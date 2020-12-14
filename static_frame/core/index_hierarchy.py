@@ -6,8 +6,6 @@ import numpy as np
 
 
 from static_frame.core.array_go import ArrayGO
-from static_frame.core.container import ContainerOperand
-from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
@@ -25,7 +23,7 @@ from static_frame.core.index import ILoc
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.index import PositionsAllocator
+from static_frame.core.util import PositionsAllocator
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import IndexLevel
@@ -40,6 +38,7 @@ from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_transpose import InterfaceTranspose
 
 from static_frame.core.type_blocks import TypeBlocks
 
@@ -62,6 +61,9 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import setdiff2d
 from static_frame.core.util import UFunc
 from static_frame.core.util import union2d
+from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import iterable_to_array_2d
+from static_frame.core.util import array_sample
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -541,16 +543,36 @@ class IndexHierarchy(IndexBase):
     def iloc(self) -> InterfaceGetItem['IndexHierarchy']:
         return InterfaceGetItem(self._extract_iloc) #type: ignore
 
-    # HOTE: this is only nodes, not a the full realization; probably need both
+
     def _iter_label(self,
-            depth_level: int = 0,
+            depth_level: tp.Optional[DepthLevelSpecifier] = None,
             ) -> tp.Iterator[tp.Hashable]:
-        yield from self._levels.label_nodes_at_depth(depth_level=depth_level)
+
+        if depth_level is None: # default to full labels
+            depth_level = list(range(self.depth))
+
+        # if no type blocks, use a levels
+        if self._recache:
+            if isinstance(depth_level, int):
+                yield from self._levels.labels_at_depth(depth_level=depth_level)
+            else:
+                yield from zip(
+                        *(self._levels.labels_at_depth(depth_level=d) for d in depth_level)
+                        )
+        else:
+            if isinstance(depth_level, int):
+                yield from self._blocks._extract_array(column_key=depth_level)
+            else:
+                yield from array2d_to_tuples(
+                        self._blocks._extract_array(column_key=depth_level)
+                        )
 
     def _iter_label_items(self,
-            depth_level: int = 0,
+            depth_level: tp.Optional[DepthLevelSpecifier] = None,
             ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
-        yield from enumerate(self._levels.label_nodes_at_depth(depth_level=depth_level))
+
+        yield from enumerate(self._iter_label(depth_level=depth_level))
+
 
     @property
     def iter_label(self) -> IterNodeDepthLevel[tp.Any]:
@@ -606,6 +628,16 @@ class IndexHierarchy(IndexBase):
         return InterfaceDatetime(
                 blocks=self._blocks._blocks,
                 blocks_to_container=blocks_to_container,
+                )
+
+
+    @property
+    def via_T(self) -> InterfaceTranspose['IndexHierarchy']:
+        '''
+        Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
+        '''
+        return InterfaceTranspose(
+                container=self,
                 )
 
 
@@ -696,13 +728,13 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
         return self._blocks.nbytes
 
-    def __bool__(self) -> bool:
-        '''
-        True if this container has size.
-        '''
-        if self._recache:
-            return bool(self._levels.__len__()) and bool(self._levels.depth)
-        return bool(self._blocks.size)
+    # def __bool__(self) -> bool:
+    #     '''
+    #     True if this container has size.
+    #     '''
+    #     if self._recache:
+    #         return bool(self._levels.__len__()) and bool(self._levels.depth)
+    #     return bool(self._blocks.size)
 
     #---------------------------------------------------------------------------
 
@@ -760,7 +792,7 @@ class IndexHierarchy(IndexBase):
 
     def _ufunc_set(self,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', 'Series']
+            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
             ) -> 'IndexHierarchy':
         '''
         Utility function for preparing and collecting values for Indices to produce a new Index.
@@ -785,11 +817,9 @@ class IndexHierarchy(IndexBase):
         elif isinstance(other, IndexBase):
             operand = other.values
             assume_unique = True # can always assume unique
-        elif isinstance(other, ContainerOperand): # TODO 0.7: use iterable to array force user to provide values
-            operand = other.values
-            assume_unique = False
         else:
-            raise NotImplementedError(f'no support for {other}')
+            operand = iterable_to_array_2d(other) #type: ignore
+            assume_unique = False
 
         both_sized = len(operand) > 0 and len(self) > 0
 
@@ -1078,39 +1108,39 @@ class IndexHierarchy(IndexBase):
     def _ufunc_binary_operator(self, *,
             operator: UFunc,
             other: tp.Any,
+            axis: int = 0,
             ) -> np.ndarray:
         '''
-        Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multipling an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
+        Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
+        from static_frame.core.series import Series
+        from static_frame.core.frame import Frame
+
         if self._recache:
             self._update_array_cache()
 
-        # NOTE: might use TypeBlocks._ufunc_binary_operator
-        values = self._blocks.values
-
-        other_is_array = False
-        if isinstance(other, Index):
-            # if this is a 1D index, must rotate labels before using an operator
-            other = other.values.reshape((len(other), 1)) # operate on labels to labels
-            other_is_array = True
-        elif isinstance(other, IndexHierarchy):
-            # already 2D
-            other = other.values # operate on labels to labels
-            other_is_array = True
-        elif isinstance(other, np.ndarray):
-            other_is_array = True
+        if isinstance(other, (Series, Frame)):
+            raise ValueError('cannot use labelled container as an operand.')
 
         if operator.__name__ == 'matmul':
-            return matmul(values, other)
+            return matmul(self._blocks.values, other)
         elif operator.__name__ == 'rmatmul':
-            return matmul(other, values)
+            return matmul(other, self._blocks.values)
 
-        return apply_binary_operator(
-                values=values,
-                other=other,
-                other_is_array=other_is_array,
+        if isinstance(other, Index):
+            other = other.values
+        elif isinstance(other, IndexHierarchy):
+            if other._recache:
+                other._update_array_cache()
+            other = other._blocks
+
+        tb = self._blocks._ufunc_binary_operator(
                 operator=operator,
+                other=other,
+                axis=axis,
                 )
+        return tb.values
+
 
     def _ufunc_axis_skipna(self, *,
             axis: int,
@@ -1298,6 +1328,27 @@ class IndexHierarchy(IndexBase):
                 )
 
 
+    def _sample_and_key(self,
+            count: int = 1,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> tp.Tuple['IndexHierarchy', np.ndarray]:
+        if self._recache:
+            self._update_array_cache()
+
+        # sort to ensure hierarchability
+        key = array_sample(self.positions, count=count, seed=seed, sort=True)
+        blocks = self._blocks._extract(row_key=key)
+
+        index_constructors = tuple(self._levels.index_types())
+
+        container = self.__class__._from_type_blocks(blocks,
+                index_constructors=index_constructors,
+                name=self._name,
+                own_blocks=True
+                )
+        return container, key
+
     #---------------------------------------------------------------------------
     # export
 
@@ -1350,7 +1401,7 @@ class IndexHierarchy(IndexBase):
         '''
         return self._INDEX_CONSTRUCTOR(self.__iter__())
 
-    def add_level(self: IH, level: tp.Hashable) -> IH:
+    def level_add(self: IH, level: tp.Hashable) -> IH:
         '''Return an IndexHierarchy with a new root (outer) level added.
         '''
         if self.STATIC: # can reuse levels
@@ -1376,7 +1427,7 @@ class IndexHierarchy(IndexBase):
 
         return self.__class__(levels, name=self._name)
 
-    def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:
+    def level_drop(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the resulting index if the resulting levels are not unique.
 
         Args:

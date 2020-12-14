@@ -224,16 +224,23 @@ class DOC_TEMPLATE:
             ''',
             )
 
-    relabel_add_level = dict(
+    relabel_level_add = dict(
             doc='''Return a new :obj:`{class_name}`, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
             ''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
             )
 
-    relabel_drop_level = dict(
+    relabel_level_drop = dict(
             doc='''Return a new :obj:`{class_name}`, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most (root) levels; a negative integer drops that many inner-most (leaf)levels.''',
+            )
+    sample = dict(
+            doc='''Randomly (optionally made deterministic with a fixed seed) extract items from the container to return a subset of the container.''',
+            count='''Number of elements to select.''',
+            index='''Number of labels to select from the index.''',
+            columns='''Number of labels to select from the columns.''',
+            seed='''Initial state of random selection.''',
             )
     selector = dict(
             key_loc=LOC_SELECTOR,
@@ -312,11 +319,25 @@ class DOC_TEMPLATE:
 
     ufunc_skipna = dict(
             args = '''
-    Args:
-        axis: Axis, defaulting to axis 0.
-        skipna: Skip missing (NaN) values, defaulting to True.
-    ''')
-
+        Args:
+            axis: Axis, defaulting to axis 0.
+            skipna: Skip missing (NaN) values, defaulting to True.
+            '''
+            )
+    window = dict(
+            args = f'''
+        Args:
+            size: Elements per window, given as an integer greater than 0.
+            {AXIS}
+            step: Element shift per window, given as an integer greater than 0. Determines the step size between windows. A step of 1 shifts each window 1 element; a step equal to the ``size`` will result in non-overlapping windows.
+            window_sized: if True, windows with fewer elements than ``size`` are skipped.
+            window_func: Array processor of window values, executed before function application (if used): can be used for applying a weighting function to each window.
+            window_valid: Function that, given an array window, returns True if the window is valid; invalid windows are skipped.
+            label_shift: A shift, relative to the right-most element contained in the window, to derive the label to be paired with the window. For example, to label each window with the label found at the start of the window, ``label_shift`` can be set to one less than ``size``.
+            start_shift: A shift to determine the first element where window collection begins.
+            size_increment: A value to be added to ``size`` with each window after the first, so as to, in combination with setting ``step`` to 0, permit iterating over expanding windows.
+            '''
+            )
 
 # NOTE: F here should replace AnyCallable below
 F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])

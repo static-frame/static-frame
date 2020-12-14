@@ -35,6 +35,7 @@ from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 
 from static_frame.core.util import array_shift
+from static_frame.core.util import array_sample
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import CallableOrMapping
@@ -75,6 +76,7 @@ from static_frame.core.util import to_datetime64
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import union1d
+from static_frame.core.util import PositionsAllocator
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -276,23 +278,6 @@ def mutable_immutable_index_filter(
     if index.STATIC:
         return index._MUTABLE_CONSTRUCTOR(index)
     return index.__class__(index) # create new instance
-
-#-------------------------------------------------------------------------------
-
-class PositionsAllocator:
-
-    _size: int = 0
-    _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
-    _array.flags.writeable = False
-
-    @classmethod
-    def get(cls, size: int) -> np.ndarray:
-        if size > cls._size:
-            cls._size = size * 2
-            cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)
-            cls._array.flags.writeable = False
-        # slices of immutable arrays are immutable
-        return cls._array[:size]
 
 #-------------------------------------------------------------------------------
 _INDEX_SLOTS = (
@@ -521,12 +506,12 @@ class Index(IndexBase):
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 
     def _iter_label(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: tp.Optional[DepthLevelSpecifier] = None
             ) -> tp.Iterator[tp.Hashable]:
         yield from self._labels
 
     def _iter_label_items(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: tp.Optional[DepthLevelSpecifier] = None
             ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
         yield from zip(self._positions, self._labels)
 
@@ -613,20 +598,20 @@ class Index(IndexBase):
             self._update_array_cache()
         return tp.cast(int, self._labels.nbytes)
 
-    def __bool__(self) -> bool:
-        '''
-        True if this container has size.
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return bool(self._labels.size)
+    # def __bool__(self) -> bool:
+    #     '''
+    #     True if this container has size.
+    #     '''
+    #     if self._recache:
+    #         self._update_array_cache()
+    #     return bool(self._labels.size)
 
     #---------------------------------------------------------------------------
     # set operations
 
     def _ufunc_set(self: I,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', 'Series']
+            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
             ) -> I:
         '''
         Utility function for preparing and collecting values for Indices to produce a new Index.
@@ -653,11 +638,8 @@ class Index(IndexBase):
         elif isinstance(other, IndexBase):
             operand = other.values
             assume_unique = True # can always assume unique
-        elif isinstance(other, ContainerOperand): # TODO 0.7: use iterable to array force user to provide values
-            operand = other.values
-            assume_unique = False
         else:
-            raise NotImplementedError(f'no support for {other}')
+            operand, assume_unique = iterable_to_array_1d(other)
 
         cls = self.__class__
 
@@ -762,7 +744,6 @@ class Index(IndexBase):
                 blocks=blocks,
                 blocks_to_container=blocks_to_container,
                 )
-
 
     #---------------------------------------------------------------------------
 
@@ -1003,10 +984,16 @@ class Index(IndexBase):
             other: tp.Any
             ) -> np.ndarray:
         '''
-        Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multipling an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
+        Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
+        from static_frame.core.series import Series
+        from static_frame.core.frame import Frame
+
         if self._recache:
             self._update_array_cache()
+
+        if isinstance(other, (Series, Frame)):
+            raise ValueError('cannot use labelled container as an operand.')
 
         values = self._labels
         other_is_array = False
@@ -1205,6 +1192,20 @@ class Index(IndexBase):
 
         return self.__class__(assigned, name=self._name)
 
+    def _sample_and_key(self,
+            count: int = 1,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> tp.Tuple['Index', np.ndarray]:
+        # NOTE: base class defines pubic method
+        # force usage of property for cache update
+        # sort positions to avoid uncomparable objects
+        key = array_sample(self.positions, count=count, seed=seed, sort=True)
+
+        values = self.values[key]
+        values.flags.writeable = False
+        return self.__class__(values, name=self._name), key
+
 
     #---------------------------------------------------------------------------
     # export
@@ -1217,14 +1218,14 @@ class Index(IndexBase):
         return Series(self.values, name=self._name)
 
 
-    def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
+    def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
         '''Return an IndexHierarchy with an added root level.
         '''
         from static_frame import IndexHierarchy
         from static_frame import IndexHierarchyGO
 
         cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
-        return cls.from_tree({level: self.values})
+        return cls.from_tree({level: self.values}, name=self._name)
 
 
     def to_pandas(self) -> 'pandas.Index':

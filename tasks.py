@@ -10,11 +10,13 @@ import invoke
 def clean(context):
     '''Clean doc and build artifacts
     '''
+    context.run('rm -rf coverage.xml')
     context.run('rm -rf htmlcov')
     context.run('rm -rf doc/build')
     context.run('rm -rf build')
     context.run('rm -rf dist')
     context.run('rm -rf *.egg-info')
+    context.run('rm -rf .coverage')
     context.run('rm -rf .mypy_cache')
     context.run('rm -rf .pytest_cache')
     context.run('rm -rf .hypothesis')
@@ -95,7 +97,10 @@ def example(context, container=None):
 #-------------------------------------------------------------------------------
 
 @invoke.task
-def test(context, unit=False, filename=None):
+def test(context,
+        unit=False,
+        cov=False,
+        ):
     '''Run tests.
     '''
     if unit:
@@ -103,10 +108,11 @@ def test(context, unit=False, filename=None):
     else:
         fp = 'static_frame/test'
 
-    if filename:
-        fp = os.path.join(fp, filename)
-
     cmd = f'pytest -s --color no --disable-pytest-warnings --tb=native {fp}'
+
+    if cov:
+        cmd += ' --cov=static_frame --cov-report=xml'
+
     print(cmd)
     context.run(cmd)
 
@@ -136,9 +142,9 @@ def lint(context):
     '''
     context.run('pylint static_frame')
 
-@invoke.task(pre=(test, mypy, lint))
-def integrate(context):
-    '''Perform all continuous integration.
+@invoke.task(pre=(mypy, lint))
+def quality(context):
+    '''Perform all quality checks.
     '''
 
 #-------------------------------------------------------------------------------

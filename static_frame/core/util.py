@@ -89,6 +89,8 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 
 STATIC_ATTR = 'STATIC'
 
+ELEMENT_TUPLE = (None,)
+
 EMPTY_TUPLE = ()
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 
@@ -175,6 +177,7 @@ GetItemKeyTypeCompound = tp.Union[
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
 NameType = tp.Optional[tp.Hashable]
+TupleConstructorType = tp.Callable[[tp.Iterator[tp.Any]], tp.Tuple[tp.Any, ...]]
 
 Bloc2DKeyType = tp.Union['Frame', np.ndarray]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]
@@ -184,6 +187,11 @@ AnyCallable = tp.Callable[..., tp.Any]
 
 Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
+
+
+def is_mapping(value: tp.Any) -> bool:
+    from static_frame import Series
+    return isinstance(value, (dict, Series))
 
 def is_callable_or_mapping(value: CallableOrMapping) -> bool:
     from static_frame import Series
@@ -201,9 +209,17 @@ PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterat
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
+DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
+
+def is_dtype_specifier(value: tp.Any) -> bool:
+    return isinstance(value, DTYPE_SPECIFIER_TYPES)
+
 # support an iterable of specifiers, or mapping based on column names
-DtypesSpecifier = tp.Optional[
-        tp.Union[tp.Iterable[DtypeSpecifier], tp.Dict[tp.Hashable, DtypeSpecifier]]]
+DtypesSpecifier = tp.Optional[tp.Union[
+        DtypeSpecifier,
+        tp.Iterable[DtypeSpecifier],
+        tp.Dict[tp.Hashable, DtypeSpecifier]
+        ]]
 
 # specifiers that are equivalent to object
 DTYPE_SPECIFIERS_OBJECT = {DTYPE_OBJECT, object, tuple}
@@ -812,13 +828,14 @@ def resolve_type_iter(
             value_type = type(v)
 
             # need to get tuple subclasses, like NamedTuple
-            if isinstance(v, (tuple, list)):
+            if isinstance(v, (tuple, list)) or hasattr(v, '__slots__'):
+                # identify SF types by if they have __slots__ defined; they also must be assigned after array creation, so we treat them like tuples
                 has_tuple = True
             elif isinstance(v, Enum):
                 # must check isinstance, as Enum types are always derived from Enum
                 has_enum = True
             elif value_type == str or value_type == np.str_:
-                # must compare to both sring types
+                # must compare to both string types
                 has_str = True
             else:
                 has_non_str = True
@@ -831,7 +848,6 @@ def resolve_type_iter(
                 resolved = object
             elif has_big_int and has_inexact:
                 resolved = object
-
         else: # resolved is object, can exit
             if copy_values:
                 values_post.extend(v_iter)
@@ -847,7 +863,7 @@ def resolve_type_iter(
 
 def iterable_to_array_1d(
         values: tp.Iterable[tp.Any],
-        dtype: DtypeSpecifier=None
+        dtype: DtypeSpecifier = None
         ) -> tp.Tuple[np.ndarray, bool]:
     '''
     Convert an arbitrary Python iterable to a 1D NumPy array without any undesirable type coercion.
@@ -856,6 +872,8 @@ def iterable_to_array_1d(
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
     if isinstance(values, np.ndarray):
+        if values.ndim != 1:
+            raise RuntimeError('expected 1d array')
         if dtype is not None and dtype != values.dtype:
             raise RuntimeError(f'Supplied dtype {dtype} not set on supplied array.')
         return values, len(values) <= 1
@@ -870,7 +888,7 @@ def iterable_to_array_1d(
         return array, True
 
     if hasattr(values, 'values') and hasattr(values, 'index'):
-        raise RuntimeError(f'Supplied iterable {type(values)} appears to be labeled, though labels are not being used. Convert to a Series.')
+        raise RuntimeError(f'Supplied iterable {type(values)} appears to be labeled, though labels are ignored in this context. Convert to an array.')
 
     values_for_construct: tp.Sequence[tp.Any]
 
@@ -897,7 +915,6 @@ def iterable_to_array_1d(
             v = np.empty(0, dtype=dtype)
             v.flags.writeable = False
             return v, True
-
         #as we have not iterated iterable, assume that there might be tuples if the dtype is object
         has_tuple = dtype in DTYPE_SPECIFIERS_OBJECT
 
@@ -910,7 +927,7 @@ def iterable_to_array_1d(
     # construction
     if has_tuple:
         # this matches cases where dtype is given and dtype is an object specifier
-        # this is the only way to assign from a sequence that contains a tuple; this does not work for dict or set (they must be copied into an iterabel), and is little slower than creating array directly
+        # this is the only way to assign from a sequence that contains a tuple; this does not work for dict or set (they must be copied into an iterable), and is little slower than creating array directly
         v = np.empty(len(values_for_construct), dtype=DTYPE_OBJECT)
         v[NULL_SLICE] = values_for_construct
     elif dtype == int:
@@ -937,11 +954,16 @@ def iterable_to_array_2d(
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
     if isinstance(values, np.ndarray):
-        # could check for ndim==2
+        if values.ndim != 2:
+            raise RuntimeError('expected 2d array')
         return values
 
+    if hasattr(values, 'values') and hasattr(values, 'index'):
+        raise RuntimeError(f'Supplied iterable {type(values)} appears to be labeled, though labels are ignored in this context. Convert to an array.')
+
     # consume values into a tuple
-    values = tuple(values)
+    if not hasattr(values, '__len__'):
+        values = tuple(values)
 
     # if we provide whole generator to resolve_type_iter, it will copy the entire sequence unless restrict copy is True
     dtype, _, _ = resolve_type_iter(
@@ -960,7 +982,7 @@ def iterable_to_array_nd(
         values: tp.Any,
         ) -> np.ndarray:
     '''
-    Attempt to determiine if a value is 0, 1, or 2D array; this will interpret lists of tuples as 2D, as NumPy does.
+    Attempt to determine if a value is 0, 1, or 2D array; this will interpret lists of tuples as 2D, as NumPy does.
     '''
     if hasattr(values, '__iter__') and not isinstance(values, str):
 
@@ -1042,6 +1064,8 @@ TD64_US = np.timedelta64(1, 'us')
 TD64_NS = np.timedelta64(1, 'ns')
 
 _DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH)
+
+DTU_PYARROW = set(('ns', 'D', 's'))
 
 def to_datetime64(
         value: DateInitializer,
@@ -1176,7 +1200,7 @@ def isna_element(value: tp.Any) -> bool:
 def isna_array(array: np.ndarray,
         include_none: bool = True,
         ) -> np.ndarray:
-    '''Given an np.ndarray, return a bolean array setting True for missing values.
+    '''Given an np.ndarray, return a Boolean array setting True for missing values.
 
     Note: the returned array is not made immutable.
     '''
@@ -1468,6 +1492,36 @@ def array_shift(*,
 def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
     for row in array: # assuming 2d
         yield tuple(row)
+
+
+def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
+    '''
+    Given a Boolean array, return the start index where of the last range, through to the end, of contiguous True values.
+    '''
+    length = len(array)
+    if len(array) == 0:
+        return 1
+    if array[-1] == False: #pylint: disable=C0121
+        # if last values is False, no contiguous region
+        return length
+    if not array.any(): # if not any are true, no regions found
+        return length
+    if array.all(): # if all are true
+        return 0
+
+    transitions = np.empty(length, dtype=bool)
+    transitions[0] = False # first value not a transition
+    # compare current to previous; do not compare first
+    np.not_equal(array[:-1], array[1:], out=transitions[1:])
+
+    transition_idx: tp.Sequence[int] = np.nonzero(transitions)[0]
+    if not len(transition_idx): # this may not ever happen
+        return length
+    # if last segment is all True
+    last_idx = transition_idx[-1]
+    if array[last_idx:].all():
+        return last_idx
+    return length
 
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
@@ -1847,6 +1901,7 @@ def _isin_1d(
     for i, element in enumerate(array):
         result[i] = element in other
 
+    result.flags.writeable = False
     return result
 
 
@@ -1865,6 +1920,32 @@ def _isin_2d(
 
     for (i, j), v in np.ndenumerate(array):
         result[i, j] = v in other
+
+    result.flags.writeable = False
+    return result
+
+
+def isin_array(*,
+        array: np.ndarray,
+        array_is_unique: bool,
+        other: np.ndarray,
+        other_is_unique: bool,
+        ) -> np.ndarray:
+    '''Core isin processing after other has been converted to an array.
+    '''
+    if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT:
+        # both funcs return immutable arrays
+        func = _isin_1d if array.ndim == 1 else _isin_2d
+        try:
+            return func(array, frozenset(other))
+        except TypeError: # only occur when something is unhashable.
+            pass
+
+    assume_unique = array_is_unique and other_is_unique
+    func = np.in1d if array.ndim == 1 else np.isin
+
+    result = func(array, other, assume_unique=assume_unique) #type: ignore
+    result.flags.writeable = False
 
     return result
 
@@ -1894,27 +1975,11 @@ def isin(
 
     other, other_is_unique = iterable_to_array_1d(other)
 
-    if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT: # type: ignore
-        try:
-            if array.ndim == 1:
-                result = _isin_1d(array, frozenset(other))
-            else:
-                result = _isin_2d(array, frozenset(other))
-        except TypeError:
-            # TypeErrors *should* only occur when something is unhashable, hence the inability to use sets. Fall back to numpy's isin.
-            pass
-
-    if result is None:
-        assume_unique = array_is_unique and other_is_unique
-        if array.ndim == 1:
-            result = np.in1d(array, other, assume_unique=assume_unique)
-        else:
-            # NOTE: likely faster to do this at the block level
-            result = np.isin(array, other, assume_unique=assume_unique)
-
-    result.flags.writeable = False
-    return result
-
+    return isin_array(array=array,
+            array_is_unique=array_is_unique,
+            other=other,
+            other_is_unique=other_is_unique,
+            )
 
 #-------------------------------------------------------------------------------
 def _ufunc_logical_skipna(
@@ -2044,7 +2109,6 @@ def ufunc_nanany(array: np.ndarray,
 
 #-------------------------------------------------------------------------------
 
-
 def array_from_element_attr(*,
         array: np.ndarray,
         attr_name: str,
@@ -2126,7 +2190,51 @@ def array_from_element_method(*,
     post.flags.writeable = False
     return post
 
+#-------------------------------------------------------------------------------
 
+class PositionsAllocator:
+    '''Resource for re-using a single array of contiguous ascending integers for common applications in IndexBase.
+    '''
+
+    _size: int = 1024
+    _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
+    _array.flags.writeable = False
+
+    @classmethod
+    def get(cls, size: int) -> np.ndarray:
+        if size > cls._size:
+            cls._size = size * 2
+            cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)
+            cls._array.flags.writeable = False
+        # slices of immutable arrays are immutable
+        return cls._array[:size]
+
+
+def array_sample(
+        array: np.ndarray,
+        count: int,
+        seed: tp.Optional[int] = None,
+        sort: bool = False,
+        ) -> np.ndarray:
+    '''
+    Given an array 1D or 2D array, randomly sample ``count`` components of that array. Sampling is always done "without replacment", meaning that the resulting array will never have duplicates. For 2D array, selection happens along axis 0.
+    '''
+    if array.ndim != 1:
+        raise NotImplementedError(f'no handling for axis {array.ndim}')
+
+    if seed is not None:
+        state = np.random.get_state()
+        np.random.seed(seed)
+
+    post = np.random.choice(array, size=count, replace=False)
+    if sort:
+        post.sort(kind=DEFAULT_SORT_KIND)
+
+    if seed is not None:
+        np.random.set_state(state)
+
+    post.flags.writeable = False
+    return post
 
 
 #-------------------------------------------------------------------------------
@@ -2163,7 +2271,7 @@ def slices_from_targets(
         target_slices = (
                 slice((start+1 if start is not None else 0), stop)
                 for start, stop in
-                zip(chain((None,), target_index[:-1]), target_index)
+                zip(chain(ELEMENT_TUPLE, target_index[:-1]), target_index)
                 )
 
     for target_slice, value in zip(target_slices, target_values):
@@ -2250,17 +2358,16 @@ def write_optional_file(
 #-------------------------------------------------------------------------------
 # trivial, non NP util
 
-def get_tuple_constructor(fields: np.ndarray) -> tp.Type[tp.Tuple[tp.Any, ...]]:
+def get_tuple_constructor(
+        fields: np.ndarray,
+        ) -> TupleConstructorType:
     '''
     Given fields, try to create a Namedtuple; if that fails, return a normal tuple.
     '''
     try:
-        return namedtuple('Axis', fields)
+        return namedtuple('Axis', fields)._make #type: ignore
     except ValueError:
-        # take positiona args
-        return lambda *args: tuple(args) # type: ignore
-
-
+        return tuple
 
 
 def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:

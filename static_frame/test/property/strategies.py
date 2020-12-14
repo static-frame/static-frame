@@ -63,7 +63,6 @@ hypo_settings.load_profile("sf")
 #-------------------------------------------------------------------------------
 # spacings
 
-# @lru_cache(maxsize=32)
 def subset_contiguous_sum(target: int) -> tp.Tuple[tp.Tuple[int, ...], ...]:
     '''
     Return an iterabel of integers that sum to the target. This does not find all combinations or permutations, just all combintation of the range from 1 to the number (inclusive).

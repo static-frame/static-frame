@@ -88,6 +88,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import UFunc
 from static_frame.core.util import dtype_kind_to_na
+from static_frame.core.util import DTYPE_OBJECT
 
 
 if tp.TYPE_CHECKING:
@@ -140,10 +141,18 @@ class Series(ContainerOperand):
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
-        array = np.full(
-                len(index_final), #type: ignore
-                fill_value=element,
-                dtype=dtype)
+
+        length = len(index_final) #type: ignore
+        if isinstance(element, tuple):
+            array = np.empty(length, dtype=DTYPE_OBJECT)
+            # this is the only way to insert tuples
+            for i in range(length):
+                array[i] = element
+        else:
+            array = np.full(
+                    length,
+                    fill_value=element,
+                    dtype=dtype)
         array.flags.writeable = False
         return cls(array,
                 index=index_final,
@@ -836,8 +845,8 @@ class Series(ContainerOperand):
                 index=self._index.flat(),
                 name=self._name)
 
-    @doc_inject(selector='relabel_add_level', class_name='Series')
-    def relabel_add_level(self,
+    @doc_inject(selector='relabel_level_add', class_name='Series')
+    def relabel_level_add(self,
             level: tp.Hashable
             ) -> 'Series':
         '''
@@ -847,11 +856,11 @@ class Series(ContainerOperand):
             level: {level}
         '''
         return self.__class__(self.values,
-                index=self._index.add_level(level),
+                index=self._index.level_add(level),
                 name=self._name)
 
-    @doc_inject(selector='relabel_drop_level', class_name='Series')
-    def relabel_drop_level(self,
+    @doc_inject(selector='relabel_level_drop', class_name='Series')
+    def relabel_level_drop(self,
             count: int = 1
             ) -> 'Series':
         '''
@@ -864,7 +873,7 @@ class Series(ContainerOperand):
             raise RuntimeError('cannot drop level of an Index that is not an IndexHierarchy')
 
         return self.__class__(self.values,
-                index=self._index.drop_level(count),
+                index=self._index.level_drop(count),
                 name=self._name)
 
 
@@ -1372,11 +1381,11 @@ class Series(ContainerOperand):
         '''
         return self.values.nbytes #type: ignore
 
-    def __bool__(self) -> bool:
-        '''
-        True if this container has size.
-        '''
-        return bool(self.values.size)
+    # def __bool__(self) -> bool:
+    #     '''
+    #     True if this container has size.
+    #     '''
+    #     return bool(self.values.size)
 
 
     #---------------------------------------------------------------------------
@@ -1520,8 +1529,11 @@ class Series(ContainerOperand):
 
 
     def _axis_group_labels_items(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: tp.Optional[DepthLevelSpecifier] = None,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
+
+        if depth_level is None:
+            depth_level = 0
 
         values = self.index.values_at_depth(depth_level)
         group_to_tuple = values.ndim == 2
@@ -1739,6 +1751,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
+        # returns an immutable array
         array = isin(self.values, other)
         return self.__class__(array, index=self._index, name=self._name)
 
@@ -1959,6 +1972,37 @@ class Series(ContainerOperand):
             :obj:`Series`
         '''
         return self.iloc[-count:]
+
+    def count(self, *,
+            skipna: bool = True
+            ) -> int:
+        '''
+        Return the count of non-NA elements.
+
+        Args:
+            skipna
+        '''
+        if not skipna:
+            return len(self.values)
+        return len(self.values) - isna_array(self.values).sum() #type: ignore
+
+    @doc_inject(selector='sample')
+    def sample(self,
+            count: int = 1,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> 'Series':
+        '''{doc}
+
+        Args:
+            {count}
+            {seed}
+        '''
+        index, key = self._index._sample_and_key(count=count, seed=seed)
+        values = self.values[key]
+        values.flags.writeable = False
+        return self.__class__(values, index=index, name=self._name)
+
 
     @doc_inject(selector='argminmax')
     def loc_min(self, *,

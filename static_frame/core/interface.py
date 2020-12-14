@@ -32,6 +32,7 @@ from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
@@ -283,6 +284,7 @@ class InterfaceGroup:
     OperatorUnary = 'Operator Unary'
     AccessorDatetime = 'Accessor Datetime'
     AccessorString = 'Accessor String'
+    AccessorTranspose = 'Accessor Transpose'
 
 # NOTE: order from definition retained
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items() if not k.startswith('_'))
@@ -523,9 +525,14 @@ class InterfaceRecord(tp.NamedTuple):
             max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
-        group = (InterfaceGroup.AccessorString
-                if cls_interface is InterfaceString
-                else InterfaceGroup.AccessorDatetime)
+        if cls_interface is InterfaceString:
+            group = InterfaceGroup.AccessorString
+        elif cls_interface is InterfaceDatetime:
+            group = InterfaceGroup.AccessorDatetime
+        elif cls_interface is InterfaceTranspose:
+            group = InterfaceGroup.AccessorTranspose
+        else:
+            raise NotImplementedError()
 
         for field in cls_interface.INTERFACE: # apply, map, etc
             delegate_obj = getattr(cls_interface, field)
@@ -874,6 +881,11 @@ class InterfaceSummary(Features):
             elif isinstance(obj, InterfaceDatetime):
                 yield from InterfaceRecord.gen_from_accessor(
                             cls_interface=InterfaceDatetime,
+                            **kwargs,
+                            )
+            elif isinstance(obj, InterfaceTranspose):
+                yield from InterfaceRecord.gen_from_accessor(
+                            cls_interface=InterfaceTranspose,
                             **kwargs,
                             )
             elif obj.__class__ in (InterfaceSelectDuo, InterfaceSelectTrio):

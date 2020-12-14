@@ -21,20 +21,22 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import COMPLEX_TYPES
-# from static_frame.core.util import DT64_MONTH
-# from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_INT_KINDS
-# from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
+from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
 if tp.TYPE_CHECKING:
     from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
+    from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
+
+    # from openpyxl.cell.read_only import ReadOnlyCell # pylint: disable=W0611 #pragma: no cover
+    # from openpyxl.cell.read_only import EmptyCell # pylint: disable=W0611 #pragma: no cover
 
 
 MAX_XLSX_ROWS = 1048576
@@ -388,6 +390,7 @@ class StoreXLSX(Store):
         index_name_depth_level = config.index_name_depth_level
         columns_depth = config.columns_depth
         columns_name_depth_level = config.columns_name_depth_level
+        trim_nadir = config.trim_nadir
 
         skip_header = config.skip_header
         skip_footer = config.skip_footer
@@ -418,61 +421,74 @@ class StoreXLSX(Store):
         data = [] # pre-size with None?
         apex_rows = []
 
+        if trim_nadir:
+            mask = np.full((last_row_count, max_column), False)
+
         for row_count, row in enumerate(ws.iter_rows(max_row=max_row), start=-skip_header):
             if row_count < 0:
                 continue # due to skip header; perserves comparison to columns_depth
             if row_count >= last_row_count:
                 break
 
-            if store_filter is None:
-                row = tuple(c.value for c in row)
-            else: # only need to filter string values, but probably too expensive to pre-check
-                row = tuple(store_filter.to_type_filter_element(c.value) for c in row)
+            if trim_nadir:
+                row_data: tp.Sequence[tp.Any] = []
+                for col_count, c in enumerate(row):
+                    if store_filter is None:
+                        value = c.value
+                    else:
+                        value = store_filter.to_type_filter_element(c.value)
+                    if value is None: # NOTE: only checking None, not np.nan
+                        mask[row_count, col_count] = True
+                    row_data.append(value) # type: ignore
+                if not row_data:
+                    mask[row_count] = True
+            else:
+                if store_filter is None:
+                    row_data = tuple(c.value for c in row)
+                else: # only need to filter string values, but probably too expensive to pre-check
+                    row_data = tuple(store_filter.to_type_filter_element(c.value) for c in row)
 
             if row_count <= columns_depth - 1:
-                apex_rows.append(row[:index_depth])
+                apex_rows.append(row_data[:index_depth])
                 if columns_depth == 1:
-                    columns_values.extend(row[index_depth:])
+                    columns_values.extend(row_data[index_depth:])
                 elif columns_depth > 1:
-                    # NOTE: this orientation will need to be rotated
-                    columns_values.append(row[index_depth:])
+                    columns_values.append(row_data[index_depth:])
                 continue
 
             if index_depth == 0:
-                data.append(row)
+                data.append(row_data)
             elif index_depth == 1:
-                index_values.append(row[0])
-                data.append(row[1:])
+                index_values.append(row_data[0])
+                data.append(row_data[1:])
             else:
-                index_values.append(row[:index_depth])
-                data.append(row[index_depth:])
+                index_values.append(row_data[:index_depth])
+                data.append(row_data[index_depth:])
 
         wb.close()
 
-        # Trim all-empty trailing rows created from style formatting GH#146. As the wb is opened in read-only mode, reverse iterating on the wb is not an option, nor is direct row access by integer; alos, evaluating all rows on forward iteration is expensive. Instead, after collecting all the data in a list and closing the wb, reverse iterate and find rows that are all empty.
-        # NOTE: need to handle case where there are valid index values
+        #-----------------------------------------------------------------------
+        # Trim all-empty trailing rows created from style formatting GH#146. As the wb is opened in read-only mode, reverse iterating on the wb is not an option, nor is direct row access by integer
 
-        empty_token = (None if store_filter is None
-                else store_filter.to_type_filter_element(None))
+        if trim_nadir:
+            # NOTE: `mask` is all data, while `data` is post index/columns extraction; this means that if a non-None label is found, the row/column will not be trimmed.
+            row_mask = mask.all(axis=1)
+            row_trim_start = array1d_to_last_contiguous_to_edge(row_mask) - columns_depth
+            if row_trim_start < len(row_mask) - columns_depth:
+                data = data[:row_trim_start]
+                if index_depth > 0: # this handles depth 1 and greater
+                    index_values = index_values[:row_trim_start]
 
-        for row_count in range(len(data) - 1, -2, -1):
-            if row_count < 0:
-                break
-            if any(c != empty_token for c in data[row_count]): # try to break early with any
-                break
-            if index_depth == 1 and index_values[row_count] != empty_token:
-                break
-            if index_depth > 1 and any(c != empty_token for c in index_values[row_count]):
-                break
+            col_mask = mask.all(axis=0)
+            col_trim_start = array1d_to_last_contiguous_to_edge(col_mask) - index_depth
+            if col_trim_start < len(col_mask) - index_depth:
+                data = (r[:col_trim_start] for r in data) #type: ignore
+                if columns_depth == 1:
+                    columns_values = columns_values[:col_trim_start]
+                if columns_depth > 1:
+                    columns_values = (r[:col_trim_start] for r in columns_values) #type: ignore
 
-        # row_count is set to the first row that has data or index; can be -1
-        empty_row_idx = row_count + 1 # index of all-empty row
-        if empty_row_idx != len(data):
-            # trim data and index_values, if index_depth > 0
-            data = data[:empty_row_idx]
-            if index_depth > 0:
-                index_values = index_values[:empty_row_idx]
-
+        #-----------------------------------------------------------------------
         # continue with Index and Frame creation
         index_name = None if columns_depth == 0 else apex_to_name(
                 rows=apex_rows,
@@ -514,7 +530,6 @@ class StoreXLSX(Store):
                     )
             own_columns = True
 
-        # NOTE: this might be a Frame or a FrameGO
         return container_type.from_records(data, #type: ignore
                         index=index,
                         columns=columns,
@@ -524,6 +539,10 @@ class StoreXLSX(Store):
                         name=name,
                         consolidate_blocks=config.consolidate_blocks
                         )
+
+
+
+
 
     @store_coherent_non_write
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:

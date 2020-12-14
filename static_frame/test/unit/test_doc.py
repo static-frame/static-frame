@@ -1290,7 +1290,7 @@ d'Arrest 6.51           1.346
 sort_columns(*, ascending, kind)     Frame    Method Return a new Fram...
 sort_index(*, ascending, kind)       Frame    Method Return a new Fram...
 sort_values(key, *, ascending, ax... Frame    Method Return a new Fram...
-<<U94>                               <<U5>    <<U17> <<U83>
+<<U94>                               <<U5>    <<U18> <<U83>
 
 #end_Frame-interface
 
@@ -1613,7 +1613,7 @@ Mercury nan       nan
 Earth   162715536   35.640899999999995
 Mars    46131264    0.41216400000000003
 Jupiter 20444424256 3602404.0
-<<U7>   <object>    <object>
+<<U7>   <int64>     <float64>
 
 #end_Frame-iter_element().apply()
 
@@ -2218,7 +2218,7 @@ quark                              strange 0.1       -0.333
 
 #end_Frame-relabel_flat()
 
-#start_Frame-relabel_add_level()
+#start_Frame-relabel_level_add()
 >>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
 >>> f = f.set_index_hierarchy(('type', 'name'), drop=True)
 >>> f
@@ -2231,7 +2231,7 @@ quark                              charm   1.3       0.666
 quark                              strange 0.1       -0.333
 <<U6>                              <<U7>   <float64> <float64>
 
->>> f.relabel_add_level(index='particle')
+>>> f.relabel_level_add(index='particle')
 <Frame>
 <Index>                                           mass      charge    <<U6>
 <IndexHierarchy: ('type', 'name')>
@@ -2241,10 +2241,10 @@ particle                           quark  charm   1.3       0.666
 particle                           quark  strange 0.1       -0.333
 <<U8>                              <<U6>  <<U7>   <float64> <float64>
 
-#end_Frame-relabel_add_level()
+#end_Frame-relabel_level_add()
 
 
-#start_Frame-relabel_drop_level()
+#start_Frame-relabel_level_drop()
 >>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
 >>> f = f.set_index_hierarchy(('type', 'name'), drop=True)
 >>> f
@@ -2257,7 +2257,7 @@ quark                              charm   1.3       0.666
 quark                              strange 0.1       -0.333
 <<U6>                              <<U7>   <float64> <float64>
 
->>> f.relabel_drop_level(index=1)
+>>> f.relabel_level_drop(index=1)
 <Frame>
 <Index> mass      charge    <<U6>
 <Index>
@@ -2267,7 +2267,7 @@ charm   1.3       0.666
 strange 0.1       -0.333
 <<U7>   <float64> <float64>
 
-#end_Frame-relabel_drop_level()
+#end_Frame-relabel_level_drop()
 
 
 #start_Frame-pivot()
@@ -2403,7 +2403,7 @@ dropna(axis, condition)              FrameGO  Method   Return a new Fram...
 drop[key]                            FrameGO  Selector Label-based selec...
 drop.iloc[key]                       FrameGO  Selector
 drop.loc[key]                        FrameGO  Selector
-<<U94>                               <<U7>    <<U17>   <<U83>
+<<U94>                               <<U7>    <<U18>   <<U83>
 
 #end_FrameGO-interface
 
@@ -2548,7 +2548,7 @@ from_names(names)                    IndexHierarchy Constructor Construct a zero
 from_pandas(value)                   IndexHierarchy Constructor Given a Pandas in...
 from_product(*, name, *levels)       IndexHierarchy Constructor Given groups of i...
 from_tree(tree, *, name)             IndexHierarchy Constructor Convert into a In...
-<<U68>                               <<U14>         <<U17>      <<U83>
+<<U68>                               <<U14>         <<U18>      <<U83>
 
 #end_IndexHierarchy-interface
 
@@ -2576,7 +2576,7 @@ quark            down
 rehierarch(depth_map)     IndexHierarchyGO Method Return a new Inde...
 relabel(mapper)           IndexHierarchyGO Method Return a new Inde...
 rename(name)              IndexHierarchyGO Method Return a new Fram...
-<<U68>                    <<U16>           <<U17> <<U83>
+<<U68>                    <<U16>           <<U18> <<U83>
 
 #end_IndexHierarchyGO-interface
 

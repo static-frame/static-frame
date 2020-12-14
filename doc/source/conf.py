@@ -117,7 +117,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
         inter_items = []
         for g in INTERFACE_GROUP_ORDER:
             inter_sub = inter.loc[inter['group'] == g]
-            if inter_sub: # some groups are empty
+            if len(inter_sub): # some groups are empty
                 inter_items.append((g, inter_sub))
         post['interface'][target.__name__] = (
                 target.__name__,

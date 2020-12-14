@@ -18,7 +18,7 @@ from static_frame import ILoc
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.index import PositionsAllocator
+from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import mloc
 
 
@@ -884,14 +884,20 @@ class TestUnit(TestCase):
 
     def test_index_intersection_c(self) -> None:
         idx1 = Index((10, 20))
-        idx2 = idx1.intersection(Series([20, 30]))
+        with self.assertRaises(RuntimeError):
+            # raises as it identifies labelled data
+            _ = idx1.intersection(Series([20, 30]))
+
+        idx2 = idx1.intersection(Series([20, 30]).values)
         self.assertEqual(idx2.values.tolist(), [20])
 
+        idx3 = idx1.intersection([20, 30])
+        self.assertEqual(idx3.values.tolist(), [20])
 
     def test_index_intersection_d(self) -> None:
         idx1 = Index((10, 20))
-        with self.assertRaises(NotImplementedError):
-            idx2 = idx1.intersection('b') #type: ignore
+        idx2 = idx1.intersection('b')
+        self.assertEqual(len(idx2), 0)
 
     def test_index_intersection_e(self) -> None:
 
@@ -1087,17 +1093,14 @@ class TestUnit(TestCase):
     def test_index_bool_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
-        self.assertTrue(bool(idx1))
-
-        idx2 = IndexGO(())
-        self.assertFalse(bool(idx2))
+        with self.assertRaises(ValueError):
+            bool(idx1)
 
     def test_index_bool_b(self) -> None:
 
         idx1 = IndexGO(())
-        self.assertFalse(bool(idx1))
-        idx1.append('a')
-        self.assertTrue(bool(idx1))
+        with self.assertRaises(ValueError):
+            bool(idx1)
 
     def test_index_astype_a(self) -> None:
 
@@ -1276,6 +1279,13 @@ class TestUnit(TestCase):
         b.append(4)
         self.assertFalse(a.equals(b))
 
+    #---------------------------------------------------------------------------
+    def test_index_sample_a(self) -> None:
+        a = IndexGO([1, 2, 3])
+        a.append(None) #type: ignore
+        b = a.sample(2, seed=3)
+
+        self.assertEqual(b.values.tolist(), [2, None])
 
 
 if __name__ == '__main__':

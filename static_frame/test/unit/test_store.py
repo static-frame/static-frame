@@ -83,7 +83,7 @@ class TestUnit(TestCase):
                 include_columns=False,
                 )
         self.assertEqual(field_names, range(0, 3))
-        self.assertEqual(dtypes.tolist(), #type: ignore
+        self.assertEqual(dtypes,
                 [np.dtype('<U1'), np.dtype('bool'), np.dtype('O')])
 
     def test_store_get_field_names_and_dtypes_b(self) -> None:
@@ -95,7 +95,7 @@ class TestUnit(TestCase):
                 include_columns=True)
 
         self.assertEqual(field_names.tolist(), ['x', 'y', 'z']) #type: ignore
-        self.assertEqual(dtypes.tolist(), #type: ignore
+        self.assertEqual(dtypes,
                 [np.dtype('<U1'), np.dtype('bool'), np.dtype('O')])
 
 if __name__ == '__main__':

@@ -1,6 +1,136 @@
 What is New in Static Frame
 ===============================
 
+0.7.8
+----------
+
+``Frame.iter_tuple_items()`` now exposes a ``constructor`` argument to control creation of axis containers.
+
+Added ``Batch.apply_items``.
+
+Added ``Frame.count``, ``Series.count``, ``Batch.count``.
+
+Added ``Frame.sample``, ``Series.sample``, ``Index.sample``, ``IndexHierarchy.sample``, ``Batch.sample``.
+
+Added ``Frame.via_T`` and ``IndexHierarchy.via_T`` accessors for opposite axis binary operator application of 1D operands.
+
+
+0.7.7
+----------
+
+``IndexHierarchy.iter_label`` now defaults to iterating full depth labels.
+
+``Batch.__repr__()`` is no longer a display that exhausts the stored generator.
+
+``Frame.iter_tuple()`` now exposes a ``constructor`` argument to control creation of axis containers.
+
+
+0.7.6
+----------
+
+Fixed issue in using ``Frame.extend`` with zero-length ``Frame``.
+
+
+0.7.5
+----------
+
+Implemented ``Frame.isin`` on ``TypeBlocks``.
+
+Implemented ``Frame.clip`` on ``TypeBlocks``.
+
+
+0.7.4
+----------
+
+``Series.from_element`` now works correctly with tuples
+
+``Batch`` element handling now avoids diagonal formations; ``Batch.apply()`` now handles elements correctly
+
+``dtypes`` parameters can now be provided with ``dict_values`` instances.
+
+``Frame.to_parquet``, ``Frame.to_arrow`` now convert ``np.datetime64`` units to nanosecond if not supported by PyArrow.
+
+
+0.7.3
+----------
+
+``Bus`` now exposes ``max_persist`` parameter to define the maximum number of loaded ``Frame`` retained by the ``Bus``.
+
+Added ``len()`` to ``via_str`` interfaces.
+
+``Frame.iter_element`` now takes an ``axis`` argument to determine element order, where 0 is row major, 1 is column major.
+
+Silenced ``NaturalNameWarning`` via ``tables`` in ``StoreHDF5``.
+
+``StoreSQLite`` will now re-write, rather than update, a file path where an SQLite DB already exists.
+
+Improved handling for iterating zero-sized ``Frame``.
+
+Improved type detection when performing operations on ``Frame.iter_element`` iterators.
+
+``Frame.shift()`` ``file_value`` parameter is now key-word argument only.
+
+``Frame.roll()`` ``include_index``, ``include_columns`` is now key-word argument only.
+
+
+0.7.2
+----------
+
+Extended application of binary equality operators to permit comparison with arrays of single elements.
+
+
+0.7.1
+----------
+
+Refined application of binary equality operators to permit comparison with strings or elements that are not sequences.
+
+
+0.7.0
+----------
+
+API change: ``__bool__`` of all containers now raises a ValueError.
+
+API change: ``IndexHierarchy.iter_label`` now iterates over realized labels.
+
+API change: ``IndexBase.union``, ``IndexBase.intersection`` no longer automatically unpack ``values`` from ``ContainerOperand`` subclasses.
+
+API change: Container operands used with binary equality operators will raise if sizes are not equivalent.
+
+API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to False by default.
+
+API change: ``Series.relabel_add_level`` to ``Series.relabel_level_add``, ``Series.relabel_drop_level`` to ``Series.relabel_level_drop``, ``Frame.relabel_add_level`` to ``Frame.relabel_level_add``, ``Frame.relabel_drop_level`` to ``Frame.relabel_level_drop``, ``Index.add_level`` to ``Index.level_add``, ``IndexHierarchy.add_level`` to ``IndexHierarcchy.level_add``, ``IndexHierarchy.drop_level`` to ``IndexHierarchy.level_drop``.
+
+
+0.6.38
+----------
+
+``Frame.dtype`` interface now takes ``DtypesSpecifier``, permitting setting ``dtype`` by mapping, iterable, or single value.
+
+``dtypes`` can be given as a single ``DtypeSpecifier`` for specifying ``dtype`` of all columns.
+
+``Series`` of ``Frame`` can now be created without specifying ``dtype`` arguments.
+
+``Frame`` now supports usage as a ``weakref``.
+
+``Frame.from_parquet`` now raises when ``columns_select`` names columns not found in the file.
+
+
+0.6.37
+----------
+
+Fixed issue in implementation of ``trim_nadir`` when reading XLSX files.
+
+
+0.6.36
+----------
+
+Fixed issue in ``Frame.from_pandas`` when the columns have mixed types including integers.
+
+Improved ``dtype`` preservation in zero-sized ``Series`` extraction from ``Frame``.
+
+Added ``trim_nadir`` parameter to ``StoreConfig`` and ``Frame.from_xlsx``: permits removing all-None trailing rows and columns resulting from XLSX styles being applied to empty cells.
+
+
 0.6.35
 ----------
 
@@ -408,6 +538,7 @@ Added ``Index.head()``, ``Index.tail()``, ``IndexHierarchy.head()``, ``IndexHier
 
 ``Frame.from_records`` and related routines now do full type induction per column; all type induction on untyped iterables now examines all values.
 
+
 0.5.12
 ----------
 
@@ -646,7 +777,7 @@ The ``Series`` initializer no longer accepts dictionaries; ``Series.from_dict`` 
 
 ``IndexAutoFactory`` suport removed from ``Series.reindex`` and ``Frame.reindex`` and added to ``Series.relabel`` and ``Frame.relabel``.
 
-The following ``Series`` and ``Frame`` methods are renamed: ``reindex_flat``, ``reindex_add_level``, and ``reindex_drop_level`` are now ``relabel_flat``, ``relabel_add_level``, and ``relabel_drop_level``.
+The following ``Series`` and ``Frame`` methods are renamed: ``reindex_flat``, ``reindex_add_level``, and ``reindex_drop_level`` are now ``relabel_flat``, ``relabel_add_level``, and ``relabel_level_drop``.
 
 Implemented ``Frame.from_sql`` constructor.
 
@@ -760,7 +891,7 @@ Improvements to application of ellipsis when normalizing width in ``Display`` st
 0.3.2
 -----------
 
-``IndexHierarchy.drop_level()`` and related methods have been updated such that negative integers drop innermost levels, and postive integers drop outermost levels. This is an API breaking change.
+``IndexHierarchy.level_drop()`` and related methods have been updated such that negative integers drop innermost levels, and postive integers drop outermost levels. This is an API breaking change.
 
 Fixed missing handling for all-missing in ``Series.dropna``.
 
