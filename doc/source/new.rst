@@ -10,7 +10,7 @@ Added ``Batch.apply_items``.
 
 Added ``Frame.count``, ``Series.count``, ``Batch.count``.
 
-Added ``Frame.sample``, ``Series.sample``, ``Index.sample``, ``IndexHierarchy.sample``.
+Added ``Frame.sample``, ``Series.sample``, ``Index.sample``, ``IndexHierarchy.sample``, ``Batch.sample``.
 
 Added ``Frame.via_T`` and ``IndexHierarchy.via_T`` accessors for opposite axis binary operator application of 1D operands.
 

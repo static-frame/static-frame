@@ -626,12 +626,37 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
 
-    def count(self, axis: int = 0) -> 'Batch':
+    def count(self, *,
+            skipna: bool = True,
+            axis: int = 0,
+            ) -> 'Batch':
         '''Apply count on contained Frames.
         '''
         return self._apply_attr(
                 attr='count',
+                skipna=skipna,
                 axis=axis,
+                )
+
+    @doc_inject(selector='sample')
+    def sample(self,
+            index: tp.Optional[int] = None,
+            columns: tp.Optional[int] = None,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> 'Batch':
+        '''Apply sample on contained Frames.
+
+        Args:
+            {index}
+            {columns}
+            {seed}
+        '''
+        return self._apply_attr(
+                attr='sample',
+                index=index,
+                columns=columns,
+                seed=seed,
                 )
 
     @doc_inject(selector='head', class_name='Batch')

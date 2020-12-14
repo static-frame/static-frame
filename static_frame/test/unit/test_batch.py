@@ -806,8 +806,6 @@ class TestUnit(TestCase):
                 index=('y', 'z', 'x'),
                 name='f2')
 
-        # b1 = Batch.from_frames((f1, f2))
-
         self.assertEqual(
                 Batch.from_frames((f1, f2)).count(axis=0).to_frame().to_pairs(0),
             (('b', (('f1', 3), ('f2', 2))), ('a', (('f1', 2), ('f2', 3)))))
@@ -911,6 +909,21 @@ class TestUnit(TestCase):
                 (('a', (('f1', 60), ('f2', 120))), ('b', (('f1', 140), ('f2', 300)))))
 
 
+    #---------------------------------------------------------------------------
+    def test_batch_sample_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        self.assertEqual(
+                Batch.from_frames((f1, f2)).sample(1, 1, seed=22).to_frame().to_pairs(0),
+                (('a', ((('f1', 'x'), 1), (('f2', 'z'), 3))),)
+                )
 
 if __name__ == '__main__':
     unittest.main()
