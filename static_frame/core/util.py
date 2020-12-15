@@ -2312,6 +2312,8 @@ def slices_from_targets(
 def path_filter(fp: PathSpecifierOrFileLike) -> tp.Union[str, tp.TextIO]:
     '''Realize Path objects as strings, let TextIO pass through, if given.
     '''
+    if fp is None:
+        raise ValueError('None cannot be interpreted as a file path')
     if isinstance(fp, PathLike):
         return str(fp)
     return fp

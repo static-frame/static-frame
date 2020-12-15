@@ -1180,7 +1180,6 @@ class TestUnit(TestCase):
                         columns_depth=1)
 
 
-
     def test_frame_from_parquet_c(self) -> None:
         f = sf.FrameGO.from_element('a',
                 index=range(3),
@@ -1302,6 +1301,12 @@ class TestUnit(TestCase):
             self.assertEqual(f4.to_pairs(0),
                     ((0, ((0, 10.1), (1, -5.1), (2, 2000.1))), (1, ((0, 20.1), (1, 0.1), (2, 33.1))), (2, ((0, 'False'), (1, 'True'), (2, 'False'))), (3, ((0, dt64('2020')), (1, dt64('2000')), (2, dt64('2017')))))
                     )
+
+    def test_frame_from_parquet_f(self) -> None:
+        # arrow was segfaulting on None; we identify and raise
+        with self.assertRaises(ValueError):
+            f1 = Frame.from_parquet(None)
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_msgpack_a(self) -> None:

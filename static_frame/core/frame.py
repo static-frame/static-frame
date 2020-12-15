@@ -2269,6 +2269,8 @@ class Frame(ContainerOperand):
         if columns_select and index_depth != 0:
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
 
+        fp = path_filter(fp)
+
         # NOTE: the order of columns_select will determine their order
         table = pq.read_table(fp,
                 columns=columns_select,
