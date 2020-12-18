@@ -346,5 +346,63 @@ def bus_batch_demo() -> None:
 
 
 
+def bus_aggregate():
+    import frame_fixtures as ff
+    from itertools import zip_longest
+
+    # create the "total index"
+    index = sf.IndexDate.from_date_range('2019-01-12', '2019-12-31')
+
+    # create dummy data index by the total index and with columns
+    src = ff.parse(f's({len(index)},4)').relabel(index=index, columns=tuple('abcd'))
+
+    chunk_size = 7
+    window_size = 12
+
+    # create a bus by chunking src
+    def items_frames() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
+        starts = range(0, len(index), chunk_size)
+        ends = range(starts[1], len(index), chunk_size)
+
+        for start, end in zip_longest(starts, ends, fillvalue=len(index)):
+            f = src.iloc[start:end]
+            yield f.rename(str(f.index.iloc[0]))
+
+    bus = sf.Bus.from_frames(items_frames())
+
+    # create a series of total index to bus label
+    def items_map() -> tp.Iterator[tp.Tuple[np.datetime64, str]]:
+        for f in bus.values:
+            for dt in f.index:
+                yield dt, f.name
+
+    ref = sf.Series.from_items(items_map())
+
+    # using the ref, we can select and concat from any start, end
+    def get_slice(start: np.datetime64, end: np.datetime64) -> sf.Frame:
+        bus_labels = ref[start: end].unique()
+        return sf.Frame.from_concat(bus[bus_labels].values).loc[start: end]
+
+
+    # selecting an arbitrary window
+    fsub = get_slice(index.iloc[3], index.iloc[100])
+
+    # creating a batch for windowed processing
+    def items_window() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
+        for window in index.to_series().iter_window(size=window_size):
+            fsub = get_slice(window.values[0], window.values[-1])
+            yield fsub.index[-1], fsub
+
+    post = sf.Batch(items_window()).mean().to_frame()
+
+    # comparing src to batch-extracted windows
+    post_alt = sf.Batch(src.iter_window_items(size=window_size)).mean().to_frame()
+    assert post.equals(post_alt)
+
+
+
+
+
+
 if __name__ == '__main__':
-    bus_batch_streaming()
+    bus_aggregate()
