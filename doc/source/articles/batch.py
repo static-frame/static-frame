@@ -346,7 +346,7 @@ def bus_batch_demo() -> None:
 
 
 
-def bus_aggregate():
+def bus_aggregate() -> None:
     import frame_fixtures as ff
     from itertools import zip_longest
 
@@ -360,7 +360,7 @@ def bus_aggregate():
     window_size = 12
 
     # create a bus by chunking src
-    def items_frames() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
+    def items_frames() -> tp.Iterator[sf.Frame]:
         starts = range(0, len(index), chunk_size)
         ends = range(starts[1], len(index), chunk_size)
 
@@ -381,16 +381,16 @@ def bus_aggregate():
     # using the ref, we can select and concat from any start, end
     def get_slice(start: np.datetime64, end: np.datetime64) -> sf.Frame:
         bus_labels = ref[start: end].unique()
-        return sf.Frame.from_concat(bus[bus_labels].values).loc[start: end]
+        return sf.Frame.from_concat(bus[bus_labels].values).loc[start: end] #type: ignore
 
 
     # selecting an arbitrary window
     fsub = get_slice(index.iloc[3], index.iloc[100])
 
     # creating a batch for windowed processing
-    def items_window() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
+    def items_window() -> tp.Iterator[tp.Tuple[np.datetime64, sf.Frame]]:
         for window in index.to_series().iter_window(size=window_size):
-            fsub = get_slice(window.values[0], window.values[-1])
+            fsub = get_slice(window.values[0], window.values[-1]) #type: ignore
             yield fsub.index[-1], fsub
 
     post = sf.Batch(items_window()).mean().to_frame()
