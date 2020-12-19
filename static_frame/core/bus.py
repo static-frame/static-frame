@@ -147,12 +147,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # delegation
 
-    def __getattr__(self, name: str) -> tp.Any:
+    def __getattr__(self, attr: str) -> tp.Any:
         try:
-            return getattr(self._series, name)
+            return getattr(self._series, attr)
         except AttributeError:
             # fix the attribute error to reference the Bus
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'") from None
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'") from None
 
     #---------------------------------------------------------------------------
     # cache management
