@@ -2,6 +2,8 @@ import typing as tp
 from itertools import zip_longest
 from itertools import repeat
 
+import numpy as np
+
 from static_frame.core.container import ContainerOperand
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.frame import Frame
@@ -14,18 +16,25 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import Display
 from static_frame.core.series import Series
 from static_frame.core.exception import AxisInvalid
-
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.node_selector import InterfaceGetItem
 
 
 
 
 class AxisMap:
+    '''
+    An AxisMap is a Series where index values point to string label in a Bus.
+    '''
 
     @staticmethod
     def from_components(
             components: tp.Iterable[tp.Tuple[tp.Iterable[tp.Hashable], str]],
             ) -> Series:
-        def items():
+
+        def items() -> tp.Iterator[tp.Tuple[tp.Hashable, str]]:
             for axis_labels, label in components:
                 yield from zip(axis_labels, repeat(label))
 
@@ -58,6 +67,8 @@ class Quilt(ContainerOperand, StoreClientMixin):
             '_bus',
             '_axis',
             '_axis_map',
+            '_axis_opposite',
+            '_recache',
             # '_name', # can use the name of the stored Bus
             # '_config', # stored in Bus
             # '_max_workers',
@@ -67,7 +78,11 @@ class Quilt(ContainerOperand, StoreClientMixin):
 
     _bus: Bus
     _axis: int
+    _axis_map: Series
+    _axis_opposite: IndexBase
+    _recache: bool
 
+    _NDIM: int = 2
 
     @classmethod
     def from_frame(cls,
@@ -115,19 +130,39 @@ class Quilt(ContainerOperand, StoreClientMixin):
 
         return cls(bus, axis=axis, axis_map=axis_map)
 
+    #---------------------------------------------------------------------------
     def __init__(self,
             bus: Bus,
             *,
             axis: int = 0,
             axis_map: tp.Optional[Series] = None,
+            axis_opposite: tp.Optional[IndexBase] = None,
             ) -> None:
         self._bus = bus
         self._axis = axis
 
         # defer creation until needed
         self._axis_map: Series = axis_map
+        self._axis_opposite: IndexBase = axis_opposite
 
+        if axis_map is None or axis_opposite is None:
+            self._recache = True
+        else:
+            self._recache = False
 
+    #---------------------------------------------------------------------------
+    # deferred loading of axis info
+
+    def _update_array_cache(self) -> None:
+        if self._axis_map is None:
+            self._axis_map = AxisMap.from_bus(self._bus)
+        if self._axis_opposite is None:
+            # always assume thee first Frame in the Quilt is representative; otherwise, need to get a union index.
+            if self._axis == 0: # get columns
+                self._axis_opposite = self._bus.iloc[0].columns
+            else:
+                self._axis_opposite = self._bus.iloc[0].index
+        self._recache = False
 
 
     #---------------------------------------------------------------------------
@@ -162,6 +197,175 @@ class Quilt(ContainerOperand, StoreClientMixin):
             ) -> Display:
         '''Provide a :obj:`Frame`-style display of the :obj:`Quilt`.
         '''
-        pass
+        if self._recache:
+            self._update_array_cache()
+        raise NotImplementedError()
+
+    #---------------------------------------------------------------------------
+    # accessors
+
+    @property
+    @doc_inject(selector='values_2d', class_name='Quilt')
+    def values(self) -> np.ndarray:
+        '''
+        {}
+        '''
+        if self._recache:
+            self._update_array_cache()
+        raise NotImplementedError()
+
+    @property
+    def index(self) -> IndexBase:
+        '''The ``IndexBase`` instance assigned for row labels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._axis_map.index if self._axis == 0 else self._axis_opposite
+
+    @property
+    def columns(self) -> IndexBase:
+        '''The ``IndexBase`` instance assigned for column labels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._axis_opposite if self._axis == 0 else self._axis_map.index
+
+    #---------------------------------------------------------------------------
+
+    @property
+    def shape(self) -> tp.Tuple[int, int]:
+        '''
+        Return a tuple describing the shape of the underlying NumPy array.
+
+        Returns:
+            :obj:`tp.Tuple[int]`
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return len(self.index), len(self.columns)
+
+    @property
+    def ndim(self) -> int:
+        '''
+        Return the number of dimensions, which for a `Frame` is always 2.
+
+        Returns:
+            :obj:`int`
+        '''
+        return self._NDIM
+
+    @property
+    def size(self) -> int:
+        '''
+        Return the size of the underlying NumPy array.
+
+        Returns:
+            :obj:`int`
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return len(self.index) * len(self.columns)
+
+    @property
+    def nbytes(self) -> int:
+        '''
+        Return the total bytes of the underlying NumPy array.
+
+        Returns:
+            :obj:`int`
+        '''
+        # return self._blocks.nbytes
+        if self._recache:
+            self._update_array_cache()
+        raise NotImplementedError()
+
+
+    #---------------------------------------------------------------------------
+
+    def _extract(self,
+            row_key: GetItemKeyType = None,
+            column_key: GetItemKeyType = None,
+            ) -> tp.Union[Frame, Series]:
+        '''
+        Extract based on iloc selection.
+        '''
+        # columns = self.columns
+        # index = self.index
+
+        parts = []
+        if row_key is None:
+            row_key = NULL_SLICE
+
+        if self._axis == 0:
+            # get ordered unique values; cannot use .unique as need order
+            bus_keys = dict.fromkeys(self._axis_map.iloc[row_key].values)
+            for key in bus_keys:
+                # need to trim bus-part after extraction
+                parts.append(self._bus.loc[key].iloc[NULL_SLICE, column_key])
+
+        if isinstance(parts[0], Series):
+            return Series.from_concat(parts)
+        elif isinstance(parts[0], Frame):
+            return Frame.from_concat(parts, axis=self._axis)
+        raise NotImplementedError(f'no handling for {parts[0]}')
+
+
+    # NOTE: the following methods are duplicated from Frame
+
+    def _extract_iloc(self, key: GetItemKeyTypeCompound) -> Frame:
+        '''
+        Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
+        '''
+        if isinstance(key, tuple):
+            return self._extract(*key)
+        return self._extract(row_key=key)
+
+    def _compound_loc_to_iloc(self,
+            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
+        '''
+        Given a compound iloc key, return a tuple of row, column keys. Assumes the first argument is always a row extractor.
+        '''
+        if isinstance(key, tuple):
+            loc_row_key, loc_column_key = key
+            iloc_column_key = self.columns.loc_to_iloc(loc_column_key)
+        else:
+            loc_row_key = key
+            iloc_column_key = None
+
+        iloc_row_key = self.index.loc_to_iloc(loc_row_key)
+        return iloc_row_key, iloc_column_key
+
+    def _extract_loc(self, key: GetItemKeyTypeCompound) -> Frame:
+        return self._extract(*self._compound_loc_to_iloc(key))
+
+    def _compound_loc_to_getitem_iloc(self,
+            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
+        '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
+        '''
+        iloc_column_key = self.columns.loc_to_iloc(key)
+        return None, iloc_column_key
+
+    @doc_inject(selector='selector')
+    def __getitem__(self, key: GetItemKeyType) -> tp.Union[Frame, Series]:
+        '''Selector of columns by label.
+
+        Args:
+            key: {key_loc}
+        '''
+        return self._extract(*self._compound_loc_to_getitem_iloc(key))
+
+
+
+    #---------------------------------------------------------------------------
+    # interfaces
+
+    @property
+    def loc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_loc)
+
+    @property
+    def iloc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_iloc)
+
 
     #---------------------------------------------------------------------------

@@ -3500,13 +3500,6 @@ class Frame(ContainerOperand):
         '''
         return self._blocks.nbytes
 
-    # def __bool__(self) -> bool:
-    #     '''
-    #     True if this container has size.
-    #     '''
-    #     return bool(self._blocks.size)
-
-
 
     #---------------------------------------------------------------------------
     @staticmethod
@@ -3634,19 +3627,10 @@ class Frame(ContainerOperand):
         iloc_row_key = self._index.loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _compound_loc_to_getitem_iloc(self,
-            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
-        '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
-        '''
-        iloc_column_key = self._columns.loc_to_iloc(key)
-        return None, iloc_column_key
 
     def _extract_loc(self, key: GetItemKeyTypeCompound) -> 'Frame':
-        iloc_row_key, iloc_column_key = self._compound_loc_to_iloc(key)
-        return self._extract(
-                row_key=iloc_row_key,
-                column_key=iloc_column_key
-                )
+        return self._extract(*self._compound_loc_to_iloc(key))
+
 
     def _extract_bloc(self, key: Bloc2DKeyType) -> Series:
         '''
@@ -3661,6 +3645,13 @@ class Frame(ContainerOperand):
                 for x, y in zip(*np.nonzero(bloc_key))
                 )
         return Series(values, index=index, own_index=True)
+
+    def _compound_loc_to_getitem_iloc(self,
+            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
+        '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
+        '''
+        iloc_column_key = self._columns.loc_to_iloc(key)
+        return None, iloc_column_key
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> tp.Union['Frame', Series]:

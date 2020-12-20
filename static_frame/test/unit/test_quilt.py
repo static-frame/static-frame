@@ -21,6 +21,21 @@ class TestUnit(TestCase):
 
         post = AxisMap.from_bus(q1._bus, q1._axis)
         self.assertEqual(len(post), 100)
+
+        s1 = q1['ztsv']
+        self.assertEqual(s1.shape, (100,))
+        self.assertTrue(s1['zwVN'] == f1.loc['zwVN', 'ztsv'])
+
+        f1 = q1['zUvW':]
+        self.assertEqual(f1.shape, (100, 2))
+        self.assertEqual(f1.columns.values.tolist(), ['zUvW', 'zkuW'])
+
+        f2 = q1[['zZbu', 'zkuW']]
+        self.assertEqual(f2.shape, (100, 2))
+        self.assertEqual(f2.columns.values.tolist(), ['zZbu', 'zkuW'])
+
+        # this does not trim upper region
+        f3 = q1.loc['zQuq':, 'zUvW':]
         # import ipdb; ipdb.set_trace()
 
     def test_quilt_from_frame_b(self) -> None:

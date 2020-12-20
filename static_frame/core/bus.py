@@ -331,6 +331,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def items(self) -> tp.Iterator[tp.Tuple[str, tp.Any]]:
         '''Iterator of pairs of index label and value.
         '''
+        # TODO: do not load all
         self._update_series_cache_all()
         yield from self._series.items()
 
@@ -338,6 +339,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def values(self) -> np.ndarray:
         '''A 1D array of values.
         '''
+        # TODO: do not load all
         self._update_series_cache_all()
         return self._series.values
 
