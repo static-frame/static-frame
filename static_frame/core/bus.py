@@ -55,6 +55,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     _series: Series
     _store: tp.Optional[Store]
     _config: StoreConfigMap
+    _name: NameType
 
     STATIC = False
 
@@ -248,6 +249,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # extraction
 
     def _extract_iloc(self, key: GetItemKeyType) -> 'Bus':
+        '''
+        Returns:
+            Bus or, if an element is selected, a Frame
+        '''
         self._update_series_cache_iloc(key=key)
 
         # iterable selection should be handled by NP
@@ -255,6 +260,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         if not isinstance(values, np.ndarray): # if we have a single element
             return values #type: ignore
+
         series = Series(
                 values,
                 index=self._series._index.iloc[key],
@@ -321,12 +327,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loadings contained Frame
 
-    def items(self) -> tp.Iterator[tp.Tuple[str, tp.Any]]:
+    def items(self) -> tp.Iterator[tp.Tuple[str, Frame]]:
         '''Iterator of pairs of index label and value.
         '''
         # force new iteration to account for max_persist
         for i, label in enumerate(self._series._index):
-            yield label, self._extract_iloc(i)
+            yield label, self._extract_iloc(i) #type: ignore
 
     @property
     def values(self) -> np.ndarray:

@@ -26,7 +26,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.shape, (100,))
         self.assertTrue(s1['zwVN'] == f1.loc['zwVN', 'ztsv'])
 
-        f1 = q1['zUvW':]
+        f1 = q1['zUvW':] #type: ignore
         self.assertEqual(f1.shape, (100, 2))
         self.assertEqual(f1.columns.values.tolist(), ['zUvW', 'zkuW'])
 
@@ -35,7 +35,7 @@ class TestUnit(TestCase):
         self.assertEqual(f2.columns.values.tolist(), ['zZbu', 'zkuW'])
 
         # this does not trim upper region
-        f3 = q1.loc['zQuq':, 'zUvW':]
+        f3 = q1.loc['zQuq':, 'zUvW':] #type: ignore
         # import ipdb; ipdb.set_trace()
 
     def test_quilt_from_frame_b(self) -> None:

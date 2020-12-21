@@ -110,7 +110,6 @@ class StoreConfig(metaclass=InterfaceMeta):
         self.include_index_name = include_index_name
         self.include_columns = include_columns
         self.include_columns_name = include_columns_name
-
         # self.format_index = format_index
         # self.format_columns = format_columns
         self.merge_hierarchical_labels = merge_hierarchical_labels

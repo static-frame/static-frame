@@ -78,8 +78,8 @@ class Quilt(ContainerOperand, StoreClientMixin):
 
     _bus: Bus
     _axis: int
-    _axis_map: Series
-    _axis_opposite: IndexBase
+    _axis_map: tp.Optional[Series]
+    _axis_opposite: tp.Optional[IndexBase]
     _recache: bool
 
     _NDIM: int = 2
@@ -105,7 +105,8 @@ class Quilt(ContainerOperand, StoreClientMixin):
         starts = range(0, len(vector), chunksize)
         ends = range(starts[1], len(vector), chunksize)
 
-        label_extractor = label_extractor if label_extractor else lambda x: x.iloc[0]
+        if label_extractor is None:
+            label_extractor = lambda x: x.iloc[0] #type: ignore
 
         axis_map_components = []
 
@@ -113,11 +114,11 @@ class Quilt(ContainerOperand, StoreClientMixin):
             for start, end in zip_longest(starts, ends, fillvalue=len(vector)):
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
-                    label = label_extractor(f.index)
+                    label = label_extractor(f.index) #type: ignore
                     axis_map_components.append((f.index, label))
                 elif axis == 1: # along columns
                     f = frame.iloc[:, start:end]
-                    label = label_extractor(f.columns)
+                    label = label_extractor(f.columns) #type: ignore
                     axis_map_components.append((f.columns, label))
                 else:
                     raise AxisInvalid(f'invalid axis {axis}')
@@ -142,8 +143,8 @@ class Quilt(ContainerOperand, StoreClientMixin):
         self._axis = axis
 
         # defer creation until needed
-        self._axis_map: Series = axis_map
-        self._axis_opposite: IndexBase = axis_opposite
+        self._axis_map = axis_map
+        self._axis_opposite = axis_opposite
 
         if axis_map is None or axis_opposite is None:
             self._recache = True
@@ -220,7 +221,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         if self._recache:
             self._update_array_cache()
-        return self._axis_map.index if self._axis == 0 else self._axis_opposite
+        return self._axis_map.index if self._axis == 0 else self._axis_opposite #type: ignore
 
     @property
     def columns(self) -> IndexBase:
@@ -228,7 +229,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         if self._recache:
             self._update_array_cache()
-        return self._axis_opposite if self._axis == 0 else self._axis_map.index
+        return self._axis_opposite if self._axis == 0 else self._axis_map.index #type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -289,8 +290,8 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         Extract based on iloc selection.
         '''
-        # columns = self.columns
-        # index = self.index
+        if self._recache:
+            self._update_array_cache()
 
         parts = []
         if row_key is None:
@@ -298,7 +299,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
 
         if self._axis == 0:
             # get ordered unique values; cannot use .unique as need order
-            bus_keys = dict.fromkeys(self._axis_map.iloc[row_key].values)
+            bus_keys = dict.fromkeys(self._axis_map.iloc[row_key].values) #type: ignore
             for key in bus_keys:
                 # need to trim bus-part after extraction
                 parts.append(self._bus.loc[key].iloc[NULL_SLICE, column_key])
@@ -312,7 +313,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
 
     # NOTE: the following methods are duplicated from Frame
 
-    def _extract_iloc(self, key: GetItemKeyTypeCompound) -> Frame:
+    def _extract_iloc(self, key: GetItemKeyTypeCompound) -> tp.Union[Series, Frame]:
         '''
         Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
         '''
@@ -335,7 +336,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         iloc_row_key = self.index.loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _extract_loc(self, key: GetItemKeyTypeCompound) -> Frame:
+    def _extract_loc(self, key: GetItemKeyTypeCompound) -> tp.Union[Series, Frame]:
         return self._extract(*self._compound_loc_to_iloc(key))
 
     def _compound_loc_to_getitem_iloc(self,
@@ -360,12 +361,12 @@ class Quilt(ContainerOperand, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem:
-        return InterfaceGetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItem['Frame']:
+        return InterfaceGetItem(self._extract_loc) #type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItem:
-        return InterfaceGetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItem['Frame']:
+        return InterfaceGetItem(self._extract_iloc) #type: ignore
 
 
     #---------------------------------------------------------------------------

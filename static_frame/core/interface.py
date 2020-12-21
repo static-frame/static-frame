@@ -783,8 +783,8 @@ class InterfaceSummary(Features):
                 instance = target.from_frames((f,)) #type: ignore
             elif target is Quilt:
                 f = Frame.from_elements((0,), name='frame')
-                bus = Bus.from_frames((f,)) #type: ignore
-                instance = target(bus)
+                bus = Bus.from_frames((f,))
+                instance = target(bus) #type: ignore
             elif target is Batch:
                 instance = Batch(iter(()))
             elif issubclass(target, IndexHierarchy):
