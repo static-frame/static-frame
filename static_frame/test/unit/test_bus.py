@@ -1147,7 +1147,7 @@ class TestUnit(TestCase):
                     [True, False, False, True, True])
 
 
-    def test_bus_max_persist_3(self) -> None:
+    def test_bus_max_persist_e(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(4):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
@@ -1181,6 +1181,65 @@ class TestUnit(TestCase):
             _ = b2.iloc[:3]
             self.assertEqual(list(b2._last_accessed.keys()),
                     ['3', '0', '1', '2'])
+
+
+
+    def test_bus_max_persist_f(self) -> None:
+        def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            for i in range(5):
+                yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
+
+        s = Series.from_items(items(), dtype=object)
+        b1 = Bus(s)
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+
+            # insure that items delivers Frame, not FrameDeferred
+            post = tuple(b2.items())
+            self.assertEqual(len(post), 5)
+            self.assertTrue(all(isinstance(f, Frame) for _, f in post))
+            self.assertEqual(b2._loaded.tolist(),
+                    [False, False, False, False, True])
+
+
+    def test_bus_max_persist_g(self) -> None:
+        def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            for i in range(5):
+                yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
+
+        s = Series.from_items(items(), dtype=object)
+        b1 = Bus(s)
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+
+            # insure that items delivers Frame, not FrameDeferred
+            post = b2.values
+            self.assertEqual(len(post), 5)
+            self.assertTrue(all(isinstance(f, Frame) for f in post))
+            self.assertEqual(b2._loaded.tolist(),
+                    [False, False, False, False, True])
+
+
 
 
 if __name__ == '__main__':

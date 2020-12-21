@@ -244,12 +244,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
         self._loaded_all = self._loaded.all()
 
-    def _update_series_cache_all(self) -> None:
-        '''Load all Tables contained in this Bus.
-        '''
-        if not self._loaded_all:
-            self._update_series_cache_iloc(NULL_SLICE)
-
     #---------------------------------------------------------------------------
     # extraction
 
@@ -297,7 +291,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 max_persist=self._max_persist,
                 )
 
-
     @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> 'Bus':
         '''Selector of values by label.
@@ -326,22 +319,24 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self._series.__len__()
 
     #---------------------------------------------------------------------------
-    # dictionary-like interface
+    # dictionary-like interface; these will force loadings contained Frame
 
     def items(self) -> tp.Iterator[tp.Tuple[str, tp.Any]]:
         '''Iterator of pairs of index label and value.
         '''
-        # TODO: do not load all
-        self._update_series_cache_all()
-        yield from self._series.items()
+        # force new iteration to account for max_persist
+        for i, label in enumerate(self._series._index):
+            yield label, self._extract_iloc(i)
 
     @property
     def values(self) -> np.ndarray:
-        '''A 1D array of values.
+        '''A 1D object array of all Frame contained in the Bus.
         '''
-        # TODO: do not load all
-        self._update_series_cache_all()
-        return self._series.values
+        post = np.empty(self.__len__(), dtype=object)
+        for i, _ in enumerate(self._series._index):
+            post[i] = self._extract_iloc(i)
+
+        return post
 
     #---------------------------------------------------------------------------
     @doc_inject()
@@ -361,7 +356,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self._series._display(config, display_cls)
 
     #---------------------------------------------------------------------------
-    # extended disciptors
+    # extended discriptors; in general, these do not force loading Frame
 
     @property
     def mloc(self) -> Series:
@@ -394,14 +389,13 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @property
     def shapes(self) -> Series:
-        '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`.
+        '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
 
         Returns:
             :obj:`tp.Tuple[int]`
         '''
         values = (f.shape if f is not FrameDeferred else None for f in self._series.values)
         return Series(values, index=self._series._index, dtype=object, name='shape')
-
 
     @property
     def nbytes(self) -> int:
@@ -412,7 +406,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @property
     def status(self) -> Frame:
         '''
-        Return a
+        Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame`.
         '''
         def gen() -> tp.Iterator[Series]:
 
@@ -446,6 +440,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         {doc}
 
+        Note: this will attempt to load and compare all Frame managed by the Bus.
+
         Args:
             {compare_name}
             {compare_dtype}
@@ -461,16 +457,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         elif not isinstance(other, Bus):
             return False
 
-        # defer updating cache
-        self._update_series_cache_all()
-
+        # NOTE: dtype self._series is always object
         if len(self._series) != len(other._series):
             return False
 
         if compare_name and self._series._name != other._series._name:
             return False
-
-        # NOTE: dtype self._series is always object
 
         if not self._series.index.equals(
                 other._series.index,
@@ -482,8 +474,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             return False
 
         # can zip because length of Series already match
-        for (frame_self, frame_other) in zip(
-                self._series.values, other._series.values):
+        # using .values will force loading all Frame into memory; better to use items() to permit collection
+        for (_, frame_self), (_, frame_other) in zip(self.items(), other.items()):
             if not frame_self.equals(frame_other,
                     compare_name=compare_name,
                     compare_dtype=compare_dtype,

@@ -1,6 +1,14 @@
 What is New in Static Frame
 ===============================
 
+0.7.9
+----------
+
+Improved handling of invalid file paths given to constructors.
+
+Improved implementation of ``Bus.items()``, ``Bus.values`` that deliver proper results when `max_persist` is active.
+
+
 0.7.8
 ----------
 
