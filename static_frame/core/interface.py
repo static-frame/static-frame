@@ -38,6 +38,7 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DT64_S
+from static_frame.core.quilt import Quilt
 
 
 
@@ -780,6 +781,10 @@ class InterfaceSummary(Features):
             elif target is Bus:
                 f = Frame.from_elements((0,), name='frame')
                 instance = target.from_frames((f,)) #type: ignore
+            elif target is Quilt:
+                f = Frame.from_elements((0,), name='frame')
+                bus = Bus.from_frames((f,)) #type: ignore
+                instance = target(bus)
             elif target is Batch:
                 instance = Batch(iter(()))
             elif issubclass(target, IndexHierarchy):

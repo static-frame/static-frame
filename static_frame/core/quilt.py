@@ -155,7 +155,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
 
     def _update_array_cache(self) -> None:
         if self._axis_map is None:
-            self._axis_map = AxisMap.from_bus(self._bus)
+            self._axis_map = AxisMap.from_bus(self._bus, self._axis)
         if self._axis_opposite is None:
             # always assume thee first Frame in the Quilt is representative; otherwise, need to get a union index.
             if self._axis == 0: # get columns
@@ -204,15 +204,15 @@ class Quilt(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # accessors
 
-    @property
-    @doc_inject(selector='values_2d', class_name='Quilt')
-    def values(self) -> np.ndarray:
-        '''
-        {}
-        '''
-        if self._recache:
-            self._update_array_cache()
-        raise NotImplementedError()
+    # @property
+    # @doc_inject(selector='values_2d', class_name='Quilt')
+    # def values(self) -> np.ndarray:
+    #     '''
+    #     {}
+    #     '''
+    #     if self._recache:
+    #         self._update_array_cache()
+    #     raise NotImplementedError()
 
     @property
     def index(self) -> IndexBase:
@@ -266,18 +266,18 @@ class Quilt(ContainerOperand, StoreClientMixin):
             self._update_array_cache()
         return len(self.index) * len(self.columns)
 
-    @property
-    def nbytes(self) -> int:
-        '''
-        Return the total bytes of the underlying NumPy array.
+    # @property
+    # def nbytes(self) -> int:
+    #     '''
+    #     Return the total bytes of the underlying NumPy array.
 
-        Returns:
-            :obj:`int`
-        '''
-        # return self._blocks.nbytes
-        if self._recache:
-            self._update_array_cache()
-        raise NotImplementedError()
+    #     Returns:
+    #         :obj:`int`
+    #     '''
+    #     # return self._blocks.nbytes
+    #     if self._recache:
+    #         self._update_array_cache()
+    #     raise NotImplementedError()
 
 
     #---------------------------------------------------------------------------
