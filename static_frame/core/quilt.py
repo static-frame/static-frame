@@ -65,7 +65,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
             '_bus',
             '_axis',
             '_axis_map',
-            '_retain_chunk_labels',
+            '_retain_bus_labels',
             '_axis_opposite',
             '_assign_axis',
             '_columns',
@@ -92,7 +92,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
             frame: Frame,
             *,
             chunksize: int,
-            retain_chunk_labels: bool,
+            retain_bus_labels: bool,
             axis: int = 0,
             name: NameType = None,
             label_extractor: tp.Optional[tp.Callable[[IndexBase], tp.Hashable]] = None,
@@ -136,7 +136,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         return cls(bus,
                 axis=axis,
                 axis_map=axis_map,
-                retain_chunk_labels=retain_chunk_labels,
+                retain_bus_labels=retain_bus_labels,
                 )
 
     #---------------------------------------------------------------------------
@@ -144,13 +144,13 @@ class Quilt(ContainerOperand, StoreClientMixin):
             bus: Bus,
             *,
             axis: int = 0,
-            retain_chunk_labels: bool,
+            retain_bus_labels: bool,
             axis_map: tp.Optional[Series] = None,
             axis_opposite: tp.Optional[IndexBase] = None,
             ) -> None:
         self._bus = bus
         self._axis = axis
-        self._retain_chunk_labels = retain_chunk_labels
+        self._retain_bus_labels = retain_bus_labels
 
         # defer creation until needed
         self._axis_map = axis_map
@@ -176,18 +176,17 @@ class Quilt(ContainerOperand, StoreClientMixin):
                 self._axis_opposite = self._bus.iloc[0].index
 
         if self._axis == 0:
-            if not self._retain_chunk_labels:
+            if not self._retain_bus_labels:
                 self._index = self._axis_map.index.level_drop(1)
             else: # get hierarchical
                 self._index = self._axis_map.index
             self._columns = self._axis_opposite
         else:
-            self._index = self._axis_opposite
-            if not self._retain_chunk_labels:
+            if not self._retain_bus_labels:
                 self._columns = self._axis_map.index.level_drop(1)
             else:
                 self._columns = self._axis_map.index
-
+            self._index = self._axis_opposite
         self._assign_axis = False
 
     #---------------------------------------------------------------------------
@@ -205,7 +204,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         return self.__class__(self._bus.rename(name),
                 axis=self._axis,
-                retain_chunk_labels=self._retain_chunk_labels,
+                retain_bus_labels=self._retain_bus_labels,
                 axis_map=self._axis_map,
                 axis_opposite=self._axis_opposite,
                 )
@@ -295,18 +294,18 @@ class Quilt(ContainerOperand, StoreClientMixin):
             self._update_axis_labels()
         return len(self._index) * len(self._columns)
 
-    # @property
-    # def nbytes(self) -> int:
-    #     '''
-    #     Return the total bytes of the underlying NumPy array.
+    @property
+    def nbytes(self) -> int:
+        '''
+        Return the total bytes of the underlying NumPy arrays.
 
-    #     Returns:
-    #         :obj:`int`
-    #     '''
-    #     # return self._blocks.nbytes
-    #     if self._assign_axis:
-    #         self._update_axis_labels()
-    #     raise NotImplementedError()
+        Returns:
+            :obj:`int`
+        '''
+        # return self._blocks.nbytes
+        if self._assign_axis:
+            self._update_axis_labels()
+        return sum(f.nbytes for _, f in self._bus.items())
 
 
     #---------------------------------------------------------------------------
@@ -319,12 +318,12 @@ class Quilt(ContainerOperand, StoreClientMixin):
         Extract based on iloc selection.
         '''
         parts = []
-        if row_key is None:
-            row_key = NULL_SLICE
+
+        row_key = NULL_SLICE if row_key is None else row_key
+        column_key = NULL_SLICE if column_key is None else column_key
 
         if self._axis == 0:
             # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-            # import ipdb; ipdb.set_trace()
             sel = np.full(len(self._axis_map), False)
             sel[row_key] = True
             sel.flags.writeable = False
@@ -332,10 +331,11 @@ class Quilt(ContainerOperand, StoreClientMixin):
             bus_keys = duplicate_filter(self._axis_map.iloc[row_key].values) #type: ignore
             for key in bus_keys:
                 sel_component = sel_map[HLoc[key]].values # get Boolean array
-                component = self._bus.loc[key]
-                # need to trim bus-part after extraction
-                # within each bus key, need to find targetted values
-                parts.append(component.iloc[sel_component, column_key])
+                # need to trim component after extraction
+                component = self._bus.loc[key].iloc[sel_component, column_key]
+                if self._retain_bus_labels:
+                    component = component.relabel_level_add(key)
+                parts.append(component)
 
         if isinstance(parts[0], Series):
             return Series.from_concat(parts)
