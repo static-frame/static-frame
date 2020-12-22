@@ -23,7 +23,6 @@ from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NameType
-from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import INT_TYPES
 
 #-------------------------------------------------------------------------------

@@ -1,6 +1,5 @@
 import typing as tp
 from itertools import zip_longest
-from itertools import repeat
 
 import numpy as np
 
@@ -56,7 +55,7 @@ class AxisMap:
             else:
                 raise AxisInvalid(f'invalid axis {axis}')
 
-        return cls.from_tree(tree)
+        return cls.from_tree(tree) # type: ignore
 
 
 class Quilt(ContainerOperand, StoreClientMixin):
@@ -112,7 +111,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         if label_extractor is None:
             label_extractor = lambda x: x.iloc[0] #type: ignore
 
-        axis_map_components: tp.Dict[tp.Hashable, tp.IndexBase] = {}
+        axis_map_components: tp.Dict[tp.Hashable, IndexBase] = {}
 
         def values() -> tp.Iterator[Frame]:
             for start, end in zip_longest(starts, ends, fillvalue=len(vector)):
@@ -177,13 +176,13 @@ class Quilt(ContainerOperand, StoreClientMixin):
 
         if self._axis == 0:
             if not self._retain_bus_labels:
-                self._index = self._axis_map.index.level_drop(1)
+                self._index = self._axis_map.index.level_drop(1) #type: ignore
             else: # get hierarchical
                 self._index = self._axis_map.index
             self._columns = self._axis_opposite
         else:
             if not self._retain_bus_labels:
-                self._columns = self._axis_map.index.level_drop(1)
+                self._columns = self._axis_map.index.level_drop(1) #type: ignore
             else:
                 self._columns = self._axis_map.index
             self._index = self._axis_opposite
@@ -227,12 +226,12 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self._extract(NULL_SLICE, NULL_SLICE).display(config)
+        return self._extract(NULL_SLICE, NULL_SLICE).display(config) #type: ignore
 
     #---------------------------------------------------------------------------
     # accessors
 
-    @property
+    @property #type: ignore
     @doc_inject(selector='values_2d', class_name='Quilt')
     def values(self) -> np.ndarray:
         '''
@@ -324,10 +323,10 @@ class Quilt(ContainerOperand, StoreClientMixin):
 
         if self._axis == 0:
             # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-            sel = np.full(len(self._axis_map), False)
+            sel = np.full(len(self._axis_map), False) #type: ignore
             sel[row_key] = True
             sel.flags.writeable = False
-            sel_map = Series(sel, index=self._axis_map.index)
+            sel_map = Series(sel, index=self._axis_map.index) #type: ignore
             bus_keys = duplicate_filter(self._axis_map.iloc[row_key].values) #type: ignore
             for key in bus_keys:
                 sel_component = sel_map[HLoc[key]].values # get Boolean array

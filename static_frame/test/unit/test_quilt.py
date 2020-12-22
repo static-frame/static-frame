@@ -20,7 +20,7 @@ class TestUnit(TestCase):
                 y=Index(('a', 'b', 'c')),
                 )
 
-        am = AxisMap.from_tree(components)
+        am = AxisMap.from_tree(components) #type: ignore
         self.assertEqual(am.to_pairs(),
                 ((('x', 'a'), 'x'), (('x', 'b'), 'x'), (('x', 'c'), 'x'), (('y', 'a'), 'y'), (('y', 'b'), 'y'), (('y', 'c'), 'y')))
 
@@ -94,16 +94,6 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_quilt_nbytes_a(self) -> None:
-
-        dc = DisplayConfig(type_show=False)
-
-        f1 = ff.parse('s(10,4)|v(int)|i(I,str)|c(I,str)').rename('foo')
-        q1 = Quilt.from_frame(f1, chunksize=2, retain_bus_labels=False)
-        self.assertEqual(q1.nbytes, f1.nbytes)
-
-
-    #---------------------------------------------------------------------------
     def test_quilt_retain_labels_a(self) -> None:
 
         dc = DisplayConfig(type_show=False)
@@ -111,7 +101,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(10,4)|v(int)|i(I,str)|c(I,str)').rename('foo')
         q1 = Quilt.from_frame(f1, chunksize=2, retain_bus_labels=False)
         self.assertEqual(q1.index.depth, 1)
-        f2 = q1.loc['zkuW':'z2Oo']
+        f2 = q1.loc['zkuW':'z2Oo'] #type: ignore
         self.assertEqual(f2.index.depth, 1)
         self.assertEqual(f2.to_pairs(0),
                 (('zZbu', (('zkuW', 13448), ('zmVj', 175579), ('z2Oo', 58768))), ('ztsv', (('zkuW', -168387), ('zmVj', 140627), ('z2Oo', 66269))), ('zUvW', (('zkuW', 54020), ('zmVj', 129017), ('z2Oo', 35021))), ('zkuW', (('zkuW', 122246), ('zmVj', 197228), ('z2Oo', 105269))))
@@ -120,7 +110,7 @@ class TestUnit(TestCase):
         q2 = Quilt.from_frame(f1, chunksize=2, retain_bus_labels=True)
         self.assertEqual(q2.index.depth, 2)
         # import ipdb; ipdb.set_trace()
-        f3 = q2.loc[HLoc['zUvW':'z5l6']]
+        f3 = q2.loc[HLoc['zUvW':'z5l6']] #type: ignore
         self.assertEqual(f3.index.depth, 2)
         self.assertEqual(f3.to_pairs(0),
                 (('zZbu', ((('zUvW', 'zUvW'), 84967), (('zUvW', 'zkuW'), 13448), (('zmVj', 'zmVj'), 175579), (('zmVj', 'z2Oo'), 58768), (('z5l6', 'z5l6'), 146284), (('z5l6', 'zCE3'), 170440))), ('ztsv', ((('zUvW', 'zUvW'), 5729), (('zUvW', 'zkuW'), -168387), (('zmVj', 'zmVj'), 140627), (('zmVj', 'z2Oo'), 66269), (('z5l6', 'z5l6'), -171231), (('z5l6', 'zCE3'), -38997))), ('zUvW', ((('zUvW', 'zUvW'), 30205), (('zUvW', 'zkuW'), 54020), (('zmVj', 'zmVj'), 129017), (('zmVj', 'z2Oo'), 35021), (('z5l6', 'z5l6'), 166924), (('z5l6', 'zCE3'), 122246))), ('zkuW', ((('zUvW', 'zUvW'), 166924), (('zUvW', 'zkuW'), 122246), (('zmVj', 'zmVj'), 197228), (('zmVj', 'z2Oo'), 105269), (('z5l6', 'z5l6'), 119909), (('z5l6', 'zCE3'), 194224))))
