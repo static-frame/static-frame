@@ -29,24 +29,23 @@ class TestUnit(TestCase):
         dc = DisplayConfig(type_show=False)
 
         f1 = ff.parse('s(10,4)|v(int)|i(I,str)|c(I,str)').rename('foo')
-        q1 = Quilt.from_frame(f1, chunksize=2, axis_is_unique=True)
+        q1 = Quilt.from_frame(f1, chunksize=2, retain_chunk_labels=False)
         self.assertEqual(
                 q1.display(dc).to_rows(),
                 f1.display(dc).to_rows())
 
     def test_quilt_values_a(self) -> None:
-
-
         f1 = ff.parse('s(6,4)|v(int)|i(I,str)|c(I,str)')
-        q1 = Quilt.from_frame(f1, chunksize=2, axis_is_unique=True)
-        import ipdb; ipdb.set_trace()
+        q1 = Quilt.from_frame(f1, chunksize=2, retain_chunk_labels=False)
+        self.assertEqual(q1.values.tolist(),
+                [[-88017, 162197, -3648, 129017], [92867, -41157, 91301, 35021], [84967, 5729, 30205, 166924], [13448, -168387, 54020, 122246], [175579, 140627, 129017, 197228], [58768, 66269, 35021, 105269]])
 
 
     def test_quilt_from_frame_a(self) -> None:
 
         f1 = ff.parse('s(100,4)|v(int)|i(I,str)|c(I,str)').rename('foo')
 
-        q1 = Quilt.from_frame(f1, chunksize=10, axis_is_unique=True)
+        q1 = Quilt.from_frame(f1, chunksize=10, retain_chunk_labels=False)
 
         # import ipdb; ipdb.set_trace()
 
@@ -77,7 +76,7 @@ class TestUnit(TestCase):
 
         f1 = ff.parse('s(4,100)|v(int)|i(I,str)|c(I,str)')
 
-        q1 = Quilt.from_frame(f1, chunksize=10, axis=1, axis_is_unique=True)
+        q1 = Quilt.from_frame(f1, chunksize=10, axis=1, retain_chunk_labels=False)
 
         post = AxisMap.from_bus(q1._bus, q1._axis)
         self.assertEqual(len(post), 100)

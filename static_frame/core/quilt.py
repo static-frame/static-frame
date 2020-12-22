@@ -65,7 +65,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
             '_bus',
             '_axis',
             '_axis_map',
-            '_axis_is_unique',
+            '_retain_chunk_labels',
             '_axis_opposite',
             '_assign_axis',
             '_columns',
@@ -83,9 +83,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
     _axis_opposite: tp.Optional[IndexBase]
     _columns: IndexBase
     _index: IndexBase
-
     _assign_axis: bool
-
 
     _NDIM: int = 2
 
@@ -94,7 +92,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
             frame: Frame,
             *,
             chunksize: int,
-            axis_is_unique: bool, #NOTE: here the axis is always unique
+            retain_chunk_labels: bool,
             axis: int = 0,
             name: NameType = None,
             label_extractor: tp.Optional[tp.Callable[[IndexBase], tp.Hashable]] = None,
@@ -138,7 +136,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         return cls(bus,
                 axis=axis,
                 axis_map=axis_map,
-                axis_is_unique=axis_is_unique,
+                retain_chunk_labels=retain_chunk_labels,
                 )
 
     #---------------------------------------------------------------------------
@@ -146,13 +144,13 @@ class Quilt(ContainerOperand, StoreClientMixin):
             bus: Bus,
             *,
             axis: int = 0,
-            axis_is_unique: bool,
+            retain_chunk_labels: bool,
             axis_map: tp.Optional[Series] = None,
             axis_opposite: tp.Optional[IndexBase] = None,
             ) -> None:
         self._bus = bus
         self._axis = axis
-        self._axis_is_unique = axis_is_unique
+        self._retain_chunk_labels = retain_chunk_labels
 
         # defer creation until needed
         self._axis_map = axis_map
@@ -178,14 +176,14 @@ class Quilt(ContainerOperand, StoreClientMixin):
                 self._axis_opposite = self._bus.iloc[0].index
 
         if self._axis == 0:
-            if self._axis_is_unique:
+            if not self._retain_chunk_labels:
                 self._index = self._axis_map.index.level_drop(1)
             else: # get hierarchical
                 self._index = self._axis_map.index
             self._columns = self._axis_opposite
         else:
             self._index = self._axis_opposite
-            if self._axis_is_unique:
+            if not self._retain_chunk_labels:
                 self._columns = self._axis_map.index.level_drop(1)
             else:
                 self._columns = self._axis_map.index
@@ -207,7 +205,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         return self.__class__(self._bus.rename(name),
                 axis=self._axis,
-                axis_is_unique=self._axis_is_unique,
+                retain_chunk_labels=self._retain_chunk_labels,
                 axis_map=self._axis_map,
                 axis_opposite=self._axis_opposite,
                 )
