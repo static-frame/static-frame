@@ -34,6 +34,14 @@ class TestUnit(TestCase):
                 q1.display(dc).to_rows(),
                 f1.display(dc).to_rows())
 
+    def test_quilt_values_a(self) -> None:
+
+
+        f1 = ff.parse('s(6,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=2, axis_is_unique=True)
+        import ipdb; ipdb.set_trace()
+
+
     def test_quilt_from_frame_a(self) -> None:
 
         f1 = ff.parse('s(100,4)|v(int)|i(I,str)|c(I,str)').rename('foo')

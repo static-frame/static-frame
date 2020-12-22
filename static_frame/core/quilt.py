@@ -235,15 +235,15 @@ class Quilt(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # accessors
 
-    # @property
-    # @doc_inject(selector='values_2d', class_name='Quilt')
-    # def values(self) -> np.ndarray:
-    #     '''
-    #     {}
-    #     '''
-    #     if self._assign_axis:
-    #         self._update_axis_labels()
-    #     raise NotImplementedError()
+    @property
+    @doc_inject(selector='values_2d', class_name='Quilt')
+    def values(self) -> np.ndarray:
+        '''
+        {}
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        return self._extract(NULL_SLICE, NULL_SLICE).values
 
     @property
     def index(self) -> IndexBase:
