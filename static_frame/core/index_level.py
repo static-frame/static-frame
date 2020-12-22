@@ -31,6 +31,7 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import EMPTY_TUPLE
+# from static_frame.core.exception import LocInvalid
 
 
 # if tp.TYPE_CHECKING:

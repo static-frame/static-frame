@@ -59,6 +59,8 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
+from static_frame.core.util import duplicate_filter
+
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 
@@ -2335,6 +2337,11 @@ class TestUnit(TestCase):
             self.assertEqual(array_sample(a1, 6, seed=1).tolist(), [3, 2, 0, 1])
 
 
+    #---------------------------------------------------------------------------
+    def test_duplicate_filter_a(self) -> None:
+        self.assertEqual(list(duplicate_filter(list('aaaabcccd'))), list('abcd'))
+        self.assertEqual(list(duplicate_filter(list('d'))), list('d'))
+        self.assertEqual(list(duplicate_filter(list())), list())
 
 
 if __name__ == '__main__':

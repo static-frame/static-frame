@@ -20,9 +20,9 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.node_selector import InterfaceGetItem
-
-
-
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.hloc import HLoc
+from static_frame.core.util import duplicate_filter
 
 class AxisMap:
     '''
@@ -30,35 +30,33 @@ class AxisMap:
     '''
 
     @staticmethod
-    def from_components(
-            components: tp.Iterable[tp.Tuple[tp.Iterable[tp.Hashable], str]],
+    def from_tree(
+            tree: tp.Dict[tp.Hashable, IndexBase],
             ) -> Series:
 
-        def items() -> tp.Iterator[tp.Tuple[tp.Hashable, str]]:
-            for axis_labels, label in components:
-                yield from zip(axis_labels, repeat(label))
+        index = IndexHierarchy.from_tree(tree)
+        return Series(
+                index.values_at_depth(0), # store the labels as series values
+                index=index,
+                own_index=True,
+                )
 
-        return Series.from_items(items(), dtype=str)
-
-
-    @staticmethod
-    def from_bus(bus: Bus, axis: int) -> Series:
+    @classmethod
+    def from_bus(cls, bus: Bus, axis: int) -> Series:
         '''
         Given a :obj:`Bus` and an axis, derive a :obj:`Series` that maps the derived total index (concatenating all Bus components) to their Bus label.
         '''
-        def items() -> tp.Iterator[tp.Tuple[tp.Hashable, str]]:
-            for label, f in bus.items():
-                if axis == 0:
-                    yield from zip(f.index, repeat(label))
-                elif axis == 1:
-                    yield from zip(f.columns, repeat(label))
-                else:
-                    raise AxisInvalid(f'invalid axis {axis}')
+        tree = {}
+        # NOTE: need to extract just axis labels, not both
+        for label, f in bus.items():
+            if axis == 0:
+                tree[label] = f.index
+            elif axis == 1:
+                tree[label] = f.columns
+            else:
+                raise AxisInvalid(f'invalid axis {axis}')
 
-        dtype = bus._series.index.values.dtype
-        return Series.from_items(items(), dtype=dtype)
-
-
+        return cls.from_tree(tree)
 
 
 class Quilt(ContainerOperand, StoreClientMixin):
@@ -67,8 +65,11 @@ class Quilt(ContainerOperand, StoreClientMixin):
             '_bus',
             '_axis',
             '_axis_map',
+            '_axis_is_unique',
             '_axis_opposite',
-            '_recache',
+            '_assign_axis',
+            '_columns',
+            '_index',
             # '_name', # can use the name of the stored Bus
             # '_config', # stored in Bus
             # '_max_workers',
@@ -80,7 +81,11 @@ class Quilt(ContainerOperand, StoreClientMixin):
     _axis: int
     _axis_map: tp.Optional[Series]
     _axis_opposite: tp.Optional[IndexBase]
-    _recache: bool
+    _columns: IndexBase
+    _index: IndexBase
+
+    _assign_axis: bool
+
 
     _NDIM: int = 2
 
@@ -89,9 +94,10 @@ class Quilt(ContainerOperand, StoreClientMixin):
             frame: Frame,
             *,
             chunksize: int,
+            axis_is_unique: bool, #NOTE: here the axis is always unique
             axis: int = 0,
             name: NameType = None,
-            label_extractor: tp.Optional[tp.Callable[[IndexBase], str]] = None,
+            label_extractor: tp.Optional[tp.Callable[[IndexBase], tp.Hashable]] = None,
             config: StoreConfigMapInitializer = None,
             ) -> 'Quilt':
         '''
@@ -108,18 +114,18 @@ class Quilt(ContainerOperand, StoreClientMixin):
         if label_extractor is None:
             label_extractor = lambda x: x.iloc[0] #type: ignore
 
-        axis_map_components = []
+        axis_map_components: tp.Dict[tp.Hashable, tp.IndexBase] = {}
 
         def values() -> tp.Iterator[Frame]:
             for start, end in zip_longest(starts, ends, fillvalue=len(vector)):
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
                     label = label_extractor(f.index) #type: ignore
-                    axis_map_components.append((f.index, label))
+                    axis_map_components[label] = f.index
                 elif axis == 1: # along columns
                     f = frame.iloc[:, start:end]
                     label = label_extractor(f.columns) #type: ignore
-                    axis_map_components.append((f.columns, label))
+                    axis_map_components[label] = f.columns
                 else:
                     raise AxisInvalid(f'invalid axis {axis}')
                 yield f.rename(label)
@@ -127,44 +133,64 @@ class Quilt(ContainerOperand, StoreClientMixin):
         name = name if name else frame.name
         bus = Bus.from_frames(values(), config=config, name=name)
 
-        axis_map = AxisMap.from_components(axis_map_components)
+        axis_map = AxisMap.from_tree(axis_map_components)
 
-        return cls(bus, axis=axis, axis_map=axis_map)
+        return cls(bus,
+                axis=axis,
+                axis_map=axis_map,
+                axis_is_unique=axis_is_unique,
+                )
 
     #---------------------------------------------------------------------------
     def __init__(self,
             bus: Bus,
             *,
             axis: int = 0,
+            axis_is_unique: bool,
             axis_map: tp.Optional[Series] = None,
             axis_opposite: tp.Optional[IndexBase] = None,
             ) -> None:
         self._bus = bus
         self._axis = axis
+        self._axis_is_unique = axis_is_unique
 
         # defer creation until needed
         self._axis_map = axis_map
         self._axis_opposite = axis_opposite
+        # will be set with re-axis
+        # self._index = None
+        # self._columns = None
+        self._assign_axis = True
 
-        if axis_map is None or axis_opposite is None:
-            self._recache = True
-        else:
-            self._recache = False
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
 
-    def _update_array_cache(self) -> None:
+    def _update_axis_labels(self) -> None:
         if self._axis_map is None:
             self._axis_map = AxisMap.from_bus(self._bus, self._axis)
+
         if self._axis_opposite is None:
             # always assume thee first Frame in the Quilt is representative; otherwise, need to get a union index.
             if self._axis == 0: # get columns
                 self._axis_opposite = self._bus.iloc[0].columns
             else:
                 self._axis_opposite = self._bus.iloc[0].index
-        self._recache = False
 
+        if self._axis == 0:
+            if self._axis_is_unique:
+                self._index = self._axis_map.index.level_drop(1)
+            else: # get hierarchical
+                self._index = self._axis_map.index
+            self._columns = self._axis_opposite
+        else:
+            self._index = self._axis_opposite
+            if self._axis_is_unique:
+                self._columns = self._axis_map.index.level_drop(1)
+            else:
+                self._columns = self._axis_map.index
+
+        self._assign_axis = False
 
     #---------------------------------------------------------------------------
     # name interface
@@ -179,7 +205,12 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         Return a new Quilt with an updated name attribute.
         '''
-        return self.__class__(self._bus.rename(name))
+        return self.__class__(self._bus.rename(name),
+                axis=self._axis,
+                axis_is_unique=self._axis_is_unique,
+                axis_map=self._axis_map,
+                axis_opposite=self._axis_opposite,
+                )
 
     #---------------------------------------------------------------------------
 
@@ -192,15 +223,14 @@ class Quilt(ContainerOperand, StoreClientMixin):
             header = self.__class__.__name__
         return f'<{header} at {hex(id(self))}>'
 
-
     def display(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
         '''Provide a :obj:`Frame`-style display of the :obj:`Quilt`.
         '''
-        if self._recache:
-            self._update_array_cache()
-        raise NotImplementedError()
+        if self._assign_axis:
+            self._update_axis_labels()
+        return self._extract(NULL_SLICE, NULL_SLICE).display(config)
 
     #---------------------------------------------------------------------------
     # accessors
@@ -211,25 +241,25 @@ class Quilt(ContainerOperand, StoreClientMixin):
     #     '''
     #     {}
     #     '''
-    #     if self._recache:
-    #         self._update_array_cache()
+    #     if self._assign_axis:
+    #         self._update_axis_labels()
     #     raise NotImplementedError()
 
     @property
     def index(self) -> IndexBase:
         '''The ``IndexBase`` instance assigned for row labels.
         '''
-        if self._recache:
-            self._update_array_cache()
-        return self._axis_map.index if self._axis == 0 else self._axis_opposite #type: ignore
+        if self._assign_axis:
+            self._update_axis_labels()
+        return self._index
 
     @property
     def columns(self) -> IndexBase:
         '''The ``IndexBase`` instance assigned for column labels.
         '''
-        if self._recache:
-            self._update_array_cache()
-        return self._axis_opposite if self._axis == 0 else self._axis_map.index #type: ignore
+        if self._assign_axis:
+            self._update_axis_labels()
+        return self._columns
 
     #---------------------------------------------------------------------------
 
@@ -241,9 +271,9 @@ class Quilt(ContainerOperand, StoreClientMixin):
         Returns:
             :obj:`tp.Tuple[int]`
         '''
-        if self._recache:
-            self._update_array_cache()
-        return len(self.index), len(self.columns)
+        if self._assign_axis:
+            self._update_axis_labels()
+        return len(self._index), len(self._columns)
 
     @property
     def ndim(self) -> int:
@@ -263,9 +293,9 @@ class Quilt(ContainerOperand, StoreClientMixin):
         Returns:
             :obj:`int`
         '''
-        if self._recache:
-            self._update_array_cache()
-        return len(self.index) * len(self.columns)
+        if self._assign_axis:
+            self._update_axis_labels()
+        return len(self._index) * len(self._columns)
 
     # @property
     # def nbytes(self) -> int:
@@ -276,8 +306,8 @@ class Quilt(ContainerOperand, StoreClientMixin):
     #         :obj:`int`
     #     '''
     #     # return self._blocks.nbytes
-    #     if self._recache:
-    #         self._update_array_cache()
+    #     if self._assign_axis:
+    #         self._update_axis_labels()
     #     raise NotImplementedError()
 
 
@@ -290,19 +320,24 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         Extract based on iloc selection.
         '''
-        if self._recache:
-            self._update_array_cache()
-
         parts = []
         if row_key is None:
             row_key = NULL_SLICE
 
         if self._axis == 0:
-            # get ordered unique values; cannot use .unique as need order
-            bus_keys = dict.fromkeys(self._axis_map.iloc[row_key].values) #type: ignore
+            # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
+            # import ipdb; ipdb.set_trace()
+            sel = np.full(len(self._axis_map), False)
+            sel[row_key] = True
+            sel.flags.writeable = False
+            sel_map = Series(sel, index=self._axis_map.index)
+            bus_keys = duplicate_filter(self._axis_map.iloc[row_key].values) #type: ignore
             for key in bus_keys:
+                sel_component = sel_map[HLoc[key]].values # get Boolean array
+                component = self._bus.loc[key]
                 # need to trim bus-part after extraction
-                parts.append(self._bus.loc[key].iloc[NULL_SLICE, column_key])
+                # within each bus key, need to find targetted values
+                parts.append(component.iloc[sel_component, column_key])
 
         if isinstance(parts[0], Series):
             return Series.from_concat(parts)
@@ -311,12 +346,14 @@ class Quilt(ContainerOperand, StoreClientMixin):
         raise NotImplementedError(f'no handling for {parts[0]}')
 
 
-    # NOTE: the following methods are duplicated from Frame
+    # NOTE: the following methods are nearly duplicated from Frame
 
     def _extract_iloc(self, key: GetItemKeyTypeCompound) -> tp.Union[Series, Frame]:
         '''
         Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
         '''
+        if self._assign_axis:
+            self._update_axis_labels()
         if isinstance(key, tuple):
             return self._extract(*key)
         return self._extract(row_key=key)
@@ -328,22 +365,24 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         if isinstance(key, tuple):
             loc_row_key, loc_column_key = key
-            iloc_column_key = self.columns.loc_to_iloc(loc_column_key)
+            iloc_column_key = self._columns.loc_to_iloc(loc_column_key)
         else:
             loc_row_key = key
             iloc_column_key = None
 
-        iloc_row_key = self.index.loc_to_iloc(loc_row_key)
+        iloc_row_key = self._index.loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
     def _extract_loc(self, key: GetItemKeyTypeCompound) -> tp.Union[Series, Frame]:
+        if self._assign_axis:
+            self._update_axis_labels()
         return self._extract(*self._compound_loc_to_iloc(key))
 
     def _compound_loc_to_getitem_iloc(self,
             key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
         '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
-        iloc_column_key = self.columns.loc_to_iloc(key)
+        iloc_column_key = self._columns.loc_to_iloc(key)
         return None, iloc_column_key
 
     @doc_inject(selector='selector')
@@ -353,6 +392,8 @@ class Quilt(ContainerOperand, StoreClientMixin):
         Args:
             key: {key_loc}
         '''
+        if self._assign_axis:
+            self._update_axis_labels()
         return self._extract(*self._compound_loc_to_getitem_iloc(key))
 
 

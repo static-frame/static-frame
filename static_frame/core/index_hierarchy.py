@@ -1431,7 +1431,7 @@ class IndexHierarchy(IndexBase):
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the resulting index if the resulting levels are not unique.
 
         Args:
-            count: A positive value is the number of depths to remove from the root (outer) side of the hierarhcy; a negative values is the number of depths to remove from the leaf (inner) side of the hierarchy.
+            count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative values is the number of depths to remove from the leaf (inner) side of the hierarchy.
         '''
         if count < 0: # remove from inner
             levels = self._levels.to_index_level()
