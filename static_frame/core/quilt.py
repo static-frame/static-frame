@@ -22,6 +22,7 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.hloc import HLoc
 from static_frame.core.util import duplicate_filter
+from static_frame.core.util import INT_TYPES
 
 class AxisMap:
     '''
@@ -91,7 +92,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
             frame: Frame,
             *,
             chunksize: int,
-            retain_bus_labels: bool,
+            retain_labels: bool,
             axis: int = 0,
             name: NameType = None,
             label_extractor: tp.Optional[tp.Callable[[IndexBase], tp.Hashable]] = None,
@@ -104,9 +105,13 @@ class Quilt(ContainerOperand, StoreClientMixin):
             label_extractor: Function that, given the partitioned index component along the specified axis, returns a string label for that chunk.
         '''
         vector = frame._index if axis == 0 else frame._columns
+        vector_len = len(vector)
 
-        starts = range(0, len(vector), chunksize)
-        ends = range(starts[1], len(vector), chunksize)
+        starts = range(0, vector_len, chunksize)
+        if len(starts) == 1:
+            ends: tp.Iterable[int] = (vector_len,)
+        else:
+            ends = range(starts[1], vector_len, chunksize)
 
         if label_extractor is None:
             label_extractor = lambda x: x.iloc[0] #type: ignore
@@ -114,7 +119,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         axis_map_components: tp.Dict[tp.Hashable, IndexBase] = {}
 
         def values() -> tp.Iterator[Frame]:
-            for start, end in zip_longest(starts, ends, fillvalue=len(vector)):
+            for start, end in zip_longest(starts, ends, fillvalue=vector_len):
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
                     label = label_extractor(f.index) #type: ignore
@@ -135,7 +140,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         return cls(bus,
                 axis=axis,
                 axis_map=axis_map,
-                retain_bus_labels=retain_bus_labels,
+                retain_labels=retain_labels,
                 )
 
     #---------------------------------------------------------------------------
@@ -143,13 +148,13 @@ class Quilt(ContainerOperand, StoreClientMixin):
             bus: Bus,
             *,
             axis: int = 0,
-            retain_bus_labels: bool,
+            retain_labels: bool,
             axis_map: tp.Optional[Series] = None,
             axis_opposite: tp.Optional[IndexBase] = None,
             ) -> None:
         self._bus = bus
         self._axis = axis
-        self._retain_bus_labels = retain_bus_labels
+        self._retain_bus_labels = retain_labels
 
         # defer creation until needed
         self._axis_map = axis_map
@@ -203,7 +208,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         return self.__class__(self._bus.rename(name),
                 axis=self._axis,
-                retain_bus_labels=self._retain_bus_labels,
+                retain_labels=self._retain_bus_labels,
                 axis_map=self._axis_map,
                 axis_opposite=self._axis_opposite,
                 )
@@ -316,30 +321,61 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         Extract based on iloc selection.
         '''
-        parts = []
+        parts: tp.List[tp.Any] = []
 
         row_key = NULL_SLICE if row_key is None else row_key
         column_key = NULL_SLICE if column_key is None else column_key
 
+        sel = np.full(len(self._axis_map), False) #type: ignore
         if self._axis == 0:
-            # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-            sel = np.full(len(self._axis_map), False) #type: ignore
-            sel[row_key] = True
-            sel.flags.writeable = False
-            sel_map = Series(sel, index=self._axis_map.index) #type: ignore
-            bus_keys = duplicate_filter(self._axis_map.iloc[row_key].values) #type: ignore
-            for key in bus_keys:
-                sel_component = sel_map[HLoc[key]].values # get Boolean array
-                # need to trim component after extraction
-                component = self._bus.loc[key].iloc[sel_component, column_key]
-                if self._retain_bus_labels:
-                    component = component.relabel_level_add(key)
-                parts.append(component)
+            sel_key = row_key
+            opposite_key = column_key
+        else:
+            sel_key = column_key
+            opposite_key = row_key
 
+        if isinstance(sel_key, INT_TYPES):
+            sel_reduces = True
+        else:
+            sel_reduces = False
+
+        sel[sel_key] = True
+        sel.flags.writeable = False
+        sel_map = Series(sel, index=self._axis_map.index, own_index=True) #type: ignore
+        # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
+        axis_map_sub = self._axis_map.iloc[sel_key] #type: ignore
+        if not isinstance(axis_map_sub, Series):
+            # we have an element
+            bus_keys = (axis_map_sub,)
+        else:
+            bus_keys = duplicate_filter(axis_map_sub.values) #type: ignore
+
+        for key in bus_keys:
+            sel_component = sel_map[HLoc[key]].values # get Boolean array
+            # cannot tell if a Boolean array was a dimension-reducing selection
+            if self._axis == 0:
+                component = self._bus.loc[key].iloc[sel_component, opposite_key]
+                if self._retain_bus_labels:
+                    # component might be a Series, can call the same with first arg
+                    component = component.relabel_level_add(key)
+            else:
+                component = self._bus.loc[key].iloc[opposite_key, sel_component]
+                if self._retain_bus_labels:
+                    if isinstance(component, Series):
+                        component = component.relabel_level_add(key)
+                    else:
+                        component = component.relabel_level_add(columns=key)
+                if sel_reduces:
+                    # make Frame into a Series
+                    component = component.iloc[NULL_SLICE, 0]
+            parts.append(component)
+
+        if len(parts) == 1:
+            return parts.pop() #type: ignore
         if isinstance(parts[0], Series):
             return Series.from_concat(parts)
-        elif isinstance(parts[0], Frame):
-            return Frame.from_concat(parts, axis=self._axis)
+        if isinstance(parts[0], Frame):
+            return Frame.from_concat(parts, axis=self._axis) #type: ignore
         raise NotImplementedError(f'no handling for {parts[0]}')
 
 
