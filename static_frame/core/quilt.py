@@ -344,8 +344,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         sel_map = Series(sel, index=self._axis_map.index, own_index=True) #type: ignore
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
         axis_map_sub = self._axis_map.iloc[sel_key] #type: ignore
-        if not isinstance(axis_map_sub, Series):
-            # we have an element
+        if not isinstance(axis_map_sub, Series): # we have an element integer
             bus_keys = (axis_map_sub,)
         else:
             bus_keys = duplicate_filter(axis_map_sub.values) #type: ignore
