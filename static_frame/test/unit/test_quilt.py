@@ -170,8 +170,26 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=False)
 
-        import ipdb; ipdb.set_trace()
+        self.assertEqual(q1.loc['zO5l', 'zkuW'], 146284)
 
+        f2 = q1.loc[['zmVj', 'zOyq', 'zmhG', 'zwIp']]
+        self.assertTrue(f2.equals(f1.loc[['zmVj', 'zOyq', 'zmhG', 'zwIp']]))
+
+        s1 = q1.loc[['zmVj', 'zOyq', 'zmhG', 'zwIp'], 'zkuW']
+        self.assertTrue(s1.equals(f1.loc[['zmVj', 'zOyq', 'zmhG', 'zwIp'], 'zkuW']))
+        self.assertEqual(s1.name, 'zkuW')
+        self.assertEqual(s1.shape, (4,))
+
+
+    def test_quilt_extract_f(self) -> None:
+
+        f1 = ff.parse('s(4,20)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=1, retain_labels=False)
+
+        f2 = q1.loc[:, ['zUvW', 'zB7E', 'zwIp']]
+        self.assertTrue(f2.equals(f1.loc[:, ['zUvW', 'zB7E', 'zwIp']]))
+
+        self.assertEqual(q1.loc['zkuW', 'zwIp'], -112188)
 
     #---------------------------------------------------------------------------
     def test_quilt_retain_labels_a(self) -> None:
