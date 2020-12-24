@@ -154,20 +154,18 @@ class Quilt(ContainerBase, StoreClientMixin):
             store: Store,
             *,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int],
-            retain_labels: bool,
-            axis: int = 0,
+            **kwargs,
             ) -> 'Quilt':
         '''
         For compatibility with StoreClientMixin.
         '''
         bus = Bus._from_store(store=store,
                 config=config,
-                max_persist=max_persist,
+                max_persist=kwargs.get('max_persist'), # None is default
                 )
         return cls(bus,
-                axis=axis,
-                retain_labels=retain_labels,
+                axis=kwargs.get('axis', 0),
+                retain_labels=kwargs['retain_labels'],
                 )
 
     #---------------------------------------------------------------------------

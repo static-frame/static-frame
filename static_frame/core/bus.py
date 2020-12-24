@@ -87,12 +87,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             store: Store,
             *,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int],
+            **kwargs,
             ) -> 'Bus':
         return cls(cls._deferred_series(store.labels()),
                 store=store,
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
     #---------------------------------------------------------------------------

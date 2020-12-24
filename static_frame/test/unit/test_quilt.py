@@ -254,8 +254,6 @@ class TestUnit(TestCase):
         self.assertEqual(q1.get(''), None)
 
 
-
-
     #---------------------------------------------------------------------------
     def test_quilt_store_client_mixin_a(self) -> None:
 

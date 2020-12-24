@@ -38,7 +38,7 @@ class StoreClientMixin:
     def from_zip_tsv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -48,7 +48,7 @@ class StoreClientMixin:
         store = StoreZipTSV(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
     @classmethod
@@ -56,7 +56,7 @@ class StoreClientMixin:
     def from_zip_csv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -66,7 +66,7 @@ class StoreClientMixin:
         store = StoreZipCSV(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
     @classmethod
@@ -74,7 +74,6 @@ class StoreClientMixin:
     def from_zip_pickle(cls, #type: ignore
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
             **kwargs,
             ) -> 'StoreClientMixin':
         '''
@@ -85,7 +84,6 @@ class StoreClientMixin:
         store = StoreZipPickle(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
                 **kwargs,
                 )
 
@@ -95,7 +93,7 @@ class StoreClientMixin:
     def from_zip_parquet(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -105,7 +103,7 @@ class StoreClientMixin:
         store = StoreZipParquet(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
 
@@ -114,7 +112,7 @@ class StoreClientMixin:
     def from_xlsx(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -125,7 +123,7 @@ class StoreClientMixin:
         store = StoreXLSX(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
 
@@ -134,7 +132,7 @@ class StoreClientMixin:
     def from_sqlite(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -144,7 +142,7 @@ class StoreClientMixin:
         store = StoreSQLite(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
 
@@ -153,7 +151,7 @@ class StoreClientMixin:
     def from_hdf5(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -163,7 +161,7 @@ class StoreClientMixin:
         store = StoreHDF5(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
 
