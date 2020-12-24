@@ -219,7 +219,7 @@ class Series(ContainerOperand):
             containers: tp.Iterable['Series'],
             *,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
-            name: NameType = None
+            name: NameType = NAME_DEFAULT,
             ) -> 'Series':
         '''
         Concatenate multiple :obj:`Series` into a new :obj:`Series`.
@@ -235,7 +235,15 @@ class Series(ContainerOperand):
         if index is None:
             indices = []
 
+        name_first = NAME_DEFAULT
+        name_aligned = True
+
         for c in containers:
+            if name_first == NAME_DEFAULT:
+                name_first = c.name
+            elif name_first != c.name:
+                name_aligned = False
+
             array_values.append(c.values)
             if index is None:
                 indices.append(c.index)
@@ -252,6 +260,10 @@ class Series(ContainerOperand):
         elif index is IndexAutoFactory:
             # set index arg to None to force IndexAutoFactory usage in creation
             index = None
+
+        if name == NAME_DEFAULT:
+            # only derive if not explicitly set
+            name = name_first if name_aligned else None
 
         return cls(values, index=index, name=name)
 

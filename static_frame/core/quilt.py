@@ -339,6 +339,11 @@ class Quilt(ContainerOperand, StoreClientMixin):
         else:
             sel_reduces = False
 
+        if isinstance(opposite_key, INT_TYPES):
+            opposite_reduces = True
+        else:
+            opposite_reduces = False
+
         sel[sel_key] = True
         sel.flags.writeable = False
         sel_map = Series(sel, index=self._axis_map.index, own_index=True) #type: ignore
@@ -357,6 +362,8 @@ class Quilt(ContainerOperand, StoreClientMixin):
                 if self._retain_bus_labels:
                     # component might be a Series, can call the same with first arg
                     component = component.relabel_level_add(key)
+                if sel_reduces: # make Frame into a Series
+                    component = component.iloc[0]
             else:
                 component = self._bus.loc[key].iloc[opposite_key, sel_component]
                 if self._retain_bus_labels:
@@ -364,13 +371,16 @@ class Quilt(ContainerOperand, StoreClientMixin):
                         component = component.relabel_level_add(key)
                     else:
                         component = component.relabel_level_add(columns=key)
-                if sel_reduces:
-                    # make Frame into a Series
+                if sel_reduces: # make Frame into a Series
                     component = component.iloc[NULL_SLICE, 0]
             parts.append(component)
 
+        # import ipdb; ipdb.set_trace()
         if len(parts) == 1:
-            return parts.pop() #type: ignore
+            part = parts.pop()
+            # if sel_reduces and opposite_reduces:
+            #     return part.iloc[0] # reduce a Series to element
+            return part #type: ignore
         if isinstance(parts[0], Series):
             return Series.from_concat(parts)
         if isinstance(parts[0], Frame):

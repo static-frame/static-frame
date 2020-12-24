@@ -137,6 +137,36 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_quilt_extract_c(self) -> None:
+
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
+        self.assertEqual(q1.shape, (20, 4))
+        self.assertEqual(len(q1._bus), 4)
+
+        # returns a Series
+        self.assertEqual(q1['zUvW'].shape, (20,))
+        self.assertEqual(q1['zUvW'].index.depth, 2)
+        self.assertEqual(q1.loc[('zOyq', 'zIA5'), :].shape, (4,))
+        self.assertEqual(q1.loc[:, 'ztsv'].shape, (20,))
+
+        # return an element
+        self.assertEqual(q1.loc[('zOyq', 'zIA5'), 'zkuW'], 92867)
+
+
+    def test_quilt_extract_d(self) -> None:
+
+        f1 = ff.parse('s(4,20)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=1, retain_labels=True)
+        self.assertEqual(q1.shape, (4, 20))
+        self.assertEqual(len(q1._bus), 4)
+
+        self.assertEqual(q1.loc['zUvW'].shape, (20,))
+        self.assertEqual(q1.loc['zUvW'].name, 'zUvW')
+
+        # import ipdb; ipdb.set_trace()
+
+
     #---------------------------------------------------------------------------
     def test_quilt_retain_labels_a(self) -> None:
 
