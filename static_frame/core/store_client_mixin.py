@@ -71,7 +71,7 @@ class StoreClientMixin:
 
     @classmethod
     @doc_inject(selector='bus_constructor')
-    def from_zip_pickle(cls,
+    def from_zip_pickle(cls, #type: ignore
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
