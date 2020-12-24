@@ -75,6 +75,7 @@ class StoreClientMixin:
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            **kwargs,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -85,6 +86,7 @@ class StoreClientMixin:
         return cls._from_store(store, #type: ignore
                 config=config,
                 max_persist=max_persist,
+                **kwargs,
                 )
 
 

@@ -10,6 +10,10 @@ from static_frame.core.index import Index
 from static_frame.core.hloc import HLoc
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.index import ILoc
+from static_frame.core.frame import Frame
+from static_frame.core.bus import Bus
+from static_frame.test.test_case import temp_file
+
 
 class TestUnit(TestCase):
 
@@ -215,7 +219,44 @@ class TestUnit(TestCase):
                 )
 
 
-        # import ipdb; ipdb.set_trace()
+    #---------------------------------------------------------------------------
+    def test_quilt_items_a(self) -> None:
+
+        f1 = ff.parse('s(10,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=2, retain_labels=False)
+
+        self.assertEqual(len(tuple(q1.items())), 5)
+
+
+
+    #---------------------------------------------------------------------------
+    def test_quilt_store_client_mixin_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.zip') as fp:
+
+            b1.to_zip_pickle(fp)
+
+            q1 = Quilt.from_zip_pickle(fp, max_persist=1, retain_labels=True)
+
+            self.assertEqual(q1.loc[:, :].to_pairs(0),
+                    (('a', ((('f1', 'x'), 1), (('f1', 'y'), 2), (('f2', 'x'), 1), (('f2', 'y'), 2), (('f2', 'z'), 3), (('f3', 'p'), 10), (('f3', 'q'), 20))), ('b', ((('f1', 'x'), 3), (('f1', 'y'), 4), (('f2', 'x'), 4), (('f2', 'y'), 5), (('f2', 'z'), 6), (('f3', 'p'), 50), (('f3', 'q'), 60)))))
+
+
 
 if __name__ == '__main__':
     unittest.main()

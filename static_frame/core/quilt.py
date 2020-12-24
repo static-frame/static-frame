@@ -3,7 +3,7 @@ from itertools import zip_longest
 
 import numpy as np
 
-from static_frame.core.container import ContainerOperand
+from static_frame.core.container import ContainerBase
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
@@ -23,6 +23,9 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.hloc import HLoc
 from static_frame.core.util import duplicate_filter
 from static_frame.core.util import INT_TYPES
+from static_frame.core.store import Store
+# from static_frame.core.store import StoreConfigMap
+from static_frame.core.store import StoreConfigMapInitializer
 
 class AxisMap:
     '''
@@ -59,13 +62,16 @@ class AxisMap:
         return cls.from_tree(tree) # type: ignore
 
 
-class Quilt(ContainerOperand, StoreClientMixin):
+class Quilt(ContainerBase, StoreClientMixin):
+    '''
+    A :obj:`Frame`-like view of the contents of a :obj:`Bus`.
+    '''
 
     __slots__ = (
             '_bus',
             '_axis',
             '_axis_map',
-            '_retain_bus_labels',
+            '_retain_labels',
             '_axis_opposite',
             '_assign_axis',
             '_columns',
@@ -143,6 +149,27 @@ class Quilt(ContainerOperand, StoreClientMixin):
                 retain_labels=retain_labels,
                 )
 
+    @classmethod
+    def _from_store(cls,
+            store: Store,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int],
+            retain_labels: bool,
+            axis: int = 0,
+            ) -> 'Quilt':
+        '''
+        For compatibility with StoreClientMixin.
+        '''
+        bus = Bus._from_store(store=store,
+                config=config,
+                max_persist=max_persist,
+                )
+        return cls(bus,
+                axis=axis,
+                retain_labels=retain_labels,
+                )
+
     #---------------------------------------------------------------------------
     def __init__(self,
             bus: Bus,
@@ -154,7 +181,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
             ) -> None:
         self._bus = bus
         self._axis = axis
-        self._retain_bus_labels = retain_labels
+        self._retain_labels = retain_labels
 
         # defer creation until needed
         self._axis_map = axis_map
@@ -180,13 +207,13 @@ class Quilt(ContainerOperand, StoreClientMixin):
                 self._axis_opposite = self._bus.iloc[0].index
 
         if self._axis == 0:
-            if not self._retain_bus_labels:
+            if not self._retain_labels:
                 self._index = self._axis_map.index.level_drop(1) #type: ignore
             else: # get hierarchical
                 self._index = self._axis_map.index
             self._columns = self._axis_opposite
         else:
-            if not self._retain_bus_labels:
+            if not self._retain_labels:
                 self._columns = self._axis_map.index.level_drop(1) #type: ignore
             else:
                 self._columns = self._axis_map.index
@@ -208,7 +235,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
         '''
         return self.__class__(self._bus.rename(name),
                 axis=self._axis,
-                retain_labels=self._retain_bus_labels,
+                retain_labels=self._retain_labels,
                 axis_map=self._axis_map,
                 axis_opposite=self._axis_opposite,
                 )
@@ -311,6 +338,13 @@ class Quilt(ContainerOperand, StoreClientMixin):
             self._update_axis_labels()
         return sum(f.nbytes for _, f in self._bus.items())
 
+    #---------------------------------------------------------------------------
+    # compatibility with StoreClientMixin
+
+    def items(self) -> tp.Iterator[tp.Tuple[str, Frame]]:
+        '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
+        '''
+        yield from self._bus.items()
 
     #---------------------------------------------------------------------------
 
@@ -334,10 +368,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
             sel_key = column_key
             opposite_key = row_key
 
-        if isinstance(sel_key, INT_TYPES):
-            sel_reduces = True
-        else:
-            sel_reduces = False
+        sel_reduces = isinstance(sel_key, INT_TYPES)
 
         sel[sel_key] = True
         sel.flags.writeable = False
@@ -356,7 +387,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
                 component = self._bus.loc[key].iloc[sel_component, opposite_key]
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
-                if self._retain_bus_labels:
+                if self._retain_labels:
                     # component might be a Series, can call the same with first arg
                     component = component.relabel_level_add(key)
                 if sel_reduces: # make Frame into a Series, Series into an element
@@ -365,7 +396,7 @@ class Quilt(ContainerOperand, StoreClientMixin):
                 component = self._bus.loc[key].iloc[opposite_key, sel_component]
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
-                if self._retain_bus_labels:
+                if self._retain_labels:
                     if component_is_series:
                         component = component.relabel_level_add(key)
                     else:
@@ -435,7 +466,6 @@ class Quilt(ContainerOperand, StoreClientMixin):
         if self._assign_axis:
             self._update_axis_labels()
         return self._extract(*self._compound_loc_to_getitem_iloc(key))
-
 
 
     #---------------------------------------------------------------------------

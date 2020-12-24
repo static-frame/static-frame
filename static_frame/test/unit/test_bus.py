@@ -18,7 +18,6 @@ from static_frame.core.store import StoreConfig
 from static_frame.core.display_config import DisplayConfig
 
 
-
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import skip_win

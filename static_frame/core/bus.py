@@ -327,7 +327,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # dictionary-like interface; these will force loadings contained Frame
 
     def items(self) -> tp.Iterator[tp.Tuple[str, Frame]]:
-        '''Iterator of pairs of index label and value.
+        '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
         # force new iteration to account for max_persist
         for i, label in enumerate(self._series._index):
