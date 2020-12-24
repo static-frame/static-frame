@@ -164,7 +164,13 @@ class TestUnit(TestCase):
         self.assertEqual(q1.loc['zUvW'].shape, (20,))
         self.assertEqual(q1.loc['zUvW'].name, 'zUvW')
 
-        # import ipdb; ipdb.set_trace()
+
+    def test_quilt_extract_e(self) -> None:
+
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=False)
+
+        import ipdb; ipdb.set_trace()
 
 
     #---------------------------------------------------------------------------
