@@ -25,7 +25,7 @@ from static_frame.core.util import duplicate_filter
 from static_frame.core.util import INT_TYPES
 from static_frame.core.store import Store
 # from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfigMapInitializer
+# from static_frame.core.store import StoreConfigMapInitializer
 
 class AxisMap:
     '''
@@ -339,9 +339,56 @@ class Quilt(ContainerBase, StoreClientMixin):
         return sum(f.nbytes for _, f in self._bus.items())
 
     #---------------------------------------------------------------------------
+    # dictionary-like interface
+
+    def keys(self) -> tp.Iterable[tp.Hashable]:
+        '''Iterator of column labels.
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        return self._columns
+
+    def __iter__(self) -> tp.Iterable[tp.Hashable]:
+        '''
+        Iterator of column labels, same as :py:meth:`Frame.keys`.
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        return self._columns.__iter__()
+
+    def __contains__(self, value: tp.Hashable) -> bool:
+        '''
+        Inclusion of value in column labels.
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        return self._columns.__contains__(value)
+
+    # TODO: implement iterables
+    # def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Series]]:
+    #     '''Iterator of pairs of column label and corresponding column :obj:`Series`.
+    #     '''
+    #     for label, array in zip(self._columns.values, self._blocks.axis_values(0)):
+    #         # array is assumed to be immutable
+    #         yield label, Series(array, index=self._index, name=label)
+
+    def get(self,
+            key: tp.Hashable,
+            default: tp.Optional[Series] = None,
+            ) -> Series:
+        '''
+        Return the value found at the columns key, else the default if the key is not found. This method is implemented to complete the dictionary-like interface.
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        if key not in self._columns:
+            return default
+        return self.__getitem__(key)
+
+    #---------------------------------------------------------------------------
     # compatibility with StoreClientMixin
 
-    def items(self) -> tp.Iterator[tp.Tuple[str, Frame]]:
+    def _items_store(self) -> tp.Iterator[tp.Tuple[str, Frame]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
         yield from self._bus.items()

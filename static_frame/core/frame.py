@@ -3791,7 +3791,10 @@ class Frame(ContainerOperand):
             # array is assumed to be immutable
             yield label, Series(array, index=self._index, name=label)
 
-    def get(self, key: tp.Hashable, default: tp.Optional[Series] = None) -> Series:
+    def get(self,
+            key: tp.Hashable,
+            default: tp.Optional[Series] = None,
+            ) -> Series:
         '''
         Return the value found at the columns key, else the default if the key is not found. This method is implemented to complete the dictionary-like interface.
         '''

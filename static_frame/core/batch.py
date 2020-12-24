@@ -375,6 +375,8 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         return self._items.__iter__()
 
+    _items_store = items
+
     #---------------------------------------------------------------------------
     # axis and shape ufunc methods
 

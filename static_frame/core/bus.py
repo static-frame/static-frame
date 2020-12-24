@@ -333,6 +333,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         for i, label in enumerate(self._series._index):
             yield label, self._extract_iloc(i) #type: ignore
 
+    _items_store = items
+
     @property
     def values(self) -> np.ndarray:
         '''A 1D object array of all Frame contained in the Bus.

@@ -182,7 +182,7 @@ class StoreClientMixin:
         '''
         store = StoreZipTSV(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_zip_csv(self,
@@ -196,7 +196,7 @@ class StoreClientMixin:
         '''
         store = StoreZipCSV(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_zip_pickle(self,
@@ -210,7 +210,7 @@ class StoreClientMixin:
         '''
         store = StoreZipPickle(fp)
         # config must be None for pickels, will raise otherwise
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_zip_parquet(self,
@@ -224,7 +224,7 @@ class StoreClientMixin:
         '''
         store = StoreZipParquet(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_xlsx(self,
@@ -238,7 +238,7 @@ class StoreClientMixin:
         '''
         store = StoreXLSX(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_sqlite(self,
@@ -252,7 +252,7 @@ class StoreClientMixin:
         '''
         store = StoreSQLite(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_hdf5(self,
@@ -266,4 +266,4 @@ class StoreClientMixin:
         '''
         store = StoreHDF5(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)

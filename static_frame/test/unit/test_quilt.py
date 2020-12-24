@@ -220,12 +220,39 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_quilt_items_a(self) -> None:
+    def test_quilt_items_store_a(self) -> None:
 
         f1 = ff.parse('s(10,4)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=2, retain_labels=False)
 
-        self.assertEqual(len(tuple(q1.items())), 5)
+        self.assertEqual(len(tuple(q1._items_store())), 5)
+
+    #---------------------------------------------------------------------------
+    def test_quilt_keys_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
+        self.assertEqual(list(q1.keys()), ['zZbu', 'ztsv', 'zUvW', 'zkuW'])
+
+    def test_quilt_iter_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
+        self.assertEqual(list(q1), ['zZbu', 'ztsv', 'zUvW', 'zkuW'])
+
+    def test_quilt_contains_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
+        self.assertTrue('zZbu' in q1)
+
+    def test_quilt_get_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
+        self.assertEqual(q1.get('zZbu').shape, (4,))
+        self.assertEqual(q1.get(''), None)
+
 
 
 
