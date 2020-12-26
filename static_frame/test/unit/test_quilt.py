@@ -345,6 +345,44 @@ class TestUnit(TestCase):
             _ = tuple(q1.iter_array_items(1))
 
 
+
+    #---------------------------------------------------------------------------
+
+    def test_quilt_iter_series_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        q1 = Quilt(b1, retain_labels=True)
+
+        series = tuple(q1.iter_series(axis=1))
+        s1 = series[0]
+        self.assertEqual(s1.name, ('f1', 'x'))
+        self.assertEqual(s1.to_pairs(), (('a', 1), ('b', 3)))
+        s2 = series[-1]
+        self.assertEqual(s2.name, ('f3', 'q'))
+        self.assertEqual(s2.to_pairs(), (('a', 20), ('b', 60)))
+
+        with self.assertRaises(NotImplementedError):
+            _ = tuple(q1.iter_series(0))
+
+        with self.assertRaises(NotImplementedError):
+            _ = tuple(q1.iter_series_items(0))
+
+        with self.assertRaises(NotImplementedError):
+            _ = tuple(q1.items())
+
 if __name__ == '__main__':
     unittest.main()
 

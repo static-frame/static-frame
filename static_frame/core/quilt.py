@@ -370,13 +370,12 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         return self._columns.__contains__(value)
 
-    # TODO: implement iterables
-    # def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Series]]:
-    #     '''Iterator of pairs of column label and corresponding column :obj:`Series`.
-    #     '''
-    #     for label, array in zip(self._columns.values, self._blocks.axis_values(0)):
-    #         # array is assumed to be immutable
-    #         yield label, Series(array, index=self._index, name=label)
+    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Series]]:
+        '''Iterator of pairs of column label and corresponding column :obj:`Series`.
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        yield from self._axis_series_items(axis=0) # iterate columns
 
     def get(self,
             key: tp.Hashable,
