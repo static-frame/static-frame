@@ -24,9 +24,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.quilt import Quilt # pylint: disable=W0611 #pragma: no cover
 
 
-FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series')
+FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Quilt')
 # FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')
 
 

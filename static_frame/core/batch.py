@@ -106,7 +106,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             store: Store,
             *,
             config: StoreConfigMapInitializer = None,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'Batch':
         config_map = StoreConfigMap.from_initializer(config)
         items = ((label, store.read(label, config=config_map[label]))

@@ -66,7 +66,7 @@ class AxisMap:
 
 
 class NotImplementedAxis(NotImplementedError):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
 
 class Quilt(ContainerBase, StoreClientMixin):
@@ -161,7 +161,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             store: Store,
             *,
             config: StoreConfigMapInitializer = None,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'Quilt':
         '''
         For compatibility with StoreClientMixin.
@@ -380,7 +380,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     def get(self,
             key: tp.Hashable,
             default: tp.Optional[Series] = None,
-            ) -> Series:
+            ) -> tp.Optional[Series]:
         '''
         Return the value found at the columns key, else the default if the key is not found. This method is implemented to complete the dictionary-like interface.
         '''
@@ -388,7 +388,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         if key not in self._columns:
             return default
-        return self.__getitem__(key)
+        return self.__getitem__(key) #type: ignore
 
     #---------------------------------------------------------------------------
     # compatibility with StoreClientMixin
@@ -617,7 +617,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     # iterators
 
     @property
-    def iter_array(self) -> IterNodeAxis:
+    def iter_array(self) -> IterNodeAxis['Quilt']:
         '''
         Iterator of :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -631,7 +631,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_array_items(self) -> IterNodeAxis:
+    def iter_array_items(self) -> IterNodeAxis['Quilt']:
         '''
         Iterator of pairs of label, :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -669,7 +669,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #             )
 
     @property
-    def iter_series(self) -> IterNodeAxis:
+    def iter_series(self) -> IterNodeAxis['Quilt']:
         '''
         Iterator of :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -683,7 +683,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_series_items(self) -> IterNodeAxis:
+    def iter_series_items(self) -> IterNodeAxis['Quilt']:
         '''
         Iterator of pairs of label, :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
         '''

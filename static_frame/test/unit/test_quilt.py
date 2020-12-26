@@ -238,7 +238,7 @@ class TestUnit(TestCase):
 
         f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
-        self.assertEqual(list(q1), ['zZbu', 'ztsv', 'zUvW', 'zkuW'])
+        self.assertEqual(list(q1), ['zZbu', 'ztsv', 'zUvW', 'zkuW']) #type: ignore
 
     def test_quilt_contains_a(self) -> None:
 
@@ -250,7 +250,7 @@ class TestUnit(TestCase):
 
         f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
-        self.assertEqual(q1.get('zZbu').shape, (4,))
+        self.assertEqual(q1.get('zZbu').shape, (4,)) #type: ignore
         self.assertEqual(q1.get(''), None)
 
 

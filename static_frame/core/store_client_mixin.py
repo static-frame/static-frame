@@ -28,7 +28,7 @@ class StoreClientMixin:
 
     _config: StoreConfigMap
     _from_store: tp.Callable[..., tp.Any]
-    items: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
+    _items_store: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
 
     #---------------------------------------------------------------------------
     # constructors by data format
@@ -56,7 +56,7 @@ class StoreClientMixin:
     def from_zip_csv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -71,10 +71,10 @@ class StoreClientMixin:
 
     @classmethod
     @doc_inject(selector='bus_constructor')
-    def from_zip_pickle(cls, #type: ignore
+    def from_zip_pickle(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -93,7 +93,7 @@ class StoreClientMixin:
     def from_zip_parquet(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -112,7 +112,7 @@ class StoreClientMixin:
     def from_xlsx(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -132,7 +132,7 @@ class StoreClientMixin:
     def from_sqlite(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -151,7 +151,7 @@ class StoreClientMixin:
     def from_hdf5(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.

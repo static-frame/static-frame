@@ -87,7 +87,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             store: Store,
             *,
             config: StoreConfigMapInitializer = None,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'Bus':
         return cls(cls._deferred_series(store.labels()),
                 store=store,
