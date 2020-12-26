@@ -257,6 +257,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_quilt_store_client_mixin_a(self) -> None:
 
+        # indexes are hetergenous but columns are not
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
                 index=('x', 'y'),
@@ -281,6 +282,67 @@ class TestUnit(TestCase):
             self.assertEqual(q1.loc[:, :].to_pairs(0),
                     (('a', ((('f1', 'x'), 1), (('f1', 'y'), 2), (('f2', 'x'), 1), (('f2', 'y'), 2), (('f2', 'z'), 3), (('f3', 'p'), 10), (('f3', 'q'), 20))), ('b', ((('f1', 'x'), 3), (('f1', 'y'), 4), (('f2', 'x'), 4), (('f2', 'y'), 5), (('f2', 'z'), 6), (('f3', 'p'), 50), (('f3', 'q'), 60)))))
 
+
+    #---------------------------------------------------------------------------
+
+    def test_quilt_iter_array_a(self) -> None:
+
+        # indexes are hetergenous but columns are not
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        q1 = Quilt(b1, retain_labels=True)
+
+        arrays = tuple(q1.iter_array(1))
+        self.assertEqual(len(arrays), 7)
+        self.assertEqual(arrays[0].tolist(), [1, 3])
+        self.assertEqual(arrays[-1].tolist(), [20, 60])
+
+        arrays = tuple(q1.iter_array_items(1))
+        self.assertEqual(len(arrays), 7)
+        self.assertEqual(arrays[0][0], ('f1', 'x'))
+        self.assertEqual(arrays[0][1].tolist(), [1, 3])
+
+        self.assertEqual(arrays[-1][0], ('f3', 'q'))
+        self.assertEqual(arrays[-1][1].tolist(), [20, 60])
+
+        with self.assertRaises(NotImplementedError):
+            _ = tuple(q1.iter_array(0))
+
+        with self.assertRaises(NotImplementedError):
+            _ = tuple(q1.iter_array_items(0))
+
+
+    def test_quilt_iter_array_b(self) -> None:
+
+        f1 = ff.parse('s(2,6)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
+
+        arrays = tuple(q1.iter_array_items(0))
+        self.assertEqual(len(arrays), 6)
+        self.assertEqual(arrays[0][0], 'zZbu')
+        self.assertEqual(arrays[0][1].tolist(), [-88017, 92867])
+
+        self.assertEqual(len(arrays), 6)
+        self.assertEqual(arrays[-1][0], 'z2Oo')
+        self.assertEqual(arrays[-1][1].tolist(), [84967, 13448])
+
+        with self.assertRaises(NotImplementedError):
+            _ = tuple(q1.iter_array(1))
+
+        with self.assertRaises(NotImplementedError):
+            _ = tuple(q1.iter_array_items(1))
 
 
 if __name__ == '__main__':

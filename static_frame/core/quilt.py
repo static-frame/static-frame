@@ -24,6 +24,9 @@ from static_frame.core.hloc import HLoc
 from static_frame.core.util import duplicate_filter
 from static_frame.core.util import INT_TYPES
 from static_frame.core.store import Store
+from static_frame.core.node_iter import IterNodeAxis
+from static_frame.core.node_iter import IterNodeType
+
 # from static_frame.core.store import StoreConfigMap
 # from static_frame.core.store import StoreConfigMapInitializer
 
@@ -61,6 +64,10 @@ class AxisMap:
 
         return cls.from_tree(tree) # type: ignore
 
+
+class NotImplementedAxis(NotImplementedError):
+    def __init__(self):
+        super().__init__('iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''
@@ -105,7 +112,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             config: StoreConfigMapInitializer = None,
             ) -> 'Quilt':
         '''
-        Given a :obj:`Frame`, create a :obj:`Quilt` by partitioning it along the specified ``axis`` in units of ``chunksize``, where ``axis`` 0 partitions vertically (retaining aligned columns) nad 1 partions horizontally (retaining aligned index).
+        Given a :obj:`Frame`, create a :obj:`Quilt` by partitioning it along the specified ``axis`` in units of ``chunksize``, where ``axis`` 0 partitions vertically (retaining aligned columns) and 1 partions horizontally (retaining aligned index).
 
         Args:
             label_extractor: Function that, given the partitioned index component along the specified axis, returns a string label for that chunk.
@@ -198,7 +205,8 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._axis_map = AxisMap.from_bus(self._bus, self._axis)
 
         if self._axis_opposite is None:
-            # always assume thee first Frame in the Quilt is representative; otherwise, need to get a union index.
+            # always assume the first Frame in the Quilt is representative; otherwise, need to get a union index.
+            # NOTE: opposite axis should have index alignment, as we will always implicitly align
             if self._axis == 0: # get columns
                 self._axis_opposite = self._bus.iloc[0].columns
             else:
@@ -391,6 +399,84 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         yield from self._bus.items()
 
+
+    #---------------------------------------------------------------------------
+    # axis iterators
+
+    def _axis_array(self, axis: int) -> tp.Iterator[np.ndarray]:
+        '''Generator of arrays across an axis
+
+        Args:
+            axis: 0 iterates over columns, 1 iterates over rows
+        '''
+
+        if axis == 1: # iterate over rows
+            if self._axis == 0: # bus components aligned vertically
+                for _, component in self._bus.items():
+                    yield from component._blocks.axis_values(axis)
+            else: # bus components aligned horizontally
+                raise NotImplementedAxis()
+        elif axis == 0: # iterate over columns
+            if self._axis == 1: # bus components aligned horizontally
+                for _, component in self._bus.items():
+                    yield from component._blocks.axis_values(axis)
+            else: # bus components aligned horizontally
+                raise NotImplementedAxis()
+        else:
+            raise AxisInvalid(f'no support for axis {axis}')
+
+    def _axis_array_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
+        keys = self._index if axis == 1 else self._columns
+        yield from zip(keys, self._axis_array(axis))
+
+
+    # def _axis_tuple(self, *,
+    #         axis: int,
+    #         constructor: tp.Type[tuple] = None,
+    #         ) -> tp.NamedTuple:
+    #     '''Generator of named tuples across an axis.
+
+    #     Args:
+    #         axis: 0 iterates over columns (index axis), 1 iterates over rows (column axis)
+    #     '''
+    #     if constructor is None:
+    #         if axis == 1:
+    #             labels = self._columns.values
+    #         elif axis == 0:
+    #             labels = self._index.values
+    #         else:
+    #             raise AxisInvalid(f'no support for axis {axis}')
+    #         # uses _make method to call with iterable
+    #         constructor = get_tuple_constructor(labels)
+    #     elif (isinstance(constructor, type) and
+    #             issubclass(constructor, tuple) and
+    #             hasattr(constructor, '_make')):
+    #         constructor = constructor._make
+
+    #     for axis_values in self._blocks.axis_values(axis):
+    #         # import ipdb; ipdb.set_trace()
+    #         yield constructor(axis_values)
+
+    # def _axis_tuple_items(self, *,
+    #         axis: int,
+    #         constructor: tp.Type[tuple] = None,
+    #         ) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
+    #     keys = self._index if axis == 1 else self._columns
+    #     yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
+
+
+    def _axis_series(self, axis: int) -> tp.Iterator[Series]:
+        '''Generator of Series across an axis
+        '''
+        index = self._index if axis == 0 else self._columns
+        for label, axis_values in self._axis_array_items(axis):
+            yield Series(axis_values, index=index, name=label, own_index=True)
+
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
+        keys = self._index if axis == 1 else self._columns
+        yield from zip(keys, self._axis_series(axis=axis))
+
+
     #---------------------------------------------------------------------------
 
     def _extract(self,
@@ -526,3 +612,87 @@ class Quilt(ContainerBase, StoreClientMixin):
 
 
     #---------------------------------------------------------------------------
+
+
+    #---------------------------------------------------------------------------
+    # iterators
+
+    @property
+    def iter_array(self) -> IterNodeAxis:
+        '''
+        Iterator of :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        return IterNodeAxis(
+                container=self,
+                function_values=self._axis_array,
+                function_items=self._axis_array_items,
+                yield_type=IterNodeType.VALUES
+                )
+
+    @property
+    def iter_array_items(self) -> IterNodeAxis:
+        '''
+        Iterator of pairs of label, :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        return IterNodeAxis(
+                container=self,
+                function_values=self._axis_array,
+                function_items=self._axis_array_items,
+                yield_type=IterNodeType.ITEMS
+                )
+
+    # @property
+    # def iter_tuple(self) -> IterNodeAxis:
+    #     '''
+    #     Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
+    #     '''
+    #     return IterNodeConstructorAxis(
+    #             container=self,
+    #             function_values=self._axis_tuple,
+    #             function_items=self._axis_tuple_items,
+    #             yield_type=IterNodeType.VALUES
+    #             )
+
+    # @property
+    # def iter_tuple_items(self) -> IterNodeAxis:
+    #     '''
+    #     Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
+    #     '''
+    #     return IterNodeConstructorAxis(
+    #             container=self,
+    #             function_values=self._axis_tuple,
+    #             function_items=self._axis_tuple_items,
+    #             yield_type=IterNodeType.ITEMS
+    #             )
+
+    @property
+    def iter_series(self) -> IterNodeAxis:
+        '''
+        Iterator of :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        return IterNodeAxis(
+                container=self,
+                function_values=self._axis_series,
+                function_items=self._axis_series_items,
+                yield_type=IterNodeType.VALUES
+                )
+
+    @property
+    def iter_series_items(self) -> IterNodeAxis:
+        '''
+        Iterator of pairs of label, :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        return IterNodeAxis(
+                container=self,
+                function_values=self._axis_series,
+                function_items=self._axis_series_items,
+                yield_type=IterNodeType.ITEMS
+                )

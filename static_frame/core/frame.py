@@ -2648,7 +2648,8 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    # generators
+    # iterators
+
     @property
     def iter_array(self) -> IterNodeAxis:
         '''
@@ -4039,7 +4040,7 @@ class Frame(ContainerOperand):
             index = self._index
             labels = self._columns
         for label, axis_values in zip(labels, self._blocks.axis_values(axis)):
-            yield Series(axis_values, index=index, name=label)
+            yield Series(axis_values, index=index, name=label, own_index=True)
 
     def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
         keys = self._index if axis == 1 else self._columns

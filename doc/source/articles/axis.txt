@@ -2,17 +2,28 @@
 
 
 
-# when summing, axis 0 sums rows (delivering labels of the axis 1)
-# when summing, axis 1 sums columns (delivering labels of the axis 0)
+when summing, axis 0 sums rows (delivering labels of the axis 1)
+when summing, axis 1 sums columns (delivering labels of the axis 0)
 
-# when iterating, axis 0 iters by column (delivering labels of axis 0, post apply has labels for axis 1)
-# when iterating, axis 1 iters by row (delivering labels of axis 1)
-# axis is axis along which we iterate: 0 iterates along
+when iterating, axis 0 iters by column (delivering labels of axis 0, post apply has labels for axis 1)
+when iterating, axis 1 iters by row (delivering labels of axis 1)
+axis is axis along which we iterate: 0 iterates along
 
-# when grouping, axis 0 iters groups selected by values in a column (groups are groups of rows)
-# when grouping, axis 1 iters groups selected by values in a row (groups are groups of columns)
+when grouping, axis 0 iters groups selected by values in a column (groups are groups of rows)
+when grouping, axis 1 iters groups selected by values in a row (groups are groups of columns)
 
-# pandas apply axis 0 applies func per columns (same sf's iter axis 0)
-# pandas apply axis 1 applies func per row (same sf's iter axis 1)
+for Quilt:
+native _axis 0 means Bus components are stacked vertically, but aligned by columns
+native _axis 1 means Bus components are stacked horizontally, but aligned by index
 
-# for axis 0, the function is "appled along the row axis", i.e, each function is given a series with axis 0 labels
+
+for Frame.from_concat:
+axis 0 means concat vertically (aligning on columns), same as np.concatenate(axis=0)
+axis 1 means concat horizontally (aligning on rows), same as np.concatenate(axis=1)
+
+
+
+pandas apply axis 0 applies func per columns (same sf's iter axis 0 with apply)
+pandas apply axis 1 applies func per row (same sf's iter axis 1 with apply)
+
+for axis 0, the function is "appled along the row axis", i.e, each function is given a series with axis 0 labels
