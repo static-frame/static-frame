@@ -38,7 +38,7 @@ class StoreClientMixin:
     def from_zip_tsv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
