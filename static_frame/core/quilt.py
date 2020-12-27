@@ -27,6 +27,9 @@ from static_frame.core.store import Store
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeType
 
+from static_frame.core.exception import ErrorInitQuilt
+from static_frame.core.exception import NotImplementedAxis
+
 # from static_frame.core.store import StoreConfigMap
 # from static_frame.core.store import StoreConfigMapInitializer
 
@@ -36,7 +39,7 @@ class AxisMap:
     '''
 
     @staticmethod
-    def from_tree(
+    def get_axis_series(
             tree: tp.Dict[tp.Hashable, IndexBase],
             ) -> Series:
 
@@ -48,26 +51,34 @@ class AxisMap:
                 )
 
     @classmethod
-    def from_bus(cls, bus: Bus, axis: int) -> Series:
+    def from_bus(cls, bus: Bus, axis: int) -> tp.Tuple[Series, IndexBase]:
         '''
-        Given a :obj:`Bus` and an axis, derive a :obj:`Series` that maps the derived total index (concatenating all Bus components) to their Bus label.
+        Given a :obj:`Bus` and an axis, derive a :obj:`Series` with an :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
         '''
+        # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
+
         tree = {}
-        # NOTE: need to extract just axis labels, not both
+        opposite = None
         for label, f in bus.items():
             if axis == 0:
                 tree[label] = f.index
+                if opposite is None:
+                    opposite = f.columns
+                else:
+                    if not opposite.equals(f.columns):
+                        raise ErrorInitQuilt('opposite axis must have equivalent indices')
             elif axis == 1:
                 tree[label] = f.columns
+                if opposite is None:
+                    opposite = f.index
+                else:
+                    if not opposite.equals(f.index):
+                        raise ErrorInitQuilt('opposite axis must have equivalent indices')
             else:
                 raise AxisInvalid(f'invalid axis {axis}')
 
-        return cls.from_tree(tree) # type: ignore
+        return cls.get_axis_series(tree), opposite # type: ignore
 
-
-class NotImplementedAxis(NotImplementedError):
-    def __init__(self) -> None:
-        super().__init__('iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''
@@ -130,17 +141,24 @@ class Quilt(ContainerBase, StoreClientMixin):
             label_extractor = lambda x: x.iloc[0] #type: ignore
 
         axis_map_components: tp.Dict[tp.Hashable, IndexBase] = {}
+        opposite = None
 
         def values() -> tp.Iterator[Frame]:
+            nonlocal opposite
+
             for start, end in zip_longest(starts, ends, fillvalue=vector_len):
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
                     label = label_extractor(f.index) #type: ignore
                     axis_map_components[label] = f.index
+                    if opposite is None:
+                        opposite = f.columns
                 elif axis == 1: # along columns
                     f = frame.iloc[:, start:end]
                     label = label_extractor(f.columns) #type: ignore
                     axis_map_components[label] = f.columns
+                    if opposite is None:
+                        opposite = f.index
                 else:
                     raise AxisInvalid(f'invalid axis {axis}')
                 yield f.rename(label)
@@ -148,11 +166,12 @@ class Quilt(ContainerBase, StoreClientMixin):
         name = name if name else frame.name
         bus = Bus.from_frames(values(), config=config, name=name)
 
-        axis_map = AxisMap.from_tree(axis_map_components)
+        axis_map = AxisMap.get_axis_series(axis_map_components)
 
         return cls(bus,
                 axis=axis,
                 axis_map=axis_map,
+                axis_opposite=opposite,
                 retain_labels=retain_labels,
                 )
 
@@ -188,7 +207,10 @@ class Quilt(ContainerBase, StoreClientMixin):
         self._axis = axis
         self._retain_labels = retain_labels
 
-        # defer creation until needed
+        if (axis_map is None) ^ (axis_opposite is None):
+            raise ErrorInitQuilt('if supplying axis_map, supply axis_opposite')
+
+        # can creation until needed
         self._axis_map = axis_map
         self._axis_opposite = axis_opposite
         # will be set with re-axis
@@ -201,16 +223,8 @@ class Quilt(ContainerBase, StoreClientMixin):
     # deferred loading of axis info
 
     def _update_axis_labels(self) -> None:
-        if self._axis_map is None:
-            self._axis_map = AxisMap.from_bus(self._bus, self._axis)
-
-        if self._axis_opposite is None:
-            # always assume the first Frame in the Quilt is representative; otherwise, need to get a union index.
-            # NOTE: opposite axis should have index alignment, as we will always implicitly align
-            if self._axis == 0: # get columns
-                self._axis_opposite = self._bus.iloc[0].columns
-            else:
-                self._axis_opposite = self._bus.iloc[0].index
+        if self._axis_map is None or self._axis_opposite is None:
+            self._axis_map, self._axis_opposite = AxisMap.from_bus(self._bus, self._axis)
 
         if self._axis == 0:
             if not self._retain_labels:
@@ -264,7 +278,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self._extract(NULL_SLICE, NULL_SLICE).display(config) #type: ignore
+        return self.to_frame().display(config) #type: ignore
 
     #---------------------------------------------------------------------------
     # accessors
@@ -277,7 +291,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self._extract(NULL_SLICE, NULL_SLICE).values
+        return self.to_frame().values
 
     @property
     def index(self) -> IndexBase:
@@ -485,10 +499,22 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         Extract based on iloc selection.
         '''
-        parts: tp.List[tp.Any] = []
-
         row_key = NULL_SLICE if row_key is None else row_key
         column_key = NULL_SLICE if column_key is None else column_key
+
+        if row_key == NULL_SLICE and column_key == NULL_SLICE:
+            if self._retain_labels and self._axis == 0:
+                frames = (f.relabel_level_add(index=k) for k, f in self._bus.items())
+            elif self._retain_labels and self._axis == 1:
+                frames = (f.relabel_level_add(columns=k) for k, f in self._bus.items())
+            else:
+                frames = (f for _, f in self._bus.items())
+            return Frame.from_concat(
+                    frames,
+                    axis=self._axis,
+                    )
+
+        parts: tp.List[tp.Any] = []
 
         sel = np.full(len(self._axis_map), False) #type: ignore
         if self._axis == 0:
@@ -538,13 +564,11 @@ class Quilt(ContainerBase, StoreClientMixin):
                         component = component.iloc[NULL_SLICE, 0]
             parts.append(component)
 
-        # import ipdb; ipdb.set_trace()
         if len(parts) == 1:
             return parts.pop() #type: ignore
         if component_is_series:
             return Series.from_concat(parts)
         return Frame.from_concat(parts, axis=self._axis) #type: ignore
-        # raise NotImplementedError(f'no handling for {parts[0]}')
 
 
     # NOTE: the following methods are nearly duplicated from Frame
@@ -695,3 +719,11 @@ class Quilt(ContainerBase, StoreClientMixin):
                 function_items=self._axis_series_items,
                 yield_type=IterNodeType.ITEMS
                 )
+
+
+    #---------------------------------------------------------------------------
+    def to_frame(self) -> Frame:
+        '''
+        Return a consolidated :obj:`Frame`.
+        '''
+        return self._extract(NULL_SLICE, NULL_SLICE)

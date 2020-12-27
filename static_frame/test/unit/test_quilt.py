@@ -13,7 +13,8 @@ from static_frame.core.index import ILoc
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
 from static_frame.test.test_case import temp_file
-
+from static_frame.core.exception import ErrorInitQuilt
+from static_frame.core.exception import ErrorInitIndexNonUnique
 
 class TestUnit(TestCase):
 
@@ -24,10 +25,68 @@ class TestUnit(TestCase):
                 y=Index(('a', 'b', 'c')),
                 )
 
-        am = AxisMap.from_tree(components) #type: ignore
+        am = AxisMap.get_axis_series(components) #type: ignore
         self.assertEqual(am.to_pairs(),
                 ((('x', 'a'), 'x'), (('x', 'b'), 'x'), (('x', 'c'), 'x'), (('y', 'a'), 'y'), (('y', 'b'), 'y'), (('y', 'c'), 'y')))
 
+    #---------------------------------------------------------------------------
+    def test_quilt_init_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        # columns are aligned
+        q1 = Quilt(b1, retain_labels=True, axis=0)
+        self.assertEqual(q1.shape, (7, 2))
+
+        # index is not aligned
+        q2 = Quilt(b1, retain_labels=True, axis=1)
+        with self.assertRaises(ErrorInitQuilt):
+            self.assertEqual(q2.shape, (7, 2))
+
+    def test_quilt_init_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), c=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(2,3), b=(4,6)),
+                index=('x', 'y'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(c=(10,20), b=(50,60)),
+                index=('x', 'y'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        # columns are not aligned
+        q1 = Quilt(b1, retain_labels=True, axis=0)
+        with self.assertRaises(ErrorInitQuilt):
+            self.assertEqual(q1.shape, (7, 2))
+
+        # index is aligned
+        q2 = Quilt(b1, retain_labels=True, axis=1)
+        self.assertEqual(q2.shape, (2, 6))
+
+        # must retain labels for non-unique axis
+        q3 = Quilt(b1, retain_labels=False, axis=1)
+        with self.assertRaises(ErrorInitIndexNonUnique):
+            self.assertEqual(q3.shape, (7, 2))
+
+
+    #---------------------------------------------------------------------------
     def test_quilt_display_a(self) -> None:
 
         dc = DisplayConfig(type_show=False)
@@ -66,8 +125,9 @@ class TestUnit(TestCase):
         self.assertEqual(q1.rename('bar').name, 'bar')
         self.assertTrue(repr(q1).startswith('<Quilt: foo'))
 
-        post = AxisMap.from_bus(q1._bus, q1._axis)
+        post, opp = AxisMap.from_bus(q1._bus, q1._axis)
         self.assertEqual(len(post), 100)
+        self.assertEqual(len(opp), 4)
 
         s1 = q1['ztsv']
         self.assertEqual(s1.shape, (100,))
@@ -91,9 +151,9 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frame(f1, chunksize=10, axis=1, retain_labels=False)
 
-        post = AxisMap.from_bus(q1._bus, q1._axis)
+        post, opp = AxisMap.from_bus(q1._bus, q1._axis)
         self.assertEqual(len(post), 100)
-
+        self.assertEqual(len(opp), 4)
 
     def test_quilt_from_frame_c(self) -> None:
 
@@ -382,6 +442,17 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.items())
+
+    #---------------------------------------------------------------------------
+    def test_quilt_to_frame_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
+
+        q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
+        self.assertTrue(q1.to_frame().equals(f1))
+
+        q2 = Quilt.from_frame(f1, chunksize=2, axis=0, retain_labels=False)
+        self.assertTrue(q2.to_frame().equals(f1))
 
 if __name__ == '__main__':
     unittest.main()
