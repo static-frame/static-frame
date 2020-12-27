@@ -509,7 +509,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 frames = (f.relabel_level_add(columns=k) for k, f in self._bus.items())
             else:
                 frames = (f for _, f in self._bus.items())
-            return Frame.from_concat(
+            return Frame.from_concat( #type: ignore
                     frames,
                     axis=self._axis,
                     )
@@ -726,4 +726,4 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         Return a consolidated :obj:`Frame`.
         '''
-        return self._extract(NULL_SLICE, NULL_SLICE)
+        return self._extract(NULL_SLICE, NULL_SLICE) #type: ignore
