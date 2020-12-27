@@ -26,9 +26,11 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.store import Store
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_iter import IterNodeConstructorAxis
 
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import NotImplementedAxis
+from static_frame.core.util import get_tuple_constructor
 
 # from static_frame.core.store import StoreConfigMap
 # from static_frame.core.store import StoreConfigMapInitializer
@@ -422,7 +424,6 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             axis: 0 iterates over columns, 1 iterates over rows
         '''
-
         if axis == 1: # iterate over rows
             if self._axis == 0: # bus components aligned vertically
                 for _, component in self._bus.items():
@@ -443,39 +444,38 @@ class Quilt(ContainerBase, StoreClientMixin):
         yield from zip(keys, self._axis_array(axis))
 
 
-    # def _axis_tuple(self, *,
-    #         axis: int,
-    #         constructor: tp.Type[tuple] = None,
-    #         ) -> tp.NamedTuple:
-    #     '''Generator of named tuples across an axis.
+    def _axis_tuple(self, *,
+            axis: int,
+            constructor: tp.Type[tuple] = None,
+            ) -> tp.NamedTuple:
+        '''Generator of named tuples across an axis.
 
-    #     Args:
-    #         axis: 0 iterates over columns (index axis), 1 iterates over rows (column axis)
-    #     '''
-    #     if constructor is None:
-    #         if axis == 1:
-    #             labels = self._columns.values
-    #         elif axis == 0:
-    #             labels = self._index.values
-    #         else:
-    #             raise AxisInvalid(f'no support for axis {axis}')
-    #         # uses _make method to call with iterable
-    #         constructor = get_tuple_constructor(labels)
-    #     elif (isinstance(constructor, type) and
-    #             issubclass(constructor, tuple) and
-    #             hasattr(constructor, '_make')):
-    #         constructor = constructor._make
+        Args:
+            axis: 0 iterates over columns (index axis), 1 iterates over rows (column axis)
+        '''
+        if constructor is None:
+            if axis == 1:
+                labels = self._columns.values
+            elif axis == 0:
+                labels = self._index.values
+            else:
+                raise AxisInvalid(f'no support for axis {axis}')
+            # uses _make method to call with iterable
+            constructor = get_tuple_constructor(labels)
+        elif (isinstance(constructor, type) and
+                issubclass(constructor, tuple) and
+                hasattr(constructor, '_make')):
+            constructor = constructor._make
 
-    #     for axis_values in self._blocks.axis_values(axis):
-    #         # import ipdb; ipdb.set_trace()
-    #         yield constructor(axis_values)
+        for axis_values in self._axis_array(axis):
+            yield constructor(axis_values)
 
-    # def _axis_tuple_items(self, *,
-    #         axis: int,
-    #         constructor: tp.Type[tuple] = None,
-    #         ) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
-    #     keys = self._index if axis == 1 else self._columns
-    #     yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
+    def _axis_tuple_items(self, *,
+            axis: int,
+            constructor: tp.Type[tuple] = None,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
+        keys = self._index if axis == 1 else self._columns
+        yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
 
 
     def _axis_series(self, axis: int) -> tp.Iterator[Series]:
@@ -570,8 +570,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             return Series.from_concat(parts)
         return Frame.from_concat(parts, axis=self._axis) #type: ignore
 
-
-    # NOTE: the following methods are nearly duplicated from Frame
+    #---------------------------------------------------------------------------
 
     def _extract_iloc(self, key: GetItemKeyTypeCompound) -> tp.Union[Series, Frame]:
         '''
@@ -621,7 +620,6 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         return self._extract(*self._compound_loc_to_getitem_iloc(key))
 
-
     #---------------------------------------------------------------------------
     # interfaces
 
@@ -632,10 +630,6 @@ class Quilt(ContainerBase, StoreClientMixin):
     @property
     def iloc(self) -> InterfaceGetItem['Frame']:
         return InterfaceGetItem(self._extract_iloc) #type: ignore
-
-
-    #---------------------------------------------------------------------------
-
 
     #---------------------------------------------------------------------------
     # iterators
@@ -668,29 +662,33 @@ class Quilt(ContainerBase, StoreClientMixin):
                 yield_type=IterNodeType.ITEMS
                 )
 
-    # @property
-    # def iter_tuple(self) -> IterNodeAxis:
-    #     '''
-    #     Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
-    #     '''
-    #     return IterNodeConstructorAxis(
-    #             container=self,
-    #             function_values=self._axis_tuple,
-    #             function_items=self._axis_tuple_items,
-    #             yield_type=IterNodeType.VALUES
-    #             )
+    @property
+    def iter_tuple(self) -> IterNodeAxis:
+        '''
+        Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        return IterNodeConstructorAxis(
+                container=self,
+                function_values=self._axis_tuple,
+                function_items=self._axis_tuple_items,
+                yield_type=IterNodeType.VALUES
+                )
 
-    # @property
-    # def iter_tuple_items(self) -> IterNodeAxis:
-    #     '''
-    #     Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
-    #     '''
-    #     return IterNodeConstructorAxis(
-    #             container=self,
-    #             function_values=self._axis_tuple,
-    #             function_items=self._axis_tuple_items,
-    #             yield_type=IterNodeType.ITEMS
-    #             )
+    @property
+    def iter_tuple_items(self) -> IterNodeAxis:
+        '''
+        Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        return IterNodeConstructorAxis(
+                container=self,
+                function_values=self._axis_tuple,
+                function_items=self._axis_tuple_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     @property
     def iter_series(self) -> IterNodeAxis['Quilt']:
@@ -719,7 +717,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 function_items=self._axis_series_items,
                 yield_type=IterNodeType.ITEMS
                 )
-
 
     #---------------------------------------------------------------------------
     def to_frame(self) -> Frame:

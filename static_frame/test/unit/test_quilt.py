@@ -404,8 +404,6 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.iter_array_items(1))
 
-
-
     #---------------------------------------------------------------------------
 
     def test_quilt_iter_series_a(self) -> None:
@@ -442,6 +440,31 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.items())
+
+    #---------------------------------------------------------------------------
+    def test_quilt_iter_tuple_a(self) -> None:
+
+        f1 = ff.parse('s(2,6)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
+        post = tuple(q1.iter_tuple()) # iter columns
+        self.assertEqual(len(post), 6)
+        self.assertEqual(post[0]._fields, ('zZbu', 'ztsv'))
+
+        with self.assertRaises(NotImplementedError):
+            _ = tuple(q1.iter_tuple(1))
+
+    def test_quilt_iter_tuple_b(self) -> None:
+
+        f1 = ff.parse('s(2,6)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
+        post = tuple(q1.iter_tuple_items()) # iter columns
+        self.assertEqual(len(post), 6)
+        self.assertEqual(post[0][0], 'zZbu')
+        self.assertEqual(post[0][1]._fields, ('zZbu', 'ztsv'))
+
+        with self.assertRaises(NotImplementedError):
+            _ = tuple(q1.iter_tuple_items(1))
+
 
     #---------------------------------------------------------------------------
     def test_quilt_to_frame_a(self) -> None:

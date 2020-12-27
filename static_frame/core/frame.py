@@ -4018,7 +4018,6 @@ class Frame(ContainerOperand):
             constructor = constructor._make
 
         for axis_values in self._blocks.axis_values(axis):
-            # import ipdb; ipdb.set_trace()
             yield constructor(axis_values)
 
     def _axis_tuple_items(self, *,
