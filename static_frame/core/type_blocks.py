@@ -1802,7 +1802,7 @@ class TypeBlocks(ContainerOperand):
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None
             ) -> np.ndarray:
-        '''Alternative extractor that returns just an np array, concatenating blocks as necessary. Used by internal clients that need to process row/column with an array.
+        '''Alternative extractor that returns just an ndarray, concatenating blocks as necessary. Used by internal clients that need to process row/column with an array.
 
         This will be consistent with NumPy as to the dimensionality returned: if a non-multi selection is made, 1D array will be returned.
         '''

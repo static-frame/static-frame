@@ -488,13 +488,65 @@ class Quilt(ContainerBase, StoreClientMixin):
 
 
     #---------------------------------------------------------------------------
+    def _extract_array(self,
+            row_key: GetItemKeyType = None,
+            column_key: GetItemKeyType = None,
+            ) -> np.ndarray:
+        '''
+        Extract a consolidated array based on iloc selection.
+        '''
+        row_key = NULL_SLICE if row_key is None else row_key
+        column_key = NULL_SLICE if column_key is None else column_key
+
+        if row_key == NULL_SLICE and column_key == NULL_SLICE:
+            arrays = [f.values for _, f in self._bus.items()]
+            return np.concatenate( #type: ignore
+                    arrays,
+                    axis=self._axis,
+                    )
+
+        parts: tp.List[np.ndarray] = []
+
+        sel = np.full(len(self._axis_map), False) #type: ignore
+        if self._axis == 0:
+            sel_key = row_key
+            opposite_key = column_key
+        else:
+            sel_key = column_key
+            opposite_key = row_key
+
+        sel_reduces = isinstance(sel_key, INT_TYPES)
+
+        sel[sel_key] = True
+        sel.flags.writeable = False
+        sel_map = Series(sel, index=self._axis_map.index, own_index=True) #type: ignore
+
+        # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
+        axis_map_sub = self._axis_map.iloc[sel_key] #type: ignore
+        if not isinstance(axis_map_sub, Series): # we have an element integer
+            bus_keys = (axis_map_sub,)
+        else:
+            bus_keys = duplicate_filter(axis_map_sub.values) #type: ignore
+
+        for key_count, key in enumerate(bus_keys):
+            sel_component = sel_map[HLoc[key]].values # get Boolean array
+
+            if self._axis == 0:
+                component = self._bus.loc[key]._extract_array(sel_component, opposite_key)
+            else:
+                component = self._bus.loc[key]._extract_array(opposite_key, sel_component)
+            parts.append(component)
+
+        if len(parts) == 1:
+            return parts.pop() #type: ignore
+        return np.concatenate(parts, axis=self._axis) #type: ignore
 
     def _extract(self,
             row_key: GetItemKeyType = None,
             column_key: GetItemKeyType = None,
             ) -> tp.Union[Frame, Series]:
         '''
-        Extract based on iloc selection.
+        Extract Container based on iloc selection.
         '''
         row_key = NULL_SLICE if row_key is None else row_key
         column_key = NULL_SLICE if column_key is None else column_key
@@ -526,6 +578,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel[sel_key] = True
         sel.flags.writeable = False
         sel_map = Series(sel, index=self._axis_map.index, own_index=True) #type: ignore
+
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
         axis_map_sub = self._axis_map.iloc[sel_key] #type: ignore
         if not isinstance(axis_map_sub, Series): # we have an element integer

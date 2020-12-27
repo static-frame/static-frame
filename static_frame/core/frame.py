@@ -3503,6 +3503,15 @@ class Frame(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
+    def _extract_array(
+            row_key: GetItemKeyType = None,
+            column_key: GetItemKeyType = None,
+            ) -> np.ndarray:
+        '''
+        Alternative extractor that returns just an ndarray
+        '''
+        return self._blocks._extract_array(row_key, column_key)
+
     @staticmethod
     def _extract_axis_not_multi(
                 row_key: tp.Hashable,
@@ -3513,6 +3522,7 @@ class Frame(ContainerOperand):
         '''
         row_nm = False
         column_nm = False
+        # NOTE: can we just identify integer types?
         if row_key is not None and not isinstance(row_key, KEY_MULTIPLE_TYPES):
             row_nm = True # axis 0
         if column_key is not None and not isinstance(column_key, KEY_MULTIPLE_TYPES):
@@ -3525,7 +3535,7 @@ class Frame(ContainerOperand):
             column_key: GetItemKeyType = None,
             ) -> tp.Union['Frame', Series]:
         '''
-        Extract based on iloc selection (indices have already mapped)
+        Extract Container based on iloc selection (indices have already mapped)
         '''
         blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
 
