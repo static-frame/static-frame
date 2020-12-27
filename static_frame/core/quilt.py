@@ -96,11 +96,6 @@ class Quilt(ContainerBase, StoreClientMixin):
             '_assign_axis',
             '_columns',
             '_index',
-            # '_name', # can use the name of the stored Bus
-            # '_config', # stored in Bus
-            # '_max_workers',
-            # '_chunksize',
-            # '_use_threads',
             )
 
     _bus: Bus
@@ -446,8 +441,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     def _axis_tuple(self, *,
             axis: int,
-            constructor: tp.Type[tuple] = None,
-            ) -> tp.NamedTuple:
+            constructor: tp.Optional[tp.Type[tp.NamedTuple]] = None,
+            ) -> tp.Iterator[tp.NamedTuple]:
         '''Generator of named tuples across an axis.
 
         Args:
@@ -461,19 +456,21 @@ class Quilt(ContainerBase, StoreClientMixin):
             else:
                 raise AxisInvalid(f'no support for axis {axis}')
             # uses _make method to call with iterable
-            constructor = get_tuple_constructor(labels)
+            constructor = get_tuple_constructor(labels) #type: ignore
         elif (isinstance(constructor, type) and
                 issubclass(constructor, tuple) and
                 hasattr(constructor, '_make')):
-            constructor = constructor._make
+            constructor = constructor._make #type: ignore
+
+        assert constructor is not None
 
         for axis_values in self._axis_array(axis):
             yield constructor(axis_values)
 
     def _axis_tuple_items(self, *,
             axis: int,
-            constructor: tp.Type[tuple] = None,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
+            constructor: tp.Optional[tp.Type[tp.NamedTuple]] = None,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.NamedTuple]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
 
@@ -663,7 +660,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_tuple(self) -> IterNodeAxis:
+    def iter_tuple(self) -> IterNodeConstructorAxis['Quilt']:
         '''
         Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
         '''
@@ -677,7 +674,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_tuple_items(self) -> IterNodeAxis:
+    def iter_tuple_items(self) -> IterNodeConstructorAxis['Quilt']:
         '''
         Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
         '''
