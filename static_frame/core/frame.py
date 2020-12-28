@@ -144,6 +144,8 @@ from static_frame.core.util import DTU_PYARROW
 from static_frame.core.util import DT64_NS
 from static_frame.core.util import DTYPE_INT_DEFAULT
 
+from static_frame.core import io_util
+
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -1622,9 +1624,8 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
-        lines = fp.Readlines()
+        lines = io_util.to_line_iter(fp)
         data = tuple(csv.reader(lines, delimiter=delimiter, quotechar=quote_char))
-        # data = np.loadtxt(fp, delimiter=delimiter, dtype='<U50')
 
         # Build columns
         columns_data = data[:columns_depth]
@@ -1636,9 +1637,9 @@ class Frame(ContainerOperand):
             columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(columns_data)
             own_columns = True
 
-        a = data[columns_depth:]
+        array = np.array(data[columns_depth:], dtype=object)
         return cls(
-            data=a,
+            data=array,
             columns=columns,
             own_data=True,
             own_columns=own_columns,
