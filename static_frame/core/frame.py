@@ -1622,9 +1622,9 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
-        # lines = fp.readlines()
-        # data = tuple(csv.reader(lines, delimiter=delimiter, quotechar=quote_char))
-        data = np.loadtxt(fp, delimiter=delimiter, dtype='<U50')
+        lines = fp.Readlines()
+        data = tuple(csv.reader(lines, delimiter=delimiter, quotechar=quote_char))
+        # data = np.loadtxt(fp, delimiter=delimiter, dtype='<U50')
 
         # Build columns
         columns_data = data[:columns_depth]
