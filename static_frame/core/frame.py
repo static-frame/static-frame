@@ -3503,7 +3503,7 @@ class Frame(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-    def _extract_array(
+    def _extract_array(self,
             row_key: GetItemKeyType = None,
             column_key: GetItemKeyType = None,
             ) -> np.ndarray:

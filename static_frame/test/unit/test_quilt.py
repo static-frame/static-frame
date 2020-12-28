@@ -256,6 +256,57 @@ class TestUnit(TestCase):
         self.assertEqual(q1.loc['zkuW', 'zwIp'], -112188)
 
     #---------------------------------------------------------------------------
+    def test_quilt_extract_array_a(self) -> None:
+
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
+
+        a1 = q1._extract_array(None, 2)
+        self.assertEqual(a1.tolist(),
+                [-3648, 91301, 30205, 54020, 129017, 35021, 166924, 122246, 197228, 105269, 119909, 194224, 172133, 96520, -88017, 92867, 84967, 13448, 175579, 58768])
+
+        self.assertEqual(q1._extract_array(3).tolist(), [13448, -168387, 54020, 122246])
+
+        self.assertEqual(q1._extract_array([1, 8, 9, 10, 17]).tolist(),
+                [[92867, -41157, 91301, 35021], [32395, 17698, 197228, 172133], [137759, -24849, 105269, 96520], [-62964, -30183, 119909, -88017], [130010, 81275, 13448, 170440]]
+                )
+
+        self.assertEqual(q1._extract_array([1, 9, 17], [0, 3]).tolist(),
+                [[92867, 35021], [137759, 96520], [130010, 170440]])
+
+        self.assertEqual(q1._extract_array(slice(4,8), 2).tolist(),
+                [129017, 35021, 166924, 122246])
+
+        self.assertEqual(q1._extract_array(slice(4,8), slice(1,3)).tolist(),
+                [[140627, 129017], [66269, 35021], [-171231, 166924], [-38997, 122246]])
+
+        self.assertEqual(q1._extract_array(2, 2), 30205)
+
+
+    def test_quilt_extract_array_b(self) -> None:
+
+        f1 = ff.parse('s(4,20)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=1, retain_labels=True)
+
+        a1 = q1._extract_array(None, 2)
+        self.assertEqual(a1.tolist(), [-3648, 91301, 30205, 54020])
+
+        self.assertEqual(q1._extract_array(2).tolist(), [84967, 5729, 30205, 166924, 170440, 175579, 32395, 172142, -31776, -97851, -12447, 119909, 172142, 35684, 170440, 316, 81275, 81275, 96640, -110091])
+
+        self.assertEqual(q1._extract_array(slice(0,2), 2).tolist(), [-3648, 91301])
+
+        self.assertEqual(q1._extract_array(slice(1,3), slice(4,6)).tolist(),
+                [[146284, 13448], [170440, 175579]])
+
+        self.assertEqual(q1._extract_array([0, 3], [1, 14, 15]).tolist(),
+                [[162197, 58768, 10240], [-168387, 32395, -170415]]
+                )
+
+        self.assertEqual(q1._extract_array(2, 2), 30205)
+        self.assertEqual(q1._extract_array(-1, -1), -112188)
+
+
+    #---------------------------------------------------------------------------
     def test_quilt_retain_labels_a(self) -> None:
 
         dc = DisplayConfig(type_show=False)

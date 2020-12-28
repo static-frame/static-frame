@@ -516,6 +516,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             opposite_key = row_key
 
         sel_reduces = isinstance(sel_key, INT_TYPES)
+        opposite_reduces = isinstance(opposite_key, INT_TYPES)
 
         sel[sel_key] = True
         sel.flags.writeable = False
@@ -533,12 +534,21 @@ class Quilt(ContainerBase, StoreClientMixin):
 
             if self._axis == 0:
                 component = self._bus.loc[key]._extract_array(sel_component, opposite_key)
+                if sel_reduces:
+                    component = component[0]
             else:
                 component = self._bus.loc[key]._extract_array(opposite_key, sel_component)
+                if sel_reduces:
+                    if component.ndim == 1:
+                        component = component[0]
+                    elif component.ndim == 2:
+                        component = component[NULL_SLICE, 0]
             parts.append(component)
-
+        # import ipdb; ipdb.set_trace()
         if len(parts) == 1:
             return parts.pop() #type: ignore
+        if sel_reduces or opposite_reduces:
+            return np.concatenate(parts) #type: ignore
         return np.concatenate(parts, axis=self._axis) #type: ignore
 
     def _extract(self,
