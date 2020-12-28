@@ -500,7 +500,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         if row_key == NULL_SLICE and column_key == NULL_SLICE:
             arrays = [f.values for _, f in self._bus.items()]
-            return np.concatenate( #type: ignore
+            return np.concatenate(
                     arrays,
                     axis=self._axis,
                     )
@@ -544,12 +544,12 @@ class Quilt(ContainerBase, StoreClientMixin):
                     elif component.ndim == 2:
                         component = component[NULL_SLICE, 0]
             parts.append(component)
-        # import ipdb; ipdb.set_trace()
+
         if len(parts) == 1:
-            return parts.pop() #type: ignore
+            return parts.pop()
         if sel_reduces or opposite_reduces:
-            return np.concatenate(parts) #type: ignore
-        return np.concatenate(parts, axis=self._axis) #type: ignore
+            return np.concatenate(parts)
+        return np.concatenate(parts, axis=self._axis)
 
     def _extract(self,
             row_key: GetItemKeyType = None,
