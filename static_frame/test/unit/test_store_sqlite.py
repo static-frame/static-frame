@@ -142,6 +142,30 @@ class TestUnit(TestCase):
                     )
 
 
+    def test_store_sqlite_write_f(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        frames = (f1,)
+
+        with temp_file('.sqlite') as fp:
+
+            config = StoreConfig(include_index=False)
+
+            st1 = StoreSQLite(fp)
+            st1.write(((f.name, f) for f in frames), config=config)
+
+            # prove that writing to the same path re-writes
+            st2 = StoreSQLite(fp)
+            st2.write(((f.name, f) for f in frames), config=config)
+
+            self.assertEqual(list(st2.labels()), ['f2'])
+
+
+
 if __name__ == '__main__':
     unittest.main()
 

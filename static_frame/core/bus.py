@@ -7,8 +7,8 @@ import numpy as np
 from static_frame.core.container import ContainerBase
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.frame import Frame
@@ -17,33 +17,29 @@ from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
-from static_frame.core.store_hdf5 import StoreHDF5
-from static_frame.core.store_sqlite import StoreSQLite
-from static_frame.core.store_xlsx import StoreXLSX
-from static_frame.core.store_zip import StoreZipCSV
-from static_frame.core.store_zip import StoreZipPickle
-from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import PathSpecifier
 from static_frame.core.util import NameType
-
+from static_frame.core.util import INT_TYPES
 
 #-------------------------------------------------------------------------------
-class FrameDefferedMeta(type):
+class FrameDeferredMeta(type):
     def __repr__(cls) -> str:
         return f'<{cls.__name__}>'
 
-class FrameDeferred(metaclass=FrameDefferedMeta):
+class FrameDeferred(metaclass=FrameDeferredMeta):
     '''
     Token placeholder for :obj:`Frame` not yet loaded.
     '''
 
 #-------------------------------------------------------------------------------
-class Bus(ContainerBase): # not a ContainerOperand
+class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
+    '''
+    A lazy, randomly-accessible container of :obj:`Frame`.
+    '''
 
     __slots__ = (
         '_loaded',
@@ -51,11 +47,14 @@ class Bus(ContainerBase): # not a ContainerOperand
         '_series',
         '_store',
         '_config',
+        '_last_accessed',
+        '_max_persist',
         )
 
     _series: Series
     _store: tp.Optional[Store]
     _config: StoreConfigMap
+    _name: NameType
 
     STATIC = False
 
@@ -64,7 +63,6 @@ class Bus(ContainerBase): # not a ContainerOperand
         '''
         Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
         '''
-        # make an object dtype
         return Series.from_element(FrameDeferred, index=labels, dtype=object)
 
     @classmethod
@@ -84,75 +82,17 @@ class Bus(ContainerBase): # not a ContainerOperand
                     )
         return cls(series, config=config)
 
-    #---------------------------------------------------------------------------
-    # constructors by data format
-
     @classmethod
-    def from_zip_tsv(cls,
-            fp: PathSpecifier,
+    def _from_store(cls,
+            store: Store,
+            *,
             config: StoreConfigMapInitializer = None,
+            **kwargs: tp.Any,
             ) -> 'Bus':
-        # take and store a StoreConfigMap
-        store = StoreZipTSV(fp)
         return cls(cls._deferred_series(store.labels()),
                 store=store,
-                config=config
-                )
-
-    @classmethod
-    def from_zip_csv(cls,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
-        store = StoreZipCSV(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
-
-    @classmethod
-    def from_zip_pickle(cls,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
-        store = StoreZipPickle(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
-
-    @classmethod
-    def from_xlsx(cls,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
-        # how to pass configuration for multiple sheets?
-        store = StoreXLSX(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
-
-    @classmethod
-    def from_sqlite(cls,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
-        store = StoreSQLite(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
-
-    @classmethod
-    def from_hdf5(cls,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
-        store = StoreHDF5(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
+                config=config,
+                **kwargs,
                 )
 
     #---------------------------------------------------------------------------
@@ -160,16 +100,21 @@ class Bus(ContainerBase): # not a ContainerOperand
             series: Series,
             *,
             store: tp.Optional[Store] = None,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
             ):
         '''
         Args:
-            config: StoreConfig for handling ``Frame`` construction and exporting from Store.
+            config: StoreConfig for handling :obj:`Frame` construction and exporting from Store.
+            max_persist: When loading :obj:`Frame` from a :obj:`Store`, optionally define the maximum number of :obj:`Frame` to remain in the :obj:`Bus`, regardless of the size of the :obj:`Bus`. If more than ``max_persist`` number of :obj:`Frame` are loaded, least-recently loaded :obj:`Frame` will be replaced by ``FrameDeferred``. A ``max_persist`` of 1, for example, permits reading one :obj:`Frame` at a time without ever holding in memory more than 1 :obj:`Frame`.
         '''
 
         if series.dtype != DTYPE_OBJECT:
             raise ErrorInitBus(
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
+
+        if max_persist is not None:
+            self._last_accessed: tp.Dict[str, None] = {}
 
         # do a one time iteration of series
         def gen() -> tp.Iterator[bool]:
@@ -178,6 +123,8 @@ class Bus(ContainerBase): # not a ContainerOperand
                     raise ErrorInitBus(f'supplied label {label} is not a string.')
 
                 if isinstance(value, Frame):
+                    if max_persist is not None:
+                        self._last_accessed[label] = None
                     yield True
                 elif value is FrameDeferred:
                     yield False
@@ -189,19 +136,23 @@ class Bus(ContainerBase): # not a ContainerOperand
         self._series = series
         self._store = store
 
+        # Not handling cases of max_persist being greater than the length of the Series (might floor to length)
+        if max_persist is not None and max_persist < self._loaded.sum():
+            raise ErrorInitBus('max_persis cannot be less than the number of already loaded Frames')
+        self._max_persist = max_persist
+
         # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
         self._config = StoreConfigMap.from_initializer(config)
-
 
     #---------------------------------------------------------------------------
     # delegation
 
-    def __getattr__(self, name: str) -> tp.Any:
+    def __getattr__(self, attr: str) -> tp.Any:
         try:
-            return getattr(self._series, name)
+            return getattr(self._series, attr)
         except AttributeError:
             # fix the attribute error to reference the Bus
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'") from None
 
     #---------------------------------------------------------------------------
     # cache management
@@ -220,36 +171,87 @@ class Bus(ContainerBase): # not a ContainerOperand
     def _update_series_cache_iloc(self, key: GetItemKeyType) -> None:
         '''
         Update the Series cache with the key specified, where key can be any iloc GetItemKeyType.
+
+        Args:
+            key: always an iloc key.
         '''
+        max_persist_active = self._max_persist is not None
 
-        # do nothing if all loaded, or if the requested keys are already loadsed
-        if not self._loaded_all and not self._loaded[key].all():
-            if self._store is None:
-                raise RuntimeError('no store defined')
+        load: bool
+        if self._loaded_all:
+            load = False
+        else:
+            load = not self._loaded[key].all() # works with elements
 
-            labels = set(self._iloc_to_labels(key))
+        if not load and not max_persist_active:
+            return
 
-            array = np.empty(shape=len(self._series._index), dtype=object)
-            for idx, (label, frame) in enumerate(self._series.items()):
-                if frame is FrameDeferred and label in labels:
-                    frame = self._store.read(label, config=self._config[label])
-                    self._loaded[idx] = True # update loaded status
+        if not load and max_persist_active: # must update LRU position
+            if isinstance(key, INT_TYPES):
+                labels = (self._series.index.iloc[key],)
+            else:
+                labels = self._series.index.iloc[key].values
+            for label in labels: # update LRU position
+                self._last_accessed[label] = self._last_accessed.pop(label, None)
+            return
+
+        # load and max_persist_active True or False
+        if self._store is None:
+            # there has to be a Store defined if we are partially loaded
+            raise RuntimeError('no store defined')
+
+        if max_persist_active:
+            loaded_count = self._loaded.sum()
+
+        index = self._series.index
+        array = self._series.values.copy() # not a deepcopy
+        targets = self._series.iloc[key] # key is iloc key
+        if not isinstance(targets, Series):
+            targets = {index[key]: targets} # present element as items
+
+        for label, frame in targets.items(): # this is a Series, not a Bus
+            idx = index.loc_to_iloc(label)
+
+            if max_persist_active: # update LRU position
+                self._last_accessed[label] = self._last_accessed.pop(label, None)
+
+            if frame is FrameDeferred:
+                # as we are iterating from `targets`, we might be holding on to references of Frames that we already removed in `array`; in this case we do not need to `read`, but we still need to update the new array
+                frame = self._store.read(label, config=self._config[label])
+
+            if not self._loaded[idx]:
                 array[idx] = frame
-            array.flags.writeable = False
+                self._loaded[idx] = True # update loaded status
+                if max_persist_active:
+                    loaded_count += 1
 
-            self._series = Series(array, index=self._series._index, dtype=object)
-            self._loaded_all = self._loaded.all()
+            if max_persist_active and loaded_count > self._max_persist:
+                assert loaded_count == self._max_persist + 1 # type: ignore
 
-    def _update_series_cache_all(self) -> None:
-        '''Load all Tables contained in this Bus.
-        '''
-        if not self._loaded_all:
-            self._update_series_cache_iloc(NULL_SLICE)
+                label_remove = next(iter(self._last_accessed))
+                del self._last_accessed[label_remove]
+                idx_remove = index.loc_to_iloc(label_remove)
+                self._loaded[idx_remove] = False
+                array[idx_remove] = FrameDeferred
+                loaded_count -= 1
+                assert loaded_count >= 0
+
+        array.flags.writeable = False
+        self._series = Series(array,
+                index=self._series._index,
+                dtype=object,
+                own_index=True,
+                )
+        self._loaded_all = self._loaded.all()
 
     #---------------------------------------------------------------------------
     # extraction
 
     def _extract_iloc(self, key: GetItemKeyType) -> 'Bus':
+        '''
+        Returns:
+            Bus or, if an element is selected, a Frame
+        '''
         self._update_series_cache_iloc(key=key)
 
         # iterable selection should be handled by NP
@@ -257,6 +259,7 @@ class Bus(ContainerBase): # not a ContainerOperand
 
         if not isinstance(values, np.ndarray): # if we have a single element
             return values #type: ignore
+
         series = Series(
                 values,
                 index=self._series._index.iloc[key],
@@ -264,6 +267,7 @@ class Bus(ContainerBase): # not a ContainerOperand
         return self.__class__(series=series,
                 store=self._store,
                 config=self._config,
+                max_persist=self._max_persist,
                 )
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
@@ -289,8 +293,8 @@ class Bus(ContainerBase): # not a ContainerOperand
         return self.__class__(series=series,
                 store=self._store,
                 config=self._config,
+                max_persist=self._max_persist,
                 )
-
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> 'Bus':
@@ -320,20 +324,26 @@ class Bus(ContainerBase): # not a ContainerOperand
         return self._series.__len__()
 
     #---------------------------------------------------------------------------
-    # dictionary-like interface
+    # dictionary-like interface; these will force loadings contained Frame
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
-        '''Iterator of pairs of index label and value.
+    def items(self) -> tp.Iterator[tp.Tuple[str, Frame]]:
+        '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
-        self._update_series_cache_all()
-        yield from self._series.items()
+        # force new iteration to account for max_persist
+        for i, label in enumerate(self._series._index):
+            yield label, self._extract_iloc(i) #type: ignore
+
+    _items_store = items
 
     @property
     def values(self) -> np.ndarray:
-        '''A 1D array of values.
+        '''A 1D object array of all Frame contained in the Bus.
         '''
-        self._update_series_cache_all()
-        return self._series.values
+        post = np.empty(self.__len__(), dtype=object)
+        for i, _ in enumerate(self._series._index):
+            post[i] = self._extract_iloc(i)
+
+        return post
 
     #---------------------------------------------------------------------------
     @doc_inject()
@@ -353,7 +363,7 @@ class Bus(ContainerBase): # not a ContainerOperand
         return self._series._display(config, display_cls)
 
     #---------------------------------------------------------------------------
-    # extended disciptors
+    # extended discriptors; in general, these do not force loading Frame
 
     @property
     def mloc(self) -> Series:
@@ -386,14 +396,13 @@ class Bus(ContainerBase): # not a ContainerOperand
 
     @property
     def shapes(self) -> Series:
-        '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`.
+        '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
 
         Returns:
             :obj:`tp.Tuple[int]`
         '''
         values = (f.shape if f is not FrameDeferred else None for f in self._series.values)
         return Series(values, index=self._series._index, dtype=object, name='shape')
-
 
     @property
     def nbytes(self) -> int:
@@ -404,7 +413,7 @@ class Bus(ContainerBase): # not a ContainerOperand
     @property
     def status(self) -> Frame:
         '''
-        Return a
+        Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame`.
         '''
         def gen() -> tp.Iterator[Series]:
 
@@ -438,6 +447,8 @@ class Bus(ContainerBase): # not a ContainerOperand
         '''
         {doc}
 
+        Note: this will attempt to load and compare all Frame managed by the Bus.
+
         Args:
             {compare_name}
             {compare_dtype}
@@ -453,16 +464,12 @@ class Bus(ContainerBase): # not a ContainerOperand
         elif not isinstance(other, Bus):
             return False
 
-        # defer updating cache
-        self._update_series_cache_all()
-
+        # NOTE: dtype self._series is always object
         if len(self._series) != len(other._series):
             return False
 
         if compare_name and self._series._name != other._series._name:
             return False
-
-        # NOTE: dtype self._series is always object
 
         if not self._series.index.equals(
                 other._series.index,
@@ -474,8 +481,8 @@ class Bus(ContainerBase): # not a ContainerOperand
             return False
 
         # can zip because length of Series already match
-        for (frame_self, frame_other) in zip(
-                self._series.values, other._series.values):
+        # using .values will force loading all Frame into memory; better to use items() to permit collection
+        for (_, frame_self), (_, frame_other) in zip(self.items(), other.items()):
             if not frame_self.equals(frame_other,
                     compare_name=compare_name,
                     compare_dtype=compare_dtype,
@@ -485,54 +492,3 @@ class Bus(ContainerBase): # not a ContainerOperand
                 return False
 
         return True
-
-    #---------------------------------------------------------------------------
-    # exporters
-
-    def to_zip_tsv(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreZipTSV(fp)
-        config = config if not None else self._config
-        store.write(self.items(), config=config)
-
-    def to_zip_csv(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreZipCSV(fp)
-        config = config if not None else self._config
-        store.write(self.items(), config=config)
-
-    def to_zip_pickle(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreZipPickle(fp)
-        # config must be None for pickels, will raise otherwise
-        store.write(self.items(), config=config)
-
-    def to_xlsx(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreXLSX(fp)
-        config = config if not None else self._config
-        store.write(self.items(), config=config)
-
-    def to_sqlite(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreSQLite(fp)
-        config = config if not None else self._config
-        store.write(self.items(), config=config)
-
-    def to_hdf5(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreHDF5(fp)
-        config = config if not None else self._config
-        store.write(self.items(), config=config)

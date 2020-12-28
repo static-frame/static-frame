@@ -32,11 +32,13 @@ from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DT64_S
+from static_frame.core.quilt import Quilt
 
 
 
@@ -283,6 +285,7 @@ class InterfaceGroup:
     OperatorUnary = 'Operator Unary'
     AccessorDatetime = 'Accessor Datetime'
     AccessorString = 'Accessor String'
+    AccessorTranspose = 'Accessor Transpose'
 
 # NOTE: order from definition retained
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items() if not k.startswith('_'))
@@ -523,9 +526,14 @@ class InterfaceRecord(tp.NamedTuple):
             max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
-        group = (InterfaceGroup.AccessorString
-                if cls_interface is InterfaceString
-                else InterfaceGroup.AccessorDatetime)
+        if cls_interface is InterfaceString:
+            group = InterfaceGroup.AccessorString
+        elif cls_interface is InterfaceDatetime:
+            group = InterfaceGroup.AccessorDatetime
+        elif cls_interface is InterfaceTranspose:
+            group = InterfaceGroup.AccessorTranspose
+        else:
+            raise NotImplementedError()
 
         for field in cls_interface.INTERFACE: # apply, map, etc
             delegate_obj = getattr(cls_interface, field)
@@ -745,6 +753,14 @@ class InterfaceRecord(tp.NamedTuple):
 class InterfaceSummary(Features):
 
     _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
+    _CLS_INIT_SIMPLE = frozenset((
+                    ContainerOperand,
+                    ContainerBase,
+                    IndexBase,
+                    DisplayConfig,
+                    StoreFilter,
+                    StoreConfig
+                    ))
 
     @classmethod
     def is_public(cls, field: str) -> bool:
@@ -753,7 +769,6 @@ class InterfaceSummary(Features):
         if field in cls.EXCLUDE_PRIVATE:
             return False
         return True
-
 
     @classmethod
     def get_instance(cls, target: tp.Type[ContainerBase]) -> ContainerBase:
@@ -766,18 +781,20 @@ class InterfaceSummary(Features):
             elif target is Bus:
                 f = Frame.from_elements((0,), name='frame')
                 instance = target.from_frames((f,)) #type: ignore
+            elif target is Quilt:
+                f = Frame.from_elements((0,), name='frame')
+                bus = Bus.from_frames((f,))
+                instance = target(bus, retain_labels=False) #type: ignore
             elif target is Batch:
                 instance = Batch(iter(()))
-            elif target in (DisplayConfig, StoreFilter, StoreConfig):
-                instance = target()
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):
                 instance = target(np.array((0,), dtype=DT64_S))
-            elif target in (ContainerOperand, ContainerBase, IndexBase):
-                instance = target()
             elif issubclass(target, Frame):
                 instance = target.from_elements((0,))
+            elif target in cls._CLS_INIT_SIMPLE:
+                instance = target()
             else:
                 instance = target((0,)) #type: ignore
             cls._CLS_TO_INSTANCE_CACHE[target] = instance
@@ -869,6 +886,11 @@ class InterfaceSummary(Features):
             elif isinstance(obj, InterfaceDatetime):
                 yield from InterfaceRecord.gen_from_accessor(
                             cls_interface=InterfaceDatetime,
+                            **kwargs,
+                            )
+            elif isinstance(obj, InterfaceTranspose):
+                yield from InterfaceRecord.gen_from_accessor(
+                            cls_interface=InterfaceTranspose,
                             **kwargs,
                             )
             elif obj.__class__ in (InterfaceSelectDuo, InterfaceSelectTrio):

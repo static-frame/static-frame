@@ -32,6 +32,10 @@ class ErrorInitBus(ErrorInit):
     '''Error in Bus initialization.
     '''
 
+class ErrorInitQuilt(ErrorInit):
+    '''Error in Quilt initialization.
+    '''
+
 class ErrorInitStore(ErrorInit):
     '''Error in Store initialization.
     '''
@@ -51,14 +55,19 @@ class LocInvalid(RuntimeError):
 class AxisInvalid(RuntimeError):
     pass
 
-
-
 #-------------------------------------------------------------------------------
 
 class StoreFileMutation(RuntimeError):
     '''
     A Stores file was mutated in an unexpected way.
     '''
+
+class NotImplementedAxis(NotImplementedError):
+    def __init__(self) -> None:
+        super().__init__('iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
+
+
+
 #-------------------------------------------------------------------------------
 
 def deprecated(message: str = '') -> None:

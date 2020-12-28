@@ -316,10 +316,10 @@ class BuoySingleYear2D:
         part = fsf.relabel_flat(index=True)
 
         # adding a level
-        part = fsf.relabel_add_level(index='A')
+        part = fsf.relabel_level_add(index='A')
 
         # dropping a level
-        #         ipdb> fsf.relabel_drop_level(index=1)
+        #         ipdb> fsf.relabel_level_drop(index=1)
         # *** static_frame.core.exception.ErrorInitIndex: labels (50350) have non-unique values (17034)
         # ipdb>
 

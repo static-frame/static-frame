@@ -1,17 +1,17 @@
 
 from functools import partial
 from io import StringIO
+from io import BytesIO
 from itertools import chain
 from itertools import product
+
 import csv
 import json
 import sqlite3
 import typing as tp
 
-
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
-
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -31,6 +31,7 @@ from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import apex_to_name
+from static_frame.core.container_util import MessagePackElement
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -55,17 +56,17 @@ from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
+from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
-from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
-# from static_frame.core.node_selector import InterfaceBatchQuartet
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
@@ -98,6 +99,7 @@ from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
 from static_frame.core.util import FrameInitializer
@@ -111,7 +113,9 @@ from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import is_hashable
-from static_frame.core.util import isin
+from static_frame.core.util import is_dtype_specifier
+from static_frame.core.util import is_mapping
+from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import Join
@@ -135,6 +139,11 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import dtype_kind_to_na
+from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTU_PYARROW
+from static_frame.core.util import DT64_NS
+from static_frame.core.util import DTYPE_INT_DEFAULT
+
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -156,6 +165,7 @@ class Frame(ContainerOperand):
     '''A two-dimensional ordered, labelled collection, immutable and of fixed size.
     '''
     __slots__ = (
+            '__weakref__',
             '_blocks',
             '_columns',
             '_index',
@@ -1007,7 +1017,7 @@ class Frame(ContainerOperand):
     def from_dict(cls,
             mapping: tp.Dict[tp.Hashable, tp.Iterable[tp.Any]],
             *,
-            index: IndexInitializer = None,
+            index: tp.Optional[IndexInitializer] = None,
             fill_value: object = np.nan,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
@@ -1033,6 +1043,92 @@ class Frame(ContainerOperand):
                 columns_constructor=columns_constructor,
                 consolidate_blocks=consolidate_blocks,
                 )
+
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_fields(cls,
+            fields: tp.Iterable[tp.Iterable[tp.Any]],
+            *,
+            index: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[IndexInitializer] = None,
+            fill_value: object = np.nan,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            own_index: bool = False,
+            own_columns: bool = False,
+            consolidate_blocks: bool = False
+            ) -> 'Frame':
+        '''Frame constructor from an iterator of columns, where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
+
+        Args:
+            fields: Iterable of column values.
+            index: Iterable of values to create an Index.
+            fill_value: If pairs include Series, they will be reindexed with the provided index; reindexing will use this fill value.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`static_frame.Frame`
+        '''
+        # if an index initializer is passed, and we expect to get Series, we need to create the index in advance of iterating blocks
+        if not own_index and _index_initializer_needs_init(index):
+            index = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+            own_index = True
+
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for col_idx, v in enumerate(fields):
+                column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
+
+                if isinstance(v, np.ndarray):
+                    if column_type is not None:
+                        yield v.astype(column_type)
+                    else:
+                        yield v
+                elif isinstance(v, Series):
+                    if index is None:
+                        raise ErrorInitFrame('can only consume Series in Frame.from_columns if an Index is provided.')
+                    if not v.index.equals(index):
+                        v = v.reindex(index,
+                                fill_value=fill_value,
+                                check_equals=False,
+                                )
+                    if column_type is not None:
+                        yield v.values.astype(column_type)
+                    else:
+                        yield v.values
+                elif isinstance(v, Frame):
+                    raise ErrorInitFrame('Frames are not supported in from_items constructor.')
+                else: # returned array is immutable
+                    values, _ = iterable_to_array_1d(v, column_type)
+                    yield values
+
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
+
+        return cls(TypeBlocks.from_blocks(block_gen()),
+                index=index,
+                columns=columns,
+                name=name,
+                own_data=True,
+                own_index=own_index,
+                own_columns=own_columns,
+                columns_constructor=columns_constructor
+                )
+
+
+
+
 
     @staticmethod
     def _structured_array_to_d_ia_cl(
@@ -1126,7 +1222,7 @@ class Frame(ContainerOperand):
                     array_final = store_filter.to_type_filter_array(array_final)
 
                 if get_col_dtype:
-                    # dtypes can refer to columns that will become part of the Index by name or iloc position
+                    # dtypes are applied to all columns and can refer to columns that will become part of the Index by name or iloc position: we need to be able to type these before creating Index obejcts
                     dtype = get_col_dtype(col_idx) #pylint: disable=E1102
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
@@ -1239,7 +1335,7 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    # iloc/loc pairs constructors: these are not public, not sure if they should be
+    # NOTE: # remove from_element_iloc_items, rename from_element_loc_items to from_element_items
 
     @classmethod
     def from_element_iloc_items(cls,
@@ -1277,7 +1373,8 @@ class Frame(ContainerOperand):
             *,
             index: IndexInitializer,
             columns: IndexInitializer,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypesSpecifier = None,
+            axis: tp.Optional[int] = None,
             name: NameType = None,
             fill_value: object = FILL_VALUE_DEFAULT,
             index_constructor: IndexConstructor = None,
@@ -1286,11 +1383,13 @@ class Frame(ContainerOperand):
             own_columns: bool = False,
             ) -> 'Frame':
         '''
+        Create a :obj:`Frame` from an iterable of key, value, where key is a pair of row, column labels.
+
         This function is partialed (setting the index and columns) and used by ``IterNodeDelegate`` as the apply constructor for doing application on element iteration.
 
         Args:
             items: an iterable of pairs of 2-tuples of row, column loc labels and values.
-
+            axis: when None, items can be in an order; when 0, items must be well-formed and ordered row major; when 1, items must be well-formed and ordered columns major.
 
         Returns:
             :obj:`static_frame.Frame`
@@ -1300,32 +1399,83 @@ class Frame(ContainerOperand):
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
+            own_index = True
 
         if not own_columns:
             columns = index_from_optional_constructor(columns,
                     default_constructor=cls._COLUMNS_CONSTRUCTOR,
                     explicit_constructor=columns_constructor
                     )
+            own_columns = True
 
-        items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
-                for k, v in items)
+        # if items are given i n
+        if axis is None:
+            if not is_dtype_specifier(dtype):
+                raise ErrorInitFrame('cannot provide multiple dtypes when creating a Frame from element items and axis is None')
+            items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
+                    for k, v in items)
+            dtype = dtype if dtype is not None else object
+            tb = TypeBlocks.from_element_items(
+                    items,
+                    shape=(len(index), len(columns)),
+                    dtype=dtype,
+                    fill_value=fill_value)
+            return cls(tb,
+                    index=index,
+                    columns=columns,
+                    name=name,
+                    own_data=True,
+                    own_index=own_index, # always true as either provided or created new
+                    own_columns=own_columns,
+                    )
 
-        dtype = dtype if dtype is not None else object
+        elif axis == 0: # row wise, use from-records
+            def records() -> tp.Iterator[tp.List[tp.Any]]:
+                # do not need to convert loc to iloc
+                items_iter = iter(items)
+                first = next(items_iter)
+                (r_last, _), value = first
+                values = [value]
+                for (r, c), v in items_iter:
+                    if r != r_last:
+                        yield values
+                        r_last = r
+                        values = []
+                    values.append(v)
+                yield values
 
-        tb = TypeBlocks.from_element_items(
-                items,
-                shape=(len(index), len(columns)),
-                dtype=dtype,
-                fill_value=fill_value)
+            return cls.from_records(records(),
+                    index=index,
+                    columns=columns,
+                    name=name,
+                    own_index=own_index,
+                    own_columns=own_columns,
+                    dtypes=dtype,
+                    )
 
-        return cls(tb,
-                index=index,
-                columns=columns,
-                name=name,
-                own_data=True,
-                own_index=True, # always true as either provided or created new
-                own_columns=True
-                )
+        elif axis == 1: # column wise, use from_items
+            def fields() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.List[tp.Any]]]:
+                items_iter = iter(items)
+                first = next(items_iter)
+                (_, c_last), value = first
+                values = [value]
+                for (r, c), v in items_iter:
+                    if c != c_last:
+                        yield values
+                        c_last = c
+                        values = []
+                    values.append(v)
+                yield values
+
+            return cls.from_fields(fields(),
+                    index=index,
+                    columns=columns,
+                    name=name,
+                    own_index=own_index,
+                    own_columns=own_columns,
+                    dtypes=dtype,
+                    )
+        raise AxisInvalid(f'no support for axis: {axis}')
 
     #---------------------------------------------------------------------------
     # file, data format loaders
@@ -1838,6 +1988,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             skip_header: int = 0,
             skip_footer: int = 0,
+            trim_nadir: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
         '''
@@ -1859,6 +2010,7 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
+                trim_nadir=trim_nadir,
                 )
         return st.read(label,
                 config=config,
@@ -1931,6 +2083,7 @@ class Frame(ContainerOperand):
             *,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             own_data: bool = False
             ) -> 'Frame':
@@ -1948,7 +2101,7 @@ class Frame(ContainerOperand):
         '''
         import pandas
         if not isinstance(value, pandas.DataFrame):
-            raise ErrorInitFrame('from_pandas must be called with a Pandas object')
+            raise ErrorInitFrame(f'from_pandas must be called with a Pandas DataFrame object, not: {type(value)}')
 
         pdvu1 = pandas_version_under_1()
 
@@ -1964,7 +2117,7 @@ class Frame(ContainerOperand):
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
         def blocks() -> tp.Iterator[np.ndarray]:
-            pairs = value.dtypes.items()
+            pairs = enumerate(value.dtypes.values)
             column_start, dtype_current = next(pairs)
             column_last = column_start
             yield_block = False
@@ -1978,8 +2131,8 @@ class Frame(ContainerOperand):
                     yield_block = True
 
                 if yield_block:
-                    # use loc to select before calling .values
-                    part = value.loc[NULL_SLICE, slice(column_start, column_last)]
+                    part = value.iloc[NULL_SLICE,
+                            slice(column_start, column_last + 1)]
                     yield part_to_array(part)
 
                     column_start = column
@@ -1989,7 +2142,7 @@ class Frame(ContainerOperand):
                 column_last = column
 
             # always have left over
-            part = value.loc[NULL_SLICE, slice(column_start, None)]
+            part = value.iloc[NULL_SLICE, slice(column_start, None)]
             yield part_to_array(part)
 
         if consolidate_blocks:
@@ -1997,11 +2150,13 @@ class Frame(ContainerOperand):
         else:
             blocks = TypeBlocks.from_blocks(blocks())
 
-        # avoid getting a Series if a column
-        if 'name' not in value.columns and hasattr(value, 'name'):
+        if name is not NAME_DEFAULT:
+            pass # keep
+        elif 'name' not in value.columns and hasattr(value, 'name'):
+            # avoid getting a Series if a column
             name = value.name
         else:
-            name = None
+            name = None # do not keep as NAME_DEFAULT
 
         own_index = True
         if index_constructor is IndexAutoFactory:
@@ -2165,11 +2320,19 @@ class Frame(ContainerOperand):
         if columns_select and index_depth != 0:
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
 
+        fp = path_filter(fp)
+
         # NOTE: the order of columns_select will determine their order
         table = pq.read_table(fp,
                 columns=columns_select,
                 use_pandas_metadata=False,
                 )
+        if columns_select:
+            # pq.read_table will silently accept requested columns that are not found; this can be identified if we got back fewer columns than requested
+            if len(table.column_names) < len(columns_select):
+                missing = set(columns_select) - set(table.column_names)
+                raise ErrorInitFrame(f'cannot load all columns in columns_select: missing {missing}')
+
         return cls.from_arrow(table,
                 index_depth=index_depth,
                 columns_depth=columns_depth,
@@ -2177,6 +2340,81 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks,
                 name=name
                 )
+
+    @staticmethod
+    @doc_inject(selector='constructor_frame')
+    def from_msgpack(
+            msgpack_data: bin
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory binary object formatted as a msgpack.
+
+        Args:
+            msgpack_data: A binary msgpack object, encoding a Frame as produced from to_msgpack()
+        '''
+        import msgpack
+        import msgpack_numpy
+
+        def decode(obj: dict, #dict produced by msgpack-python
+                chain: tp.Callable = msgpack_numpy.decode,
+                ) -> object:
+
+            # NOTE: maybe this can be replaced by dictionary of SF containers provided by container_util
+            globals_ref = globals()
+
+            if b'sf' in obj:
+                clsname = obj[b'sf']
+                cls = globals_ref[clsname]
+
+                if issubclass(cls, Frame):
+                    blocks = unpackb(obj[b'blocks'])
+                    return cls(
+                            blocks,
+                            name=obj[b'name'],
+                            index=unpackb(obj[b'index']),
+                            columns=unpackb(obj[b'columns']),
+                            own_data=True,
+                            )
+                elif issubclass(cls, IndexHierarchy):
+                    index_constructors=[
+                            globals_ref[clsname] for clsname in unpackb(
+                                   obj[b'index_constructors'])]
+                    blocks = unpackb(obj[b'blocks'])
+                    return cls._from_type_blocks(
+                            blocks=blocks,
+                            name=obj[b'name'],
+                            index_constructors=index_constructors,
+                            own_blocks=True)
+                elif issubclass(cls, Index):
+                    data = unpackb(obj[b'data'])
+                    return cls(
+                            data,
+                            name=obj[b'name'])
+                elif issubclass(cls, TypeBlocks):
+                    blocks = unpackb(obj[b'blocks'])
+                    return cls.from_blocks(blocks)
+
+            elif b'np' in obj:
+                #Overridden msgpack-numpy datatypes
+                data = unpackb(obj[b'data'])
+                typename = obj[b'dtype'].split('[', 1)[0]
+
+                if typename in ['datetime64', 'timedelta64', '>m8', '>M8']:
+                    array = np.array(data, dtype=obj[b'dtype'])
+
+                elif typename == 'object_':
+                    array = np.array(
+                            list(map(element_decode, data)),
+                            dtype=DTYPE_OBJECT)
+
+                array.flags.writeable = False
+                return array
+            else:
+                return chain(obj)
+
+        unpackb = partial(msgpack.unpackb, object_hook=decode)
+        element_decode = partial(MessagePackElement.decode, unpackb=unpackb)
+
+        return unpackb(msgpack_data)
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='container_init', class_name='Frame')
@@ -2395,14 +2633,17 @@ class Frame(ContainerOperand):
     @doc_inject(select='astype')
     def astype(self) -> InterfaceAsType:
         '''
-        Retype one or more columns. Can be used as as function to retype the entire ``Frame``; alternatively, a ``__getitem__`` interface permits retyping selected columns.
+        Retype one or more columns. When used as a function, can provide  retype the entire ``Frame``;  Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
 
         Args:
             {dtype}
         '''
+        # NOTE: this uses the same function for __call__ and __getitem__; call simply uses the NULL_SLICE and applys the dtype argument immediately
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
     #---------------------------------------------------------------------------
+    # via interfaces
+
     @property
     def via_str(self) -> InterfaceString['Frame']:
         '''
@@ -2448,178 +2689,237 @@ class Frame(ContainerOperand):
                 blocks_to_container=blocks_to_container,
                 )
 
+    @property
+    def via_T(self) -> InterfaceTranspose['Frame']:
+        '''
+        Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
+        '''
+        return InterfaceTranspose(
+                container=self,
+                )
+
     #---------------------------------------------------------------------------
-    # generators
+    # iterators
+
     @property
     def iter_array(self) -> IterNodeAxis:
         '''
-        Iterator of 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        Iterator of :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_array,
-            function_items=self._axis_array_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=self._axis_array,
+                function_items=self._axis_array_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_array_items(self) -> IterNodeAxis:
         '''
-        Iterator of pairs of label, 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        Iterator of pairs of label, :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_array,
-            function_items=self._axis_array_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=self._axis_array,
+                function_items=self._axis_array_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     @property
     def iter_tuple(self) -> IterNodeAxis:
-        return IterNodeAxis(
-            container=self,
-            function_values=self._axis_tuple,
-            function_items=self._axis_tuple_items,
-            yield_type=IterNodeType.VALUES
-            )
+        '''
+        Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
+        '''
+        return IterNodeConstructorAxis(
+                container=self,
+                function_values=self._axis_tuple,
+                function_items=self._axis_tuple_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_tuple_items(self) -> IterNodeAxis:
-        return IterNodeAxis(
-            container=self,
-            function_values=self._axis_tuple,
-            function_items=self._axis_tuple_items,
-            yield_type=IterNodeType.ITEMS
-            )
+        '''
+        Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
+        '''
+        return IterNodeConstructorAxis(
+                container=self,
+                function_values=self._axis_tuple,
+                function_items=self._axis_tuple_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     @property
     def iter_series(self) -> IterNodeAxis:
+        '''
+        Iterator of :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_series,
-            function_items=self._axis_series_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=self._axis_series,
+                function_items=self._axis_series_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_series_items(self) -> IterNodeAxis:
+        '''
+        Iterator of pairs of label, :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_series,
-            function_items=self._axis_series_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=self._axis_series,
+                function_items=self._axis_series_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroupAxis:
         '''
-        Iterate over Frames grouped by unique values in one or more rows or columns.
+        Iterator of :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
         return IterNodeGroupAxis(
-            container=self,
-            function_values=self._axis_group_loc,
-            function_items=self._axis_group_loc_items,
-            yield_type=IterNodeType.VALUES,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_loc,
+                function_items=self._axis_group_loc_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     @property
     def iter_group_items(self) -> IterNodeGroupAxis:
+        '''
+        Iterator of pairs of label, :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
+        '''
         return IterNodeGroupAxis(
-            container=self,
-            function_values=self._axis_group_loc,
-            function_items=self._axis_group_loc_items,
-            yield_type=IterNodeType.ITEMS,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_loc,
+                function_items=self._axis_group_loc_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     @property
     def iter_group_labels(self) -> IterNodeDepthLevelAxis:
+        '''
+        Iterator of :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
+        '''
         return IterNodeDepthLevelAxis(
-            container=self,
-            function_values=self._axis_group_labels,
-            function_items=self._axis_group_labels_items,
-            yield_type=IterNodeType.VALUES,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_labels,
+                function_items=self._axis_group_labels_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     @property
     def iter_group_labels_items(self) -> IterNodeDepthLevelAxis:
+        '''
+        Iterator of pairs of label, :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
+        '''
         return IterNodeDepthLevelAxis(
-            container=self,
-            function_values=self._axis_group_labels,
-            function_items=self._axis_group_labels_items,
-            yield_type=IterNodeType.ITEMS,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_labels,
+                function_items=self._axis_group_labels_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     #---------------------------------------------------------------------------
 
     @property
+    @doc_inject(selector='window')
     def iter_window(self) -> IterNodeWindow:
+        '''
+        Iterator of windowed values, where values are given as a :obj:`Frame`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
+    @doc_inject(selector='window')
     def iter_window_items(self) -> IterNodeWindow:
+        '''
+        Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     @property
+    @doc_inject(selector='window')
     def iter_window_array(self) -> IterNodeWindow:
+        '''
+        Iterator of windowed values, where values are given as a :obj:`np.array`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
+    @doc_inject(selector='window')
     def iter_window_array_items(self) -> IterNodeWindow:
+        '''
+        Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg:
-        return IterNodeNoArg(
-            container=self,
-            function_values=self._iter_element_loc,
-            function_items=self._iter_element_loc_items,
-            yield_type=IterNodeType.VALUES,
-            apply_type=IterNodeApplyType.FRAME_ELEMENTS
-            )
+    def iter_element(self) -> IterNodeAxis:
+        '''Iterator of elements, ordered by row then column.
+        '''
+        return IterNodeAxis(
+                container=self,
+                function_values=self._iter_element_loc,
+                function_items=self._iter_element_loc_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.FRAME_ELEMENTS
+                )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg:
-        return IterNodeNoArg(
-            container=self,
-            function_values=self._iter_element_loc,
-            function_items=self._iter_element_loc_items,
-            yield_type=IterNodeType.ITEMS,
-            apply_type=IterNodeApplyType.FRAME_ELEMENTS
-            )
+    def iter_element_items(self) -> IterNodeAxis:
+        '''Iterator of pairs of label, element, where labels are pairs of index, columns labels, ordered by row then column.
+        '''
+        return IterNodeAxis(
+                container=self,
+                function_values=self._iter_element_loc,
+                function_items=self._iter_element_loc_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.FRAME_ELEMENTS
+                )
 
     #---------------------------------------------------------------------------
     # index manipulation
@@ -2805,8 +3105,8 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True)
 
-    @doc_inject(selector='relabel_add_level', class_name='Frame')
-    def relabel_add_level(self,
+    @doc_inject(selector='relabel_level_add', class_name='Frame')
+    def relabel_level_add(self,
             index: tp.Hashable = None,
             columns: tp.Hashable = None
             ) -> 'Frame':
@@ -2818,8 +3118,8 @@ class Frame(ContainerOperand):
             columns: {level}
         '''
 
-        index = self._index.add_level(index) if index else self._index
-        columns = self._columns.add_level(columns) if columns else self._columns.copy()
+        index = self._index.level_add(index) if index else self._index
+        columns = self._columns.level_add(columns) if columns else self._columns.copy()
 
 
         return self.__class__(
@@ -2831,8 +3131,8 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True)
 
-    @doc_inject(selector='relabel_drop_level', class_name='Frame')
-    def relabel_drop_level(self,
+    @doc_inject(selector='relabel_level_drop', class_name='Frame')
+    def relabel_level_drop(self,
             index: int = 0,
             columns: int = 0
             ) -> 'Frame':
@@ -2844,8 +3144,8 @@ class Frame(ContainerOperand):
             columns: {count} Default is zero.
         '''
 
-        index = self._index.drop_level(index) if index else self._index.copy()
-        columns = self._columns.drop_level(columns) if columns else self._columns.copy()
+        index = self._index.level_drop(index) if index else self._index.copy()
+        columns = self._columns.level_drop(columns) if columns else self._columns.copy()
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
@@ -3252,15 +3552,17 @@ class Frame(ContainerOperand):
         '''
         return self._blocks.nbytes
 
-    def __bool__(self) -> bool:
-        '''
-        True if this container has size.
-        '''
-        return bool(self._blocks.size)
-
-
 
     #---------------------------------------------------------------------------
+    def _extract_array(self,
+            row_key: GetItemKeyType = None,
+            column_key: GetItemKeyType = None,
+            ) -> np.ndarray:
+        '''
+        Alternative extractor that returns just an ndarray
+        '''
+        return self._blocks._extract_array(row_key, column_key)
+
     @staticmethod
     def _extract_axis_not_multi(
                 row_key: tp.Hashable,
@@ -3271,6 +3573,7 @@ class Frame(ContainerOperand):
         '''
         row_nm = False
         column_nm = False
+        # NOTE: can we just identify integer types?
         if row_key is not None and not isinstance(row_key, KEY_MULTIPLE_TYPES):
             row_nm = True # axis 0
         if column_key is not None and not isinstance(column_key, KEY_MULTIPLE_TYPES):
@@ -3283,7 +3586,7 @@ class Frame(ContainerOperand):
             column_key: GetItemKeyType = None,
             ) -> tp.Union['Frame', Series]:
         '''
-        Extract based on iloc selection (indices have already mapped)
+        Extract Container based on iloc selection (indices have already mapped)
         '''
         blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
 
@@ -3319,13 +3622,14 @@ class Frame(ContainerOperand):
         blocks_shape = blocks._shape
 
         if blocks_shape[0] == 0 or blocks_shape[1] == 0:
-            # return a 0-sized Series
+            # return a 0-sized Series, `blocks` is already extracted
+            array = column_1d_filter(blocks._blocks[0]) if blocks._blocks else EMPTY_ARRAY
             if axis_nm[0]: # if row not multi
-                return Series(EMPTY_TUPLE,
+                return Series(array,
                         index=immutable_index_filter(columns),
                         name=name_row)
             elif axis_nm[1]:
-                return Series(EMPTY_TUPLE,
+                return Series(array,
                         index=index,
                         name=name_column)
         elif blocks_shape == (1, 1):
@@ -3385,19 +3689,10 @@ class Frame(ContainerOperand):
         iloc_row_key = self._index.loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _compound_loc_to_getitem_iloc(self,
-            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
-        '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
-        '''
-        iloc_column_key = self._columns.loc_to_iloc(key)
-        return None, iloc_column_key
 
     def _extract_loc(self, key: GetItemKeyTypeCompound) -> 'Frame':
-        iloc_row_key, iloc_column_key = self._compound_loc_to_iloc(key)
-        return self._extract(
-                row_key=iloc_row_key,
-                column_key=iloc_column_key
-                )
+        return self._extract(*self._compound_loc_to_iloc(key))
+
 
     def _extract_bloc(self, key: Bloc2DKeyType) -> Series:
         '''
@@ -3412,6 +3707,13 @@ class Frame(ContainerOperand):
                 for x, y in zip(*np.nonzero(bloc_key))
                 )
         return Series(values, index=index, own_index=True)
+
+    def _compound_loc_to_getitem_iloc(self,
+            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
+        '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
+        '''
+        iloc_column_key = self._columns.loc_to_iloc(key)
+        return None, iloc_column_key
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> tp.Union['Frame', Series]:
@@ -3551,7 +3853,10 @@ class Frame(ContainerOperand):
             # array is assumed to be immutable
             yield label, Series(array, index=self._index, name=label)
 
-    def get(self, key: tp.Hashable, default: tp.Optional[Series] = None) -> Series:
+    def get(self,
+            key: tp.Hashable,
+            default: tp.Optional[Series] = None,
+            ) -> Series:
         '''
         Return the value found at the columns key, else the default if the key is not found. This method is implemented to complete the dictionary-like interface.
         '''
@@ -3575,6 +3880,7 @@ class Frame(ContainerOperand):
     def _ufunc_binary_operator(self, *,
             operator: UFunc,
             other: tp.Any,
+            axis: int = 0,
             ) -> 'Frame':
 
         if operator.__name__ == 'matmul':
@@ -3582,11 +3888,10 @@ class Frame(ContainerOperand):
         elif operator.__name__ == 'rmatmul':
             return matmul(other, self)
 
-        #TODO: use equals on columns, index before calling reindex
-
         if isinstance(other, Frame):
             name = None
             # reindex both dimensions to union indices
+            # NOTE: union and reindexing check equals first
             columns = self._columns.union(other._columns)
             index = self._index.union(other._index)
 
@@ -3613,18 +3918,40 @@ class Frame(ContainerOperand):
                     )
         elif isinstance(other, Series):
             name = None
-            # when operating on a Series, we treat it as a row-wise operation, and thus take the union of the Series.index and Frame.columns
-            columns = self._columns.union(other._index)
-            self_tb = self.reindex(columns=columns, own_columns=True)._blocks
-            other_array = other.reindex(columns, own_index=True).values
-            return self.__class__(self_tb._ufunc_binary_operator(
-                            operator=operator,
-                            other=other_array),
-                    index=self._index,
-                    columns=columns,
-                    own_data=True,
-                    own_index=True,
-                    )
+            if axis == 0:
+                # when operating on a Series, we treat axis 0 as a row-wise operation, and thus take the union of the Series.index and Frame.columns
+                columns = self._columns.union(other._index)
+                self_tb = self.reindex(columns=columns, own_columns=True)._blocks
+                other_array = other.reindex(columns, own_index=True).values
+                blocks = self_tb._ufunc_binary_operator(
+                        operator=operator,
+                        other=other_array,
+                        axis=axis,
+                        )
+                return self.__class__(blocks,
+                        index=self._index,
+                        columns=columns,
+                        own_data=True,
+                        own_index=True,
+                        )
+            elif axis == 1:
+                # column-wise operation, take union of Series.index and Frame.index
+                index = self._index.union(other._index)
+                self_tb = self.reindex(index=index, own_index=True)._blocks
+                other_array = other.reindex(index, own_index=True).values
+                blocks = self_tb._ufunc_binary_operator(
+                        operator=operator,
+                        other=other_array,
+                        axis=axis,
+                        )
+                return self.__class__(blocks,
+                        index=index,
+                        columns=self._columns,
+                        own_data=True,
+                        own_index=True,
+                        )
+            else:
+                raise AxisInvalid(f'invalid axis: {axis}')
         elif isinstance(other, np.ndarray):
             name = None
         else:
@@ -3635,9 +3962,12 @@ class Frame(ContainerOperand):
                 name = None
 
         # assume we will keep dimensionality
-        return self.__class__(self._blocks._ufunc_binary_operator(
-                        operator=operator,
-                        other=other),
+        blocks = self._blocks._ufunc_binary_operator(
+                operator=operator,
+                other=other,
+                axis=axis,
+                )
+        return self.__class__(blocks,
                 index=self._index,
                 columns=self._columns,
                 own_data=True,
@@ -3725,25 +4055,38 @@ class Frame(ContainerOperand):
         yield from zip(keys, self._blocks.axis_values(axis))
 
 
-    def _axis_tuple(self, axis: int) -> tp.NamedTuple:
+    def _axis_tuple(self, *,
+            axis: int,
+            constructor: tp.Type[tuple] = None,
+            ) -> tp.NamedTuple:
         '''Generator of named tuples across an axis.
 
         Args:
             axis: 0 iterates over columns (index axis), 1 iterates over rows (column axis)
         '''
-        if axis == 1:
-            Tuple = get_tuple_constructor(self._columns.values)
-        elif axis == 0:
-            Tuple = get_tuple_constructor(self._index.values)
-        else:
-            raise AxisInvalid(f'no support for axis {axis}')
+        if constructor is None:
+            if axis == 1:
+                labels = self._columns.values
+            elif axis == 0:
+                labels = self._index.values
+            else:
+                raise AxisInvalid(f'no support for axis {axis}')
+            # uses _make method to call with iterable
+            constructor = get_tuple_constructor(labels)
+        elif (isinstance(constructor, type) and
+                issubclass(constructor, tuple) and
+                hasattr(constructor, '_make')):
+            constructor = constructor._make
 
         for axis_values in self._blocks.axis_values(axis):
-            yield Tuple(*axis_values)
+            yield constructor(axis_values)
 
-    def _axis_tuple_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
+    def _axis_tuple_items(self, *,
+            axis: int,
+            constructor: tp.Type[tuple] = None,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
         keys = self._index if axis == 1 else self._columns
-        yield from zip(keys, self._axis_tuple(axis=axis))
+        yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
 
 
     def _axis_series(self, axis: int) -> tp.Iterator[Series]:
@@ -3757,7 +4100,7 @@ class Frame(ContainerOperand):
             index = self._index
             labels = self._columns
         for label, axis_values in zip(labels, self._blocks.axis_values(axis)):
-            yield Series(axis_values, index=index, name=label)
+            yield Series(axis_values, index=index, name=label, own_index=True)
 
     def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
         keys = self._index if axis == 1 else self._columns
@@ -3770,7 +4113,8 @@ class Frame(ContainerOperand):
     def _axis_group_iloc_items(self,
             key: GetItemKeyType,
             *,
-            axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+            axis: int,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
 
         for group, selection, tb in self._blocks.group(axis=axis, key=key):
             if axis == 0:
@@ -3797,10 +4141,14 @@ class Frame(ContainerOperand):
             iloc_key: GetItemKeyType,
             axis: int
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+        '''
+        Optimized grouping when key is an element.
+        '''
         # Create a sorted copy since we do not want to change the underlying data
         frame_sorted: Frame = self.sort_values(key, axis=not axis)
 
-        def extract_frame(key: GetItemKeyType,
+        def extract_frame(
+                key: GetItemKeyType,
                 index: IndexBase,
                 ) -> 'Frame':
             if axis == 0:
@@ -3819,34 +4167,24 @@ class Frame(ContainerOperand):
                     own_data=True,
                     )
 
+        if not self._blocks.size:
+            return
+
         if axis == 0:
-            max_iloc: int = len(self._index)
             index: Index = frame_sorted.index
-            def get_group(i: int) -> tp.Hashable:
-                return frame_sorted.iloc[i, iloc_key]
+            group_values = frame_sorted._blocks._extract_array(column_key=iloc_key)
         else:
-            max_iloc = len(self._columns)
             index = frame_sorted.columns
-            def get_group(i: int) -> tp.Hashable:
-                return frame_sorted.iloc[iloc_key, i]
+            group_values = frame_sorted._blocks._extract_array(row_key=iloc_key)
 
-        group: tp.Hashable = get_group(0)
+        # find where new value is not equal to previous; drop the first as roll wraps
+        transitions = np.flatnonzero(group_values != np.roll(group_values, 1))[1:]
         start = 0
-        i = 0
-
-        while i < max_iloc:
-            next_group: tp.Hashable = get_group(i)
-
-            if group != next_group:
-                slc: slice = slice(start, i)
-                sliced_index: Index = index[slc]
-                yield group, extract_frame(slc, sliced_index)
-
-                start = i
-                group = next_group
-            i += 1
-
-        yield group, extract_frame(slice(start, None), index[start:])
+        for t in transitions:
+            slc = slice(start, t)
+            yield group_values[start], extract_frame(slc, index[slc])
+            start = t
+        yield group_values[start], extract_frame(slice(start, None), index[start:])
 
 
     def _axis_group_loc_items(self,
@@ -4000,25 +4338,30 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _iter_element_iloc_items(self) -> tp.Iterator[
-            tp.Tuple[tp.Tuple[int, int], tp.Any]]:
-        yield from self._blocks.element_items()
+    def _iter_element_iloc_items(self,
+            axis: int = 0,
+            ) -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]]:
+        yield from self._blocks.element_items(axis=axis)
 
     # def _iter_element_iloc(self):
     #     yield from (x for _, x in self._iter_element_iloc_items())
 
-    def _iter_element_loc_items(self) -> tp.Iterator[
-            tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]]:
+    def _iter_element_loc_items(self,
+            axis: int = 0,
+            ) -> tp.Iterator[tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]]:
         '''
-        Generator of pairs of (index, column), value.
+        Generator of pairs of (index, column), value. This is driven by ``np.ndindex``, and thus orders by row.
         '''
         yield from (
                 ((self._index[k[0]], self._columns[k[1]]), v)
-                for k, v in self._blocks.element_items()
+                for k, v in self._blocks.element_items(axis=axis)
                 )
 
-    def _iter_element_loc(self) -> tp.Iterator[tp.Any]:
-        yield from (x for _, x in self._iter_element_loc_items())
+    def _iter_element_loc(self,
+            axis: int = 0,
+            ) -> tp.Iterator[tp.Any]:
+        yield from (x for _, x in
+                self._iter_element_loc_items(axis=axis))
 
 
     #---------------------------------------------------------------------------
@@ -4168,8 +4511,14 @@ class Frame(ContainerOperand):
         '''
         Return a same-sized Boolean :obj:`Frame` that shows if the same-positioned element is in the passed iterable.
         '''
-        array = isin(self.values, other)
-        return self.__class__(array, columns=self._columns, index=self._index)
+        return self.__class__(
+                self._blocks.isin(other),
+                index=self._index,
+                columns=self._columns,
+                own_data=True,
+                name=self._name,
+                )
+
 
     @doc_inject(class_name='Frame')
     def clip(self, *,
@@ -4197,30 +4546,36 @@ class Frame(ContainerOperand):
             if arg is None:
                 continue
             bound = -np.inf if idx == 0 else np.inf
+
             if isinstance(arg, Series):
                 if axis is None:
                     raise RuntimeError('cannot use a Series argument without specifying an axis')
                 target = self._index if axis == 0 else self._columns
                 values = arg.reindex(target).fillna(bound).values
                 if axis == 0: # duplicate the same column over the width
-                    args[idx] = np.vstack([values] * self.shape[1]).T
+                    # NOTE: extracting array, then scaling in a list, assuming we are just multiply references, not creating copies
+                    args[idx] = [values] * self.shape[1]
                 else:
-                    args[idx] = np.vstack([values] * self.shape[0])
+                    # create a list of row-length arrays for maximal type preservation
+                    args[idx] = [np.full(self.shape[0], v) for v in values]
+
             elif isinstance(arg, Frame):
                 args[idx] = arg.reindex(
                         index=self._index,
-                        columns=self._columns).fillna(bound).values
+                        columns=self._columns).fillna(bound)._blocks._blocks
+
             elif hasattr(arg, '__iter__'):
                 raise RuntimeError('only Series or Frame are supported as iterable lower/upper arguments')
             # assume single value otherwise, no change necessary
 
-        array = np.clip(self.values, *args)
-        array.flags.writeable = False
+        blocks = self._blocks.clip(*args)
 
-        return self.__class__(array,
+        return self.__class__(blocks,
                 columns=self._columns,
                 index=self._index,
-                name=self._name
+                name=self._name,
+                own_data=True,
+                own_index=True,
                 )
 
 
@@ -4479,6 +4834,7 @@ class Frame(ContainerOperand):
     def roll(self,
             index: int = 0,
             columns: int = 0,
+            *,
             include_index: bool = False,
             include_columns: bool = False) -> 'Frame':
         '''
@@ -4524,6 +4880,7 @@ class Frame(ContainerOperand):
     def shift(self,
             index: int = 0,
             columns: int = 0,
+            *,
             fill_value=np.nan) -> 'Frame':
         '''
         Shift columns and/or rows by positive or negative integer counts, where columns and/or rows fall of the axis and introduce missing values, filled by `fill_value`.
@@ -4567,6 +4924,77 @@ class Frame(ContainerOperand):
             {count}
         '''
         return self.iloc[-count:]
+
+
+    def count(self, *,
+            skipna: bool = True,
+            axis: int = 0,
+            ) -> Series:
+        '''
+        Return the count of non-NA values along the provided ``axis``, where 0 provides counts per column, 1 provides counts per row.
+
+        Args:
+            axis
+        '''
+        labels = self._columns if axis == 0 else self._index
+
+        if skipna:
+            # NOTE: this could be more efficient if implemetned on TypeBlocks
+            array = np.empty(len(labels), dtype=DTYPE_INT_DEFAULT)
+            for i, v in enumerate(self._blocks.axis_values(axis=axis)):
+                array[i] = len(v) - isna_array(v).sum()
+        else:
+            array = np.full(len(labels),
+                    self._blocks._shape[axis],
+                    dtype=DTYPE_INT_DEFAULT,
+                    )
+        array.flags.writeable = False
+        return Series(array, index=labels)
+
+    @doc_inject(selector='sample')
+    def sample(self,
+            index: tp.Optional[int] = None,
+            columns: tp.Optional[int] = None,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> 'Frame':
+        '''
+        {doc}
+
+        Args:
+            {index}
+            {columns}
+            {seed}
+        '''
+        if index is not None:
+            index, index_key = self._index._sample_and_key(count=index, seed=seed)
+            own_index = True
+        else:
+            index = self._index
+            index_key = None
+            own_index = True
+
+        if columns is not None:
+            columns, columns_key = self._columns._sample_and_key(count=columns, seed=seed)
+            own_columns = True
+        else:
+            columns = self._columns
+            columns_key = None
+            own_columns = False # might be GO
+
+        if index_key is not None or columns_key is not None:
+            blocks = self._blocks._extract(row_key=index_key, column_key=columns_key)
+        else:
+            blocks = self._blocks.copy()
+
+        return self.__class__(blocks,
+                columns=columns,
+                index=index,
+                name=self._name,
+                own_data=True,
+                own_index=own_index,
+                own_columns=own_columns,
+                )
 
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
@@ -4869,8 +5297,7 @@ class Frame(ContainerOperand):
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
                 else columns_constructor(f.columns))
 
-        if index_final or columns_final:
-            f = f.relabel(index=index_final, columns=columns_final)
+        f = f.relabel(index=index_final, columns=columns_final)
 
         return f
 
@@ -5603,14 +6030,21 @@ class Frame(ContainerOperand):
         '''
         import pandas
 
-        df = pandas.DataFrame(index=self._index.to_pandas())
+        if self._blocks.unified:
+            # make copy to get writeable
+            array = self._blocks._blocks[0].copy()
+            df = pandas.DataFrame(array,
+                    index=self._index.to_pandas(),
+                    columns=self._columns.to_pandas()
+                    )
+        else:
+            df = pandas.DataFrame(index=self._index.to_pandas())
+            # use integer columns for initial loading, then replace
+            # NOTE: alternative approach of trying to assign blocks (wrapped in a DF) is not faster than single column assignment
+            for i, array in enumerate(self._blocks.axis_values(0)):
+                df[i] = array
 
-        # iter columns to preserve types
-        # use integer columns for initial loading
-        for i, array in enumerate(self._blocks.axis_values(0)):
-            df[i] = array
-
-        df.columns = self._columns.to_pandas()
+            df.columns = self._columns.to_pandas()
 
         if 'name' not in df.columns and self._name is not None:
             df.name = self._name
@@ -5627,22 +6061,30 @@ class Frame(ContainerOperand):
         import pyarrow
         from static_frame.core.store import Store
 
-        field_names, _ = Store.get_field_names_and_dtypes(
+        field_names, dtypes = Store.get_field_names_and_dtypes(
                 frame=self,
                 include_index=include_index,
                 include_columns=include_columns,
                 force_str_names=True
                 )
-        arrays = tuple(Store.get_column_iterator(
-                frame=self,
-                include_index=include_index)
-                )
+
+        def arrays() -> tp.Iterator[np.ndarray]:
+            for array, dtype in zip(
+                    Store.get_column_iterator(frame=self, include_index=include_index),
+                    dtypes,
+                    ):
+                if (dtype.kind == DTYPE_DATETIME_KIND
+                        and np.datetime_data(dtype)[0] not in DTU_PYARROW):
+                    yield array.astype(DT64_NS)
+                else:
+                    yield array
+
         # field_names have to be strings
-        return pyarrow.Table.from_arrays(arrays, names=field_names)
+        return pyarrow.Table.from_arrays(tuple(arrays()), names=field_names)
 
 
     def to_parquet(self,
-            fp: PathSpecifier,
+            fp: tp.Union[PathSpecifier, BytesIO],
             *,
             include_index: bool = True,
             include_columns: bool = True,
@@ -5658,6 +6100,68 @@ class Frame(ContainerOperand):
                 )
         fp = path_filter(fp)
         pq.write_table(table, fp)
+
+    def to_msgpack(self) -> 'bin':
+        '''
+        Return a msgpack.
+        '''
+        import msgpack
+        import msgpack_numpy
+
+        def encode(obj: object,
+                chain: tp.Callable = msgpack_numpy.encode,
+                ) -> dict: #returns dict that msgpack-python consumes
+            cls = obj.__class__
+            clsname = cls.__name__
+            package = cls.__module__.split('.', 1)[0]
+
+            if package == 'static_frame':
+                if isinstance(obj, Frame):
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'blocks':packb(obj._blocks),
+                            b'index':packb(obj.index),
+                            b'columns':packb(obj.columns)}
+                elif isinstance(obj, IndexHierarchy):
+                    if obj._recache:
+                        obj._update_array_cache()
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'index_constructors': packb([
+                                    a.__name__ for a in obj.index_types.values.tolist()]),
+                            b'blocks':packb(obj._blocks)}
+                elif isinstance(obj, Index):
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'data':packb(obj.values)}
+                elif isinstance(obj, TypeBlocks):
+                    return {b'sf':clsname,
+                            b'blocks':packb(obj._blocks)}
+
+            elif package == 'numpy':
+                #msgpack-numpy is breaking with these data types, overriding here
+                if isinstance(obj, np.ndarray):
+                    if obj.dtype.type == np.object_:
+                        data = list(map(element_encode, obj))
+                        return {b'np': True,
+                                b'dtype': 'object_',
+                                b'data': packb(data)}
+                    elif obj.dtype.type == np.datetime64:
+                        data = obj.astype(str)
+                        return {b'np': True,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(data)}
+                    elif obj.dtype.type == np.timedelta64:
+                        data = obj.astype(np.float64)
+                        return {b'np': True,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(data)}
+            return chain(obj) #let msgpack_numpy.encode take over
+
+        packb = partial(msgpack.packb, default=encode)
+        element_encode = partial(MessagePackElement.encode, packb=packb)
+
+        return packb(self)
 
     def to_xarray(self) -> 'Dataset':
         '''
@@ -6179,9 +6683,6 @@ class FrameGO(Frame):
             raise NotImplementedError(
                     f'no support for extending with {type(container)}')
 
-        if not len(container.index): # must be empty data, empty index container
-            return
-
         # self's index will never change; we only take what aligns in the passed container
         if not self._index.equals(container._index):
             container = container.reindex(self._index,
@@ -6333,9 +6834,22 @@ class FrameAsType:
         self.container = container
         self.column_key = column_key
 
-    def __call__(self, dtype, consolidate_blocks: bool = True) -> 'Frame':
+    def __call__(self,
+            dtypes: DtypesSpecifier,
+            *,
+            consolidate_blocks: bool = True,
+            ) -> 'Frame':
 
-        blocks = self.container._blocks._astype_blocks(self.column_key, dtype)
+        if self.column_key == NULL_SLICE:
+            if is_mapping(dtypes):
+                # translate keys loc to iloc
+                dtypes = {self.container._columns.loc_to_iloc(k): v
+                        for k, v in dtypes.items()}
+            blocks = self.container._blocks._astype_blocks_from_dtypes(dtypes)
+        else:
+            if not is_dtype_specifier(dtypes):
+                raise RuntimeError('must supply a single dtype specifier if using a column selection other than the NULL slice')
+            blocks = self.container._blocks._astype_blocks(self.column_key, dtypes)
 
         if consolidate_blocks:
             blocks = TypeBlocks.consolidate_blocks(blocks)

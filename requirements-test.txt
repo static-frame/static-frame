@@ -14,9 +14,12 @@ sphinx==3.1.2
 sphinx-jinja==1.1.1
 sphinx_rtd_theme>=0.5.0
 sphinxcontrib-napoleon==0.7.0
-pandas==0.23.4
+pandas==0.24.2
 xlsxwriter==1.1.2
 openpyxl==3.0.0
 xarray==0.13.0
 tables==3.6.1
 pyarrow==0.16.0
+msgpack==1.0.0
+msgpack-numpy==0.4.7
+frame-fixtures==0.2.0

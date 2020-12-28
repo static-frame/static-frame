@@ -1,0 +1,52 @@
+
+
+
+
+
+
+import static_frame as sf
+
+
+
+# pivot v. pivot_stack, pivot_unstack
+
+# specify index, columns, and data values
+
+# first implementation: do a big group by index and columns fields, then back-out coordinates
+
+# how to deal with index-hierarchy: construct first, then supply tuple coordinate in any order
+
+# second implementation: prioritize columnar construction
+
+# construct tuple version of index on a Frame.GO; replace / convert to IH
+
+
+
+if __name__ == '__main__':
+
+
+    index = sf.IndexHierarchy.from_product(
+            ('far', 'near'), ('up', 'down'), ('left', 'right'),
+            name=('z', 'y', 'x')
+            )
+    f1 = sf.FrameGO(index=index)
+    f1['a'] = tuple(range(int(len(f1) / 2))) * 2
+    f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+    f2 = f1.unset_index()
+
+    import ipdb; ipdb.set_trace()
+
+
+# f2.pivot(columns_fields='z', index_fields='a', data_fields='b')
+# NOTE: optimal sub_frame path
+# f2.pivot(columns_fields='z', index_fields=('a', 'y'), data_fields='b')
+# f2.pivot(columns_fields='z', index_fields='y', data_fields=('a', 'b'), func={'sum':np.sum, 'mean':np.mean})
+
+# ipdb> f2.pivot(columns_fields='z', index_fields='y', data_fields='b')
+# NOTE: sub-optimal additional group by
+# f2.pivot(columns_fields='z', index_fields='y', data_fields=('a', 'b'))
+# f2.pivot(columns_fields='z', index_fields='y', data_fields=('a', 'b'), func={'sum':np.sum, 'mean':np.mean})
+
+# ipdb> f2.pivot(index_fields='y', data_fields='b')
+# NOTE: group-by index

@@ -88,6 +88,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import UFunc
 from static_frame.core.util import dtype_kind_to_na
+from static_frame.core.util import DTYPE_OBJECT
 
 
 if tp.TYPE_CHECKING:
@@ -140,10 +141,18 @@ class Series(ContainerOperand):
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
-        array = np.full(
-                len(index_final), #type: ignore
-                fill_value=element,
-                dtype=dtype)
+
+        length = len(index_final) #type: ignore
+        if isinstance(element, tuple):
+            array = np.empty(length, dtype=DTYPE_OBJECT)
+            # this is the only way to insert tuples
+            for i in range(length):
+                array[i] = element
+        else:
+            array = np.full(
+                    length,
+                    fill_value=element,
+                    dtype=dtype)
         array.flags.writeable = False
         return cls(array,
                 index=index_final,
@@ -210,7 +219,7 @@ class Series(ContainerOperand):
             containers: tp.Iterable['Series'],
             *,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
-            name: NameType = None
+            name: NameType = NAME_DEFAULT,
             ) -> 'Series':
         '''
         Concatenate multiple :obj:`Series` into a new :obj:`Series`.
@@ -226,7 +235,15 @@ class Series(ContainerOperand):
         if index is None:
             indices = []
 
+        name_first = NAME_DEFAULT
+        name_aligned = True
+
         for c in containers:
+            if name_first == NAME_DEFAULT:
+                name_first = c.name
+            elif name_first != c.name:
+                name_aligned = False
+
             array_values.append(c.values)
             if index is None:
                 indices.append(c.index)
@@ -243,6 +260,10 @@ class Series(ContainerOperand):
         elif index is IndexAutoFactory:
             # set index arg to None to force IndexAutoFactory usage in creation
             index = None
+
+        if name == NAME_DEFAULT:
+            # only derive if not explicitly set
+            name = name_first if name_aligned else None
 
         return cls(values, index=index, name=name)
 
@@ -332,6 +353,7 @@ class Series(ContainerOperand):
             value: 'pandas.Series',
             *,
             index_constructor: tp.Optional[tp.Union[IndexConstructor, IndexAutoFactoryType]] = None,
+            name: NameType = NAME_DEFAULT,
             own_data: bool = False) -> 'Series':
         '''Given a Pandas Series, return a Series.
 
@@ -345,7 +367,7 @@ class Series(ContainerOperand):
         '''
         import pandas
         if not isinstance(value, pandas.Series):
-            raise ErrorInitSeries('from_pandas must be called with a Pandas object')
+            raise ErrorInitSeries(f'from_pandas must be called with a Pandas Series object, not: {type(value)}')
 
         if pandas_version_under_1():
             if own_data:
@@ -355,6 +377,8 @@ class Series(ContainerOperand):
                 data = immutable_filter(value.values)
         else:
             data = pandas_to_numpy(value, own_data=own_data)
+
+        name = name if name is not NAME_DEFAULT else value.name
 
         own_index = True
         if index_constructor is IndexAutoFactory:
@@ -367,7 +391,7 @@ class Series(ContainerOperand):
 
         return cls(data,
                 index=index,
-                name=value.name,
+                name=name,
                 own_index=own_index
                 )
 
@@ -833,8 +857,8 @@ class Series(ContainerOperand):
                 index=self._index.flat(),
                 name=self._name)
 
-    @doc_inject(selector='relabel_add_level', class_name='Series')
-    def relabel_add_level(self,
+    @doc_inject(selector='relabel_level_add', class_name='Series')
+    def relabel_level_add(self,
             level: tp.Hashable
             ) -> 'Series':
         '''
@@ -844,11 +868,11 @@ class Series(ContainerOperand):
             level: {level}
         '''
         return self.__class__(self.values,
-                index=self._index.add_level(level),
+                index=self._index.level_add(level),
                 name=self._name)
 
-    @doc_inject(selector='relabel_drop_level', class_name='Series')
-    def relabel_drop_level(self,
+    @doc_inject(selector='relabel_level_drop', class_name='Series')
+    def relabel_level_drop(self,
             count: int = 1
             ) -> 'Series':
         '''
@@ -861,7 +885,7 @@ class Series(ContainerOperand):
             raise RuntimeError('cannot drop level of an Index that is not an IndexHierarchy')
 
         return self.__class__(self.values,
-                index=self._index.drop_level(count),
+                index=self._index.level_drop(count),
                 name=self._name)
 
 
@@ -1369,11 +1393,11 @@ class Series(ContainerOperand):
         '''
         return self.values.nbytes #type: ignore
 
-    def __bool__(self) -> bool:
-        '''
-        True if this container has size.
-        '''
-        return bool(self.values.size)
+    # def __bool__(self) -> bool:
+    #     '''
+    #     True if this container has size.
+    #     '''
+    #     return bool(self.values.size)
 
 
     #---------------------------------------------------------------------------
@@ -1517,8 +1541,11 @@ class Series(ContainerOperand):
 
 
     def _axis_group_labels_items(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: tp.Optional[DepthLevelSpecifier] = None,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
+
+        if depth_level is None:
+            depth_level = 0
 
         values = self.index.values_at_depth(depth_level)
         group_to_tuple = values.ndim == 2
@@ -1736,6 +1763,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
+        # returns an immutable array
         array = isin(self.values, other)
         return self.__class__(array, index=self._index, name=self._name)
 
@@ -1956,6 +1984,37 @@ class Series(ContainerOperand):
             :obj:`Series`
         '''
         return self.iloc[-count:]
+
+    def count(self, *,
+            skipna: bool = True
+            ) -> int:
+        '''
+        Return the count of non-NA elements.
+
+        Args:
+            skipna
+        '''
+        if not skipna:
+            return len(self.values)
+        return len(self.values) - isna_array(self.values).sum() #type: ignore
+
+    @doc_inject(selector='sample')
+    def sample(self,
+            count: int = 1,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> 'Series':
+        '''{doc}
+
+        Args:
+            {count}
+            {seed}
+        '''
+        index, key = self._index._sample_and_key(count=count, seed=seed)
+        values = self.values[key]
+        values.flags.writeable = False
+        return self.__class__(values, index=index, name=self._name)
+
 
     @doc_inject(selector='argminmax')
     def loc_min(self, *,

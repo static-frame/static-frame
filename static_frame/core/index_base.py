@@ -100,7 +100,7 @@ class IndexBase(ContainerOperand):
         '''
         import pandas
         if not isinstance(value, pandas.Index):
-            raise ErrorInitIndex('from_pandas must be called with a Pandas object')
+            raise ErrorInitIndex(f'from_pandas must be called with a Pandas Index object, not: {type(value)}')
 
         from static_frame import Index
         from static_frame import IndexGO
@@ -193,17 +193,43 @@ class IndexBase(ContainerOperand):
     def _drop_iloc(self: I, key: GetItemKeyType) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def roll(self: I, shift: int) -> I:
-        raise NotImplementedError() #pragma: no cover
-
     def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
-    def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
+    def roll(self: I, shift: int) -> I:
+        raise NotImplementedError() #pragma: no cover
+
+    def fillna(self: I, value: tp.Any) -> I:
+        raise NotImplementedError() #pragma: no cover
+
+    def _sample_and_key(self: I,
+            count: int = 1,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> tp.Tuple[I, np.ndarray]:
+        raise NotImplementedError() #pragma: no cover
+
+    def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
         raise NotImplementedError() #pragma: no cover
 
     def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:
         raise NotImplementedError()
+
+    #---------------------------------------------------------------------------
+    @doc_inject(selector='sample')
+    def sample(self: I,
+            count: int = 1,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> I:
+        '''{doc}
+
+        Args:
+            {count}
+            {seed}
+        '''
+        container, _ = self._sample_and_key(count=count, seed=seed)
+        return container
 
     #---------------------------------------------------------------------------
 
@@ -278,11 +304,11 @@ class IndexBase(ContainerOperand):
 
     def _ufunc_set(self: I,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', 'Series']
+            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
             ) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def intersection(self: I, *others: tp.Union['IndexBase', 'Series']) -> I:
+    def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
         '''
@@ -296,7 +322,7 @@ class IndexBase(ContainerOperand):
             post = post._ufunc_set(func, other)
         return post
 
-    def union(self: I, *others: 'IndexBase') -> I:
+    def union(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform union with another Index, container, or NumPy array. Identical comparisons retain order.
         '''
@@ -310,7 +336,7 @@ class IndexBase(ContainerOperand):
         return post
 
 
-    def difference(self: I, other: 'IndexBase') -> I:
+    def difference(self: I, other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform difference with another Index, container, or NumPy array. Retains order.
         '''
@@ -345,8 +371,6 @@ class IndexBase(ContainerOperand):
                 dtypes=dtypes,
                 size_one_unity=size_one_unity
                 )
-
-
 
     #---------------------------------------------------------------------------
     # exporters

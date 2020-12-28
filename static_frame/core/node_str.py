@@ -29,8 +29,8 @@ class InterfaceString(Interface[TContainer]):
     # NOTE: based on https://numpy.org/doc/stable/reference/routines.char.html
 
     __slots__ = (
-            '_blocks', # function that returns array of strings
-            '_blocks_to_container', # partialed function that will return a new container
+            '_blocks',
+            '_blocks_to_container',
             )
     INTERFACE = (
             'capitalize',
@@ -51,6 +51,7 @@ class InterfaceString(Interface[TContainer]):
             'istitle',
             'isupper',
             'ljust',
+            'len',
             'lower',
             'lstrip',
             'partition',
@@ -270,6 +271,13 @@ class InterfaceString(Interface[TContainer]):
         Returns true for each element if all cased characters in the string are uppercase and there is at least one character, false otherwise.
         '''
         block_gen = self._process_blocks(self._blocks, npc.isupper)
+        return self._blocks_to_container(block_gen)
+
+    def len(self) -> TContainer:
+        '''
+        Return the length of the string.
+        '''
+        block_gen = self._process_blocks(self._blocks, npc.str_len)
         return self._blocks_to_container(block_gen)
 
     def ljust(self,

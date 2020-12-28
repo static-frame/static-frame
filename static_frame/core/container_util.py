@@ -5,6 +5,8 @@ This module us for utilty functions that take as input and / or return Container
 from collections import defaultdict
 from itertools import zip_longest
 from functools import partial
+import datetime
+from fractions import Fraction
 import typing as tp
 
 import numpy as np
@@ -35,6 +37,8 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
+from static_frame.core.util import is_dtype_specifier
+from static_frame.core.util import is_mapping
 
 from static_frame.core.exception import AxisInvalid
 
@@ -45,6 +49,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.quilt import Quilt #pylint: disable=W0611 #pragma: no cover
 
 
 
@@ -60,27 +65,33 @@ def get_col_dtype_factory(
     '''
     from static_frame.core.series import Series
 
-    # dtypes are either mappable by name, or an ordered sequence; it might be possible to support a single dtype initializer applied to all columns, however, the types of dtype initialzers are so broad, it is hard to distinguish them from a list (i.e., str class).
-
+    # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
     # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
 
-    if isinstance(dtypes, (dict, Series)):
+    if is_mapping(dtypes):
         is_map = True
-    else:
+        is_element = False
+    elif is_dtype_specifier(dtypes):
         is_map = False
+        is_element = True
+    else: # an iterable of types
+        is_map = False
+        is_element = False
 
     if columns is None and is_map:
         raise RuntimeError('cannot lookup dtypes by name without supplied columns labels')
 
     def get_col_dtype(col_idx: int) -> DtypeSpecifier:
-        nonlocal dtypes
+        nonlocal dtypes # might mutate a generator into a tuple
+        if is_element:
+            return dtypes
         if is_map:
             return dtypes.get(columns[col_idx], None) #type: ignore
-
-        # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here
-        if not hasattr(dtypes, '__len__'):
+        # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here; INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
+        if not hasattr(dtypes, '__len__') or not hasattr(dtypes, '__getitem__'):
             dtypes = tuple(dtypes) #type: ignore
         return dtypes[col_idx] #type: ignore
+
 
     return get_col_dtype
 
@@ -93,17 +104,6 @@ def is_static(value: IndexConstructor) -> bool:
         pass
     # assume this is a class method
     return getattr(value.__self__, STATIC_ATTR) #type: ignore
-
-
-# def is_dataclass(value: tp.Any) -> bool:
-#     '''Determine if dataclasses are available. Might be installed via a pip package.
-#     '''
-#     # introduced in Python 3.7; remove special handling when min req is 3.7
-#     try:
-#         import dataclasses
-#     except ImportError:
-#         return False
-#     return dataclasses.is_dataclass(value)
 
 
 def pandas_version_under_1() -> bool:
@@ -189,7 +189,6 @@ def pandas_to_numpy(
 
     array.flags.writeable = False
     return array
-
 
 
 def index_from_optional_constructor(
@@ -404,7 +403,7 @@ def matmul(
 
 
 def axis_window_items( *,
-        source: tp.Union['Series', 'Frame'],
+        source: tp.Union['Series', 'Frame', 'Quilt'],
         size: int,
         axis: int = 0,
         step: int = 1,
@@ -417,19 +416,13 @@ def axis_window_items( *,
         as_array: bool = False,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''Generator of index, window pairs pairs.
-
     Args:
-        size: integer greater than 0
-        step: integer greater than 0 to determine the step size between windows. A step of 1 shifts the window 1 data point; a step equal to window size results in non-overlapping windows.
-        window_sized: if True, windows that do not meet the size are skipped.
-        window_func: Array processor of window values, pre-function application; useful for applying weighting to the window.
-        window_valid: Function that, given an array window, returns True if the window meets requirements and should be returned.
-        label_shift: shift, relative to the right-most data point contained in the window, to derive the label to be paired with the window; e.g., to return the first label of the window, the shift will be the size minus one.
-        start_shift: shift from 0 to determine where the collection of windows begins.
-        size_increment: value to be added to each window aftert the first, so as to, in combination with setting the step size to 0, permit expanding windows.
         as_array: if True, the window is returned as an array instead of a SF object.
     '''
+    # see doc_str window for docs
+
     from static_frame.core.frame import Frame
+    from static_frame.core.quilt import Quilt
     from static_frame.core.series import Series
 
     if size <= 0:
@@ -442,13 +435,13 @@ def axis_window_items( *,
     if source_ndim == 1:
         assert isinstance(source, Series) # for mypy
         labels = source._index
-        if as_array:
-            values = source.values
+        # if as_array:
+        #     values = source.values
     else:
-        assert isinstance(source, Frame) # for mypy
+        assert isinstance(source, (Frame, Quilt)) # for mypy
         labels = source._index if axis == 0 else source._columns
-        if as_array:
-            values = source._blocks.values
+        # if as_array:
+        #     values = source._blocks.values
 
     if start_shift >= 0:
         count_window_max = len(labels)
@@ -471,18 +464,18 @@ def axis_window_items( *,
 
         if source_ndim == 1:
             if as_array:
-                window = values[key]
+                window = source.values[key]
             else:
                 window = source._extract_iloc(key)
         else:
             if axis == 0:
                 if as_array:
-                    window = values[key]
+                    window = source._extract_array(key) #type: ignore
                 else: # use low level iloc selector
                     window = source._extract(row_key=key) #type: ignore
             else:
                 if as_array:
-                    window = values[NULL_SLICE, key]
+                    window = source._extract_array(NULL_SLICE, key) #type: ignore
                 else:
                     window = source._extract(column_key=key) #type: ignore
 
@@ -565,7 +558,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
         # array first as not truthy
         return np.sort(key, kind=DEFAULT_SORT_KIND)
 
-    if not key:
+    if not len(key): #type: ignore
         return key
 
     if isinstance(key, list):
@@ -691,6 +684,8 @@ def array_from_value_iter(
                 )
     return values
 
+#-------------------------------------------------------------------------------
+# utilities for binary operator applications with type blocks
 
 def apply_binary_operator(*,
         values: np.ndarray,
@@ -701,7 +696,6 @@ def apply_binary_operator(*,
     '''
     Utility to handle binary operator application.
     '''
-
     if (values.dtype.kind in DTYPE_STR_KINDS or
             (other_is_array and other.dtype.kind in DTYPE_STR_KINDS)):
         operator_name = operator.__name__
@@ -718,13 +712,20 @@ def apply_binary_operator(*,
         result = operator(values, other)
 
     if result is False or result is True:
-        # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-        # if the arguement is a tuple of length equal to an erray, NP will perform element wise comparison; but if the argment is a tuple of length greater or equal, each value in value will be compared to that tuple
-        result = np.full(values.shape, result)
+        if not other_is_array and (
+                isinstance(other, str) or not hasattr(other, '__len__')
+                ):
+            # only expand to the size of the array operand if we are comparing to an element
+            result = np.full(values.shape, result, dtype=DTYPE_BOOL)
+        elif other_is_array and other.size == 1:
+            # elements in arrays of 0 or more dimensions are acceptable; this is what NP does for arithmetic operators when the types are compatible
+            result = np.full(values.shape, result, dtype=DTYPE_BOOL)
+        else:
+            raise ValueError('operands could not be broadcast together')
+            # raise on unaligned shapes as is done for arithmetic operators
 
     result.flags.writeable = False
     return result
-
 
 def apply_binary_operator_blocks(*,
         values: tp.Iterable[np.ndarray],
@@ -735,7 +736,6 @@ def apply_binary_operator_blocks(*,
     '''
     Application from iterators of arrays, to iterators of arrays.
     '''
-
     if apply_column_2d_filter:
         values = (column_2d_filter(op) for op in values)
         other = (column_2d_filter(op) for op in other)
@@ -748,6 +748,36 @@ def apply_binary_operator_blocks(*,
                 operator=operator,
                 )
 
+def apply_binary_operator_blocks_columnar(*,
+        values: tp.Iterable[np.ndarray],
+        other: np.ndarray,
+        operator: UFunc,
+    ) -> tp.Iterator[np.ndarray]:
+    '''
+    Application from iterators of arrays, to iterators of arrays. Will return iterator of all 1D arrays, as we will break down larger blocks in values into 1D arrays.
+
+    Args:
+        other: 1D array to be applied to each column of the blocks.
+    '''
+    assert other.ndim == 1
+    for block in values:
+        if block.ndim == 1:
+            yield apply_binary_operator(
+                    values=block,
+                    other=other,
+                    other_is_array=True,
+                    operator=operator,
+                    )
+        else:
+            for i in range(block.shape[1]):
+                yield apply_binary_operator(
+                        values=block[NULL_SLICE, i],
+                        other=other,
+                        other_is_array=True,
+                        operator=operator,
+                        )
+
+#-------------------------------------------------------------------------------
 
 def arrays_from_index_frame(
         container: 'Frame',
@@ -801,7 +831,6 @@ def key_from_container_key(
     # detect and fail on Frame?
 
     return key
-
 
 
 #---------------------------------------------------------------------------
@@ -948,13 +977,60 @@ def apex_to_name(
 
 
 
+#-------------------------------------------------------------------------------
+
+class MessagePackElement:
+    '''
+    Handle encoding/decoding of elements found in object arrays not well supported by msgpack. Many of these cases were found through Hypothesis testing.
+    '''
+
+    @staticmethod
+    def encode(
+            a: tp.Any,
+            packb: AnyCallable,
+            ) -> tp.Tuple[str, tp.Any]:
+
+        if isinstance(a, datetime.datetime): #msgpack-numpy has an issue with datetime
+            year = str(a.year).zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
+            d = year + ' ' + a.strftime('%a %b %d %H:%M:%S:%f')
+            return ('DT', d)
+        elif isinstance(a, datetime.date):
+            year = str(a.year).zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
+            d = year + ' ' + a.strftime('%a %b %d')
+            return ('D', d)
+        elif isinstance(a, datetime.time):
+            return ('T', a.strftime('%H:%M:%S:%f'))
+        elif isinstance(a, np.ndarray): #recursion not covered by msgpack-numpy
+            return ('A', packb(a)) #recurse packb
+        elif isinstance(a, Fraction): #msgpack-numpy has an issue with fractions
+            return ('F',  str(a))
+        elif isinstance(a, int) and len(str(a)) >=19:
+            #msgpack-python has an overflow issue with large ints
+            return ('I', str(a))
+        return ('', a)
 
 
+    @staticmethod
+    def decode(
+            pair: tp.Tuple[str, tp.Any],
+            unpackb: AnyCallable,
+            ) -> tp.Any:
+        dt = datetime.datetime
 
-
-
-
-
+        (typ, d) = pair
+        if typ == 'DT': #msgpack-numpy has an issue with datetime
+            return dt.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
+        elif typ == 'D':
+            return dt.strptime(d, '%Y %a %b %d').date()
+        elif typ == 'T':
+            return dt.strptime(d, '%H:%M:%S:%f').time()
+        elif typ == 'F': #msgpack-numpy has an issue with fractions
+            return Fraction(d)
+        elif typ == 'I': #msgpack-python has an issue with very large int values
+            return int(d)
+        elif typ == 'A': #recursion not covered by msgpack-numpy
+            return unpackb(d) #recurse unpackb
+        return d
 
 
 

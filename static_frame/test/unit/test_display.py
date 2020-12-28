@@ -572,8 +572,8 @@ class TestUnit(TestCase):
         f = sf.Frame.from_dict(
             dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
         f = f.set_index_hierarchy(['a', 'b'])
-        f = f.relabel_add_level(columns='I')
-        f = f.relabel_add_level(columns='J')
+        f = f.relabel_level_add(columns='I')
+        f = f.relabel_level_add(columns='J')
 
         expected1 = f.display(sf.DisplayConfig(
                 display_format='html_table', type_color=False))
@@ -846,8 +846,8 @@ class TestUnit(TestCase):
 
         f = sf.Frame.from_dict(dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
         f = f.set_index_hierarchy(['a', 'b'])
-        f = f.relabel_add_level(columns='I')
-        f = f.relabel_add_level(columns='J')
+        f = f.relabel_level_add(columns='I')
+        f = f.relabel_level_add(columns='J')
         print(f)
 
         # columns = sf.IndexHierarchy.from_product((96361, 96345), (0, 1))

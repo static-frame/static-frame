@@ -2,32 +2,43 @@
    :align: center
 
 
-.. image:: https://img.shields.io/pypi/pyversions/static-frame.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/pyversions/static-frame.svg
   :target: https://pypi.org/project/static-frame
 
-.. image:: https://img.shields.io/pypi/v/static-frame.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/v/static-frame.svg
   :target: https://pypi.org/project/static-frame
 
-.. image:: https://img.shields.io/conda/vn/conda-forge/static-frame.svg?style=flat-square
+.. image:: https://img.shields.io/conda/vn/conda-forge/static-frame.svg
   :target: https://anaconda.org/conda-forge/static-frame
 
 
-.. image:: https://img.shields.io/codecov/c/github/InvestmentSystems/static-frame.svg?style=flat-square
+.. image:: https://img.shields.io/codecov/c/github/InvestmentSystems/static-frame.svg
   :target: https://codecov.io/gh/InvestmentSystems/static-frame
 
 
-.. image:: https://img.shields.io/travis/InvestmentSystems/static-frame/master.svg?style=flat-square
-  :target: https://travis-ci.org/InvestmentSystems/static-frame/branches
 
-.. image:: https://img.shields.io/readthedocs/static-frame.svg?style=flat-square
+.. image:: https://img.shields.io/github/workflow/status/InvestmentSystems/static-frame/Test?label=test&logo=Github
+  :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3ATest
+
+.. image:: https://img.shields.io/github/workflow/status/InvestmentSystems/static-frame/TestForward?label=test-forward&logo=Github
+  :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3ATestForward
+
+.. image:: https://img.shields.io/github/workflow/status/InvestmentSystems/static-frame/Quality?label=quality&logo=Github
+  :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3AQuality
+
+
+
+.. image:: https://img.shields.io/readthedocs/static-frame.svg
   :target: https://static-frame.readthedocs.io/en/latest
 
-
-.. image:: https://img.shields.io/badge/hypothesis-tested-brightgreen.svg?style=flat-square
+.. image:: https://img.shields.io/badge/hypothesis-tested-brightgreen.svg
   :target: https://hypothesis.readthedocs.io
 
-.. image:: https://img.shields.io/pypi/status/static-frame.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/status/static-frame.svg
   :target: https://pypi.org/project/static-frame
+
+.. image:: https://img.shields.io/badge/benchmarked%20by-asv-blue.svg
+  :target: https://investmentsystems.github.io/static-frame-benchmark
 
 
 
@@ -38,13 +49,15 @@ The StaticFrame library defines the Series and Frame, immutable data structures 
 
 While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices are unique; the full range of NumPy data types is preserved, and date-time indices use discrete NumPy types; hierarchical indices are seamlessly integrated; and uniform approaches to element, row, and column iteration and function application are provided. Core StaticFrame depends only on NumPy: Pandas is not a dependency.
 
-A wide variety of table storage and representation formats are supported, including input from and output to CSV, TSV, JSON, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks. The Bus, a container of Frames, permits writing to and lazily reading from multi-table storage formats, including zipped pickles, XLSX workbooks, SQLite, and HDF5.
+A wide variety of table storage and representation formats are supported, including input from and output to CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks. The Bus, a container of Frames, permits writing to and lazily reading from multi-table storage formats, including zipped pickles, XLSX workbooks, SQLite, and HDF5.
 
 Code: https://github.com/InvestmentSystems/static-frame
 
 Docs: http://static-frame.readthedocs.io
 
 Packages: https://pypi.org/project/static-frame
+
+Benchmarks: https://investmentsystems.github.io/static-frame-benchmark
 
 Context: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_
 
@@ -372,8 +385,7 @@ Element iteration and function application works the same way as for rows or col
 4997    via.placeholder.c... via.placeholder.c...
 4998    via.placeholder.c... via.placeholder.c...
 4999    via.placeholder.c... via.placeholder.c...
-<int64> <object>             <object>
-
+<int64> <<U30>               <<U30>
 
 
 Group-by functionality is exposed in a similar manner with ``Frame.iter_group_items()`` and ``Frame.iter_group()``.

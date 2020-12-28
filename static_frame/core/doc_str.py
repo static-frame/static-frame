@@ -41,11 +41,14 @@ INDEX_CONSTRUCTOR = "index_constructor: Optional class or constructor function t
 
 COLUMNS_CONSTRUCTOR = "columns_constructor: Optional class or constructor function to create the :obj:`Index` applied to the columns."
 
+FP = 'fp: A string file path or :obj:`Path` instance.'
+
+STORE_CONFIG_MAP = 'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
 
 class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
-    # functions
+    # complete function doc strings
 
     to_html = '''
     Return an HTML table representation of this :obj:`{class_name}` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
@@ -68,6 +71,9 @@ class DOC_TEMPLATE:
     Returns:
         :obj:`str`, absolute file path to the file written.
     '''
+
+    #---------------------------------------------------------------------------
+    # common strings
 
     clip = '''Apply a clip opertion to this :obj:`{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
 
@@ -152,7 +158,7 @@ class DOC_TEMPLATE:
             )
 
     from_any = dict(
-            fp='fp: A string or :obj:`Path` to read.',
+            fp=FP,
             index_depth='index_depth: integer specification of how many columns to use in forming the index. A value of 0 will select none; a value greater than 1 will create an :obj:`IndexHierarchy`.',
             columns_depth='columns_depth: integer specification of how many rows to use in forming the columns. A value of 0 will select none; a value greater than 1 will create an :obj:`IndexHierarchy`.',
             columns_select='columns_select: An optional iterable of column names to load.',
@@ -218,16 +224,23 @@ class DOC_TEMPLATE:
             ''',
             )
 
-    relabel_add_level = dict(
+    relabel_level_add = dict(
             doc='''Return a new :obj:`{class_name}`, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
             ''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
             )
 
-    relabel_drop_level = dict(
+    relabel_level_drop = dict(
             doc='''Return a new :obj:`{class_name}`, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most (root) levels; a negative integer drops that many inner-most (leaf)levels.''',
+            )
+    sample = dict(
+            doc='''Randomly (optionally made deterministic with a fixed seed) extract items from the container to return a subset of the container.''',
+            count='''Number of elements to select.''',
+            index='''Number of labels to select from the index.''',
+            columns='''Number of labels to select from the columns.''',
+            seed='''Initial state of random selection.''',
             )
     selector = dict(
             key_loc=LOC_SELECTOR,
@@ -264,11 +277,26 @@ class DOC_TEMPLATE:
             '''
             )
 
+    bus_constructor = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            '''
+            )
+
+    bus_exporter = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            '''
+            )
+
     mloc = dict(
             doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
             doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
-    )
-
+            )
 
     map_any = dict(
             doc='Apply a mapping; for values not in the mapping, the value is returned.',
@@ -291,10 +319,28 @@ class DOC_TEMPLATE:
 
     ufunc_skipna = dict(
             args = '''
-    Args:
-        axis: Axis, defaulting to axis 0.
-        skipna: Skip missing (NaN) values, defaulting to True.
-    ''')
+        Args:
+            axis: Axis, defaulting to axis 0.
+            skipna: Skip missing (NaN) values, defaulting to True.
+            '''
+            )
+    window = dict(
+            args = f'''
+        Args:
+            size: Elements per window, given as an integer greater than 0.
+            {AXIS}
+            step: Element shift per window, given as an integer greater than 0. Determines the step size between windows. A step of 1 shifts each window 1 element; a step equal to the ``size`` will result in non-overlapping windows.
+            window_sized: if True, windows with fewer elements than ``size`` are skipped.
+            window_func: Array processor of window values, executed before function application (if used): can be used for applying a weighting function to each window.
+            window_valid: Function that, given an array window, returns True if the window is valid; invalid windows are skipped.
+            label_shift: A shift, relative to the right-most element contained in the window, to derive the label to be paired with the window. For example, to label each window with the label found at the start of the window, ``label_shift`` can be set to one less than ``size``.
+            start_shift: A shift to determine the first element where window collection begins.
+            size_increment: A value to be added to ``size`` with each window after the first, so as to, in combination with setting ``step`` to 0, permit iterating over expanding windows.
+            '''
+            )
+
+# NOTE: F here should replace AnyCallable below
+F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])
 
 def doc_inject(*,
         selector: tp.Optional[str] = None,

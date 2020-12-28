@@ -4,65 +4,89 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
-
-from static_frame.core.container import ContainerOperand
 from static_frame.core.bus import Bus
+from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
+from static_frame.core.store import Store
+from static_frame.core.store import StoreConfigMap
+from static_frame.core.store_client_mixin import StoreClientMixin
+from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import KeyOrKeys as KeyOrKeys
-
+from static_frame.core.util import ELEMENT_TUPLE
 
 FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
 GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 
-def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]) -> FrameOrSeries:
-    # process pool requires a single argument
-    frame, attr, args, kwargs = bundle
-    func = getattr(frame, attr)
-    post = func(*args, **kwargs)
-    # post might be an element
+
+#-------------------------------------------------------------------------------
+# family of executor functions normalized in signature (taking a single tuple of args) for usage in processor pool calls
+
+def normalize_container(post: tp.Any
+        ) -> FrameOrSeries:
+    # post might be an element, promote to a Series to permit concatenation
+    # NOTE: do not set index as (container.name,), as this can lead to diagonal formations; will already be paired with stored labels
     if not isinstance(post, (Frame, Series)):
-        # promote to a Series to permit concatenation
-        return Series.from_element(post, index=(frame.name,))
+        return Series.from_element(post, index=ELEMENT_TUPLE) #type: ignore
     return post
 
+def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]
+        ) -> FrameOrSeries:
+    container, func = bundle
+    return normalize_container(func(container))
 
-class Batch(ContainerOperand):
+def call_func_items(bundle: tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]
+        ) -> FrameOrSeries:
+    container, func, label = bundle
+    return normalize_container(func(label, container))
+
+def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]
+        ) -> FrameOrSeries:
+    container, attr, args, kwargs = bundle
+    func = getattr(container, attr)
+    return normalize_container(func(*args, **kwargs))
+
+#-------------------------------------------------------------------------------
+class Batch(ContainerOperand, StoreClientMixin):
     '''
-    A lazily evaluated container of Frames that broadcasts operations on component Frames.
+    A lazy, sequentially evaluated container of :obj:`Frame` that broadcasts operations on contained :obj:`Frame` by return new :obj:`Batch` instances. Full evaluation of operations only occurs when iterating or calling an exporter.
     '''
 
     __slots__ = (
             '_items',
             '_name',
+            '_config',
             '_max_workers',
             '_chunksize',
             '_use_threads',
             )
+
+    _config: StoreConfigMap
 
     @classmethod
     def from_frames(cls,
             frames: tp.Iterable[Frame],
             *,
             name: NameType = None,
+            config: StoreConfigMapInitializer = None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
@@ -71,32 +95,47 @@ class Batch(ContainerOperand):
         '''
         return cls(((f.name, f) for f in frames),
                 name=name,
+                config=config,
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
                 )
 
+    @classmethod
+    def _from_store(cls,
+            store: Store,
+            *,
+            config: StoreConfigMapInitializer = None,
+            **kwargs: tp.Any,
+            ) -> 'Batch':
+        config_map = StoreConfigMap.from_initializer(config)
+        items = ((label, store.read(label, config=config_map[label]))
+                for label in store.labels())
+        return cls(items,
+                config=config,
+                **kwargs,
+                )
+
+
     def __init__(self,
             items: IteratorFrameItems,
             *,
             name: NameType = None,
+            config: StoreConfigMapInitializer = None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
             ):
         self._items = items # might be a generator!
         self._name = name
+
+        self._config = StoreConfigMap.from_initializer(config)
+
         self._max_workers = max_workers
         self._chunksize = chunksize
         self._use_threads = use_threads
 
     #---------------------------------------------------------------------------
-
-    # def _realize(self) -> None:
-    #     # realize generator
-    #     if not hasattr(self._items, '__len__'):
-    #         self._items = tuple(self._items) #type: ignore
-
     def _derive(self,
             gen: GeneratorFrameItems,
             name: NameType = None,
@@ -105,6 +144,7 @@ class Batch(ContainerOperand):
         '''
         return self.__class__(gen(),
                 name=name if name is not None else self._name,
+                config=self._config,
                 max_workers=self._max_workers,
                 chunksize=self._chunksize,
                 use_threads=self._use_threads,
@@ -142,6 +182,8 @@ class Batch(ContainerOperand):
     def display(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
+        '''Provide a :obj:`Series`-style display of the :obj:`Batch`. Note that if the held iterator is a generator, this display will exhaust the generator.
+        '''
         config = config or DisplayActive.get()
 
         items = ((label, f.__class__) for label, f in self._items)
@@ -152,9 +194,32 @@ class Batch(ContainerOperand):
                 config=config)
         return series._display(config, display_cls)
 
+    def __repr__(self) -> str:
+        '''Provide a display of the :obj:`Batch` that does not exhaust the generator.
+        '''
+        if self._name:
+            header = f'{self.__class__.__name__}: {self._name}'
+        else:
+            header = self.__class__.__name__
+        return f'<{header} at {hex(id(self))}>'
 
     #---------------------------------------------------------------------------
     # core function application routines
+
+    def _apply_pool(self,
+            labels: tp.List[tp.Hashable],
+            arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
+            caller: tp.Callable[..., FrameOrSeries],
+            ) -> 'Batch':
+
+        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
+
+        def gen_pool() -> IteratorFrameItems:
+            with pool_executor(max_workers=self._max_workers) as executor:
+                yield from zip(labels,
+                        executor.map(caller, arg_iter, chunksize=self._chunksize)
+                        )
+        return self._derive(gen_pool)
 
     def _apply_attr(self,
             *args: tp.Any,
@@ -170,46 +235,49 @@ class Batch(ContainerOperand):
                     yield label, call_attr((frame, attr, args, kwargs))
             return self._derive(gen)
 
-        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
-
         labels = []
         def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]]:
             for label, frame in self._items:
                 labels.append(label)
                 yield frame, attr, args, kwargs
 
-        def gen_pool() -> IteratorFrameItems:
-            with pool_executor(max_workers=self._max_workers) as executor:
-                yield from zip(labels,
-                        executor.map(call_attr, arg_gen(), chunksize=self._chunksize)
-                        )
-
-        return self._derive(gen_pool)
-
+        return self._apply_pool(labels, arg_gen(), call_attr)
 
     def apply(self, func: AnyCallable) -> 'Batch':
+        '''
+        Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the :obj:`Frame` as an argument.
+        '''
         if self._max_workers is None:
             def gen() -> IteratorFrameItems:
                 for label, frame in self._items:
-                    yield label, func(frame)
+                    yield label, call_func((frame, func))
             return self._derive(gen)
 
-        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
-
         labels = []
-        def arg_gen() -> tp.Iterator[FrameOrSeries]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable]]:
             for label, frame in self._items:
                 labels.append(label)
-                yield frame
+                yield frame, func
 
-        def gen_pool() -> IteratorFrameItems:
-            with pool_executor(max_workers=self._max_workers) as executor:
-                yield from zip(labels,
-                        executor.map(func, arg_gen(), chunksize=self._chunksize)
-                        )
+        return self._apply_pool(labels, arg_gen(), call_func)
 
-        return self._derive(gen_pool)
+    def apply_items(self, func: AnyCallable) -> 'Batch':
+        '''
+        Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument.
+        '''
+        if self._max_workers is None:
+            def gen() -> IteratorFrameItems:
+                for label, frame in self._items:
+                    yield label, call_func_items((frame, func, label))
+            return self._derive(gen)
 
+        labels = []
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]]:
+            for label, frame in self._items:
+                labels.append(label)
+                yield frame, func, label
+
+        return self._apply_pool(labels, arg_gen(), call_func_items)
 
     #---------------------------------------------------------------------------
     # extraction
@@ -287,7 +355,7 @@ class Batch(ContainerOperand):
 
     def keys(self) -> tp.Iterator[tp.Hashable]:
         '''
-        Iterator of :obj:`Frame` labels/
+        Iterator of :obj:`Frame` labels.
         '''
         for k, _ in self._items:
             yield k
@@ -310,6 +378,8 @@ class Batch(ContainerOperand):
         Iterator of labels, :obj:`Frame`.
         '''
         return self._items.__iter__()
+
+    _items_store = items
 
     #---------------------------------------------------------------------------
     # axis and shape ufunc methods
@@ -562,6 +632,39 @@ class Batch(ContainerOperand):
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
 
+    def count(self, *,
+            skipna: bool = True,
+            axis: int = 0,
+            ) -> 'Batch':
+        '''Apply count on contained Frames.
+        '''
+        return self._apply_attr(
+                attr='count',
+                skipna=skipna,
+                axis=axis,
+                )
+
+    @doc_inject(selector='sample')
+    def sample(self,
+            index: tp.Optional[int] = None,
+            columns: tp.Optional[int] = None,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> 'Batch':
+        '''Apply sample on contained Frames.
+
+        Args:
+            {index}
+            {columns}
+            {seed}
+        '''
+        return self._apply_attr(
+                attr='sample',
+                index=index,
+                columns=columns,
+                seed=seed,
+                )
+
     @doc_inject(selector='head', class_name='Batch')
     def head(self, count: int = 5) -> 'Batch':
         '''{doc}
@@ -688,7 +791,7 @@ class Batch(ContainerOperand):
                 index = labels
             if axis == 1 and columns is None:
                 columns = labels
-
+            # import ipdb; ipdb.set_trace()
             return Frame.from_concat( #type: ignore
                     containers,
                     axis=axis,
@@ -716,6 +819,11 @@ class Batch(ContainerOperand):
     def to_bus(self) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily)
         '''
-        return Bus(Series.from_items(self.items(), name=self._name, dtype=DTYPE_OBJECT))
+        series = Series.from_items(
+                self.items(),
+                name=self._name,
+                dtype=DTYPE_OBJECT)
+
+        return Bus(series, config=self._config)
 
 

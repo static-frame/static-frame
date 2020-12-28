@@ -44,6 +44,7 @@ class StoreConfig(metaclass=InterfaceMeta):
             'consolidate_blocks',
             'skip_header',
             'skip_footer',
+            'trim_nadir',
             'include_index',
             'include_index_name',
             'include_columns',
@@ -76,8 +77,10 @@ class StoreConfig(metaclass=InterfaceMeta):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
+            # not used by all constructors
             skip_header: int = 0,
             skip_footer: int = 0,
+            trim_nadir: bool = False,
             # exporters
             include_index: bool = True,
             include_index_name: bool = True,
@@ -100,13 +103,13 @@ class StoreConfig(metaclass=InterfaceMeta):
         self.consolidate_blocks = consolidate_blocks
         self.skip_header = skip_header
         self.skip_footer = skip_footer
+        self.trim_nadir = trim_nadir
 
         # exporter
         self.include_index = include_index
         self.include_index_name = include_index_name
         self.include_columns = include_columns
         self.include_columns_name = include_columns_name
-
         # self.format_index = format_index
         # self.format_columns = format_columns
         self.merge_hierarchical_labels = merge_hierarchical_labels
@@ -154,7 +157,7 @@ class StoreConfigMap:
         if isinstance(initializer, cls):
             # return same instance
             return initializer
-        if initializer is None: # will get default configurtation
+        if initializer is None: # will get default configuration
             return cls()
         assert isinstance(initializer, dict)
         return cls(initializer)
@@ -250,7 +253,7 @@ class Store:
             columns_values = tuple(str(c) for c in columns_values)
 
         if not include_index:
-            dtypes = frame._blocks.dtypes
+            dtypes = frame._blocks.dtypes.tolist()
             if include_columns:
                 field_names = columns_values
             else: # name fields with integers?
@@ -264,7 +267,7 @@ class Store:
             # Get a list to mutate.
             field_names = list(index.names)
 
-            # add fram dtypes tp those from index
+            # add frame dtypes t0 those from index
             dtypes.extend(frame._blocks.dtypes)
 
             # add index names in front of column names
@@ -314,17 +317,16 @@ class Store:
             include_index: bool
             ) -> tp.Iterator[np.ndarray]:
         if include_index:
-            index_values = frame._index.values
             index_depth = frame._index.depth
 
             if index_depth == 1:
+                index_values = frame._index.values
                 return chain(
                         (index_values,),
                         frame._blocks.axis_values(0)
                         )
-            # this approach is the same as IndexHierarchy.values_at_depth
             return chain(
-                    (index_values[:, d] for d in range(index_depth)),
+                    (frame._index.values_at_depth(d) for d in range(index_depth)),
                     frame._blocks.axis_values(0)
                     )
         # avoid creating a Series per column by going to blocks

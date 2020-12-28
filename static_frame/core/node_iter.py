@@ -17,15 +17,17 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
+from static_frame.core.util import TupleConstructorType
 
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.quilt import Quilt # pylint: disable=W0611 #pragma: no cover
 
 
-FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series')
+FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Quilt')
 # FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')
 
 
@@ -156,7 +158,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def map_any(self,
             mapping: Mapping,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeSpecifier = None, # can be DtypesSpecifier in some contexts
             name: NameType = None,
             ) -> FrameOrSeries:
         '''
@@ -213,7 +215,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             mapping: Mapping,
             *,
             fill_value: tp.Any = np.nan,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeSpecifier = None,  # can be DtypesSpecifier in some contexts
             name: NameType = None,
             ) -> FrameOrSeries:
         '''
@@ -264,7 +266,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def map_all(self,
             mapping: Mapping,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeSpecifier = None,  # can be DtypesSpecifier in some contexts
             name: NameType = None,
             ) -> FrameOrSeries:
         '''
@@ -313,7 +315,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def apply(self,
             func: AnyCallable,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeSpecifier = None,  # can be DtypesSpecifier in some contexts
             name: NameType = None,
             ) -> FrameOrSeries:
         '''
@@ -444,10 +446,13 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
         elif self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
             assert isinstance(self._container, Frame) # for typing
+            # for element-wise function application, axis will always be 0 or 1, as we always do full iteration; from_element_loc_items accepts axis of None for incomplete specification, but that will never be used here.
             apply_constructor = partial(
                     self._container.__class__.from_element_loc_items,
                     index=self._container._index,
                     columns=self._container._columns,
+                    axis=kwargs['axis'],
+                    own_index=True,
                     index_constructor=self._container._index.from_labels,
                     columns_constructor=self._container._columns.from_labels
                     )
@@ -487,6 +492,20 @@ class IterNodeAxis(IterNode[FrameOrSeries]):
         return IterNode.get_delegate(self, axis=axis)
 
 
+class IterNodeConstructorAxis(IterNode[FrameOrSeries]):
+
+    __slots__ = _ITER_NODE_SLOTS
+
+    def __call__(self,
+            axis: int = 0, # make both kwarg only
+            *,
+            constructor: tp.Optional[TupleConstructorType] = None,
+            ) -> IterNodeDelegate[FrameOrSeries]:
+        return IterNode.get_delegate(self,
+                axis=axis,
+                constructor=constructor,
+                )
+
 class IterNodeGroup(IterNode[FrameOrSeries]):
     '''
     Iterator on 1D groupings where no args are required (but axis is retained for compatibility)
@@ -520,7 +539,7 @@ class IterNodeDepthLevel(IterNode[FrameOrSeries]):
     __slots__ = _ITER_NODE_SLOTS
 
     def __call__(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: tp.Optional[DepthLevelSpecifier] = None
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.get_delegate(self, depth_level=depth_level)
 

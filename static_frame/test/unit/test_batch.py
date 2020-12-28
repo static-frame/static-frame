@@ -1,15 +1,7 @@
-
-
-
-
-
-
-
-
-
 import unittest
 
 import numpy as np
+import frame_fixtures as ff
 
 nan = np.nan
 
@@ -18,10 +10,25 @@ from static_frame.core.batch import Batch
 from static_frame.test.test_case import TestCase
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.display_config import DisplayConfig
+from static_frame.test.test_case import temp_file
+from static_frame.core.store import StoreConfig
 
 
 class TestUnit(TestCase):
 
+    def test_batch_slotted_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+
+        b1 = Batch.from_frames((f1,))
+
+        with self.assertRaises(AttributeError):
+            b1.g = 30 # type: ignore #pylint: disable=E0237
+        with self.assertRaises(AttributeError):
+            b1.__dict__ #pylint: disable=W0104
 
 
     def test_batch_a(self) -> None:
@@ -47,7 +54,7 @@ class TestUnit(TestCase):
 
         b1 = Batch(f1.iter_group_items('group'))
         self.assertEqual(b1['b'].sum().to_frame().to_pairs(0),
-                (('b', (('x', 6), ('z', 387))),)
+                ((None, (('x', 6), ('z', 387))),)
                 )
 
 
@@ -119,9 +126,9 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
 
-        f2 = Batch(f1.iter_group_items('group'))['b'].sum()
-        self.assertEqual(f2.to_frame().to_pairs(0),
-                (('b', (('x', 2), ('z', 10))),)
+        f2 = Batch(f1.iter_group_items('group'))['b'].sum().to_frame()
+        self.assertEqual(f2.to_pairs(0),
+                ((None, (('x', 2), ('z', 10))),)
                 )
 
     def test_batch_e(self) -> None:
@@ -146,7 +153,22 @@ class TestUnit(TestCase):
 
         f2 = Batch(f1.iter_group_items('group')).loc[:, 'b'].sum().to_frame()
         self.assertEqual(f2.to_pairs(0),
-                (('b', (('x', 2), ('z', 10))),))
+                ((None, (('x', 2), ('z', 10))),))
+
+
+    def test_batch_g(self) -> None:
+        f1 = Frame(np.arange(6).reshape(2,3), index=(('a', 'b')), columns=(('x', 'y', 'z')), name='f1')
+        f2 = Frame(np.arange(6).reshape(2,3) * 30.5, index=(('a', 'b')), columns=(('x', 'y', 'z')), name='f2')
+
+        # this results in two rows. one column labelled None
+        f3 = Batch.from_frames((f1, f2)).sum().sum().to_frame()
+        self.assertEqual(f3.to_pairs(0),
+                ((None, (('f1', 15.0), ('f2', 457.5))),))
+
+        f4 = Batch.from_frames((f1, f2)).apply(lambda f: f.iloc[0, 0]).to_frame()
+        self.assertEqual(f4.to_pairs(0),
+                ((None, (('f1', 0.0), ('f2', 0.0))),))
+
 
     #---------------------------------------------------------------------------
     def test_batch_display_a(self) -> None:
@@ -164,6 +186,21 @@ class TestUnit(TestCase):
             '<<U1>   <object>'
             ])
 
+    def test_batch_repr_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        b1 = Batch.from_frames((f1, f2))
+        self.assertTrue(repr(b1).startswith('<Batch at '))
+
+        b2 = b1.rename('foo')
+        self.assertTrue(repr(b2).startswith('<Batch: foo at '))
+
     #---------------------------------------------------------------------------
     def test_batch_shapes_a(self) -> None:
 
@@ -176,7 +213,6 @@ class TestUnit(TestCase):
                 (('x', (1, 2)), ('z', (2, 2)))
                 )
         # import ipdb; ipdb.set_trace()
-
 
     #---------------------------------------------------------------------------
     def test_batch_apply_a(self) -> None:
@@ -217,11 +253,58 @@ class TestUnit(TestCase):
                 index=('x', 'q'),
                 name='f3')
 
-        b1 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8)
-        b2 = b1.apply(lambda x: x.shape)
-        self.assertEqual(dict(b2.items()),
-                {'f1': (2, 2), 'f2': (3, 2), 'f3': (2, 2)}
+        b1 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8).apply(lambda x: x.shape)
+        self.assertEqual(b1.to_frame().to_pairs(0),
+                ((None, (('f1', (2, 2)), ('f2', (3, 2)), ('f3', (2, 2)))),)
+                )
+
+        f2 = Frame(np.arange(4).reshape(2, 2), name='f2')
+        post = Batch.from_frames((f1, f2)).apply(lambda f: f.iloc[1, 1]).to_frame(fill_value=0.0)
+
+        self.assertEqual(
+                post.to_pairs(0),
+                ((None, (('f1', 4), ('f2', 3))),)
+                )
+
+    #---------------------------------------------------------------------------
+    def test_batch_apply_items_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('x', 'q'),
+                name='f3')
+
+        b1 = Batch.from_frames((f1, f2, f3)).apply_items(
+                lambda k, x: (k, x['b'].mean()))
+
+        self.assertEqual(b1.to_frame().to_pairs(0),
+                ((None, (('f1', ('f1', 3.5)), ('f2', ('f2', 5.0)), ('f3', ('f3', 55.0)))),)
 )
+        b2 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8).apply_items(
+                lambda k, x: (k, x['b'].mean()))
+
+        self.assertEqual(b2.to_frame().to_pairs(0),
+                ((None, (('f1', ('f1', 3.5)), ('f2', ('f2', 5.0)), ('f3', ('f3', 55.0)))),)
+                )
+
+    def test_batch_apply_items_b(self) -> None:
+
+        f1 = ff.parse('s(20,4)|v(bool,bool,int,float)|c(I,str)|i(I,str)')
+
+        b1 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply_items(lambda k, f: f.iloc[:1] if k != (True, True) else f.iloc[:3]).to_frame()
+
+        self.assertEqual(b1.to_pairs(0),
+            (('zZbu', ((((False, False), 'zZbu'), False), (((False, True), 'zr4u'), False), (((True, False), 'zkuW'), True), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True), (((True, True), 'zo2Q'), True))), ('ztsv', ((((False, False), 'zZbu'), False), (((False, True), 'zr4u'), True), (((True, False), 'zkuW'), False), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True), (((True, True), 'zo2Q'), True))), ('zUvW', ((((False, False), 'zZbu'), -3648), (((False, True), 'zr4u'), 197228), (((True, False), 'zkuW'), 54020), (((True, True), 'zIA5'), 194224), (((True, True), 'zGDJ'), 172133), (((True, True), 'zo2Q'), -88017))), ('zkuW', ((((False, False), 'zZbu'), 1080.4), (((False, True), 'zr4u'), 3884.48), (((True, False), 'zkuW'), 3338.48), (((True, True), 'zIA5'), -1760.34), (((True, True), 'zGDJ'), 1857.34), (((True, True), 'zo2Q'), 268.96))))
+            )
+
 
 
     #---------------------------------------------------------------------------
@@ -379,6 +462,23 @@ class TestUnit(TestCase):
 
         self.assertEqual(f3.to_pairs(0),
                 (('a', ((0, 20), (1, 0), (2, 0), (3, 0))), ('b', ((0, 40), (1, 50), (2, 5), (3, 6))), ('c', ((0, 0), (1, 0), (2, 2), (3, 3)))))
+
+
+    def test_batch_to_frame_c(self) -> None:
+        f1 = ff.parse('s(20,4)|v(bool,bool,int,float)|c(I,str)|i(I,str)')
+
+        f2 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply(lambda f: f.iloc[0]).to_frame(index=IndexAutoFactory)
+        self.assertEqual(f2.to_pairs(0),
+                (('zZbu', ((0, False), (1, False), (2, True), (3, True))), ('ztsv', ((0, False), (1, True), (2, False), (3, True))), ('zUvW', ((0, -3648), (1, 197228), (2, 54020), (3, 194224))), ('zkuW', ((0, 1080.4), (1, 3884.48), (2, 3338.48), (3, -1760.34))))
+                )
+
+        f3 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply(lambda f: f.iloc[:2]).to_frame()
+        self.assertEqual(f3.to_pairs(0),
+                (('zZbu', ((((False, False), 'zZbu'), False), (((False, False), 'ztsv'), False), (((False, True), 'zr4u'), False), (((False, True), 'zmhG'), False), (((True, False), 'zkuW'), True), (((True, False), 'z2Oo'), True), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True))), ('ztsv', ((((False, False), 'zZbu'), False), (((False, False), 'ztsv'), False), (((False, True), 'zr4u'), True), (((False, True), 'zmhG'), True), (((True, False), 'zkuW'), False), (((True, False), 'z2Oo'), False), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True))), ('zUvW', ((((False, False), 'zZbu'), -3648), (((False, False), 'ztsv'), 91301), (((False, True), 'zr4u'), 197228), (((False, True), 'zmhG'), 96520), (((True, False), 'zkuW'), 54020), (((True, False), 'z2Oo'), 35021), (((True, True), 'zIA5'), 194224), (((True, True), 'zGDJ'), 172133))), ('zkuW', ((((False, False), 'zZbu'), 1080.4), (((False, False), 'ztsv'), 2580.34), (((False, True), 'zr4u'), 3884.48), (((False, True), 'zmhG'), 1699.34), (((True, False), 'zkuW'), 3338.48), (((True, False), 'z2Oo'), 3944.56), (((True, True), 'zIA5'), -1760.34), (((True, True), 'zGDJ'), 1857.34))))
+                )
+
+
+
 
     #---------------------------------------------------------------------------
     def test_batch_drop_a(self) -> None:
@@ -695,6 +795,135 @@ class TestUnit(TestCase):
             (('b', (('f1', 0), ('f2', 1))), ('a', (('f1', 2), ('f2', 1))))
             )
 
+    #---------------------------------------------------------------------------
+    def test_batch_count_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(20,20,0), a=(20,20,np.nan)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,np.nan,1), a=(1,50,1)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        self.assertEqual(
+                Batch.from_frames((f1, f2)).count(axis=0).to_frame().to_pairs(0),
+            (('b', (('f1', 3), ('f2', 2))), ('a', (('f1', 2), ('f2', 3)))))
+
+        self.assertEqual(
+            Batch.from_frames((f1, f2)).count(axis=1).to_frame().to_pairs(0),
+            (('x', (('f1', 1), ('f2', 2))), ('y', (('f1', 2), ('f2', 2))), ('z', (('f1', 2), ('f2', 1))))
+            )
+
+    #---------------------------------------------------------------------------
+    def test_batch_to_zip_pickle_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2, f3))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp, config=config)
+            b2 = Batch.from_zip_pickle(fp, config=config)
+            frames = dict(b2.items())
+
+        for frame in (f1, f2, f3):
+            # parquet brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
+
+    #---------------------------------------------------------------------------
+    def test_batch_to_xlsx_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2, f3))
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp)
+            b2 = Batch.from_xlsx(fp, config=config)
+            frames = dict(b2.items())
+
+        for frame in (f1, f2, f3):
+            # parquet brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
+
+
+    def test_batch_to_zip_parquet_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2), config=config)
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp)
+            b2 = (Batch.from_xlsx(fp, config=config) * 20).sum()
+
+            self.assertEqual(b2.to_frame().to_pairs(0),
+                (('a', (('f1', 60), ('f2', 120))), ('b', (('f1', 140), ('f2', 300)))))
+
+
+    #---------------------------------------------------------------------------
+    def test_batch_sample_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        self.assertEqual(
+                Batch.from_frames((f1, f2)).sample(1, 1, seed=22).to_frame().to_pairs(0),
+                (('a', ((('f1', 'x'), 1), (('f2', 'z'), 3))),)
+                )
 
 if __name__ == '__main__':
     unittest.main()

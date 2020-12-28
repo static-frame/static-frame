@@ -19,8 +19,10 @@ from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import argmin_2d
+from static_frame.core.util import array1d_to_last_contiguous_to_edge
 from static_frame.core.util import array_from_element_method
 from static_frame.core.util import array_shift
+from static_frame.core.util import array_sample
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import binary_transition
 from static_frame.core.util import column_1d_filter
@@ -57,6 +59,8 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
+from static_frame.core.util import duplicate_filter
+
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 
@@ -2284,7 +2288,60 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             np.isnan(ufunc_all(np.array([False, None], dtype=object)))
 
+    #---------------------------------------------------------------------------
+    def test_array1d_to_last_contiguous_to_edge_a(self) -> None:
 
+        a1 = np.array([False, True, True, False, False, False, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a1), 6)
+
+        a2 = np.array([False, True, True, False, False, True, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a2), 5)
+
+        a3 = np.array([False, True, True, False, False, False, False])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a3), 7)
+
+        a4 = np.array([False, True, True, False, True, True, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a4), 4)
+
+        a5 = np.array([False, True, True, True, True, True, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a5), 1)
+
+        a6 = np.array([True, True, True, True, True, True, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a6), 0)
+
+        a7 = np.array([])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a7), 1)
+
+        a8 = np.array([True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a8), 0)
+
+        a9 = np.array([False])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a9), 1)
+
+    #---------------------------------------------------------------------------
+    def test_array_sample_a(self) -> None:
+        a1 = np.arange(10)
+        self.assertEqual(array_sample(a1, 2, seed=0).tolist(), [2, 8])
+        self.assertEqual(array_sample(a1, 4, seed=0).tolist(), [2, 8, 4, 9])
+        self.assertEqual(array_sample(a1, 2, seed=0).tolist(), [2, 8])
+
+    def test_array_sample_b(self) -> None:
+        a1 = np.arange(4)
+        self.assertEqual(array_sample(a1, 4, seed=1).tolist(), [3, 2, 0, 1])
+        self.assertEqual(array_sample(a1, 4, seed=1).tolist(), [3, 2, 0, 1])
+        self.assertEqual(array_sample(a1, 4, seed=1, sort=True).tolist(), [0, 1, 2, 3])
+
+
+        with self.assertRaises(ValueError):
+            # raises if count is greater than size of array
+            self.assertEqual(array_sample(a1, 6, seed=1).tolist(), [3, 2, 0, 1])
+
+
+    #---------------------------------------------------------------------------
+    def test_duplicate_filter_a(self) -> None:
+        self.assertEqual(list(duplicate_filter(list('aaaabcccd'))), list('abcd'))
+        self.assertEqual(list(duplicate_filter(list('d'))), list('d'))
+        self.assertEqual(list(duplicate_filter(list())), list())
 
 
 if __name__ == '__main__':

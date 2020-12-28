@@ -45,8 +45,21 @@ class SampleData:
         value_values = sf.Series(np.random.random(len(group_values)), name='data')
         frame = sf.Frame.from_concat((group_values, group_unique_values, value_values), axis=1)
 
-        cls._store['pivot_a_sf'] = frame
-        cls._store['pivot_a_df'] = frame.to_pandas()
+        cls._store['pivot_sf'] = frame
+        cls._store['pivot_df'] = frame.to_pandas()
+
+        cls._store['to_pandas_a'] = sf.Frame.from_element(
+                np.nan, index=range(75), columns=range(75000))
+
+        f1 = sf.FrameGO.from_element(
+                np.nan, index=range(75), columns=range(50000))
+        f2 = sf.FrameGO.from_element(
+                0, index=range(75), columns=range(50000, 100000))
+        f1.extend(f2) #type: ignore
+        cls._store['to_pandas_b'] = f1
+
+
+
 
     @classmethod
     def get(cls, key: str) -> tp.Any:
@@ -60,13 +73,33 @@ class Pivot(PerfTest):
 
     @classmethod
     def sf(cls) -> None:
-        f1 = SampleData.get('pivot_a_sf')
+        f1 = SampleData.get('pivot_sf')
         f2 = f1.pivot(index_fields='group_unique', columns_fields='group', data_fields='data')
         assert f2.shape == (50, 37000)
 
     @classmethod
     def pd(cls) -> None:
-        df1 = SampleData.get('pivot_a_df')
+        df1 = SampleData.get('pivot_df')
         df2 = df1.pivot(index='group_unique', columns='group', values='data')
         assert df2.shape == (50, 37000)
 
+
+class ToPandasA(PerfTest):
+
+    NUMBER = 1
+
+    @classmethod
+    def sf(cls) -> None:
+        f1 = SampleData.get('to_pandas_a')
+        df = f1.to_pandas()
+        assert df.shape == f1.shape
+
+class ToPandasB(PerfTest):
+
+    NUMBER = 1
+
+    @classmethod
+    def sf(cls) -> None:
+        f1 = SampleData.get('to_pandas_b')
+        df = f1.to_pandas()
+        assert df.shape == f1.shape
