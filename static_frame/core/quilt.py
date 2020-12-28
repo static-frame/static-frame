@@ -4,6 +4,7 @@ from itertools import zip_longest
 import numpy as np
 
 from static_frame.core.container import ContainerBase
+from static_frame.core.container_util import axis_window_items
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
@@ -23,14 +24,17 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.hloc import HLoc
 from static_frame.core.util import duplicate_filter
 from static_frame.core.util import INT_TYPES
+from static_frame.core.util import AnyCallable
 from static_frame.core.store import Store
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeConstructorAxis
+from static_frame.core.node_iter import IterNodeWindow
 
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import NotImplementedAxis
 from static_frame.core.util import get_tuple_constructor
+
 
 # from static_frame.core.store import StoreConfigMap
 # from static_frame.core.store import StoreConfigMapInitializer
@@ -486,6 +490,61 @@ class Quilt(ContainerBase, StoreClientMixin):
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
+    #---------------------------------------------------------------------------
+    def _axis_window_items(self, *,
+            size: int,
+            axis: int = 0,
+            step: int = 1,
+            window_sized: bool = True,
+            window_func: tp.Optional[AnyCallable] = None,
+            window_valid: tp.Optional[AnyCallable] = None,
+            label_shift: int = 0,
+            start_shift: int = 0,
+            size_increment: int = 0,
+            as_array: bool = False,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+        '''Generator of index, processed-window pairs.
+        '''
+        yield from axis_window_items(
+                source=self,
+                size=size,
+                axis=axis,
+                step=step,
+                window_sized=window_sized,
+                window_func=window_func,
+                window_valid=window_valid,
+                label_shift=label_shift,
+                start_shift=start_shift,
+                size_increment=size_increment,
+                as_array=as_array
+                )
+
+
+    def _axis_window(self, *,
+            size: int,
+            axis: int = 0,
+            step: int = 1,
+            window_sized: bool = True,
+            window_func: tp.Optional[AnyCallable] = None,
+            window_valid: tp.Optional[AnyCallable] = None,
+            label_shift: int = 0,
+            start_shift: int = 0,
+            size_increment: int = 0,
+            as_array: bool = False,
+            ) -> tp.Iterator['Frame']:
+        yield from (x for _, x in self._axis_window_items(
+                size=size,
+                axis=axis,
+                step=step,
+                window_sized=window_sized,
+                window_func=window_func,
+                window_valid=window_valid,
+                label_shift=label_shift,
+                start_shift=start_shift,
+                size_increment=size_increment,
+                as_array=as_array
+                ))
+
 
     #---------------------------------------------------------------------------
     def _extract_array(self,
@@ -777,6 +836,86 @@ class Quilt(ContainerBase, StoreClientMixin):
                 function_items=self._axis_series_items,
                 yield_type=IterNodeType.ITEMS
                 )
+
+
+    #---------------------------------------------------------------------------
+
+    @property
+    @doc_inject(selector='window')
+    def iter_window(self) -> IterNodeWindow:
+        '''
+        Iterator of windowed values, where values are given as a :obj:`Frame`.
+
+        {args}
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        function_values = partial(self._axis_window, as_array=False)
+        function_items = partial(self._axis_window_items, as_array=False)
+        return IterNodeWindow(
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.VALUES
+                )
+
+    @property
+    @doc_inject(selector='window')
+    def iter_window_items(self) -> IterNodeWindow:
+        '''
+        Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
+
+        {args}
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        function_values = partial(self._axis_window, as_array=False)
+        function_items = partial(self._axis_window_items, as_array=False)
+        return IterNodeWindow(
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.ITEMS
+                )
+
+    @property
+    @doc_inject(selector='window')
+    def iter_window_array(self) -> IterNodeWindow:
+        '''
+        Iterator of windowed values, where values are given as a :obj:`np.array`.
+
+        {args}
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        function_values = partial(self._axis_window, as_array=True)
+        function_items = partial(self._axis_window_items, as_array=True)
+        return IterNodeWindow(
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.VALUES
+                )
+
+    @property
+    @doc_inject(selector='window')
+    def iter_window_array_items(self) -> IterNodeWindow:
+        '''
+        Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
+
+        {args}
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+        function_values = partial(self._axis_window, as_array=True)
+        function_items = partial(self._axis_window_items, as_array=True)
+        return IterNodeWindow(
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.ITEMS
+                )
+
 
     #---------------------------------------------------------------------------
     def to_frame(self) -> Frame:
