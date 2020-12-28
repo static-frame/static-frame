@@ -470,12 +470,12 @@ def axis_window_items( *,
         else:
             if axis == 0:
                 if as_array:
-                    window = source._extract_array(key)
+                    window = source._extract_array(key) #type: ignore
                 else: # use low level iloc selector
                     window = source._extract(row_key=key) #type: ignore
             else:
                 if as_array:
-                    window = source._extract_array(NULL_SLICE, key)
+                    window = source._extract_array(NULL_SLICE, key) #type: ignore
                 else:
                     window = source._extract(column_key=key) #type: ignore
 

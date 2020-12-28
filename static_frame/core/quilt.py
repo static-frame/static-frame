@@ -1,5 +1,6 @@
 import typing as tp
 from itertools import zip_longest
+from functools import partial
 
 import numpy as np
 
@@ -840,9 +841,9 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
 
-    @property
+    @property #type: ignore
     @doc_inject(selector='window')
-    def iter_window(self) -> IterNodeWindow:
+    def iter_window(self) -> IterNodeWindow['Quilt']:
         '''
         Iterator of windowed values, where values are given as a :obj:`Frame`.
 
@@ -859,9 +860,9 @@ class Quilt(ContainerBase, StoreClientMixin):
                 yield_type=IterNodeType.VALUES
                 )
 
-    @property
+    @property #type: ignore
     @doc_inject(selector='window')
-    def iter_window_items(self) -> IterNodeWindow:
+    def iter_window_items(self) -> IterNodeWindow['Quilt']:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
 
@@ -878,9 +879,9 @@ class Quilt(ContainerBase, StoreClientMixin):
                 yield_type=IterNodeType.ITEMS
                 )
 
-    @property
+    @property #type: ignore
     @doc_inject(selector='window')
-    def iter_window_array(self) -> IterNodeWindow:
+    def iter_window_array(self) -> IterNodeWindow['Quilt']:
         '''
         Iterator of windowed values, where values are given as a :obj:`np.array`.
 
@@ -897,9 +898,9 @@ class Quilt(ContainerBase, StoreClientMixin):
                 yield_type=IterNodeType.VALUES
                 )
 
-    @property
+    @property #type: ignore
     @doc_inject(selector='window')
-    def iter_window_array_items(self) -> IterNodeWindow:
+    def iter_window_array_items(self) -> IterNodeWindow['Quilt']:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
 
