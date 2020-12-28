@@ -15,3 +15,8 @@ dist
 # WingIDE
 *.wp[ur]
 
+# Macos
+.DS_Store
+
+# Line profiler
+*.lprof
