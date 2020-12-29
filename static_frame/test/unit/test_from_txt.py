@@ -2,8 +2,27 @@ from io import StringIO
 from pathlib import Path
 
 import pytest
+import numpy as np
 
 import static_frame as sf
+
+
+@pytest.fixture
+def unique_tsv() -> StringIO:
+    '''A tsv file where every cell is unique'''
+    column_count = 10
+    row_count = 5
+
+    i = 0
+    data = []
+    for r in range(row_count):
+        row = []
+        for c in range(column_count):
+            row.append(str(i))
+            i += 1
+        data.append('\t'.join(row))
+
+    return StringIO('\n'.join(data))
 
 
 def test_frame_from_txt() -> None:
@@ -17,6 +36,7 @@ def test_frame_from_txt() -> None:
     assert f1.iloc[:, :2].to_pairs(0) == (
         ('count', ((0, '1'), (1, '3'), (2, '100'), (3, '4'))),
         ('score', ((0, '1.3'), (1, '5.2'), (2, '3.4'), (3, '9.0'))))
+
 
 def test_frame_from_txt_file(tmpdir) -> None:
     # header, mixed types, no index
@@ -60,3 +80,28 @@ def test_frame_from_txt_file_2(tmpdir) -> None:
     f = sf.Frame.from_txt(tmpfile, index_depth=1, delimiter='|')
     assert (f.to_pairs(0) ==
             (('A', (('a', True), ('b', False))), ('B', (('a', 20.2), ('b', 85.3)))))
+
+
+def test_depth(unique_tsv: StringIO):
+    f = sf.Frame.from_txt(unique_tsv, delimiter='\t', index_depth=1)
+    assert f.index.values.tolist() == ['10', '20', '30', '40']
+    e = np.array([['11', '12'],
+           ['21', '22']], dtype=object)
+    assert (f.iloc[:2, :2].values == e).all()
+    assert f.columns.values.tolist() == ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+    unique_tsv.seek(0)
+    f = sf.Frame.from_txt(unique_tsv, delimiter='\t', columns_depth=0)
+    e = np.array([['0', '1'],
+                  ['10', '11']], dtype=object)
+    assert (f.iloc[:2, :2].values == e).all()
+    assert f.columns.values.tolist() == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+    unique_tsv.seek(0)
+    f = sf.Frame.from_txt(unique_tsv, delimiter='\t', columns_depth=2, index_depth=2)
+    e = np.array([['0', '1'],
+                  ['10', '11']], dtype=object)
+    assert (f.iloc[:2, :2].values == e).all()
+    assert f.columns.values.tolist() == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+    assert 0

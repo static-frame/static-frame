@@ -32,6 +32,7 @@ from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import MessagePackElement
+from static_frame.core.container_util import array_to_index
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1630,19 +1631,34 @@ class Frame(ContainerOperand):
 
         quadrants = io_util.slice_index_and_columns(array, index_depth, columns_depth)
 
-        # Build columns
+        # Build columns.
         own_columns = False
-        if columns_depth == 1:
-            columns = cls._COLUMNS_CONSTRUCTOR(quadrants.columns[0])
+        columns = None
+        if quadrants.columns.size:
             own_columns = True
-        else:
-            columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(quadrants.columns)
-            own_columns = True
+            columns = array_to_index(
+                    quadrants.columns,
+                    index_constructor=cls._COLUMNS_CONSTRUCTOR,
+                    hierarchy_constructor=cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+            )
+
+        # Build index.
+        own_index = False
+        index = IndexAutoFactory
+        if quadrants.index.size:
+            index = array_to_index(
+                    quadrants.index,
+                    index_constructor=Index,
+                    hierarchy_constructor=IndexHierarchy.from_labels,
+            )
+            own_index = True
 
         return cls(
-            data=array[columns_depth:],
-            columns=columns,
+            data=quadrants.data,
             own_data=True,
+            index=index,
+            own_index=own_index,
+            columns=columns,
             own_columns=own_columns,
             name=name,
         )
