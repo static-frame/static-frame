@@ -5,6 +5,7 @@ import io
 
 import pytest
 import py
+import numpy as np
 
 from static_frame.core import io_util
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
@@ -50,3 +51,28 @@ def test_to_line_iter(input_format_and_expected):
 
     iterator = io_util.to_line_iter(input_)
     assert tuple(iterator) == expected
+
+
+def test_slice_index_and_columns():
+    shape = (5, 10)
+    a = np.zeros(shape, dtype=np.int8)
+    r = io_util.slice_index_and_columns(a, 0, 0)
+    assert r.data.shape == shape
+    assert all(x.size==0 for x in (r.index, r.columns, r.top_left))
+
+    r = io_util.slice_index_and_columns(a, 1, 0)
+    assert r.data.shape == (5, 9)
+    assert r.index.shape == (5, 1)
+    assert all(x.size==0 for x in (r.columns, r.top_left))
+
+    r = io_util.slice_index_and_columns(a, 0, 1)
+    assert r.data.shape == (4, 10)
+    assert r.columns.shape == (1, 10)
+    assert all(x.size==0 for x in (r.index, r.top_left))
+
+    r = io_util.slice_index_and_columns(a, 2, 1)
+    assert r.data.shape == (4, 8)
+    assert r.columns.shape == (1, 8)
+    assert r.index.shape == (4, 2)
+    assert r.top_left.shape == (1, 2)
+
