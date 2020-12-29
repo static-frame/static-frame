@@ -1626,9 +1626,10 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         lines = io_util.to_line_iter(fp)
         data = tuple(csv.reader(lines, delimiter=delimiter, quotechar=quote_char))
+        array = np.array(data, dtype=object)
 
         # Build columns
-        columns_data = data[:columns_depth]
+        columns_data = array[:columns_depth]
         own_columns = False
         if columns_depth == 1:
             columns = cls._COLUMNS_CONSTRUCTOR(columns_data[0])
@@ -1637,9 +1638,8 @@ class Frame(ContainerOperand):
             columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(columns_data)
             own_columns = True
 
-        array = np.array(data[columns_depth:], dtype=object)
         return cls(
-            data=array,
+            data=array[columns_depth:],
             columns=columns,
             own_data=True,
             own_columns=own_columns,
