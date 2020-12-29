@@ -1033,22 +1033,16 @@ class MessagePackElement:
         return d
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def array_to_index(
+        array: np.ndarray,
+        index_constructor: tp.Callable,
+        hierarchy_constructor: tp.Callable,
+    ) -> IndexBase:
+    '''Given an array, call either `index_constructor` or `hierarchy_constructor` depending on the dimensionality of the data.
+    `array` is assumed to be 2 dimensional.
+    '''
+    if any(d == 1 for d in array.shape):
+        index = index_constructor(array.flatten())
+    else:
+        index = hierarchy_constructor(array)
+    return index
