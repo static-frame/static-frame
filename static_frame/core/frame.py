@@ -1628,14 +1628,15 @@ class Frame(ContainerOperand):
         data = tuple(csv.reader(lines, delimiter=delimiter, quotechar=quote_char))
         array = np.array(data, dtype=object)
 
+        quadrants = io_util.slice_index_and_columns(array, index_depth, columns_depth)
+
         # Build columns
-        columns_data = array[:columns_depth]
         own_columns = False
         if columns_depth == 1:
-            columns = cls._COLUMNS_CONSTRUCTOR(columns_data[0])
+            columns = cls._COLUMNS_CONSTRUCTOR(quadrants.columns[0])
             own_columns = True
         else:
-            columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(columns_data)
+            columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(quadrants.columns)
             own_columns = True
 
         return cls(
