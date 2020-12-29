@@ -2,6 +2,7 @@
 import unittest
 
 import frame_fixtures as ff
+import numpy as np
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.quilt import Quilt
@@ -12,9 +13,13 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.index import ILoc
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
+from static_frame.core.batch import Batch
+from static_frame.core.store import StoreConfig
+
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import ErrorInitIndexNonUnique
+
 
 class TestUnit(TestCase):
 
@@ -368,7 +373,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_quilt_store_client_mixin_a(self) -> None:
 
-        # indexes are hetergenous but columns are not
+        # indexes are heterogenous but columns are not
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
                 index=('x', 'y'),
@@ -527,6 +532,72 @@ class TestUnit(TestCase):
 
         q2 = Quilt.from_frame(f1, chunksize=2, axis=0, retain_labels=False)
         self.assertTrue(q2.to_frame().equals(f1))
+
+    #---------------------------------------------------------------------------
+    def test_quilt_iter_window_a(self) -> None:
+
+        f1 = ff.parse('s(20,2)|v(int)|i(I,str)|c(I,str)')
+
+        q1 = Quilt.from_frame(f1, chunksize=4, axis=0, retain_labels=False)
+        self.assertTrue(len(q1._bus), 5)
+
+        post1 = tuple(q1.iter_window(size=5))
+        self.assertEqual(len(post1), 16)
+        self.assertEqual(post1[-1].shape, (5, 2))
+
+        f2 = Batch(q1.iter_window_items(size=5)).mean().to_frame()
+        self.assertEqual(f2.to_pairs(0),
+                (('zZbu', (('zmVj', 55768.8), ('z2Oo', 85125.8), ('z5l6', 95809.2), ('zCE3', 112903.8), ('zr4u', 116693.2), ('zYVB', 109129.2), ('zOyq', 84782.8), ('zIA5', 89954.4), ('zGDJ', 24929.2), ('zmhG', 43655.2), ('zo2Q', 28049.0), ('zjZQ', 21071.6), ('zO5l', 20315.6), ('zEdH', 77254.8), ('zB7E', 21935.2), ('zwIp', -21497.8))), ('ztsv', (('zmVj', 19801.8), ('z2Oo', 616.2), ('z5l6', -25398.6), ('zCE3', -34343.8), ('zr4u', 2873.2), ('zYVB', -30222.0), ('zOyq', -49512.4), ('zIA5', -3803.0), ('zGDJ', -15530.0), ('zmhG', 19152.0), ('zo2Q', 59952.2), ('zjZQ', 63255.8), ('zO5l', 57918.2), ('zEdH', 93699.6), ('zB7E', 56150.2), ('zwIp', 17830.4))))
+                )
+
+    def test_quilt_iter_window_b(self) -> None:
+        from string import ascii_lowercase
+        # indexes are heterogenous but columns are not
+        def get_frame(scale: int = 1) -> Frame:
+            return Frame(np.arange(12).reshape(4, 3) * scale, columns=('x', 'y', 'z'))
+
+        config = StoreConfig(include_index=True, index_depth=1)
+        with temp_file('.zip') as fp:
+
+            items = ((ascii_lowercase[i], get_frame(scale=i)) for i in range(20))
+            Batch(items).to_zip_parquet(fp, config=config)
+
+            # aggregate index is not unique so must retain outer labels
+            q1 = Quilt.from_zip_parquet(fp, max_persist=1, retain_labels=True, config=config)
+            self.assertEqual(q1.status['loaded'].sum(), 0)
+
+            s1 = q1['y'] # extract and consolidate a column
+            self.assertEqual(s1.shape, (80,))
+            self.assertEqual(q1.status['loaded'].sum(), 1)
+
+            # extract a region using a loc selection
+            s2 = q1.loc[HLoc['h':'m'], ['x', 'z']].sum() #type: ignore
+            self.assertEqual(s2.to_pairs(), (('x', 1026), ('z', 1482)))
+
+            # iterate over all rows and apply a function
+            s3 = q1.iter_series(axis=1).apply(lambda s: s.mean())
+            self.assertEqual(s3.shape, (80,))
+            self.assertEqual(q1.status['loaded'].sum(), 1)
+
+            # take a rolling mean of size six
+            f1 = Batch(q1.iter_window_items(size=6)).mean().to_frame()
+            self.assertEqual(f1.shape, (75, 3))
+            self.assertEqual(q1.status['loaded'].sum(), 1)
+
+
+    #---------------------------------------------------------------------------
+    def test_quilt_iter_window_array_b(self) -> None:
+
+        f1 = ff.parse('s(20,2)|v(int)|i(I,str)|c(I,str)')
+
+        q1 = Quilt.from_frame(f1, chunksize=4, axis=0, retain_labels=False)
+        self.assertTrue(len(q1._bus), 5)
+
+        s1 = q1.iter_window_array(size=5, step=4).apply(lambda a: a.sum())
+        self.assertEqual(s1.to_pairs(),
+                (('zmVj', 377853), ('zr4u', 597832), ('zGDJ', 46996), ('zO5l', 391169)))
+
+
 
 if __name__ == '__main__':
     unittest.main()
