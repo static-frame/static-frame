@@ -1637,7 +1637,7 @@ class Frame(ContainerOperand):
         if quadrants.columns.size:
             own_columns = True
             columns = array_to_index(
-                    quadrants.columns,
+                    quadrants.columns.T,
                     index_constructor=cls._COLUMNS_CONSTRUCTOR,
                     hierarchy_constructor=cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
             )

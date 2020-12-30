@@ -99,9 +99,9 @@ def test_depth(unique_tsv: StringIO):
 
     unique_tsv.seek(0)
     f = sf.Frame.from_txt(unique_tsv, delimiter='\t', columns_depth=2, index_depth=2)
-    e = np.array([['0', '1'],
-                  ['10', '11']], dtype=object)
+    e = np.array([['22', '23'],
+                  ['32', '33']], dtype=object)
     assert (f.iloc[:2, :2].values == e).all()
-    assert f.columns.values.tolist() == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert f.columns.shape == (8, 2)
+    assert f.index.shape == (3, 2)
 
-    assert 0
