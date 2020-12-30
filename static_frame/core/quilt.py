@@ -360,6 +360,13 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         return sum(f.nbytes for _, f in self._bus.items())
 
+    @property
+    def status(self) -> Frame:
+        '''
+        Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in the contained :obj:`Bus`.
+        '''
+        return self._bus.status
+
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
