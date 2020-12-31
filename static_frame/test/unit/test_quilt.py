@@ -260,20 +260,23 @@ class TestUnit(TestCase):
 
         self.assertEqual(q1.loc['zkuW', 'zwIp'], -112188)
 
-    # def test_quilt_extract_g(self) -> None:
-    #     from string import ascii_lowercase
-    #     config = StoreConfig(include_index=True, index_depth=1)
+    def test_quilt_extract_g(self) -> None:
+        from string import ascii_lowercase
+        config = StoreConfig(include_index=True, index_depth=1)
 
-    #     with temp_file('.zip') as fp:
+        with temp_file('.zip') as fp:
 
-    #         items = ((ascii_lowercase[i], Frame(np.arange(200_000).reshape(100_000, 2), columns=tuple('xy'))) for i in range(4))
+            items = ((ascii_lowercase[i], Frame(np.arange(2_000).reshape(1_000, 2), columns=tuple('xy'))) for i in range(4))
 
-    #         Batch(items).to_zip_pickle(fp, config=config)
+            Batch(items).to_zip_pickle(fp, config=config)
 
-    #         q1 = Quilt.from_zip_pickle(fp, max_persist=1, retain_labels=True, config=config)
-    #         self.assertEqual(q1.shape, (400_000, 2))
-    #         q1.iloc[200_000:200_010, 1:]
-    #         # import ipdb; ipdb.set_trace()
+            q1 = Quilt.from_zip_pickle(fp, max_persist=1, retain_labels=True, config=config)
+            self.assertEqual(q1.shape, (4_000, 2))
+            post = q1.iloc[2_000:2_010, 1:]
+            self.assertEqual(post.shape, (10, 1))
+            self.assertEqual(set(post.index.values_at_depth(0)), {'c'})
+            # import ipdb; ipdb.set_trace()
+            pass
 
 
     #---------------------------------------------------------------------------

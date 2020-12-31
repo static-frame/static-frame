@@ -576,7 +576,6 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         parts: tp.List[np.ndarray] = []
 
-        sel = np.full(len(self._axis_map), False) #type: ignore
         if self._axis == 0:
             sel_key = row_key
             opposite_key = column_key
@@ -587,9 +586,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel_reduces = isinstance(sel_key, INT_TYPES)
         opposite_reduces = isinstance(opposite_key, INT_TYPES)
 
+        sel = np.full(len(self._axis_map), False) #type: ignore
         sel[sel_key] = True
-        sel.flags.writeable = False
-        sel_map = Series(sel, index=self._axis_map.index, own_index=True) #type: ignore
 
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
         axis_map_sub = self._axis_map.iloc[sel_key] #type: ignore
@@ -599,7 +597,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             bus_keys = duplicate_filter(axis_map_sub.values) #type: ignore
 
         for key_count, key in enumerate(bus_keys):
-            sel_component = sel_map[HLoc[key]].values # get Boolean array
+            sel_component = sel[self._axis_map.index.loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
                 component = self._bus.loc[key]._extract_array(sel_component, opposite_key)
@@ -655,8 +653,6 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         sel = np.full(len(self._axis_map), False) #type: ignore
         sel[sel_key] = True
-        sel.flags.writeable = False
-        sel_map = Series(sel, index=self._axis_map.index, own_index=True) #type: ignore
 
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
         axis_map_sub = self._axis_map.iloc[sel_key] #type: ignore
@@ -666,8 +662,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             bus_keys = duplicate_filter(axis_map_sub.values) #type: ignore
 
         for key_count, key in enumerate(bus_keys):
-            sel_component = sel_map[HLoc[key]].values # get Boolean array
-            # import ipdb; ipdb.set_trace()
+            sel_component = sel[self._axis_map.index.loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
                 component = self._bus.loc[key].iloc[sel_component, opposite_key]
