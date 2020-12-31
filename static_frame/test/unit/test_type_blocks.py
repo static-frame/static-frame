@@ -1,6 +1,7 @@
 import unittest
 import pickle
 from itertools import zip_longest
+import copy
 
 import numpy as np
 
@@ -1624,7 +1625,7 @@ class TestUnit(TestCase):
                 [(dtype('int64'), 3), (dtype('bool'), 3), (dtype('<U2'), 2), (dtype('O'), 1)])
 
 
-
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_copy_a(self) -> None:
 
@@ -1645,6 +1646,18 @@ class TestUnit(TestCase):
 
         self.assertEqual(tb2.iloc[2].values.tolist(),
                 [[0, 0, 1, True, False, True, None, 'oe', 'od']])
+
+
+    def test_type_blocks_copy_a(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        tb2 = copy.copy(tb1)
+
+        self.assertEqual([id(a) for a in tb1._blocks], [id(a) for a in tb2._blocks])
 
 
     #---------------------------------------------------------------------------

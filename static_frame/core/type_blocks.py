@@ -248,15 +248,25 @@ class TypeBlocks(ContainerOperand):
         for b in self._blocks:
             b.flags.writeable = False
 
-    def copy(self) -> 'TypeBlocks':
+    def __copy__(self) -> 'TypeBlocks':
         '''
-        Return a new TypeBlocks. Underlying arrays are not copied.
+        Return shallow copy of this TypeBlocks. Underlying arrays are not copied.
         '''
         return self.__class__(
                 blocks=[b for b in self._blocks],
                 dtypes=self._dtypes.copy(), # list
                 index=self._index.copy(),
-                shape=self._shape)
+                shape=self._shape,
+                )
+
+    def copy(self) -> 'TypeBlocks':
+        '''
+        Return shallow copy of this TypeBlocks. Underlying arrays are not copied.
+        '''
+        return self.__copy__()
+
+
+
 
     #---------------------------------------------------------------------------
     # new properties
