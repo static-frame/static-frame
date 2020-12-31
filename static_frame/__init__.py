@@ -91,7 +91,7 @@ from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import mloc as mloc
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
-
+from static_frame.core.quilt import Quilt as Quilt
 
 __version__ = '0.7.8' # use -dev for new version in development
 

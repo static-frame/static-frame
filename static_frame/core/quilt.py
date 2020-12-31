@@ -58,7 +58,10 @@ class AxisMap:
                 )
 
     @classmethod
-    def from_bus(cls, bus: Bus, axis: int) -> tp.Tuple[Series, IndexBase]:
+    def from_bus(cls,
+            bus: Bus,
+            axis: int,
+            ) -> tp.Tuple[Series, IndexBase]:
         '''
         Given a :obj:`Bus` and an axis, derive a :obj:`Series` with an :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
         '''
@@ -83,7 +86,6 @@ class AxisMap:
                         raise ErrorInitQuilt('opposite axis must have equivalent indices')
             else:
                 raise AxisInvalid(f'invalid axis {axis}')
-
         return cls.get_axis_series(tree), opposite # type: ignore
 
 
@@ -642,7 +644,6 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         parts: tp.List[tp.Any] = []
 
-        sel = np.full(len(self._axis_map), False) #type: ignore
         if self._axis == 0:
             sel_key = row_key
             opposite_key = column_key
@@ -652,6 +653,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         sel_reduces = isinstance(sel_key, INT_TYPES)
 
+        sel = np.full(len(self._axis_map), False) #type: ignore
         sel[sel_key] = True
         sel.flags.writeable = False
         sel_map = Series(sel, index=self._axis_map.index, own_index=True) #type: ignore
@@ -665,6 +667,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         for key_count, key in enumerate(bus_keys):
             sel_component = sel_map[HLoc[key]].values # get Boolean array
+            # import ipdb; ipdb.set_trace()
 
             if self._axis == 0:
                 component = self._bus.loc[key].iloc[sel_component, opposite_key]

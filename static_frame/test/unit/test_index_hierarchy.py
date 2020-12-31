@@ -565,6 +565,45 @@ class TestUnit(TestCase):
         post2 = ih1.loc_to_iloc(HLoc[:, :, ILoc[-4]])
         self.assertEqual(post1, [4, 5, 6, 7])
 
+
+    def test_hierarchy_loc_to_iloc_m(self) -> None:
+        idx = Index(range(20), loc_is_iloc=True)
+        idx_alt = Index(range(20))
+
+        tree = {'a':idx, 'b':idx}
+        ih1 = IndexHierarchy.from_tree(tree)
+
+        tree_alt = {'a':idx_alt, 'b':idx_alt}
+        ih1_alt = IndexHierarchy.from_tree(tree_alt)
+
+        post1 = ih1.loc_to_iloc(HLoc['b'])
+        self.assertEqual(post1, ih1_alt.loc_to_iloc(HLoc['b']))
+        self.assertEqual(post1, slice(20, 40))
+
+        post2 = ih1.loc_to_iloc(HLoc['b', 10:12])
+        self.assertEqual(post2, ih1_alt.loc_to_iloc(HLoc['b', 10:12]))
+        self.assertEqual(post2, [30, 31, 32])
+
+        post3 = ih1.loc_to_iloc(HLoc['b', [0, 10, 19]])
+        self.assertEqual(post3, ih1_alt.loc_to_iloc(HLoc['b', [0, 10, 19]]))
+        self.assertEqual(post3, [20, 30, 39])
+
+        post4 = ih1.loc_to_iloc(HLoc['b', 11])
+        self.assertEqual(post4, ih1_alt.loc_to_iloc(HLoc['b', 11]))
+        self.assertEqual(post4, 31)
+
+        post5 = ih1.loc_to_iloc(
+                HLoc['b', ~(ih1.values_at_depth(1) % 3).astype(bool)])
+        self.assertEqual(post5, ih1_alt.loc_to_iloc(
+                HLoc['b', ~(ih1.values_at_depth(1) % 3).astype(bool)]))
+        self.assertEqual(post5, [20, 23, 26, 29, 32, 35, 38])
+
+        post6 = ih1.loc_to_iloc(HLoc['b', np.array([0, 10, 19])])
+        self.assertEqual(post6, ih1_alt.loc_to_iloc(HLoc['b', np.array([0, 10, 19])]))
+        self.assertEqual(post6, [20, 30, 39])
+
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_iloc_a(self) -> None:

@@ -260,6 +260,22 @@ class TestUnit(TestCase):
 
         self.assertEqual(q1.loc['zkuW', 'zwIp'], -112188)
 
+    # def test_quilt_extract_g(self) -> None:
+    #     from string import ascii_lowercase
+    #     config = StoreConfig(include_index=True, index_depth=1)
+
+    #     with temp_file('.zip') as fp:
+
+    #         items = ((ascii_lowercase[i], Frame(np.arange(200_000).reshape(100_000, 2), columns=tuple('xy'))) for i in range(4))
+
+    #         Batch(items).to_zip_pickle(fp, config=config)
+
+    #         q1 = Quilt.from_zip_pickle(fp, max_persist=1, retain_labels=True, config=config)
+    #         self.assertEqual(q1.shape, (400_000, 2))
+    #         q1.iloc[200_000:200_010, 1:]
+    #         # import ipdb; ipdb.set_trace()
+
+
     #---------------------------------------------------------------------------
     def test_quilt_extract_array_a(self) -> None:
 

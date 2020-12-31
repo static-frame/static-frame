@@ -801,6 +801,9 @@ def key_from_container_key(
         key: GetItemKeyType,
         expand_iloc: bool = False,
         ) -> GetItemKeyType:
+    '''
+    Unpack selection values from another Index, Series, or ILoc selection.
+    '''
 
     from static_frame.core.index import Index
     from static_frame.core.index import ILoc

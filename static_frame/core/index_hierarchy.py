@@ -1041,6 +1041,7 @@ class IndexHierarchy(IndexBase):
             key = HLoc(tuple(
                     key_from_container_key(self, k, expand_iloc=True)
                     for k in key))
+        # TODO: do call key_from_container_key as else of HLoc handling
 
         return self._levels.loc_to_iloc(key)
 

@@ -8,6 +8,8 @@ Improved handling of invalid file paths given to constructors.
 
 Improved implementations of ``Bus.items()``, ``Bus.values``, and ``Bus.equals()`` that deliver proper results when `max_persist` is active.
 
+Implementation of ``Quilt``, a container that presents the contents of a ``Bus`` as either vertically or horizontally stacked ``Fraem``.
+
 
 0.7.8
 ----------

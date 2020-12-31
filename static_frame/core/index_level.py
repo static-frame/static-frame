@@ -531,6 +531,7 @@ class IndexLevel:
                     if isinstance(level_targets, IndexLevel):
                         levels.append((level_targets, next_depth, next_offset))
                     else:
+                        # NOTE: use a generator expression to extend
                         levels.extend([(lvl, next_depth, next_offset)
                                 for lvl in level_targets])
 

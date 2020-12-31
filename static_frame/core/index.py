@@ -198,8 +198,8 @@ class LocMap:
         Note: all SF objects (Series, Index) need to be converted to basic types before being passed as `key` to this function.
 
         Args:
-            offset: in the contect of an IndexHierarchical, the iloc positions returned from this funcition need to be shifted.
-            partial_selection: if True and key is an iterable of labels that includes lables not in the mapping, available matches will be returned rather than raising.
+            offset: in the context of an IndexHierarchical, the iloc positions returned from this funcition need to be shifted.
+            partial_selection: if True and key is an iterable of labels that includes labels not in the mapping, available matches will be returned rather than raising.
         Returns:
             An integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
@@ -209,7 +209,7 @@ class LocMap:
 
         if isinstance(key, slice):
             if offset_apply and key == NULL_SLICE:
-                # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explict slice relative to the offset
+                # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explicit slice relative to the offset
                 return slice(offset, len(positions) + offset) #type: ignore
             try:
                 return slice(*cls.map_slice_args(
@@ -903,7 +903,7 @@ class Index(IndexBase):
 
         key = key_from_container_key(self, key)
 
-        if self._map is None: # loc_is_iloc
+        if self._map is None and offset is None: # loc_is_iloc
             if isinstance(key, np.ndarray):
                 if key.dtype == bool:
                     return key
@@ -914,6 +914,34 @@ class Index(IndexBase):
             elif isinstance(key, slice):
                 key = slice_to_inclusive_slice(key)
             return key
+
+        if self._map is None and offset is not None: # loc_is_iloc
+            if isinstance(key, slice):
+                if key == NULL_SLICE:
+                    return slice(offset, self.__len__() + offset) #type: ignore
+
+                key = slice_to_inclusive_slice(key)
+
+                def slice_attrs() -> tp.Iterator[int]:
+                    for attr in SLICE_ATTRS:
+                        if attr != SLICE_STEP_ATTR:
+                            yield getattr(key, attr) + offset
+                        else:
+                            yield getattr(key, attr)
+
+                return slice(*slice_attrs())
+
+            if isinstance(key, np.ndarray):
+                if key.dtype == DTYPE_BOOL:
+                    return self._positions[key] + offset
+                if key.dtype != DTYPE_INT_DEFAULT:
+                    key = key.astype(DTYPE_INT_DEFAULT)
+                return key + offset
+
+            if isinstance(key, list):
+               return [k + offset for k in key]
+            # a single element
+            return key + offset
 
         if key_transform:
             key = key_transform(key)
