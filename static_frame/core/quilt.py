@@ -564,6 +564,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         Extract a consolidated array based on iloc selection.
         '''
+        assert self._axis_map is not None #mypy
+
         row_key = NULL_SLICE if row_key is None else row_key
         column_key = NULL_SLICE if column_key is None else column_key
 
@@ -586,15 +588,15 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel_reduces = isinstance(sel_key, INT_TYPES)
         opposite_reduces = isinstance(opposite_key, INT_TYPES)
 
-        sel = np.full(len(self._axis_map), False) #type: ignore
+        sel = np.full(len(self._axis_map), False)
         sel[sel_key] = True
 
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-        axis_map_sub = self._axis_map.iloc[sel_key] #type: ignore
+        axis_map_sub = self._axis_map.iloc[sel_key]
         if not isinstance(axis_map_sub, Series): # we have an element integer
             bus_keys = (axis_map_sub,)
         else:
-            bus_keys = duplicate_filter(axis_map_sub.values) #type: ignore
+            bus_keys = duplicate_filter(axis_map_sub.values)
 
         for key_count, key in enumerate(bus_keys):
             sel_component = sel[self._axis_map.index.loc_to_iloc(HLoc[key])]
@@ -625,6 +627,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         Extract Container based on iloc selection.
         '''
+        assert self._axis_map is not None #mypy
+
         row_key = NULL_SLICE if row_key is None else row_key
         column_key = NULL_SLICE if column_key is None else column_key
 
@@ -651,15 +655,15 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         sel_reduces = isinstance(sel_key, INT_TYPES)
 
-        sel = np.full(len(self._axis_map), False) #type: ignore
+        sel = np.full(len(self._axis_map), False)
         sel[sel_key] = True
 
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-        axis_map_sub = self._axis_map.iloc[sel_key] #type: ignore
+        axis_map_sub = self._axis_map.iloc[sel_key]
         if not isinstance(axis_map_sub, Series): # we have an element integer
             bus_keys = (axis_map_sub,)
         else:
-            bus_keys = duplicate_filter(axis_map_sub.values) #type: ignore
+            bus_keys = duplicate_filter(axis_map_sub.values)
 
         for key_count, key in enumerate(bus_keys):
             sel_component = sel[self._axis_map.index.loc_to_iloc(HLoc[key])]
