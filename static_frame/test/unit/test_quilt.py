@@ -275,8 +275,7 @@ class TestUnit(TestCase):
             post = q1.iloc[2_000:2_010, 1:]
             self.assertEqual(post.shape, (10, 1))
             self.assertEqual(set(post.index.values_at_depth(0)), {'c'})
-            # import ipdb; ipdb.set_trace()
-            pass
+
 
 
     #---------------------------------------------------------------------------
