@@ -918,7 +918,7 @@ class Index(IndexBase):
         if self._map is None and offset is not None: # loc_is_iloc
             if isinstance(key, slice):
                 if key == NULL_SLICE:
-                    return slice(offset, self.__len__() + offset) #type: ignore
+                    return slice(offset, self.__len__() + offset)
 
                 key = slice_to_inclusive_slice(key)
 
@@ -941,13 +941,13 @@ class Index(IndexBase):
             if isinstance(key, list):
                return [k + offset for k in key]
             # a single element
-            return key + offset
+            return key + offset # type: ignore
 
         if key_transform:
             key = key_transform(key)
 
         return LocMap.loc_to_iloc(
-                label_to_pos=self._map,
+                label_to_pos=self._map, #type: ignore
                 labels=self._labels,
                 positions=self._positions, # always an np.ndarray
                 key=key,

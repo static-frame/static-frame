@@ -532,8 +532,8 @@ class IndexLevel:
                         levels.append((level_targets, next_depth, next_offset))
                     else:
                         # NOTE: use a generator expression to extend
-                        levels.extend([(lvl, next_depth, next_offset)
-                                for lvl in level_targets])
+                        levels.extend((lvl, next_depth, next_offset)
+                                for lvl in level_targets)
 
         iloc_count = len(ilocs)
         if iloc_count == 0:
