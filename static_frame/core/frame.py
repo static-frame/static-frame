@@ -4,6 +4,7 @@ from io import StringIO
 from io import BytesIO
 from itertools import chain
 from itertools import product
+from copy import deepcopy
 
 import csv
 import json
@@ -2509,6 +2510,30 @@ class Frame(ContainerOperand):
             raise ErrorInitFrame(
                 f'Columns has incorrect size (got {self._blocks.shape[1]}, expected {col_count})'
                 )
+
+    #---------------------------------------------------------------------------
+
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Frame':
+        obj = self.__new__(self.__class__)
+        obj._blocks = deepcopy(self._blocks, memo)
+        obj._columns = deepcopy(self._columns, memo) #type: ignore
+        obj._index = deepcopy(self._index, memo) #type: ignore
+        obj._name = self._name # should be hashable/immutable
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+
+    # def __copy__(self) -> 'Frame':
+    #     '''
+    #     Return shallow copy of this Frame.
+    #     '''
+
+    # def copy(self)-> 'Frame':
+    #     '''
+    #     Return shallow copy of this Frame.
+    #     '''
+    #     return self.__copy__() #type: ignore
 
     #---------------------------------------------------------------------------
     # name interface

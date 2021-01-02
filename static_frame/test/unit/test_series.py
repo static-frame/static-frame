@@ -7,6 +7,8 @@ import pickle
 import datetime
 import typing as tp
 from enum import Enum
+import copy
+
 import numpy as np
 
 from static_frame.test.test_case import TestCase
@@ -3862,7 +3864,15 @@ class TestUnit(TestCase):
                 ((('a', 'x'), 0), (('b', 'x'), 2), (('b', 'y'), 3))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_series_deepcopy_a(self) -> None:
 
+        s1 = Series(['a', 'b', 'c'],
+                index=IndexHierarchy.from_labels([('X', 1), ('X', 2), ('Y', 1)])
+                )
+        s2 = copy.deepcopy(s1)
+        self.assertTrue(id(s1.values) != id(s2.values))
+        self.assertTrue(id(s1.index.values_at_depth(1)) != id(s2.index.values_at_depth(1)))
 
 if __name__ == '__main__':
     unittest.main()

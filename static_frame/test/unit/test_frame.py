@@ -8,6 +8,7 @@ import pickle
 import sqlite3
 import datetime
 import typing as tp
+import copy
 
 import numpy as np
 import frame_fixtures as ff
@@ -11779,6 +11780,44 @@ class TestUnit(TestCase):
                 ((0, ((0, False), (1, True), (2, True), (3, True), (4, True), (5, False))), (1, ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True))), (2, ((0, False), (1, True), (2, True), (3, True), (4, False), (5, False)))))
 
     #---------------------------------------------------------------------------
+
+    def test_frame_deepcopy_a(self) -> None:
+
+        f1 = sf.FrameGO(index=tuple('abc'))
+        f1['x'] = (3, 4, 5)
+        f1['y'] = Series.from_dict(dict(b=10, c=11, a=12))
+
+        f2 = copy.deepcopy(f1)
+        f2['z'] = 0
+        f1['q'] = 10
+
+        self.assertEqual(f2.to_pairs(0),
+                (('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 12), ('b', 10), ('c', 11))), ('z', (('a', 0), ('b', 0), ('c', 0)))))
+
+        self.assertTrue([id(b) for b in f1._blocks._blocks] != [id(b) for b in f2._blocks._blocks])
+
+
+    def test_frame_deepcopy_b(self) -> None:
+
+        a1 = np.array(list('abc'))
+        a1.flags.writeable = False
+        f1 = Frame.from_fields((a1, a1, a1), index=a1, columns=a1)
+
+        a1_id = id(a1)
+        self.assertEqual(id(f1.index.values), a1_id)
+        self.assertEqual(id(f1.columns.values), a1_id)
+        self.assertEqual(id(f1._blocks._blocks[0]), a1_id)
+        self.assertEqual(id(f1._blocks._blocks[1]), a1_id)
+        self.assertEqual(id(f1._blocks._blocks[2]), a1_id)
+
+        f2 = copy.deepcopy(f1)
+        a2_id = id(f2.index.values)
+
+        self.assertEqual(id(f2.columns.values), a2_id)
+        self.assertEqual(id(f2._blocks._blocks[0]), a2_id)
+        self.assertEqual(id(f2._blocks._blocks[1]), a2_id)
+        self.assertEqual(id(f2._blocks._blocks[2]), a2_id)
+
 
 
 if __name__ == '__main__':
