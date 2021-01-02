@@ -1,12 +1,11 @@
 
 import unittest
-import numpy as np
 import copy
 
+import numpy as np
+
 from static_frame import mloc
-
 from static_frame.core.array_go import ArrayGO
-
 from static_frame.test.test_case import TestCase
 
 

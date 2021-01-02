@@ -510,8 +510,8 @@ class Series(ContainerOperand):
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Series':
         obj = self.__new__(self.__class__)
-        obj.values = array_deepcopy(self.values, memo) #type: ignore
-        obj._index = deepcopy(self._index, memo) #type: ignore
+        obj.values = array_deepcopy(self.values, memo)
+        obj._index = deepcopy(self._index, memo)
         obj._name = self._name # should be hashable/immutable
 
         memo[id(self)] = obj
