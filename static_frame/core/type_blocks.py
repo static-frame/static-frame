@@ -259,7 +259,6 @@ class TypeBlocks(ContainerOperand):
         memo[id(self)] = obj
         return obj #type: ignore
 
-
     def __copy__(self) -> 'TypeBlocks':
         '''
         Return shallow copy of this TypeBlocks. Underlying arrays are not copied.

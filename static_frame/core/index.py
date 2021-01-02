@@ -3,6 +3,7 @@ from collections.abc import KeysView
 import operator as operator_mod
 from itertools import zip_longest
 from functools import reduce
+from copy import deepcopy
 
 import numpy as np
 
@@ -845,15 +846,33 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def copy(self: I) -> I:
+    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
+        if self._recache:
+            self._update_array_cache()
+
+        obj = self.__new__(self.__class__)
+        obj._map = deepcopy(self._map, memo)
+        obj._labels = deepcopy(self._labels, memo)
+        obj._positions = PositionsAllocator.get(len(self._labels))
+        obj._recache = False
+        obj._name = self._name # should be hashable/immutable
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    def __copy__(self: I) -> I:
         '''
-        Return a new Index.
+        Return shallow copy of this Index.
         '''
-        # this is not a complete deepcopy, as _labels here is an immutable np array (a new map will be created); if this is an IndexGO, we will pass the cached, immutable NP array
         if self._recache:
             self._update_array_cache()
 
         return self.__class__(self, name=self._name)
+
+    def copy(self: I) -> I:
+        '''
+        Return shallow copy of this Index.
+        '''
+        return self.__copy__()
 
     def relabel(self, mapper: 'RelabelInput') -> 'Index':
         '''
