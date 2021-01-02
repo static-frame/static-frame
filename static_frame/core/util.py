@@ -9,6 +9,8 @@ from itertools import chain
 from itertools import zip_longest
 from os import PathLike
 from urllib import request
+from copy import deepcopy
+
 import datetime
 import operator
 import os
@@ -1049,9 +1051,6 @@ def slice_to_inclusive_slice(key: slice) -> slice:
     stop = None if key.stop is None else key.stop + 1
     return slice(key.start, stop, key.step)
 
-
-
-
 #-------------------------------------------------------------------------------
 # dates
 
@@ -1297,6 +1296,28 @@ def binary_transition(
 
     raise NotImplementedError(f'no handling for array with ndim: {array.ndim}')
 
+#-------------------------------------------------------------------------------
+
+def array_deepcopy(
+        array: np.ndarray,
+        memo: tp.Optional[tp.Dict[int, tp.Any]],
+        ) -> np.ndarray:
+    '''
+    Create a deepcopy of an array, handling memo lookup, insertion, and object arrays.
+    '''
+    ident = id(array)
+    if memo is not None and ident in memo:
+        return memo[ident]
+
+    if array.dtype == DTYPE_OBJECT:
+        post = deepcopy(array, memo)
+    else:
+        post = array.copy()
+
+    post.flags.writeable = array.flags.writeable
+    if memo is not None:
+        memo[ident] = post
+    return post
 
 #-------------------------------------------------------------------------------
 # tools for handling duplicates
