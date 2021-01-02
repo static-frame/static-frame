@@ -532,6 +532,7 @@ class IndexHierarchy(IndexBase):
         obj._blocks = deepcopy(self._blocks, memo)
         obj._recache = False
         obj._name = self._name # should be hashable/immutable
+
         memo[id(self)] = obj
         return obj #type: ignore
 

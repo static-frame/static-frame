@@ -2523,7 +2523,6 @@ class Frame(ContainerOperand):
         memo[id(self)] = obj
         return obj #type: ignore
 
-
     # def __copy__(self) -> 'Frame':
     #     '''
     #     Return shallow copy of this Frame.
