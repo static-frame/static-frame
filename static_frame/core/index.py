@@ -78,6 +78,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import union1d
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import array_deepcopy
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -471,7 +472,6 @@ class Index(IndexBase):
             raise ErrorInitIndex('invalid label dtype for this Index', #pragma: no cover
                     self._labels.dtype, self._DTYPE)
 
-
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
         '''
@@ -480,6 +480,34 @@ class Index(IndexBase):
         for key, value in state[1].items():
             setattr(self, key, value)
         self._labels.flags.writeable = False
+
+    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
+        if self._recache:
+            self._update_array_cache()
+
+        obj = self.__new__(self.__class__)
+        obj._map = deepcopy(self._map, memo)
+        obj._labels = array_deepcopy(self._labels, memo)
+        obj._positions = PositionsAllocator.get(len(self._labels))
+        obj._recache = False
+        obj._name = self._name # should be hashable/immutable
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    def __copy__(self: I) -> I:
+        '''
+        Return shallow copy of this Index.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        return self.__class__(self, name=self._name)
+
+    def copy(self: I) -> I:
+        '''
+        Return shallow copy of this Index.
+        '''
+        return self.__copy__()
 
     #---------------------------------------------------------------------------
     # name interface
@@ -845,34 +873,6 @@ class Index(IndexBase):
 
 
     #---------------------------------------------------------------------------
-
-    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
-        if self._recache:
-            self._update_array_cache()
-
-        obj = self.__new__(self.__class__)
-        obj._map = deepcopy(self._map, memo)
-        obj._labels = deepcopy(self._labels, memo)
-        obj._positions = PositionsAllocator.get(len(self._labels))
-        obj._recache = False
-        obj._name = self._name # should be hashable/immutable
-        memo[id(self)] = obj
-        return obj #type: ignore
-
-    def __copy__(self: I) -> I:
-        '''
-        Return shallow copy of this Index.
-        '''
-        if self._recache:
-            self._update_array_cache()
-
-        return self.__class__(self, name=self._name)
-
-    def copy(self: I) -> I:
-        '''
-        Return shallow copy of this Index.
-        '''
-        return self.__copy__()
 
     def relabel(self, mapper: 'RelabelInput') -> 'Index':
         '''

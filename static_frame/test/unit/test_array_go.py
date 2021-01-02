@@ -1,6 +1,7 @@
 
 import unittest
 import numpy as np
+import copy
 
 from static_frame import mloc
 
@@ -91,6 +92,12 @@ class TestUnit(TestCase):
                 ['a', 'b', 'c', 'd', 'e'])
 
 
+    def test_array_deepcopy_a(self) -> None:
+        ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), dtype=object))
+        ag1.append('e')
+        ag1.extend(('f', 'g'))
+        ag2 = copy.deepcopy(ag1)
+        self.assertEqual(ag1._array.tolist(), ag2._array.tolist())
 
     def test_array_len_a(self) -> None:
 
