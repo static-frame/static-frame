@@ -2350,7 +2350,7 @@ class TestUnit(TestCase):
         a1 = np.array([3, 10, 20])
         a1.flags.writeable = False
 
-        memo = {}
+        memo: tp.Dict[int, tp.Any] = {}
         a2 = array_deepcopy(a1, memo)
         a3 = array_deepcopy(a1, memo)
 
@@ -2366,7 +2366,7 @@ class TestUnit(TestCase):
         a1 = np.array([3, None, 20, obj], dtype=object)
         a1.flags.writeable = False
 
-        memo = {}
+        memo: tp.Dict[int, tp.Any] = {}
         a2 = array_deepcopy(a1, memo)
         a3 = array_deepcopy(a1, memo)
 

@@ -1648,7 +1648,7 @@ class TestUnit(TestCase):
                 [[0, 0, 1, True, False, True, None, 'oe', 'od']])
 
 
-    def test_type_blocks_copy_a(self) -> None:
+    def test_type_blocks_copy_b(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
