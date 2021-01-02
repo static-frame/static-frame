@@ -3205,6 +3205,44 @@ class TestUnit(TestCase):
                     axis=0,
                     )
 
+    #---------------------------------------------------------------------------
+    def test_type_blocks_deepcopy_a(self) -> None:
+        a1 = np.array([10, 20, 30])
+        a2 = np.arange(10, 16).reshape(3, 2)
+        a3 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        tb2 = copy.deepcopy(tb1)
+        self.assertEqual(tb1.shape, tb2.shape)
+        self.assertNotEqual([id(a) for a in tb1._blocks], [id(a) for a in tb2._blocks])
+
+    def test_type_blocks_deepcopy_b(self) -> None:
+        a1 = np.array([10, 20, 30])
+        a1.flags.writeable = False
+
+        tb1 = TypeBlocks.from_blocks((a1, a1, a1))
+
+        tb2 = copy.deepcopy(tb1)
+
+        self.assertTrue(id(tb2._blocks[0]) != id(tb1._blocks[0]))
+
+        # usage of memo dict means we reuse the same array once we have one copy
+        self.assertTrue(id(tb2._blocks[0]) == id(tb2._blocks[1]))
+        self.assertTrue(id(tb2._blocks[0]) == id(tb2._blocks[2]))
+
+    def test_type_blocks_deepcopy_c(self) -> None:
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([False, True, False])
+        a3 = np.array(['b', 'c', 'd'], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        tb2 = copy.deepcopy(tb1)
+
+        self.assertTrue(tb1.shape == tb2.shape)
+        self.assertTrue(id(tb1._blocks[2]) != id(tb2._blocks[2]))
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
