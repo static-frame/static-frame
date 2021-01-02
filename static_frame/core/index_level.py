@@ -176,7 +176,7 @@ class IndexLevel:
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'IndexLevel':
         obj = self.__new__(self.__class__)
         obj.index = deepcopy(self.index, memo)
-        obj.targets = deepcopy(self.targets, memo) # ArrayGO implement __deepcopy__
+        obj.targets = deepcopy(self.targets, memo) # ArrayGO implements __deepcopy__
         obj.offset = self.offset
         obj._depth = self._depth
         obj._length = self._length

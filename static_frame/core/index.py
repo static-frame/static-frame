@@ -1302,13 +1302,31 @@ class _IndexGOMixin:
     __slots__ = () # define in derived class
 
     _map: tp.Optional[AutoMap]
+    _labels: np.ndarray
+    _positions: np.ndarray
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
     _positions_mutable_count: int
-    _positions: np.ndarray
-    _labels: np.ndarray
 
+    #---------------------------------------------------------------------------
+    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
+        if self._recache:
+            self._update_array_cache()
 
+        obj = self.__new__(self.__class__)
+        obj._map = deepcopy(self._map, memo)
+        obj._labels = array_deepcopy(self._labels, memo)
+        obj._positions = PositionsAllocator.get(len(self._labels))
+        obj._recache = False
+        obj._name = self._name # should be hashable/immutable
+        obj._labels_mutable = deepcopy(self._labels_mutable, memo)
+        obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo)
+        obj._positions_mutable_count = self._positions_mutable_count
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    #---------------------------------------------------------------------------
     def _extract_labels(self,
             mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
             labels: np.ndarray,

@@ -3,6 +3,7 @@ import unittest
 import pickle
 import datetime
 from collections import OrderedDict
+import copy
 
 import numpy as np
 
@@ -2216,8 +2217,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
             [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
 
-
-
     def test_hierarchy_copy_b(self) -> None:
 
         labels = (
@@ -2238,6 +2237,53 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.values.tolist(),
             [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
             )
+
+
+    def test_hierarchy_deepcopy_a(self) -> None:
+
+        groups = Index(('A', 'B', 'C'))
+        dates = IndexDate.from_date_range('2018-01-01', '2018-01-04')
+        observations = Index(('x', 'y'))
+        ih1 = IndexHierarchy.from_product(groups, dates, observations)
+
+        ih2 = copy.deepcopy(ih1)
+        self.assertEqual(ih1.values.tolist(), ih2.values.tolist())
+
+        # show that memo dict is working
+        ref_id = id(ih2._levels.targets[0].targets[0].index._labels)
+        self.assertEqual(
+                ref_id,
+                id(ih2._levels.targets[0].targets[1].index._labels),
+                )
+        self.assertEqual(
+                ref_id,
+                id(ih2._levels.targets[1].targets[3].index._labels),
+                )
+
+
+    def test_hierarchy_deepcopy_b(self) -> None:
+
+
+        idx1 = Index(('A', 'B', 'C'))
+        idx2 = Index(('x', 'y'))
+        idx3 = Index((4, 5, 6))
+
+        ih1 = IndexHierarchyGO.from_index_items(dict(a=idx1, b=idx2, c=idx3).items())
+        ih1.append(('c', 7))
+
+        ih2 = copy.deepcopy(ih1)
+
+        ih2.append(('c', 8))
+        ih1.append(('d', 8))
+
+        self.assertEqual(ih1.values.tolist(),
+                [['a', 'A'], ['a', 'B'], ['a', 'C'], ['b', 'x'], ['b', 'y'], ['c', 4], ['c', 5], ['c', 6], ['c', 7], ['d', 8]]
+                )
+
+        self.assertEqual(ih2.values.tolist(),
+                [['a', 'A'], ['a', 'B'], ['a', 'C'], ['b', 'x'], ['b', 'y'], ['c', 4], ['c', 5], ['c', 6], ['c', 7], ['c', 8]]
+                )
+
 
     #---------------------------------------------------------------------------
 

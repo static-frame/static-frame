@@ -1,6 +1,7 @@
 import typing as tp
 from itertools import chain
 from ast import literal_eval
+from copy import deepcopy
 
 import numpy as np
 
@@ -543,7 +544,7 @@ class IndexHierarchy(IndexBase):
 
         blocks = self._blocks.copy()
         return self.__class__(
-                levels=self._levels,
+                levels=self._levels, # immutable, can re-use
                 name=self._name,
                 blocks=blocks,
                 own_blocks=True
@@ -1550,7 +1551,7 @@ class IndexHierarchyGO(IndexHierarchy):
 
         blocks = self._blocks.copy()
         return self.__class__(
-                levels=self._levels.to_index_level(),
+                levels=self._levels.to_index_level(), # recursive deep copy
                 name=self._name,
                 blocks=blocks,
                 own_blocks=True,
