@@ -2250,14 +2250,14 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.values.tolist(), ih2.values.tolist())
 
         # show that memo dict is working
-        ref_id = id(ih2._levels.targets[0].targets[0].index._labels)
+        ref_id = id(ih2._levels.targets[0].targets[0].index._labels) #type: ignore
         self.assertEqual(
                 ref_id,
-                id(ih2._levels.targets[0].targets[1].index._labels),
+                id(ih2._levels.targets[0].targets[1].index._labels), #type: ignore
                 )
         self.assertEqual(
                 ref_id,
-                id(ih2._levels.targets[1].targets[3].index._labels),
+                id(ih2._levels.targets[1].targets[3].index._labels), #type: ignore
                 )
 
 

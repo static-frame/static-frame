@@ -486,11 +486,12 @@ class Index(IndexBase):
             self._update_array_cache()
 
         obj = self.__new__(self.__class__)
-        obj._map = deepcopy(self._map, memo)
-        obj._labels = array_deepcopy(self._labels, memo)
-        obj._positions = PositionsAllocator.get(len(self._labels))
+        obj._map = deepcopy(self._map, memo) #type: ignore
+        obj._labels = array_deepcopy(self._labels, memo) #type: ignore
+        obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
         obj._recache = False
         obj._name = self._name # should be hashable/immutable
+
         memo[id(self)] = obj
         return obj #type: ignore
 
@@ -507,7 +508,7 @@ class Index(IndexBase):
         '''
         Return shallow copy of this Index.
         '''
-        return self.__copy__()
+        return self.__copy__() #type: ignore
 
     #---------------------------------------------------------------------------
     # name interface
@@ -1309,19 +1310,19 @@ class _IndexGOMixin:
     _positions_mutable_count: int
 
     #---------------------------------------------------------------------------
-    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
+    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I: #type: ignore
         if self._recache:
             self._update_array_cache()
 
         obj = self.__new__(self.__class__)
-        obj._map = deepcopy(self._map, memo)
-        obj._labels = array_deepcopy(self._labels, memo)
-        obj._positions = PositionsAllocator.get(len(self._labels))
+        obj._map = deepcopy(self._map, memo) #type: ignore
+        obj._labels = array_deepcopy(self._labels, memo) #type: ignore
+        obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
         obj._recache = False
         obj._name = self._name # should be hashable/immutable
-        obj._labels_mutable = deepcopy(self._labels_mutable, memo)
-        obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo)
-        obj._positions_mutable_count = self._positions_mutable_count
+        obj._labels_mutable = deepcopy(self._labels_mutable, memo) #type: ignore
+        obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo) #type: ignore
+        obj._positions_mutable_count = self._positions_mutable_count #type: ignore
 
         memo[id(self)] = obj
         return obj #type: ignore

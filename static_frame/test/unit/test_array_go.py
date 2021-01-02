@@ -97,7 +97,7 @@ class TestUnit(TestCase):
         ag1.append('e')
         ag1.extend(('f', 'g'))
         ag2 = copy.deepcopy(ag1)
-        self.assertEqual(ag1._array.tolist(), ag2._array.tolist())
+        self.assertEqual(ag1._array.tolist(), ag2._array.tolist()) #type: ignore
 
     def test_array_len_a(self) -> None:
 

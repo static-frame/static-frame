@@ -733,8 +733,8 @@ class TestUnit(TestCase):
         post = copy.deepcopy(lvl1a)
         self.assertEqual(lvl1a.values.tolist(), post.values.tolist())
         self.assertEqual(
-                id(post.targets[0].index._labels),
-                id(post.targets[1].index._labels))
+                id(post.targets[0].index._labels), #type: ignore
+                id(post.targets[1].index._labels)) #type: ignore
 
 
 if __name__ == '__main__':
