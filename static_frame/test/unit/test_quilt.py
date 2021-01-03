@@ -130,7 +130,7 @@ class TestUnit(TestCase):
         self.assertEqual(q1.rename('bar').name, 'bar')
         self.assertTrue(repr(q1).startswith('<Quilt: foo'))
 
-        post, opp = AxisMap.from_bus(q1._bus, q1._axis)
+        post, opp = AxisMap.from_bus(q1._bus, q1._axis, deepcopy_from_bus=True)
         self.assertEqual(len(post), 100)
         self.assertEqual(len(opp), 4)
 
@@ -156,7 +156,7 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frame(f1, chunksize=10, axis=1, retain_labels=False)
 
-        post, opp = AxisMap.from_bus(q1._bus, q1._axis)
+        post, opp = AxisMap.from_bus(q1._bus, q1._axis, deepcopy_from_bus=False)
         self.assertEqual(len(post), 100)
         self.assertEqual(len(opp), 4)
 

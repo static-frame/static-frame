@@ -1,6 +1,7 @@
 import typing as tp
 from itertools import zip_longest
 from functools import partial
+from copy import deepcopy
 
 import numpy as np
 
@@ -35,10 +36,28 @@ from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import NotImplementedAxis
 from static_frame.core.util import get_tuple_constructor
+from static_frame.core.util import array_deepcopy
 
 
 # from static_frame.core.store import StoreConfigMap
 # from static_frame.core.store import StoreConfigMapInitializer
+
+def get_extractor(
+        deepcopy_from_bus: bool,
+        is_array: bool,
+        memo_active: bool,
+        ) -> tp.Any:
+    '''
+    Args:
+        memo_active: enable usage of a common memoization dictionary accross all calls to extract from this extractor.
+    '''
+    if deepcopy_from_bus:
+        memo = None if not memo_active else {}
+        if is_array:
+            return partial(array_deepcopy, memo=memo)
+        return partial(deepcopy, memo=memo)
+
+    return lambda x: x
 
 class AxisMap:
     '''
@@ -61,26 +80,29 @@ class AxisMap:
     def from_bus(cls,
             bus: Bus,
             axis: int,
+            deepcopy_from_bus: bool,
             ) -> tp.Tuple[Series, IndexBase]:
         '''
         Given a :obj:`Bus` and an axis, derive a :obj:`Series` with an :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
         '''
         # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
 
+        extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
+
         tree = {}
         opposite = None
         for label, f in bus.items():
             if axis == 0:
-                tree[label] = f.index
+                tree[label] = extractor(f.index)
                 if opposite is None:
-                    opposite = f.columns
+                    opposite = extractor(f.columns)
                 else:
                     if not opposite.equals(f.columns):
                         raise ErrorInitQuilt('opposite axis must have equivalent indices')
             elif axis == 1:
-                tree[label] = f.columns
+                tree[label] = extractor(f.columns)
                 if opposite is None:
-                    opposite = f.index
+                    opposite = extractor(f.index)
                 else:
                     if not opposite.equals(f.index):
                         raise ErrorInitQuilt('opposite axis must have equivalent indices')
@@ -103,6 +125,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             '_assign_axis',
             '_columns',
             '_index',
+            '_deepcopy_from_bus',
             )
 
     _bus: Bus
@@ -196,6 +219,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return cls(bus,
                 axis=kwargs.get('axis', 0),
                 retain_labels=kwargs['retain_labels'],
+                deepcopy_from_bus=kwargs.get('deepcopy_from_bus', False),
                 )
 
     #---------------------------------------------------------------------------
@@ -206,10 +230,12 @@ class Quilt(ContainerBase, StoreClientMixin):
             retain_labels: bool,
             axis_map: tp.Optional[Series] = None,
             axis_opposite: tp.Optional[IndexBase] = None,
+            deepcopy_from_bus: bool = False,
             ) -> None:
         self._bus = bus
         self._axis = axis
         self._retain_labels = retain_labels
+        self._deepcopy_from_bus = deepcopy_from_bus
 
         if (axis_map is None) ^ (axis_opposite is None):
             raise ErrorInitQuilt('if supplying axis_map, supply axis_opposite')
@@ -228,7 +254,11 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     def _update_axis_labels(self) -> None:
         if self._axis_map is None or self._axis_opposite is None:
-            self._axis_map, self._axis_opposite = AxisMap.from_bus(self._bus, self._axis)
+            self._axis_map, self._axis_opposite = AxisMap.from_bus(
+                    self._bus,
+                    axis=self._axis,
+                    deepcopy_from_bus=self._deepcopy_from_bus,
+                    )
 
         if self._axis == 0:
             if not self._retain_labels:
@@ -260,6 +290,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self.__class__(self._bus.rename(name),
                 axis=self._axis,
                 retain_labels=self._retain_labels,
+                deepcopy_from_bus=self._deepcopy_from_bus,
                 axis_map=self._axis_map,
                 axis_opposite=self._axis_opposite,
                 )
@@ -566,11 +597,17 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         assert self._axis_map is not None #mypy
 
+        extractor = get_extractor(
+                self._deepcopy_from_bus,
+                is_array=True,
+                memo_active=False,
+                )
+
         row_key = NULL_SLICE if row_key is None else row_key
         column_key = NULL_SLICE if column_key is None else column_key
 
         if row_key == NULL_SLICE and column_key == NULL_SLICE:
-            arrays = [f.values for _, f in self._bus.items()]
+            arrays = [extractor(f.values) for _, f in self._bus.items()]
             return np.concatenate(
                     arrays,
                     axis=self._axis,
@@ -612,7 +649,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                         component = component[0]
                     elif component.ndim == 2:
                         component = component[NULL_SLICE, 0]
-            parts.append(component)
+
+            parts.append(extractor(component))
 
         if len(parts) == 1:
             return parts.pop()
@@ -629,16 +667,25 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         assert self._axis_map is not None #mypy
 
+        extractor = get_extractor(
+                self._deepcopy_from_bus,
+                is_array=False,
+                memo_active=False,
+                )
+
         row_key = NULL_SLICE if row_key is None else row_key
         column_key = NULL_SLICE if column_key is None else column_key
 
         if row_key == NULL_SLICE and column_key == NULL_SLICE:
             if self._retain_labels and self._axis == 0:
-                frames = (f.relabel_level_add(index=k) for k, f in self._bus.items())
+                frames = (extractor(f.relabel_level_add(index=k))
+                        for k, f in self._bus.items())
             elif self._retain_labels and self._axis == 1:
-                frames = (f.relabel_level_add(columns=k) for k, f in self._bus.items())
+                frames = (extractor(f.relabel_level_add(columns=k))
+                        for k, f in self._bus.items())
             else:
-                frames = (f for _, f in self._bus.items())
+                frames = (extractor(f) for _, f in self._bus.items())
+
             return Frame.from_concat( #type: ignore
                     frames,
                     axis=self._axis,
@@ -691,7 +738,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                         component = component.iloc[0]
                     else:
                         component = component.iloc[NULL_SLICE, 0]
-            parts.append(component)
+
+            parts.append(extractor(component))
 
         if len(parts) == 1:
             return parts.pop() #type: ignore

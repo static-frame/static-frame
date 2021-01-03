@@ -158,15 +158,15 @@ class LowMemoryQuilt(LineGen):
         yield 'import pandas as pd'
         yield 'import static_frame as sf'
         yield 'from string import ascii_lowercase'
-        # yield "df = pd.DataFrame(np.arange(5_000_000 * 4).reshape(5_000_000, 4), columns=tuple('wxyz'))"
+        # yield "df = pd.DataFrame(np.arange(6_000_000 * 4).reshape(6_000_000, 4), columns=tuple('wxyz'))"
         # yield "del df"
         yield "fp = '/tmp/test.zip'"
         yield 'config = sf.StoreConfig(include_index=True, index_depth=1)'
-        yield "items = ((ascii_lowercase[i], sf.Frame(np.arange(2_000_000).reshape(500_000, 4), columns=tuple('wxyz'))) for i in range(4))"
+        yield "items = ((ascii_lowercase[i], sf.Frame(np.arange(2_000_000).reshape(500_000, 4), columns=tuple('wxyz'))) for i in range(12))"
         yield 'sf.Batch(items).to_zip_pickle(fp, config=config)'
-        yield 'q1 = sf.Quilt.from_zip_pickle(fp, max_persist=1, retain_labels=True, config=config)'
+        yield 'q1 = sf.Quilt.from_zip_pickle(fp, max_persist=1, retain_labels=True, config=config, deepcopy_from_bus=True)'
         yield 'q1.shape'
-        yield "q1.iloc[1000000:1000010, 3:]"
+        # yield "q1.iloc[1000000:1000010, 3:]"
         # yield 'sf.Batch(q1.iter_window_items(size=100_000, step=100_000)).mean().to_frame()'
 
 
