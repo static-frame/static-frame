@@ -1314,7 +1314,9 @@ def array_deepcopy(
     else:
         post = array.copy()
 
-    post.flags.writeable = array.flags.writeable
+    if post.ndim > 0:
+        post.flags.writeable = array.flags.writeable
+
     if memo is not None:
         memo[ident] = post
     return post

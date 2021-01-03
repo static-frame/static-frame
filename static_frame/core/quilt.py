@@ -148,6 +148,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             name: NameType = None,
             label_extractor: tp.Optional[tp.Callable[[IndexBase], tp.Hashable]] = None,
             config: StoreConfigMapInitializer = None,
+            deepcopy_from_bus: bool = False,
             ) -> 'Quilt':
         '''
         Given a :obj:`Frame`, create a :obj:`Quilt` by partitioning it along the specified ``axis`` in units of ``chunksize``, where ``axis`` 0 partitions vertically (retaining aligned columns) and 1 partions horizontally (retaining aligned index).
@@ -200,6 +201,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 axis_map=axis_map,
                 axis_opposite=opposite,
                 retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
                 )
 
     @classmethod
@@ -464,16 +466,24 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             axis: 0 iterates over columns, 1 iterates over rows
         '''
+        extractor = get_extractor(
+                self._deepcopy_from_bus,
+                is_array=True,
+                memo_active=False,
+                )
+
         if axis == 1: # iterate over rows
             if self._axis == 0: # bus components aligned vertically
                 for _, component in self._bus.items():
-                    yield from component._blocks.axis_values(axis)
+                    for array in component._blocks.axis_values(axis):
+                        yield extractor(array)
             else: # bus components aligned horizontally
                 raise NotImplementedAxis()
         elif axis == 0: # iterate over columns
             if self._axis == 1: # bus components aligned horizontally
                 for _, component in self._bus.items():
-                    yield from component._blocks.axis_values(axis)
+                    for array in component._blocks.axis_values(axis):
+                        yield extractor(array)
             else: # bus components aligned horizontally
                 raise NotImplementedAxis()
         else:
@@ -546,7 +556,12 @@ class Quilt(ContainerBase, StoreClientMixin):
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, processed-window pairs.
         '''
-        yield from axis_window_items(
+        extractor = get_extractor(
+                self._deepcopy_from_bus,
+                is_array=False,
+                memo_active=False,
+                )
+        for label, container in axis_window_items(
                 source=self,
                 size=size,
                 axis=axis,
@@ -558,7 +573,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 start_shift=start_shift,
                 size_increment=size_increment,
                 as_array=as_array
-                )
+                ):
+            yield label, extractor(container)
 
 
     def _axis_window(self, *,

@@ -503,8 +503,6 @@ def axis_window_items( *,
         size += size_increment
         count += 1
 
-        # import ipdb; ipdb.set_trace()
-
         if count > count_window_max or idx_left > idx_left_max or size < 0:
             break
 
