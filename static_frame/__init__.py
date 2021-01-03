@@ -93,6 +93,6 @@ from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFil
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.quilt import Quilt as Quilt
 
-__version__ = '0.7.8' # use -dev for new version in development
+__version__ = '0.7.9' # use -dev for new version in development
 
 
