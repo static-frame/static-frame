@@ -52,7 +52,7 @@ def get_extractor(
         memo_active: enable usage of a common memoization dictionary accross all calls to extract from this extractor.
     '''
     if deepcopy_from_bus:
-        memo = None if not memo_active else {}
+        memo: tp.Optional[tp.Dict[int, tp.Any]] = None if not memo_active else {}
         if is_array:
             return partial(array_deepcopy, memo=memo)
         return partial(deepcopy, memo=memo)
