@@ -943,11 +943,22 @@ class TestUnit(TestCase):
             self.assertEqual(q1.status['loaded'].sum(), 1)
 
     #---------------------------------------------------------------------------
-    def test_quilt_iter_window_array_b(self) -> None:
+    def test_quilt_iter_window_array_b1(self) -> None:
 
         f1 = ff.parse('s(20,2)|v(int)|i(I,str)|c(I,str)')
 
         q1 = Quilt.from_frame(f1, chunksize=4, axis=0, retain_labels=False)
+        self.assertTrue(len(q1._bus), 5)
+
+        s1 = q1.iter_window_array(size=5, step=4).apply(lambda a: a.sum())
+        self.assertEqual(s1.to_pairs(),
+                (('zmVj', 377853), ('zr4u', 597832), ('zGDJ', 46996), ('zO5l', 391169)))
+
+    def test_quilt_iter_window_array_b2(self) -> None:
+
+        f1 = ff.parse('s(20,2)|v(int)|i(I,str)|c(I,str)')
+
+        q1 = Quilt.from_frame(f1, chunksize=4, axis=0, retain_labels=False, deepcopy_from_bus=True)
         self.assertTrue(len(q1._bus), 5)
 
         s1 = q1.iter_window_array(size=5, step=4).apply(lambda a: a.sum())
