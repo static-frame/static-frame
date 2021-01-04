@@ -571,7 +571,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 as_array=as_array
                 )
 
-
     def _axis_window(self, *,
             size: int,
             axis: int = 0,
@@ -597,7 +596,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 as_array=as_array
                 ))
 
-
     #---------------------------------------------------------------------------
     def _extract_array(self,
             row_key: GetItemKeyType = None,
@@ -618,7 +616,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         column_key = NULL_SLICE if column_key is None else column_key
 
         if row_key == NULL_SLICE and column_key == NULL_SLICE:
-            arrays = [extractor(f.values) for _, f in self._bus.items()]
+            if len(self._bus) == 1:
+                return extractor(self._bus.iloc[0].values)
+
+            # NOTE: do not need to call extractor when np.concatenate is called, as a new array is always allocated.
+            arrays = [f.values for _, f in self._bus.items()]
             return np.concatenate(
                     arrays,
                     axis=self._axis,
@@ -661,10 +663,12 @@ class Quilt(ContainerBase, StoreClientMixin):
                     elif component.ndim == 2:
                         component = component[NULL_SLICE, 0]
 
-            parts.append(extractor(component))
+            parts.append(component)
 
         if len(parts) == 1:
-            return parts.pop()
+            return extractor(parts.pop())
+
+        # NOTE: np.concatenate always allocates a new array, thus no need for extractor above
         if sel_reduces or opposite_reduces:
             return np.concatenate(parts)
         return np.concatenate(parts, axis=self._axis)
@@ -754,6 +758,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         if len(parts) == 1:
             return parts.pop() #type: ignore
+
+        # NOTE: Series/Frame from_concate will attempt to re-use ndarrays, and thus using extractor above is appropriate
         if component_is_series:
             return Series.from_concat(parts)
         return Frame.from_concat(parts, axis=self._axis) #type: ignore

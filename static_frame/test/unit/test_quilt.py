@@ -124,8 +124,6 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frame(f1, chunksize=10, retain_labels=False)
 
-        # import ipdb; ipdb.set_trace()
-
         self.assertEqual(q1.name, 'foo')
         self.assertEqual(q1.rename('bar').name, 'bar')
         self.assertTrue(repr(q1).startswith('<Quilt: foo'))
@@ -497,7 +495,7 @@ class TestUnit(TestCase):
 
         q2 = Quilt.from_frame(f1, chunksize=2, retain_labels=True)
         self.assertEqual(q2.index.depth, 2)
-        # import ipdb; ipdb.set_trace()
+
         f3 = q2.loc[HLoc['zUvW':'z5l6']] #type: ignore
         self.assertEqual(f3.index.depth, 2)
         self.assertEqual(f3.to_pairs(0),
@@ -697,18 +695,15 @@ class TestUnit(TestCase):
 
         f1 = ff.parse('s(2,6)|v(int,str)|i(I,str)|c(I,str)')
 
-        q1 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=True)
-        a1_src_id = id(q1._bus._series.values[0]._extract_array(None, 0))
-        a1_dst_id = id(next(iter(q1.iter_array(0))))
-        self.assertTrue(a1_src_id != a1_dst_id)
-
         q2 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=False)
         a2_src_id = id(q2._bus._series.values[0]._extract_array(None, 0))
         a2_dst_id = id(next(iter(q2.iter_array(0))))
         self.assertTrue(a2_src_id == a2_dst_id)
 
-        import ipdb; ipdb.set_trace()
-        arrays = tuple(q1.iter_array_items(0))
+        q1 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=True)
+        a1_src_id = id(q1._bus._series.values[0]._extract_array(None, 0))
+        a1_dst_id = id(next(iter(q1.iter_array(0))))
+        self.assertTrue(a1_src_id != a1_dst_id)
 
     #---------------------------------------------------------------------------
 
