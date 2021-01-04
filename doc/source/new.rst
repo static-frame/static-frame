@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.7.11
+----------
+
+Corrected issue in ``Frame.iter_series`` due to recent optimization.
+
+
 0.7.10
 ----------
 
