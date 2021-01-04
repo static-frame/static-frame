@@ -556,12 +556,8 @@ class Quilt(ContainerBase, StoreClientMixin):
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, processed-window pairs.
         '''
-        extractor = get_extractor(
-                self._deepcopy_from_bus,
-                is_array=False,
-                memo_active=False,
-                )
-        for label, container in axis_window_items(
+        # NOTE: this will use _extract, _extract_array to get results, thus we do not need an extractor
+        yield from axis_window_items(
                 source=self,
                 size=size,
                 axis=axis,
@@ -573,8 +569,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 start_shift=start_shift,
                 size_increment=size_increment,
                 as_array=as_array
-                ):
-            yield label, extractor(container)
+                )
 
 
     def _axis_window(self, *,
