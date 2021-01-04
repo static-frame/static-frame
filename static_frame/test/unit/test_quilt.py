@@ -479,6 +479,22 @@ class TestUnit(TestCase):
         self.assertEqual(q1._extract_array(2, 2), 30205)
         self.assertEqual(q1._extract_array(-1, -1), -112188)
 
+    def test_quilt_extract_array_b3(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
+
+        q1 = Quilt.from_frame(f1, chunksize=4, axis=1, retain_labels=False, deepcopy_from_bus=False)
+        a1_id_in_bus = id(q1._bus._series.values[0].values)
+        a1_id_via_quilt = id(q1._extract_array())
+        self.assertEqual(a1_id_in_bus, a1_id_via_quilt)
+
+        q2 = Quilt.from_frame(f1, chunksize=4, axis=1, retain_labels=False, deepcopy_from_bus=True)
+        a2_id_in_bus = id(q2._bus._series.values[0].values)
+        a2_id_via_quilt = id(q2._extract_array())
+        self.assertNotEqual(a2_id_in_bus, a2_id_via_quilt)
+
+
+
     #---------------------------------------------------------------------------
     def test_quilt_retain_labels_a(self) -> None:
 
