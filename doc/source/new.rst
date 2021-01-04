@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.7.10
+----------
+
+Improvements to ``Quilt`` extraction routines.
+
+
 0.7.9
 ----------
 
