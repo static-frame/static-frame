@@ -692,6 +692,24 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.iter_array_items(1))
 
+
+    def test_quilt_iter_array_b3(self) -> None:
+
+        f1 = ff.parse('s(2,6)|v(int,str)|i(I,str)|c(I,str)')
+
+        q1 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=True)
+        a1_src_id = id(q1._bus._series.values[0]._extract_array(None, 0))
+        a1_dst_id = id(next(iter(q1.iter_array(0))))
+        self.assertTrue(a1_src_id != a1_dst_id)
+
+        q2 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=False)
+        a2_src_id = id(q2._bus._series.values[0]._extract_array(None, 0))
+        a2_dst_id = id(next(iter(q2.iter_array(0))))
+        self.assertTrue(a2_src_id == a2_dst_id)
+
+        import ipdb; ipdb.set_trace()
+        arrays = tuple(q1.iter_array_items(0))
+
     #---------------------------------------------------------------------------
 
     def test_quilt_iter_series_a1(self) -> None:
