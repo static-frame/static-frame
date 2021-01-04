@@ -4067,11 +4067,13 @@ class Frame(ContainerOperand):
         '''
         # reference the indices and let the constructor reuse what is reusable
         if axis == 1:
-            index = self._columns
+            index = (self._columns if self._columns.STATIC
+                    else self._columns._IMMUTABLE_CONSTRUCTOR(self._columns))
             labels = self._index
         elif axis == 0:
             index = self._index
             labels = self._columns
+
         for label, axis_values in zip(labels, self._blocks.axis_values(axis)):
             yield Series(axis_values, index=index, name=label, own_index=True)
 

@@ -1591,8 +1591,6 @@ class TestUnit(TestCase):
         self.assertEqual([x for x in f1], ['p', 'q', 'r', 's', 't'])
 
 
-
-
     def test_frame_iter_array_a(self) -> None:
 
         records = (
@@ -1748,6 +1746,18 @@ class TestUnit(TestCase):
         self.assertEqual(post2,
                 [(1, 30), (2, 50), ('a', 'b'), (False, True), (True, False)])
 
+    #---------------------------------------------------------------------------
+    def test_frame_iter_series_a(self) -> None:
+        f1 = ff.parse('f(Fg)|s(2,8)|i(I,str)|c(Ig,str)|v(int)')
+        post1 = tuple(f1.iter_series(0))
+        self.assertEqual(len(post1), 8)
+        self.assertEqual(post1[0].to_pairs(),
+                (('zZbu', -88017), ('ztsv', 92867)))
+
+        post2 = tuple(f1.iter_series(1))
+        self.assertEqual(len(post2), 2)
+        self.assertEqual(post2[0].to_pairs(),
+                (('zZbu', -88017), ('ztsv', 162197), ('zUvW', -3648), ('zkuW', 129017), ('zmVj', 58768), ('z2Oo', 84967), ('z5l6', 146284), ('zCE3', 137759)))
 
 
     #---------------------------------------------------------------------------

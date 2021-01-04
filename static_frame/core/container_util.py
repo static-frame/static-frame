@@ -221,7 +221,7 @@ def index_from_optional_constructor(
             # v: S, dc: ~S, return a mutable version of something that is not mutable
             return value._MUTABLE_CONSTRUCTOR(value)
 
-    # cannot always deterine satic status from constructors; fallback on using default constructor
+    # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value)
 
 def index_constructor_empty(
