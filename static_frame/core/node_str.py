@@ -184,7 +184,7 @@ class InterfaceString(Interface[TContainer]):
             end: tp.Optional[int] = None
             ) -> TContainer:
         '''
-        Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
+        Returns a container with the number of non-overlapping occurrences of substring ``suffix`` (or an interable of suffixes) in the optional range ``start``, ``end``.
         '''
 
         if isinstance(suffix, str):
