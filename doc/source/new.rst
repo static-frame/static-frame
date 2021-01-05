@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.7.12
+----------
+
+Extended `via_str.startswith()` and `via_str.endswith()` functions to support passing an iterable of strings to match.
+
+
 0.7.11
 ----------
 

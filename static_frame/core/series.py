@@ -631,8 +631,6 @@ class Series(ContainerOperand):
         '''
         Interface for applying string methods to elements in this container.
         '''
-        blocks = (self.values,)
-
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Series':
             return self.__class__(
                 next(blocks), # assume only one
@@ -640,6 +638,8 @@ class Series(ContainerOperand):
                 name=self._name,
                 own_index=True,
                 )
+
+        blocks = (self.values,)
 
         return InterfaceString(
                 blocks=blocks,

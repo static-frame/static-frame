@@ -1810,7 +1810,7 @@ def _ufunc_set_2d(
 
 def union1d(array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Union on 1D array, handling diverse types and short-circuiting to preserve order where appropriate.
@@ -1823,7 +1823,7 @@ def union1d(array: np.ndarray,
 def intersect1d(
         array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Intersect on 1D array, handling diverse types and short-circuiting to preserve order where appropriate.
@@ -1836,7 +1836,7 @@ def intersect1d(
 def setdiff1d(
         array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Difference on 1D array, handling diverse types and short-circuiting to preserve order where appropriate
@@ -1849,7 +1849,7 @@ def setdiff1d(
 def union2d(
         array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Union on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
@@ -1862,7 +1862,7 @@ def union2d(
 def intersect2d(
         array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Intersect on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
@@ -1875,7 +1875,7 @@ def intersect2d(
 def setdiff2d(
         array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Difference on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
@@ -1888,7 +1888,7 @@ def setdiff2d(
 def ufunc_set_iter(
         arrays: tp.Iterable[np.ndarray],
         union: bool = False,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Iteratively apply a set operation ufunc to 1D or 2D arrays; if all are equal, no operation is performed and order is retained.

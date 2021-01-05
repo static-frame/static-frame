@@ -10436,6 +10436,56 @@ class TestUnit(TestCase):
             (('x', (('a', 'Foo'), ('b', 'Baz'))), ('y', (('a', 'Bar'), ('b', 'Baz'))))
             )
 
+    def test_frame_str_startswith_a(self) -> None:
+
+        blocks = [
+                np.array([['foo', 'bar'], ['baz', 'baz']]),
+                np.array(['fall', 'buzz']),
+                ]
+
+        f1 = Frame(TypeBlocks.from_blocks(blocks),
+                index=('a', 'b'),
+                columns=('x', 'y', 'z')
+                )
+
+        f2 = f1.via_str.startswith(('fa', 'ba'))
+        self.assertEqual(f2.to_pairs(0),
+                (('x', (('a', False), ('b', True))), ('y', (('a', True), ('b', True))), ('z', (('a', True), ('b', False))))
+                )
+
+        f3 = f1.via_str.startswith('fo')
+        self.assertEqual(f3.to_pairs(0),
+                (('x', (('a', True), ('b', False))), ('y', (('a', False), ('b', False))), ('z', (('a', False), ('b', False))))
+                )
+
+        f4 = f1.via_str.startswith(('bu', 'fo'))
+        self.assertEqual(f4.to_pairs(0),
+                (('x', (('a', True), ('b', False))), ('y', (('a', False), ('b', False))), ('z', (('a', False), ('b', True))))
+                )
+
+
+    def test_frame_str_endswith_a(self) -> None:
+
+        blocks = [
+                np.array([['foo', 'bar'], ['baz', 'baz']]),
+                np.array(['fall', 'buzz']),
+                ]
+
+        f1 = Frame(TypeBlocks.from_blocks(blocks),
+                index=('a', 'b'),
+                columns=('x', 'y', 'z')
+                )
+
+        f2 = f1.via_str.endswith(('zz', 'az'))
+        self.assertEqual(f1.via_str.endswith(('zz', 'az')).to_pairs(0),
+                (('x', (('a', False), ('b', True))), ('y', (('a', False), ('b', True))), ('z', (('a', False), ('b', True))))
+                )
+
+        f3 = f1.via_str.endswith(('oo', 'ar'))
+        self.assertEqual(f3.to_pairs(0),
+                (('x', (('a', True), ('b', False))), ('y', (('a', True), ('b', False))), ('z', (('a', False), ('b', False))))
+                )
+
     def test_frame_str_center_a(self) -> None:
 
         f1 = Frame.from_records(
