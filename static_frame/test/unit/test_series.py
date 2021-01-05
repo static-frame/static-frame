@@ -3276,11 +3276,24 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 (('x', False), ('y', True)))
 
+    def test_series_str_endswith_b(self) -> None:
+        s1 = Series(('foo', 'fall', 'funk'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.endswith(('oo', 'nk'))
+        self.assertEqual(s2.to_pairs(),
+                (('x', True), ('y', False), ('z', True)))
+
+
     def test_series_str_startswith_a(self) -> None:
         s1 = Series(('foo', 'foo foo bar'), index=('x', 'y'))
         s2 = s1.via_str.startswith('foo')
         self.assertEqual(s2.to_pairs(),
                 (('x', True), ('y', True)))
+
+    def test_series_str_startswith_b(self) -> None:
+        s1 = Series(('foo', 'fall', 'funk'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.startswith(('fa', 'fo'))
+        self.assertEqual(s2.to_pairs(),
+                (('x', True), ('y', True), ('z', False)))
 
     def test_series_str_find_a(self) -> None:
         s1 = Series(('foo', 'bar foo bar'), index=('x', 'y'))
