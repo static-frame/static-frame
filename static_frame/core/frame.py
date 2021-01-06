@@ -5,6 +5,7 @@ from io import BytesIO
 from itertools import chain
 from itertools import product
 from copy import deepcopy
+from operator import itemgetter
 
 import csv
 import json
@@ -1479,6 +1480,7 @@ class Frame(ContainerOperand):
             connection: sqlite3.Connection,
             index_depth: int = 0,
             columns_depth: int = 1,
+            columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
@@ -1493,17 +1495,17 @@ class Frame(ContainerOperand):
             {name}
             {consolidate_blocks}
         '''
-        row_gen = connection.execute(query)
+        sql_iterable = connection.execute(query)
 
         own_columns = False
         columns = None
         if columns_depth == 1:
-            columns = cls._COLUMNS_CONSTRUCTOR(b[0] for b in row_gen.description[index_depth:])
+            columns = cls._COLUMNS_CONSTRUCTOR(b[0] for b in sql_iterable.description[index_depth:])
             own_columns = True
         elif columns_depth > 1:
             # use IH: get via static attr of columns const
             constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
-            labels = (b[0] for b in row_gen.description[index_depth:])
+            labels = (b[0] for b in sql_iterable.description[index_depth:])
             columns = constructor(labels, delimiter=' ')
             own_columns = True
 
@@ -1514,21 +1516,36 @@ class Frame(ContainerOperand):
             if index_depth == 1:
                 index_constructor = Index
 
-                def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in row_gen:
+                def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in sql_iterable:
                         index.append(row[0])
                         yield row[1:]
 
             else: # > 1
                 index_constructor = IndexHierarchy.from_labels
 
-                def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in row_gen:
+                def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in sql_iterable:
                         index.append(row[:index_depth])
                         yield row[index_depth:]
         else:
             index = None
-            row_gen_final = lambda: row_gen
+            row_gen = lambda: sql_iterable
+
+        if columns_select:
+            columns_select = set(columns_select)
+
+            sel = columns.isin(columns_select)
+            # desired_cols = columns.loc_to_iloc(sel) # Currently doesn't work for IH...
+            desired_cols = np.where(sel)[0]
+
+            def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                for row in row_gen():
+                    yield itemgetter(*desired_cols)(row)
+
+            columns = columns.loc[sel]
+        else:
+            row_gen_final = row_gen
 
         # let default type induction do its work
         return cls.from_records(

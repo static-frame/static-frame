@@ -368,7 +368,10 @@ class IndexHierarchy(IndexBase):
             if len(parts) <= 1:
                 raise RuntimeError(f'Could not not parse more than one label from delimited string: {label}')
 
-            return tuple(literal_eval(p) for p in parts)
+            try:
+                return tuple(literal_eval(p) for p in parts)
+            except ValueError as e:
+                raise ValueError('A label is malformed. This is most likely due to not quoting a string label') from e
 
         return cls.from_labels(
                 (to_label(label) for label in labels),

@@ -170,6 +170,48 @@ class TestCase(unittest.TestCase):
         conn.commit()
         return conn
 
+    @staticmethod
+    def get_test_db_b() -> sqlite3.Connection:
+        conn = sqlite3.connect(':memory:')
+        c = conn.cursor()
+        c.execute('''CREATE TABLE events
+             (idx int, date text, identifier text, value real, count int)''')
+
+        count = 0
+        for identifier in ('a1', 'b2'):
+            for date in ('2006-01-01', '2006-01-02'):
+                c.execute(f"INSERT INTO events VALUES ({count}, '{date}','{identifier}',12.5,8)")
+                count += 1
+        conn.commit()
+        return conn
+
+    @staticmethod
+    def get_test_db_c() -> sqlite3.Connection:
+        conn = sqlite3.connect(':memory:')
+        c = conn.cursor()
+        c.execute('''CREATE TABLE events
+             ("'date' 'from'" text, "'date' 'to'" text, "'value' 'a'" real, "'value' 'b'" int)''')
+
+        for identifier in ('a1', 'b2'):
+            for date in ('2006-01-01', '2006-01-02'):
+                c.execute(f"INSERT INTO events VALUES ('{date}','{identifier}',12.5,8)")
+        conn.commit()
+        return conn
+
+    @staticmethod
+    def get_test_db_d() -> sqlite3.Connection:
+        conn = sqlite3.connect(':memory:')
+        c = conn.cursor()
+        c.execute('''CREATE TABLE events
+             ("'id' 'id'" text, "'date' 'from'" text, "'date' 'to'" text, "'value' 'a'" real, "'value' 'b'" int)''')
+
+        count = 0
+        for identifier in ('a1', 'b2'):
+            for date in ('2006-01-01', '2006-01-02'):
+                c.execute(f"INSERT INTO events VALUES ({count}, '{date}','{identifier}',12.5,8)")
+                count += 1
+        conn.commit()
+        return conn
 
     #---------------------------------------------------------------------------
 
