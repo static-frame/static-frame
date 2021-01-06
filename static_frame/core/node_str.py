@@ -1,8 +1,9 @@
-
 import typing as tp
+from functools import reduce
+import operator
+
 import numpy as np
 from numpy import char as npc
-
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import TContainer
@@ -178,15 +179,28 @@ class InterfaceString(Interface[TContainer]):
         return self._blocks_to_container(block_gen)
 
     def endswith(self,
-            suffix: str,
+            suffix: tp.Union[str, tp.Iterable[str]],
             start: tp.Optional[int] = None,
             end: tp.Optional[int] = None
             ) -> TContainer:
         '''
-        Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
+        Returns a container with the number of non-overlapping occurrences of substring ``suffix`` (or an interable of suffixes) in the optional range ``start``, ``end``.
         '''
-        block_gen = self._process_blocks(self._blocks, npc.endswith, (suffix, start, end))
-        return self._blocks_to_container(block_gen)
+
+        if isinstance(suffix, str):
+            block_iter = self._process_blocks(self._blocks, npc.endswith, (suffix, start, end))
+            return self._blocks_to_container(block_iter)
+
+        def block_gen() -> tp.Iterator[np.ndarray]:
+            blocks_per_sub = (
+                    self._process_blocks(self._blocks, npc.endswith, (sub, start, end))
+                    for sub in suffix)
+            for block_layers in zip(*blocks_per_sub):
+                array = reduce(operator.or_, block_layers)
+                array.flags.writeable = False
+                yield array
+
+        return self._blocks_to_container(block_gen())
 
     def find(self,
             sub: str,
@@ -423,15 +437,27 @@ class InterfaceString(Interface[TContainer]):
     #splitlines: not likely useful
 
     def startswith(self,
-            prefix: str,
+            prefix: tp.Union[str, tp.Iterable[str]],
             start: tp.Optional[int] = None,
             end: tp.Optional[int] = None
             ) -> TContainer:
         '''
-        Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
+        Returns a container with the number of non-overlapping occurrences of substring `prefix` (or an interable of prefixes) in the optional range ``start``, ``end``.
         '''
-        block_gen = self._process_blocks(self._blocks, npc.startswith, (prefix, start, end))
-        return self._blocks_to_container(block_gen)
+        if isinstance(prefix, str):
+            block_iter = self._process_blocks(self._blocks, npc.startswith, (prefix, start, end))
+            return self._blocks_to_container(block_iter)
+
+        def block_gen() -> tp.Iterator[np.ndarray]:
+            blocks_per_sub = (
+                    self._process_blocks(self._blocks, npc.startswith, (sub, start, end))
+                    for sub in prefix)
+            for block_layers in zip(*blocks_per_sub):
+                array = reduce(operator.or_, block_layers)
+                array.flags.writeable = False
+                yield array
+
+        return self._blocks_to_container(block_gen())
 
     def strip(self,
             chars: tp.Optional[str] = None,

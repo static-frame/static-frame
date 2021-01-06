@@ -9,6 +9,8 @@ from itertools import chain
 from itertools import zip_longest
 from os import PathLike
 from urllib import request
+from copy import deepcopy
+
 import datetime
 import operator
 import os
@@ -365,6 +367,21 @@ def row_1d_filter(array: np.ndarray) -> np.ndarray:
         return np.reshape(array, array.shape[1])
     return array
 
+def duplicate_filter(values: tp.Iterable[tp.Any]) -> tp.Iterator[tp.Any]:
+    '''
+    Assuming ordered values, yield one of each unique value as determined by __eq__ comparison.
+    '''
+    v_iter = iter(values)
+    try:
+        v = next(v_iter)
+    except StopIteration:
+        return
+    yield v
+    last = v
+    for v in v_iter:
+        if v != last:
+            yield v
+        last = v
 
 def _gen_skip_middle(
         forward_iter: CallableToIterType,
@@ -1034,9 +1051,6 @@ def slice_to_inclusive_slice(key: slice) -> slice:
     stop = None if key.stop is None else key.stop + 1
     return slice(key.start, stop, key.step)
 
-
-
-
 #-------------------------------------------------------------------------------
 # dates
 
@@ -1282,6 +1296,30 @@ def binary_transition(
 
     raise NotImplementedError(f'no handling for array with ndim: {array.ndim}')
 
+#-------------------------------------------------------------------------------
+
+def array_deepcopy(
+        array: np.ndarray,
+        memo: tp.Optional[tp.Dict[int, tp.Any]],
+        ) -> np.ndarray:
+    '''
+    Create a deepcopy of an array, handling memo lookup, insertion, and object arrays.
+    '''
+    ident = id(array)
+    if memo is not None and ident in memo:
+        return memo[ident]
+
+    if array.dtype == DTYPE_OBJECT:
+        post = deepcopy(array, memo)
+    else:
+        post = array.copy()
+
+    if post.ndim > 0:
+        post.flags.writeable = array.flags.writeable
+
+    if memo is not None:
+        memo[ident] = post
+    return post
 
 #-------------------------------------------------------------------------------
 # tools for handling duplicates
@@ -1772,7 +1810,7 @@ def _ufunc_set_2d(
 
 def union1d(array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Union on 1D array, handling diverse types and short-circuiting to preserve order where appropriate.
@@ -1785,7 +1823,7 @@ def union1d(array: np.ndarray,
 def intersect1d(
         array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Intersect on 1D array, handling diverse types and short-circuiting to preserve order where appropriate.
@@ -1798,7 +1836,7 @@ def intersect1d(
 def setdiff1d(
         array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Difference on 1D array, handling diverse types and short-circuiting to preserve order where appropriate
@@ -1811,7 +1849,7 @@ def setdiff1d(
 def union2d(
         array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Union on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
@@ -1824,7 +1862,7 @@ def union2d(
 def intersect2d(
         array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Intersect on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
@@ -1837,7 +1875,7 @@ def intersect2d(
 def setdiff2d(
         array: np.ndarray,
         other: np.ndarray,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Difference on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
@@ -1850,7 +1888,7 @@ def setdiff2d(
 def ufunc_set_iter(
         arrays: tp.Iterable[np.ndarray],
         union: bool = False,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Iteratively apply a set operation ufunc to 1D or 2D arrays; if all are equal, no operation is performed and order is retained.
@@ -2312,6 +2350,8 @@ def slices_from_targets(
 def path_filter(fp: PathSpecifierOrFileLike) -> tp.Union[str, tp.TextIO]:
     '''Realize Path objects as strings, let TextIO pass through, if given.
     '''
+    if fp is None:
+        raise ValueError('None cannot be interpreted as a file path')
     if isinstance(fp, PathLike):
         return str(fp)
     return fp

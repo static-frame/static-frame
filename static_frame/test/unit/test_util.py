@@ -59,6 +59,9 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
+from static_frame.core.util import duplicate_filter
+from static_frame.core.util import array_deepcopy
+
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 
@@ -2335,6 +2338,44 @@ class TestUnit(TestCase):
             self.assertEqual(array_sample(a1, 6, seed=1).tolist(), [3, 2, 0, 1])
 
 
+    #---------------------------------------------------------------------------
+    def test_duplicate_filter_a(self) -> None:
+        self.assertEqual(list(duplicate_filter(list('aaaabcccd'))), list('abcd'))
+        self.assertEqual(list(duplicate_filter(list('d'))), list('d'))
+        self.assertEqual(list(duplicate_filter(list())), list())
+
+
+    #---------------------------------------------------------------------------
+    def test_array_deepcopy_a(self) -> None:
+        a1 = np.array([3, 10, 20])
+        a1.flags.writeable = False
+
+        memo: tp.Dict[int, tp.Any] = {}
+        a2 = array_deepcopy(a1, memo)
+        a3 = array_deepcopy(a1, memo)
+
+        self.assertTrue(id(a2) != id(a1))
+        self.assertTrue(id(a2) == id(a3))
+        self.assertTrue(id(a1) in memo)
+        self.assertFalse(a2.flags.writeable)
+        self.assertEqual(a2.tolist(), [3, 10, 20])
+
+    def test_array_deepcopy_b(self) -> None:
+        obj = object()
+
+        a1 = np.array([3, None, 20, obj], dtype=object)
+        a1.flags.writeable = False
+
+        memo: tp.Dict[int, tp.Any] = {}
+        a2 = array_deepcopy(a1, memo)
+        a3 = array_deepcopy(a1, memo)
+
+        self.assertTrue(id(a2) != id(a1))
+        self.assertTrue(id(a2) == id(a3))
+        self.assertTrue(id(a1) in memo)
+        self.assertTrue(id(obj) in memo)
+        self.assertFalse(a2.flags.writeable)
+        self.assertEqual(a2.tolist()[:3], [3, None, 20])
 
 
 if __name__ == '__main__':

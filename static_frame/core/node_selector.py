@@ -27,6 +27,7 @@ TContainer = tp.TypeVar('TContainer',
         'TypeBlocks',
         'Bus',
         'Batch',
+        # 'Quilt',
         'IndexHierarchy',
         )
 GetItemFunc = tp.TypeVar('GetItemFunc',

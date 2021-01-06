@@ -3,6 +3,7 @@ import unittest
 import pickle
 import datetime
 from collections import OrderedDict
+import copy
 
 import numpy as np
 
@@ -564,6 +565,45 @@ class TestUnit(TestCase):
 
         post2 = ih1.loc_to_iloc(HLoc[:, :, ILoc[-4]])
         self.assertEqual(post1, [4, 5, 6, 7])
+
+
+    def test_hierarchy_loc_to_iloc_m(self) -> None:
+        idx = Index(range(20), loc_is_iloc=True)
+        idx_alt = Index(range(20))
+
+        tree = {'a':idx, 'b':idx}
+        ih1 = IndexHierarchy.from_tree(tree)
+
+        tree_alt = {'a':idx_alt, 'b':idx_alt}
+        ih1_alt = IndexHierarchy.from_tree(tree_alt)
+
+        post1 = ih1.loc_to_iloc(HLoc['b'])
+        self.assertEqual(post1, ih1_alt.loc_to_iloc(HLoc['b']))
+        self.assertEqual(post1, slice(20, 40))
+
+        post2 = ih1.loc_to_iloc(HLoc['b', 10:12])
+        self.assertEqual(post2, ih1_alt.loc_to_iloc(HLoc['b', 10:12]))
+        self.assertEqual(post2, [30, 31, 32])
+
+        post3 = ih1.loc_to_iloc(HLoc['b', [0, 10, 19]])
+        self.assertEqual(post3, ih1_alt.loc_to_iloc(HLoc['b', [0, 10, 19]]))
+        self.assertEqual(post3, [20, 30, 39])
+
+        post4 = ih1.loc_to_iloc(HLoc['b', 11])
+        self.assertEqual(post4, ih1_alt.loc_to_iloc(HLoc['b', 11]))
+        self.assertEqual(post4, 31)
+
+        post5 = ih1.loc_to_iloc(
+                HLoc['b', ~(ih1.values_at_depth(1) % 3).astype(bool)])
+        self.assertEqual(post5, ih1_alt.loc_to_iloc(
+                HLoc['b', ~(ih1.values_at_depth(1) % 3).astype(bool)]))
+        self.assertEqual(post5, [20, 23, 26, 29, 32, 35, 38])
+
+        post6 = ih1.loc_to_iloc(HLoc['b', np.array([0, 10, 19])])
+        self.assertEqual(post6, ih1_alt.loc_to_iloc(HLoc['b', np.array([0, 10, 19])]))
+        self.assertEqual(post6, [20, 30, 39])
+
+
 
     #---------------------------------------------------------------------------
 
@@ -2177,8 +2217,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
             [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
 
-
-
     def test_hierarchy_copy_b(self) -> None:
 
         labels = (
@@ -2199,6 +2237,53 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.values.tolist(),
             [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
             )
+
+
+    def test_hierarchy_deepcopy_a(self) -> None:
+
+        groups = Index(('A', 'B', 'C'))
+        dates = IndexDate.from_date_range('2018-01-01', '2018-01-04')
+        observations = Index(('x', 'y'))
+        ih1 = IndexHierarchy.from_product(groups, dates, observations)
+
+        ih2 = copy.deepcopy(ih1)
+        self.assertEqual(ih1.values.tolist(), ih2.values.tolist())
+
+        # show that memo dict is working
+        ref_id = id(ih2._levels.targets[0].targets[0].index._labels) #type: ignore
+        self.assertEqual(
+                ref_id,
+                id(ih2._levels.targets[0].targets[1].index._labels), #type: ignore
+                )
+        self.assertEqual(
+                ref_id,
+                id(ih2._levels.targets[1].targets[3].index._labels), #type: ignore
+                )
+
+
+    def test_hierarchy_deepcopy_b(self) -> None:
+
+
+        idx1 = Index(('A', 'B', 'C'))
+        idx2 = Index(('x', 'y'))
+        idx3 = Index((4, 5, 6))
+
+        ih1 = IndexHierarchyGO.from_index_items(dict(a=idx1, b=idx2, c=idx3).items())
+        ih1.append(('c', 7))
+
+        ih2 = copy.deepcopy(ih1)
+
+        ih2.append(('c', 8))
+        ih1.append(('d', 8))
+
+        self.assertEqual(ih1.values.tolist(),
+                [['a', 'A'], ['a', 'B'], ['a', 'C'], ['b', 'x'], ['b', 'y'], ['c', 4], ['c', 5], ['c', 6], ['c', 7], ['d', 8]]
+                )
+
+        self.assertEqual(ih2.values.tolist(),
+                [['a', 'A'], ['a', 'B'], ['a', 'C'], ['b', 'x'], ['b', 'y'], ['c', 4], ['c', 5], ['c', 6], ['c', 7], ['c', 8]]
+                )
+
 
     #---------------------------------------------------------------------------
 

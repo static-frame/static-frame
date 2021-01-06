@@ -1,6 +1,7 @@
 import unittest
 import pickle
 import datetime
+import copy
 import typing as tp
 from io import StringIO
 
@@ -1287,6 +1288,26 @@ class TestUnit(TestCase):
 
         self.assertEqual(b.values.tolist(), [2, None])
 
+    #---------------------------------------------------------------------------
+    def test_index_deepcopy_a(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd'))
+        idx1.append('e')
+
+        idx2 = copy.deepcopy(idx1)
+        idx1.append('f')
+
+        self.assertEqual(idx2.values.tolist(), ['a', 'b', 'c', 'd', 'e'])
+        self.assertTrue(id(idx1._labels) != id(idx2._labels))
+
+    def test_index_deepcopy_b(self) -> None:
+        idx1 = IndexGO(range(5), loc_is_iloc=True)
+
+        idx2 = copy.deepcopy(idx1)
+
+        self.assertEqual(idx2.values.tolist(), [0, 1, 2, 3, 4])
+        self.assertTrue(id(idx1._labels) != id(idx2._labels))
+        self.assertTrue(idx2._map is None)
 
 if __name__ == '__main__':
     unittest.main()

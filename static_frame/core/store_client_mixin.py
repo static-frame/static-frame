@@ -28,7 +28,7 @@ class StoreClientMixin:
 
     _config: StoreConfigMap
     _from_store: tp.Callable[..., tp.Any]
-    items: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
+    _items_store: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
 
     #---------------------------------------------------------------------------
     # constructors by data format
@@ -38,7 +38,7 @@ class StoreClientMixin:
     def from_zip_tsv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -48,7 +48,7 @@ class StoreClientMixin:
         store = StoreZipTSV(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
     @classmethod
@@ -56,7 +56,7 @@ class StoreClientMixin:
     def from_zip_csv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -66,7 +66,7 @@ class StoreClientMixin:
         store = StoreZipCSV(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
     @classmethod
@@ -74,7 +74,7 @@ class StoreClientMixin:
     def from_zip_pickle(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -84,7 +84,7 @@ class StoreClientMixin:
         store = StoreZipPickle(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
 
@@ -93,7 +93,7 @@ class StoreClientMixin:
     def from_zip_parquet(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -103,7 +103,7 @@ class StoreClientMixin:
         store = StoreZipParquet(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
 
@@ -112,7 +112,7 @@ class StoreClientMixin:
     def from_xlsx(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -123,7 +123,7 @@ class StoreClientMixin:
         store = StoreXLSX(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
 
@@ -132,7 +132,7 @@ class StoreClientMixin:
     def from_sqlite(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -142,7 +142,7 @@ class StoreClientMixin:
         store = StoreSQLite(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
 
@@ -151,7 +151,7 @@ class StoreClientMixin:
     def from_hdf5(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None,
+            **kwargs: tp.Any,
             ) -> 'StoreClientMixin':
         '''
         Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -161,7 +161,7 @@ class StoreClientMixin:
         store = StoreHDF5(fp)
         return cls._from_store(store, #type: ignore
                 config=config,
-                max_persist=max_persist,
+                **kwargs,
                 )
 
 
@@ -180,7 +180,7 @@ class StoreClientMixin:
         '''
         store = StoreZipTSV(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_zip_csv(self,
@@ -194,7 +194,7 @@ class StoreClientMixin:
         '''
         store = StoreZipCSV(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_zip_pickle(self,
@@ -208,7 +208,7 @@ class StoreClientMixin:
         '''
         store = StoreZipPickle(fp)
         # config must be None for pickels, will raise otherwise
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_zip_parquet(self,
@@ -222,7 +222,7 @@ class StoreClientMixin:
         '''
         store = StoreZipParquet(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_xlsx(self,
@@ -236,7 +236,7 @@ class StoreClientMixin:
         '''
         store = StoreXLSX(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_sqlite(self,
@@ -250,7 +250,7 @@ class StoreClientMixin:
         '''
         store = StoreSQLite(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)
 
     @doc_inject(selector='bus_exporter')
     def to_hdf5(self,
@@ -264,4 +264,4 @@ class StoreClientMixin:
         '''
         store = StoreHDF5(fp)
         config = config if not config is None else self._config
-        store.write(self.items(), config=config)
+        store.write(self._items_store(), config=config)

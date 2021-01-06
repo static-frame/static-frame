@@ -1,6 +1,7 @@
 import typing as tp
 from functools import partial
 from itertools import chain
+from copy import deepcopy
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
@@ -89,6 +90,7 @@ from static_frame.core.util import write_optional_file
 from static_frame.core.util import UFunc
 from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import array_deepcopy
 
 
 if tp.TYPE_CHECKING:
@@ -219,7 +221,7 @@ class Series(ContainerOperand):
             containers: tp.Iterable['Series'],
             *,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
-            name: NameType = None
+            name: NameType = NAME_DEFAULT,
             ) -> 'Series':
         '''
         Concatenate multiple :obj:`Series` into a new :obj:`Series`.
@@ -235,7 +237,15 @@ class Series(ContainerOperand):
         if index is None:
             indices = []
 
+        name_first = NAME_DEFAULT
+        name_aligned = True
+
         for c in containers:
+            if name_first == NAME_DEFAULT:
+                name_first = c.name
+            elif name_first != c.name:
+                name_aligned = False
+
             array_values.append(c.values)
             if index is None:
                 indices.append(c.index)
@@ -252,6 +262,10 @@ class Series(ContainerOperand):
         elif index is IndexAutoFactory:
             # set index arg to None to force IndexAutoFactory usage in creation
             index = None
+
+        if name == NAME_DEFAULT:
+            # only derive if not explicitly set
+            name = name_first if name_aligned else None
 
         return cls(values, index=index, name=name)
 
@@ -484,15 +498,6 @@ class Series(ContainerOperand):
                 f'Index has incorrect size (got {index_count}, expected {value_count})'
                 )
 
-    # ---------------------------------------------------------------------------
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
-        '''
-        Returns a reverse iterator on the series' index.
-
-        Returns:
-            :obj:`static_frame.Series`
-        '''
-        return reversed(self._index) #type: ignore
 
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Any) -> None:
@@ -502,6 +507,42 @@ class Series(ContainerOperand):
         for key, value in state[1].items():
             setattr(self, key, value)
         self.values.flags.writeable = False
+
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Series':
+        obj = self.__new__(self.__class__)
+        obj.values = array_deepcopy(self.values, memo)
+        obj._index = deepcopy(self._index, memo)
+        obj._name = self._name # should be hashable/immutable
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    # def __copy__(self) -> 'Series':
+    #     '''
+    #     Return shallow copy of this Series.
+    #     '''
+    #     return self.__class__(
+    #             self._values,
+    #             index=self._index,
+    #             name=self._name,
+    #             own_index=True,
+    #             )
+
+    # def copy(self)-> 'Series':
+    #     '''
+    #     Return shallow copy of this Series.
+    #     '''
+    #     return self.__copy__() #type: ignore
+
+    # ---------------------------------------------------------------------------
+    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Returns a reverse iterator on the series' index.
+
+        Returns:
+            :obj:`static_frame.Series`
+        '''
+        return reversed(self._index) #type: ignore
 
     #---------------------------------------------------------------------------
     # name interface
@@ -590,8 +631,6 @@ class Series(ContainerOperand):
         '''
         Interface for applying string methods to elements in this container.
         '''
-        blocks = (self.values,)
-
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Series':
             return self.__class__(
                 next(blocks), # assume only one
@@ -599,6 +638,8 @@ class Series(ContainerOperand):
                 name=self._name,
                 own_index=True,
                 )
+
+        blocks = (self.values,)
 
         return InterfaceString(
                 blocks=blocks,

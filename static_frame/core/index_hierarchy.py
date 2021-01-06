@@ -1,6 +1,7 @@
 import typing as tp
 from itertools import chain
 from ast import literal_eval
+from copy import deepcopy
 
 import numpy as np
 
@@ -522,6 +523,41 @@ class IndexHierarchy(IndexBase):
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
     #---------------------------------------------------------------------------
+    def __deepcopy__(self: IH, memo: tp.Dict[int, tp.Any]) -> IH:
+        if self._recache:
+            self._update_array_cache()
+
+        obj = self.__new__(self.__class__)
+        obj._levels = deepcopy(self._levels, memo)
+        obj._blocks = deepcopy(self._blocks, memo)
+        obj._recache = False
+        obj._name = self._name # should be hashable/immutable
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    def __copy__(self: IH) -> IH:
+        '''
+        Return a shallow copy of this IndexHierarchy.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        blocks = self._blocks.copy()
+        return self.__class__(
+                levels=self._levels, # immutable, can re-use
+                name=self._name,
+                blocks=blocks,
+                own_blocks=True
+                )
+
+    def copy(self: IH) -> IH:
+        '''
+        Return a shallow copy of this IndexHierarchy.
+        '''
+        return self.__copy__()
+
+    #---------------------------------------------------------------------------
     # name interface
 
     def rename(self: IH, name: NameType) -> IH:
@@ -953,22 +989,6 @@ class IndexHierarchy(IndexBase):
         return Series(self._levels.index_types(), index=labels)
 
     #---------------------------------------------------------------------------
-
-    def copy(self: IH) -> IH:
-        '''
-        Return a new IndexHierarchy. This is not a deep copy.
-        '''
-        if self._recache:
-            self._update_array_cache()
-
-        blocks = self._blocks.copy()
-        return self.__class__(
-                levels=self._levels,
-                name=self._name,
-                blocks=blocks,
-                own_blocks=True
-                )
-
     def relabel(self, mapper: RelabelInput) -> 'IndexHierarchy':
         '''
         Return a new IndexHierarchy with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
@@ -1034,13 +1054,14 @@ class IndexHierarchy(IndexBase):
             # default iteration of IH is as tuple
             return [self._levels.leaf_loc_to_iloc(k) for k in key]
 
-        key = key_from_container_key(self, key)
 
         if isinstance(key, HLoc):
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
             key = HLoc(tuple(
                     key_from_container_key(self, k, expand_iloc=True)
                     for k in key))
+        else:
+            key = key_from_container_key(self, key)
 
         return self._levels.loc_to_iloc(key)
 
@@ -1431,7 +1452,7 @@ class IndexHierarchy(IndexBase):
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the resulting index if the resulting levels are not unique.
 
         Args:
-            count: A positive value is the number of depths to remove from the root (outer) side of the hierarhcy; a negative values is the number of depths to remove from the leaf (inner) side of the hierarchy.
+            count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative values is the number of depths to remove from the leaf (inner) side of the hierarchy.
         '''
         if count < 0: # remove from inner
             levels = self._levels.to_index_level()
@@ -1522,16 +1543,16 @@ class IndexHierarchyGO(IndexHierarchy):
         self._levels.extend(other._levels)
         self._recache = True
 
-    def copy(self: IH) -> IH:
+    def __copy__(self: IH) -> IH:
         '''
-        Return a new IndexHierarchy. This is not a deep copy.
+        Return a shallow copy of this IndexHierarchy.
         '''
         if self._recache:
             self._update_array_cache()
 
         blocks = self._blocks.copy()
         return self.__class__(
-                levels=self._levels.to_index_level(),
+                levels=self._levels.to_index_level(), # recursive deep copy
                 name=self._name,
                 blocks=blocks,
                 own_blocks=True,

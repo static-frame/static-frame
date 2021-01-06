@@ -4,6 +4,7 @@ import typing as tp
 from collections import deque
 from itertools import zip_longest
 from itertools import repeat
+from copy import deepcopy
 
 import numpy as np
 
@@ -31,10 +32,8 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import EMPTY_TUPLE
+# from static_frame.core.exception import LocInvalid
 
-
-# if tp.TYPE_CHECKING:
-#     from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
 
 INDEX_LEVEL_SLOTS = (
             'index',
@@ -43,8 +42,6 @@ INDEX_LEVEL_SLOTS = (
             '_depth',
             '_length',
             )
-
-
 
 class IndexLevel:
     '''
@@ -174,6 +171,19 @@ class IndexLevel:
                 raise ErrorInitIndexLevel('zero length index requires specification of depth_reference')
             self._depth = depth_reference
             self._length = 0
+
+    #---------------------------------------------------------------------------
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'IndexLevel':
+        obj = self.__new__(self.__class__)
+        obj.index = deepcopy(self.index, memo)
+        obj.targets = deepcopy(self.targets, memo) # ArrayGO implements __deepcopy__
+        obj.offset = self.offset
+        obj._depth = self._depth
+        obj._length = self._length
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
 
     #---------------------------------------------------------------------------
     def depths(self) -> tp.Iterator[int]:
@@ -530,8 +540,8 @@ class IndexLevel:
                     if isinstance(level_targets, IndexLevel):
                         levels.append((level_targets, next_depth, next_offset))
                     else:
-                        levels.extend([(lvl, next_depth, next_offset)
-                                for lvl in level_targets])
+                        levels.extend((lvl, next_depth, next_offset)
+                                for lvl in level_targets)
 
         iloc_count = len(ilocs)
         if iloc_count == 0:

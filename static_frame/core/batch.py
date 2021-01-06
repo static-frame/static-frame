@@ -104,13 +104,17 @@ class Batch(ContainerOperand, StoreClientMixin):
     @classmethod
     def _from_store(cls,
             store: Store,
+            *,
             config: StoreConfigMapInitializer = None,
-            max_persist: tp.Optional[int] = None, # not used
+            **kwargs: tp.Any,
             ) -> 'Batch':
         config_map = StoreConfigMap.from_initializer(config)
         items = ((label, store.read(label, config=config_map[label]))
                 for label in store.labels())
-        return cls(items, config=config)
+        return cls(items,
+                config=config,
+                **kwargs,
+                )
 
 
     def __init__(self,
@@ -374,6 +378,8 @@ class Batch(ContainerOperand, StoreClientMixin):
         Iterator of labels, :obj:`Frame`.
         '''
         return self._items.__iter__()
+
+    _items_store = items
 
     #---------------------------------------------------------------------------
     # axis and shape ufunc methods

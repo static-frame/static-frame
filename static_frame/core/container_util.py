@@ -49,6 +49,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.quilt import Quilt #pylint: disable=W0611 #pragma: no cover
 
 
 
@@ -220,7 +221,7 @@ def index_from_optional_constructor(
             # v: S, dc: ~S, return a mutable version of something that is not mutable
             return value._MUTABLE_CONSTRUCTOR(value)
 
-    # cannot always deterine satic status from constructors; fallback on using default constructor
+    # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value)
 
 def index_constructor_empty(
@@ -402,7 +403,7 @@ def matmul(
 
 
 def axis_window_items( *,
-        source: tp.Union['Series', 'Frame'],
+        source: tp.Union['Series', 'Frame', 'Quilt'],
         size: int,
         axis: int = 0,
         step: int = 1,
@@ -421,6 +422,7 @@ def axis_window_items( *,
     # see doc_str window for docs
 
     from static_frame.core.frame import Frame
+    from static_frame.core.quilt import Quilt
     from static_frame.core.series import Series
 
     if size <= 0:
@@ -433,13 +435,13 @@ def axis_window_items( *,
     if source_ndim == 1:
         assert isinstance(source, Series) # for mypy
         labels = source._index
-        if as_array:
-            values = source.values
+        # if as_array:
+        #     values = source.values
     else:
-        assert isinstance(source, Frame) # for mypy
+        assert isinstance(source, (Frame, Quilt)) # for mypy
         labels = source._index if axis == 0 else source._columns
-        if as_array:
-            values = source._blocks.values
+        # if as_array:
+        #     values = source._blocks.values
 
     if start_shift >= 0:
         count_window_max = len(labels)
@@ -462,18 +464,18 @@ def axis_window_items( *,
 
         if source_ndim == 1:
             if as_array:
-                window = values[key]
+                window = source.values[key]
             else:
                 window = source._extract_iloc(key)
         else:
             if axis == 0:
                 if as_array:
-                    window = values[key]
+                    window = source._extract_array(key) #type: ignore
                 else: # use low level iloc selector
                     window = source._extract(row_key=key) #type: ignore
             else:
                 if as_array:
-                    window = values[NULL_SLICE, key]
+                    window = source._extract_array(NULL_SLICE, key) #type: ignore
                 else:
                     window = source._extract(column_key=key) #type: ignore
 
@@ -500,8 +502,6 @@ def axis_window_items( *,
         idx_left += step
         size += size_increment
         count += 1
-
-        # import ipdb; ipdb.set_trace()
 
         if count > count_window_max or idx_left > idx_left_max or size < 0:
             break
@@ -799,6 +799,9 @@ def key_from_container_key(
         key: GetItemKeyType,
         expand_iloc: bool = False,
         ) -> GetItemKeyType:
+    '''
+    Unpack selection values from another Index, Series, or ILoc selection.
+    '''
 
     from static_frame.core.index import Index
     from static_frame.core.index import ILoc

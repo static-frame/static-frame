@@ -4,6 +4,7 @@ from io import StringIO
 from io import BytesIO
 from itertools import chain
 from itertools import product
+from copy import deepcopy
 
 import csv
 import json
@@ -2269,6 +2270,8 @@ class Frame(ContainerOperand):
         if columns_select and index_depth != 0:
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
 
+        fp = path_filter(fp)
+
         # NOTE: the order of columns_select will determine their order
         table = pq.read_table(fp,
                 columns=columns_select,
@@ -2509,6 +2512,29 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
+
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Frame':
+        obj = self.__new__(self.__class__)
+        obj._blocks = deepcopy(self._blocks, memo)
+        obj._columns = deepcopy(self._columns, memo) #type: ignore
+        obj._index = deepcopy(self._index, memo) #type: ignore
+        obj._name = self._name # should be hashable/immutable
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    # def __copy__(self) -> 'Frame':
+    #     '''
+    #     Return shallow copy of this Frame.
+    #     '''
+
+    # def copy(self)-> 'Frame':
+    #     '''
+    #     Return shallow copy of this Frame.
+    #     '''
+    #     return self.__copy__() #type: ignore
+
+    #---------------------------------------------------------------------------
     # name interface
 
     @property
@@ -2646,7 +2672,8 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    # generators
+    # iterators
+
     @property
     def iter_array(self) -> IterNodeAxis:
         '''
@@ -3498,15 +3525,17 @@ class Frame(ContainerOperand):
         '''
         return self._blocks.nbytes
 
-    # def __bool__(self) -> bool:
-    #     '''
-    #     True if this container has size.
-    #     '''
-    #     return bool(self._blocks.size)
-
-
 
     #---------------------------------------------------------------------------
+    def _extract_array(self,
+            row_key: GetItemKeyType = None,
+            column_key: GetItemKeyType = None,
+            ) -> np.ndarray:
+        '''
+        Alternative extractor that returns just an ndarray
+        '''
+        return self._blocks._extract_array(row_key, column_key)
+
     @staticmethod
     def _extract_axis_not_multi(
                 row_key: tp.Hashable,
@@ -3517,6 +3546,7 @@ class Frame(ContainerOperand):
         '''
         row_nm = False
         column_nm = False
+        # NOTE: can we just identify integer types?
         if row_key is not None and not isinstance(row_key, KEY_MULTIPLE_TYPES):
             row_nm = True # axis 0
         if column_key is not None and not isinstance(column_key, KEY_MULTIPLE_TYPES):
@@ -3529,7 +3559,7 @@ class Frame(ContainerOperand):
             column_key: GetItemKeyType = None,
             ) -> tp.Union['Frame', Series]:
         '''
-        Extract based on iloc selection (indices have already mapped)
+        Extract Container based on iloc selection (indices have already mapped)
         '''
         blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
 
@@ -3632,19 +3662,10 @@ class Frame(ContainerOperand):
         iloc_row_key = self._index.loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _compound_loc_to_getitem_iloc(self,
-            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
-        '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
-        '''
-        iloc_column_key = self._columns.loc_to_iloc(key)
-        return None, iloc_column_key
 
     def _extract_loc(self, key: GetItemKeyTypeCompound) -> 'Frame':
-        iloc_row_key, iloc_column_key = self._compound_loc_to_iloc(key)
-        return self._extract(
-                row_key=iloc_row_key,
-                column_key=iloc_column_key
-                )
+        return self._extract(*self._compound_loc_to_iloc(key))
+
 
     def _extract_bloc(self, key: Bloc2DKeyType) -> Series:
         '''
@@ -3659,6 +3680,13 @@ class Frame(ContainerOperand):
                 for x, y in zip(*np.nonzero(bloc_key))
                 )
         return Series(values, index=index, own_index=True)
+
+    def _compound_loc_to_getitem_iloc(self,
+            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
+        '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
+        '''
+        iloc_column_key = self._columns.loc_to_iloc(key)
+        return None, iloc_column_key
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> tp.Union['Frame', Series]:
@@ -3798,7 +3826,10 @@ class Frame(ContainerOperand):
             # array is assumed to be immutable
             yield label, Series(array, index=self._index, name=label)
 
-    def get(self, key: tp.Hashable, default: tp.Optional[Series] = None) -> Series:
+    def get(self,
+            key: tp.Hashable,
+            default: tp.Optional[Series] = None,
+            ) -> Series:
         '''
         Return the value found at the columns key, else the default if the key is not found. This method is implemented to complete the dictionary-like interface.
         '''
@@ -4021,7 +4052,6 @@ class Frame(ContainerOperand):
             constructor = constructor._make
 
         for axis_values in self._blocks.axis_values(axis):
-            # import ipdb; ipdb.set_trace()
             yield constructor(axis_values)
 
     def _axis_tuple_items(self, *,
@@ -4037,13 +4067,15 @@ class Frame(ContainerOperand):
         '''
         # reference the indices and let the constructor reuse what is reusable
         if axis == 1:
-            index = self._columns
+            index = (self._columns if self._columns.STATIC
+                    else self._columns._IMMUTABLE_CONSTRUCTOR(self._columns))
             labels = self._index
         elif axis == 0:
             index = self._index
             labels = self._columns
+
         for label, axis_values in zip(labels, self._blocks.axis_values(axis)):
-            yield Series(axis_values, index=index, name=label)
+            yield Series(axis_values, index=index, name=label, own_index=True)
 
     def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
         keys = self._index if axis == 1 else self._columns

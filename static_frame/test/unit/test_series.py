@@ -7,6 +7,8 @@ import pickle
 import datetime
 import typing as tp
 from enum import Enum
+import copy
+
 import numpy as np
 
 from static_frame.test.test_case import TestCase
@@ -3274,11 +3276,24 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 (('x', False), ('y', True)))
 
+    def test_series_str_endswith_b(self) -> None:
+        s1 = Series(('foo', 'fall', 'funk'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.endswith(('oo', 'nk'))
+        self.assertEqual(s2.to_pairs(),
+                (('x', True), ('y', False), ('z', True)))
+
+
     def test_series_str_startswith_a(self) -> None:
         s1 = Series(('foo', 'foo foo bar'), index=('x', 'y'))
         s2 = s1.via_str.startswith('foo')
         self.assertEqual(s2.to_pairs(),
                 (('x', True), ('y', True)))
+
+    def test_series_str_startswith_b(self) -> None:
+        s1 = Series(('foo', 'fall', 'funk'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.startswith(('fa', 'fo'))
+        self.assertEqual(s2.to_pairs(),
+                (('x', True), ('y', True), ('z', False)))
 
     def test_series_str_find_a(self) -> None:
         s1 = Series(('foo', 'bar foo bar'), index=('x', 'y'))
@@ -3862,7 +3877,15 @@ class TestUnit(TestCase):
                 ((('a', 'x'), 0), (('b', 'x'), 2), (('b', 'y'), 3))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_series_deepcopy_a(self) -> None:
 
+        s1 = Series(['a', 'b', 'c'],
+                index=IndexHierarchy.from_labels([('X', 1), ('X', 2), ('Y', 1)])
+                )
+        s2 = copy.deepcopy(s1)
+        self.assertTrue(id(s1.values) != id(s2.values))
+        self.assertTrue(id(s1.index.values_at_depth(1)) != id(s2.index.values_at_depth(1)))
 
 if __name__ == '__main__':
     unittest.main()

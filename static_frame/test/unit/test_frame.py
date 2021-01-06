@@ -8,6 +8,7 @@ import pickle
 import sqlite3
 import datetime
 import typing as tp
+import copy
 
 import numpy as np
 import frame_fixtures as ff
@@ -1180,7 +1181,6 @@ class TestUnit(TestCase):
                         columns_depth=1)
 
 
-
     def test_frame_from_parquet_c(self) -> None:
         f = sf.FrameGO.from_element('a',
                 index=range(3),
@@ -1302,6 +1302,12 @@ class TestUnit(TestCase):
             self.assertEqual(f4.to_pairs(0),
                     ((0, ((0, 10.1), (1, -5.1), (2, 2000.1))), (1, ((0, 20.1), (1, 0.1), (2, 33.1))), (2, ((0, 'False'), (1, 'True'), (2, 'False'))), (3, ((0, dt64('2020')), (1, dt64('2000')), (2, dt64('2017')))))
                     )
+
+    def test_frame_from_parquet_f(self) -> None:
+        # arrow was segfaulting on None; we identify and raise
+        with self.assertRaises(ValueError):
+            f1 = Frame.from_parquet(None)
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_msgpack_a(self) -> None:
@@ -1585,8 +1591,6 @@ class TestUnit(TestCase):
         self.assertEqual([x for x in f1], ['p', 'q', 'r', 's', 't'])
 
 
-
-
     def test_frame_iter_array_a(self) -> None:
 
         records = (
@@ -1742,6 +1746,18 @@ class TestUnit(TestCase):
         self.assertEqual(post2,
                 [(1, 30), (2, 50), ('a', 'b'), (False, True), (True, False)])
 
+    #---------------------------------------------------------------------------
+    def test_frame_iter_series_a(self) -> None:
+        f1 = ff.parse('f(Fg)|s(2,8)|i(I,str)|c(Ig,str)|v(int)')
+        post1 = tuple(f1.iter_series(0))
+        self.assertEqual(len(post1), 8)
+        self.assertEqual(post1[0].to_pairs(),
+                (('zZbu', -88017), ('ztsv', 92867)))
+
+        post2 = tuple(f1.iter_series(1))
+        self.assertEqual(len(post2), 2)
+        self.assertEqual(post2[0].to_pairs(),
+                (('zZbu', -88017), ('ztsv', 162197), ('zUvW', -3648), ('zkuW', 129017), ('zmVj', 58768), ('z2Oo', 84967), ('z5l6', 146284), ('zCE3', 137759)))
 
 
     #---------------------------------------------------------------------------
@@ -10420,6 +10436,56 @@ class TestUnit(TestCase):
             (('x', (('a', 'Foo'), ('b', 'Baz'))), ('y', (('a', 'Bar'), ('b', 'Baz'))))
             )
 
+    def test_frame_str_startswith_a(self) -> None:
+
+        blocks = [
+                np.array([['foo', 'bar'], ['baz', 'baz']]),
+                np.array(['fall', 'buzz']),
+                ]
+
+        f1 = Frame(TypeBlocks.from_blocks(blocks),
+                index=('a', 'b'),
+                columns=('x', 'y', 'z')
+                )
+
+        f2 = f1.via_str.startswith(('fa', 'ba'))
+        self.assertEqual(f2.to_pairs(0),
+                (('x', (('a', False), ('b', True))), ('y', (('a', True), ('b', True))), ('z', (('a', True), ('b', False))))
+                )
+
+        f3 = f1.via_str.startswith('fo')
+        self.assertEqual(f3.to_pairs(0),
+                (('x', (('a', True), ('b', False))), ('y', (('a', False), ('b', False))), ('z', (('a', False), ('b', False))))
+                )
+
+        f4 = f1.via_str.startswith(('bu', 'fo'))
+        self.assertEqual(f4.to_pairs(0),
+                (('x', (('a', True), ('b', False))), ('y', (('a', False), ('b', False))), ('z', (('a', False), ('b', True))))
+                )
+
+
+    def test_frame_str_endswith_a(self) -> None:
+
+        blocks = [
+                np.array([['foo', 'bar'], ['baz', 'baz']]),
+                np.array(['fall', 'buzz']),
+                ]
+
+        f1 = Frame(TypeBlocks.from_blocks(blocks),
+                index=('a', 'b'),
+                columns=('x', 'y', 'z')
+                )
+
+        f2 = f1.via_str.endswith(('zz', 'az'))
+        self.assertEqual(f1.via_str.endswith(('zz', 'az')).to_pairs(0),
+                (('x', (('a', False), ('b', True))), ('y', (('a', False), ('b', True))), ('z', (('a', False), ('b', True))))
+                )
+
+        f3 = f1.via_str.endswith(('oo', 'ar'))
+        self.assertEqual(f3.to_pairs(0),
+                (('x', (('a', True), ('b', False))), ('y', (('a', True), ('b', False))), ('z', (('a', False), ('b', False))))
+                )
+
     def test_frame_str_center_a(self) -> None:
 
         f1 = Frame.from_records(
@@ -11774,6 +11840,44 @@ class TestUnit(TestCase):
                 ((0, ((0, False), (1, True), (2, True), (3, True), (4, True), (5, False))), (1, ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True))), (2, ((0, False), (1, True), (2, True), (3, True), (4, False), (5, False)))))
 
     #---------------------------------------------------------------------------
+
+    def test_frame_deepcopy_a(self) -> None:
+
+        f1 = sf.FrameGO(index=tuple('abc'))
+        f1['x'] = (3, 4, 5)
+        f1['y'] = Series.from_dict(dict(b=10, c=11, a=12))
+
+        f2 = copy.deepcopy(f1)
+        f2['z'] = 0
+        f1['q'] = 10
+
+        self.assertEqual(f2.to_pairs(0),
+                (('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 12), ('b', 10), ('c', 11))), ('z', (('a', 0), ('b', 0), ('c', 0)))))
+
+        self.assertTrue([id(b) for b in f1._blocks._blocks] != [id(b) for b in f2._blocks._blocks])
+
+
+    def test_frame_deepcopy_b(self) -> None:
+
+        a1 = np.array(list('abc'))
+        a1.flags.writeable = False
+        f1 = Frame.from_fields((a1, a1, a1), index=a1, columns=a1)
+
+        a1_id = id(a1)
+        self.assertEqual(id(f1.index.values), a1_id)
+        self.assertEqual(id(f1.columns.values), a1_id)
+        self.assertEqual(id(f1._blocks._blocks[0]), a1_id)
+        self.assertEqual(id(f1._blocks._blocks[1]), a1_id)
+        self.assertEqual(id(f1._blocks._blocks[2]), a1_id)
+
+        f2 = copy.deepcopy(f1)
+        a2_id = id(f2.index.values)
+
+        self.assertEqual(id(f2.columns.values), a2_id)
+        self.assertEqual(id(f2._blocks._blocks[0]), a2_id)
+        self.assertEqual(id(f2._blocks._blocks[1]), a2_id)
+        self.assertEqual(id(f2._blocks._blocks[2]), a2_id)
+
 
 
 if __name__ == '__main__':

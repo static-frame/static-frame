@@ -4,18 +4,19 @@ import typing as tp
 import numpy as np
 
 from static_frame.core.util import immutable_filter
-
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import array_deepcopy
 
 class ArrayGO:
     '''
     A grow only, one-dimensional, object type array, specifically for usage in IndexHierarchy IndexLevel objects.
     '''
+    _DTYPE = DTYPE_OBJECT # only object arrays are supported
 
     _array: tp.Optional[np.ndarray]
     _array_mutable: tp.Optional[tp.List[tp.Any]]
 
     __slots__ = (
-            '_dtype',
             '_array',
             '_array_mutable',
             '_recache',
@@ -31,16 +32,13 @@ class ArrayGO:
         Args:
             own_iterable: flag iterable as ownable by this instance.
         '''
-
-        self._dtype = object # only object arrays are supported
-
         if isinstance(iterable, np.ndarray):
             if own_iterable:
                 self._array = iterable
                 self._array.flags.writeable = False
             else:
                 self._array = immutable_filter(iterable)
-            if self._array.dtype != self._dtype:
+            if self._array.dtype != self._DTYPE:
                 raise NotImplementedError('only object arrays are supported')
             self._recache = False
             self._array_mutable = None
@@ -53,20 +51,46 @@ class ArrayGO:
             else:
                 self._array_mutable = list(iterable)
 
+    #---------------------------------------------------------------------------
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'ArrayGO':
+        if self._recache:
+            self._update_array_cache()
+
+        obj = self.__new__(self.__class__)
+        obj._array = array_deepcopy(self._array, memo)
+        obj._array_mutable = None # after updating cache
+        obj._recache = False
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    def __copy__(self) -> 'ArrayGO':
+        '''Return a shallow copy of this ArrayGO.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self.__class__(self._array, own_iterable=True)
+
+    def copy(self) -> 'ArrayGO':
+        '''Return a shallow copy of this ArrayGO.
+        '''
+        return self.__copy__()
+
+    #---------------------------------------------------------------------------
     def _update_array_cache(self) -> None:
         if self._array_mutable is not None:
             if self._array is not None:
                 len_base = len(self._array)
                 array = np.empty(
                         len_base + len(self._array_mutable),
-                        self._dtype)
+                        self._DTYPE)
                 array[:len_base] = self._array
                 array[len_base:] = self._array_mutable
                 array.flags.writeable = False
                 self._array = array
                 self._array_mutable = None
             else:
-                self._array = np.array(self._array_mutable, self._dtype)
+                self._array = np.array(self._array_mutable, self._DTYPE)
                 self._array.flags.writeable = False
                 self._array_mutable = None
         self._recache = False
@@ -107,9 +131,3 @@ class ArrayGO:
         return self._array
 
 
-    def copy(self) -> 'ArrayGO':
-        '''Return a new ArrayGO with an immutable array from this ArrayGO
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return self.__class__(self._array, own_iterable=True)
