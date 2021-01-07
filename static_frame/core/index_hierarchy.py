@@ -47,6 +47,7 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import DTYPE_BOOL
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
@@ -1056,7 +1057,8 @@ class IndexHierarchy(IndexBase):
         elif isinstance(key, IndexHierarchy):
             # default iteration of IH is as tuple
             return [self._levels.leaf_loc_to_iloc(k) for k in key]
-
+        elif isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
+            return self.positions[key]
 
         if isinstance(key, HLoc):
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
