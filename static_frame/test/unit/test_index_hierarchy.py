@@ -237,7 +237,6 @@ class TestUnit(TestCase):
         dates = IndexDate.from_date_range('2018-01-01', '2018-01-04')
         observations = Index(('x', 'y'))
 
-
         lvl2a = IndexLevel(index=observations)
         lvl2b = IndexLevel(index=observations, offset=2)
         lvl2c = IndexLevel(index=observations, offset=4)
@@ -305,7 +304,6 @@ class TestUnit(TestCase):
 
         post = ih.loc_to_iloc(HLoc[['A', 'C'], :, 'x'])
         self.assertEqual(post, [0, 2, 4, 6, 16, 18, 20, 22])
-
 
 
     def test_hierarchy_loc_to_iloc_b(self) -> None:
@@ -404,7 +402,6 @@ class TestUnit(TestCase):
 
         iloc2 = ih.loc_to_iloc(Index(labels))
         self.assertEqual(iloc2, [0, 1, 2, 3, 4, 5])
-
 
 
     def test_hierarchy_loc_to_iloc_e(self) -> None:
@@ -603,6 +600,10 @@ class TestUnit(TestCase):
         self.assertEqual(post6, ih1_alt.loc_to_iloc(HLoc['b', np.array([0, 10, 19])]))
         self.assertEqual(post6, [20, 30, 39])
 
+    def test_hierarchy_loc_to_iloc_n(self) -> None:
+        idx = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        post = idx.loc_to_iloc(np.array([False, True, False, True]))
+        self.assertEqual(post.tolist(), [1, 3])
 
 
     #---------------------------------------------------------------------------
