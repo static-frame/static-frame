@@ -9469,6 +9469,35 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_from_sql_columns_select_no_columns(self) -> None:
+
+        conn: sqlite3.Connection = self.get_test_db_a()
+
+        f1 = sf.Frame.from_sql(
+                'select * from events',
+                connection=conn,
+                columns_depth=0,
+        )
+
+        f2 = sf.Frame.from_sql(
+                'select * from events',
+                connection=conn,
+                columns_depth=0,
+                columns_select=['date', 'value', 'count'],
+        )
+
+        # When columns_depth is 0, columns_select is effectively ignored.
+
+        # this might be different on windows
+        expected_dtype_kinds = ['U', 'U', 'f', 'i']
+        self.assertEqual([x.kind for x in f1.dtypes.values], expected_dtype_kinds)
+        self.assertEqual([x.kind for x in f2.dtypes.values], expected_dtype_kinds)
+
+        expected_pairs = ((0, ((0, '2006-01-01'), (1, '2006-01-02'), (2, '2006-01-01'), (3, '2006-01-02'))), (1, ((0, 'a1'), (1, 'a1'), (2, 'b2'), (3, 'b2'))), (2, ((0, 12.5), (1, 12.5), (2, 12.5), (3, 12.5))), (3, ((0, 8), (1, 8), (2, 8), (3, 8))))
+        self.assertEqual(f1.to_pairs(0), expected_pairs)
+        self.assertEqual(f2.to_pairs(0), expected_pairs)
+
+
     def test_frame_from_sql_columns_select(self) -> None:
 
         conn: sqlite3.Connection = self.get_test_db_a()

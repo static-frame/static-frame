@@ -1497,17 +1497,36 @@ class Frame(ContainerOperand):
         '''
         sql_iterable = connection.execute(query)
 
-        own_columns = False
         columns = None
-        if columns_depth == 1:
-            columns = cls._COLUMNS_CONSTRUCTOR(b[0] for b in sql_iterable.description[index_depth:])
+        own_columns = False
+        filter_row = lambda row: row
+
+        if columns_depth >= 1:
+            labels = (col for (col, *_) in sql_iterable.description[index_depth:])
             own_columns = True
-        elif columns_depth > 1:
-            # use IH: get via static attr of columns const
-            constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
-            labels = (b[0] for b in sql_iterable.description[index_depth:])
-            columns = constructor(labels, delimiter=' ')
-            own_columns = True
+
+            if columns_depth == 1:
+                if columns_select:
+                    indices, labels = map(tuple, zip(*((i, label) for (i, label) in enumerate(labels) if label in columns_select)))
+                    selector = itemgetter(*indices)
+                    filter_row = lambda row: selector(row)
+
+                columns = cls._COLUMNS_CONSTRUCTOR(labels)
+            else: # > 1
+                # use IH: get via static attr of columns const
+                constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
+                columns = constructor(labels, delimiter=' ')
+
+                if columns_select:
+                    # Have to wait until columns is already constructed in order to filter, since
+                    # `from_labels_delimited` is implementing specific logic to convert the SQL columns
+                    # into an IndexHierarchy, thus making filtering on the raw labels effectively impossible
+                    columns_select = set(columns_select)
+                    sel = columns.isin(columns_select)
+                    columns = columns.loc[sel]
+
+                    selector = itemgetter(*np.where(sel)[0])
+                    filter_row = lambda row: selector(row)
 
         index_constructor = None
 
@@ -1533,17 +1552,7 @@ class Frame(ContainerOperand):
             row_gen = lambda: sql_iterable
 
         if columns_select:
-            columns_select = set(columns_select)
-
-            sel = columns.isin(columns_select)
-            # desired_cols = columns.loc_to_iloc(sel) # Currently doesn't work for IH...
-            desired_cols = np.where(sel)[0]
-
-            def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                for row in row_gen():
-                    yield itemgetter(*desired_cols)(row)
-
-            columns = columns.loc[sel]
+            row_gen_final = lambda: (filter_row(row) for row in row_gen())
         else:
             row_gen_final = row_gen
 
