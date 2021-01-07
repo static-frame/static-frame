@@ -9597,6 +9597,8 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
+
     def test_frame_from_records_items_a(self) -> None:
 
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Dict[tp.Hashable, tp.Any]]]:

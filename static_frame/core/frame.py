@@ -1511,17 +1511,14 @@ class Frame(ContainerOperand):
                 if columns_select:
                     indices, labels = map(tuple, zip(*((i, label) for (i, label) in enumerate(labels) if label in columns_select)))
                     selector = itemgetter(*indices)
-
                 columns = cls._COLUMNS_CONSTRUCTOR(labels)
             else: # > 1
-                # use IH: get via static attr of columns const
+                # NOTE: we only support loading in IH if encoded in each header with a space delimiter
                 constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
                 columns = constructor(labels, delimiter=' ')
-
                 if columns_select:
                     iloc_sel = columns.loc_to_iloc(columns.isin(columns_select))
                     selector = itemgetter(*iloc_sel)
-
                     columns = columns.iloc[iloc_sel]
         else:
             def selector(row):
