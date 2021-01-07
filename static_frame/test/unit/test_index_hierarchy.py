@@ -603,7 +603,7 @@ class TestUnit(TestCase):
     def test_hierarchy_loc_to_iloc_n(self) -> None:
         idx = IndexHierarchy.from_product(('a', 'b'), (1, 2))
         post = idx.loc_to_iloc(np.array([False, True, False, True]))
-        self.assertEqual(post.tolist(), [1, 3])
+        self.assertEqual(post.tolist(), [1, 3]) #type: ignore
 
 
     #---------------------------------------------------------------------------

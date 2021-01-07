@@ -5,7 +5,9 @@ What is New in Static Frame
 0.7.12
 ----------
 
-Extended `via_str.startswith()` and `via_str.endswith()` functions to support passing an iterable of strings to match.
+Extended ``via_str.startswith()`` and ``via_str.endswith()`` functions to support passing an iterable of strings to match.
+
+Improved ``IndexHierarchy.loc_to_iloc`` to support Boolean array selections.
 
 
 0.7.11
