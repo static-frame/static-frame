@@ -1499,7 +1499,9 @@ class Frame(ContainerOperand):
 
         columns = None
         own_columns = False
-        filter_row = lambda row: row
+
+        if columns_select:
+            columns_select = set(columns_select)
 
         if columns_depth >= 1:
             labels = (col for (col, *_) in sql_iterable.description[index_depth:])
@@ -1509,7 +1511,6 @@ class Frame(ContainerOperand):
                 if columns_select:
                     indices, labels = map(tuple, zip(*((i, label) for (i, label) in enumerate(labels) if label in columns_select)))
                     selector = itemgetter(*indices)
-                    filter_row = lambda row: selector(row)
 
                 columns = cls._COLUMNS_CONSTRUCTOR(labels)
             else: # > 1
@@ -1518,15 +1519,17 @@ class Frame(ContainerOperand):
                 columns = constructor(labels, delimiter=' ')
 
                 if columns_select:
-                    # Have to wait until columns is already constructed in order to filter, since
-                    # `from_labels_delimited` is implementing specific logic to convert the SQL columns
-                    # into an IndexHierarchy, thus making filtering on the raw labels effectively impossible
-                    columns_select = set(columns_select)
-                    sel = columns.isin(columns_select)
-                    columns = columns.loc[sel]
+                    iloc_sel = columns.loc_to_iloc(columns.isin(columns_select))
+                    selector = itemgetter(*iloc_sel)
 
-                    selector = itemgetter(*np.where(sel)[0])
-                    filter_row = lambda row: selector(row)
+                    columns = columns.iloc[iloc_sel]
+        else:
+            def selector(row):
+                return row
+
+        if columns_select:
+            def filter_row(row):
+                return selector(row)
 
         index_constructor = None
 
@@ -1552,13 +1555,13 @@ class Frame(ContainerOperand):
             row_gen = lambda: sql_iterable
 
         if columns_select:
-            row_gen_final = lambda: (filter_row(row) for row in row_gen())
+            row_gen_final = (filter_row(row) for row in row_gen())
         else:
-            row_gen_final = row_gen
+            row_gen_final = row_gen()
 
         # let default type induction do its work
         return cls.from_records(
-                row_gen_final(),
+                row_gen_final,
                 columns=columns,
                 index=index,
                 dtypes=dtypes,
