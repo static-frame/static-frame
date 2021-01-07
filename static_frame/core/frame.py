@@ -1492,41 +1492,46 @@ class Frame(ContainerOperand):
             query: A query string.
             connection: A DBAPI2 (PEP 249) Connection object, such as those returned from SQLite (via the sqlite3 module) or PyODBC.
             {dtypes}
+            columns_select: An optional iterable of field names to extract from the results of the query.
             {name}
             {consolidate_blocks}
         '''
         sql_iterable = connection.execute(query)
-
         columns = None
         own_columns = False
 
         if columns_select:
             columns_select = set(columns_select)
+            # selector function defined below
+            def filter_row(row):
+                post = selector(row)
+                return post if not selector_reduces else (post,)
 
-        if columns_depth >= 1:
+        if columns_depth >= 1 or columns_select:
+            # always need to derive labels if using columns_select
             labels = (col for (col, *_) in sql_iterable.description[index_depth:])
+
+        if columns_depth <= 1 and columns_select:
+            iloc_sel, labels = zip(*(
+                    pair for pair in enumerate(labels) if pair[1] in columns_select
+                    ))
+            selector = itemgetter(*iloc_sel)
+            selector_reduces = len(iloc_sel) == 1
+
+        if columns_depth == 1:
+            columns = cls._COLUMNS_CONSTRUCTOR(labels)
+            own_columns = True
+        elif columns_depth > 1:
+            # NOTE: we only support loading in IH if encoded in each header with a space delimiter
+            constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
+            columns = constructor(labels, delimiter=' ')
             own_columns = True
 
-            if columns_depth == 1:
-                if columns_select:
-                    indices, labels = map(tuple, zip(*((i, label) for (i, label) in enumerate(labels) if label in columns_select)))
-                    selector = itemgetter(*indices)
-                columns = cls._COLUMNS_CONSTRUCTOR(labels)
-            else: # > 1
-                # NOTE: we only support loading in IH if encoded in each header with a space delimiter
-                constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
-                columns = constructor(labels, delimiter=' ')
-                if columns_select:
-                    iloc_sel = columns.loc_to_iloc(columns.isin(columns_select))
-                    selector = itemgetter(*iloc_sel)
-                    columns = columns.iloc[iloc_sel]
-        else:
-            def selector(row):
-                return row
-
-        if columns_select:
-            def filter_row(row):
-                return selector(row)
+            if columns_select:
+                iloc_sel = columns.loc_to_iloc(columns.isin(columns_select))
+                selector = itemgetter(*iloc_sel)
+                selector_reduces = len(iloc_sel) == 1
+                columns = columns.iloc[iloc_sel]
 
         index_constructor = None
 
@@ -1556,7 +1561,6 @@ class Frame(ContainerOperand):
         else:
             row_gen_final = row_gen()
 
-        # let default type induction do its work
         return cls.from_records(
                 row_gen_final,
                 columns=columns,
