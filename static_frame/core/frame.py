@@ -1615,7 +1615,9 @@ class Frame(ContainerOperand):
             delimiter: str,
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_depth: int = 1,
+            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1661,7 +1663,7 @@ class Frame(ContainerOperand):
             )
             own_index = True
 
-        return cls(
+        result = cls(
             data=quadrants.data,
             own_data=True,
             index=index,
@@ -1670,6 +1672,9 @@ class Frame(ContainerOperand):
             own_columns=own_columns,
             name=name,
         )
+        if dtypes:
+            result = result.astype(dtypes)
+        return result
 
     @classmethod
     @doc_inject(selector='constructor_frame')
@@ -1690,7 +1695,8 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+            guess_dtypes: bool=False,
             ) -> 'Frame':
         '''
         Create a Frame from a file path or a file-like object defining a delimited (CSV, TSV) data file.
@@ -1719,6 +1725,25 @@ class Frame(ContainerOperand):
         # TODO: add columns_select as usecols styles selective loading
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
+
+        if not guess_dtypes:
+            return cls.from_delimited_no_guess(
+                fp=fp,
+                delimiter=delimiter,
+                index_depth=index_depth,
+                index_column_first=index_column_first,
+                index_name_depth_level=index_name_depth_level,
+                columns_depth=columns_depth,
+                columns_name_depth_level=columns_name_depth_level,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
+                quote_char=quote_char,
+                encoding=encoding,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                store_filter=store_filter,
+            )
 
         fp = path_filter(fp)
         delimiter_native = '\t'
