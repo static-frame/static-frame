@@ -64,6 +64,7 @@ from static_frame.core.util import union2d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import array_sample
+from static_frame.core.util import DtypeSpecifier
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -181,7 +182,8 @@ class IndexHierarchy(IndexBase):
             reorder_for_hierarchy: bool = False,
             index_constructors: tp.Optional[IndexConstructors] = None,
             depth_reference: tp.Optional[int] = None,
-            continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE
+            continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            dtype: DtypeSpecifier = None,
             ) -> IH:
         '''
         Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
@@ -199,7 +201,7 @@ class IndexHierarchy(IndexBase):
                 raise RuntimeError('continuation_token not supported when reorder_for_hiearchy')
             # use from_records to ensure approprate columnar types
             from static_frame import Frame
-            index_labels = Frame.from_records(labels)._blocks
+            index_labels = Frame.from_records(labels, dtypes=dtype)._blocks
             # this will reorder and create the index using this smae method, passed as cls.from_labels
             index, _ = rehierarch_from_type_blocks(
                     labels=index_labels,
