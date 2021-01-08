@@ -5846,6 +5846,41 @@ class TestUnit(TestCase):
         self.assertEqual(f3.dtypes.iter_element().apply(str).to_pairs(),
                 (('color', '<U5'), ('count', 'int64'), ('score', 'float64')))
 
+    @skip_win  # type: ignore
+    def test_frame_from_csv_a_no_guess(self) -> None:
+        # header, mixed types, no index
+
+        s1 = StringIO('count,score,color\n1,1.3,red\n3,5.2,green\n100,3.4,blue\n4,9.0,black')
+        dtypes = {'count': int, 'score': float,}
+        f1 = Frame.from_csv(s1, dtypes=dtypes)
+
+        post = f1.iloc[:, :2].sum(axis=0)
+        self.assertEqual(post.to_pairs(),
+                (('count', 108.0), ('score', 18.9)))
+        self.assertEqual(f1.shape, (4, 3))
+
+        self.assertEqual(f1.dtypes.iter_element().apply(str).to_pairs(),
+                (('count', 'int64'), ('score', 'float64'), ('color', 'object')))
+
+
+        s2 = StringIO('color,count,score\nred,1,1.3\ngreen,3,5.2\nblue,100,3.4\nblack,4,9.0')
+
+        f2 = Frame.from_csv(s2, dtypes=dtypes)
+        self.assertEqual(f2['count':].sum().to_pairs(),  # type: ignore  # https://github.com/python/typeshed/pull/3024
+                (('count', 108.0), ('score', 18.9)))
+        self.assertEqual(f2.shape, (4, 3))
+        self.assertEqual(f2.dtypes.iter_element().apply(str).to_pairs(),
+                (('color', 'object'), ('count', 'int64'), ('score', 'float64')))
+
+
+        # add junk at beginning and end
+        s3 = StringIO('junk\ncolor,count,score\nred,1,1.3\ngreen,3,5.2\nblue,100,3.4\nblack,4,9.0\njunk')
+
+        f3 = Frame.from_csv(s3, skip_header=1, skip_footer=1)
+        self.assertEqual(f3.shape, (4, 3))
+        self.assertEqual(f3.dtypes.iter_element().apply(str).to_pairs(),
+                (('color', 'object'), ('count', 'int64'), ('score', 'float64')))
+
 
 
     def test_frame_from_csv_b(self) -> None:
