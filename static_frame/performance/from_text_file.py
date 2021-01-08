@@ -91,8 +91,8 @@ def run_method(func, data_name, suffix):
 # Build performance classes for all frames
 sf_method_names = ('guess', 'no_guess')
 suffix_to_sf_read_methods = {
-    '.tsv': (sf.Frame.from_tsv, functools.partial(sf.Frame.from_txt, delimiter='\t')),
-    '.csv': (sf.Frame.from_csv, functools.partial(sf.Frame.from_txt, delimiter=',')),
+    '.tsv': (sf.Frame.from_tsv, functools.partial(sf.Frame.from_delimited_no_guess, delimiter='\t')),
+    '.csv': (sf.Frame.from_csv, functools.partial(sf.Frame.from_delimited_no_guess, delimiter=',')),
 }
 suffix_to_pd_read_method = {
     '.tsv': functools.partial(pd.read_csv, delimiter='\t'),

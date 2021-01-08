@@ -30,7 +30,7 @@ def test_frame_from_txt() -> None:
 
     s1 = StringIO('count,score,color\n1,1.3,red\n3,5.2,green\n100,3.4,blue\n4,9.0,black')
 
-    f1 = sf.Frame.from_txt(s1, delimiter=',')
+    f1 = sf.Frame.from_delimited_no_guess(s1, delimiter=',')
 
     assert f1.shape == (4, 3)
     assert f1.iloc[:, :2].to_pairs(0) == (
@@ -46,7 +46,7 @@ def test_frame_from_txt_file(tmpdir) -> None:
     with open(fp, 'w') as f:
         f.write('count,score,color\n1,1.3,red\n3,5.2,green\n100,3.4,blue\n4,9.0,black')
 
-    f1 = sf.Frame.from_txt(str(fp), delimiter=',')
+    f1 = sf.Frame.from_delimited_no_guess(str(fp), delimiter=',')
 
     assert f1.shape == (4, 3)
     assert f1.iloc[:, :2].to_pairs(0) == (
@@ -64,7 +64,7 @@ def test_from_tsv(tmpdir) -> None:
     # simple_frame.to_tsv(infp, include_index=False)
 
     with open(infp, 'r') as f:
-        f1 = sf.Frame.from_txt(f, delimiter='\t')
+        f1 = sf.Frame.from_delimited_no_guess(f, delimiter='\t')
 
     assert 0
 
@@ -75,15 +75,15 @@ def test_frame_from_txt_file_2(tmpdir) -> None:
         file.write('\n'.join(('index|A|B', 'a|True|20.2', 'b|False|85.3')))
 
     with pytest.raises(sf.ErrorInitFrame):
-        f = sf.Frame.from_txt(tmpfile, index_depth=1, delimiter='|', skip_header=-1)
+        f = sf.Frame.from_delimited_no_guess(tmpfile, index_depth=1, delimiter='|', skip_header=-1)
 
-    f = sf.Frame.from_txt(tmpfile, index_depth=1, delimiter='|')
+    f = sf.Frame.from_delimited_no_guess(tmpfile, index_depth=1, delimiter='|')
     assert (f.to_pairs(0) ==
             (('A', (('a', True), ('b', False))), ('B', (('a', 20.2), ('b', 85.3)))))
 
 
 def test_depth(unique_tsv: StringIO):
-    f = sf.Frame.from_txt(unique_tsv, delimiter='\t', index_depth=1)
+    f = sf.Frame.from_delimited_no_guess(unique_tsv, delimiter='\t', index_depth=1)
     assert f.index.values.tolist() == ['10', '20', '30', '40']
     e = np.array([['11', '12'],
            ['21', '22']], dtype=object)
@@ -91,14 +91,14 @@ def test_depth(unique_tsv: StringIO):
     assert f.columns.values.tolist() == ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
     unique_tsv.seek(0)
-    f = sf.Frame.from_txt(unique_tsv, delimiter='\t', columns_depth=0)
+    f = sf.Frame.from_delimited_no_guess(unique_tsv, delimiter='\t', columns_depth=0)
     e = np.array([['0', '1'],
                   ['10', '11']], dtype=object)
     assert (f.iloc[:2, :2].values == e).all()
     assert f.columns.values.tolist() == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     unique_tsv.seek(0)
-    f = sf.Frame.from_txt(unique_tsv, delimiter='\t', columns_depth=2, index_depth=2)
+    f = sf.Frame.from_delimited_no_guess(unique_tsv, delimiter='\t', columns_depth=2, index_depth=2)
     e = np.array([['22', '23'],
                   ['32', '33']], dtype=object)
     assert (f.iloc[:2, :2].values == e).all()

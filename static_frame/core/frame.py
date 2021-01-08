@@ -1609,7 +1609,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     @profile
-    def from_txt(cls,
+    def from_delimited_no_guess(cls,
             fp: PathSpecifierOrFileLikeOrIterator,
             *,
             delimiter: str,
