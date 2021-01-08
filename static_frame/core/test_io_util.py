@@ -76,3 +76,26 @@ def test_slice_index_and_columns():
     assert r.index.shape == (4, 2)
     assert r.top_left.shape == (1, 2)
 
+
+def test_slice_index_and_columns_skip_header_footer():
+    shape = (5, 10)
+    a = np.zeros(shape, dtype=np.int8)
+    r = io_util.slice_index_and_columns(a, 0, 0, 1, 1)
+    assert r.data.shape == (3, 10)
+    assert all(x.size==0 for x in (r.index, r.columns, r.top_left))
+
+    r = io_util.slice_index_and_columns(a, 1, 0, 2, 0)
+    assert r.data.shape == (3, 9)
+    assert r.index.shape == (3, 1)
+    assert all(x.size==0 for x in (r.columns, r.top_left))
+
+    r = io_util.slice_index_and_columns(a, 0, 1, 0, 2)
+    assert r.data.shape == (2, 10)
+    assert r.columns.shape == (1, 10)
+    assert all(x.size==0 for x in (r.index, r.top_left))
+
+    r = io_util.slice_index_and_columns(a, 2, 1, 2, 2)
+    assert r.data.shape == (0, 8)
+    assert r.columns.shape == (1, 8)
+    assert r.index.shape == (0, 2)
+    assert r.top_left.shape == (1, 2)

@@ -55,7 +55,7 @@ def test_frame_from_txt_file(tmpdir) -> None:
 
 
 def test_from_tsv(tmpdir) -> None:
-    infp = Path('/var/folders/w6/kz3x68k54sbg64gdkn2ph9nm0000gn/T/static_frame.performance.from_text_file-of-tomrutherford/r1000c5.csv')
+    infp = Path('/var/folders/w6/kz3x68k54sbg64gdkn2ph9nm0000gn/T/static_frame.performance.from_text_file-of-tomrutherford/r1000c5.tsv')
     # infp = Path(tmpdir) / 'infp.txt'
     # simple_frame = sf.Frame.from_records(
         # [(1, 2, 3), (1, 2, 3), (1, 2, 3), (1, 2, 3)],

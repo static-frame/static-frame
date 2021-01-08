@@ -28,9 +28,18 @@ def to_line_iter(x: util.PathSpecifierOrFileLikeOrIterator) -> tp.Iterator[str]:
     return x
 
 
-def slice_index_and_columns(array: np.ndarray, index_depth: int, columns_depth: int) -> SlicedArray:
+def slice_index_and_columns(
+        array: np.ndarray,
+        index_depth: int,
+        columns_depth: int,
+        skip_header: int=0,
+        skip_footer: int=0,
+    ) -> SlicedArray:
     '''Slice the given array into 4 parts: index, columns, data, and the unused upper left corner.
     '''
+    # Skip header and footer
+    array = array[skip_header:array.shape[0]-skip_footer]
+
     # Slice into 4 quadrants, named as per compass.
     nw = array[:columns_depth, :index_depth]
     ne = array[:columns_depth, index_depth:]
