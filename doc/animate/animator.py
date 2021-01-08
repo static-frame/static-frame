@@ -148,6 +148,29 @@ class LowMemoryOpsVerbose(LineGen):
         yield 'f3.shape'
         yield PAUSE_LONG
 
+
+class LowMemoryQuilt(LineGen):
+    CMD_PREFIX = 'prlimit --as=800000000' # shown to cause expected memory error
+
+    @staticmethod
+    def lines() -> LineIter:
+        yield 'import numpy as np'
+        yield 'import pandas as pd'
+        yield 'import static_frame as sf'
+        yield 'from string import ascii_lowercase'
+        # yield "df = pd.DataFrame(np.arange(6_000_000 * 4).reshape(6_000_000, 4), columns=tuple('wxyz'))"
+        # yield "del df"
+        yield "fp = '/tmp/test.zip'"
+        yield 'config = sf.StoreConfig(include_index=True, index_depth=1)'
+        yield "items = ((ascii_lowercase[i], sf.Frame(np.arange(2_000_000).reshape(500_000, 4), columns=tuple('wxyz'))) for i in range(12))"
+        yield 'sf.Batch(items).to_zip_pickle(fp, config=config)'
+        yield 'q1 = sf.Quilt.from_zip_pickle(fp, max_persist=1, retain_labels=True, config=config, deepcopy_from_bus=True)'
+        yield 'q1.shape'
+        yield "q1.iloc[1000000:1000010, 3:]"
+        # yield 'sf.Batch(q1.iter_window_items(size=100_000, step=100_000)).mean().to_frame()'
+
+
+
 #------------------------------------------------------------------------\------
 class Animator:
 
@@ -159,7 +182,7 @@ class Animator:
     def print_char(cls, char: str) -> None:
         print(char, end='')
         sys.stdout.flush()
-        time.sleep(cls.CHAR_INTERVAL + random.choice(cls.CHAR_JITTER))
+        # time.sleep(cls.CHAR_INTERVAL + random.choice(cls.CHAR_JITTER))
 
     @classmethod
     def pause(cls, interval: float) -> None:
@@ -172,6 +195,10 @@ class Animator:
 
     @classmethod
     def main(cls, func: tp.Callable[[], LineIter]) -> None:
+
+        import static_frame as sf
+        import numpy as np
+        from string import ascii_lowercase
 
         for line in func():
             if line is PAUSE_SHORT:
@@ -195,12 +222,17 @@ class Animator:
                 continue
 
             # NOTE: exec puts variables in this scope; pass globals and locals eval, exec
+            g = globals()
+            g['sf'] = sf
+            g['np'] = np
+            g['ascii_lowercase'] = ascii_lowercase
+            l = locals()
             try:
-                post = eval(line)
+                post = eval(line, g, l)
                 if post is not None:
                     print(post)
             except SyntaxError:
-                exec(line)
+                exec(line, g, l)
             except MemoryError as e:
                 traceback.print_exc(limit=-3)
 
@@ -210,6 +242,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
             description='Terminal animator',
             formatter_class=argparse.RawDescriptionHelpFormatter,
             )
+    # NOTE: when using --animate, CMD_PREFIX must be applied when the command is called
     p.add_argument('--animate',
             help='Name of class to display the animation.',
             )
@@ -225,7 +258,11 @@ def get_arg_parser() -> argparse.ArgumentParser:
 if __name__ == '__main__':
 
     options = get_arg_parser().parse_args()
-    line_gen = {cls.__name__: cls for cls in (LowMemoryOpsVerbose, DisplayConfig)}
+    line_gen = {cls.__name__: cls for cls in (
+            LowMemoryOpsVerbose,
+            DisplayConfig,
+            LowMemoryQuilt,
+            )}
 
     if options.animate:
         cls = line_gen[options.animate]

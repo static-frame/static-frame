@@ -1,10 +1,9 @@
 
 import unittest
 from collections import OrderedDict
-
+import copy
 
 import numpy as np
-
 
 from static_frame import Frame
 from static_frame import HLoc
@@ -300,7 +299,6 @@ class TestUnit(TestCase):
         lvl2a = IndexLevelGO(index=observations)
         lvl2b = IndexLevelGO(index=observations, offset=2)
         lvl2_targets = ArrayGO((lvl2a, lvl2b))
-        # must defensively copy index
         assert id(lvl2a.index) != id(lvl2b.index)
 
         lvl1a = IndexLevelGO(index=groups,
@@ -716,8 +714,27 @@ class TestUnit(TestCase):
                 (1, 2, 1, 2, 3, 2, 3, 1, 1, 1, 2, 3, 1))
 
 
+    #---------------------------------------------------------------------------
 
+    def test_index_level_deepcopy_a(self) -> None:
 
+        groups = IndexGO(('A', 'B'))
+        observations = IndexGO(('x', 'y'))
+
+        lvl2a = IndexLevelGO(index=observations)
+        lvl2b = IndexLevelGO(index=observations, offset=2)
+        lvl2_targets = ArrayGO((lvl2a, lvl2b))
+        assert id(lvl2a.index) != id(lvl2b.index)
+
+        lvl1a = IndexLevelGO(index=groups,
+                targets=lvl2_targets,
+                offset=0)
+
+        post = copy.deepcopy(lvl1a)
+        self.assertEqual(lvl1a.values.tolist(), post.values.tolist())
+        self.assertEqual(
+                id(post.targets[0].index._labels), #type: ignore
+                id(post.targets[1].index._labels)) #type: ignore
 
 
 if __name__ == '__main__':

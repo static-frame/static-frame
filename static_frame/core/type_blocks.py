@@ -4,7 +4,7 @@ import typing as tp
 from itertools import zip_longest
 from itertools import chain
 from functools import partial
-
+from copy import deepcopy
 
 import numpy as np
 
@@ -59,6 +59,7 @@ from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import isin_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
+from static_frame.core.util import array_deepcopy
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -66,7 +67,7 @@ class TypeBlocks(ContainerOperand):
 
     A TypeBlocks instance can have a zero size shape (where the length of one axis is zero). Internally, when axis 0 (rows) is of size 0, we store similarly sized arrays. When axis 1 (columns) is of size 0, we do not store arrays, as such arrays do not define a type (as types are defined by columns).
     '''
-    # related to Pandas BlockManager
+
     __slots__ = (
             '_blocks',
             '_dtypes',
@@ -248,15 +249,36 @@ class TypeBlocks(ContainerOperand):
         for b in self._blocks:
             b.flags.writeable = False
 
-    def copy(self) -> 'TypeBlocks':
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'TypeBlocks':
+        obj = self.__new__(self.__class__)
+        obj._blocks = [array_deepcopy(b, memo) for b in self._blocks]
+        obj._dtypes = deepcopy(self._dtypes, memo)
+        obj._index = self._index.copy() # list of tuples of ints
+        obj._shape = self._shape # immutable, no copy necessary
+        obj._row_dtype = deepcopy(self._row_dtype, memo)
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    def __copy__(self) -> 'TypeBlocks':
         '''
-        Return a new TypeBlocks. Underlying arrays are not copied.
+        Return shallow copy of this TypeBlocks. Underlying arrays are not copied.
         '''
         return self.__class__(
                 blocks=[b for b in self._blocks],
                 dtypes=self._dtypes.copy(), # list
                 index=self._index.copy(),
-                shape=self._shape)
+                shape=self._shape,
+                )
+
+    def copy(self) -> 'TypeBlocks':
+        '''
+        Return shallow copy of this TypeBlocks. Underlying arrays are not copied.
+        '''
+        return self.__copy__()
+
+
+
 
     #---------------------------------------------------------------------------
     # new properties

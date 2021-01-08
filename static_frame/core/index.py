@@ -3,6 +3,7 @@ from collections.abc import KeysView
 import operator as operator_mod
 from itertools import zip_longest
 from functools import reduce
+from copy import deepcopy
 
 import numpy as np
 
@@ -77,6 +78,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import union1d
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import array_deepcopy
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -198,8 +200,8 @@ class LocMap:
         Note: all SF objects (Series, Index) need to be converted to basic types before being passed as `key` to this function.
 
         Args:
-            offset: in the contect of an IndexHierarchical, the iloc positions returned from this funcition need to be shifted.
-            partial_selection: if True and key is an iterable of labels that includes lables not in the mapping, available matches will be returned rather than raising.
+            offset: in the context of an IndexHierarchical, the iloc positions returned from this funcition need to be shifted.
+            partial_selection: if True and key is an iterable of labels that includes labels not in the mapping, available matches will be returned rather than raising.
         Returns:
             An integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
@@ -209,7 +211,7 @@ class LocMap:
 
         if isinstance(key, slice):
             if offset_apply and key == NULL_SLICE:
-                # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explict slice relative to the offset
+                # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explicit slice relative to the offset
                 return slice(offset, len(positions) + offset) #type: ignore
             try:
                 return slice(*cls.map_slice_args(
@@ -470,7 +472,6 @@ class Index(IndexBase):
             raise ErrorInitIndex('invalid label dtype for this Index', #pragma: no cover
                     self._labels.dtype, self._DTYPE)
 
-
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
         '''
@@ -479,6 +480,35 @@ class Index(IndexBase):
         for key, value in state[1].items():
             setattr(self, key, value)
         self._labels.flags.writeable = False
+
+    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
+        if self._recache:
+            self._update_array_cache()
+
+        obj = self.__new__(self.__class__)
+        obj._map = deepcopy(self._map, memo) #type: ignore
+        obj._labels = array_deepcopy(self._labels, memo) #type: ignore
+        obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
+        obj._recache = False
+        obj._name = self._name # should be hashable/immutable
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    def __copy__(self: I) -> I:
+        '''
+        Return shallow copy of this Index.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        return self.__class__(self, name=self._name)
+
+    def copy(self: I) -> I:
+        '''
+        Return shallow copy of this Index.
+        '''
+        return self.__copy__() #type: ignore
 
     #---------------------------------------------------------------------------
     # name interface
@@ -845,16 +875,6 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def copy(self: I) -> I:
-        '''
-        Return a new Index.
-        '''
-        # this is not a complete deepcopy, as _labels here is an immutable np array (a new map will be created); if this is an IndexGO, we will pass the cached, immutable NP array
-        if self._recache:
-            self._update_array_cache()
-
-        return self.__class__(self, name=self._name)
-
     def relabel(self, mapper: 'RelabelInput') -> 'Index':
         '''
         Return a new Index with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping need not map all origin keys.
@@ -903,7 +923,7 @@ class Index(IndexBase):
 
         key = key_from_container_key(self, key)
 
-        if self._map is None: # loc_is_iloc
+        if self._map is None and offset is None: # loc_is_iloc
             if isinstance(key, np.ndarray):
                 if key.dtype == bool:
                     return key
@@ -915,11 +935,39 @@ class Index(IndexBase):
                 key = slice_to_inclusive_slice(key)
             return key
 
+        if self._map is None and offset is not None: # loc_is_iloc
+            if isinstance(key, slice):
+                if key == NULL_SLICE:
+                    return slice(offset, self.__len__() + offset)
+
+                key = slice_to_inclusive_slice(key)
+
+                def slice_attrs() -> tp.Iterator[int]:
+                    for attr in SLICE_ATTRS:
+                        if attr != SLICE_STEP_ATTR:
+                            yield getattr(key, attr) + offset
+                        else:
+                            yield getattr(key, attr)
+
+                return slice(*slice_attrs())
+
+            if isinstance(key, np.ndarray):
+                if key.dtype == DTYPE_BOOL:
+                    return self._positions[key] + offset
+                if key.dtype != DTYPE_INT_DEFAULT:
+                    key = key.astype(DTYPE_INT_DEFAULT)
+                return key + offset
+
+            if isinstance(key, list):
+               return [k + offset for k in key]
+            # a single element
+            return key + offset # type: ignore
+
         if key_transform:
             key = key_transform(key)
 
         return LocMap.loc_to_iloc(
-                label_to_pos=self._map,
+                label_to_pos=self._map, #type: ignore
                 labels=self._labels,
                 positions=self._positions, # always an np.ndarray
                 key=key,
@@ -1255,13 +1303,31 @@ class _IndexGOMixin:
     __slots__ = () # define in derived class
 
     _map: tp.Optional[AutoMap]
+    _labels: np.ndarray
+    _positions: np.ndarray
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
     _positions_mutable_count: int
-    _positions: np.ndarray
-    _labels: np.ndarray
 
+    #---------------------------------------------------------------------------
+    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I: #type: ignore
+        if self._recache:
+            self._update_array_cache()
 
+        obj = self.__new__(self.__class__)
+        obj._map = deepcopy(self._map, memo) #type: ignore
+        obj._labels = array_deepcopy(self._labels, memo) #type: ignore
+        obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
+        obj._recache = False
+        obj._name = self._name # should be hashable/immutable
+        obj._labels_mutable = deepcopy(self._labels_mutable, memo) #type: ignore
+        obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo) #type: ignore
+        obj._positions_mutable_count = self._positions_mutable_count #type: ignore
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    #---------------------------------------------------------------------------
     def _extract_labels(self,
             mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
             labels: np.ndarray,

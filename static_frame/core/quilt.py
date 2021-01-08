@@ -1,6 +1,7 @@
 import typing as tp
 from itertools import zip_longest
 from functools import partial
+from copy import deepcopy
 
 import numpy as np
 
@@ -35,10 +36,28 @@ from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import NotImplementedAxis
 from static_frame.core.util import get_tuple_constructor
+from static_frame.core.util import array_deepcopy
 
 
 # from static_frame.core.store import StoreConfigMap
 # from static_frame.core.store import StoreConfigMapInitializer
+
+def get_extractor(
+        deepcopy_from_bus: bool,
+        is_array: bool,
+        memo_active: bool,
+        ) -> tp.Any:
+    '''
+    Args:
+        memo_active: enable usage of a common memoization dictionary accross all calls to extract from this extractor.
+    '''
+    if deepcopy_from_bus:
+        memo: tp.Optional[tp.Dict[int, tp.Any]] = None if not memo_active else {}
+        if is_array:
+            return partial(array_deepcopy, memo=memo)
+        return partial(deepcopy, memo=memo)
+
+    return lambda x: x
 
 class AxisMap:
     '''
@@ -58,32 +77,37 @@ class AxisMap:
                 )
 
     @classmethod
-    def from_bus(cls, bus: Bus, axis: int) -> tp.Tuple[Series, IndexBase]:
+    def from_bus(cls,
+            bus: Bus,
+            axis: int,
+            deepcopy_from_bus: bool,
+            ) -> tp.Tuple[Series, IndexBase]:
         '''
         Given a :obj:`Bus` and an axis, derive a :obj:`Series` with an :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
         '''
         # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
 
+        extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
+
         tree = {}
         opposite = None
         for label, f in bus.items():
             if axis == 0:
-                tree[label] = f.index
+                tree[label] = extractor(f.index)
                 if opposite is None:
-                    opposite = f.columns
+                    opposite = extractor(f.columns)
                 else:
                     if not opposite.equals(f.columns):
                         raise ErrorInitQuilt('opposite axis must have equivalent indices')
             elif axis == 1:
-                tree[label] = f.columns
+                tree[label] = extractor(f.columns)
                 if opposite is None:
-                    opposite = f.index
+                    opposite = extractor(f.index)
                 else:
                     if not opposite.equals(f.index):
                         raise ErrorInitQuilt('opposite axis must have equivalent indices')
             else:
                 raise AxisInvalid(f'invalid axis {axis}')
-
         return cls.get_axis_series(tree), opposite # type: ignore
 
 
@@ -101,6 +125,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             '_assign_axis',
             '_columns',
             '_index',
+            '_deepcopy_from_bus',
             )
 
     _bus: Bus
@@ -123,6 +148,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             name: NameType = None,
             label_extractor: tp.Optional[tp.Callable[[IndexBase], tp.Hashable]] = None,
             config: StoreConfigMapInitializer = None,
+            deepcopy_from_bus: bool = False,
             ) -> 'Quilt':
         '''
         Given a :obj:`Frame`, create a :obj:`Quilt` by partitioning it along the specified ``axis`` in units of ``chunksize``, where ``axis`` 0 partitions vertically (retaining aligned columns) and 1 partions horizontally (retaining aligned index).
@@ -175,6 +201,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 axis_map=axis_map,
                 axis_opposite=opposite,
                 retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
                 )
 
     @classmethod
@@ -194,6 +221,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return cls(bus,
                 axis=kwargs.get('axis', 0),
                 retain_labels=kwargs['retain_labels'],
+                deepcopy_from_bus=kwargs.get('deepcopy_from_bus', False),
                 )
 
     #---------------------------------------------------------------------------
@@ -204,10 +232,12 @@ class Quilt(ContainerBase, StoreClientMixin):
             retain_labels: bool,
             axis_map: tp.Optional[Series] = None,
             axis_opposite: tp.Optional[IndexBase] = None,
+            deepcopy_from_bus: bool = False,
             ) -> None:
         self._bus = bus
         self._axis = axis
         self._retain_labels = retain_labels
+        self._deepcopy_from_bus = deepcopy_from_bus
 
         if (axis_map is None) ^ (axis_opposite is None):
             raise ErrorInitQuilt('if supplying axis_map, supply axis_opposite')
@@ -226,7 +256,11 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     def _update_axis_labels(self) -> None:
         if self._axis_map is None or self._axis_opposite is None:
-            self._axis_map, self._axis_opposite = AxisMap.from_bus(self._bus, self._axis)
+            self._axis_map, self._axis_opposite = AxisMap.from_bus(
+                    self._bus,
+                    axis=self._axis,
+                    deepcopy_from_bus=self._deepcopy_from_bus,
+                    )
 
         if self._axis == 0:
             if not self._retain_labels:
@@ -258,6 +292,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self.__class__(self._bus.rename(name),
                 axis=self._axis,
                 retain_labels=self._retain_labels,
+                deepcopy_from_bus=self._deepcopy_from_bus,
                 axis_map=self._axis_map,
                 axis_opposite=self._axis_opposite,
                 )
@@ -431,16 +466,24 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             axis: 0 iterates over columns, 1 iterates over rows
         '''
+        extractor = get_extractor(
+                self._deepcopy_from_bus,
+                is_array=True,
+                memo_active=False,
+                )
+
         if axis == 1: # iterate over rows
             if self._axis == 0: # bus components aligned vertically
                 for _, component in self._bus.items():
-                    yield from component._blocks.axis_values(axis)
+                    for array in component._blocks.axis_values(axis):
+                        yield extractor(array)
             else: # bus components aligned horizontally
                 raise NotImplementedAxis()
         elif axis == 0: # iterate over columns
             if self._axis == 1: # bus components aligned horizontally
                 for _, component in self._bus.items():
-                    yield from component._blocks.axis_values(axis)
+                    for array in component._blocks.axis_values(axis):
+                        yield extractor(array)
             else: # bus components aligned horizontally
                 raise NotImplementedAxis()
         else:
@@ -513,6 +556,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, processed-window pairs.
         '''
+        # NOTE: this will use _extract, _extract_array to get results, thus we do not need an extractor
         yield from axis_window_items(
                 source=self,
                 size=size,
@@ -526,7 +570,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 size_increment=size_increment,
                 as_array=as_array
                 )
-
 
     def _axis_window(self, *,
             size: int,
@@ -553,7 +596,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 as_array=as_array
                 ))
 
-
     #---------------------------------------------------------------------------
     def _extract_array(self,
             row_key: GetItemKeyType = None,
@@ -562,10 +604,22 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         Extract a consolidated array based on iloc selection.
         '''
+        assert self._axis_map is not None #mypy
+
+        extractor = get_extractor(
+                self._deepcopy_from_bus,
+                is_array=True,
+                memo_active=False,
+                )
+
         row_key = NULL_SLICE if row_key is None else row_key
         column_key = NULL_SLICE if column_key is None else column_key
 
         if row_key == NULL_SLICE and column_key == NULL_SLICE:
+            if len(self._bus) == 1:
+                return extractor(self._bus.iloc[0].values)
+
+            # NOTE: do not need to call extractor when np.concatenate is called, as a new array is always allocated.
             arrays = [f.values for _, f in self._bus.items()]
             return np.concatenate(
                     arrays,
@@ -574,7 +628,6 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         parts: tp.List[np.ndarray] = []
 
-        sel = np.full(len(self._axis_map), False) #type: ignore
         if self._axis == 0:
             sel_key = row_key
             opposite_key = column_key
@@ -585,19 +638,18 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel_reduces = isinstance(sel_key, INT_TYPES)
         opposite_reduces = isinstance(opposite_key, INT_TYPES)
 
+        sel = np.full(len(self._axis_map), False)
         sel[sel_key] = True
-        sel.flags.writeable = False
-        sel_map = Series(sel, index=self._axis_map.index, own_index=True) #type: ignore
 
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-        axis_map_sub = self._axis_map.iloc[sel_key] #type: ignore
+        axis_map_sub = self._axis_map.iloc[sel_key]
         if not isinstance(axis_map_sub, Series): # we have an element integer
             bus_keys = (axis_map_sub,)
         else:
-            bus_keys = duplicate_filter(axis_map_sub.values) #type: ignore
+            bus_keys = duplicate_filter(axis_map_sub.values)
 
         for key_count, key in enumerate(bus_keys):
-            sel_component = sel_map[HLoc[key]].values # get Boolean array
+            sel_component = sel[self._axis_map.index.loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
                 component = self._bus.loc[key]._extract_array(sel_component, opposite_key)
@@ -610,10 +662,13 @@ class Quilt(ContainerBase, StoreClientMixin):
                         component = component[0]
                     elif component.ndim == 2:
                         component = component[NULL_SLICE, 0]
+
             parts.append(component)
 
         if len(parts) == 1:
-            return parts.pop()
+            return extractor(parts.pop())
+
+        # NOTE: np.concatenate always allocates a new array, thus no need for extractor above
         if sel_reduces or opposite_reduces:
             return np.concatenate(parts)
         return np.concatenate(parts, axis=self._axis)
@@ -625,16 +680,27 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         Extract Container based on iloc selection.
         '''
+        assert self._axis_map is not None #mypy
+
+        extractor = get_extractor(
+                self._deepcopy_from_bus,
+                is_array=False,
+                memo_active=False,
+                )
+
         row_key = NULL_SLICE if row_key is None else row_key
         column_key = NULL_SLICE if column_key is None else column_key
 
         if row_key == NULL_SLICE and column_key == NULL_SLICE:
             if self._retain_labels and self._axis == 0:
-                frames = (f.relabel_level_add(index=k) for k, f in self._bus.items())
+                frames = (extractor(f.relabel_level_add(index=k))
+                        for k, f in self._bus.items())
             elif self._retain_labels and self._axis == 1:
-                frames = (f.relabel_level_add(columns=k) for k, f in self._bus.items())
+                frames = (extractor(f.relabel_level_add(columns=k))
+                        for k, f in self._bus.items())
             else:
-                frames = (f for _, f in self._bus.items())
+                frames = (extractor(f) for _, f in self._bus.items())
+
             return Frame.from_concat( #type: ignore
                     frames,
                     axis=self._axis,
@@ -642,7 +708,6 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         parts: tp.List[tp.Any] = []
 
-        sel = np.full(len(self._axis_map), False) #type: ignore
         if self._axis == 0:
             sel_key = row_key
             opposite_key = column_key
@@ -652,19 +717,18 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         sel_reduces = isinstance(sel_key, INT_TYPES)
 
+        sel = np.full(len(self._axis_map), False)
         sel[sel_key] = True
-        sel.flags.writeable = False
-        sel_map = Series(sel, index=self._axis_map.index, own_index=True) #type: ignore
 
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-        axis_map_sub = self._axis_map.iloc[sel_key] #type: ignore
+        axis_map_sub = self._axis_map.iloc[sel_key]
         if not isinstance(axis_map_sub, Series): # we have an element integer
             bus_keys = (axis_map_sub,)
         else:
-            bus_keys = duplicate_filter(axis_map_sub.values) #type: ignore
+            bus_keys = duplicate_filter(axis_map_sub.values)
 
         for key_count, key in enumerate(bus_keys):
-            sel_component = sel_map[HLoc[key]].values # get Boolean array
+            sel_component = sel[self._axis_map.index.loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
                 component = self._bus.loc[key].iloc[sel_component, opposite_key]
@@ -689,10 +753,13 @@ class Quilt(ContainerBase, StoreClientMixin):
                         component = component.iloc[0]
                     else:
                         component = component.iloc[NULL_SLICE, 0]
-            parts.append(component)
+
+            parts.append(extractor(component))
 
         if len(parts) == 1:
             return parts.pop() #type: ignore
+
+        # NOTE: Series/Frame from_concate will attempt to re-use ndarrays, and thus using extractor above is appropriate
         if component_is_series:
             return Series.from_concat(parts)
         return Frame.from_concat(parts, axis=self._axis) #type: ignore

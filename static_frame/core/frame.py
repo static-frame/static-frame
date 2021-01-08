@@ -4,6 +4,8 @@ from io import StringIO
 from io import BytesIO
 from itertools import chain
 from itertools import product
+from copy import deepcopy
+from operator import itemgetter
 
 import csv
 import json
@@ -1491,6 +1493,7 @@ class Frame(ContainerOperand):
             connection: sqlite3.Connection,
             index_depth: int = 0,
             columns_depth: int = 1,
+            columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
@@ -1502,22 +1505,46 @@ class Frame(ContainerOperand):
             query: A query string.
             connection: A DBAPI2 (PEP 249) Connection object, such as those returned from SQLite (via the sqlite3 module) or PyODBC.
             {dtypes}
+            columns_select: An optional iterable of field names to extract from the results of the query.
             {name}
             {consolidate_blocks}
         '''
-        row_gen = connection.execute(query)
-
-        own_columns = False
+        sql_iterable = connection.execute(query)
         columns = None
+        own_columns = False
+
+        if columns_select:
+            columns_select = set(columns_select)
+            # selector function defined below
+            def filter_row(row):
+                post = selector(row)
+                return post if not selector_reduces else (post,)
+
+        if columns_depth >= 1 or columns_select:
+            # always need to derive labels if using columns_select
+            labels = (col for (col, *_) in sql_iterable.description[index_depth:])
+
+        if columns_depth <= 1 and columns_select:
+            iloc_sel, labels = zip(*(
+                    pair for pair in enumerate(labels) if pair[1] in columns_select
+                    ))
+            selector = itemgetter(*iloc_sel)
+            selector_reduces = len(iloc_sel) == 1
+
         if columns_depth == 1:
-            columns = cls._COLUMNS_CONSTRUCTOR(b[0] for b in row_gen.description[index_depth:])
+            columns = cls._COLUMNS_CONSTRUCTOR(labels)
             own_columns = True
         elif columns_depth > 1:
-            # use IH: get via static attr of columns const
+            # NOTE: we only support loading in IH if encoded in each header with a space delimiter
             constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
-            labels = (b[0] for b in row_gen.description[index_depth:])
             columns = constructor(labels, delimiter=' ')
             own_columns = True
+
+            if columns_select:
+                iloc_sel = columns.loc_to_iloc(columns.isin(columns_select))
+                selector = itemgetter(*iloc_sel)
+                selector_reduces = len(iloc_sel) == 1
+                columns = columns.iloc[iloc_sel]
 
         index_constructor = None
 
@@ -1526,25 +1553,29 @@ class Frame(ContainerOperand):
             if index_depth == 1:
                 index_constructor = Index
 
-                def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in row_gen:
+                def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in sql_iterable:
                         index.append(row[0])
                         yield row[1:]
 
             else: # > 1
                 index_constructor = IndexHierarchy.from_labels
 
-                def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in row_gen:
+                def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in sql_iterable:
                         index.append(row[:index_depth])
                         yield row[index_depth:]
         else:
             index = None
-            row_gen_final = lambda: row_gen
+            row_gen = lambda: sql_iterable
 
-        # let default type induction do its work
+        if columns_select:
+            row_gen_final = (filter_row(row) for row in row_gen())
+        else:
+            row_gen_final = row_gen()
+
         return cls.from_records(
-                row_gen_final(),
+                row_gen_final,
                 columns=columns,
                 index=index,
                 dtypes=dtypes,
@@ -2611,6 +2642,29 @@ class Frame(ContainerOperand):
             raise ErrorInitFrame(
                 f'Columns has incorrect size (got {self._blocks.shape[1]}, expected {col_count})'
                 )
+
+    #---------------------------------------------------------------------------
+
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Frame':
+        obj = self.__new__(self.__class__)
+        obj._blocks = deepcopy(self._blocks, memo)
+        obj._columns = deepcopy(self._columns, memo) #type: ignore
+        obj._index = deepcopy(self._index, memo) #type: ignore
+        obj._name = self._name # should be hashable/immutable
+
+        memo[id(self)] = obj
+        return obj #type: ignore
+
+    # def __copy__(self) -> 'Frame':
+    #     '''
+    #     Return shallow copy of this Frame.
+    #     '''
+
+    # def copy(self)-> 'Frame':
+    #     '''
+    #     Return shallow copy of this Frame.
+    #     '''
+    #     return self.__copy__() #type: ignore
 
     #---------------------------------------------------------------------------
     # name interface
@@ -4145,11 +4199,13 @@ class Frame(ContainerOperand):
         '''
         # reference the indices and let the constructor reuse what is reusable
         if axis == 1:
-            index = self._columns
+            index = (self._columns if self._columns.STATIC
+                    else self._columns._IMMUTABLE_CONSTRUCTOR(self._columns))
             labels = self._index
         elif axis == 0:
             index = self._index
             labels = self._columns
+
         for label, axis_values in zip(labels, self._blocks.axis_values(axis)):
             yield Series(axis_values, index=index, name=label, own_index=True)
 

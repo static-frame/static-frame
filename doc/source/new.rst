@@ -1,12 +1,37 @@
 What is New in Static Frame
 ===============================
 
+
+0.7.12
+----------
+
+Extended ``via_str.startswith()`` and ``via_str.endswith()`` functions to support passing an iterable of strings to match.
+
+Improved ``IndexHierarchy.loc_to_iloc`` to support Boolean array selections.
+
+
+0.7.11
+----------
+
+Corrected issue in ``Frame.iter_series`` due to recent optimization.
+
+
+0.7.10
+----------
+
+Improvements to ``Quilt`` extraction routines.
+
+
 0.7.9
 ----------
 
 Improved handling of invalid file paths given to constructors.
 
 Improved implementations of ``Bus.items()``, ``Bus.values``, and ``Bus.equals()`` that deliver proper results when `max_persist` is active.
+
+Implementation of ``Quilt``, a container that presents the contents of a ``Bus`` as either vertically or horizontally stacked ``Frame``.
+
+Implemented ``__deepcopy__()`` on all containers.
 
 
 0.7.8

@@ -221,7 +221,7 @@ def index_from_optional_constructor(
             # v: S, dc: ~S, return a mutable version of something that is not mutable
             return value._MUTABLE_CONSTRUCTOR(value)
 
-    # cannot always deterine satic status from constructors; fallback on using default constructor
+    # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value)
 
 def index_constructor_empty(
@@ -502,8 +502,6 @@ def axis_window_items( *,
         idx_left += step
         size += size_increment
         count += 1
-
-        # import ipdb; ipdb.set_trace()
 
         if count > count_window_max or idx_left > idx_left_max or size < 0:
             break
@@ -801,6 +799,9 @@ def key_from_container_key(
         key: GetItemKeyType,
         expand_iloc: bool = False,
         ) -> GetItemKeyType:
+    '''
+    Unpack selection values from another Index, Series, or ILoc selection.
+    '''
 
     from static_frame.core.index import Index
     from static_frame.core.index import ILoc
