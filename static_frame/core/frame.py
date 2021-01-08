@@ -1640,6 +1640,7 @@ class Frame(ContainerOperand):
                     quadrants.columns.T,
                     index_constructor=cls._COLUMNS_CONSTRUCTOR,
                     hierarchy_constructor=cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+                    dtype=object,
             )
 
         # Build index.
@@ -1650,6 +1651,7 @@ class Frame(ContainerOperand):
                     quadrants.index,
                     index_constructor=Index,
                     hierarchy_constructor=IndexHierarchy.from_labels,
+                    dtype=object,
             )
             own_index = True
 

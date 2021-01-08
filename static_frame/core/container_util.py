@@ -1037,6 +1037,7 @@ def array_to_index(
         array: np.ndarray,
         index_constructor: tp.Callable,
         hierarchy_constructor: tp.Callable,
+        **constructor_kwargs: tp.Any,
     ) -> IndexBase:
     '''Given an array, call either `index_constructor` or `hierarchy_constructor` depending on the dimensionality of the data.
     `array` is assumed to be 2 dimensional.
@@ -1044,5 +1045,5 @@ def array_to_index(
     if any(d == 1 for d in array.shape):
         index = index_constructor(array.flatten())
     else:
-        index = hierarchy_constructor(array)
+        index = hierarchy_constructor(array, **constructor_kwargs)
     return index
