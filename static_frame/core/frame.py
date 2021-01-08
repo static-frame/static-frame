@@ -1629,7 +1629,13 @@ class Frame(ContainerOperand):
         data = tuple(csv.reader(lines, delimiter=delimiter, quotechar=quote_char))
         array = np.array(data, dtype=object)
 
-        quadrants = io_util.slice_index_and_columns(array, index_depth, columns_depth)
+        quadrants = io_util.slice_index_and_columns(
+                array,
+                index_depth,
+                columns_depth,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
+        )
 
         # Build columns.
         own_columns = False

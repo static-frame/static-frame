@@ -36,6 +36,8 @@ def slice_index_and_columns(
         skip_footer: int=0,
     ) -> SlicedArray:
     '''Slice the given array into 4 parts: index, columns, data, and the unused upper left corner.
+
+    Optionally skip header and footer rows.
     '''
     # Skip header and footer
     array = array[skip_header:array.shape[0]-skip_footer]
