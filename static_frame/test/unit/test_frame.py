@@ -8166,6 +8166,7 @@ class TestUnit(TestCase):
                 self.assertTrue(f2.shape == (3, f1.shape[1] - 1))
 
 
+    #---------------------------------------------------------------------------
     def test_frame_head_tail_a(self) -> None:
 
         # thest of multi threaded apply

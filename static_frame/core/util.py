@@ -257,13 +257,14 @@ FrameInitializer = tp.Union[
         np.ndarray,
         ] # need to add FRAME_INITIALIZER_DEFAULT
 
-FILL_VALUE_DEFAULT = object()
-NAME_DEFAULT = object()
-
-
 DateInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearInitializer = tp.Union[str, datetime.date, np.datetime64]
+
+#-------------------------------------------------------------------------------
+FILL_VALUE_DEFAULT = object()
+NAME_DEFAULT = object()
+
 
 #-------------------------------------------------------------------------------
 # join utils

@@ -4675,7 +4675,8 @@ class Frame(ContainerOperand):
             column: GetItemKeyType,
             *,
             drop: bool = False,
-            index_constructor=Index) -> 'Frame':
+            index_constructor: IndexConstructor = Index,
+            ) -> 'Frame':
         '''
         Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
         '''
