@@ -23,13 +23,20 @@ class _StoreZip(Store):
     _EXT_CONTAINED: str = ''
 
     @store_coherent_non_write
-    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True,
+            ) -> tp.Iterator[str]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
         with zipfile.ZipFile(self._fp) as zf:
             for name in zf.namelist():
                 if strip_ext:
-                    yield name.replace(self._EXT_CONTAINED, '')
-                else:
-                    yield name
+                    name = name.replace(self._EXT_CONTAINED, '')
+                c = config_map[name]
+                yield c.label_decode(name)
+
 
 class _StoreZipDelimited(_StoreZip):
     # store attribute of passed-in container_type to use for construction
@@ -114,14 +121,13 @@ class StoreZipPickle(_StoreZip):
 
     @store_coherent_non_write
     def read(self,
-            label: str,
+            label: tp.Hashable,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
-        # config does not do anything for pickles
-        # if config is not None:
-        #     raise ErrorInitStore('cannot use a StoreConfig on pickled Stores')
+
+        label = label if not config else config.label_encode(label)
 
         with zipfile.ZipFile(self._fp) as zf:
             frame = pickle.loads(zf.read(label + self._EXT_CONTAINED))
@@ -134,21 +140,21 @@ class StoreZipPickle(_StoreZip):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None
             ) -> None:
 
-        # if config is not None:
-        #     raise ErrorInitStore('cannot use a StoreConfig on pickled Stores')
+        config_map = StoreConfigMap.from_initializer(config)
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
+
+                label = config_map[label].label_encode(label)
+
                 if isinstance(frame, FrameGO):
                     raise NotImplementedError('convert FrameGO to Frame before pickling.')
                 zf.writestr(label + self._EXT_CONTAINED, pickle.dumps(frame))
-
-
 
 
 #-------------------------------------------------------------------------------
@@ -170,12 +176,15 @@ class StoreZipParquet(_StoreZip):
         if config is None:
             raise ErrorInitStore('a StoreConfig is required on parquet Stores')
 
+        label = config.label_encode(label)
+
         with zipfile.ZipFile(self._fp) as zf:
             src = BytesIO(zf.read(label + self._EXT_CONTAINED))
             frame = container_type.from_parquet(
                     src,
                     index_depth=config.index_depth,
                     columns_depth=config.columns_depth,
+                    columns_select=config.columns_select,
                     dtypes=config.dtypes,
                     name=label,
                     consolidate_blocks=config.consolidate_blocks,
@@ -194,12 +203,14 @@ class StoreZipParquet(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
                 c = config_map[label]
+                label = c.label_encode(label)
+
                 dst = BytesIO()
                 # call from class to explicitly pass self as frame
                 frame.to_parquet(
                         dst,
                         include_index=c.include_index,
-                        include_columns=c.include_columns
+                        include_columns=c.include_columns,
                         )
                 dst.seek(0)
                 # this will write it without a container
