@@ -49,7 +49,6 @@ class _StoreZipDelimited(_StoreZip):
         # NOTE: labels need to be strings
         with zipfile.ZipFile(self._fp) as zf:
             src = StringIO()
-            # labels may not be present
             src.write(zf.read(label + self._EXT_CONTAINED).decode())
             src.seek(0)
             # call from class to explicitly pass self as frame
