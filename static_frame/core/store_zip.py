@@ -45,13 +45,15 @@ class _StoreZipDelimited(_StoreZip):
 
     @store_coherent_non_write
     def read(self,
-            label: str,
+            label: tp.Hashable,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
 
         if config is None:
             raise ErrorInitStore('a StoreConfig is required on delimited Stores')
+
+        label = config.label_encode(label)
 
         # NOTE: labels need to be strings
         with zipfile.ZipFile(self._fp) as zf:
@@ -70,7 +72,7 @@ class _StoreZipDelimited(_StoreZip):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             config: StoreConfigMapInitializer = None
             ) -> None:
 
@@ -80,6 +82,8 @@ class _StoreZipDelimited(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
                 c = config_map[label]
+                label = c.label_encode(label)
+
                 dst = StringIO()
                 # call from class to explicitly pass self as frame
                 self.__class__._EXPORTER(frame,
@@ -167,7 +171,7 @@ class StoreZipParquet(_StoreZip):
 
     @store_coherent_non_write
     def read(self,
-            label: str,
+            label: tp.Hashable,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
@@ -193,7 +197,7 @@ class StoreZipParquet(_StoreZip):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None
             ) -> None:
