@@ -188,6 +188,7 @@ class StoreSQLite(Store):
                     connection=conn,
                     index_depth=config.index_depth,
                     columns_depth=config.columns_depth,
+                    columns_select=config.columns_select,
                     dtypes=config.dtypes,
                     name=label,
                     consolidate_blocks=config.consolidate_blocks

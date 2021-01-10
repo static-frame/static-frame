@@ -209,7 +209,7 @@ class StoreZipParquet(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
                 c = config_map[label]
-                label = c.label_encode(label)
+                label = config_map.default.label_encode(label)
 
                 dst = BytesIO()
                 # call from class to explicitly pass self as frame

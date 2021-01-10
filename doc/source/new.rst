@@ -5,6 +5,14 @@ What is New in Static Frame
 0.7.12
 ----------
 
+``Bus`` indices are no longer required to be string typed.
+
+``StoreConfig`` adds ``label_encoder``, ``label_decoder`` parameters for translating hashables to strings and vice versa when writing to / from ``Store`` formats.
+
+``Frame.from_sql`` now supports a ``columns_select`` parameter.
+
+``StoreConfig`` now supports a ``columns_select`` parameter; ``columns_select`` parameters from ``StoreConfig`` are now used in ``StoreZipParquet``, ``StoreSQLite``.
+
 Extended ``via_str.startswith()`` and ``via_str.endswith()`` functions to support passing an iterable of strings to match.
 
 Improved ``IndexHierarchy.loc_to_iloc`` to support Boolean array selections.
