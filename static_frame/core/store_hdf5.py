@@ -13,6 +13,7 @@ from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import STORE_LABEL_DEFAULT
 
 
 class StoreHDF5(Store):
@@ -21,7 +22,7 @@ class StoreHDF5(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Optional[tp.Hashable], Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -68,7 +69,7 @@ class StoreHDF5(Store):
     @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read(self,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,

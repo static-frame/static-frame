@@ -264,6 +264,7 @@ YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 #-------------------------------------------------------------------------------
 FILL_VALUE_DEFAULT = object()
 NAME_DEFAULT = object()
+STORE_LABEL_DEFAULT = object()
 
 
 #-------------------------------------------------------------------------------

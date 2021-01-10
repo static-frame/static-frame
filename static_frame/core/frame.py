@@ -145,12 +145,14 @@ from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTU_PYARROW
 from static_frame.core.util import DT64_NS
 from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import STORE_LABEL_DEFAULT
 
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from xarray import Dataset #pylint: disable=W0611 #pragma: no cover
     import pyarrow #pylint: disable=W0611 #pragma: no cover
+
 
 
 class Frame(ContainerOperand):
@@ -1954,12 +1956,14 @@ class Frame(ContainerOperand):
                 store_filter=store_filter,
                 )
 
+    #---------------------------------------------------------------------------
+    # Store-based constructors
 
     @classmethod
     def from_xlsx(cls,
             fp: PathSpecifier,
             *,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_depth: int = 1,
@@ -2002,7 +2006,7 @@ class Frame(ContainerOperand):
     def from_sqlite(cls,
             fp: PathSpecifier,
             *,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
             columns_depth: int = 1,
             dtypes: DtypesSpecifier = None,
@@ -2032,7 +2036,7 @@ class Frame(ContainerOperand):
     def from_hdf5(cls,
             fp: PathSpecifier,
             *,
-            label: str,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
             columns_depth: int = 1,
             consolidate_blocks: bool = False,
@@ -2055,6 +2059,8 @@ class Frame(ContainerOperand):
                 container_type=cls,
                 # store_filter=store_filter,
                 )
+
+    #---------------------------------------------------------------------------
 
     @classmethod
     @doc_inject()
@@ -6438,10 +6444,13 @@ class Frame(ContainerOperand):
         root.clipboard_clear()
         root.clipboard_append(sio.read())
 
+    #---------------------------------------------------------------------------
+    # Store based output
+
     def to_xlsx(self,
             fp: PathSpecifier, # not sure I can take a file like yet
             *,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             include_index: bool = True,
             include_index_name: bool = True,
             include_columns: bool = True,
@@ -6468,11 +6477,10 @@ class Frame(ContainerOperand):
                 store_filter=store_filter,
                 )
 
-
     def to_sqlite(self,
             fp: PathSpecifier, # not sure file-like StringIO works
             *,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             include_index: bool = True,
             include_columns: bool = True,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -6497,7 +6505,7 @@ class Frame(ContainerOperand):
     def to_hdf5(self,
             fp: PathSpecifier, # not sure file-like StringIO works
             *,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             include_index: bool = True,
             include_columns: bool = True,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -6513,7 +6521,7 @@ class Frame(ContainerOperand):
                 include_columns=include_columns,
                 )
 
-        if not label:
+        if label is STORE_LABEL_DEFAULT:
             if not self.name:
                 raise RuntimeError('must provide a label or define Frame name.')
             label = self.name
@@ -6524,6 +6532,7 @@ class Frame(ContainerOperand):
                 # store_filter=store_filter,
                 )
 
+    #---------------------------------------------------------------------------
 
     @doc_inject(class_name='Frame')
     def to_html(self,

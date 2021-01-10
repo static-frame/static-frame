@@ -22,6 +22,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import STORE_LABEL_DEFAULT
 
 
 class StoreSQLite(Store):
@@ -101,7 +102,7 @@ class StoreSQLite(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -129,7 +130,7 @@ class StoreSQLite(Store):
                 c = config_map[label]
 
                 # for interface compatibility with StoreXLSX, where label can be None
-                if label is None: # better default
+                if label is STORE_LABEL_DEFAULT:
                     label = 'None'
                 else:
                     label = config_map.default.label_encode(label)
@@ -149,7 +150,7 @@ class StoreSQLite(Store):
     @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read(self,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
@@ -162,7 +163,9 @@ class StoreSQLite(Store):
         if config is None:
             config = StoreConfig() # get default
 
-        if label is not None: # better default
+        if label is STORE_LABEL_DEFAULT:
+            label = 'None'
+        else:
             label = config.label_encode(label)
 
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)

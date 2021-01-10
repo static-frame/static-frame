@@ -28,13 +28,13 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
+from static_frame.core.util import STORE_LABEL_DEFAULT
 
 if tp.TYPE_CHECKING:
     from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
-
     # from openpyxl.cell.read_only import ReadOnlyCell # pylint: disable=W0611 #pragma: no cover
     # from openpyxl.cell.read_only import EmptyCell # pylint: disable=W0611 #pragma: no cover
 
@@ -72,8 +72,6 @@ class FormatDefaults:
         for func in format_funcs:
             f = func(f)
         return f
-
-
 
 
 class StoreXLSX(Store):
@@ -285,7 +283,7 @@ class StoreXLSX(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Optional[tp.Hashable], Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -308,7 +306,9 @@ class StoreXLSX(Store):
 
         for label, frame in items:
             c = config_map[label]
-            if label is not None:
+            if label is STORE_LABEL_DEFAULT:
+                label = None # values is supported by add_worksheet, below
+            else:
                 label = config_map.default.label_encode(label)
 
             # NOTE: this must be called here, as we need the workbook been assigning formats, and we need to get a config per label
@@ -373,7 +373,7 @@ class StoreXLSX(Store):
     @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read(self,
-            label: tp.Optional[tp.Hashable] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             *,
             config: tp.Optional[StoreConfig] = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -399,13 +399,11 @@ class StoreXLSX(Store):
 
         wb = self._load_workbook(self._fp)
 
-        if label is None:
-            # NOTE: label might be None from a non-str Bus index; need an object default
+        if label is STORE_LABEL_DEFAULT:
             ws = wb[wb.sheetnames[0]]
             name = None # do not set to default sheet name
         else:
-            label = config.label_encode(label)
-            ws = wb[label]
+            ws = wb[config.label_encode(label)]
             name = ws.title
 
 

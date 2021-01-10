@@ -43,6 +43,7 @@ from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.util import STORE_LABEL_DEFAULT
 
 nan = np.nan
 
@@ -6738,7 +6739,7 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp)
             st = StoreXLSX(fp)
-            f2 = st.read(label=None, config=config)
+            f2 = st.read(label=STORE_LABEL_DEFAULT, config=config)
             self.assertEqualFrames(f1, f2)
 
     def test_frame_to_xlsx_b(self) -> None:

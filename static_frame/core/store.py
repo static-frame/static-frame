@@ -226,6 +226,7 @@ class StoreConfigMap:
     def default(self) -> StoreConfig:
         return self._default
 
+
 #-------------------------------------------------------------------------------
 class Store:
 
