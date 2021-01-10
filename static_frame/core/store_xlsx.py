@@ -307,7 +307,8 @@ class StoreXLSX(Store):
         for label, frame in items:
             c = config_map[label]
             if label is STORE_LABEL_DEFAULT:
-                label = None # values is supported by add_worksheet, below
+                # None is supported by add_worksheet, below
+                label = None #type: ignore
             else:
                 label = config_map.default.label_encode(label)
 
