@@ -13,7 +13,6 @@ from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import STORE_LABEL_DEFAULT
 
 
 class StoreHDF5(Store):

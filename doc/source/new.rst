@@ -7,7 +7,7 @@ What is New in Static Frame
 
 ``Bus`` indices are no longer required to be string typed.
 
-``StoreConfig`` adds ``label_encoder``, ``label_decoder`` parameters for translating hashables to strings and vice versa when writing to / from ``Store`` formats.
+``StoreConfig`` adds ``label_encoder``, ``label_decoder`` parameters for translating hashables to strings and strings to hashables when writing to / from ``Store`` formats.
 
 ``Frame.from_sql`` now supports a ``columns_select`` parameter.
 
