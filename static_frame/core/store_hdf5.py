@@ -21,7 +21,7 @@ class StoreHDF5(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Optional[tp.Hashable], Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -37,6 +37,7 @@ class StoreHDF5(Store):
 
             for label, frame in items:
                 c = config_map[label]
+                label = config_map.default.label_encode(label)
 
                 # should all tables be under a common group?
                 field_names, dtypes = self.get_field_names_and_dtypes(
@@ -83,6 +84,8 @@ class StoreHDF5(Store):
             config = StoreConfig() # get default
         if config.dtypes:
             raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
+
+        label = config.label_encode(label)
 
         index_depth = config.index_depth
         columns_depth = config.columns_depth

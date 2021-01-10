@@ -82,7 +82,7 @@ class _StoreZipDelimited(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
                 c = config_map[label]
-                label = c.label_encode(label)
+                label = config_map.default.label_encode(label)
 
                 dst = StringIO()
                 # call from class to explicitly pass self as frame
@@ -131,7 +131,9 @@ class StoreZipPickle(_StoreZip):
             container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
 
-        label = label if not config else config.label_encode(label)
+        if config is None:
+            config = StoreConfig() # get default
+        label = config.label_encode(label)
 
         with zipfile.ZipFile(self._fp) as zf:
             frame = pickle.loads(zf.read(label + self._EXT_CONTAINED))
@@ -154,7 +156,7 @@ class StoreZipPickle(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
 
-                label = config_map[label].label_encode(label)
+                label = config_map.default.label_encode(label)
 
                 if isinstance(frame, FrameGO):
                     raise NotImplementedError('convert FrameGO to Frame before pickling.')

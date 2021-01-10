@@ -7,7 +7,7 @@ from static_frame.core.frame import FrameGO
 # from static_frame.core.series import Series
 
 from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigMap
+# from static_frame.core.store import StoreConfigMap
 
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipCSV
@@ -195,7 +195,7 @@ class TestUnit(TestCase):
         config = StoreConfig(
                 index_depth=1,
                 include_index=True,
-                label_encoder=lambda x: x.upper(),
+                label_encoder=lambda x: x.upper(), #type: ignore
                 label_decoder=lambda x: x.lower(),
                 )
 

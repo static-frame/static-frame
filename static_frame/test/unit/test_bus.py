@@ -594,7 +594,36 @@ class TestUnit(TestCase):
 
         self.assertEqual(b2['frame'].values.tolist(),
                 [[datetime(1983, 2, 20, 5, 34, 18, 763000), datetime(2020, 8, 1, 0, 0)], [datetime(1975, 3, 20, 5, 20, 18, 1000), datetime(2020, 7, 31, 0, 0)]]
-)
+                )
+
+    def test_bus_to_xlsx_g(self) -> None:
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name=dt64('2019-12-31'))
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),
+                name=dt64('2020-01-01'))
+
+        config = StoreConfig(include_index=True,
+                index_depth=1,
+                label_encoder=str,
+                label_decoder=dt64,
+                )
+        b1 = Bus.from_frames((f1, f2), config=config)
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp, config=config)
+
+            b2 = Bus.from_xlsx(fp, config=config)
+            tuple(b2.items()) # force loading all
+
+        for frame in (f1, f2):
+            self.assertEqualFrames(frame, b2[frame.name])
 
 
 
@@ -647,6 +676,41 @@ class TestUnit(TestCase):
         with self.assertRaises(StoreFileMutation):
             tuple(b2.items())
 
+
+    def test_bus_to_sqlite_c(self) -> None:
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name=dt64('2019-12-31'))
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),
+                name=dt64('2020-01-01'))
+
+        config = StoreConfig(include_index=True,
+                index_depth=1,
+                label_encoder=str,
+                label_decoder=dt64,
+                )
+        b1 = Bus.from_frames((f1, f2), config=config)
+
+        with temp_file('.db') as fp:
+            b1.to_sqlite(fp, config=config)
+
+            b2 = Bus.from_sqlite(fp, config=config)
+            tuple(b2.items()) # force loading all
+            self.assertEqual(b2.index.dtype.kind, 'M')
+
+
+        for frame in (f1, f2):
+            self.assertEqualFrames(frame, b2[frame.name])
+
+
+
+    #---------------------------------------------------------------------------
     def test_bus_to_hdf5_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -693,6 +757,36 @@ class TestUnit(TestCase):
 
         with self.assertRaises(StoreFileMutation):
             tuple(b2.items())
+
+    def test_bus_to_hdf5_c(self) -> None:
+        dt64 = np.datetime64
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name=dt64('2019-12-31'))
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),
+                name=dt64('2020-01-01'))
+
+        config = StoreConfig(include_index=True,
+                index_depth=1,
+                label_encoder=str,
+                label_decoder=dt64,
+                )
+        b1 = Bus.from_frames((f1, f2), config=config)
+
+        with temp_file('.h5') as fp:
+            b1.to_hdf5(fp, config=config)
+
+            b2 = Bus.from_hdf5(fp, config=config)
+            tuple(b2.items()) # force loading all
+            self.assertEqual(b2.index.dtype.kind, 'M')
+
+
+        for frame in (f1, f2):
+            self.assertEqualFrames(frame, b2[frame.name])
 
     #---------------------------------------------------------------------------
 

@@ -57,7 +57,7 @@ class StoreSQLite(Store):
     def _frame_to_table(cls,
             *,
             frame: Frame,
-            label: tp.Optional[str], # can be None
+            label: str, # can be None
             cursor: sqlite3.Cursor,
             include_columns: bool,
             include_index: bool,
@@ -65,11 +65,6 @@ class StoreSQLite(Store):
             ) -> None:
 
         # here we provide a row-based represerntation that is externally usable as an slqite db; an alternative approach would be to store one cell pre column, where the column iststored as as binary BLOB; see here https://stackoverflow.com/questions/18621513/python-insert-numpy-array-into-sqlite3-database
-
-        # for interface compatibility with StoreXLSX, where label can be None
-        if label is None:
-            label = 'None'
-
         field_names, dtypes = cls.get_field_names_and_dtypes(
                 frame=frame,
                 include_index=include_index,
@@ -133,6 +128,12 @@ class StoreSQLite(Store):
             for label, frame in items:
                 c = config_map[label]
 
+                # for interface compatibility with StoreXLSX, where label can be None
+                if label is None: # better default
+                    label = 'None'
+                else:
+                    label = config_map.default.label_encode(label)
+
                 self._frame_to_table(frame=frame,
                         label=label,
                         cursor=cursor,
@@ -160,6 +161,9 @@ class StoreSQLite(Store):
         '''
         if config is None:
             config = StoreConfig() # get default
+
+        if label is not None: # better default
+            label = config.label_encode(label)
 
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 

@@ -141,7 +141,6 @@ class StoreConfig(metaclass=InterfaceMeta):
             return self.label_decoder(label)
         return label
 
-# NOTE: key should be tp.Optional[str], but cannot get mypy to accept
 SCMMapType = tp.Mapping[tp.Any, StoreConfig]
 SCMMapInitializer = tp.Optional[SCMMapType]
 
@@ -220,7 +219,7 @@ class StoreConfigMap:
                     raise ErrorInitStoreConfig(f'config {label} has encoder/decoder inconsistent with default; align values and/or pass a default StoreConfig.')
                 self._map[label] = config
 
-    def __getitem__(self, key: tp.Optional[str]) -> StoreConfig:
+    def __getitem__(self, key: tp.Optional[tp.Hashable]) -> StoreConfig:
         return self._map.get(key, self._default)
 
     @property
@@ -366,7 +365,7 @@ class Store:
 
     #---------------------------------------------------------------------------
     def read(self,
-            label: str,
+            label: tp.Hashable,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,

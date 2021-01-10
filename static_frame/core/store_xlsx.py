@@ -285,7 +285,7 @@ class StoreXLSX(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Optional[tp.Hashable], Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -308,6 +308,8 @@ class StoreXLSX(Store):
 
         for label, frame in items:
             c = config_map[label]
+            if label is not None:
+                label = config_map.default.label_encode(label)
 
             # NOTE: this must be called here, as we need the workbook been assigning formats, and we need to get a config per label
             format_columns = FormatDefaults.get_format_or_default(
@@ -339,7 +341,7 @@ class StoreXLSX(Store):
                     format_funcs=(FormatDefaults.label, FormatDefaults.datetime,))
 
 
-            ws = wb.add_worksheet(label)
+            ws = wb.add_worksheet(label) # label can be None
             self._frame_to_worksheet(frame,
                     ws,
                     format_columns=format_columns,
@@ -371,7 +373,7 @@ class StoreXLSX(Store):
     @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read(self,
-            label: tp.Optional[str] = None,
+            label: tp.Optional[tp.Hashable] = None,
             *,
             config: tp.Optional[StoreConfig] = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -398,11 +400,14 @@ class StoreXLSX(Store):
         wb = self._load_workbook(self._fp)
 
         if label is None:
+            # NOTE: label might be None from a non-str Bus index; need an object default
             ws = wb[wb.sheetnames[0]]
             name = None # do not set to default sheet name
         else:
+            label = config.label_encode(label)
             ws = wb[label]
             name = ws.title
+
 
         if ws.max_column <= 1 or ws.max_row <= 1:
             # https://openpyxl.readthedocs.io/en/stable/optimized.html
