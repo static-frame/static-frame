@@ -133,12 +133,12 @@ class StoreConfig(metaclass=InterfaceMeta):
         if self.label_encoder:
             label = self.label_encoder(label)
         if not isinstance(label, str):
-            raise RuntimeError('Store label is not a string; provide a label_encoder to StoreConfig')
+            raise RuntimeError(f'Store label {label} is not a string; provide a label_encoder to StoreConfig')
         return label
 
     def label_decode(self, label: str) -> tp.Hashable:
         if self.label_decoder:
-            label = self.label_decoder(label)
+            return self.label_decoder(label)
         return label
 
 # NOTE: key should be tp.Optional[str], but cannot get mypy to accept
@@ -219,7 +219,6 @@ class StoreConfigMap:
                         config.label_decoder != self._default.label_decoder):
                     raise ErrorInitStoreConfig(f'config {label} has encoder/decoder inconsistent with default; align values and/or pass a default StoreConfig.')
                 self._map[label] = config
-
 
     def __getitem__(self, key: tp.Optional[str]) -> StoreConfig:
         return self._map.get(key, self._default)
@@ -388,7 +387,7 @@ class Store:
     def labels(self, *,
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
-            ) -> tp.Iterator[str]:
+            ) -> tp.Iterator[tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
 
 
@@ -397,7 +396,7 @@ def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
 
     @wraps(f)
     def wrapper(self: Store, *args: tp.Any, **kwargs: tp.Any) -> Frame:
-        '''Decprator for derived Store class implementation of reaad(), labels().
+        '''Decprator for derived Store class implementation of read(), labels().
         '''
         self._mtime_coherent()
         return f(self, *args, **kwargs) # type: ignore

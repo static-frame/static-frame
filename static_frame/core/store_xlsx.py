@@ -541,15 +541,20 @@ class StoreXLSX(Store):
                         )
 
 
-
-
-
     @store_coherent_non_write
-    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True,
+            ) -> tp.Iterator[tp.Hashable]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
         wb = self._load_workbook(self._fp)
         labels = tuple(wb.sheetnames)
         wb.close()
-        yield from labels
+
+        for label in labels:
+            yield config_map.default.label_decode(label)
 
 
 

@@ -130,7 +130,7 @@ class StoreHDF5(Store):
     def labels(self, *,
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
-            ) -> tp.Iterator[str]:
+            ) -> tp.Iterator[tp.Hashable]:
         '''
         Iterator of labels.
         '''
@@ -142,7 +142,5 @@ class StoreHDF5(Store):
             for node in file.iter_nodes(where='/',
                     classname=tables.Table.__name__):
                 # NOTE: this is not the complete path
-                yield node.name
-                # c = config_map[name]
-                # yield c.label_decode(name)
+                yield config_map.default.label_decode(node.name)
 

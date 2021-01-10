@@ -26,7 +26,7 @@ class _StoreZip(Store):
     def labels(self, *,
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
-            ) -> tp.Iterator[str]:
+            ) -> tp.Iterator[tp.Hashable]:
 
         config_map = StoreConfigMap.from_initializer(config)
 
@@ -34,9 +34,8 @@ class _StoreZip(Store):
             for name in zf.namelist():
                 if strip_ext:
                     name = name.replace(self._EXT_CONTAINED, '')
-                # need to get get the config to get the right decoder; but the key to use is
-                c = config_map[name]
-                yield c.label_decode(name)
+                # always use default decoder
+                yield config_map.default.label_decode(name)
 
 
 class _StoreZipDelimited(_StoreZip):
