@@ -127,14 +127,22 @@ class StoreHDF5(Store):
 
 
     @store_coherent_non_write
-    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True,
+            ) -> tp.Iterator[str]:
         '''
         Iterator of labels.
         '''
         import tables
+
+        config_map = StoreConfigMap.from_initializer(config)
 
         with tables.open_file(self._fp, mode='r') as file:
             for node in file.iter_nodes(where='/',
                     classname=tables.Table.__name__):
                 # NOTE: this is not the complete path
                 yield node.name
+                # c = config_map[name]
+                # yield c.label_decode(name)
+

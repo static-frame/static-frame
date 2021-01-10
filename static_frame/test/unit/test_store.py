@@ -26,6 +26,23 @@ class TestUnit(TestCase):
         st = StoreDerived(fp='foo.txt')
         self.assertTrue(np.isnan(st._last_modified))
 
+    def test_store_config_map_init_a(self) -> None:
+        maps = {'a': StoreConfig(index_depth=2),
+                'b': StoreConfig(index_depth=3, label_encoder=str)}
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            sc1m = StoreConfigMap.from_initializer(maps)
+
+
+    def test_store_config_map_init_b(self) -> None:
+        maps = {'a': StoreConfig(index_depth=2, label_encoder=str),
+                'b': StoreConfig(index_depth=3, label_encoder=str)}
+        default = StoreConfig(label_encoder=str)
+
+        sc1m = StoreConfigMap(maps, default=default)
+        self.assertEqual(sc1m.default.label_encoder, str)
+
+    #---------------------------------------------------------------------------
     def test_store_config_map_a(self) -> None:
 
         sc1 = StoreConfig(index_depth=3, columns_depth=3)
@@ -97,6 +114,19 @@ class TestUnit(TestCase):
         self.assertEqual(field_names.tolist(), ['x', 'y', 'z']) #type: ignore
         self.assertEqual(dtypes,
                 [np.dtype('<U1'), np.dtype('bool'), np.dtype('O')])
+
+
+    #---------------------------------------------------------------------------
+
+    def test_store_config_map_get_default_a(self) -> None:
+        maps = {'a': StoreConfig(index_depth=2),
+                'b': StoreConfig(index_depth=3)}
+
+        sc1m = StoreConfigMap.from_initializer(maps)
+        self.assertTrue(sc1m.default == StoreConfigMap._DEFAULT)
+
+    #---------------------------------------------------------------------------
+
 
 if __name__ == '__main__':
     unittest.main()

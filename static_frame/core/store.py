@@ -192,9 +192,18 @@ class StoreConfigMap:
 
     def __init__(self,
             config_map: SCMMapInitializer = None,
+            *,
             default: tp.Optional[StoreConfig] = None,
             own_config_map: bool = False
             ):
+
+        if default is None:
+            self._default = self._DEFAULT
+        elif not isinstance(default, StoreConfig):
+            raise ErrorInitStoreConfig(
+                f'unspported class {default}, must be {StoreConfig}')
+        else:
+            self._default = default
 
         # initialize new dict and transfer to support checking Config classes
         self._map: SCMMapType = {}
@@ -206,19 +215,18 @@ class StoreConfigMap:
                 if not isinstance(config, self._DEFAULT.__class__):
                     raise ErrorInitStoreConfig(
                         f'unspported class {config}, must be {self._DEFAULT.__class__}')
+                if (config.label_encoder != self._default.label_encoder or
+                        config.label_decoder != self._default.label_decoder):
+                    raise ErrorInitStoreConfig(f'config {label} has encoder/decoder inconsistent with default; align values and/or pass a default StoreConfig.')
                 self._map[label] = config
 
-        if default is None:
-            self._default = self._DEFAULT
-        elif not isinstance(default, StoreConfig):
-            raise ErrorInitStoreConfig(
-                f'unspported class {default}, must be {StoreConfig}')
-        else:
-            self._default = default
 
     def __getitem__(self, key: tp.Optional[str]) -> StoreConfig:
         return self._map.get(key, self._default)
 
+    @property
+    def default(self) -> StoreConfig:
+        return self._default
 
 #-------------------------------------------------------------------------------
 class Store:

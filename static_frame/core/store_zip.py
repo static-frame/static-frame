@@ -34,6 +34,7 @@ class _StoreZip(Store):
             for name in zf.namelist():
                 if strip_ext:
                     name = name.replace(self._EXT_CONTAINED, '')
+                # need to get get the config to get the right decoder; but the key to use is
                 c = config_map[name]
                 yield c.label_decode(name)
 
