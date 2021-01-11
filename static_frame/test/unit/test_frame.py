@@ -5887,7 +5887,7 @@ class TestUnit(TestCase):
         # add junk at beginning and end
         s3 = StringIO('junk\ncolor,count,score\nred,1,1.3\ngreen,3,5.2\nblue,100,3.4\nblack,4,9.0\njunk')
 
-        f3 = Frame.from_csv(s3, skip_header=1, skip_footer=1)
+        f3 = Frame.from_csv(s3, skip_header=1, skip_footer=1, dtypes=dtypes)
         self.assertEqual(f3.shape, (4, 3))
         self.assertEqual(f3.dtypes.iter_element().apply(str).to_pairs(),
                 (('color', 'object'), ('count', 'int64'), ('score', 'float64')))

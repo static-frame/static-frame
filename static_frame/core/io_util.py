@@ -45,7 +45,8 @@ def csv_to_array(
         next(lines)
 
     data = tuple(csv.reader(lines, delimiter=delimiter, quotechar=quote_char))
-    data = data[:-skip_footer]
+    if skip_footer:
+        data = data[:-skip_footer]
     return np.array(data, dtype=object)
 
 
