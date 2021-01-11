@@ -1942,7 +1942,8 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+            guess_dtypes: bool=False,
             ) -> 'Frame':
         '''
         Specialized version of :obj:`Frame.from_delimited` for CSV files.
@@ -1965,6 +1966,7 @@ class Frame(ContainerOperand):
                 name=name,
                 consolidate_blocks=consolidate_blocks,
                 store_filter=store_filter,
+                guess_dtypes=guess_dtypes,
                 )
 
     @classmethod

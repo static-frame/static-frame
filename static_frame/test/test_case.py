@@ -45,6 +45,7 @@ skip_linux_no_display = pytest.mark.skipif(
         sys.platform == 'linux' and 'DISPLAY' not in os.environ,
         reason='No display available'
         )
+skip_guess = pytest.mark.skip
 
 #-------------------------------------------------------------------------------
 class Timer():
