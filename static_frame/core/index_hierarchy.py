@@ -1184,7 +1184,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        dtype = None if not dtypes else dtypes[0]
+        dtype = None if not dtypes else dtypes[0] # must be a tuple
         values = self._blocks.values
 
         if skipna:

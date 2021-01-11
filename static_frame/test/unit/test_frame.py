@@ -8425,7 +8425,12 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 (('x', ((0, 10), (1, 3))), ('y', ((0, '5'), (1, '20')))))
 
-
+    def test_frame_from_recrods_u(self) -> None:
+        f1 = Frame.from_element(1, index=[1, 2], columns=['a', 'b'])
+        f2 = Frame.from_records(f1.iter_tuple(), columns=f1.columns, dtypes=f1.dtypes)
+        self.assertEqual(f2.to_pairs(0),
+                (('a', ((0, 1), (1, 1))), ('b', ((0, 1), (1, 1))))
+                )
 
     #---------------------------------------------------------------------------
 

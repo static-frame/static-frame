@@ -708,7 +708,7 @@ class Frame(ContainerOperand):
             column_name_getter = fields_dc.__getitem__
             columns = []
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
 
         # NOTE: row data by definition does not have Index data, so col count is length of row
         if hasattr(row_reference, '__len__'):
@@ -785,7 +785,7 @@ class Frame(ContainerOperand):
         '''
         columns = []
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
 
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
@@ -957,7 +957,7 @@ class Frame(ContainerOperand):
                     )
             own_index = True
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for col_idx, (k, v) in enumerate(pairs):
@@ -1076,7 +1076,7 @@ class Frame(ContainerOperand):
                     )
             own_index = True
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for col_idx, v in enumerate(fields):
@@ -1190,7 +1190,7 @@ class Frame(ContainerOperand):
                 columns_by_col_idx.append(columns[columns_idx])
                 columns_idx += 1
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
                 columns_by_col_idx)
 
@@ -2207,7 +2207,7 @@ class Frame(ContainerOperand):
             columns = None
 
         # by using value.columns_names, we expose access to the index arrays, which is deemed desirable as that is what we do in from_delimited
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
                 value.column_names)
 
@@ -4031,7 +4031,7 @@ class Frame(ContainerOperand):
         # axis 1 processes cols, delivers row index
         assert axis < 2
 
-        dtype = None if not dtypes else dtypes[0]
+        dtype = None if not dtypes else dtypes[0] # only a tuple
 
         # assumed not composable for axis 1, full-shape processing requires processing contiguous values
         v = self.values
