@@ -1658,16 +1658,18 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
-        lines = io_util.to_line_iter(fp)
-        data = tuple(csv.reader(lines, delimiter=delimiter, quotechar=quote_char))
-        array = np.array(data, dtype=object)
+        array = io_util.csv_to_array(
+                fp,
+                delimiter=delimiter,
+                quote_char=quote_char,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
+        )
 
         quadrants = io_util.slice_index_and_columns(
                 array,
                 index_depth,
                 columns_depth,
-                skip_header=skip_header,
-                skip_footer=skip_footer,
         )
 
         # Build columns.
