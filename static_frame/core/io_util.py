@@ -1,6 +1,7 @@
 import typing as tp
 import os
 from pathlib import Path
+import csv
 
 import numpy as np
 
@@ -26,6 +27,26 @@ def to_line_iter(x: util.PathSpecifierOrFileLikeOrIterator) -> tp.Iterator[str]:
     if isinstance(x, (str, os.PathLike)):
         return read_file(Path(x))
     return x
+
+
+def csv_to_array(
+        x: util.PathSpecifierOrFileLikeOrIterator,
+        delimiter: str,
+        quote_char: str = '"',
+        skip_header: int = 0,
+        skip_footer: int = 0,
+    ) -> np.ndarray:
+    """Consume the given iterator into an array, optionally skipping first and last rows."""
+
+    lines = to_line_iter(x)
+
+    # Advance lines to skip header.
+    for _ in range(skip_header):
+        next(lines)
+
+    data = tuple(csv.reader(lines, delimiter=delimiter, quotechar=quote_char))
+    data = data[:-skip_footer]
+    return np.array(data, dtype=object)
 
 
 def slice_index_and_columns(

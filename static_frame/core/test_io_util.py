@@ -21,7 +21,7 @@ def _to_str(data: str, tmpdir: py.path.local) -> str:
     return str(_to_path(data, tmpdir))
 
 
-def _to_textio(data: str, tmpdir: py.path.local) -> tp.TextIO:
+def _to_textio(data: str, _: tp.Optional[py.path.local]=None) -> tp.TextIO:
     return io.StringIO(data)
 
 
@@ -99,3 +99,10 @@ def test_slice_index_and_columns_skip_header_footer():
     assert r.columns.shape == (1, 8)
     assert r.index.shape == (0, 2)
     assert r.top_left.shape == (1, 2)
+
+
+def test_to_array():
+    expected = ('junk','a,b,c', 'd,e,f', 'junk', 'junk,junk')
+    iter_ = _to_textio('\n'.join(expected))
+    array = io_util.csv_to_array(iter_, delimiter=',', skip_header=1, skip_footer=2)
+    assert array.tolist() == [['a', 'b', 'c'], ['d', 'e', 'f']]
