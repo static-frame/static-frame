@@ -58,6 +58,7 @@ class InterfaceDatetime(Interface[TContainer]):
             'isoformat',
             'strftime',
             'strptime',
+            'strpdate',
             )
 
     DT64_EXCLUDE_YEAR = (DT64_YEAR,)
