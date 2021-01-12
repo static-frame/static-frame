@@ -2171,6 +2171,28 @@ def array_from_element_attr(*,
     post.flags.writeable = False
     return post
 
+def array_from_element_apply(*,
+        array: np.ndarray,
+        func: AnyCallable,
+        dtype: np.dtype
+        ) -> np.array:
+    '''
+    Handle element-wise function application.
+    '''
+    if array.ndim == 1 and dtype != DTYPE_OBJECT:
+        post = np.fromiter(
+                (func(d) for d in array),
+                count=len(array),
+                dtype=dtype,
+                )
+    else:
+        post = np.empty(shape=array.shape, dtype=dtype)
+        for iloc, e in np.ndenumerate(array):
+            post[iloc] = func(e)
+
+    post.flags.writeable = False
+    return post
+
 
 def array_from_element_method(*,
         array: np.ndarray,

@@ -1,12 +1,14 @@
 
 import typing as tp
 import numpy as np
-
+from datetime import datetime
+from datetime import date
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import TContainer
 from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
+from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import DT64_AS
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_FS
@@ -54,6 +56,7 @@ class InterfaceDatetime(Interface[TContainer]):
             'fromisoformat',
             'isoformat',
             'strftime',
+            'strptime',
             )
 
     DT64_EXCLUDE_YEAR = (DT64_YEAR,)
@@ -282,7 +285,6 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-
     def fromisoformat(self) -> TContainer:
         '''
         Return a :obj:`datetime.date` object from an ISO 8601 format.
@@ -304,11 +306,9 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-
-
     def strftime(self, format: str) -> TContainer:
         '''
-        Return a string representing the date, controlled by an explicit format string.
+        Return a string representing the date, controlled by an explicit ``format`` string.
         '''
 
         def blocks() -> tp.Iterator[np.ndarray]:
@@ -333,7 +333,48 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
+    def strptime(self, format: str) -> TContainer:
+        '''
+        Return a Python datetime object from parsing a string defined with ``format``.
+        '''
+        def func(s: str) -> datetime:
+            return datetime.strptime(s, format)
 
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                # permit only string types, or objects types that contain strings
+                self._validate_dtype_str(block.dtype)
+                # returns an immutable array
+                array = array_from_element_apply(
+                        array=block,
+                        func=func,
+                        dtype=DTYPE_OBJECT,
+                        )
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+
+    def strpdate(self, format: str) -> TContainer:
+        '''
+        Return a Python date object from parsing a string defined with ``format``.
+        '''
+        def func(s: str) -> date:
+            return datetime.strptime(s, format).date()
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                # permit only string types, or objects types that contain strings
+                self._validate_dtype_str(block.dtype)
+                # returns an immutable array
+                array = array_from_element_apply(
+                        array=block,
+                        func=func,
+                        dtype=DTYPE_OBJECT,
+                        )
+                yield array
+
+        return self._blocks_to_container(blocks())
 
 
 
