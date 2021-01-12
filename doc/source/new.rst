@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+0.7.13
+----------
+
+Improved handling for using ``Frame.iter_group`` on zero-sized ``Frame``.
+
+``Series`` can be used as arguments to ``dtypes`` in ``Frame`` constructors.
+
 
 0.7.12
 ----------
