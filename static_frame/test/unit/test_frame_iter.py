@@ -423,6 +423,15 @@ class TestUnit(TestCase):
         self.assertEqual(list(empty.iter_element()), [])
         self.assertEqual(list(empty.iter_group(key=1)), [])
 
+    def test_frame_iter_group_f(self) -> None:
+        f = sf.Frame(np.arange(3).reshape(1,3), columns=tuple('abc'))
+        f = f.drop.loc[0]
+        post1 = tuple(f.iter_group(['b','c']))
+        self.assertEqual(post1, ())
+
+        post2 = tuple(f.iter_group('a'))
+        self.assertEqual(post2, ())
+
 
     #---------------------------------------------------------------------------
     def test_frame_iter_group_items_a(self) -> None:

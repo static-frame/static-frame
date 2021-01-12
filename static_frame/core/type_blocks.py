@@ -277,9 +277,6 @@ class TypeBlocks(ContainerOperand):
         '''
         return self.__copy__()
 
-
-
-
     #---------------------------------------------------------------------------
     # new properties
 
@@ -753,6 +750,10 @@ class TypeBlocks(ContainerOperand):
         '''
         # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
         unique_axis = None
+
+        # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
+        if self._shape[0] == 0 or self._shape[1] == 0: # zero sized
+            return
 
         if axis == 0:
             # axis 0 means we return row groups; key is a column key
