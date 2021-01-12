@@ -8,6 +8,8 @@ Improved handling for using ``Frame.iter_group`` on zero-sized ``Frame``.
 
 ``Series`` can now be used as arguments to ``dtypes`` in ``Frame`` constructors.
 
+Added ``via_dt.strptime`` and ``via_dt.strpdate`` for parsing strings to Python ``date``, ``datetime`` objects, respectively.
+
 
 0.7.12
 ----------

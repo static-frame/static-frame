@@ -9800,7 +9800,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_frame_as_dt_year_a(self) -> None:
+    def test_frame_via_dt_year_a(self) -> None:
 
         dt64 = np.datetime64
 
@@ -9821,7 +9821,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_frame_as_dt_month_b(self) -> None:
+    def test_frame_via_dt_month_b(self) -> None:
 
         dt64 = np.datetime64
 
@@ -9847,7 +9847,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_frame_as_dt_weekday_a(self) -> None:
+    def test_frame_via_dt_weekday_a(self) -> None:
 
         dt64 = np.datetime64
 
@@ -9867,7 +9867,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_frame_as_dt_weekday_b(self) -> None:
+    def test_frame_via_dt_weekday_b(self) -> None:
 
         dt64 = np.datetime64
 
@@ -9884,7 +9884,7 @@ class TestUnit(TestCase):
                 (('x', (('a', 3), ('b', 2))), ('y', (('a', 0), ('b', 6))))
                 )
 
-    def test_frame_as_dt_day_a(self) -> None:
+    def test_frame_via_dt_day_a(self) -> None:
 
         dt64 = np.datetime64
 
@@ -9910,7 +9910,7 @@ class TestUnit(TestCase):
                 (('w', (('a', 5), ('b', 1))), ('x', (('a', 2), ('b', 1))), ('y', (('a', 3), ('b', 3))), ('z', (('a', 2), ('b', 2))))
                 )
 
-    def test_frame_as_dt_timetuple_a(self) -> None:
+    def test_frame_via_dt_timetuple_a(self) -> None:
 
         dt64 = np.datetime64
 
@@ -9938,7 +9938,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_frame_as_dt_strftime_a(self) -> None:
+    def test_frame_via_dt_strftime_a(self) -> None:
 
         dt64 = np.datetime64
 
@@ -9968,7 +9968,7 @@ class TestUnit(TestCase):
                 (('w', (('a', '12|04|05'), ('b', '14|01|01'))), ('x', (('a', '12|04|02'), ('b', '12|04|01'))), ('y', (('a', '20|05|03'), ('b', '20|01|03'))), ('z', (('a', '17|05|02'), ('b', '25|03|02'))))
                 )
 
-    def test_frame_as_dt_fromisoformat_a(self) -> None:
+    def test_frame_via_dt_fromisoformat_a(self) -> None:
 
         dt64 = np.datetime64
 
@@ -9991,7 +9991,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = f1.via_dt.fromisoformat()
 
-    def test_frame_as_dt_fromisoformat_b(self) -> None:
+    def test_frame_via_dt_fromisoformat_b(self) -> None:
 
         dt64 = np.datetime64
 
@@ -10007,6 +10007,28 @@ class TestUnit(TestCase):
 
         self.assertEqual(f2.to_pairs(0),
                 (('w', (('a', datetime.datetime(2020, 5, 3, 20, 30)), ('b', datetime.datetime(2020, 1, 3, 20, 30)))), ('x', (('a', datetime.datetime(2017, 5, 2, 5, 55)), ('b', datetime.datetime(2025, 3, 2, 3, 20)))))
+                )
+
+    def test_frame_via_dt_strptime_a(self) -> None:
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_records(
+                [['12/1/2012', '3/12/1983'],
+                ['7/3/1972','12/31/2021']],
+                index=('a', 'b'),
+                columns=('w', 'x'),
+                consolidate_blocks=True
+                )
+
+        f2 = f1.via_dt.strptime('%m/%d/%Y')
+        self.assertEqual(f2.to_pairs(0),
+                (('w', (('a', datetime.datetime(2012, 12, 1, 0, 0)), ('b', datetime.datetime(1972, 7, 3, 0, 0)))), ('x', (('a', datetime.datetime(1983, 3, 12, 0, 0)), ('b', datetime.datetime(2021, 12, 31, 0, 0)))))
+                )
+
+        f3 = f1.via_dt.strpdate('%m/%d/%Y')
+        self.assertEqual(f3.to_pairs(0),
+                (('w', (('a', datetime.date(2012, 12, 1)), ('b', datetime.date(1972, 7, 3)))), ('x', (('a', datetime.date(1983, 3, 12)), ('b', datetime.date(2021, 12, 31)))))
                 )
 
 
