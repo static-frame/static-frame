@@ -4678,7 +4678,7 @@ class Frame(ContainerOperand):
         # invalid axis will raise in array_to_duplicated
 
     def set_index(self,
-            column: GetItemKeyType,
+            column: tp.Hashable,
             *,
             drop: bool = False,
             index_constructor: IndexConstructor = Index,
