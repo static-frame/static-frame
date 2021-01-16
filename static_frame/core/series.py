@@ -2440,3 +2440,30 @@ class SeriesAssign(Assign):
         return self.container.__class__(array,
                 index=self.container._index,
                 name=self.container._name)
+
+
+#-------------------------------------------------------------------------------
+class SeriesHE(Series):
+    '''
+    Hashable subclass of ``Series``. To support hashability, this ``Series`` subclass implements ``__eq__`` to return a Boolean rather than an ``np.ndarray``.
+    '''
+
+    def __eq__(self, other: tp.Any) -> bool:
+        return self.equals(other,
+                compare_name=True,
+                compare_dtype=True,
+                compare_class=True,
+                skipna=True,
+                )
+
+    def __hash__(self) -> int:
+        return hash(tuple(self.index.values))
+
+    def to_series(self) -> Series:
+        '''
+        Return a ``Series`` from this ``SeriesHE``.
+        '''
+        return Series(self.values,
+                index=self.index,
+                own_index=True,
+                )

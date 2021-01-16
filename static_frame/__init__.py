@@ -75,6 +75,7 @@ from static_frame.core.node_selector import InterfaceSelectQuartet
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.series import Series as Series
+from static_frame.core.series import SeriesHE as SeriesHE
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.store import StoreConfig as StoreConfig
 from static_frame.core.store import StoreConfigMap as StoreConfigMap
