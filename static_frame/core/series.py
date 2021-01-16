@@ -2340,6 +2340,17 @@ class Series(ContainerOperand):
         from static_frame import FrameGO
         return self._to_frame(constructor=FrameGO, axis=axis) #type: ignore
 
+    def to_series_he(self) -> 'SeriesHE':
+        '''
+        Return a :obj:`SeriesHE` from this :obj:`Series`.
+        '''
+        return SeriesHE(self.values,
+                index=self._index,
+                name=self._name,
+                own_index=True,
+                )
+
+
     def to_pandas(self) -> 'pandas.Series':
         '''
         Return a Pandas Series.
@@ -2451,10 +2462,13 @@ class SeriesHE(Series):
             'values',
             '_index',
             '_name',
+            '_hash',
             )
 
+    _hash: int
+
     def __eq__(self, other: tp.Any) -> bool:
-        return self.equals(other,
+        return self.equals(other, #type: ignore
                 compare_name=True,
                 compare_dtype=True,
                 compare_class=True,
@@ -2462,7 +2476,12 @@ class SeriesHE(Series):
                 )
 
     def __hash__(self) -> int:
-        return hash(tuple(self.index.values))
+        if not hasattr(self, '_hash'):
+            self._hash = hash((
+                    tuple(self.index.values),
+                    self.values.dtype.str,
+                    ))
+        return self._hash
 
     def to_series(self) -> Series:
         '''

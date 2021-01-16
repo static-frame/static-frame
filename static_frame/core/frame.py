@@ -6231,25 +6231,35 @@ class Frame(ContainerOperand):
 
     def to_frame(self) -> 'Frame':
         '''
-        Return Frame version of this Frame, which is (as the Frame is immutable) is self.
+        Return Frame version of this Frame, which (as the Frame is immutable) is self.
         '''
         return self
 
-    def to_frame_go(self) -> 'FrameGO':
-        '''
-        Return a FrameGO view of this Frame. As underlying data is immutable, this is a no-copy operation.
-        '''
-        # copying blocks does not copy underlying data
-        return FrameGO(
+    def _to_frame(self,
+            constructor: tp.Type[ContainerOperand]
+            ) -> 'Frame':
+        return constructor(
                 self._blocks.copy(),
-                index=self._index, # can reuse
+                index=self.index,
                 columns=self._columns,
-                # columns_constructor=self.columns._MUTABLE_CONSTRUCTOR,
                 name=self._name,
                 own_data=True,
                 own_index=True,
-                own_columns=False # need to make grow only
+                own_columns=constructor is FrameHE,
                 )
+
+    def to_frame_he(self) -> 'FrameHE':
+        '''
+        Return a ``FrameHE`` version of this Frame.
+        '''
+        return self._to_frame(FrameHE)
+
+    def to_frame_go(self) -> 'FrameGO':
+        '''
+        Return a ``FrameGO`` version of this Frame.
+        '''
+        return self._to_frame(FrameGO)
+
 
     def to_delimited(self,
             fp: PathSpecifierOrFileLike,
@@ -6729,18 +6739,24 @@ class FrameGO(Frame):
                 name=self._name,
                 own_data=True,
                 own_index=True,
-                own_columns=False,
+                own_columns=False, # all cases need new columns
                 )
 
     def to_frame(self) -> Frame:
         '''
-        Return Frame version of this FrameGO.
+        Return :obj:`Frame` version of this :obj:`FrameGO`.
         '''
         return self._to_frame(Frame)
 
+    def to_frame_he(self) -> 'FrameHE':
+        '''
+        Return a :obj:`FrameGO` version of this :obj:`FrameGO`.
+        '''
+        return self._to_frame(FrameHE)
+
     def to_frame_go(self) -> 'FrameGO':
         '''
-        Return a FrameGO version of this FrameGO.
+        Return a :obj:`FrameGO` version of this :obj:`FrameGO`.
         '''
         return self._to_frame(FrameGO)
 
@@ -6887,7 +6903,8 @@ class FrameHE(Frame):
             '_blocks',
             '_columns',
             '_index',
-            '_name'
+            '_name',
+            '_hash',
             )
 
     def __eq__(self, other: tp.Any) -> bool:
@@ -6899,8 +6916,19 @@ class FrameHE(Frame):
                 )
 
     def __hash__(self) -> int:
-        return hash(tuple(tuple(self.index.values), tuple(self.columns.values)))
+        if not hasattr(self, '_hash'):
+            self._hash = hash((
+                    tuple(self.index.values),
+                    tuple(self.columns.values),
+                    tuple(dt.str for dt in self._blocks.dtypes)
+                    ))
+        return self._hash
 
+    def to_frame_he(self) -> Frame:
+        '''
+        Return :obj:`FrameHE` version of this :obj:`FrameHE`, which (as the :obj:`FrameHE` is immutable) is self.
+        '''
+        return self
 
     def _to_frame(self,
             constructor: tp.Type[ContainerOperand]
@@ -6917,12 +6945,12 @@ class FrameHE(Frame):
 
     def to_frame(self) -> Frame:
         '''
-        Return Frame version of this FrameHE.
+        Return obj:`Frame` version of this obj:`FrameHE`.
         '''
         return self._to_frame(Frame)
 
     def to_frame_go(self) -> FrameGO:
         '''
-        Return a FrameGO version of this FrameHE.
+        Return a obj:`FrameGO` version of this obj:`FrameHE`.
         '''
         return self._to_frame(FrameGO)

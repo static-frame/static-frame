@@ -3908,43 +3908,6 @@ class TestUnit(TestCase):
         self.assertTrue(id(s1.values) != id(s2.values))
         self.assertTrue(id(s1.index.values_at_depth(1)) != id(s2.index.values_at_depth(1)))
 
-    #---------------------------------------------------------------------------
-    def test_series_he_hash_a(self) -> None:
-
-        s1 = SeriesHE(('a', 'b', 'c'))
-        s2 = SeriesHE(('a', 'b', 'c'))
-        s3 = SeriesHE(('a', 'b', 'c'), index=tuple('xyz'))
-        s4 = SeriesHE(('p', 'q', 'r'))
-        s5 = Series(('a', 'b', 'c'))
-
-        self.assertTrue(s1 == s2)
-        self.assertFalse(s1 == s5)
-        self.assertTrue(isinstance(s5 == s5, Series))
-
-        self.assertTrue(isinstance(hash(s1), int))
-        self.assertEqual(hash(s1), hash(s2))
-
-        # has is based on index labels
-        self.assertEqual(hash(s1), hash(s4))
-        self.assertNotEquals(hash(s1), hash(s3))
-
-        q = {s1, s2, s3}
-        self.assertEqual(len(q), 2)
-        self.assertTrue(s1 in q)
-        self.assertTrue(s2 in q)
-        self.assertTrue(s4 not in q)
-
-        d = {s1: 'foo', s3: 'bar'}
-        self.assertTrue(s2 in d)
-        self.assertEquals(d[s1], 'foo')
-
-        with self.assertRaises(TypeError):
-            s5 in d
-
-        s6 = s1.to_series()
-
-        with self.assertRaises(TypeError):
-            s6 in d
 
 
 
