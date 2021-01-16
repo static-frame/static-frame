@@ -105,3 +105,8 @@ def test_depth(unique_tsv: StringIO):
     assert f.columns.shape == (8, 2)
     assert f.index.shape == (3, 2)
 
+
+def test_converters(unique_tsv: StringIO):
+    # Converters are needed for dtypes to be useful.
+    f = sf.Frame.from_delimited_no_guess(unique_tsv, delimiter='\t', index_depth=1)
+    assert 0
