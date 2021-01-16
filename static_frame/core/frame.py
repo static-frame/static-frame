@@ -146,6 +146,7 @@ from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTU_PYARROW
 from static_frame.core.util import DT64_NS
 from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import STORE_LABEL_DEFAULT
 
 from static_frame.core import io_util
 
@@ -719,7 +720,7 @@ class Frame(ContainerOperand):
             column_name_getter = fields_dc.__getitem__
             columns = []
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
 
         # NOTE: row data by definition does not have Index data, so col count is length of row
         if hasattr(row_reference, '__len__'):
@@ -796,7 +797,7 @@ class Frame(ContainerOperand):
         '''
         columns = []
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
 
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
@@ -968,7 +969,7 @@ class Frame(ContainerOperand):
                     )
             own_index = True
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for col_idx, (k, v) in enumerate(pairs):
@@ -1087,7 +1088,7 @@ class Frame(ContainerOperand):
                     )
             own_index = True
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for col_idx, v in enumerate(fields):
@@ -1201,7 +1202,7 @@ class Frame(ContainerOperand):
                 columns_by_col_idx.append(columns[columns_idx])
                 columns_idx += 1
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
                 columns_by_col_idx)
 
@@ -2060,12 +2061,14 @@ class Frame(ContainerOperand):
                 store_filter=store_filter,
                 )
 
+    #---------------------------------------------------------------------------
+    # Store-based constructors
 
     @classmethod
     def from_xlsx(cls,
             fp: PathSpecifier,
             *,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_depth: int = 1,
@@ -2108,7 +2111,7 @@ class Frame(ContainerOperand):
     def from_sqlite(cls,
             fp: PathSpecifier,
             *,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
             columns_depth: int = 1,
             dtypes: DtypesSpecifier = None,
@@ -2138,7 +2141,7 @@ class Frame(ContainerOperand):
     def from_hdf5(cls,
             fp: PathSpecifier,
             *,
-            label: str,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
             columns_depth: int = 1,
             consolidate_blocks: bool = False,
@@ -2161,6 +2164,8 @@ class Frame(ContainerOperand):
                 container_type=cls,
                 # store_filter=store_filter,
                 )
+
+    #---------------------------------------------------------------------------
 
     @classmethod
     @doc_inject()
@@ -2307,7 +2312,7 @@ class Frame(ContainerOperand):
             columns = None
 
         # by using value.columns_names, we expose access to the index arrays, which is deemed desirable as that is what we do in from_delimited
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
                 value.column_names)
 
@@ -4131,7 +4136,7 @@ class Frame(ContainerOperand):
         # axis 1 processes cols, delivers row index
         assert axis < 2
 
-        dtype = None if not dtypes else dtypes[0]
+        dtype = None if not dtypes else dtypes[0] # only a tuple
 
         # assumed not composable for axis 1, full-shape processing requires processing contiguous values
         v = self.values
@@ -4778,10 +4783,11 @@ class Frame(ContainerOperand):
         # invalid axis will raise in array_to_duplicated
 
     def set_index(self,
-            column: GetItemKeyType,
+            column: tp.Hashable,
             *,
             drop: bool = False,
-            index_constructor=Index) -> 'Frame':
+            index_constructor: IndexConstructor = Index,
+            ) -> 'Frame':
         '''
         Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
         '''
@@ -6330,25 +6336,35 @@ class Frame(ContainerOperand):
 
     def to_frame(self) -> 'Frame':
         '''
-        Return Frame version of this Frame, which is (as the Frame is immutable) is self.
+        Return Frame version of this Frame, which (as the Frame is immutable) is self.
         '''
         return self
 
-    def to_frame_go(self) -> 'FrameGO':
-        '''
-        Return a FrameGO view of this Frame. As underlying data is immutable, this is a no-copy operation.
-        '''
-        # copying blocks does not copy underlying data
-        return FrameGO(
+    def _to_frame(self,
+            constructor: tp.Type[ContainerOperand]
+            ) -> 'Frame':
+        return constructor(
                 self._blocks.copy(),
-                index=self.index, # can reuse
-                columns=self.columns,
-                columns_constructor=self.columns._MUTABLE_CONSTRUCTOR,
+                index=self.index,
+                columns=self._columns,
                 name=self._name,
                 own_data=True,
                 own_index=True,
-                own_columns=False # need to make grow only
+                own_columns=constructor is FrameHE,
                 )
+
+    def to_frame_he(self) -> 'FrameHE':
+        '''
+        Return a ``FrameHE`` version of this Frame.
+        '''
+        return self._to_frame(FrameHE)
+
+    def to_frame_go(self) -> 'FrameGO':
+        '''
+        Return a ``FrameGO`` version of this Frame.
+        '''
+        return self._to_frame(FrameGO)
+
 
     def to_delimited(self,
             fp: PathSpecifierOrFileLike,
@@ -6543,10 +6559,13 @@ class Frame(ContainerOperand):
         root.clipboard_clear()
         root.clipboard_append(sio.read())
 
+    #---------------------------------------------------------------------------
+    # Store based output
+
     def to_xlsx(self,
             fp: PathSpecifier, # not sure I can take a file like yet
             *,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             include_index: bool = True,
             include_index_name: bool = True,
             include_columns: bool = True,
@@ -6573,11 +6592,10 @@ class Frame(ContainerOperand):
                 store_filter=store_filter,
                 )
 
-
     def to_sqlite(self,
             fp: PathSpecifier, # not sure file-like StringIO works
             *,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             include_index: bool = True,
             include_columns: bool = True,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -6602,7 +6620,7 @@ class Frame(ContainerOperand):
     def to_hdf5(self,
             fp: PathSpecifier, # not sure file-like StringIO works
             *,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             include_index: bool = True,
             include_columns: bool = True,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -6618,7 +6636,7 @@ class Frame(ContainerOperand):
                 include_columns=include_columns,
                 )
 
-        if not label:
+        if label is STORE_LABEL_DEFAULT:
             if not self.name:
                 raise RuntimeError('must provide a label or define Frame name.')
             label = self.name
@@ -6629,6 +6647,7 @@ class Frame(ContainerOperand):
                 # store_filter=store_filter,
                 )
 
+    #---------------------------------------------------------------------------
 
     @doc_inject(class_name='Frame')
     def to_html(self,
@@ -6818,24 +6837,31 @@ class FrameGO(Frame):
     def _to_frame(self,
             constructor: tp.Type[ContainerOperand]
             ) -> Frame:
-        return constructor(self._blocks.copy(),
+        return constructor(
+                self._blocks.copy(),
                 index=self.index,
-                columns=self.columns.values,
+                columns=self._columns,
                 name=self._name,
                 own_data=True,
                 own_index=True,
-                own_columns=False # need to make static only
+                own_columns=False, # all cases need new columns
                 )
 
     def to_frame(self) -> Frame:
         '''
-        Return Frame version of this FrameGO.
+        Return :obj:`Frame` version of this :obj:`FrameGO`.
         '''
         return self._to_frame(Frame)
 
+    def to_frame_he(self) -> 'FrameHE':
+        '''
+        Return a :obj:`FrameGO` version of this :obj:`FrameGO`.
+        '''
+        return self._to_frame(FrameHE)
+
     def to_frame_go(self) -> 'FrameGO':
         '''
-        Return a FrameGO version of this FrameGO.
+        Return a :obj:`FrameGO` version of this :obj:`FrameGO`.
         '''
         return self._to_frame(FrameGO)
 
@@ -6973,3 +6999,63 @@ class FrameAsType:
                 index=self.container.index,
                 name=self.container._name,
                 own_data=True)
+
+
+#-------------------------------------------------------------------------------
+class FrameHE(Frame):
+
+    __slots__ = (
+            '_blocks',
+            '_columns',
+            '_index',
+            '_name',
+            '_hash',
+            )
+
+    def __eq__(self, other: tp.Any) -> bool:
+        return self.equals(other,
+                compare_name=True,
+                compare_dtype=True,
+                compare_class=True,
+                skipna=True,
+                )
+
+    def __hash__(self) -> int:
+        if not hasattr(self, '_hash'):
+            self._hash = hash((
+                    tuple(self.index.values),
+                    tuple(self.columns.values),
+                    tuple(dt.str for dt in self._blocks.dtypes)
+                    ))
+        return self._hash
+
+    def to_frame_he(self) -> Frame:
+        '''
+        Return :obj:`FrameHE` version of this :obj:`FrameHE`, which (as the :obj:`FrameHE` is immutable) is self.
+        '''
+        return self
+
+    def _to_frame(self,
+            constructor: tp.Type[ContainerOperand]
+            ) -> Frame:
+        return constructor(
+                self._blocks.copy(),
+                index=self.index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True,
+                own_index=True,
+                own_columns=constructor is Frame,
+                )
+
+    def to_frame(self) -> Frame:
+        '''
+        Return obj:`Frame` version of this obj:`FrameHE`.
+        '''
+        return self._to_frame(Frame)
+
+    def to_frame_go(self) -> FrameGO:
+        '''
+        Return a obj:`FrameGO` version of this obj:`FrameHE`.
+        '''
+        return self._to_frame(FrameGO)

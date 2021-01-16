@@ -59,10 +59,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     STATIC = False
 
     @staticmethod
-    def _deferred_series(labels: tp.Iterable[str]) -> Series:
+    def _deferred_series(labels: tp.Iterable[tp.Hashable]) -> Series:
         '''
         Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
         '''
+        # NOTE: need to accept an  IndexConstructor to support reanimating Index subtypes, IH
         return Series.from_element(FrameDeferred, index=labels, dtype=object)
 
     @classmethod
@@ -89,7 +90,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             config: StoreConfigMapInitializer = None,
             **kwargs: tp.Any,
             ) -> 'Bus':
-        return cls(cls._deferred_series(store.labels()),
+        return cls(cls._deferred_series(store.labels(config=config)),
                 store=store,
                 config=config,
                 **kwargs,
@@ -119,9 +120,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         # do a one time iteration of series
         def gen() -> tp.Iterator[bool]:
             for label, value in series.items():
-                if not isinstance(label, str):
-                    raise ErrorInitBus(f'supplied label {label} is not a string.')
-
                 if isinstance(value, Frame):
                     if max_persist is not None:
                         self._last_accessed[label] = None
@@ -280,16 +278,13 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         values = self._series.values[iloc_key]
 
         if not isinstance(values, np.ndarray): # if we have a single element
-            # NOTE: only support str labels, not IndexHierarchy
-            # if isinstance(key, HLoc) and key.has_key_multiple():
-            #     values = np.array(values)
-            #     values.flags.writeable = False
             return values #type: ignore
 
         series = Series(values,
                 index=self._series._index.iloc[iloc_key],
                 own_index=True,
                 name=self._series._name)
+
         return self.__class__(series=series,
                 store=self._store,
                 config=self._config,
@@ -326,7 +321,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loadings contained Frame
 
-    def items(self) -> tp.Iterator[tp.Tuple[str, Frame]]:
+    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
         # force new iteration to account for max_persist

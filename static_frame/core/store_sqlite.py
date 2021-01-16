@@ -22,6 +22,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import STORE_LABEL_DEFAULT
 
 
 class StoreSQLite(Store):
@@ -57,7 +58,7 @@ class StoreSQLite(Store):
     def _frame_to_table(cls,
             *,
             frame: Frame,
-            label: tp.Optional[str], # can be None
+            label: str, # can be None
             cursor: sqlite3.Cursor,
             include_columns: bool,
             include_index: bool,
@@ -65,11 +66,6 @@ class StoreSQLite(Store):
             ) -> None:
 
         # here we provide a row-based represerntation that is externally usable as an slqite db; an alternative approach would be to store one cell pre column, where the column iststored as as binary BLOB; see here https://stackoverflow.com/questions/18621513/python-insert-numpy-array-into-sqlite3-database
-
-        # for interface compatibility with StoreXLSX, where label can be None
-        if label is None:
-            label = 'None'
-
         field_names, dtypes = cls.get_field_names_and_dtypes(
                 frame=frame,
                 include_index=include_index,
@@ -106,7 +102,7 @@ class StoreSQLite(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -133,6 +129,12 @@ class StoreSQLite(Store):
             for label, frame in items:
                 c = config_map[label]
 
+                # for interface compatibility with StoreXLSX, where label can be None
+                if label is STORE_LABEL_DEFAULT:
+                    label = 'None'
+                else:
+                    label = config_map.default.label_encode(label)
+
                 self._frame_to_table(frame=frame,
                         label=label,
                         cursor=cursor,
@@ -148,7 +150,7 @@ class StoreSQLite(Store):
     @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read(self,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
@@ -160,6 +162,11 @@ class StoreSQLite(Store):
         '''
         if config is None:
             config = StoreConfig() # get default
+
+        if label is STORE_LABEL_DEFAULT:
+            label = 'None'
+        else:
+            label = config.label_encode(label)
 
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
@@ -184,16 +191,22 @@ class StoreSQLite(Store):
                     connection=conn,
                     index_depth=config.index_depth,
                     columns_depth=config.columns_depth,
+                    columns_select=config.columns_select,
                     dtypes=config.dtypes,
                     name=label,
                     consolidate_blocks=config.consolidate_blocks
                     ))
 
     @store_coherent_non_write
-    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True,
+            ) -> tp.Iterator[tp.Hashable]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
         with sqlite3.connect(self._fp) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
             for row in cursor:
-                yield row[0]
-
+                yield config_map.default.label_decode(row[0])

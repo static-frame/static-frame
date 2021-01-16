@@ -28,13 +28,13 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
+from static_frame.core.util import STORE_LABEL_DEFAULT
 
 if tp.TYPE_CHECKING:
     from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
-
     # from openpyxl.cell.read_only import ReadOnlyCell # pylint: disable=W0611 #pragma: no cover
     # from openpyxl.cell.read_only import EmptyCell # pylint: disable=W0611 #pragma: no cover
 
@@ -72,8 +72,6 @@ class FormatDefaults:
         for func in format_funcs:
             f = func(f)
         return f
-
-
 
 
 class StoreXLSX(Store):
@@ -285,7 +283,7 @@ class StoreXLSX(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -308,6 +306,11 @@ class StoreXLSX(Store):
 
         for label, frame in items:
             c = config_map[label]
+            if label is STORE_LABEL_DEFAULT:
+                # None is supported by add_worksheet, below
+                label = None #type: ignore
+            else:
+                label = config_map.default.label_encode(label)
 
             # NOTE: this must be called here, as we need the workbook been assigning formats, and we need to get a config per label
             format_columns = FormatDefaults.get_format_or_default(
@@ -339,7 +342,7 @@ class StoreXLSX(Store):
                     format_funcs=(FormatDefaults.label, FormatDefaults.datetime,))
 
 
-            ws = wb.add_worksheet(label)
+            ws = wb.add_worksheet(label) # label can be None
             self._frame_to_worksheet(frame,
                     ws,
                     format_columns=format_columns,
@@ -371,7 +374,7 @@ class StoreXLSX(Store):
     @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read(self,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable = STORE_LABEL_DEFAULT,
             *,
             config: tp.Optional[StoreConfig] = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -397,12 +400,13 @@ class StoreXLSX(Store):
 
         wb = self._load_workbook(self._fp)
 
-        if label is None:
+        if label is STORE_LABEL_DEFAULT:
             ws = wb[wb.sheetnames[0]]
             name = None # do not set to default sheet name
         else:
-            ws = wb[label]
+            ws = wb[config.label_encode(label)]
             name = ws.title
+
 
         if ws.max_column <= 1 or ws.max_row <= 1:
             # https://openpyxl.readthedocs.io/en/stable/optimized.html
@@ -541,15 +545,20 @@ class StoreXLSX(Store):
                         )
 
 
-
-
-
     @store_coherent_non_write
-    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True,
+            ) -> tp.Iterator[tp.Hashable]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
         wb = self._load_workbook(self._fp)
         labels = tuple(wb.sheetnames)
         wb.close()
-        yield from labels
+
+        for label in labels:
+            yield config_map.default.label_decode(label)
 
 
 

@@ -1,9 +1,30 @@
 What is New in Static Frame
 ===============================
 
+0.7.14
+----------
+
+
+0.7.13
+----------
+
+Improved handling for using ``Frame.iter_group`` on zero-sized ``Frame``.
+
+``Series`` can now be used as arguments to ``dtypes`` in ``Frame`` constructors.
+
+Added ``via_dt.strptime`` and ``via_dt.strpdate`` for parsing strings to Python ``date``, ``datetime`` objects, respectively.
+
 
 0.7.12
 ----------
+
+``Bus`` indices are no longer required to be string typed.
+
+``StoreConfig`` adds ``label_encoder``, ``label_decoder`` parameters for translating hashables to strings and strings to hashables when writing to / from ``Store`` formats.
+
+``Frame.from_sql`` now supports a ``columns_select`` parameter.
+
+``StoreConfig`` now supports a ``columns_select`` parameter; ``columns_select`` parameters from ``StoreConfig`` are now used in ``StoreZipParquet``, ``StoreSQLite``.
 
 Extended ``via_str.startswith()`` and ``via_str.endswith()`` functions to support passing an iterable of strings to match.
 

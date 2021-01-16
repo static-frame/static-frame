@@ -21,7 +21,7 @@ class StoreHDF5(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -37,6 +37,7 @@ class StoreHDF5(Store):
 
             for label, frame in items:
                 c = config_map[label]
+                label = config_map.default.label_encode(label)
 
                 # should all tables be under a common group?
                 field_names, dtypes = self.get_field_names_and_dtypes(
@@ -67,7 +68,7 @@ class StoreHDF5(Store):
     @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read(self,
-            label: tp.Optional[str] = None,
+            label: tp.Hashable,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
@@ -83,6 +84,8 @@ class StoreHDF5(Store):
             config = StoreConfig() # get default
         if config.dtypes:
             raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
+
+        label = config.label_encode(label)
 
         index_depth = config.index_depth
         columns_depth = config.columns_depth
@@ -127,14 +130,20 @@ class StoreHDF5(Store):
 
 
     @store_coherent_non_write
-    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True,
+            ) -> tp.Iterator[tp.Hashable]:
         '''
         Iterator of labels.
         '''
         import tables
 
+        config_map = StoreConfigMap.from_initializer(config)
+
         with tables.open_file(self._fp, mode='r') as file:
             for node in file.iter_nodes(where='/',
                     classname=tables.Table.__name__):
                 # NOTE: this is not the complete path
-                yield node.name
+                yield config_map.default.label_decode(node.name)
+

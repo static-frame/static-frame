@@ -18,6 +18,7 @@ import static_frame as sf
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import Series
+from static_frame import SeriesHE
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import mloc
@@ -3409,7 +3410,7 @@ class TestUnit(TestCase):
 
         # import ipdb; ipdb.set_trace()
     #---------------------------------------------------------------------------
-    def test_series_as_dt_year_a(self) -> None:
+    def test_series_via_dt_year_a(self) -> None:
         dt64 = np.datetime64
 
         s1 = Series(('2014', '2013'), index=('x', 'y'))
@@ -3425,7 +3426,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_series_as_dt_day_a(self) -> None:
+    def test_series_via_dt_day_a(self) -> None:
         dt64 = np.datetime64
 
         s1 = Series(('2014', '2013'), index=('x', 'y'))
@@ -3456,7 +3457,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_series_as_dt_isoformat_a(self) -> None:
+    def test_series_via_dt_isoformat_a(self) -> None:
 
         s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55'),
                 index=('x', 'y'),
@@ -3467,7 +3468,7 @@ class TestUnit(TestCase):
                 (('x', '2014-01-02*05:02:00'), ('y', '2013-02-05*16:55:00'))
                 )
 
-    def test_series_as_dt_weekday_a(self) -> None:
+    def test_series_via_dt_weekday_a(self) -> None:
 
         s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55'),
                 index=('x', 'y'),
@@ -3508,6 +3509,26 @@ class TestUnit(TestCase):
 
         self.assertEqual(post.values.tolist(),
                 [datetime.date(2014, 2, 12), datetime.date(2013, 11, 28)])
+
+    def test_series_via_dt_strptime_a(self) -> None:
+        s1 = Series(('12/2/2014', '11/28/2013'), index=('x', 'y'), dtype=object)
+        post = s1.via_dt.strptime('%m/%d/%Y')
+
+
+        self.assertEqual(post.values.tolist(),
+                [datetime.datetime(2014, 12, 2, 0, 0),
+                datetime.datetime(2013, 11, 28, 0, 0)])
+
+    def test_series_via_dt_strpdate_a(self) -> None:
+        s1 = Series(('12/2/2014', '11/28/2013'), index=('x', 'y'), dtype=object)
+        post = s1.via_dt.strpdate('%m/%d/%Y')
+
+        self.assertEqual(post.values.tolist(),
+                [datetime.date(2014, 12, 2),
+                datetime.date(2013, 11, 28)])
+
+
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 
@@ -3886,6 +3907,9 @@ class TestUnit(TestCase):
         s2 = copy.deepcopy(s1)
         self.assertTrue(id(s1.values) != id(s2.values))
         self.assertTrue(id(s1.index.values_at_depth(1)) != id(s2.index.values_at_depth(1)))
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

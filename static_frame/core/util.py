@@ -257,13 +257,15 @@ FrameInitializer = tp.Union[
         np.ndarray,
         ] # need to add FRAME_INITIALIZER_DEFAULT
 
-FILL_VALUE_DEFAULT = object()
-NAME_DEFAULT = object()
-
-
 DateInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearInitializer = tp.Union[str, datetime.date, np.datetime64]
+
+#-------------------------------------------------------------------------------
+FILL_VALUE_DEFAULT = object()
+NAME_DEFAULT = object()
+STORE_LABEL_DEFAULT = object()
+
 
 #-------------------------------------------------------------------------------
 # join utils
@@ -2165,6 +2167,28 @@ def array_from_element_attr(*,
         post = np.empty(shape=array.shape, dtype=dtype)
         for iloc, e in np.ndenumerate(array):
             post[iloc] = getattr(e, attr_name)
+
+    post.flags.writeable = False
+    return post
+
+def array_from_element_apply(*,
+        array: np.ndarray,
+        func: AnyCallable,
+        dtype: np.dtype
+        ) -> np.array:
+    '''
+    Handle element-wise function application.
+    '''
+    if array.ndim == 1 and dtype != DTYPE_OBJECT:
+        post = np.fromiter(
+                (func(d) for d in array),
+                count=len(array),
+                dtype=dtype,
+                )
+    else:
+        post = np.empty(shape=array.shape, dtype=dtype)
+        for iloc, e in np.ndenumerate(array):
+            post[iloc] = func(e)
 
     post.flags.writeable = False
     return post

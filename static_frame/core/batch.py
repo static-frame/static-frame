@@ -109,8 +109,10 @@ class Batch(ContainerOperand, StoreClientMixin):
             **kwargs: tp.Any,
             ) -> 'Batch':
         config_map = StoreConfigMap.from_initializer(config)
+
         items = ((label, store.read(label, config=config_map[label]))
-                for label in store.labels())
+                for label in store.labels(config=config_map))
+
         return cls(items,
                 config=config,
                 **kwargs,

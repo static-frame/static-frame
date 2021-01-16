@@ -23,13 +23,20 @@ class _StoreZip(Store):
     _EXT_CONTAINED: str = ''
 
     @store_coherent_non_write
-    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True,
+            ) -> tp.Iterator[tp.Hashable]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
         with zipfile.ZipFile(self._fp) as zf:
             for name in zf.namelist():
                 if strip_ext:
-                    yield name.replace(self._EXT_CONTAINED, '')
-                else:
-                    yield name
+                    name = name.replace(self._EXT_CONTAINED, '')
+                # always use default decoder
+                yield config_map.default.label_decode(name)
+
 
 class _StoreZipDelimited(_StoreZip):
     # store attribute of passed-in container_type to use for construction
@@ -38,7 +45,7 @@ class _StoreZipDelimited(_StoreZip):
 
     @store_coherent_non_write
     def read(self,
-            label: str,
+            label: tp.Hashable,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
@@ -46,10 +53,11 @@ class _StoreZipDelimited(_StoreZip):
         if config is None:
             raise ErrorInitStore('a StoreConfig is required on delimited Stores')
 
+        label = config.label_encode(label)
+
         # NOTE: labels need to be strings
         with zipfile.ZipFile(self._fp) as zf:
             src = StringIO()
-            # labels may not be present
             src.write(zf.read(label + self._EXT_CONTAINED).decode())
             src.seek(0)
             # call from class to explicitly pass self as frame
@@ -64,7 +72,7 @@ class _StoreZipDelimited(_StoreZip):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             config: StoreConfigMapInitializer = None
             ) -> None:
 
@@ -74,6 +82,8 @@ class _StoreZipDelimited(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
                 c = config_map[label]
+                label = config_map.default.label_encode(label)
+
                 dst = StringIO()
                 # call from class to explicitly pass self as frame
                 self.__class__._EXPORTER(frame,
@@ -115,14 +125,15 @@ class StoreZipPickle(_StoreZip):
 
     @store_coherent_non_write
     def read(self,
-            label: str,
+            label: tp.Hashable,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
-        # config does not do anything for pickles
-        # if config is not None:
-        #     raise ErrorInitStore('cannot use a StoreConfig on pickled Stores')
+
+        if config is None:
+            config = StoreConfig() # get default
+        label = config.label_encode(label)
 
         with zipfile.ZipFile(self._fp) as zf:
             frame = pickle.loads(zf.read(label + self._EXT_CONTAINED))
@@ -135,21 +146,21 @@ class StoreZipPickle(_StoreZip):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None
             ) -> None:
 
-        # if config is not None:
-        #     raise ErrorInitStore('cannot use a StoreConfig on pickled Stores')
+        config_map = StoreConfigMap.from_initializer(config)
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
+
+                label = config_map.default.label_encode(label)
+
                 if isinstance(frame, FrameGO):
                     raise NotImplementedError('convert FrameGO to Frame before pickling.')
                 zf.writestr(label + self._EXT_CONTAINED, pickle.dumps(frame))
-
-
 
 
 #-------------------------------------------------------------------------------
@@ -162,7 +173,7 @@ class StoreZipParquet(_StoreZip):
 
     @store_coherent_non_write
     def read(self,
-            label: str,
+            label: tp.Hashable,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
@@ -171,12 +182,15 @@ class StoreZipParquet(_StoreZip):
         if config is None:
             raise ErrorInitStore('a StoreConfig is required on parquet Stores')
 
+        label = config.label_encode(label)
+
         with zipfile.ZipFile(self._fp) as zf:
             src = BytesIO(zf.read(label + self._EXT_CONTAINED))
             frame = container_type.from_parquet(
                     src,
                     index_depth=config.index_depth,
                     columns_depth=config.columns_depth,
+                    columns_select=config.columns_select,
                     dtypes=config.dtypes,
                     name=label,
                     consolidate_blocks=config.consolidate_blocks,
@@ -185,7 +199,7 @@ class StoreZipParquet(_StoreZip):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None
             ) -> None:
@@ -195,12 +209,14 @@ class StoreZipParquet(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
                 c = config_map[label]
+                label = config_map.default.label_encode(label)
+
                 dst = BytesIO()
                 # call from class to explicitly pass self as frame
                 frame.to_parquet(
                         dst,
                         include_index=c.include_index,
-                        include_columns=c.include_columns
+                        include_columns=c.include_columns,
                         )
                 dst.seek(0)
                 # this will write it without a container

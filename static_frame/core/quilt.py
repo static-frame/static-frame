@@ -451,7 +451,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # compatibility with StoreClientMixin
 
-    def _items_store(self) -> tp.Iterator[tp.Tuple[str, Frame]]:
+    def _items_store(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
         yield from self._bus.items()

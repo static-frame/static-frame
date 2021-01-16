@@ -34,12 +34,15 @@ class StoreConfig(metaclass=InterfaceMeta):
     include_index: bool
     include_columns: bool
     merge_hierarchical_labels: bool
+    label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]]
+    label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]]
 
     __slots__ = (
             'index_depth',
             'index_name_depth_level',
             'columns_depth',
             'columns_name_depth_level',
+            'columns_select',
             'dtypes',
             'consolidate_blocks',
             'skip_header',
@@ -50,6 +53,8 @@ class StoreConfig(metaclass=InterfaceMeta):
             'include_columns',
             'include_columns_name',
             'merge_hierarchical_labels',
+            'label_encoder',
+            'label_decoder',
             )
 
     @classmethod
@@ -75,6 +80,7 @@ class StoreConfig(metaclass=InterfaceMeta):
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             # not used by all constructors
@@ -88,6 +94,9 @@ class StoreConfig(metaclass=InterfaceMeta):
             include_columns_name: bool = False,
             # not used by all exporters
             merge_hierarchical_labels: bool = True,
+            # store label serializer
+            label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]] = None,
+            label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]] = None,
             ):
         '''
         Args:
@@ -99,6 +108,7 @@ class StoreConfig(metaclass=InterfaceMeta):
         self.index_name_depth_level = index_name_depth_level
         self.columns_depth = columns_depth
         self.columns_name_depth_level = columns_name_depth_level
+        self.columns_select = columns_select
         self.dtypes = dtypes
         self.consolidate_blocks = consolidate_blocks
         self.skip_header = skip_header
@@ -114,7 +124,23 @@ class StoreConfig(metaclass=InterfaceMeta):
         # self.format_columns = format_columns
         self.merge_hierarchical_labels = merge_hierarchical_labels
 
-# NOTE: key should be tp.Optional[str], but cannot get mypy to accept
+        # NOTE: if only encode is provide, should we raise?
+        self.label_encoder = label_encoder
+        self.label_decoder = label_decoder
+
+
+    def label_encode(self, label: tp.Hashable) -> str:
+        if self.label_encoder:
+            label = self.label_encoder(label)
+        if not isinstance(label, str):
+            raise RuntimeError(f'Store label {label} is not a string; provide a label_encoder to StoreConfig')
+        return label
+
+    def label_decode(self, label: str) -> tp.Hashable:
+        if self.label_decoder:
+            return self.label_decoder(label)
+        return label
+
 SCMMapType = tp.Mapping[tp.Any, StoreConfig]
 SCMMapInitializer = tp.Optional[SCMMapType]
 
@@ -143,6 +169,7 @@ class StoreConfigMap:
         '''
         config_map = {f.name: StoreConfig.from_frame(f) for f in frames}
         return cls(config_map, own_config_map=True)
+
     @classmethod
     def from_config(cls, config: StoreConfig) -> 'StoreConfigMap':
         return cls(default=config)
@@ -164,9 +191,18 @@ class StoreConfigMap:
 
     def __init__(self,
             config_map: SCMMapInitializer = None,
+            *,
             default: tp.Optional[StoreConfig] = None,
             own_config_map: bool = False
             ):
+
+        if default is None:
+            self._default = self._DEFAULT
+        elif not isinstance(default, StoreConfig):
+            raise ErrorInitStoreConfig(
+                f'unspported class {default}, must be {StoreConfig}')
+        else:
+            self._default = default
 
         # initialize new dict and transfer to support checking Config classes
         self._map: SCMMapType = {}
@@ -178,19 +214,17 @@ class StoreConfigMap:
                 if not isinstance(config, self._DEFAULT.__class__):
                     raise ErrorInitStoreConfig(
                         f'unspported class {config}, must be {self._DEFAULT.__class__}')
+                if (config.label_encoder != self._default.label_encoder or
+                        config.label_decoder != self._default.label_decoder):
+                    raise ErrorInitStoreConfig(f'config {label} has encoder/decoder inconsistent with default; align values and/or pass a default StoreConfig.')
                 self._map[label] = config
 
-        if default is None:
-            self._default = self._DEFAULT
-        elif not isinstance(default, StoreConfig):
-            raise ErrorInitStoreConfig(
-                f'unspported class {default}, must be {StoreConfig}')
-        else:
-            self._default = default
-
-    def __getitem__(self, key: tp.Optional[str]) -> StoreConfig:
+    def __getitem__(self, key: tp.Optional[tp.Hashable]) -> StoreConfig:
         return self._map.get(key, self._default)
 
+    @property
+    def default(self) -> StoreConfig:
+        return self._default
 
 
 #-------------------------------------------------------------------------------
@@ -212,10 +246,8 @@ class Store:
                     f'file path {fp} does not match one of the required extensions: {self._EXT}')
 
         self._fp: str = fp
-
         self._last_modified = np.nan
         self._mtime_update()
-
 
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):
@@ -334,7 +366,7 @@ class Store:
 
     #---------------------------------------------------------------------------
     def read(self,
-            label: str,
+            label: tp.Hashable,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
@@ -352,7 +384,10 @@ class Store:
         '''
         raise NotImplementedError() #pragma: no cover
 
-    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True,
+            ) -> tp.Iterator[tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
 
 
@@ -361,7 +396,7 @@ def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
 
     @wraps(f)
     def wrapper(self: Store, *args: tp.Any, **kwargs: tp.Any) -> Frame:
-        '''Decprator for derived Store class implementation of reaad(), labels().
+        '''Decprator for derived Store class implementation of read(), labels().
         '''
         self._mtime_coherent()
         return f(self, *args, **kwargs) # type: ignore

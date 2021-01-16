@@ -26,6 +26,7 @@ from static_frame.core.exception import StoreFileMutation
 from static_frame.core.frame import Frame as Frame
 from static_frame.core.frame import FrameAssign as FrameAssign
 from static_frame.core.frame import FrameGO as FrameGO
+from static_frame.core.frame import FrameHE as FrameHE
 from static_frame.core.hloc import HLoc as HLoc
 from static_frame.core.index import ILoc as ILoc
 from static_frame.core.index import Index as Index
@@ -75,6 +76,7 @@ from static_frame.core.node_selector import InterfaceSelectQuartet
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.series import Series as Series
+from static_frame.core.series import SeriesHE as SeriesHE
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.store import StoreConfig as StoreConfig
 from static_frame.core.store import StoreConfigMap as StoreConfigMap
@@ -93,6 +95,6 @@ from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFil
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.quilt import Quilt as Quilt
 
-__version__ = '0.7.11' # use -dev for new version in development
+__version__ = '0.7.13' # use -dev for new version in development
 
 

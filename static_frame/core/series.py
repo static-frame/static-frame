@@ -112,7 +112,6 @@ class Series(ContainerOperand):
             '_name',
             )
 
-
     values: np.ndarray
 
     _index: IndexBase
@@ -2341,6 +2340,17 @@ class Series(ContainerOperand):
         from static_frame import FrameGO
         return self._to_frame(constructor=FrameGO, axis=axis) #type: ignore
 
+    def to_series_he(self) -> 'SeriesHE':
+        '''
+        Return a :obj:`SeriesHE` from this :obj:`Series`.
+        '''
+        return SeriesHE(self.values,
+                index=self._index,
+                name=self._name,
+                own_index=True,
+                )
+
+
     def to_pandas(self) -> 'pandas.Series':
         '''
         Return a Pandas Series.
@@ -2440,3 +2450,45 @@ class SeriesAssign(Assign):
         return self.container.__class__(array,
                 index=self.container._index,
                 name=self.container._name)
+
+
+#-------------------------------------------------------------------------------
+class SeriesHE(Series):
+    '''
+    Hashable subclass of ``Series``. To support hashability, this ``Series`` subclass implements ``__eq__`` to return a Boolean rather than an ``np.ndarray``.
+    '''
+
+    __slots__ = (
+            'values',
+            '_index',
+            '_name',
+            '_hash',
+            )
+
+    _hash: int
+
+    def __eq__(self, other: tp.Any) -> bool:
+        return self.equals(other, #type: ignore
+                compare_name=True,
+                compare_dtype=True,
+                compare_class=True,
+                skipna=True,
+                )
+
+    def __hash__(self) -> int:
+        if not hasattr(self, '_hash'):
+            self._hash = hash((
+                    tuple(self.index.values),
+                    self.values.dtype.str,
+                    ))
+        return self._hash
+
+    def to_series(self) -> Series:
+        '''
+        Return a ``Series`` from this ``SeriesHE``.
+        '''
+        return Series(self.values,
+                index=self._index,
+                name=self._name,
+                own_index=True,
+                )

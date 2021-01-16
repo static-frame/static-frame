@@ -7,7 +7,7 @@ from static_frame.core.frame import FrameGO
 # from static_frame.core.series import Series
 
 from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigMap
+# from static_frame.core.store import StoreConfigMap
 
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipCSV
@@ -157,8 +157,8 @@ class TestUnit(TestCase):
                 index=('x', 'y'),
                 name='foo')
 
-        config = StoreConfig(index_depth=1, include_index=True)
-        config_map = StoreConfigMap.from_config(config)
+        # config = StoreConfig(index_depth=1, include_index=True)
+        # config_map = StoreConfigMap.from_config(config)
 
         with temp_file('.zip') as fp:
 
@@ -175,17 +175,42 @@ class TestUnit(TestCase):
                 index=('x', 'y'),
                 name='foo')
 
-        config = StoreConfig(index_depth=1, include_index=True)
-        config_map = StoreConfigMap.from_config(config)
+        # config = StoreConfig(index_depth=1, include_index=True)
+        # config_map = StoreConfigMap.from_config(config)
 
         with temp_file('.zip') as fp:
 
             st = StoreZipPickle(fp)
 
-            # raise if trying to store a FrameGO
             with self.assertRaises(NotImplementedError):
                 st.write(((f1.name, f1),))
 
+    def test_store_zip_pickle_d(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+
+        config = StoreConfig(
+                index_depth=1,
+                include_index=True,
+                label_encoder=lambda x: x.upper(), #type: ignore
+                label_decoder=lambda x: x.lower(),
+                )
+
+        with temp_file('.zip') as fp:
+
+            st = StoreZipPickle(fp)
+            st.write(((f1.name, f1),), config=config)
+
+            frame_stored = st.read(f1.name, config=config)
+
+            self.assertEqual(tuple(st.labels()), ('FOO',))
+            self.assertEqual(tuple(st.labels(config=config)), ('foo',))
+
+
+    #---------------------------------------------------------------------------
 
     def test_store_zip_parquet_a(self) -> None:
 

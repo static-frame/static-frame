@@ -396,7 +396,7 @@ class Index(IndexBase):
 
         # resolve the targetted labels dtype, by lookin at the class attr _DTYPE and/or the passed dtype argument
         if dtype is None:
-            dtype_extract = self._DTYPE # set in some specialized Index classes
+            dtype_extract = self._DTYPE # set in some specialized Index sub-classes
         else: # passed dtype is not None
             if is_typed and dtype != self._DTYPE:
                 # NOTE: should never get to this branch, as derived Index classes that set _DTYPE remove dtype from __init__

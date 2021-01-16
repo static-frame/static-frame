@@ -16,7 +16,7 @@ from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfig
 from static_frame.core.display_config import DisplayConfig
-
+from static_frame.core.hloc import HLoc
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -594,7 +594,36 @@ class TestUnit(TestCase):
 
         self.assertEqual(b2['frame'].values.tolist(),
                 [[datetime(1983, 2, 20, 5, 34, 18, 763000), datetime(2020, 8, 1, 0, 0)], [datetime(1975, 3, 20, 5, 20, 18, 1000), datetime(2020, 7, 31, 0, 0)]]
-)
+                )
+
+    def test_bus_to_xlsx_g(self) -> None:
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name=dt64('2019-12-31'))
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),
+                name=dt64('2020-01-01'))
+
+        config = StoreConfig(include_index=True,
+                index_depth=1,
+                label_encoder=str,
+                label_decoder=dt64,
+                )
+        b1 = Bus.from_frames((f1, f2), config=config)
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp, config=config)
+
+            b2 = Bus.from_xlsx(fp, config=config)
+            tuple(b2.items()) # force loading all
+
+        for frame in (f1, f2):
+            self.assertEqualFrames(frame, b2[frame.name])
 
 
 
@@ -647,6 +676,41 @@ class TestUnit(TestCase):
         with self.assertRaises(StoreFileMutation):
             tuple(b2.items())
 
+
+    def test_bus_to_sqlite_c(self) -> None:
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name=dt64('2019-12-31'))
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),
+                name=dt64('2020-01-01'))
+
+        config = StoreConfig(include_index=True,
+                index_depth=1,
+                label_encoder=str,
+                label_decoder=dt64,
+                )
+        b1 = Bus.from_frames((f1, f2), config=config)
+
+        with temp_file('.db') as fp:
+            b1.to_sqlite(fp, config=config)
+
+            b2 = Bus.from_sqlite(fp, config=config)
+            tuple(b2.items()) # force loading all
+            self.assertEqual(b2.index.dtype.kind, 'M')
+
+
+        for frame in (f1, f2):
+            self.assertEqualFrames(frame, b2[frame.name])
+
+
+
+    #---------------------------------------------------------------------------
     def test_bus_to_hdf5_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -693,6 +757,36 @@ class TestUnit(TestCase):
 
         with self.assertRaises(StoreFileMutation):
             tuple(b2.items())
+
+    def test_bus_to_hdf5_c(self) -> None:
+        dt64 = np.datetime64
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name=dt64('2019-12-31'))
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),
+                name=dt64('2020-01-01'))
+
+        config = StoreConfig(include_index=True,
+                index_depth=1,
+                label_encoder=str,
+                label_decoder=dt64,
+                )
+        b1 = Bus.from_frames((f1, f2), config=config)
+
+        with temp_file('.h5') as fp:
+            b1.to_hdf5(fp, config=config)
+
+            b2 = Bus.from_hdf5(fp, config=config)
+            tuple(b2.items()) # force loading all
+            self.assertEqual(b2.index.dtype.kind, 'M')
+
+
+        for frame in (f1, f2):
+            self.assertEqualFrames(frame, b2[frame.name])
 
     #---------------------------------------------------------------------------
 
@@ -928,8 +1022,26 @@ class TestUnit(TestCase):
         s1 = Series((f1, f2, f3), index=ih, dtype=object)
 
         # do not support IndexHierarchy, as lables are tuples, not strings
-        with self.assertRaises(ErrorInitBus):
-            b1 = Bus(s1)
+        from ast import literal_eval
+        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+        b1 = Bus(s1)
+        b2 = b1[HLoc[:, 1]]
+        self.assertEqual(b2.shape, (2,))
+        self.assertEqual(b2.index.values.tolist(),
+                [['a', 1], ['b', 1]])
+
+        with temp_file('.zip') as fp:
+
+            with self.assertRaises(RuntimeError):
+                b1.to_zip_pickle(fp)
+
+            b1.to_zip_pickle(fp, config=config)
+
+            # NOTE: this comes back as an Index of tuples
+            b3 = Bus.from_zip_pickle(fp, config=config)
+
+            self.assertEqual(b3.index.values.tolist(),
+                    [('a', 1), ('b', 2), ('b', 1)])
 
 
     #---------------------------------------------------------------------------
@@ -981,6 +1093,45 @@ class TestUnit(TestCase):
         for frame in (f1, f2, f3):
             # parquet brings in characters as objects, thus forcing different dtypes
             self.assertEqualFrames(frame, b2[frame.name], compare_dtype=False)
+
+
+    def test_bus_to_parquet_b(self) -> None:
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name=dt64('2020-01-01'))
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name=dt64('1932-12-17'))
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name=dt64('1950-04-23'))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True,
+                label_encoder=str,
+                label_decoder=dt64
+                )
+
+        b1 = Bus.from_frames((f1, f2, f3), config=config)
+        self.assertEqual(b1.index.dtype.kind, 'M')
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_parquet(fp, config=config)
+
+            b2 = Bus.from_zip_parquet(fp, config=config)
+            self.assertEqual(b2.index.dtype.kind, 'M')
+
+            key = dt64('2020-01-01')
+            self.assertEqualFrames(b1[key], b2[key], compare_dtype=False)
 
     #---------------------------------------------------------------------------
     def test_bus_max_persist_a(self) -> None:
