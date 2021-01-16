@@ -17,8 +17,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(idx1), 4)
         self.assertEqual(idx1.STATIC, True)
 
-        # import ipdb; ipdb.set_trace()
-
     def test_index_auto_factory_b(self) -> None:
 
         idx1 = IndexAutoFactory.from_optional_constructor(8,

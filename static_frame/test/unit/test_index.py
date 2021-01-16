@@ -30,6 +30,8 @@ class TestUnit(TestCase):
         a1 = PositionsAllocator.get(3)
         a2 = PositionsAllocator.get(4)
         a3 = PositionsAllocator.get(5)
+
+        # we get different object IDs, but point to the same data
         self.assertTrue(mloc(a1) == mloc(a2))
         self.assertTrue(mloc(a3) == mloc(a2))
 
