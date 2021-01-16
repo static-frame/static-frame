@@ -6242,9 +6242,9 @@ class Frame(ContainerOperand):
         # copying blocks does not copy underlying data
         return FrameGO(
                 self._blocks.copy(),
-                index=self.index, # can reuse
-                columns=self.columns,
-                columns_constructor=self.columns._MUTABLE_CONSTRUCTOR,
+                index=self._index, # can reuse
+                columns=self._columns,
+                # columns_constructor=self.columns._MUTABLE_CONSTRUCTOR,
                 name=self._name,
                 own_data=True,
                 own_index=True,
@@ -6722,13 +6722,14 @@ class FrameGO(Frame):
     def _to_frame(self,
             constructor: tp.Type[ContainerOperand]
             ) -> Frame:
-        return constructor(self._blocks.copy(),
+        return constructor(
+                self._blocks.copy(),
                 index=self.index,
-                columns=self.columns.values,
+                columns=self._columns,
                 name=self._name,
                 own_data=True,
                 own_index=True,
-                own_columns=False # need to make static only
+                own_columns=False,
                 )
 
     def to_frame(self) -> Frame:
@@ -6877,3 +6878,51 @@ class FrameAsType:
                 index=self.container.index,
                 name=self.container._name,
                 own_data=True)
+
+
+#-------------------------------------------------------------------------------
+class FrameHE(Frame):
+
+    __slots__ = (
+            '_blocks',
+            '_columns',
+            '_index',
+            '_name'
+            )
+
+    def __eq__(self, other: tp.Any) -> bool:
+        return self.equals(other,
+                compare_name=True,
+                compare_dtype=True,
+                compare_class=True,
+                skipna=True,
+                )
+
+    def __hash__(self) -> int:
+        return hash(tuple(tuple(self.index.values), tuple(self.columns.values)))
+
+
+    def _to_frame(self,
+            constructor: tp.Type[ContainerOperand]
+            ) -> Frame:
+        return constructor(
+                self._blocks.copy(),
+                index=self.index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True,
+                own_index=True,
+                own_columns=constructor is Frame,
+                )
+
+    def to_frame(self) -> Frame:
+        '''
+        Return Frame version of this FrameHE.
+        '''
+        return self._to_frame(Frame)
+
+    def to_frame_go(self) -> FrameGO:
+        '''
+        Return a FrameGO version of this FrameHE.
+        '''
+        return self._to_frame(FrameGO)

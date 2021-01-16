@@ -112,7 +112,6 @@ class Series(ContainerOperand):
             '_name',
             )
 
-
     values: np.ndarray
 
     _index: IndexBase
@@ -2448,6 +2447,12 @@ class SeriesHE(Series):
     Hashable subclass of ``Series``. To support hashability, this ``Series`` subclass implements ``__eq__`` to return a Boolean rather than an ``np.ndarray``.
     '''
 
+    __slots__ = (
+            'values',
+            '_index',
+            '_name',
+            )
+
     def __eq__(self, other: tp.Any) -> bool:
         return self.equals(other,
                 compare_name=True,
@@ -2464,6 +2469,7 @@ class SeriesHE(Series):
         Return a ``Series`` from this ``SeriesHE``.
         '''
         return Series(self.values,
-                index=self.index,
+                index=self._index,
+                name=self._name,
                 own_index=True,
                 )
