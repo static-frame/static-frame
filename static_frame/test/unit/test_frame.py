@@ -5178,7 +5178,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_from_csv_f_no_guess(self) -> None:
-        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NULL,3.4,blue\nD,,9.0,black')
+        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,nan,3.4,blue\nD,nan,9.0,black')
 
         f1 = sf.Frame.from_csv(
                 s1,
@@ -5195,11 +5195,31 @@ class TestUnit(TestCase):
                 (('count', (('A', np.nan), ('B', np.nan), ('C', np.nan), ('D', np.nan))), ('score', (('A', 1.3), ('B', 5.2), ('C', 3.4), ('D', 9.0))), ('color', (('A', 'red'), ('B', 'green'), ('C', 'blue'), ('D', 'black'))))
                 )
 
-
+    @skip_guess
     def test_frame_from_csv_g(self) -> None:
         filelike = StringIO('''0,4,234.5,5.3,'red',False
 30,50,9.234,5.434,'blue',True''')
         f1 = Frame.from_csv(filelike, columns_depth=0)
+        self.assertEqual(f1.to_pairs(0),
+            ((0, ((0, 0), (1, 30))), (1, ((0, 4), (1, 50))), (2, ((0, 234.5), (1, 9.234))), (3, ((0, 5.3), (1, 5.434))), (4, ((0, "'red'"), (1, "'blue'"))), (5, ((0, False), (1, True))))
+            )
+
+
+    def test_frame_from_csv_g_no_guess(self) -> None:
+        filelike = StringIO('''0,4,234.5,5.3,'red',False
+30,50,9.234,5.434,'blue',True''')
+        f1 = Frame.from_csv(
+            filelike,
+            columns_depth=0,
+            guess_dtypes=False,
+            dtypes={
+                0: 'int64',
+                1: 'int64',
+                2: 'float64',
+                3: 'float64',
+                5: 'bool',
+            }
+        )
         self.assertEqual(f1.to_pairs(0),
             ((0, ((0, 0), (1, 30))), (1, ((0, 4), (1, 50))), (2, ((0, 234.5), (1, 9.234))), (3, ((0, 5.3), (1, 5.434))), (4, ((0, "'red'"), (1, "'blue'"))), (5, ((0, False), (1, True))))
             )
