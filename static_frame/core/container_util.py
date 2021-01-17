@@ -810,8 +810,9 @@ def key_from_container_key(
     if isinstance(key, Index):
         # if an Index, we simply use the values of the index
         key = key.values
-    elif isinstance(key, Series):
-        if key.dtype == bool:
+    elif isinstance(key, Series) and not hasattr(key, '__hash__'):
+        # Series that are not hashable are unpacked into an array; SeriesHE can be used as a key
+        if key.dtype == DTYPE_BOOL:
             # if a Boolean series, sort and reindex
             if not key.index.equals(index):
                 key = key.reindex(index,

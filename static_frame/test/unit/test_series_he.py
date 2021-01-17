@@ -37,7 +37,7 @@ class TestUnit(TestCase):
 
         # has is based on index labels
         self.assertEqual(hash(s1), hash(s4))
-        self.assertNotEquals(hash(s1), hash(s3))
+        self.assertNotEqual(hash(s1), hash(s3))
 
         q = {s1, s2, s3}
         self.assertEqual(len(q), 2)
@@ -58,10 +58,17 @@ class TestUnit(TestCase):
             s6 in d
 
 
+    def test_series_he_hash_b(self) -> None:
 
+        s1 = SeriesHE.from_dict(dict(a=10, b=42))
+        s2 = SeriesHE.from_dict(dict(x='foo', y='bar'), name=s1)
 
+        self.assertEqual(s2.name['b'], 42)
 
+        s3 = Series.from_dict({s1: 40, s2: 1000})
 
+        self.assertEqual(s3[s2], 1000)
+        # import ipdb; ipdb.set_trace()
 
 
 
