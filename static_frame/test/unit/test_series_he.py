@@ -50,12 +50,12 @@ class TestUnit(TestCase):
         self.assertEquals(d[s1], 'foo')
 
         with self.assertRaises(TypeError):
-            s5 in d
+            _ = s5 in d
 
         s6 = s1.to_series()
 
         with self.assertRaises(TypeError):
-            s6 in d
+            _ = s6 in d
 
 
     def test_series_he_hash_b(self) -> None:

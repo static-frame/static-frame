@@ -1,8 +1,11 @@
 What is New in Static Frame
 ===============================
 
+
 0.7.14
 ----------
+
+Added immutable, hashable containers ``SeriesHE`` and ``FrameHE``.
 
 
 0.7.13

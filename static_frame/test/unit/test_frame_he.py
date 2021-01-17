@@ -4,7 +4,7 @@ import unittest
 
 import frame_fixtures as ff
 
-from static_frame import Frame
+# from static_frame import Frame
 from static_frame import FrameHE
 from static_frame.test.test_case import TestCase
 

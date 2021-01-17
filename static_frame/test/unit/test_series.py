@@ -18,7 +18,7 @@ import static_frame as sf
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import Series
-from static_frame import SeriesHE
+# from static_frame import SeriesHE
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import mloc
