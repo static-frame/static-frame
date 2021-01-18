@@ -353,7 +353,7 @@ Or, using the ``Frame.drop`` interface, a new ``Frame`` can be created by droppi
 Iteration of rows, columns, and elements, as well as function application on those values, is unified under a family of generator interfaces. These interfaces are distinguished by the form of the data iterated (``Series``, ``namedtuple``, or ``array``) and whether key-value pairs (e.g., ``Frame.iter_series_items()``) or just values (e.g., ``Frame.iter_series()``) are yielded. For example, we can iterate over each row of a ``Frame`` and yield a corresponding ``Series``:
 
 >>> next(iter(frame.iter_series(axis=1)))
-<Series>
+<Series: 0>
 <Index>
 albumId      1
 id           1

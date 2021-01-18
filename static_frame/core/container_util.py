@@ -440,11 +440,10 @@ def axis_window_items( *,
         if as_array:
             values = source.values
     else:
-        # assert isinstance(source, (Frame, Quilt)) # for mypy
-        labels = source._index if axis == 0 else source._columns
+        labels = source._index if axis == 0 else source._columns #type: ignore
 
         if isinstance(source, Frame) and axis == 0 and as_array:
-            # for a Frame, when collecting rows, it is more efficient to pre-consolidate blocks prior to slicing. Note that this results in the same block coercion necsessary for each window (which is not the same for axis 1, where block coercion is not required)
+            # for a Frame, when collecting rows, it is more efficient to pre-consolidate blocks prior to slicing. Note that this results in the same block coercion necessary for each window (which is not the same for axis 1, where block coercion is not required)
             values = source._blocks.values
 
     if start_shift >= 0:
@@ -468,13 +467,13 @@ def axis_window_items( *,
 
         if source_ndim == 1:
             if as_array:
-                window = values[key]
+                window = values[key] #type: ignore
             else:
                 window = source._extract_iloc(key)
         else:
             if axis == 0: # extract rows
                 if as_array and values is not None:
-                    window = values[key] #type: ignore
+                    window = values[key]
                 elif as_array:
                     window = source._extract_array(key) #type: ignore
                 else: # use low level iloc selector
