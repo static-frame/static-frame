@@ -415,7 +415,8 @@ def axis_window_items( *,
         size_increment: int = 0,
         as_array: bool = False,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
-    '''Generator of index, window pairs pairs.
+    '''Generator of index, window pairs. When ndim is 2, axis 0 returns windows of rows, axis 1 returns windows of columns.
+
     Args:
         as_array: if True, the window is returned as an array instead of a SF object.
     '''
@@ -431,17 +432,20 @@ def axis_window_items( *,
         raise RuntimeError('window step cannot be less than than 0')
 
     source_ndim = source.ndim
+    values: tp.Optional[np.ndarray] = None
 
     if source_ndim == 1:
         assert isinstance(source, Series) # for mypy
         labels = source._index
-        # if as_array:
-        #     values = source.values
+        if as_array:
+            values = source.values
     else:
-        assert isinstance(source, (Frame, Quilt)) # for mypy
+        # assert isinstance(source, (Frame, Quilt)) # for mypy
         labels = source._index if axis == 0 else source._columns
-        # if as_array:
-        #     values = source._blocks.values
+
+        if isinstance(source, Frame) and axis == 0 and as_array:
+            # for a Frame, when collecting rows, it is more efficient to pre-consolidate blocks prior to slicing. Note that this results in the same block coercion necsessary for each window (which is not the same for axis 1, where block coercion is not required)
+            values = source._blocks.values
 
     if start_shift >= 0:
         count_window_max = len(labels)
@@ -464,16 +468,18 @@ def axis_window_items( *,
 
         if source_ndim == 1:
             if as_array:
-                window = source.values[key]
+                window = values[key]
             else:
                 window = source._extract_iloc(key)
         else:
-            if axis == 0:
-                if as_array:
+            if axis == 0: # extract rows
+                if as_array and values is not None:
+                    window = values[key] #type: ignore
+                elif as_array:
                     window = source._extract_array(key) #type: ignore
                 else: # use low level iloc selector
                     window = source._extract(row_key=key) #type: ignore
-            else:
+            else: # extract columns
                 if as_array:
                     window = source._extract_array(NULL_SLICE, key) #type: ignore
                 else:
@@ -484,7 +490,7 @@ def axis_window_items( *,
             idx_label = idx_right + label_shift
             if idx_label < 0: # do not wrap around
                 raise IndexError()
-            #if we cannot get a lable, the window is invalid
+            #if we cannot get a label, the window is invalid
             label = labels.iloc[idx_label]
         except IndexError: # an invalid label has to be dropped
             valid = False
@@ -806,11 +812,12 @@ def key_from_container_key(
     from static_frame.core.index import Index
     from static_frame.core.index import ILoc
     from static_frame.core.series import Series
+    from static_frame.core.series import SeriesHE
 
     if isinstance(key, Index):
         # if an Index, we simply use the values of the index
         key = key.values
-    elif isinstance(key, Series) and not hasattr(key, '__hash__'):
+    elif isinstance(key, Series) and key.__class__ is not SeriesHE:
         # Series that are not hashable are unpacked into an array; SeriesHE can be used as a key
         if key.dtype == DTYPE_BOOL:
             # if a Boolean series, sort and reindex
@@ -831,7 +838,6 @@ def key_from_container_key(
         key = array
 
     # detect and fail on Frame?
-
     return key
 
 

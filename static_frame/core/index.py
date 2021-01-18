@@ -254,7 +254,6 @@ class LocMap:
                 return [label_to_pos[k] for k in key if k in label_to_pos]
             if offset_apply:
                 return [label_to_pos[k] + offset for k in key] #type: ignore
-            import ipdb; ipdb.set_trace()
             return [label_to_pos[k] for k in key]
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
