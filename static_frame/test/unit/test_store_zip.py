@@ -3,6 +3,7 @@ import unittest
 
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
+from static_frame.core.frame import FrameHE
 # from static_frame.core.bus import Bus
 # from static_frame.core.series import Series
 
@@ -114,8 +115,7 @@ class TestUnit(TestCase):
                 # config is required
                 _ = st.read(f1.name)
 
-
-
+    #---------------------------------------------------------------------------
     def test_store_zip_pickle_a(self) -> None:
 
         f1 = Frame.from_dict(
@@ -149,6 +149,10 @@ class TestUnit(TestCase):
                 self.assertEqual(frame_stored_2.__class__, FrameGO)
                 self.assertEqual(frame_stored_2.shape, frame.shape)
 
+                frame_stored_3 = st.read(label, container_type=FrameHE)
+                self.assertEqual(frame_stored_3.__class__, FrameHE)
+                self.assertEqual(frame_stored_3.shape, frame.shape)
+
 
     def test_store_zip_pickle_b(self) -> None:
 
@@ -175,15 +179,13 @@ class TestUnit(TestCase):
                 index=('x', 'y'),
                 name='foo')
 
-        # config = StoreConfig(index_depth=1, include_index=True)
-        # config_map = StoreConfigMap.from_config(config)
-
         with temp_file('.zip') as fp:
-
             st = StoreZipPickle(fp)
+            st.write(((f1.name, f1),))
 
-            with self.assertRaises(NotImplementedError):
-                st.write(((f1.name, f1),))
+            frame_stored = st.read(f1.name)
+            self.assertEqual(frame_stored.shape, f1.shape)
+            self.assertTrue(frame_stored.__class__ is Frame)
 
     def test_store_zip_pickle_d(self) -> None:
 
@@ -208,6 +210,35 @@ class TestUnit(TestCase):
 
             self.assertEqual(tuple(st.labels()), ('FOO',))
             self.assertEqual(tuple(st.labels(config=config)), ('foo',))
+
+    def test_store_zip_pickle_e(self) -> None:
+
+        f1 = FrameGO.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = FrameGO.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar')
+        f3 = FrameGO.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='baz')
+
+        with temp_file('.zip') as fp:
+            st = StoreZipPickle(fp)
+            st.write((f.name, f) for f in (f1, f2, f3))
+
+            post = tuple(st.read_many(('baz', 'bar', 'foo'), container_type=Frame))
+            self.assertEqual(len(post), 3)
+            self.assertEqual(post[0].name, 'baz')
+            self.assertEqual(post[1].name, 'bar')
+            self.assertEqual(post[2].name, 'foo')
+
+            self.assertTrue(post[0].__class__ is Frame)
+            self.assertTrue(post[1].__class__ is Frame)
+            self.assertTrue(post[2].__class__ is Frame)
 
 
     #---------------------------------------------------------------------------
@@ -242,6 +273,36 @@ class TestUnit(TestCase):
 
             f3_post = st.read('baz', config=config)
             self.assertTrue(f3.equals(f3_post, compare_name=True, compare_class=True))
+
+
+    def test_store_zip_parquet_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='baz')
+
+        config = StoreConfig(index_depth=1, include_index=True, columns_depth=1)
+
+        with temp_file('.zip') as fp:
+
+            st = StoreZipParquet(fp)
+            st.write((f.name, f) for f in (f1, f2, f3))
+
+            post = tuple(st.read_many(('baz', 'bar', 'foo'), config=config))
+            self.assertEqual(len(post), 3)
+            self.assertEqual(post[0].name, 'baz')
+            self.assertEqual(post[1].name, 'bar')
+            self.assertEqual(post[2].name, 'foo')
+
 
 
 

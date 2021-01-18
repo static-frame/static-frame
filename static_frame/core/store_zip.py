@@ -186,7 +186,6 @@ class StoreZipPickle(_StoreZip):
             for label in labels:
                 label = config_map.default.label_encode(label)
                 frame = pickle.loads(zf.read(label + self._EXT_CONTAINED))
-
                 if frame.__class__ is container_type:
                     yield frame
                 else:
@@ -204,9 +203,6 @@ class StoreZipPickle(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
                 label = config_map.default.label_encode(label)
-
-                if isinstance(frame, FrameGO):
-                    raise NotImplementedError('convert FrameGO to Frame before pickling.')
                 zf.writestr(label + self._EXT_CONTAINED, pickle.dumps(frame))
 
 
@@ -262,12 +258,12 @@ class StoreZipParquet(_StoreZip):
                 src = BytesIO(zf.read(label + self._EXT_CONTAINED))
                 yield container_type.from_parquet(
                         src,
-                        index_depth=config.index_depth,
-                        columns_depth=config.columns_depth,
-                        columns_select=config.columns_select,
-                        dtypes=config.dtypes,
+                        index_depth=c.index_depth,
+                        columns_depth=c.columns_depth,
+                        columns_select=c.columns_select,
+                        dtypes=c.dtypes,
                         name=label,
-                        consolidate_blocks=config.consolidate_blocks,
+                        consolidate_blocks=c.consolidate_blocks,
                         )
 
     @store_coherent_write
