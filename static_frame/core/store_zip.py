@@ -15,7 +15,7 @@ from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
-
+from static_frame.core.container_util import container_to_exporter_attr
 
 class _StoreZip(Store):
 
@@ -46,6 +46,7 @@ class _StoreZipDelimited(_StoreZip):
     @store_coherent_non_write
     def read(self,
             label: tp.Hashable,
+            *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
@@ -55,7 +56,6 @@ class _StoreZipDelimited(_StoreZip):
 
         label = config.label_encode(label)
 
-        # NOTE: labels need to be strings
         with zipfile.ZipFile(self._fp) as zf:
             src = StringIO()
             src.write(zf.read(label + self._EXT_CONTAINED).decode())
@@ -69,6 +69,35 @@ class _StoreZipDelimited(_StoreZip):
                     name=label,
                     consolidate_blocks=config.consolidate_blocks
                     ))
+
+    @store_coherent_non_write
+    def read_many(self,
+            labels: tp.Iterable[tp.Hashable],
+            *,
+            config: StoreConfigMapInitializer = None,
+            container_type: tp.Type[Frame] = Frame,
+            ) -> Frame:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
+        with zipfile.ZipFile(self._fp) as zf:
+            for label in labels:
+                c = config_map[label]
+                label = config_map.default.label_encode(label)
+
+                src = StringIO()
+                src.write(zf.read(label + self._EXT_CONTAINED).decode())
+                src.seek(0)
+                # call from class to explicitly pass self as frame
+                constructor = getattr(container_type, self._CONSTRUCTOR_ATTR)
+                yield constructor(src,
+                        index_depth=c.index_depth,
+                        columns_depth=c.columns_depth,
+                        dtypes=c.dtypes,
+                        name=label,
+                        consolidate_blocks=c.consolidate_blocks
+                        )
+
 
     @store_coherent_write
     def write(self,
@@ -134,15 +163,34 @@ class StoreZipPickle(_StoreZip):
         if config is None:
             config = StoreConfig() # get default
         label = config.label_encode(label)
+        exporter = container_to_exporter_attr(container_type)
 
         with zipfile.ZipFile(self._fp) as zf:
             frame = pickle.loads(zf.read(label + self._EXT_CONTAINED))
+            if frame.__class__ is container_type:
+                return frame
+            return getattr(frame, exporter)()
 
-            # assume the stored frame is not a FrameGO
-            if issubclass(container_type, FrameGO):
-                frame = frame.to_frame_go()
+    @store_coherent_non_write
+    def read_many(self,
+            labels: tp.Iterable[tp.Hashable],
+            *,
+            config: StoreConfigMapInitializer = None,
+            container_type: tp.Type[Frame] = Frame,
+            ) -> tp.Iterator[Frame]:
 
-            return tp.cast(Frame, frame)
+        config_map = StoreConfigMap.from_initializer(config)
+        exporter = container_to_exporter_attr(container_type)
+
+        with zipfile.ZipFile(self._fp) as zf:
+            for label in labels:
+                label = config_map.default.label_encode(label)
+                frame = pickle.loads(zf.read(label + self._EXT_CONTAINED))
+
+                if frame.__class__ is container_type:
+                    yield frame
+                else:
+                    yield getattr(frame, exporter)()
 
     @store_coherent_write
     def write(self,
@@ -155,7 +203,6 @@ class StoreZipPickle(_StoreZip):
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
-
                 label = config_map.default.label_encode(label)
 
                 if isinstance(frame, FrameGO):
@@ -196,6 +243,32 @@ class StoreZipParquet(_StoreZip):
                     consolidate_blocks=config.consolidate_blocks,
                     )
         return tp.cast(Frame, frame)
+
+    @store_coherent_non_write
+    def read_many(self,
+            labels: tp.Iterable[tp.Hashable],
+            *,
+            config: StoreConfigMapInitializer = None,
+            container_type: tp.Type[Frame] = Frame,
+            ) -> tp.Iterator[Frame]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
+        with zipfile.ZipFile(self._fp) as zf:
+            for label in labels:
+                c = config_map[label]
+                label = config_map.default.label_encode(label)
+
+                src = BytesIO(zf.read(label + self._EXT_CONTAINED))
+                yield container_type.from_parquet(
+                        src,
+                        index_depth=config.index_depth,
+                        columns_depth=config.columns_depth,
+                        columns_select=config.columns_select,
+                        dtypes=config.dtypes,
+                        name=label,
+                        consolidate_blocks=config.consolidate_blocks,
+                        )
 
     @store_coherent_write
     def write(self,

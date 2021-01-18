@@ -983,6 +983,18 @@ def apex_to_name(
     raise AxisInvalid(f'invalid axis: {axis}')
 
 
+def container_to_exporter_attr(container_type: tp.Type['Frame']) -> str:
+    from static_frame.core.frame import Frame
+    from static_frame.core.frame import FrameGO
+    from static_frame.core.frame import FrameHE
+
+    if container_type is Frame:
+        return 'to_frame'
+    elif container_type is FrameGO:
+        return 'to_frame_go'
+    elif container_type is FrameHE:
+        return 'to_frame_he'
+    raise NotImplementedError(f'no handling for {container_type}')
 
 #-------------------------------------------------------------------------------
 

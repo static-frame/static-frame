@@ -375,6 +375,16 @@ class Store:
         '''
         raise NotImplementedError() #pragma: no cover
 
+    def read_many(self,
+            labels: tp.Iterable[tp.Hashable],
+            *,
+            config: StoreConfigMapInitializer = None,
+            container_type: tp.Type[Frame] = Frame,
+            ) -> tp.Iterator[Frame]:
+        '''Read many Frame, given by `labels`, from the Store. Return an iterator of instances of `container_type`.
+        '''
+        raise NotImplementedError() #pragma: no cover
+
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
             *,
