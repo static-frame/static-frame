@@ -460,8 +460,8 @@ def axis_window_items( *,
         idx_right = idx_left + size - 1
 
         # floor idx_left at 0 so as to not wrap
-        idx_left_floored = max(idx_left, 0)
-        idx_right_floored = max(idx_right, -1) # will add one
+        idx_left_floored = idx_left if idx_left > 0 else 0
+        idx_right_floored = idx_right if idx_right > -1 else -1 # will add one
 
         key = slice(idx_left_floored, idx_right_floored + 1)
 
