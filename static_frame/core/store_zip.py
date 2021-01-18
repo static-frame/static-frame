@@ -76,7 +76,7 @@ class _StoreZipDelimited(_StoreZip):
             *,
             config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,
-            ) -> Frame:
+            ) -> tp.Iterator[Frame]:
 
         config_map = StoreConfigMap.from_initializer(config)
 
@@ -168,8 +168,8 @@ class StoreZipPickle(_StoreZip):
         with zipfile.ZipFile(self._fp) as zf:
             frame = pickle.loads(zf.read(label + self._EXT_CONTAINED))
             if frame.__class__ is container_type:
-                return frame
-            return getattr(frame, exporter)()
+                return frame #type: ignore
+            return getattr(frame, exporter)() #type: ignore
 
     @store_coherent_non_write
     def read_many(self,
