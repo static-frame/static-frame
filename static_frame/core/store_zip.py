@@ -7,7 +7,6 @@ from io import BytesIO
 
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.frame import Frame
-from static_frame.core.frame import FrameGO
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
