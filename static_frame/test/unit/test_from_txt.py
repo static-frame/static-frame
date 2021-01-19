@@ -1,5 +1,7 @@
 from io import StringIO
 from pathlib import Path
+import functools
+import operator
 
 import pytest
 import numpy as np
@@ -108,5 +110,22 @@ def test_depth(unique_tsv: StringIO):
 
 def test_converters(unique_tsv: StringIO):
     # Converters are needed for dtypes to be useful.
-    f = sf.Frame.from_delimited_no_guess(unique_tsv, delimiter='\t', index_depth=1)
-    assert 0
+    def is_11(element):
+        return element == '11'
+    f = sf.Frame.from_delimited_no_guess(
+        unique_tsv,
+        delimiter='\t',
+        index_depth=1,
+        converters={
+            '1': is_11,
+            '3': lambda x: x + '0',
+            '2': lambda x: '3' in x,
+        },
+        dtypes={
+            '3': int,
+        }
+    )
+
+    assert f['3'].equals(sf.Series([130, 230, 330, 430], index=f.index))
+    assert f['1'].equals(sf.Series([True, False, False, False], index=f.index))
+    assert f['2'].equals(sf.Series([False, False, True, False], index=f.index))

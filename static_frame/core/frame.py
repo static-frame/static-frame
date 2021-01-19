@@ -35,6 +35,7 @@ from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import array_to_index
+from static_frame.core.container_util import apply_converters_and_dtypes
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1654,6 +1655,7 @@ class Frame(ContainerOperand):
             skip_footer: int = 0,
             quote_char: str = '"',
             encoding: tp.Optional[str] = None,
+            converters: tp.Optional[tp.Dict[GetItemKeyType, tp.Callable[[tp.Any], tp.Any]]]=None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
@@ -1706,7 +1708,10 @@ class Frame(ContainerOperand):
             own_columns=own_columns,
             name=name,
         )
-        if dtypes:
+
+        if converters:
+            result = apply_converters_and_dtypes(result, converters, dtypes)
+        elif dtypes:
             result = result.astype(dtypes)
         return result
 
