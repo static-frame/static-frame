@@ -2455,7 +2455,7 @@ class SeriesAssign(Assign):
 #-------------------------------------------------------------------------------
 class SeriesHE(Series):
     '''
-    Hashable subclass of ``Series``. To support hashability, this ``Series`` subclass implements ``__eq__`` to return a Boolean rather than an ``np.ndarray``.
+    A hash/equals subclass of :obj:`Series`, permiting usage in a Python set, dictionary, or other context where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than an Boolean :obj:`Series`.
     '''
 
     __slots__ = (
@@ -2468,19 +2468,19 @@ class SeriesHE(Series):
     _hash: int
 
     def __eq__(self, other: tp.Any) -> bool:
+        '''
+        Return True if other is a ``Series`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
+        '''
         return self.equals(other, #type: ignore
                 compare_name=True,
-                compare_dtype=True,
-                compare_class=True,
+                compare_dtype=False,
+                compare_class=False,
                 skipna=True,
                 )
 
     def __hash__(self) -> int:
         if not hasattr(self, '_hash'):
-            self._hash = hash((
-                    tuple(self.index.values),
-                    self.values.dtype.str,
-                    ))
+            self._hash = hash(tuple(self.index.values))
         return self._hash
 
     def to_series(self) -> Series:

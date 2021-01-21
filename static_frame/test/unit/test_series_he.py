@@ -1,11 +1,13 @@
 
 
 import unittest
+import frame_fixtures as ff
+
 
 from static_frame import Series
 from static_frame import SeriesHE
 from static_frame.test.test_case import TestCase
-
+from static_frame import ILoc
 
 class TestUnit(TestCase):
 
@@ -29,7 +31,8 @@ class TestUnit(TestCase):
         s5 = Series(('a', 'b', 'c'))
 
         self.assertTrue(s1 == s2)
-        self.assertFalse(s1 == s5)
+        # we do not compare container class, so
+        self.assertTrue(s1 == s5)
         self.assertTrue(isinstance(s5 == s5, Series))
 
         self.assertTrue(isinstance(hash(s1), int))
@@ -44,6 +47,8 @@ class TestUnit(TestCase):
         self.assertTrue(s1 in q)
         self.assertTrue(s2 in q)
         self.assertTrue(s4 not in q)
+        with self.assertRaises(TypeError):
+            _ = s5 in q
 
         d = {s1: 'foo', s3: 'bar'}
         self.assertTrue(s2 in d)
@@ -70,6 +75,12 @@ class TestUnit(TestCase):
         self.assertEqual(s3[s2], 1000)
         # import ipdb; ipdb.set_trace()
 
+
+    def test_series_he_hash_c(self) -> None:
+
+        s1 = ff.parse('s(10,1)|i(I,str)')[ILoc[0]].to_series_he()
+        self.assertFalse(hasattr(s1, '_hash'))
+        self.assertEqual(hash(s1), s1._hash)
 
 
 if __name__ == '__main__':

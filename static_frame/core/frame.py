@@ -6626,7 +6626,7 @@ class Frame(ContainerOperand):
 #-------------------------------------------------------------------------------
 
 class FrameGO(Frame):
-    '''A two-dimensional, ordered, labelled container, immutable with grow-only columns.
+    '''A grow-only Frame, providing a two-dimensional, ordered, labelled container, immutable with grow-only columns.
     '''
 
     __slots__ = (
@@ -6898,6 +6898,9 @@ class FrameAsType:
 
 #-------------------------------------------------------------------------------
 class FrameHE(Frame):
+    '''
+    A hash/equals Frame, permiting usage in a Python set, dictionary, or other context where a hashable container is needed.
+    '''
 
     __slots__ = (
             '_blocks',
@@ -6907,11 +6910,16 @@ class FrameHE(Frame):
             '_hash',
             )
 
+    _hash: int
+
     def __eq__(self, other: tp.Any) -> bool:
+        '''
+        Return True if other is a ``Frame`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
+        '''
         return self.equals(other,
                 compare_name=True,
-                compare_dtype=True,
-                compare_class=True,
+                compare_dtype=False,
+                compare_class=False,
                 skipna=True,
                 )
 
@@ -6920,7 +6928,7 @@ class FrameHE(Frame):
             self._hash = hash((
                     tuple(self.index.values),
                     tuple(self.columns.values),
-                    tuple(dt.str for dt in self._blocks.dtypes)
+                    # tuple(dt.str for dt in self._blocks.dtypes)
                     ))
         return self._hash
 

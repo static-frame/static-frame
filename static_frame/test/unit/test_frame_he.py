@@ -30,7 +30,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(hash(f1), hash(f2))
         # same indices, different types
-        self.assertNotEqual(hash(f1), hash(f3))
+        self.assertEqual(hash(f1), hash(f3))
         self.assertNotEqual(hash(f1), hash(f4))
 
         q = {f1, f2, f3, f4}
@@ -44,6 +44,11 @@ class TestUnit(TestCase):
         self.assertEqual(d[f3], 'bar')
 
 
+    def test_frame_he_hash_b(self) -> None:
+
+        f1 = ff.parse('s(10,1)|i(I,str)').to_frame_he()
+        self.assertFalse(hasattr(f1, '_hash'))
+        self.assertEqual(hash(f1), f1._hash)
 
 
 
