@@ -73,6 +73,7 @@ class TestUnit(TestCase):
         s3 = Series.from_dict({s1: 40, s2: 1000})
 
         self.assertEqual(s3[s2], 1000)
+        self.assertFalse(s1 == s2) # name attr is different
         # import ipdb; ipdb.set_trace()
 
 

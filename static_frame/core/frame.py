@@ -6899,7 +6899,7 @@ class FrameAsType:
 #-------------------------------------------------------------------------------
 class FrameHE(Frame):
     '''
-    A hash/equals Frame, permiting usage in a Python set, dictionary, or other context where a hashable container is needed.
+    A hash/equals subclass of :obj:`Frame`, permiting usage in a Python set, dictionary, or other context where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than a Boolean :obj:`Frame`
     '''
 
     __slots__ = (
@@ -6922,6 +6922,12 @@ class FrameHE(Frame):
                 compare_class=False,
                 skipna=True,
                 )
+
+    def __ne__(self, other: tp.Any) -> bool:
+        '''
+        Return False if other is a ``Frame`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
+        '''
+        return not self.__eq__(other)
 
     def __hash__(self) -> int:
         if not hasattr(self, '_hash'):

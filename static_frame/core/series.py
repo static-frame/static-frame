@@ -2478,6 +2478,13 @@ class SeriesHE(Series):
                 skipna=True,
                 )
 
+    def __ne__(self, other: tp.Any) -> bool:
+        '''
+        Return False if other is a ``Series`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
+        '''
+        return not self.__eq__(other)
+
+
     def __hash__(self) -> int:
         if not hasattr(self, '_hash'):
             self._hash = hash(tuple(self.index.values))
