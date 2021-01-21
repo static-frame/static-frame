@@ -57,7 +57,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(10,1)|i(I,str)').to_frame_he().rename('foo')
         self.assertFalse(f1 == f2)
 
-    def test_frame_he_hash_c(self) -> None:
+    def test_frame_he_hash_d(self) -> None:
 
         f1 = ff.parse('s(10,2)|i(I,str)|v(str)').to_frame_he()
         f2 = ff.parse('s(10,2)|i(I,str)|v(str)').to_frame_he().astype(object)
