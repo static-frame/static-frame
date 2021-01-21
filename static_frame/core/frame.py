@@ -1498,7 +1498,18 @@ class Frame(ContainerOperand):
             {name}
             {consolidate_blocks}
         '''
-        sql_iterable = connection.execute(query)
+
+        # We cannot assume the cursor object returned by DBAPI Connection to have a context manager
+        cursor = None
+        try:
+            cursor = connection.cursor()
+            cursor.execute(query)
+            cursor_description = cursor.description
+            rows = cursor.fetchall()
+        finally:
+            if cursor:
+                cursor.close()
+
         columns = None
         own_columns = False
 
@@ -1511,7 +1522,7 @@ class Frame(ContainerOperand):
 
         if columns_depth >= 1 or columns_select:
             # always need to derive labels if using columns_select
-            labels = (col for (col, *_) in sql_iterable.description[index_depth:])
+            labels = (col for (col, *_) in cursor_description[index_depth:])
 
         if columns_depth <= 1 and columns_select:
             iloc_sel, labels = zip(*(
@@ -1543,7 +1554,7 @@ class Frame(ContainerOperand):
                 index_constructor = Index
 
                 def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in sql_iterable:
+                    for row in rows:
                         index.append(row[0])
                         yield row[1:]
 
@@ -1551,12 +1562,12 @@ class Frame(ContainerOperand):
                 index_constructor = IndexHierarchy.from_labels
 
                 def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in sql_iterable:
+                    for row in rows:
                         index.append(row[:index_depth])
                         yield row[index_depth:]
         else:
             index = None
-            row_gen = lambda: sql_iterable
+            row_gen = lambda: rows
 
         if columns_select:
             row_gen_final = (filter_row(row) for row in row_gen())
