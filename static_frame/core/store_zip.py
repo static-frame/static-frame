@@ -53,11 +53,11 @@ class _StoreZipDelimited(_StoreZip):
         if config is None:
             raise ErrorInitStore('a StoreConfig is required on delimited Stores')
 
-        label = config.label_encode(label)
+        label_encoded = config.label_encode(label)
 
         with zipfile.ZipFile(self._fp) as zf:
             src = StringIO()
-            src.write(zf.read(label + self._EXT_CONTAINED).decode())
+            src.write(zf.read(label_encoded + self._EXT_CONTAINED).decode())
             src.seek(0)
             # call from class to explicitly pass self as frame
             constructor = getattr(container_type, self._CONSTRUCTOR_ATTR)
@@ -82,10 +82,10 @@ class _StoreZipDelimited(_StoreZip):
         with zipfile.ZipFile(self._fp) as zf:
             for label in labels:
                 c = config_map[label]
-                label = config_map.default.label_encode(label)
+                label_encoded = config_map.default.label_encode(label)
 
                 src = StringIO()
-                src.write(zf.read(label + self._EXT_CONTAINED).decode())
+                src.write(zf.read(label_encoded + self._EXT_CONTAINED).decode())
                 src.seek(0)
                 # call from class to explicitly pass self as frame
                 constructor = getattr(container_type, self._CONSTRUCTOR_ATTR)
@@ -96,7 +96,6 @@ class _StoreZipDelimited(_StoreZip):
                         name=label,
                         consolidate_blocks=c.consolidate_blocks
                         )
-
 
     @store_coherent_write
     def write(self,
@@ -110,7 +109,7 @@ class _StoreZipDelimited(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
                 c = config_map[label]
-                label = config_map.default.label_encode(label)
+                label_encoded = config_map.default.label_encode(label)
 
                 dst = StringIO()
                 # call from class to explicitly pass self as frame
@@ -123,7 +122,7 @@ class _StoreZipDelimited(_StoreZip):
                         )
                 dst.seek(0)
                 # this will write it without a container
-                zf.writestr(label + self._EXT_CONTAINED, dst.read())
+                zf.writestr(label_encoded + self._EXT_CONTAINED, dst.read())
 
 
 class StoreZipTSV(_StoreZipDelimited):
@@ -161,11 +160,11 @@ class StoreZipPickle(_StoreZip):
 
         if config is None:
             config = StoreConfig() # get default
-        label = config.label_encode(label)
+        label_encoded = config.label_encode(label)
         exporter = container_to_exporter_attr(container_type)
 
         with zipfile.ZipFile(self._fp) as zf:
-            frame = pickle.loads(zf.read(label + self._EXT_CONTAINED))
+            frame = pickle.loads(zf.read(label_encoded + self._EXT_CONTAINED))
             if frame.__class__ is container_type:
                 return frame #type: ignore
             return getattr(frame, exporter)() #type: ignore
@@ -183,8 +182,8 @@ class StoreZipPickle(_StoreZip):
 
         with zipfile.ZipFile(self._fp) as zf:
             for label in labels:
-                label = config_map.default.label_encode(label)
-                frame = pickle.loads(zf.read(label + self._EXT_CONTAINED))
+                label_encoded = config_map.default.label_encode(label)
+                frame = pickle.loads(zf.read(label_encoded + self._EXT_CONTAINED))
                 if frame.__class__ is container_type:
                     yield frame
                 else:
@@ -201,8 +200,8 @@ class StoreZipPickle(_StoreZip):
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
-                label = config_map.default.label_encode(label)
-                zf.writestr(label + self._EXT_CONTAINED, pickle.dumps(frame))
+                label_encoded = config_map.default.label_encode(label)
+                zf.writestr(label_encoded + self._EXT_CONTAINED, pickle.dumps(frame))
 
 
 #-------------------------------------------------------------------------------
@@ -224,10 +223,10 @@ class StoreZipParquet(_StoreZip):
         if config is None:
             raise ErrorInitStore('a StoreConfig is required on parquet Stores')
 
-        label = config.label_encode(label)
+        label_encoded = config.label_encode(label)
 
         with zipfile.ZipFile(self._fp) as zf:
-            src = BytesIO(zf.read(label + self._EXT_CONTAINED))
+            src = BytesIO(zf.read(label_encoded + self._EXT_CONTAINED))
             frame = container_type.from_parquet(
                     src,
                     index_depth=config.index_depth,
@@ -252,9 +251,9 @@ class StoreZipParquet(_StoreZip):
         with zipfile.ZipFile(self._fp) as zf:
             for label in labels:
                 c = config_map[label]
-                label = config_map.default.label_encode(label)
+                label_encoded = config_map.default.label_encode(label)
 
-                src = BytesIO(zf.read(label + self._EXT_CONTAINED))
+                src = BytesIO(zf.read(label_encoded + self._EXT_CONTAINED))
                 yield container_type.from_parquet(
                         src,
                         index_depth=c.index_depth,
@@ -277,7 +276,7 @@ class StoreZipParquet(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
                 c = config_map[label]
-                label = config_map.default.label_encode(label)
+                label_encoded = config_map.default.label_encode(label)
 
                 dst = BytesIO()
                 # call from class to explicitly pass self as frame
@@ -288,7 +287,7 @@ class StoreZipParquet(_StoreZip):
                         )
                 dst.seek(0)
                 # this will write it without a container
-                zf.writestr(label + self._EXT_CONTAINED, dst.read())
+                zf.writestr(label_encoded + self._EXT_CONTAINED, dst.read())
 
 
 

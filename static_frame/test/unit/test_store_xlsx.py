@@ -63,7 +63,6 @@ class TestUnit(TestCase):
             st1 = StoreXLSX(fp)
             st1.write(((f.name, f) for f in frames), config=config_map)
 
-            # import ipdb; ipdb.set_trace()
             sheet_names = tuple(st1.labels()) # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
@@ -75,8 +74,6 @@ class TestUnit(TestCase):
                         )
                 f_loaded = st1.read(name, config=c)
                 self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
-
-
 
 
     def test_store_xlsx_write_b(self) -> None:
@@ -233,6 +230,60 @@ class TestUnit(TestCase):
             self.assertEqual(f2.to_pairs(0),
                     (('a', (('p', np.inf), ('q', -np.inf))),
                     ('b', (('p', np.inf), ('q', -np.inf)))))
+
+    def test_store_xlsx_read_many_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(x=(1,2,-5,200), y=(3,4,-5,-3000)),
+                index=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_records(
+                ((10, 20, 50, 60), (50.0, 60.4, -50, -60)),
+                index=('p', 'q'),
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f3')
+        f4 = Frame.from_records((
+                (10, 20, 50, False, 10, 20, 50, False),
+                (50.0, 60.4, -50, True, 50.0, 60.4, -50, True),
+                (234, 44452, 0, False, 234, 44452, 0, False),
+                (4, -4, 2000, True, 4, -4, 2000, True),
+                (10, 20, 50, False, 10, 20, 50, False),
+                (50.0, 60.4, -50, True, 50.0, 60.4, -50, True),
+                (234, 44452, 0, False, 234, 44452, 0, False),
+                (4, -4, 2000, True, 4, -4, 2000, True),
+                ),
+                index=IndexHierarchy.from_product(('top', 'bottom'), ('far', 'near'), ('left', 'right')),
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b'), (1, 2)),
+                name='f4')
+
+        frames = (f1, f2, f3, f4)
+        config_map = StoreConfigMap.from_config(
+                StoreConfig(include_index=True, include_columns=True))
+
+        with temp_file('.xlsx') as fp:
+
+            st1 = StoreXLSX(fp)
+            st1.write(((f.name, f) for f in frames), config=config_map)
+
+            sheet_names = tuple(st1.labels()) # this will read from file, not in memory
+            self.assertEqual(tuple(f.name for f in frames), sheet_names)
+
+            config_map = {}
+            for i, name in enumerate(sheet_names):
+                f_src = frames[i]
+                c = StoreConfig(
+                        index_depth=f_src.index.depth,
+                        columns_depth=f_src.columns.depth
+                        )
+                config_map[name] = c
+
+            for i, f_loaded in enumerate(st1.read_many(sheet_names, config=config_map)):
+                f_src = frames[i]
+                self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
 
 
 

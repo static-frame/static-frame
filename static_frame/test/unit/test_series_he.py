@@ -74,7 +74,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(s3[s2], 1000)
         self.assertFalse(s1 == s2) # name attr is different
-        # import ipdb; ipdb.set_trace()
 
 
     def test_series_he_hash_c(self) -> None:
