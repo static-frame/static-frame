@@ -65,68 +65,65 @@ class StoreHDF5(Store):
                 table.flush()
 
 
-    @doc_inject(selector='constructor_frame')
-    @store_coherent_non_write
-    def read(self,
-            label: tp.Hashable,
-            *,
-            config: tp.Optional[StoreConfig] = None,
-            container_type: tp.Type[Frame] = Frame,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
-            ) -> Frame:
-        '''
-        Args:
-            {dtypes}
-        '''
-        import tables
+    # @doc_inject(selector='constructor_frame')
+    # @store_coherent_non_write
+    # def read(self,
+    #         label: tp.Hashable,
+    #         *,
+    #         config: tp.Optional[StoreConfig] = None,
+    #         container_type: tp.Type[Frame] = Frame,
+    #         # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+    #         ) -> Frame:
 
-        if config is None:
-            config = StoreConfig() # get default
-        if config.dtypes:
-            raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
+    #     import tables
 
-        label = config.label_encode(label)
+    #     if config is None:
+    #         config = StoreConfig() # get default
+    #     if config.dtypes:
+    #         raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
 
-        index_depth = config.index_depth
-        columns_depth = config.columns_depth
+    #     label = config.label_encode(label)
 
-        index_arrays = []
-        columns_labels = []
+    #     index_depth = config.index_depth
+    #     columns_depth = config.columns_depth
 
-        with tables.open_file(self._fp, mode='r') as file:
-            table = file.get_node(f'/{label}')
-            colnames = table.cols._v_colnames
+    #     index_arrays = []
+    #     columns_labels = []
 
-            def blocks() -> tp.Iterator[np.ndarray]:
-                for col_idx, colname in enumerate(colnames):
+    #     with tables.open_file(self._fp, mode='r') as file:
+    #         table = file.get_node(f'/{label}')
+    #         colnames = table.cols._v_colnames
 
-                    # can also do: table.read(field=colname)
-                    array = table.col(colname)
+    #         def blocks() -> tp.Iterator[np.ndarray]:
+    #             for col_idx, colname in enumerate(colnames):
 
-                    if array.dtype.kind in DTYPE_STR_KINDS:
-                        array = array.astype(str)
-                    array.flags.writeable = False
+    #                 # can also do: table.read(field=colname)
+    #                 array = table.col(colname)
 
-                    if col_idx < index_depth:
-                        index_arrays.append(array)
-                        continue
-                    # only store column labels for those yielded
-                    columns_labels.append(colname)
-                    yield array
+    #                 if array.dtype.kind in DTYPE_STR_KINDS:
+    #                     array = array.astype(str)
+    #                 array.flags.writeable = False
 
-            if config.consolidate_blocks:
-                data = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
-            else:
-                data = TypeBlocks.from_blocks(blocks())
+    #                 if col_idx < index_depth:
+    #                     index_arrays.append(array)
+    #                     continue
+    #                 # only store column labels for those yielded
+    #                 columns_labels.append(colname)
+    #                 yield array
 
-        return container_type._from_data_index_arrays_column_labels(
-                data=data,
-                index_depth=index_depth,
-                index_arrays=index_arrays,
-                columns_depth=columns_depth,
-                columns_labels=columns_labels,
-                name=tp.cast(tp.Hashable, label) # not sure why this is necessary
-                )
+    #         if config.consolidate_blocks:
+    #             data = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
+    #         else:
+    #             data = TypeBlocks.from_blocks(blocks())
+
+    #     return container_type._from_data_index_arrays_column_labels(
+    #             data=data,
+    #             index_depth=index_depth,
+    #             index_arrays=index_arrays,
+    #             columns_depth=columns_depth,
+    #             columns_labels=columns_labels,
+    #             name=tp.cast(tp.Hashable, label) # not sure why this is necessary
+    #             )
 
 
     @store_coherent_non_write
@@ -186,8 +183,6 @@ class StoreHDF5(Store):
                         columns_labels=columns_labels,
                         name=label,
                         )
-
-
 
 
     @store_coherent_non_write

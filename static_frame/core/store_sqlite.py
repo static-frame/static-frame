@@ -147,43 +147,43 @@ class StoreSQLite(Store):
             # conn.close()
 
 
-    @doc_inject(selector='constructor_frame')
-    @store_coherent_non_write
-    def read(self,
-            label: tp.Hashable,
-            *,
-            config: tp.Optional[StoreConfig] = None,
-            container_type: tp.Type[Frame] = Frame,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
-            ) -> Frame:
-        '''
-        Args:
-            {dtypes}
-        '''
-        if config is None:
-            config = StoreConfig() # get default
+    # @doc_inject(selector='constructor_frame')
+    # @store_coherent_non_write
+    # def read(self,
+    #         label: tp.Hashable,
+    #         *,
+    #         config: tp.Optional[StoreConfig] = None,
+    #         container_type: tp.Type[Frame] = Frame,
+    #         # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+    #         ) -> Frame:
+    #     '''
+    #     Args:
+    #         {dtypes}
+    #     '''
+    #     if config is None:
+    #         config = StoreConfig() # get default
 
-        if label is STORE_LABEL_DEFAULT:
-            label = 'None'
-        else:
-            label = config.label_encode(label)
+    #     if label is STORE_LABEL_DEFAULT:
+    #         label = 'None'
+    #     else:
+    #         label = config.label_encode(label)
 
-        sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
+    #     sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
-        with sqlite3.connect(self._fp,
-                detect_types=sqlite3.PARSE_DECLTYPES
-                ) as conn:
-            # cursor = conn.cursor()
-            query = f'SELECT * from "{label}"'
-            return tp.cast(Frame, container_type.from_sql(query=query,
-                    connection=conn,
-                    index_depth=config.index_depth,
-                    columns_depth=config.columns_depth,
-                    columns_select=config.columns_select,
-                    dtypes=config.dtypes,
-                    name=label,
-                    consolidate_blocks=config.consolidate_blocks
-                    ))
+    #     with sqlite3.connect(self._fp,
+    #             detect_types=sqlite3.PARSE_DECLTYPES
+    #             ) as conn:
+    #         # cursor = conn.cursor()
+    #         query = f'SELECT * from "{label}"'
+    #         return tp.cast(Frame, container_type.from_sql(query=query,
+    #                 connection=conn,
+    #                 index_depth=config.index_depth,
+    #                 columns_depth=config.columns_depth,
+    #                 columns_select=config.columns_select,
+    #                 dtypes=config.dtypes,
+    #                 name=label,
+    #                 consolidate_blocks=config.consolidate_blocks
+    #                 ))
 
     @store_coherent_non_write
     def read_many(self,

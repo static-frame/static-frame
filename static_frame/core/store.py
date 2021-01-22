@@ -401,6 +401,8 @@ class Store:
         raise NotImplementedError() #pragma: no cover
 
 
+#-------------------------------------------------------------------------------
+# decorators
 
 def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
 
