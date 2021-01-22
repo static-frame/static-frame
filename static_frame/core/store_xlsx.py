@@ -722,7 +722,7 @@ class StoreXLSX(Store):
             ) -> Frame:
         '''Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``.
         '''
-        return next(self.read_many((label,),
+        return next(self.read_many((label,), #type: ignore
                 config=config,
                 store_filter=store_filter,
                 container_type=container_type,

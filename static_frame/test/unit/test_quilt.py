@@ -204,13 +204,13 @@ class TestUnit(TestCase):
 
         s1 = q1.loc['zUvW', HLoc[['zkuW', 'z5l6']]]
         self.assertEqual(s1.shape, (6,))
-        self.assertEqual(s1.to_pairs(), #type: ignore
+        self.assertEqual(s1.to_pairs(),
                 ((('zkuW', 'zkuW'), 166924), (('zkuW', 'zmVj'), 170440), (('zkuW', 'z2Oo'), 175579), (('z5l6', 'z5l6'), 32395), (('z5l6', 'zCE3'), 172142), (('z5l6', 'zr4u'), -31776)))
 
         s2 = q1.loc[:, ('z5l6', 'z5l6')]
         self.assertEqual(s2.shape, (4,))
         self.assertEqual(s2.name, ('z5l6', 'z5l6'))
-        self.assertEqual(s2.to_pairs(), #type: ignore
+        self.assertEqual(s2.to_pairs(),
                 (('zZbu', 146284), ('ztsv', 170440), ('zUvW', 32395), ('zkuW', 137759))
                 )
 
@@ -229,13 +229,13 @@ class TestUnit(TestCase):
 
         s1 = q1.loc['zUvW', HLoc[['zkuW', 'z5l6']]]
         self.assertEqual(s1.shape, (6,))
-        self.assertEqual(s1.to_pairs(), #type: ignore
+        self.assertEqual(s1.to_pairs(),
                 ((('zkuW', 'zkuW'), 166924), (('zkuW', 'zmVj'), 170440), (('zkuW', 'z2Oo'), 175579), (('z5l6', 'z5l6'), 32395), (('z5l6', 'zCE3'), 172142), (('z5l6', 'zr4u'), -31776)))
 
         s2 = q1.loc[:, ('z5l6', 'z5l6')]
         self.assertEqual(s2.shape, (4,))
         self.assertEqual(s2.name, ('z5l6', 'z5l6'))
-        self.assertEqual(s2.to_pairs(), #type: ignore
+        self.assertEqual(s2.to_pairs(),
                 (('zZbu', 146284), ('ztsv', 170440), ('zUvW', 32395), ('zkuW', 137759))
                 )
 
