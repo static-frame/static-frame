@@ -204,10 +204,15 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         index = self._series.index
         array = self._series.values.copy() # not a deepcopy
         targets = self._series.iloc[key] # key is iloc key
-        if not isinstance(targets, Series):
-            targets = {index[key]: targets} # present element as items
 
-        for label, frame in targets.items(): # this is a Series, not a Bus
+        if not isinstance(targets, Series):
+            target_items = ((index[key], targets),) # present element as items
+        else:
+            target_items = tuple(targets.items())
+
+        # TODO: create generator of read calls with a single pass iteration of
+
+        for label, frame in target_items: # this is a Series, not a Bus
             idx = index.loc_to_iloc(label)
 
             if max_persist_active: # update LRU position
