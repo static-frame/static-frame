@@ -554,7 +554,7 @@ class StoreXLSX(Store):
             config: StoreConfigMapInitializer = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             container_type: tp.Type[Frame] = Frame,
-            ) -> Frame:
+            ) -> tp.Iterator[Frame]:
 
         config_map = StoreConfigMap.from_initializer(config)
         wb = self._load_workbook(self._fp)
@@ -608,11 +608,11 @@ class StoreXLSX(Store):
 
                 if trim_nadir:
                     row_data: tp.Sequence[tp.Any] = []
-                    for col_count, c in enumerate(row):
+                    for col_count, cell in enumerate(row):
                         if store_filter is None:
-                            value = c.value
+                            value = cell.value
                         else:
-                            value = store_filter.to_type_filter_element(c.value)
+                            value = store_filter.to_type_filter_element(cell.value)
                         if value is None: # NOTE: only checking None, not np.nan
                             mask[row_count, col_count] = True
                         row_data.append(value) # type: ignore
@@ -620,9 +620,9 @@ class StoreXLSX(Store):
                         mask[row_count] = True
                 else:
                     if store_filter is None:
-                        row_data = tuple(c.value for c in row)
+                        row_data = tuple(cell.value for cell in row)
                     else: # only need to filter string values, but probably too expensive to pre-check
-                        row_data = tuple(store_filter.to_type_filter_element(c.value) for c in row)
+                        row_data = tuple(store_filter.to_type_filter_element(cell.value) for cell in row)
 
                 if row_count <= columns_depth - 1:
                     apex_rows.append(row_data[:index_depth])
@@ -703,7 +703,7 @@ class StoreXLSX(Store):
                         )
                 own_columns = True
 
-            yield container_type.from_records(data, #type: ignore
+            yield container_type.from_records(data,
                             index=index,
                             columns=columns,
                             dtypes=dtypes,

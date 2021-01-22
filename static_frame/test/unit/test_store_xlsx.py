@@ -1,26 +1,19 @@
 
 import unittest
+import typing as tp
 
 import numpy as np
 
-
 from static_frame.core.frame import Frame
-from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.hloc import HLoc
-# from static_frame.core.series import Series
-
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
-
-# from static_frame.test.test_case import skip_win
-# from static_frame.core.exception import ErrorInitStore
-
-from static_frame.core.store_xlsx import StoreXLSX
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store_filter import StoreFilter
+from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
-
+from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase
 
 class TestUnit(TestCase):
 
@@ -261,27 +254,27 @@ class TestUnit(TestCase):
                 name='f4')
 
         frames = (f1, f2, f3, f4)
-        config_map = StoreConfigMap.from_config(
+        config_map_write = StoreConfigMap.from_config(
                 StoreConfig(include_index=True, include_columns=True))
 
         with temp_file('.xlsx') as fp:
 
             st1 = StoreXLSX(fp)
-            st1.write(((f.name, f) for f in frames), config=config_map)
+            st1.write(((f.name, f) for f in frames), config=config_map_write)
 
             sheet_names = tuple(st1.labels()) # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
-            config_map = {}
+            config_map_read: tp.Dict[tp.Hashable, StoreConfig] = {}
             for i, name in enumerate(sheet_names):
                 f_src = frames[i]
                 c = StoreConfig(
                         index_depth=f_src.index.depth,
                         columns_depth=f_src.columns.depth
                         )
-                config_map[name] = c
+                config_map_read[name] = c
 
-            for i, f_loaded in enumerate(st1.read_many(sheet_names, config=config_map)):
+            for i, f_loaded in enumerate(st1.read_many(sheet_names, config=config_map_read)):
                 f_src = frames[i]
                 self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
 
