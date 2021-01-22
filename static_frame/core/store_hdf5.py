@@ -130,6 +130,67 @@ class StoreHDF5(Store):
 
 
     @store_coherent_non_write
+    def read_many(self,
+            labels: tp.Iterable[tp.Hashable],
+            *,
+            config: StoreConfigMapInitializer = None,
+            container_type: tp.Type[Frame] = Frame,
+            ) -> tp.Iterator[Frame]:
+        import tables
+        config_map = StoreConfigMap.from_initializer(config)
+
+        with tables.open_file(self._fp, mode='r') as file:
+            for label in labels:
+                c = config_map[label]
+                label_encoded = config_map.default.label_encode(label)
+
+                index_depth = c.index_depth
+                columns_depth = c.columns_depth
+                consolidate_blocks = c.consolidate_blocks
+                if c.dtypes:
+                    raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
+
+                index_arrays = []
+                columns_labels = []
+
+                table = file.get_node(f'/{label_encoded}')
+                colnames = table.cols._v_colnames
+
+                def blocks() -> tp.Iterator[np.ndarray]:
+                    for col_idx, colname in enumerate(colnames):
+                        # can also do: table.read(field=colname)
+                        array = table.col(colname)
+                        if array.dtype.kind in DTYPE_STR_KINDS:
+                            array = array.astype(str)
+                        array.flags.writeable = False
+
+                        if col_idx < index_depth:
+                            index_arrays.append(array)
+                            continue
+
+                        # only store column labels for those yielded
+                        columns_labels.append(colname)
+                        yield array
+
+                if consolidate_blocks:
+                    data = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
+                else:
+                    data = TypeBlocks.from_blocks(blocks())
+
+                # this will own_data in subsequent constructor call
+                yield container_type._from_data_index_arrays_column_labels(
+                        data=data,
+                        index_depth=index_depth,
+                        index_arrays=index_arrays,
+                        columns_depth=columns_depth,
+                        columns_labels=columns_labels,
+                        name=label,
+                        )
+
+
+
+
+    @store_coherent_non_write
     def labels(self, *,
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
