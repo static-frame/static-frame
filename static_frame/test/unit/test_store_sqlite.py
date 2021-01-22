@@ -9,6 +9,7 @@ from static_frame.test.test_case import temp_file
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_sqlite import StoreSQLite
+from static_frame.core.store import StoreConfigMap
 
 
 class TestUnit(TestCase):
@@ -58,8 +59,6 @@ class TestUnit(TestCase):
                 f_loaded = st1.read(name, config=config)
                 self.assertEqualFrames(f_src, f_loaded)
 
-
-
     def test_store_sqlite_write_b(self) -> None:
 
         f1 = Frame.from_dict(
@@ -86,8 +85,6 @@ class TestUnit(TestCase):
                     ((('I', 'a'), '3/2'), (('I', 'b'), '1/2'), (('II', 'a'), '2/3'), (('II', 'b'), '3/7'))
             )
 
-
-
     def test_store_sqlite_write_c(self) -> None:
 
         f1 = Frame.from_dict(
@@ -110,7 +107,6 @@ class TestUnit(TestCase):
             self.assertAlmostEqualItems(f_loaded['x'].to_pairs(),
                     ((('I', 'a'), 1.2001953125), (('I', 'b'), 4.5), (('II', 'a'), 3.19921875), (('II', 'b'), 6.5))
                     )
-
 
     def test_store_sqlite_write_d(self) -> None:
 
@@ -164,6 +160,62 @@ class TestUnit(TestCase):
 
             self.assertEqual(list(st2.labels()), ['f2'])
 
+    #---------------------------------------------------------------------------
+
+
+    def test_store_sqlite_read_many_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(x=(1,2,-5,200), y=(3,4,-5,-3000)),
+                index=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_records(
+                ((10, 20, 50, 60), (50.0, 60.4, -50, -60)),
+                index=('p', 'q'),
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f3')
+        f4 = Frame.from_records((
+                (10, 20, 50, False, 10, 20, 50, False),
+                (50.0, 60.4, -50, True, 50.0, 60.4, -50, True),
+                (234, 44452, 0, False, 234, 44452, 0, False),
+                (4, -4, 2000, True, 4, -4, 2000, True),
+                (10, 20, 50, False, 10, 20, 50, False),
+                (50.0, 60.4, -50, True, 50.0, 60.4, -50, True),
+                (234, 44452, 0, False, 234, 44452, 0, False),
+                (4, -4, 2000, True, 4, -4, 2000, True),
+                ),
+                index=IndexHierarchy.from_product(('top', 'bottom'), ('far', 'near'), ('left', 'right')),
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b'), (1, 2)),
+                name='f4')
+
+        frames = (f1, f2, f3, f4)
+        config_map_write = StoreConfigMap.from_config(
+                StoreConfig(include_index=True, include_columns=True))
+
+        with temp_file('.sqlite') as fp:
+
+            st1 = StoreSQLite(fp)
+            st1.write(((f.name, f) for f in frames), config=config_map_write)
+
+            labels = tuple(st1.labels()) # this will read from file, not in memory
+            self.assertEqual(tuple(f.name for f in frames), labels)
+
+            config_map_read: tp.Dict[tp.Hashable, StoreConfig] = {}
+            for i, name in enumerate(labels):
+                f_src = frames[i]
+                c = StoreConfig(
+                        index_depth=f_src.index.depth,
+                        columns_depth=f_src.columns.depth
+                        )
+                config_map_read[name] = c
+
+            for i, f_loaded in enumerate(st1.read_many(labels, config=config_map_read)):
+                f_src = frames[i]
+                self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
 
 
 if __name__ == '__main__':

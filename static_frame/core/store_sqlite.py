@@ -170,18 +170,6 @@ class StoreSQLite(Store):
 
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
-        # def bytes_to_types(x):
-        #     if x == self._BYTES_NONE:
-        #         return None
-        #     elif x == self._BYTES_NEGINF:
-        #         return -np.inf
-        #     elif x == self._BYTES_POSINF:
-        #         return np.inf
-        #     # import ipdb; ipdb.set_trace()
-        #     return x.decode()
-            # return x
-        # sqlite3.register_converter('NONE', bytes_to_types)
-
         with sqlite3.connect(self._fp,
                 detect_types=sqlite3.PARSE_DECLTYPES
                 ) as conn:
@@ -196,6 +184,42 @@ class StoreSQLite(Store):
                     name=label,
                     consolidate_blocks=config.consolidate_blocks
                     ))
+
+    @store_coherent_non_write
+    def read_many(self,
+            labels: tp.Iterable[tp.Hashable],
+            *,
+            config: StoreConfigMapInitializer = None,
+            container_type: tp.Type[Frame] = Frame,
+            ) -> tp.Iterator[Frame]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+        sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
+
+        with sqlite3.connect(self._fp,
+                detect_types=sqlite3.PARSE_DECLTYPES
+                ) as conn:
+
+            for label in labels:
+                c = config_map[label]
+
+                if label is STORE_LABEL_DEFAULT:
+                    label_encoded = 'None'
+                else:
+                    label_encoded = config_map.default.label_encode(label)
+
+                query = f'SELECT * from "{label_encoded}"'
+
+                yield tp.cast(Frame, container_type.from_sql(query=query,
+                        connection=conn,
+                        index_depth=c.index_depth,
+                        columns_depth=c.columns_depth,
+                        columns_select=c.columns_select,
+                        dtypes=c.dtypes,
+                        name=label,
+                        consolidate_blocks=c.consolidate_blocks
+                        ))
+
 
     @store_coherent_non_write
     def labels(self, *,

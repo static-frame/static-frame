@@ -38,10 +38,8 @@ if tp.TYPE_CHECKING:
     # from openpyxl.cell.read_only import ReadOnlyCell # pylint: disable=W0611 #pragma: no cover
     # from openpyxl.cell.read_only import EmptyCell # pylint: disable=W0611 #pragma: no cover
 
-
 MAX_XLSX_ROWS = 1048576
 MAX_XLSX_COLUMNS = 16384 #1024 on libre office
-
 
 class FormatDefaults:
 
