@@ -64,7 +64,7 @@ class StoreSQLite(Store):
                 frame=frame,
                 include_index=include_index,
                 include_columns=include_columns,
-                force_brackets=True # needed for having nu7mbers as field names
+                force_brackets=True # needed for having numbers as field names
                 )
 
         index = frame._index
