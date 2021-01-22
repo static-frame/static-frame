@@ -28,13 +28,7 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 class StoreSQLite(Store):
 
     _EXT: tp.FrozenSet[str] =  frozenset(('.db', '.sqlite'))
-
-    # _EXT: str = '.sqlite'
     _BYTES_ONE = b'1'
-
-    # _BYTES_NONE = b'None'
-    # _BYTES_NEGINF = b'-Inf'
-    # _BYTES_POSINF = b'Inf'
 
     @staticmethod
     def _dtype_to_affinity_type(
