@@ -6007,21 +6007,13 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # exporters
 
-    def to_pairs(self, axis) -> tp.Iterable[
+    def to_pairs(self, axis: int = 0) -> tp.Iterable[
             tp.Tuple[tp.Hashable, tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]]]:
         '''
         Return a tuple of major axis key, minor axis key vlaue pairs, where major axis is determined by the axis argument.
         '''
-        # TODO: find a common interfave on IndexHierarchy that cna give hashables
-        if isinstance(self._index, IndexHierarchy):
-            index_values = list(array2d_to_tuples(self._index.values))
-        else:
-            index_values = self._index.values
-
-        if isinstance(self._columns, IndexHierarchy):
-            columns_values = list(array2d_to_tuples(self._columns.values))
-        else:
-            columns_values = self._columns.values
+        index_values = tuple(self._index)
+        columns_values = tuple(self._columns)
 
         if axis == 1:
             major = index_values

@@ -365,16 +365,6 @@ class Store:
         return frame._blocks.axis_values(0)
 
     #---------------------------------------------------------------------------
-    def read(self,
-            label: tp.Hashable,
-            *,
-            config: tp.Optional[StoreConfig] = None,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> Frame:
-        '''Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`.
-        '''
-        raise NotImplementedError() #pragma: no cover
-
     def read_many(self,
             labels: tp.Iterable[tp.Hashable],
             *,
@@ -384,6 +374,16 @@ class Store:
         '''Read many Frame, given by `labels`, from the Store. Return an iterator of instances of `container_type`.
         '''
         raise NotImplementedError() #pragma: no cover
+
+    def read(self,
+            label: tp.Hashable,
+            *,
+            config: tp.Optional[StoreConfig] = None,
+            container_type: tp.Type[Frame] = Frame,
+            ) -> Frame:
+        '''Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``.
+        '''
+        return next(self.read_many((label,), config=config, container_type=container_type))
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],

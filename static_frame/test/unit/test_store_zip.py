@@ -111,9 +111,9 @@ class TestUnit(TestCase):
             st = StoreZipCSV(fp)
             st.write((f.name, f) for f in (f1,))
 
-            with self.assertRaises(ErrorInitStore):
-                # config is required
-                _ = st.read(f1.name)
+            # this now uses a default config
+            f = st.read(f1.name)
+            self.assertEqual(f.to_pairs(), (('__index0__', ((0, 'x'), (1, 'y'))), ('a', ((0, 1), (1, 2))), ('b', ((0, 3), (1, 4)))))
 
     #---------------------------------------------------------------------------
     def test_store_zip_pickle_a(self) -> None:
