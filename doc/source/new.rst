@@ -7,6 +7,8 @@ What is New in Static Frame
 
 Added immutable, hashable containers ``SeriesHE`` and ``FrameHE``.
 
+Implemented ``read_many`` for all ``Store`` subclasses; ``Bus`` now uses these interfaces for significantly faster reads of multi-``Frame`` selections.
+
 
 0.7.13
 ----------

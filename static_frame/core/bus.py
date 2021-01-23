@@ -173,8 +173,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             labels: tp.Iterator[tp.Hashable],
             max_persist: tp.Optional[int],
             ) -> tp.Iterator[Frame]:
+        '''
+        Ready as many labels as possible from Store, then yield back each one at a time. If max_persist is active, max_persist will set the maximum number of Frame to load per read. Using Store.read_many is shown to have significant performance benefits on large collections of Frame.
+        '''
         if max_persist is None:
-            # config is already a StoreConfigMap
             for frame in store.read_many(labels, config=config):
                 yield frame
         elif max_persist > 1:

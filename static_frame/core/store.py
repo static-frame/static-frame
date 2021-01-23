@@ -375,6 +375,7 @@ class Store:
         '''
         raise NotImplementedError() #pragma: no cover
 
+    @store_coherent_non_write
     def read(self,
             label: tp.Hashable,
             *,

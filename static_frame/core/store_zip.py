@@ -5,12 +5,10 @@ from io import StringIO
 from io import BytesIO
 
 
-from static_frame.core.exception import ErrorInitStore
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
-from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
@@ -41,33 +39,6 @@ class _StoreZipDelimited(_StoreZip):
     # store attribute of passed-in container_type to use for construction
     _EXPORTER: AnyCallable
     _CONSTRUCTOR_ATTR: str
-
-    # @store_coherent_non_write
-    # def read(self,
-    #         label: tp.Hashable,
-    #         *,
-    #         config: tp.Optional[StoreConfig] = None,
-    #         container_type: tp.Type[Frame] = Frame,
-    #         ) -> Frame:
-
-    #     if config is None:
-    #         raise ErrorInitStore('a StoreConfig is required on delimited Stores')
-
-    #     label_encoded = config.label_encode(label)
-
-    #     with zipfile.ZipFile(self._fp) as zf:
-    #         src = StringIO()
-    #         src.write(zf.read(label_encoded + self._EXT_CONTAINED).decode())
-    #         src.seek(0)
-    #         # call from class to explicitly pass self as frame
-    #         constructor = getattr(container_type, self._CONSTRUCTOR_ATTR)
-    #         return tp.cast(Frame, constructor(src,
-    #                 index_depth=config.index_depth,
-    #                 columns_depth=config.columns_depth,
-    #                 dtypes=config.dtypes,
-    #                 name=label,
-    #                 consolidate_blocks=config.consolidate_blocks
-    #                 ))
 
     @store_coherent_non_write
     def read_many(self,
@@ -150,25 +121,6 @@ class StoreZipPickle(_StoreZip):
 
     _EXT_CONTAINED = '.pickle'
 
-    # @store_coherent_non_write
-    # def read(self,
-    #         label: tp.Hashable,
-    #         *,
-    #         config: tp.Optional[StoreConfig] = None,
-    #         container_type: tp.Type[Frame] = Frame,
-    #         ) -> Frame:
-
-    #     if config is None:
-    #         config = StoreConfig() # get default
-    #     label_encoded = config.label_encode(label)
-    #     exporter = container_to_exporter_attr(container_type)
-
-    #     with zipfile.ZipFile(self._fp) as zf:
-    #         frame = pickle.loads(zf.read(label_encoded + self._EXT_CONTAINED))
-    #         if frame.__class__ is container_type:
-    #             return frame #type: ignore
-    #         return getattr(frame, exporter)() #type: ignore
-
     @store_coherent_non_write
     def read_many(self,
             labels: tp.Iterable[tp.Hashable],
@@ -211,32 +163,6 @@ class StoreZipParquet(_StoreZip):
     '''
 
     _EXT_CONTAINED = '.parquet'
-
-    # @store_coherent_non_write
-    # def read(self,
-    #         label: tp.Hashable,
-    #         *,
-    #         config: tp.Optional[StoreConfig] = None,
-    #         container_type: tp.Type[Frame] = Frame,
-    #         ) -> Frame:
-
-    #     if config is None:
-    #         raise ErrorInitStore('a StoreConfig is required on parquet Stores')
-
-    #     label_encoded = config.label_encode(label)
-
-    #     with zipfile.ZipFile(self._fp) as zf:
-    #         src = BytesIO(zf.read(label_encoded + self._EXT_CONTAINED))
-    #         frame = container_type.from_parquet(
-    #                 src,
-    #                 index_depth=config.index_depth,
-    #                 columns_depth=config.columns_depth,
-    #                 columns_select=config.columns_select,
-    #                 dtypes=config.dtypes,
-    #                 name=label,
-    #                 consolidate_blocks=config.consolidate_blocks,
-    #                 )
-    #     return tp.cast(Frame, frame)
 
     @store_coherent_non_write
     def read_many(self,
