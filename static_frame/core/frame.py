@@ -1500,7 +1500,6 @@ class Frame(ContainerOperand):
         '''
 
         # We cannot assume the cursor object returned by DBAPI Connection to have a context manager
-        cursor = None
         try:
             cursor = connection.cursor()
             cursor.execute(query)
@@ -1557,7 +1556,6 @@ class Frame(ContainerOperand):
                     for row in rows:
                         index.append(row[0])
                         yield row[1:]
-
             else: # > 1
                 index_constructor = IndexHierarchy.from_labels
 

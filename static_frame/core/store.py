@@ -228,6 +228,32 @@ class StoreConfigMap:
 
 
 #-------------------------------------------------------------------------------
+# decorators
+
+def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
+
+    @wraps(f)
+    def wrapper(self: 'Store', *args: tp.Any, **kwargs: tp.Any) -> Frame:
+        '''Decprator for derived Store class implementation of read(), labels().
+        '''
+        self._mtime_coherent()
+        return f(self, *args, **kwargs) # type: ignore
+
+    return wrapper
+
+
+def store_coherent_write(f: AnyCallable) -> AnyCallable:
+    '''Decorator for dervied Store classes implementation of write()
+    '''
+    @wraps(f)
+    def wrapper(self: 'Store', *args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+        post = f(self,  *args, **kwargs)
+        self._mtime_update()
+        return post
+
+    return wrapper
+
+#-------------------------------------------------------------------------------
 class Store:
 
     _EXT: tp.FrozenSet[str]
@@ -264,7 +290,6 @@ class Store:
         elif not np.isnan(self._last_modified):
             # file existed previously and we got a modification time, but now it does not exist
             raise StoreFileMutation(f'expected file {self._fp} no longer exists')
-
 
     #---------------------------------------------------------------------------
     @staticmethod
@@ -401,29 +426,3 @@ class Store:
             ) -> tp.Iterator[tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
 
-
-#-------------------------------------------------------------------------------
-# decorators
-
-def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
-
-    @wraps(f)
-    def wrapper(self: Store, *args: tp.Any, **kwargs: tp.Any) -> Frame:
-        '''Decprator for derived Store class implementation of read(), labels().
-        '''
-        self._mtime_coherent()
-        return f(self, *args, **kwargs) # type: ignore
-
-    return wrapper
-
-
-def store_coherent_write(f: AnyCallable) -> AnyCallable:
-    '''Decorator for dervied Store classes implementation of write()
-    '''
-    @wraps(f)
-    def wrapper(self: Store, *args: tp.Any, **kwargs: tp.Any) -> tp.Any:
-        post = f(self,  *args, **kwargs)
-        self._mtime_update()
-        return post
-
-    return wrapper
