@@ -171,7 +171,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             store: Store,
             config: StoreConfigMap,
             labels: tp.Iterator[tp.Hashable],
-            max_persist: int,
+            max_persist: tp.Optional[int],
             ) -> tp.Iterator[Frame]:
         if max_persist is None:
             # config is already a StoreConfigMap
@@ -262,15 +262,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     loaded_count += 1
 
             if max_persist_active and loaded_count > self._max_persist:
-                assert loaded_count == self._max_persist + 1 # type: ignore
-
                 label_remove = next(iter(self._last_accessed))
                 del self._last_accessed[label_remove]
                 idx_remove = index.loc_to_iloc(label_remove)
                 self._loaded[idx_remove] = False
                 array[idx_remove] = FrameDeferred
                 loaded_count -= 1
-                assert loaded_count >= 0
 
         array.flags.writeable = False
         self._series = Series(array,
