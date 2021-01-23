@@ -1498,90 +1498,85 @@ class Frame(ContainerOperand):
             {name}
             {consolidate_blocks}
         '''
-
-        # We cannot assume the cursor object returned by DBAPI Connection to have a context manager
-        try:
-            cursor = connection.cursor()
-            cursor.execute(query)
-            cursor_description = cursor.description
-            rows = cursor.fetchall()
-        finally:
-            if cursor:
-                cursor.close()
-
         columns = None
         own_columns = False
 
-        if columns_select:
-            columns_select = set(columns_select)
-            # selector function defined below
-            def filter_row(row):
-                post = selector(row)
-                return post if not selector_reduces else (post,)
-
-        if columns_depth >= 1 or columns_select:
-            # always need to derive labels if using columns_select
-            labels = (col for (col, *_) in cursor_description[index_depth:])
-
-        if columns_depth <= 1 and columns_select:
-            iloc_sel, labels = zip(*(
-                    pair for pair in enumerate(labels) if pair[1] in columns_select
-                    ))
-            selector = itemgetter(*iloc_sel)
-            selector_reduces = len(iloc_sel) == 1
-
-        if columns_depth == 1:
-            columns = cls._COLUMNS_CONSTRUCTOR(labels)
-            own_columns = True
-        elif columns_depth > 1:
-            # NOTE: we only support loading in IH if encoded in each header with a space delimiter
-            constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
-            columns = constructor(labels, delimiter=' ')
-            own_columns = True
+        # We cannot assume the cursor object returned by DBAPI Connection to have a context manager, thus all cursor usage needs to be wrapped in a try/finally to insure that the cursor is closed.
+        cursor = None
+        try:
+            cursor = connection.cursor()
+            cursor.execute(query)
 
             if columns_select:
-                iloc_sel = columns.loc_to_iloc(columns.isin(columns_select))
+                columns_select = set(columns_select)
+                # selector function defined below
+                def filter_row(row):
+                    post = selector(row)
+                    return post if not selector_reduces else (post,)
+
+            if columns_depth >= 1 or columns_select:
+                # always need to derive labels if using columns_select
+                labels = (col for (col, *_) in cursor.description[index_depth:])
+
+            if columns_depth <= 1 and columns_select:
+                iloc_sel, labels = zip(*(
+                        pair for pair in enumerate(labels) if pair[1] in columns_select
+                        ))
                 selector = itemgetter(*iloc_sel)
                 selector_reduces = len(iloc_sel) == 1
-                columns = columns.iloc[iloc_sel]
 
-        index_constructor = None
+            if columns_depth == 1:
+                columns = cls._COLUMNS_CONSTRUCTOR(labels)
+                own_columns = True
+            elif columns_depth > 1:
+                # NOTE: we only support loading in IH if encoded in each header with a space delimiter
+                constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
+                columns = constructor(labels, delimiter=' ')
+                own_columns = True
 
-        if index_depth > 0:
-            index = [] # lazily populate
-            if index_depth == 1:
-                index_constructor = Index
+                if columns_select:
+                    iloc_sel = columns.loc_to_iloc(columns.isin(columns_select))
+                    selector = itemgetter(*iloc_sel)
+                    selector_reduces = len(iloc_sel) == 1
+                    columns = columns.iloc[iloc_sel]
 
-                def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in rows:
-                        index.append(row[0])
-                        yield row[1:]
-            else: # > 1
-                index_constructor = IndexHierarchy.from_labels
+            index_constructor = None
+            if index_depth > 0:
+                index = [] # lazily populate
+                if index_depth == 1:
+                    index_constructor = Index
+                    def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                        for row in cursor:
+                            index.append(row[0])
+                            yield row[1:]
+                else: # > 1
+                    index_constructor = IndexHierarchy.from_labels
+                    def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                        for row in cursor:
+                            index.append(row[:index_depth])
+                            yield row[index_depth:]
+            else:
+                index = None
+                row_gen = lambda: cursor
 
-                def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in rows:
-                        index.append(row[:index_depth])
-                        yield row[index_depth:]
-        else:
-            index = None
-            row_gen = lambda: rows
+            if columns_select:
+                row_gen_final = (filter_row(row) for row in row_gen())
+            else:
+                row_gen_final = row_gen()
 
-        if columns_select:
-            row_gen_final = (filter_row(row) for row in row_gen())
-        else:
-            row_gen_final = row_gen()
-
-        return cls.from_records(
-                row_gen_final,
-                columns=columns,
-                index=index,
-                dtypes=dtypes,
-                name=name,
-                own_columns=own_columns,
-                index_constructor=index_constructor,
-                consolidate_blocks=consolidate_blocks,
-                )
+            return cls.from_records(
+                    row_gen_final,
+                    columns=columns,
+                    index=index,
+                    dtypes=dtypes,
+                    name=name,
+                    own_columns=own_columns,
+                    index_constructor=index_constructor,
+                    consolidate_blocks=consolidate_blocks,
+                    )
+        finally:
+            if cursor:
+                cursor.close()
 
     @classmethod
     @doc_inject(selector='constructor_frame')
