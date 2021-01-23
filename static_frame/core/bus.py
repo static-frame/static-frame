@@ -230,22 +230,22 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         index = self._series.index
         array = self._series.values.copy() # not a deepcopy
+
         targets = self._series.iloc[key] # key is iloc key
-
-        # target_items needs to be iterable twice
         if not isinstance(targets, Series):
-            target_items = ((index[key], targets),) # present element as items
-        else:
-            target_items = tuple(targets.items())
+            label = index[key]
+            targets_items = ((label, targets),) # present element as items
+            store_reader = (self._store.read(label, config=self._config[label]) for _ in  range(1))
+        else: # more than one Frame
+            store_reader = self._store_reader(
+                    store=self._store,
+                    config=self._config,
+                    labels=(label for label, f in targets.items() if f is FrameDeferred),
+                    max_persist=self._max_persist,
+                    )
+            targets_items = targets.items()
 
-        store_reader = self._store_reader(
-                store=self._store,
-                config=self._config,
-                labels=(label for label, f in target_items if f is FrameDeferred),
-                max_persist=self._max_persist,
-                )
-
-        for label, frame in target_items: # this is a Series, not a Bus
+        for label, frame in targets_items: # this is a Series, not a Bus
             idx = index.loc_to_iloc(label)
 
             if max_persist_active: # update LRU position
