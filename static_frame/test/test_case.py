@@ -38,7 +38,7 @@ skip_win = pytest.mark.skipif(
 
 skip_pylt37 = pytest.mark.skipif(
         sys.version_info < (3, 7),
-        reason='Windows default dtypes'
+        reason='Python earlier than 3.7'
         )
 
 skip_linux_no_display = pytest.mark.skipif(
