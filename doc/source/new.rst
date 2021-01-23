@@ -9,6 +9,8 @@ Added immutable, hashable containers ``SeriesHE`` and ``FrameHE``.
 
 Implemented ``read_many`` for all ``Store`` subclasses; ``Bus`` now uses these interfaces for significantly faster reads of multi-``Frame`` selections.
 
+Improved handling of connection object given to ``Frame.from_sql``.
+
 
 0.7.13
 ----------

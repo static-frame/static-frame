@@ -64,7 +64,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
         '''
         # NOTE: need to accept an  IndexConstructor to support reanimating Index subtypes, IH
-        return Series.from_element(FrameDeferred, index=labels, dtype=object)
+        return Series.from_element(FrameDeferred, index=labels, dtype=DTYPE_OBJECT)
 
     @classmethod
     def from_frames(cls,
@@ -75,12 +75,23 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             ) -> 'Bus':
         '''Return a :obj:`Bus` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
         '''
-        # could take a StoreConfigMap
         series = Series.from_items(
                     ((f.name, f) for f in frames),
-                    dtype=object,
+                    dtype=DTYPE_OBJECT,
                     name=name,
                     )
+        return cls(series, config=config)
+
+    @classmethod
+    def from_items(cls,
+            pairs: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            *,
+            config: StoreConfigMapInitializer = None,
+            name: NameType = None,
+            ) -> 'Bus':
+        '''Return a :obj:`Bus` from an iterable of pairs of label, :obj:`Frame`.
+        '''
+        series = Series.from_items(pairs, dtype=DTYPE_OBJECT, name=name)
         return cls(series, config=config)
 
     @classmethod
