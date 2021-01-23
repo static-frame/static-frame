@@ -252,7 +252,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 self._last_accessed[label] = self._last_accessed.pop(label, None)
 
             if frame is FrameDeferred:
-                # frame = self._store.read(label, config=self._config[label])
                 frame = next(store_reader)
 
             if not self._loaded[idx]:
