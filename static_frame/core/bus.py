@@ -38,7 +38,7 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
 #-------------------------------------------------------------------------------
 class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     '''
-    A lazy, randomly-accessible container of :obj:`Frame`.
+    A randomly-accessible container of :obj:`Frame`. When created from a multi-table storage format (such as a zip-pickle or XLSX), a Bus will lazily read in components as they are accessed. When combined with the ``max_persist`` parameter, a Bus will not hold on to more than ``max_persist`` references, permitting low-memory reading of collections of :obj:`Frame`.
     '''
 
     __slots__ = (
@@ -115,6 +115,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
 
         if max_persist is not None:
+            # use an (ordered) dictionary to give use an ordered set, simply pointing to None for all keys
             self._last_accessed: tp.Dict[str, None] = {}
 
         # do a one time iteration of series
@@ -165,6 +166,32 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             return [self.index.values[key],] # needs to be a list for usage in loc assignment
         return self.index.values[key]
 
+    @staticmethod
+    def _store_reader(
+            store: Store,
+            config: StoreConfigMap,
+            labels: tp.Iterator[tp.Hashable],
+            max_persist: int,
+            ) -> tp.Iterator[Frame]:
+        if max_persist is None:
+            # config is already a StoreConfigMap
+            for frame in store.read_many(labels, config=config):
+                yield frame
+        elif max_persist > 1:
+            coll = []
+            for label in labels:
+                coll.append(label)
+                if len(coll) == max_persist:
+                    for frame in store.read_many(coll, config=config):
+                        yield frame
+                    coll.clear()
+            if coll: # less than max persist remaining
+                for frame in store.read_many(coll, config=config):
+                    yield frame
+        else: # max persist is 1
+            for label in labels:
+                yield store.read(label, config=config[labels])
+
 
     def _update_series_cache_iloc(self, key: GetItemKeyType) -> None:
         '''
@@ -205,12 +232,18 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         array = self._series.values.copy() # not a deepcopy
         targets = self._series.iloc[key] # key is iloc key
 
+        # target_items needs to be iterable twice
         if not isinstance(targets, Series):
             target_items = ((index[key], targets),) # present element as items
         else:
             target_items = tuple(targets.items())
 
-        # TODO: create generator of read calls with a single pass iteration of
+        store_reader = self._store_reader(
+                store=self._store,
+                config=self._config,
+                labels=(label for label, f in target_items if f is FrameDeferred),
+                max_persist=self._max_persist,
+                )
 
         for label, frame in target_items: # this is a Series, not a Bus
             idx = index.loc_to_iloc(label)
@@ -219,10 +252,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 self._last_accessed[label] = self._last_accessed.pop(label, None)
 
             if frame is FrameDeferred:
-                # as we are iterating from `targets`, we might be holding on to references of Frames that we already removed in `array`; in this case we do not need to `read`, but we still need to update the new array
-                frame = self._store.read(label, config=self._config[label])
+                # frame = self._store.read(label, config=self._config[label])
+                frame = next(store_reader)
 
             if not self._loaded[idx]:
+                # as we are iterating from `targets`, we might be holding on to references of Frames that we already removed in `array`; in this case we do not need to `read`, but we still need to update the new array
                 array[idx] = frame
                 self._loaded[idx] = True # update loaded status
                 if max_persist_active:
