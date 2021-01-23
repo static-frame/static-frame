@@ -37,7 +37,6 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.core.frame import FrameAssign
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
-from static_frame.test.test_case import skip_linux_no_display
 from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
@@ -5805,21 +5804,6 @@ class TestUnit(TestCase):
             f1.to_tsv(fp, include_index=True)
             f2 = Frame.from_tsv(fp, index_depth=2, columns_depth=2)
             self.assertEqualFrames(f1, f2)
-
-    #---------------------------------------------------------------------------
-    @skip_linux_no_display #type: ignore
-    def test_frame_to_clipboard_a(self) -> None:
-        records = (
-                (2, 'a', False),
-                (3, 'b', False),
-                )
-        f1 = Frame.from_records(records,
-                columns=('r', 's', 't'),
-                index=('w', 'x'))
-
-        f1.to_clipboard()
-        f2 = Frame.from_clipboard(index_depth=1)
-        self.assertTrue(f2.equals(f1, compare_dtype=True))
 
     #---------------------------------------------------------------------------
     def test_frame_to_html_a(self) -> None:
