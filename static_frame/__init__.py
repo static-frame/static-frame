@@ -6,7 +6,6 @@ from static_frame.core.batch import Batch as Batch
 from static_frame.core.bus import Bus as Bus
 from static_frame.core.display import Display as Display
 from static_frame.core.display import DisplayActive as DisplayActive
-from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta
 from static_frame.core.display_config import DisplayConfig as DisplayConfig
 from static_frame.core.display_config import DisplayConfigs as DisplayConfigs
 from static_frame.core.display_config import DisplayFormats as DisplayFormats
@@ -56,6 +55,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy as IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchyGO
 from static_frame.core.index_level import IndexLevel as IndexLevel
 from static_frame.core.index_level import IndexLevelGO as IndexLevelGO
+from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
@@ -74,10 +74,12 @@ from static_frame.core.node_selector import InterfaceGetItem as InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectQuartet
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.quilt import Quilt as Quilt
 from static_frame.core.series import Series as Series
-from static_frame.core.series import SeriesHE as SeriesHE
 from static_frame.core.series import SeriesAssign as SeriesAssign
+from static_frame.core.series import SeriesHE as SeriesHE
 from static_frame.core.store import StoreConfig as StoreConfig
 from static_frame.core.store import StoreConfigMap as StoreConfigMap
 from static_frame.core.store_filter import StoreFilter as StoreFilter
@@ -93,7 +95,6 @@ from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import mloc as mloc
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
-from static_frame.core.quilt import Quilt as Quilt
 
 __version__ = '0.7.13' # use -dev for new version in development
 

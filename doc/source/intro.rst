@@ -11,7 +11,7 @@ For a concise overview of StaticFrame interfaces, start with :ref:`api-overview-
 
 StaticFrame does not aspire to be an all-in-one framework for all aspects of data processing and visualization. StaticFrame focuses on providing efficient and powerful data structures with consistent, clear, and stable interfaces.
 
-StaticFrame targets comparable or better performance than Pandas. While this is already the case for many core operations (See :ref:`performance`), other operations are, for now, still more performant in Pandas (such as reading delimited text files via ``pd.read_csv``). StaticFrame provides easy conversion to and from Pandas to bridge needed functionality or performance.
+StaticFrame targets comparable or better performance than Pandas. While this is already the case for many core operations, other operations are, for now, still more performant in Pandas (such as reading delimited text files via ``pd.read_csv``). StaticFrame provides easy conversion to and from Pandas to bridge needed functionality or performance.
 
 StaticFrame relies entirely on NumPy for types and numeric computation routines. NumPy offers desirable stability in performance and interface. For working with SciPy and related tools, StaticFrame exposes easy access to NumPy arrays, conversion to and from Pandas and Arrow, and support for reading from and writing to a wide variety of storage formats.
 

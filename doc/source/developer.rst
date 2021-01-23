@@ -1,3 +1,4 @@
+.. _developer:
 
 Developer Guide
 *******************
@@ -14,17 +15,17 @@ Preparing an Environment
 
 .. note::
 
-    Running StaticFrame integration tests may clear your clipboard. This is an artifact of using Python's `Tk` for clipboard interaction in :obj:`Frame.to_clipboard()` and :obj:`Frame.from_clipboard()`.
+    Running StaticFrame integration tests may clear your clipboard. This is an artifact of using Python's ``Tk`` for clipboard interaction in :obj:`Frame.to_clipboard()` and :obj:`Frame.from_clipboard()`.
 
 
 
 To prepare a StaticFrame repository and environment, follow the following steps.
 
-Clone the git repository:
+Clone the git repository::
 
     git clone https://github.com/InvestmentSystems/static-frame.git
 
-Create a virtual environment with StaticFrame's requirements for testing:
+Create a virtual environment with StaticFrame's requirements for testing::
 
     python3 -m venv .env-sf
     source .env-sf/bin/activate
@@ -35,15 +36,15 @@ Create a virtual environment with StaticFrame's requirements for testing:
 Running Tests & Static Analysis
 -----------------------------------------
 
-PyTest can be used to run StaticFrame tests. Alternatively, Invoke (installed via ``requirements-test.txt``) can be used to run tests and static analysis. To run all test, enter the following:
+PyTest can be used to run StaticFrame tests. Alternatively, Invoke (installed via ``requirements-test.txt``) can be used to run tests and static analysis. To run all test, enter the following::
 
     invoke test
 
-When iterating on code, running fast unit tests is generally sufficient:
+When iterating on code, running fast unit tests is generally sufficient::
 
     invoke test -u
 
-To run MyPy and Pylint static analysis, use the following:
+To run MyPy and Pylint static analysis, use the following::
 
     invoke mypy
     invoke lint
