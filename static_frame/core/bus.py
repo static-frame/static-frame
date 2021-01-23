@@ -230,8 +230,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         index = self._series.index
         array = self._series.values.copy() # not a deepcopy
-
         targets = self._series.iloc[key] # key is iloc key
+
         if not isinstance(targets, Series):
             label = index[key]
             targets_items = ((label, targets),) # present element as items
