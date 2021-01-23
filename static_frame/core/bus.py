@@ -202,33 +202,22 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         max_persist_active = self._max_persist is not None
 
-        load: bool
-        if self._loaded_all:
-            load = False
-        else:
-            load = not self._loaded[key].all() # works with elements
-
+        load = False if self._loaded_all else not self._loaded[key].all()
         if not load and not max_persist_active:
             return
 
+        index = self._series.index
         if not load and max_persist_active: # must update LRU position
-            if isinstance(key, INT_TYPES):
-                labels = (self._series.index.iloc[key],)
-            else:
-                labels = self._series.index.iloc[key].values
+            labels = (index.iloc[key],) if isinstance(key, INT_TYPES) else index.iloc[key].values
             for label in labels: # update LRU position
                 self._last_accessed[label] = self._last_accessed.pop(label, None)
             return
 
-        # load and max_persist_active True or False
-        if self._store is None:
-            # there has to be a Store defined if we are partially loaded
+        if self._store is None: # there has to be a Store defined if we are partially loaded
             raise RuntimeError('no store defined')
-
         if max_persist_active:
             loaded_count = self._loaded.sum()
 
-        index = self._series.index
         array = self._series.values.copy() # not a deepcopy
         targets = self._series.iloc[key] # key is iloc key
 
@@ -245,7 +234,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     )
             targets_items = targets.items()
 
-        for label, frame in targets_items: # this is a Series, not a Bus
+        for label, frame in targets_items:
             idx = index.loc_to_iloc(label)
 
             if max_persist_active: # update LRU position
