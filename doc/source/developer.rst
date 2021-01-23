@@ -13,12 +13,6 @@ If you have an idea for a new feature for which there is not already an issue, p
 Preparing an Environment
 -------------------------------
 
-.. note::
-
-    Running StaticFrame integration tests may clear your clipboard. This is an artifact of using Python's ``Tk`` for clipboard interaction in :obj:`Frame.to_clipboard()` and :obj:`Frame.from_clipboard()`.
-
-
-
 To prepare a StaticFrame repository and environment, follow the following steps.
 
 Clone the git repository::
@@ -35,6 +29,11 @@ Create a virtual environment with StaticFrame's requirements for testing::
 
 Running Tests & Static Analysis
 -----------------------------------------
+
+.. note::
+
+    Running StaticFrame integration tests may clear your clipboard. This is an artifact of using Python's ``Tk`` for clipboard interaction in :obj:`Frame.to_clipboard()` and :obj:`Frame.from_clipboard()`.
+
 
 PyTest can be used to run StaticFrame tests. Alternatively, Invoke (installed via ``requirements-test.txt``) can be used to run tests and static analysis. To run all test, enter the following::
 
