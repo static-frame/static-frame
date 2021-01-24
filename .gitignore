@@ -4,7 +4,7 @@
 .pytest_cache
 .vscode
 .env
-.evn-sf
+.env-sf
 
 __pycache__
 build
