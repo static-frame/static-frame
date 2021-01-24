@@ -15,12 +15,13 @@ Preparing an Environment
 
 To prepare a StaticFrame repository and environment, follow the following steps.
 
-Clone the git repository::
+Clone the git repository (or your fork)::
 
     git clone https://github.com/InvestmentSystems/static-frame.git
 
 Create a virtual environment with StaticFrame's requirements for testing::
 
+    cd static-frame
     python3 -m venv .env-sf
     source .env-sf/bin/activate
     pip install -r requirements-test.txt
