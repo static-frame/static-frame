@@ -22,3 +22,6 @@ class TestUnit(TestCase):
         f1.to_clipboard()
         f2 = Frame.from_clipboard(index_depth=1)
         self.assertTrue(f2.equals(f1, compare_dtype=True))
+
+
+
