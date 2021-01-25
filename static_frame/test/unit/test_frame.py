@@ -2632,6 +2632,17 @@ class TestUnit(TestCase):
                 (('a', ((0, False), (1, False))), ('b', ((0, 'x'), (1, 'x'))), ('c', ((0, 'x'), (1, 'x'))), ('d', ((0, 'x'), (1, 'x'))), ('e', ((0, False), (1, False)))))
 
 
+    def test_frame_assign_getitem_h(self) -> None:
+
+        f1 = sf.Frame.from_element('1', index=range(4), columns=range(5))
+        f2 = f1[[1, 2, 3]].astype({1: int, 2: bool,})
+        f3 = f1.assign[f2.columns](f2)
+        self.assertEqual([b.dtype.kind for b in f3._blocks._blocks],
+                ['U', 'i', 'b', 'U', 'U'])
+        self.assertEqual(f3.to_pairs(),
+                ((0, ((0, '1'), (1, '1'), (2, '1'), (3, '1'))), (1, ((0, 1), (1, 1), (2, 1), (3, 1))), (2, ((0, True), (1, True), (2, True), (3, True))), (3, ((0, '1'), (1, '1'), (2, '1'), (3, '1'))), (4, ((0, '1'), (1, '1'), (2, '1'), (3, '1'))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_assign_iloc_a(self) -> None:

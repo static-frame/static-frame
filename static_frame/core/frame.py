@@ -2941,7 +2941,7 @@ class Frame(ContainerOperand):
             value: tp.Union[Series, 'Frame'],
             iloc_key: GetItemKeyTypeCompound,
             fill_value: object = np.nan
-            ) -> 'Frame':
+            ) -> tp.Union[Series, 'Frame']:
         '''Given a value that is a Series or Frame, reindex it to the index components, drawn from this Frame, that are specified by the iloc_key.
         '''
         if isinstance(iloc_key, tuple):
@@ -6792,34 +6792,41 @@ class FrameAssign(Assign):
             value: Value to assign, which can be a :obj:`Series`, :obj:`Frame`, np.ndarray, or element.
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
+        is_frame = isinstance(value, Frame)
+        is_series = isinstance(value, Series)
+
         if self.iloc_key is not None:
             # NOTE: the iloc key's order is not relevant in assignment
-            if isinstance(value, (Series, Frame)):
-                if isinstance(value, Series):
-                    iloc_key = self.iloc_key
-                elif isinstance(value, Frame):
-                    # block assignment requires that column keys are ascending
-                    iloc_key = (self.iloc_key[0],
-                            key_to_ascending_key(self.iloc_key[1], self.container.shape[1]))
-                # conform the passed in value to the targets given by self.iloc_key
-                assigned_container = self.container._reindex_other_like_iloc(value,
+            value_is_blocks = False
+            if is_series:
+                iloc_key = self.iloc_key
+                assigned = self.container._reindex_other_like_iloc(value,
                         iloc_key,
-                        fill_value=fill_value)
-                # NOTE: taking .values here forces a single-type array from Frame
-                assigned = assigned_container.values
+                        fill_value=fill_value).values
+            elif is_frame:
+                # block assignment requires that column keys are ascending
+                # conform the passed in value to the targets given by self.iloc_key
+                iloc_key = (self.iloc_key[0],
+                        key_to_ascending_key(self.iloc_key[1], self.container.shape[1]))
+                assigned = self.container._reindex_other_like_iloc(value,
+                        iloc_key,
+                        fill_value=fill_value)._blocks._blocks
+                value_is_blocks = True
             else: # could be array or single element
                 iloc_key = self.iloc_key
                 assigned = value
 
-            blocks = self.container._blocks.extract_iloc_assign(iloc_key, assigned)
+            blocks = self.container._blocks.extract_iloc_assign(iloc_key,
+                    assigned,
+                    value_is_blocks=value_is_blocks,
+                    )
 
         else: # use bloc
             bloc_key = bloc_key_normalize(
                     key=self.bloc_key,
                     container=self.container
                     )
-
-            if isinstance(value, Frame):
+            if is_frame:
                 invalid = object()
                 value = value.reindex(
                         index=self.container._index,
