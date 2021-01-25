@@ -2053,7 +2053,8 @@ class TypeBlocks(ContainerOperand):
             return TypeBlocks.from_blocks(self._assign_blocks_from_keys_by_blocks(
                     row_key=row_key,
                     column_key=column_key,
-                    values=value))
+                    values=value, #type: ignore
+                    ))
         return TypeBlocks.from_blocks(self._assign_blocks_from_keys(
                 row_key=row_key,
                 column_key=column_key,

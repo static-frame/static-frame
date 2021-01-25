@@ -11,6 +11,8 @@ Implemented ``read_many`` for all ``Store`` subclasses; ``Bus`` now uses these i
 
 Improved handling of connection object given to ``Frame.from_sql``.
 
+Improved type-preservation and performance when assigning ``Frame`` into ``Frame``.
+
 
 0.7.13
 ----------
