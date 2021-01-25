@@ -2801,7 +2801,7 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(f1.assign.loc[:, [2, 5, 6]](f2).to_pairs(),
-                ((0, ((0, False), (1, False), (2, False), (3, True))), (1, ((0, False), (1, False), (2, False), (3, False))), (2, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'), (3, 'zB7E'))), (3, ((0, False), (1, False), (2, True), (3, True))), (4, ((0, 58768), (1, 146284), (2, 170440), (3, 32395))), (5, ((0, numpy.datetime64('164167')), (1, numpy.datetime64('43127')), (2, numpy.datetime64('7699')), (3, numpy.datetime64('170357')))), (6, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'), (3, 'zmVj'))), (7, ((0, 137759), (1, -62964), (2, 172142), (3, -154686))))
+                ((0, ((0, False), (1, False), (2, False), (3, True))), (1, ((0, False), (1, False), (2, False), (3, False))), (2, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'), (3, 'zB7E'))), (3, ((0, False), (1, False), (2, True), (3, True))), (4, ((0, 58768), (1, 146284), (2, 170440), (3, 32395))), (5, ((0, np.datetime64('164167')), (1, np.datetime64('43127')), (2, np.datetime64('7699')), (3, np.datetime64('170357')))), (6, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'), (3, 'zmVj'))), (7, ((0, 137759), (1, -62964), (2, 172142), (3, -154686))))
                 )
 
 
