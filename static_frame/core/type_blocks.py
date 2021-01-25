@@ -1597,7 +1597,7 @@ class TypeBlocks(ContainerOperand):
 
                 # at least one target we need to apply in the current block.
                 block_is_column = b.ndim == 1 or (b.ndim > 1 and b.shape[1] == 1)
-                start = target_key if not target_is_slice else target_key.start # type: ignore
+                start: int = target_key if not target_is_slice else target_key.start # type: ignore
 
                 if start > assigned_stop: # yield component from the last assigned position
                     b_component = b[NULL_SLICE, slice(assigned_stop, start)] # keeps writeable=False
