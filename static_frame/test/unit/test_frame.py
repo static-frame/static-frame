@@ -2659,6 +2659,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.assign.iloc[1,1](3000).iloc[1,1], 3000)
 
 
+    #---------------------------------------------------------------------------
     def test_frame_assign_loc_a(self) -> None:
 
         records = (
@@ -2791,6 +2792,21 @@ class TestUnit(TestCase):
                 (('a', ((0, False), (1, False))), ('b', ((0, False), (1, 'x'))), ('c', ((0, False), (1, 'x'))), ('d', ((0, False), (1, 'x'))), ('e', ((0, False), (1, False)))))
 
 
+    def test_frame_assign_loc_g(self) -> None:
+        f1 = ff.parse('s(4,8)|v(bool,bool,int,bool,int)')
+        f2 = ff.parse('s(6,4)|v(str,dtY)').relabel(columns=(2,5,6,8))
+
+        self.assertEqual(f1.assign.loc[[2,3], :](f2, fill_value=0).to_pairs(),
+                ((0, ((0, False), (1, False), (2, 0), (3, 0))), (1, ((0, False), (1, False), (2, 0), (3, 0))), (2, ((0, -3648), (1, 91301), (2, 'zEdH'), (3, 'zB7E'))), (3, ((0, False), (1, False), (2, 0), (3, 0))), (4, ((0, 58768), (1, 146284), (2, 0), (3, 0))), (5, ((0, False), (1, True), (2, datetime.date(7699, 1, 1)), (3, 168387))), (6, ((0, True), (1, True), (2, 'zkuW'), (3, 'zmVj'))), (7, ((0, 137759), (1, -62964), (2, 0), (3, 0))))
+                )
+
+        self.assertEqual(f1.assign.loc[:, [2, 5, 6]](f2).to_pairs(),
+                ((0, ((0, False), (1, False), (2, False), (3, True))), (1, ((0, False), (1, False), (2, False), (3, False))), (2, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'), (3, 'zB7E'))), (3, ((0, False), (1, False), (2, True), (3, True))), (4, ((0, 58768), (1, 146284), (2, 170440), (3, 32395))), (5, ((0, numpy.datetime64('164167')), (1, numpy.datetime64('43127')), (2, numpy.datetime64('7699')), (3, numpy.datetime64('170357')))), (6, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'), (3, 'zmVj'))), (7, ((0, 137759), (1, -62964), (2, 172142), (3, -154686))))
+                )
+
+
+    #---------------------------------------------------------------------------
+
     def test_frame_assign_coercion_a(self) -> None:
 
         records = (
@@ -2803,7 +2819,6 @@ class TestUnit(TestCase):
         f2 = f1.assign.loc['x', 'r'](None)
         self.assertEqual(f2.to_pairs(0),
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('r', (('x', None), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False)))))
-
 
     #---------------------------------------------------------------------------
 
