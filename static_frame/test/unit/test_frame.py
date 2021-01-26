@@ -1,48 +1,48 @@
-import unittest
-from collections import OrderedDict
-import itertools as it
 from collections import namedtuple
+from collections import OrderedDict
 from io import StringIO
-import string
+import copy
+import datetime
+import itertools as it
 import pickle
 import sqlite3
-import datetime
+import string
 import typing as tp
-import copy
+import unittest
 
 import numpy as np
 import frame_fixtures as ff
 
-import static_frame as sf
-from static_frame import Index
-from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
-from static_frame import IndexYearMonth
-from static_frame import IndexYearGO
-from static_frame import IndexYear
-from static_frame import IndexDate
-from static_frame import IndexDateGO
-from static_frame import Series
+from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import FrameGO
-from static_frame import TypeBlocks
-from static_frame import mloc
-from static_frame import ILoc
 from static_frame import HLoc
-from static_frame import DisplayConfig
+from static_frame import ILoc
+from static_frame import Index
 from static_frame import IndexAutoFactory
-from static_frame.core.store_xlsx import StoreXLSX
-from static_frame.core.store import StoreConfig
-from static_frame.core.store_filter import StoreFilter
-from static_frame.core.frame import FrameAssign
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
-from static_frame.test.test_case import skip_pylt37
-from static_frame.test.test_case import temp_file
+from static_frame import IndexDate
+from static_frame import IndexDateGO
+from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
+from static_frame import IndexYear
+from static_frame import IndexYearGO
+from static_frame import IndexYearMonth
+from static_frame import mloc
+from static_frame import Series
+from static_frame import TypeBlocks
+from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import AxisInvalid
+from static_frame.core.frame import FrameAssign
+from static_frame.core.store import StoreConfig
+from static_frame.core.store_filter import StoreFilter
+from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.test.test_case import skip_pylt37
+from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase
+import static_frame as sf
 
 nan = np.nan
 
@@ -7418,7 +7418,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_records_a(self) -> None:
 
-        NT = namedtuple('Sample', ('a', 'b', 'c'))
+        NT = namedtuple('NT', ('a', 'b', 'c'))
         records = [NT(x, x, x) for x in range(4)]
         f1 = Frame.from_records(records)
         self.assertEqual(f1.columns.values.tolist(), ['a', 'b', 'c'])
@@ -9449,7 +9449,7 @@ class TestUnit(TestCase):
     def test_frame_pivot_k(self) -> None:
 
         index = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
+                ('far', 20), (None, 'down'), (False, 'right'),
                 name=('z', 'y', 'x')
                 )
         f1 = FrameGO(index=index)
@@ -9469,7 +9469,7 @@ class TestUnit(TestCase):
     def test_frame_pivot_m(self) -> None:
 
         index = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
+                ('far', 20), (None, 'down'), (False, 'right'),
                 name=('z', 'y', 'x')
                 )
         f1 = FrameGO(index=index)
@@ -10046,11 +10046,11 @@ class TestUnit(TestCase):
     def test_frame_equals_a(self) -> None:
 
         idx1 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
+                ('far', 20), (None, 'down'), (False, 'right'),
                 name=('z', 'y', 'x')
                 )
         idx2 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
+                ('far', 20), (None, 'down'), (False, 'right'),
                 name=('z', 'y', 'x')
                 )
         f1 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx1)
@@ -10075,11 +10075,11 @@ class TestUnit(TestCase):
     def test_frame_equals_b(self) -> None:
 
         idx1 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
+                ('far', 20), (None, 'down'), (False, 'right'),
                 name=('z', 'y', 'x')
                 )
         idx2 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
+                ('far', 20), (None, 'down'), (False, 'right'),
                 name=('z', 'y', 'q')
                 )
         f1 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx1)
@@ -10092,11 +10092,11 @@ class TestUnit(TestCase):
     def test_frame_equals_c(self) -> None:
 
         idx1 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
+                ('far', 20), (None, 'down'), (False, 'right'),
                 name=('z', 'y', 'x')
                 )
         idx2 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
+                ('far', 20), (None, 'down'), (False, 'right'),
                 name=('z', 'y', 'x')
                 )
         f1 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx1)

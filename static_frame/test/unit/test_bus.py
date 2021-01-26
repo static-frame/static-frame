@@ -870,7 +870,8 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         self.assertTrue(b1.equals(b1))
 
-        class BusDerived(Bus): pass
+        class BusDerived(Bus):
+            pass
 
         b2 = BusDerived.from_frames((f1, f2, f3))
 

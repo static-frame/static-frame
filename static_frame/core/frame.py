@@ -34,7 +34,6 @@ from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import MessagePackElement
-
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
@@ -79,7 +78,6 @@ from static_frame.core.pivot import extrapolate_column_fields
 from static_frame.core.pivot import pivot_records_items
 from static_frame.core.pivot import pivot_records_dtypes
 from static_frame.core.pivot import pivot_items
-
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _read_url
 from static_frame.core.util import AnyCallable
@@ -454,7 +452,7 @@ class Frame(ContainerOperand):
                     # all TypeBlocks have the same number of blocks by here
                     for block_idx in range(len(type_blocks[0]._blocks)):
                         block_parts = []
-                        for frame_idx in range(len(type_blocks)):
+                        for frame_idx in range(len(type_blocks)): #pylint: disable=C0200
                             b = column_2d_filter(
                                     type_blocks[frame_idx]._blocks[block_idx])
                             block_parts.append(b)

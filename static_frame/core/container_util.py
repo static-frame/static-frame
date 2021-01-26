@@ -44,12 +44,12 @@ from static_frame.core.exception import AxisInvalid
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.quilt import Quilt #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.series import Series #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
 
 
 

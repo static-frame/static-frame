@@ -1,6 +1,6 @@
 import typing as tp
-import numpy as np
 
+import numpy as np
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
@@ -8,21 +8,21 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.exception import ErrorInitIndex
 
 
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_auto import RelabelInput #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import Series #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import RelabelInput #pylint: disable=W0611,C0412 #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexBase')
 
@@ -52,8 +52,8 @@ class IndexBase(ContainerOperand):
     __add__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     __sub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     __mul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __matmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray] #type: ignore
-    __truediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray] #type: ignore
+    __matmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __truediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     __floordiv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     __mod__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     # __divmod__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
@@ -72,7 +72,7 @@ class IndexBase(ContainerOperand):
     __radd__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     __rsub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     __rmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rtruediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray] #type: ignore
+    __rtruediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     __rfloordiv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     # __len__: tp.Callable[['IndexBase'], int]
 

@@ -1169,7 +1169,7 @@ class Index(IndexBase):
 
         # NOTE: will only be False, or an array
         if eq is False:
-            return eq #type: ignore
+            return eq
 
         if skipna:
             isna_both = (isna_array(self.values, include_none=False)

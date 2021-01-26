@@ -69,9 +69,9 @@ from static_frame.core.util import array_sample
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import FrameGO #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.frame import FrameGO #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.series import Series #pylint: disable=W0611,C0412 #pragma: no cover
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
 

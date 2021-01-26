@@ -2,6 +2,8 @@ import doctest
 import os
 import typing as tp
 
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
 
 # useful constructors
 # >>> f = sf.FrameGO.from_records((('Encke', 3.30, '2003-12-28'), ('Giacobini-Zinner', 6.52, '1998-11-21'), ('Tempel-Tuttle', 32.92, '1998-02-28'), ('Wild 2', 6.39, '2003-09-25')), columns=('Name', 'Orbital Period', 'Perihelion Date'))
@@ -2734,9 +2736,6 @@ from_year_range(start, stop, step... IndexDateGO Constructor Get an IndexDate ..
 
 '''
 
-
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
 
 @skip_win
 class TestUnit(doctest.DocTestCase, TestCase):

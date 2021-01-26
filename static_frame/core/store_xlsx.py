@@ -306,7 +306,7 @@ class StoreXLSX(Store):
             c = config_map[label]
             if label is STORE_LABEL_DEFAULT:
                 # None is supported by add_worksheet, below
-                label = None #type: ignore
+                label = None
             else:
                 label = config_map.default.label_encode(label)
 

@@ -860,7 +860,7 @@ class TestUnit(TestCase):
                 (None, 'B', 2),
                 )
 
-        ih = IndexHierarchy.from_labels(labels1, continuation_token=None) # type: ignore
+        ih = IndexHierarchy.from_labels(labels1, continuation_token=None)
 
         self.assertEqual(ih.values.tolist(),
                 [['I', 'A', 1], ['I', 'A', 2], ['I', 'B', 1], ['I', 'B', 2], ['II', 'A', 1], ['II', 'A', 2], ['II', 'B', 1], ['II', 'B', 2]]
@@ -2713,7 +2713,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_index_hierarchy_fillna_a(self) -> None:
 
-        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, None)) #type: ignore
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, None))
         ih2 = ih1.fillna(20)
         self.assertEqual(ih2.values.tolist(),
                 [[1, 'a', 2], [1, 'a', 20], [1, 'b', 2], [1, 'b', 20], [2, 'a', 2], [2, 'a', 20], [2, 'b', 2], [2, 'b', 20]]

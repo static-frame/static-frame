@@ -27,7 +27,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import KeyOrKeys as KeyOrKeys
+from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
 from static_frame.core.util import ELEMENT_TUPLE
@@ -45,7 +45,7 @@ def normalize_container(post: tp.Any
     # post might be an element, promote to a Series to permit concatenation
     # NOTE: do not set index as (container.name,), as this can lead to diagonal formations; will already be paired with stored labels
     if not isinstance(post, (Frame, Series)):
-        return Series.from_element(post, index=ELEMENT_TUPLE) #type: ignore
+        return Series.from_element(post, index=ELEMENT_TUPLE)
     return post
 
 def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]
