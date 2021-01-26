@@ -13,6 +13,8 @@ Improved handling of connection object given to ``Frame.from_sql``.
 
 Improved type-preservation and performance when assigning ``Frame`` into ``Frame``.
 
+Added ``Bus.from_items()`` constructor.
+
 
 0.7.13
 ----------
