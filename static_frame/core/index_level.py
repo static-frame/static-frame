@@ -444,21 +444,21 @@ class IndexLevel:
         return False
 
     def leaf_loc_to_iloc(self,
-            key: tp.Union[tp.Iterable[tp.Hashable], tp.Type[ILoc], tp.Type[HLoc]]
+            key: tp.Union[tp.Iterable[tp.Hashable], ILoc, HLoc]
             ) -> int:
         '''Given an iterable of single-element level keys (a leaf loc), return the iloc value.
 
         Note that key components (level selectors) cannot be slices, lists, or np.ndarray.
         '''
         if isinstance(key, ILoc):
-            return key.key
+            return key.key #type: ignore [return-value]
 
         node = self
         pos = 0
         key_depth_max = len(key) - 1 #type: ignore
 
         # NOTE: rather than a for/enumerate, this could use a while loop on an iter() and explicitly look at next() results to determine if the key matches
-        for key_depth, k in enumerate(key): #type: ignore
+        for key_depth, k in enumerate(key):
             if isinstance(k, KEY_MULTIPLE_TYPES):
                 raise RuntimeError(f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].')
             if node.targets is not None:
@@ -576,6 +576,7 @@ class IndexLevel:
         labels = np.empty(shape, dtype=dtype)
 
         row_count = 0
+        levels: tp.Deque[tp.Tuple['IndexLevel', int, tp.Optional[np.ndarray]]]
         levels = deque(((self, 0, None),)) # order matters
 
         while levels:
@@ -605,6 +606,7 @@ class IndexLevel:
     def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
         # NOTE: this implementation shown to be faster than a purely recursive implementation.
         depth_count = self.depth
+        levels: tp.Deque[tp.Tuple['IndexLevel', int, tp.Optional[np.ndarray]]]
         levels = deque(((self, 0, None),)) # order matters
 
         while levels:
@@ -623,7 +625,7 @@ class IndexLevel:
                     else:
                         row = row_previous.copy()
                     row[depth] = label
-                    levels.append((level_target, depth_next, row)) #type: ignore
+                    levels.append((level_target, depth_next, row))
 
 
     def values_at_depth(self,
@@ -858,6 +860,8 @@ class IndexLevelGO(IndexLevel):
             raise RuntimeError('appending key {} of insufficent depth {}'.format(
                         key, depth_count))
 
+        level_previous: tp.Optional['IndexLevelGO']
+
         if not self.index.__len__():
             # where we have zero length, create new root index and targets from the key alone
             depth_max = depth_count - 1
@@ -912,7 +916,7 @@ class IndexLevelGO(IndexLevel):
                 # if we have targets, must update them
                 if node.targets is not None:
                     assert level_previous is not None
-                    level_previous.offset = node.__len__()
+                    level_previous.offset = node.__len__() #type: ignore [unreachable]
                     node.targets.append(level_previous)
             else: # depth not found is higher up
                 # NOTE: do not need to use index_from_optional_constructor, as no explicit constructor is being supplied, and we can expect that the existing types must be valid

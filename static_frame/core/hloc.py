@@ -10,11 +10,10 @@ class HLocMeta(type):
 
     def __getitem__(cls,
             key: GetItemKeyType
-            ) -> tp.Iterable[GetItemKeyType]:
+            ) -> 'HLoc':
         if not isinstance(key, tuple):
             key = (key,)
-        # NOTE: tp.case is a performance hit and should be removed
-        return tp.cast(tp.Iterable[GetItemKeyType], cls(key))
+        return cls(key) #type: ignore [no-any-return]
 
 class HLoc(metaclass=HLocMeta):
     '''A wrapper for embedding hierarchical specificiations for :obj:`static_frame.IndexHierarchy` within a single axis argument of a ``loc`` selection.

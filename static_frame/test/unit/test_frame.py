@@ -1757,12 +1757,13 @@ class TestUnit(TestCase):
     def test_frame_setitem_m(self) -> None:
         f1 = sf.FrameGO.from_records(np.arange(9).reshape(3,3))
 
-        def gen1() -> tp.Iterator[int]:
-            raise ValueError('gen1')
-            yield 1 #pylint: disable=W0101
+        def gen1(v: bool) -> tp.Iterator[int]:
+            if v:
+                raise ValueError('gen1')
+            yield 1
 
         try:
-            f1['a'] = gen1()
+            f1['a'] = gen1(True)
         except ValueError:
             pass
 

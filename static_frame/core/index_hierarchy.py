@@ -798,7 +798,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        sub_display = None
+        sub_display: tp.Optional[Display] = None
 
         header_sub: tp.Optional[str]
         header: tp.Optional[DisplayHeader]

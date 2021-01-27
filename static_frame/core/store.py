@@ -14,7 +14,6 @@ from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.exception import StoreFileMutation
 from static_frame.core.frame import Frame
-from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import path_filter
@@ -319,8 +318,7 @@ class Store:
             if index.depth == 1:
                 dtypes = [index.dtype]
             else:
-                assert isinstance(index, IndexHierarchy) # for typing
-                dtypes = index.dtypes.values.tolist()
+                dtypes = index.dtypes.values.tolist() #type: ignore [attr-defined]
             # Get a list to mutate.
             field_names = list(index.names)
 

@@ -559,8 +559,8 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     @doc_inject(selector='duplicated')
-    def drop_duplicated(self, *, #type: ignore
-            axis=0,
+    def drop_duplicated(self, *,
+            axis: int = 0,
             exclude_first: bool = False,
             exclude_last: bool = False
             ) -> 'Batch':

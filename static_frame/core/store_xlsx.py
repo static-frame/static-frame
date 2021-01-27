@@ -129,7 +129,7 @@ class StoreXLSX(Store):
             if isinstance(value, COMPLEX_TYPES):
                 return ws.write_string(row, col, str(value), format_cell)
 
-            if writer_attr == 'write':
+            if writer_attr == 'write': #type: ignore [unreachable]
                 # determine type for each value
                 if isinstance(value, BOOL_TYPES):
                     return ws.write_boolean(row, col, value, format_cell)

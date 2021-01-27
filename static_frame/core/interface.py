@@ -366,7 +366,7 @@ class InterfaceRecord(tp.NamedTuple):
     def gen_from_astype(cls, *,
             cls_name: str,
             name: str,
-            obj: AnyCallable,
+            obj: tp.Any,
             reference: str,
             doc: str,
             max_args: int,

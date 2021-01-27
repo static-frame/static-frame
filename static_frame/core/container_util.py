@@ -241,8 +241,8 @@ def index_constructor_empty(
     return False
 
 def matmul(
-        lhs: tp.Union['Series', 'Frame', np.ndarray],
-        rhs: tp.Union['Series', 'Frame', np.ndarray],
+        lhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],
+        rhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],
         ) -> tp.Any: #tp.Union['Series', 'Frame']:
     '''
     Implementation of matrix multiplication for Series and Frame

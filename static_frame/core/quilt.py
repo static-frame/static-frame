@@ -46,7 +46,7 @@ def get_extractor(
         deepcopy_from_bus: bool,
         is_array: bool,
         memo_active: bool,
-        ) -> tp.Any:
+        ) -> AnyCallable:
     '''
     Args:
         memo_active: enable usage of a common memoization dictionary accross all calls to extract from this extractor.
@@ -56,7 +56,6 @@ def get_extractor(
         if is_array:
             return partial(array_deepcopy, memo=memo)
         return partial(deepcopy, memo=memo)
-
     return lambda x: x
 
 class AxisMap:
@@ -90,7 +89,8 @@ class AxisMap:
         extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
         tree = {}
-        opposite = None
+        opposite: tp.Optional[IndexBase] = None
+
         for label, f in bus.items():
             if axis == 0:
                 tree[label] = extractor(f.index)
@@ -627,6 +627,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     )
 
         parts: tp.List[np.ndarray] = []
+        bus_keys: tp.Iterable[tp.Hashable]
 
         if self._axis == 0:
             sel_key = row_key
@@ -642,7 +643,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel[sel_key] = True
 
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-        axis_map_sub = self._axis_map.iloc[sel_key]
+        axis_map_sub: tp.Union[Series, tp.Hashable] = self._axis_map.iloc[sel_key]
         if not isinstance(axis_map_sub, Series): # we have an element integer
             bus_keys = (axis_map_sub,)
         else:
@@ -707,6 +708,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     )
 
         parts: tp.List[tp.Any] = []
+        bus_keys: tp.Iterable[tp.Hashable]
 
         if self._axis == 0:
             sel_key = row_key
@@ -721,7 +723,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel[sel_key] = True
 
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-        axis_map_sub = self._axis_map.iloc[sel_key]
+        axis_map_sub: tp.Union[Series, int] = self._axis_map.iloc[sel_key]
         if not isinstance(axis_map_sub, Series): # we have an element integer
             bus_keys = (axis_map_sub,)
         else:

@@ -422,7 +422,7 @@ class Series(ContainerOperand):
         #-----------------------------------------------------------------------
         # values assignment
 
-        values_constructor = None # if deferred
+        values_constructor: tp.Optional[tp.Callable[[int], None]] = None # if deferred
 
         if not isinstance(values, np.ndarray):
             if isinstance(values, dict):
@@ -847,7 +847,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='relabel', class_name='Series')
     def relabel(self,
-            index: RelabelInput
+            index: tp.Optional[RelabelInput]
             ) -> 'Series':
         '''
         {doc}
@@ -860,11 +860,11 @@ class Series(ContainerOperand):
         own_index = False
         if index is IndexAutoFactory:
             index_init = None
+        elif index is None:
+            index_init = self._index
         elif is_callable_or_mapping(index): #type: ignore
             index_init = self._index.relabel(index)
             own_index = True
-        elif index is None:
-            index_init = self._index
         else:
             index_init = index #type: ignore
 
@@ -2061,7 +2061,7 @@ class Series(ContainerOperand):
         post = argmin_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
-        return self.index[post]
+        return self.index[post] #type: ignore [unreachable]
 
     @doc_inject(selector='argminmax')
     def iloc_min(self, *,
@@ -2094,7 +2094,7 @@ class Series(ContainerOperand):
         post = argmax_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
-        return self.index[post]
+        return self.index[post] #type: ignore [unreachable]
 
     @doc_inject(selector='argminmax')
     def iloc_max(self, *,

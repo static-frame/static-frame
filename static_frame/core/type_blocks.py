@@ -135,7 +135,7 @@ class TypeBlocks(ContainerOperand):
                 r, c = shape_filter(block)
 
                 # check number of rows is the same for all blocks
-                if row_count is not None and r != row_count:
+                if row_count is not None and r != row_count: #type: ignore [unreachable]
                     raise ErrorInitTypeBlocks(f'mismatched row count: {r}: {row_count}')
                 else: # assign on first
                     row_count = r
@@ -500,7 +500,7 @@ class TypeBlocks(ContainerOperand):
 
         This is a generator to permit lazy pairwise comparison.
         '''
-        group_dtype = None # store type found along contiguous blocks
+        group_dtype: tp.Optional[np.dtype] = None # store type found along contiguous blocks
         group_cols = 0
         for block in self._blocks:
             if group_dtype is None: # first block of a type
@@ -579,7 +579,7 @@ class TypeBlocks(ContainerOperand):
         '''
         Generator consumer, generator producer of np.ndarray, consolidating if types are exact matches.
         '''
-        group_dtype = None # store type found along contiguous blocks
+        group_dtype: tp.Optional[np.dtype] = None # store type found along contiguous blocks
         group = []
 
         for block in raw_blocks:
@@ -930,7 +930,7 @@ class TypeBlocks(ContainerOperand):
         # NOTE: the TypeBlocks Display is not composed into other Displays
 
         config = config or DisplayActive.get()
-        d = None
+        d: tp.Optional[Display] = None
         outermost = True # only for the first
         idx = 0
         for block in self._blocks:
@@ -987,7 +987,8 @@ class TypeBlocks(ContainerOperand):
             indices: can be a generator
         '''
         # store pairs of block idx, ascending col list
-        last = None
+        last: tp.Optional[tp.Tuple[int, int]] = None
+
         for block_idx, col in indices:
             if not last:
                 last = (block_idx, col)

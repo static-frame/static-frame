@@ -235,7 +235,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         targets = self._series.iloc[key] # key is iloc key
 
         if not isinstance(targets, Series):
-            label = index[key]
+            label = index[key] #type: ignore [unreachable]
             targets_items = ((label, targets),) # present element as items
             store_reader = (self._store.read(label, config=self._config[label]) for _ in  range(1))
         else: # more than one Frame
