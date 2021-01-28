@@ -2416,7 +2416,7 @@ def write_optional_file(
     else: # string IO
         f.write(content)
         f.seek(0)
-    return tp.cast(str, fp) # this migh return None with a StringIO
+    return fp #type: ignore
 
 
 #-------------------------------------------------------------------------------

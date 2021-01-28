@@ -1173,7 +1173,7 @@ class TestUnit(TestCase):
         # self.assertEqual(len(f.to_pairs(0)), 8)
 
 
-        f2 = f1.assign.loc[('I', 'B', 2), ('II', 'A', 1)](200)
+        f2 = f1.assign.loc[('I', 'B', 2), ('II', 'A', 1)](200) #type: ignore
 
         post = f2.to_pairs(0)
         self.assertEqual(post,

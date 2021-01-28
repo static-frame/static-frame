@@ -1558,13 +1558,13 @@ class TestUnit(TestCase):
                 [[0, 2], [4, 6], [12, 14]])
 
         self.assertTrue(f1._index._map is None) #type: ignore
-        self.assertTrue(f1._columns._map is None) #type: ignore
+        self.assertTrue(f1._columns._map is None)
 
         f1[4] = list(range(5))
-        self.assertTrue(f1._columns._map is None) #type: ignore
+        self.assertTrue(f1._columns._map is None)
 
         f1[20] = list(range(5))
-        self.assertFalse(f1._columns._map is None) #type: ignore
+        self.assertFalse(f1._columns._map is None)
 
         self.assertEqual(f1.values.tolist(),
                 [[0, 1, 2, 3, 0, 0],
@@ -2289,7 +2289,7 @@ class TestUnit(TestCase):
         f = sf.Frame.from_element(True, index=[1,2,3], columns=['a'])
         target = sf.Series([False, False, False], index=[1,2,3])
 
-        self.assertEqual(f.loc[target, 'a'].dtype, np.dtype('bool'))
+        self.assertEqual(f.loc[target, 'a'].dtype, np.dtype('bool')) #type: ignore
         self.assertEqual(f.loc[target].dtypes.values.tolist(), [np.dtype('bool')])
 
     def test_frame_extract_e(self) -> None:
@@ -2297,7 +2297,7 @@ class TestUnit(TestCase):
         f = sf.Frame.from_element('fourty-two', index=[1,2,3], columns=['a'])
         target = sf.Series([False, False, False], index=[1,2,3])
 
-        self.assertEqual(f.loc[target, 'a'].dtype, np.dtype('<U10'))
+        self.assertEqual(f.loc[target, 'a'].dtype, np.dtype('<U10')) #type: ignore
         self.assertEqual(f.loc[target].dtypes.values.tolist(), [np.dtype('<U10')])
 
 

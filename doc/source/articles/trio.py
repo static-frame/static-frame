@@ -6,7 +6,7 @@ import static_frame as sf
 # kaggle datasets download -d unsdsn/world-happiness
 
 
-def main():
+def main() -> None:
     fp = '/tmp/archive.zip'
 
 
@@ -15,7 +15,7 @@ def main():
     bus = sf.Bus.from_zip_csv(fp, config=sc)
     f = bus[2017]
     print(f)
-    import ipdb; ipdb.set_trace()
+    # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     main()

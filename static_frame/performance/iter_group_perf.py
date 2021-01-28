@@ -128,7 +128,7 @@ class BuildTestFrames:
     @staticmethod
     def _shuffle(frame: Frame) -> Frame:
         random.seed(0)
-        return frame.loc[random.sample(frame.index.values.tolist(), len(frame))] # type: ignore
+        return frame.loc[random.sample(frame.index.values.tolist(), len(frame))]
 
     def build_frame(self, rows: int, cols: int, groups: int, mixed_data: bool) -> Frame:
         group_col: np.ndarray = self._build_groups(groups, rows)

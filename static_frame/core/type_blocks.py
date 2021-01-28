@@ -2068,7 +2068,9 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     # operators
 
-    def _ufunc_unary_operator(self, operator: tp.Callable[[np.ndarray], np.ndarray]) -> 'TypeBlocks':
+    def _ufunc_unary_operator(self,
+            operator: tp.Callable[[np.ndarray], np.ndarray],
+            ) -> 'TypeBlocks':
         # for now, do no reblocking; though, in many cases, operating on a unified block will be faster
         def operation() -> tp.Iterator[np.ndarray]:
             for b in self._blocks:
