@@ -1,0 +1,26 @@
+
+
+Three Paradigms for Working with Collections of DataFrames
+=======================================================================
+
+
+It is common in DataFrame processing routines to work with collections of tables: for example, we might represent a multi-year dataset as a single table per year; or we might need to use data from multiple tables found in a database or XLSX file.
+
+
+In some situations, hierarchical indices can be used to bring multiple tables into a single DataFrame, but this may not be practical for performance: it may be that efficient data handling requires having only one or few tables loaded at a time. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
+
+This presentation introduces three novel containers for working with collections of DataFrames: the Bus, the Batch, and the Quilt. Each is specialized for different data layouts and usage contexts, and all over significant performance trade-offs and opportunities for flexible memory usage and parallel process. Together, they cover three core paradigms for working with collections of tables. These containers happen to be implemented in StaticFrame, but the paradigms are useful for any DataFrame library.
+
+
+Three Approaches
+___________________________
+
+The three paradigms can be described concisely as follows. The Bus is an ordered mapping of labels to tables, permitting random (and lazy) access and loading. The Batch is an iterator of labels and tables, permitting composable and deferred computation of operations. The Quilt is as virtual concatenation of tables along an axis, permitting treating many tables as one with optional lazy loading.
+
+
+
+
+
+
+
+
