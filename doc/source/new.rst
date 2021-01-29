@@ -1,6 +1,17 @@
 What is New in Static Frame
 ===============================
 
+0.7.15
+----------
+
+Added ``include_index_name``, ``include_columns_name`` parameters to ``Frame.to_arrow``
+
+Added ``include_index_name``, ``include_columns_name`` parameters to ``Frame.to_parquet``
+
+Added ``index_name_depth_level``, ``columns_name_depth_level`` parameters to ``Frame.from_arrow``
+
+Added ``index_name_depth_level``, ``columns_name_depth_level`` parameters to ``Frame.from_parquet``
+
 
 0.7.14
 ----------

@@ -13,6 +13,8 @@ from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.exception import StoreFileMutation
+from static_frame.core.exception import StoreParameterConflict
+
 from static_frame.core.frame import Frame
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypesSpecifier
@@ -295,7 +297,9 @@ class Store:
     def get_field_names_and_dtypes(*,
             frame: Frame,
             include_index: bool,
+            include_index_name: bool,
             include_columns: bool,
+            include_columns_name: bool,
             force_str_names: bool = False,
             force_brackets: bool = False
             ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[np.dtype]]:
@@ -304,11 +308,16 @@ class Store:
         columns = frame.columns
         columns_values = columns.values
 
+        if include_index_name and include_columns_name:
+            raise StoreParameterConflict('cannot include_index_name and include_columns_name with this Store')
+
         if columns.depth > 1:
             # The str() of an array produces a space-delimited representation that includes list brackets; we could trim these brackets here, but need them for SQLite usage; thus, clients will have to trim if necessary.
             columns_values = tuple(str(c) for c in columns_values)
 
         if not include_index:
+            if include_columns_name:
+                raise StoreParameterConflict('cannot include_columns_name when include_index is False')
             dtypes = frame._blocks.dtypes.tolist()
             if include_columns:
                 field_names = columns_values
@@ -320,7 +329,14 @@ class Store:
             else:
                 dtypes = index.dtypes.values.tolist() #type: ignore [attr-defined]
             # Get a list to mutate.
-            field_names = list(index.names)
+            if include_index_name:
+                field_names = list(index.names)
+            elif include_columns_name and index.depth == columns.depth:
+                field_names = list(columns.names)
+            elif include_columns_name and index.depth == 1 and columns.depth > 1:
+                field_names = [tuple(str(c) for c in columns.names),]
+            else: # if index_depth > 1 and not equal t columns_depth
+                raise StoreParameterConflict('cannot determine field names over index; set one of include_index_name or include_columns_name')
 
             # add frame dtypes t0 those from index
             dtypes.extend(frame._blocks.dtypes)

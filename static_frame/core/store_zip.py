@@ -183,7 +183,9 @@ class StoreZipParquet(_StoreZip):
                 yield container_type.from_parquet(
                         src,
                         index_depth=c.index_depth,
+                        index_name_depth_level=c.index_name_depth_level,
                         columns_depth=c.columns_depth,
+                        columns_name_depth_level=c.columns_name_depth_level,
                         columns_select=c.columns_select,
                         dtypes=c.dtypes,
                         name=label,
@@ -209,7 +211,9 @@ class StoreZipParquet(_StoreZip):
                 frame.to_parquet(
                         dst,
                         include_index=c.include_index,
+                        include_index_name=c.include_index_name,
                         include_columns=c.include_columns,
+                        include_columns_name=c.include_columns_name,
                         )
                 dst.seek(0)
                 # this will write it without a container

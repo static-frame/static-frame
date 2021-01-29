@@ -97,7 +97,9 @@ class TestUnit(TestCase):
 
         field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
                 include_index=False,
+                include_index_name=True,
                 include_columns=False,
+                include_columns_name=False,
                 )
         self.assertEqual(field_names, range(0, 3))
         self.assertEqual(dtypes,
@@ -109,7 +111,10 @@ class TestUnit(TestCase):
 
         field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
                 include_index=False,
-                include_columns=True)
+                include_index_name=True,
+                include_columns=True,
+                include_columns_name=False,
+                )
 
         self.assertEqual(field_names.tolist(), ['x', 'y', 'z']) #type: ignore
         self.assertEqual(dtypes,

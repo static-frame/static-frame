@@ -1,21 +1,38 @@
 
 
 Three Paradigms for Working with Collections of DataFrames
+The Bus, Batch, & Quilt: A Trio of Tools for Working with Collections of DataFrames
 =======================================================================
 
 
-It is common in DataFrame processing routines to work with collections of tables: for example, we might represent a multi-year dataset as a single table per year; or we might need to use data from multiple tables found in a database or XLSX file.
+It is common in DataFrame processing routines to work with collections of tables: for example, we might represent a multi-year dataset as a single table per year; or we might need to use data from multiple tables found in a database or XLSX file. This presentation introduces three novel containers for working with collections of DataFrames: the Bus, Batch, and Quilt.
 
 
-In some situations, hierarchical indices can be used to bring multiple tables into a single DataFrame, but this may not be practical for performance: it may be that efficient data handling requires having only one or few tables loaded at a time. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
+In some situations, hierarchical indices can be used to bring multiple tables into a single DataFrame, but this may not be practical for performance: efficient data handling may require having only one or few tables loaded at a time, and hierarchical indices incur additional overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
 
-This presentation introduces three novel containers for working with collections of DataFrames: the Bus, the Batch, and the Quilt. Each is specialized for different data layouts and usage contexts, and all over significant performance trade-offs and opportunities for flexible memory usage and parallel process. Together, they cover three core paradigms for working with collections of tables. These containers happen to be implemented in StaticFrame, but the paradigms are useful for any DataFrame library.
+The Bus, Batch, and Quilt are specialized for different data layouts and usage contexts, and each offers significant performance trade-offs and opportunities for flexible memory usage and parallel processing. Together, they cover three core paradigms for working with collections of DataFrames. While these containers are implemented in the Python StaticFrame package (a Pandas alternative that offers immutable DataFrames and a more consistent interface), the abstractions are useful for application in any DataFrame or table processing library.
+
+In addition, all three tools provide the same interfaces for reading from, and writing to, multi-table storage formats such as XLSX, SQLite, HDF5, or zipped containers of Parquet or delimited text files.
+
+These tools evolved from the context of my work: processing financial data and implementing portfolio construction routines. There, data sets are naturally partitioned by date or characteristic. For historical simulations, the data needed can be large. The Bus, Batch, and Quilt have provided convenient and efficient tools for this domain, without the overhead of moving to multi-machine architectures like Dask.
 
 
 Three Approaches
 ___________________________
 
-The three paradigms can be described concisely as follows. The Bus is an ordered mapping of labels to tables, permitting random (and lazy) access and loading. The Batch is an iterator of labels and tables, permitting composable and deferred computation of operations. The Quilt is as virtual concatenation of tables along an axis, permitting treating many tables as one with optional lazy loading.
+The three paradigms can be described concisely as follows. The Bus is an ordered mapping of labels to tables, permitting random (and lazy) access and loading. The Batch is an iterator of labels and tables, permitting composable, deferred, and parallel computation of operations. The Quilt is as a virtual concatenation of tables along an axis, permitting the treatment of many tables as one without loading all component tables into memory.
+
+We can flesh out those concise descriptions by looking at these tools through a number of different comparisons.
+
+
+Relation to Other Containers
+................................
+
+The Bus can be thought of as an (ordered) dictionary or Series of DataFrames, a key difference being that, when reading from a file store, DataFrames are only loaded when accessed, and can be configured to only hold strong references to a limited number of DataFrames defined by the `max_persist` argument.
+
+
+
+
 
 
 

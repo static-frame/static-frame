@@ -193,7 +193,7 @@ class StoreXLSX(Store):
             if store_filter:
                 columns_values = store_filter.from_type_filter_array(columns_values)
             writer_columns = cls._get_writer(columns_values.dtype, ws)
-            # for labels in acme, do not know type
+            # for labels in apex, do not know type
             writer_names = cls._get_writer(DTYPE_OBJECT, ws)
 
         # write by column

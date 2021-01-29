@@ -1100,6 +1100,57 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('0', ((0, np.datetime64('2017-01-01T00:00:00.000000000')), (1, np.datetime64('2017-01-01T00:00:00.000000000')))), ('1', ((0, np.datetime64('2017-01-01T00:00:00.000000000')), (1, np.datetime64('2017-01-01T00:00:00.000000000'))))))
 
+    def test_frame_to_parquet_f(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = Index(tuple('ABCD'), name='foo')
+        index = Index(tuple('WXYZ'), name='bar')
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        with temp_file('.parquet') as fp:
+            with self.assertRaises(RuntimeError):
+                f1.to_parquet(fp,
+                        include_index=True,
+                        include_columns=True,
+                        include_index_name=True,
+                        include_columns_name=True,
+                        )
+
+            f1.to_parquet(fp,
+                    include_index=True,
+                    include_columns=True,
+                    include_index_name=True,
+                    )
+            f2 = Frame.from_parquet(fp,
+                    index_depth=1,
+                    index_name_depth_level=0,
+                    columns_depth=1,
+                    )
+            self.assertEqual(f2.index.name, 'bar')
+            self.assertEqual(f2.columns.name, None)
+
+            f3 = Frame.from_parquet(fp,
+                    index_depth=1,
+                    columns_depth=1,
+                    columns_name_depth_level=0,
+                    )
+            self.assertEqual(f3.index.name, None)
+            self.assertEqual(f3.columns.name, 'bar')
+
+            f4 = Frame.from_parquet(fp,
+                    index_depth=1,
+                    columns_depth=1,
+                    index_name_depth_level=0,
+                    columns_name_depth_level=0,
+                    )
+            self.assertEqual(f4.index.name, 'bar')
+            self.assertEqual(f4.columns.name, 'bar')
 
 
     #---------------------------------------------------------------------------

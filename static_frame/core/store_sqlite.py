@@ -58,7 +58,9 @@ class StoreSQLite(Store):
         field_names, dtypes = cls.get_field_names_and_dtypes(
                 frame=frame,
                 include_index=include_index,
+                include_index_name=True,
                 include_columns=include_columns,
+                include_columns_name=False,
                 force_brackets=True # needed for having numbers as field names
                 )
 

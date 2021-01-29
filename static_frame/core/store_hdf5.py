@@ -42,7 +42,9 @@ class StoreHDF5(Store):
                 field_names, dtypes = self.get_field_names_and_dtypes(
                         frame=frame,
                         include_index=c.include_index,
-                        include_columns=c.include_columns
+                        include_index_name=True,
+                        include_columns=c.include_columns,
+                        include_columns_name=False,
                         )
 
                 # Must set pos to have stable position

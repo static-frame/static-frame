@@ -942,7 +942,7 @@ def index_many_set(
 def apex_to_name(
         rows: tp.Sequence[tp.Sequence[tp.Hashable]],
         depth_level: tp.Optional[DepthLevelSpecifier],
-        axis: int, # 0 is by row (for index, 1 is by column (for columns)
+        axis: int, # 0 is by row (for index), 1 is by column (for columns)
         axis_depth: int,
         ) -> NameType:
     '''
