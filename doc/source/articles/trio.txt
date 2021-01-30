@@ -2,35 +2,140 @@
 
 Three Paradigms for Working with Collections of DataFrames
 The Bus, Batch, & Quilt: A Trio of Tools for Working with Collections of DataFrames
-=======================================================================
+=====================================================================================
 
 
-It is common in DataFrame processing routines to work with collections of tables: for example, we might represent a multi-year dataset as a single table per year; or we might need to use data from multiple tables found in a database or XLSX file. This presentation introduces three novel containers for working with collections of DataFrames: the Bus, Batch, and Quilt.
+It is common in DataFrame processing routines to work with collections of tables, such as a multi-year dataset with a single table per year, or historical stock data with table per stock. We might need to use data from multiple tables found in a database or XLSX file. This presentation introduces three novel containers for working with such collections of DataFrames: the Bus, Batch, and Quilt.
 
 
-In some situations, hierarchical indices can be used to bring multiple tables into a single DataFrame, but this may not be practical for performance: efficient data handling may require having only one or few tables loaded at a time, and hierarchical indices incur additional overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
+In some situations, hierarchical indices can be used to bring multiple tables into a single DataFrame, but this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
 
-The Bus, Batch, and Quilt are specialized for different data layouts and usage contexts, and each offers significant performance trade-offs and opportunities for flexible memory usage and parallel processing. Together, they cover three core paradigms for working with collections of DataFrames. While these containers are implemented in the Python StaticFrame package (a Pandas alternative that offers immutable DataFrames and a more consistent interface), the abstractions are useful for application in any DataFrame or table processing library.
+The Bus, Batch, and Quilt are specialized for different data layouts and usage contexts, and each offers significant performance opportunities for flexible memory usage and parallel processing. Together, they cover three core paradigms for working with collections of DataFrames. Because the are interrelated, I describe them as "trio."
 
-In addition, all three tools provide the same interfaces for reading from, and writing to, multi-table storage formats such as XLSX, SQLite, HDF5, or zipped containers of Parquet or delimited text files.
+In addition, all three tools provide the same interfaces for reading from, and writing to, multi-table storage formats such as XLSX, SQLite, HDF5, or zipped containers of pickle, Parquet, or delimited-text files.
 
-These tools evolved from the context of my work: processing financial data and implementing portfolio construction routines. There, data sets are naturally partitioned by date or characteristic. For historical simulations, the data needed can be large. The Bus, Batch, and Quilt have provided convenient and efficient tools for this domain, without the overhead of moving to multi-machine architectures like Dask.
+These tools evolved from the context of my work: processing financial data and modelling investment systems. There, data sets are naturally partitioned by date or characteristic. For historical simulations, the data needed can be large. The Bus, Batch, and Quilt have provided convenient and efficient tools for this domain, without the overhead of moving to multi-machine architectures like Dask.
+
+While these containers are implemented in the Python StaticFrame package (a Pandas alternative that offers immutable DataFrames), the abstractions are useful for application in any DataFrame or table processing library. StaticFrame calls DataFrames simply "Frames," and that convention will be used in this presentation.
 
 
-Three Approaches
+Sample Data
 ___________________________
 
-The three paradigms can be described concisely as follows. The Bus is an ordered mapping of labels to tables, permitting random (and lazy) access and loading. The Batch is an iterator of labels and tables, permitting composable, deferred, and parallel computation of operations. The Quilt is as a virtual concatenation of tables along an axis, permitting the treatment of many tables as one without loading all component tables into memory.
+We will use the World Happiness Report dataset via Kaggle to demonstrate these containers. The file "archive.zip" is available at https://www.kaggle.com/unsdsn/world-happiness or via the `kaggle` command-line app::
 
-We can flesh out those concise descriptions by looking at these tools through a number of different comparisons.
+    kaggle datasets download -d unsdsn/world-happiness
+
+After creating a `StoreConfig` to specify table and archive characteristics, we can load the zip directly into a Bus to get started. While zip archives of CSV files are convenient, they are far less efficient than zip archives of parquet or pickle files.
+
+>>> import static_frame as sf
+>>> config = sf.StoreConfig(index_depth=1, label_decoder=int, label_encoder=str)
+>>> bus = sf.Bus.from_zip_csv('archive.zip', config=config)
+>>> bus
+<Bus>
+<Index>
+2015    <FrameDeferred>
+2016    <FrameDeferred>
+2017    <FrameDeferred>
+2018    <FrameDeferred>
+2019    <FrameDeferred>
+<int64> <object>
+
+While essentially representing the same kind of data, the component tables in this archive have inconsistent columns and column naming. We can normalize each table to four columns, and assign an index with the following Frame-processing function:
+
+    def normalize(f: sf.Frame) -> sf.Frame:
+        fields = ['country', 'score', 'rank', 'gdp']
+
+        def relabel(label):
+            for field in fields:
+                if field in label.lower():
+                    return field
+            return label
+
+        return f.relabel(columns=relabel)[fields].set_index(fields[0], drop=True)
+
+Give this function we can reload the Bus by using the Batch to apply this function to each table:
+
+>>> bus = sf.Batch.from_zip_csv('archive.zip', config=config).apply(normalize).to_bus()
 
 
 Relation to Other Containers
-................................
-
-The Bus can be thought of as an (ordered) dictionary or Series of DataFrames, a key difference being that, when reading from a file store, DataFrames are only loaded when accessed, and can be configured to only hold strong references to a limited number of DataFrames defined by the `max_persist` argument.
+_______________________________
 
 
+The Bus can be thought of as an ordered dictionary (or Series) of Frames, permitting random access by label. When reading from a file store, Frames are loaded lazily, only when accessed, and can be configured to only hold strong references to a limited number of Frames defined by the ``max_persist`` argument. This permits limiting the total memory loaded by the Bus. As shown above, initially loading "archive.zip" shows five ``FrameDeferred`` objects: Frames that are labelled but not yet loaded.
+
+As the Bus supports reading from and writing to XLSX and HDF5 (as well as other formats), it serves the same purpose as the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but provides a more general and consistent interface between those storage types (as well as many others).
+
+The Batch can be thought of as a generator of pairs of label and Frame. The generator is only iterated when creating a composite Frame with ``Batch.to_frame`` or using dictionary like methods: ``keys``, ``items``, and ``values``. All other method calls or operator applications are composed and deferred in a new Batch, composing the operation upon the stored iterator.
+
+The Batch is related to pandas DataFrameGroupBy and Rolling objects: interfaces that result from configuring a group by or rolling window operation, that then expose function application on those groups or windows. The Batch generalizes this utility for those cases as well as any iterator of labels and Frames.
+
+The Quilt can be thought of as a Frame built from many smaller Frames, and aligned either vertically or horizontally: a virtual concatenation of tables along an axis. The Quilt exposes a subset of the Frame interface. As the Quilt manages reading those smaller Frames though a contained Bus, the Bus can be configured with ``max_persist`` to limit the number of Frames loaded, permitting doing operations on a "virtual" Frame that might not be possible to load into memory.
+
+
+Shape Characteristics
+_______________________
+
+Another way of understanding the trio is in terms of shape and iteration characteristics. The Bus and Batch are one-dimensional collections of Frames; the Quilt presents a two-dimensional Frame. While the shape of the Bus and Batch is the number of Frames, the shape of the Quilt depends on its axis of orientation. While each container is iterable, only the Batch is an iterator: its shape cannot be known until iteration is completed.
+
+For n Frame of shape (x, y)
++---------+------+------+------------------+
+|         |Bus   |Batch |Quilt             |
++=========+======+======+==================+
+|ndim     |1     |1     |2                 |
++---------+------+------+------------------+
+|shape    |(n,)  |(n,)  |(xn, y) or (x, yn)|
++---------+------+------+------------------+
+|Iterable |True  |True  |True              |
++---------+------+------+------------------+
+|Iterator |False |True  |False             |
++---------+------+------+------------------+
+
+
+Selection
+_______________________
+
+We can create a Batch and a Quilt from the normalized Bus to demonstrate how selection differs with each. A Batch can be initialized from an items-like iterator of pairs of label and Frame. A Quilt can be initialized from a Bus, and requires specification of which axis to orient on, either vertically (axis 0) or horizontally (axis 1). Additionally, creation of a Quilt must specify ``retain_labels``: if labels on the axis of alignment are globally unique, Frame labels do not have to be retained.
+
+>>> batch = sf.Batch(bus.items())
+>>> quilt = sf.Quilt(bus, axis=0, retain_labels=True)
+
+
+In : bus.head(2)
+<Series>
+<Index>
+2015     Frame
+2016     Frame
+<int64>  <object>
+
+
+In : sf.Batch(bus.items()).head(2).to_frame()
+<Frame>
+<Index>                      score            rank    gdp              <<U29>
+<IndexHierarchy>
+2015             Switzerland 7.587            1       1.39651
+2015             Iceland     7.561            2       1.30232
+2016             Denmark     7.526            1       1.44178
+2016             Switzerland 7.509            2       1.52733
+2017             Norway      7.53700017929077 1       1.61646318435669
+2017             Denmark     7.52199983596802 2       1.48238301277161
+2018             Finland     7.632            1       1.305
+2018             Norway      7.594            2       1.456
+2019             Finland     7.769            1       1.34
+2019             Denmark     7.6              2       1.383
+<int64>          <<U24>      <float64>        <int64> <float64>
+
+
+>>> quilt['rank'].head()
+<Series: rank>
+<IndexHierarchy: country>
+2015                      Switzerland 1
+2015                      Iceland     2
+2015                      Denmark     3
+2015                      Norway      4
+2015                      Canada      5
+<int64>                   <<U11>      <int64>
 
 
 
@@ -39,5 +144,9 @@ The Bus can be thought of as an (ordered) dictionary or Series of DataFrames, a 
 
 
 
+Unused
+___________________________
 
+The three paradigms can be described concisely as follows. The Bus is an ordered mapping of labels to Frames, permitting random (and lazy) access and loading. The Batch is an iterator of labels and Frames, permitting composable, deferred, and parallel computation of operations on each Frame. The Quilt is as a virtual concatenation of tables along an axis, permitting the treatment of many tables as one, yet without loading all component Frames into memory.
 
+Those descriptions are likely insufficient for a clear understanding. We will demonstrate these features by looking at these tools through a number of different comparisons.
