@@ -524,3 +524,32 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 return False
 
         return True
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in changed dimensionality
+
+    @doc_inject(selector='head', class_name='Bus')
+    def head(self, count: int = 5) -> 'Bus':
+        '''{doc}
+
+        Args:
+            {count}
+
+        Returns:
+            :obj:`Bus`
+        '''
+        return self.iloc[:count]
+
+    @doc_inject(selector='tail', class_name='Bus')
+    def tail(self, count: int = 5) -> 'Bus':
+        '''{doc}s
+
+        Args:
+            {count}
+
+        Returns:
+            :obj:`Bus`
+        '''
+        return self.iloc[-count:]
+
+

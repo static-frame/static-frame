@@ -436,7 +436,7 @@ def main() -> None:
     import ipdb; ipdb.set_trace()
 
 
-def table():
+def tables():
     name = 'For n Frame of shape (x, y)'
     columns = (  'Bus', 'Batch', 'Quilt')
     records_items = (
@@ -451,8 +451,26 @@ def table():
     print(f.name)
     print(f.to_rst())
 
+    name = 'Constructors & Exporters'
+    columns = (  'Constructor', 'Exporter')
+    records = (
+        ('from_zip_tsv', 'to_zip_tsv',),
+        ('from_zip_csv', 'to_zip_csv',),
+        ('from_zip_pickle', 'to_zip_pickle',),
+        ('from_zip_parquet', 'to_zip_parquet',),
+        ('from_xlsx',  'to_xlsx'),
+        ('from_sqlite',  'to_sqlite'),
+        ('from_hdf5',  'to_hdf5'),
+        )
+
+    f = sf.Frame.from_records(records, columns=columns, name=name)
+    # print(f)
+    print(f.name)
+    print(f.to_rst(sf.DisplayConfig(include_index=False, type_show=False)))
+
+
 if __name__ == '__main__':
-    table()
+    tables()
     main()
 
 

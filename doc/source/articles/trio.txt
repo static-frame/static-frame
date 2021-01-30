@@ -2,6 +2,7 @@
 
 Three Paradigms for Working with Collections of DataFrames
 The Bus, Batch, & Quilt: A Trio of Tools for Working with Collections of DataFrames
+The Bus, Batch, & Quilt: A Trio of Multi-Frame Containers
 =====================================================================================
 
 
@@ -10,7 +11,7 @@ It is common in DataFrame processing routines to work with collections of tables
 
 In some situations, hierarchical indices can be used to bring multiple tables into a single DataFrame, but this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
 
-The Bus, Batch, and Quilt are specialized for different data layouts and usage contexts, and each offers significant performance opportunities for flexible memory usage and parallel processing. Together, they cover three core paradigms for working with collections of DataFrames. Because the are interrelated, I describe them as "trio."
+The Bus, Batch, and Quilt are specialized for different data layouts and usage contexts, and each offers significant performance opportunities for flexible memory usage and parallel processing. As familiy of multi-frame containers (MFCs), they cover three core paradigms for working with collections of DataFrames. Because the are interrelated, I describe them as a "trio."
 
 In addition, all three tools provide the same interfaces for reading from, and writing to, multi-table storage formats such as XLSX, SQLite, HDF5, or zipped containers of pickle, Parquet, or delimited-text files.
 
@@ -54,9 +55,10 @@ While essentially representing the same kind of data, the component tables in th
 
         return f.relabel(columns=relabel)[fields].set_index(fields[0], drop=True)
 
-Give this function we can reload the Bus by using the Batch to apply this function to each table:
+Given this function we can reload the Bus by using the Batch to apply this function to each table:
 
 >>> bus = sf.Batch.from_zip_csv('archive.zip', config=config).apply(normalize).to_bus()
+
 
 
 Relation to Other Containers
@@ -93,24 +95,68 @@ For n Frame of shape (x, y)
 +---------+------+------+------------------+
 
 
-Selection
+Initialization
 _______________________
 
-We can create a Batch and a Quilt from the normalized Bus to demonstrate how selection differs with each. A Batch can be initialized from an items-like iterator of pairs of label and Frame. A Quilt can be initialized from a Bus, and requires specification of which axis to orient on, either vertically (axis 0) or horizontally (axis 1). Additionally, creation of a Quilt must specify ``retain_labels``: if labels on the axis of alignment are globally unique, Frame labels do not have to be retained.
+The Bus, Batch, and Quilt all share the same file-based constructors and exporters, such as `from_zip_csv()` shown above or `from_xlsx()`; each constructor has a corresponding exporter: e.g., `to_zip_csv()` or `to_xlsx()`, respectively. The following table summarize the constructors and exporters available.
+
+File-Based Constructors & Exporters
++-----------------+--------------+
+|Constructor      |Exporter      |
++=================+==============+
+|from_zip_tsv     |to_zip_tsv    |
++-----------------+--------------+
+|from_zip_csv     |to_zip_csv    |
++-----------------+--------------+
+|from_zip_pickle  |to_zip_pickle |
++-----------------+--------------+
+|from_zip_parquet |to_zip_parquet|
++-----------------+--------------+
+|from_xlsx        |to_xlsx       |
++-----------------+--------------+
+|from_sqlite      |to_sqlite     |
++-----------------+--------------+
+|from_hdf5        |to_hdf5       |
++-----------------+--------------+
+
+
+Constructors for creating MFCs from in-memory Frames are also provided. A Batch can be initialized from any items-like iterator of pairs of label and Frame; this is can be supplied by ``items()`` on the Bus. As the Batch is a generator-like iterator, it can only be iterated once before it is exhausted. For this reason a fresh Batch will be created for each usage in subsequent examples. The following example demonstrates that, just like a generator, a Batch can only be iterated once:
 
 >>> batch = sf.Batch(bus.items())
+>>> len(tuple(batch))
+5
+>>> len(tuple(batch))
+0
+
+
+A Quilt can be initialized from a Bus, and requires specification of which axis to orient on, either vertically (axis 0) or horizontally (axis 1). Additionally, creation of a Quilt must specify if outer Frame lables should be retained with the ``retain_labels`` argument.
+
 >>> quilt = sf.Quilt(bus, axis=0, retain_labels=True)
+>>> [f.shape for f in bus.values]
+[(158, 3), (157, 3), (155, 3), (156, 3), (156, 3)]
+>>> quilt.shape
+(782, 3)
 
 
-In : bus.head(2)
-<Series>
+Cross-Container Comparisons
+______________________________
+
+To better understand these containers, I will demonstrate similar operations on each. Through understanding these examples, the nature of these containers will be made clear.
+
+
+Selection
+...............................
+
+The ``head(2)`` method returns three very different results with each container. The Bus, like a `Series`, returns a new `Bus` with the first two Frames. The Batch calls `head(2)` on each contained `Frame`, returning the top two rows from each contained `Frame`. The Quilt, representing the contained Frames as a contiguous, tall Frame, return the first two row of the first Frame, labelled with a hierarchical index.
+
+>>> bus.head(2)
+<Bus>
 <Index>
-2015     Frame
-2016     Frame
-<int64>  <object>
+2015    Frame
+2016    Frame
+<int64> <object>
 
-
-In : sf.Batch(bus.items()).head(2).to_frame()
+>>> sf.Batch(bus.items()).head(2).to_frame()
 <Frame>
 <Index>                      score            rank    gdp              <<U29>
 <IndexHierarchy>
@@ -126,27 +172,77 @@ In : sf.Batch(bus.items()).head(2).to_frame()
 2019             Denmark     7.6              2       1.383
 <int64>          <<U24>      <float64>        <int64> <float64>
 
-
->>> quilt['rank'].head()
-<Series: rank>
+>> quilt.head(2)
+<Frame: 2015>
+<Index>                               score     rank    gdp       <<U29>
 <IndexHierarchy: country>
-2015                      Switzerland 1
-2015                      Iceland     2
-2015                      Denmark     3
-2015                      Norway      4
-2015                      Canada      5
-<int64>                   <<U11>      <int64>
+2015                      Switzerland 7.587     1       1.39651
+2015                      Iceland     7.561     2       1.30232
+<int64>                   <<U24>      <float64> <int64> <float64>
+
+
+The full range of `loc` and `iloc` style selection is supported from all containers, but again operating in the appropriate dimensional context of each MFC. With the Bus we can select contained Frames, with the Batch we can select from each contained Frame, and with the Quilt we can select form the virtual concatenation into a single Frame.
+
+>>> bus[2017].tail()
+<Frame: 2017>
+<Index>                  score            rank    gdp               <<U29>
+<Index: country>
+Rwanda                   3.47099995613098 151     0.368745893239975
+Syria                    3.46199989318848 152     0.777153134346008
+Tanzania                 3.34899997711182 153     0.511135876178741
+Burundi                  2.90499997138977 154     0.091622568666935
+Central African Republic 2.69300007820129 155     0.0
+<<U24>                   <float64>        <int64> <float64>
+
+>>> sf.Batch(bus.items()).loc['Tanzania', ['score', 'rank']].to_frame()
+<Frame>
+<Index> score            rank      <<U29>
+<Index>
+2015    3.781            146.0
+2016    3.666            149.0
+2017    3.34899997711182 153.0
+2018    3.303            153.0
+2019    3.231            153.0
+<int64> <float64>        <float64>
+
+>>> quilt.loc[sf.HLoc[:, 'Tanzania'], ['score', 'rank']]
+<Frame>
+<Index>                            score            rank    <<U29>
+<IndexHierarchy: country>
+2015                      Tanzania 3.781            146
+2016                      Tanzania 3.666            149
+2017                      Tanzania 3.34899997711182 153
+2018                      Tanzania 3.303            153
+2019                      Tanzania 3.231            153
+<int64>                   <<U8>    <float64>        <int64>
+
+
+
+Iteration
+...............................
+
+
+
+
+
+Function Application
+...............................
+
+
+
+
+
+Performance
+_______________________
+
+
+
+
+Conclusion
+_______________________
 
 
 
 
 
 
-
-
-Unused
-___________________________
-
-The three paradigms can be described concisely as follows. The Bus is an ordered mapping of labels to Frames, permitting random (and lazy) access and loading. The Batch is an iterator of labels and Frames, permitting composable, deferred, and parallel computation of operations on each Frame. The Quilt is as a virtual concatenation of tables along an axis, permitting the treatment of many tables as one, yet without loading all component Frames into memory.
-
-Those descriptions are likely insufficient for a clear understanding. We will demonstrate these features by looking at these tools through a number of different comparisons.
