@@ -35,6 +35,10 @@ class StoreConfig(metaclass=InterfaceMeta):
     merge_hierarchical_labels: bool
     label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]]
     label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]]
+    read_max_workers: tp.Optional[int]
+    read_chunksize: int
+    write_max_workers: tp.Optional[int]
+    write_chunksize: int
 
     __slots__ = (
             'index_depth',
@@ -54,6 +58,10 @@ class StoreConfig(metaclass=InterfaceMeta):
             'merge_hierarchical_labels',
             'label_encoder',
             'label_decoder',
+            'read_max_workers',
+            'read_chunksize',
+            'write_max_workers',
+            'write_chunksize',
             )
 
     @classmethod
@@ -96,6 +104,10 @@ class StoreConfig(metaclass=InterfaceMeta):
             # store label serializer
             label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]] = None,
             label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]] = None,
+            read_max_workers: tp.Optional[int] = None,
+            read_chunksize: int = 1,
+            write_max_workers: tp.Optional[int] = None,
+            write_chunksize: int = 1,
             ):
         '''
         Args:
@@ -127,6 +139,10 @@ class StoreConfig(metaclass=InterfaceMeta):
         self.label_encoder = label_encoder
         self.label_decoder = label_decoder
 
+        self.read_max_workers = read_max_workers
+        self.read_chunksize = read_chunksize
+        self.write_max_workers = write_max_workers
+        self.write_chunksize = write_chunksize
 
     def label_encode(self, label: tp.Hashable) -> str:
         if self.label_encoder:
@@ -216,10 +232,19 @@ class StoreConfigMap:
                 if (config.label_encoder != self._default.label_encoder or
                         config.label_decoder != self._default.label_decoder):
                     raise ErrorInitStoreConfig(f'config {label} has encoder/decoder inconsistent with default; align values and/or pass a default StoreConfig.')
+                if (config.read_max_workers != self._default.read_max_workers or
+                        config.read_chunksize != self._default.read_chunksize):
+                    raise ErrorInitStoreConfig(f'config {label} has read_max_workers/chunksize inconsistent with default; align values and/or pass a default StoreConfig.')
+                if (config.write_max_workers != self._default.write_max_workers or
+                        config.write_chunksize != self._default.write_chunksize):
+                    raise ErrorInitStoreConfig(f'config {label} has write_max_workers/chunksize inconsistent with default; align values and/or pass a default StoreConfig.')
                 self._map[label] = config
 
     def __getitem__(self, key: tp.Optional[tp.Hashable]) -> StoreConfig:
         return self._map.get(key, self._default)
+
+    def is_empty(self) -> bool:
+        return len(self._map) == 0
 
     @property
     def default(self) -> StoreConfig:

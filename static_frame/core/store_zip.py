@@ -3,7 +3,8 @@ import zipfile
 import pickle
 from io import StringIO
 from io import BytesIO
-
+from functools import partial
+from concurrent.futures import ProcessPoolExecutor
 
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
@@ -13,6 +14,7 @@ from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
 from static_frame.core.container_util import container_to_exporter_attr
+from static_frame.core.util import DtypesSpecifier
 
 class _StoreZip(Store):
 
@@ -164,6 +166,37 @@ class StoreZipParquet(_StoreZip):
 
     _EXT_CONTAINED = '.parquet'
 
+    @staticmethod
+    def _build_frame_explicit(
+            src_and_name: tp.Tuple[BytesIO, tp.Hashable],
+            *,
+            index_depth: int,
+            columns_depth: int,
+            columns_select: int,
+            dtypes: DtypesSpecifier,
+            consolidate_blocks: bool,
+            container_type: tp.Type[Frame],
+        ) -> Frame:
+        '''Used when a single configuration exists. Allows client to partial in the configuration once'''
+        src, name = src_and_name
+        return container_type.from_parquet(
+            src,
+            index_depth=index_depth,
+            columns_depth=columns_depth,
+            columns_select=columns_select,
+            dtypes=dtypes,
+            name=name,
+            consolidate_blocks=consolidate_blocks,
+        )
+
+    @classmethod
+    def _build_frame_from_parameters(cls,
+            parameters: tp.Dict[str, tp.Any],
+            container_type: tp.Type[Frame],
+        ) -> Frame:
+        '''Used when multiple configurations exist. Allows client to pass in the configuration for each frame'''
+        return cls._build_frame_explicit(**parameters, container_type=container_type)
+
     @store_coherent_non_write
     def read_many(self,
             labels: tp.Iterable[tp.Hashable],
@@ -173,22 +206,56 @@ class StoreZipParquet(_StoreZip):
             ) -> tp.Iterator[Frame]:
 
         config_map = StoreConfigMap.from_initializer(config)
+        single_config = config_map.is_empty()
+        frames_parameters = []
 
+        # Load in all byte & kwarg information needed to build the frames
         with zipfile.ZipFile(self._fp) as zf:
             for label in labels:
                 c = config_map[label]
-                label_encoded = config_map.default.label_encode(label)
 
+                label_encoded = config_map.default.label_encode(label)
                 src = BytesIO(zf.read(label_encoded + self._EXT_CONTAINED))
-                yield container_type.from_parquet(
-                        src,
+
+                src_and_name = src, label
+
+                if single_config:
+                    # No need to duplicate config info here
+                    frames_parameters.append(src_and_name)
+                else:
+                    frames_parameters.append(dict(
+                        src_and_name=src_and_name,
                         index_depth=c.index_depth,
                         columns_depth=c.columns_depth,
                         columns_select=c.columns_select,
                         dtypes=c.dtypes,
-                        name=label,
                         consolidate_blocks=c.consolidate_blocks,
-                        )
+                ))
+
+        config = config_map.default
+
+        if single_config:
+            # Partial in each config parameter explicitly since there is only one config
+            func = partial(self._build_frame_explicit,
+                    index_depth=config.index_depth,
+                    columns_depth=config.columns_depth,
+                    columns_select=config.columns_select,
+                    dtypes=config.dtypes,
+                    consolidate_blocks=config.consolidate_blocks,
+                    container_type=container_type,
+            )
+        else:
+            # Config information will come from the parameters
+            func = partial(self._build_frame_from_parameters, container_type=container_type)
+
+        if config.read_max_workers is None:
+            for frame_parameters in frames_parameters:
+                yield func(frame_parameters)
+        else:
+            chunksize = config.read_chunksize
+
+            with ProcessPoolExecutor(max_workers=config.read_max_workers) as executor:
+                yield from executor.map(func, frame_parameters, chunksize=chunksize)
 
     @store_coherent_write
     def write(self,
@@ -214,6 +281,3 @@ class StoreZipParquet(_StoreZip):
                 dst.seek(0)
                 # this will write it without a container
                 zf.writestr(label_encoded + self._EXT_CONTAINED, dst.read())
-
-
-
