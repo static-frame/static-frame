@@ -181,7 +181,7 @@ The ``head(2)`` method returns three very different results with each container.
 <int64>                   <<U24>      <float64> <int64> <float64>
 
 
-The full range of `loc` and `iloc` style selection is supported from all containers, but again operating in the appropriate dimensional context of each MFC. With the Bus we can select contained Frames, with the Batch we can select from each contained Frame, and with the Quilt we can select form the virtual concatenation into a single Frame.
+The full range of `loc` and `iloc` style selection is supported from all containers, though specialized to within the particular dimensional context. With the Bus we can select contained Frames, with the Batch we can select from with each contained Frame, and with the Quilt we can select from the virtual concatenation of a single Frame.
 
 >>> bus[2017].tail()
 <Frame: 2017>
@@ -218,17 +218,101 @@ Central African Republic 2.69300007820129 155     0.0
 
 
 
-Iteration
-...............................
+Iteration & Function Application
+...................................
+
+Opportunities for iteration and function application are similarly specialized for each container.
+
+>>> common = set(reduce(lambda x, y: x.intersection(y), (f.index for f in bus.values)))
+>>> bus.iter_element().apply(lambda f: len(set(f.index) - common))
+<Series>
+<Index>
+2015     17
+2016     16
+2017     14
+2018     15
+2019     15
+<int64>  <int64>
+>>> 'Laos' in common
+False
+>>> bus.iter_element().apply(lambda f: 'Laos' in f.index)
+<Series>
+<Index>
+2015     True
+2016     True
+2017     False
+2018     True
+2019     True
+<int64>  <bool>
+
+
+Using a Batch to find the maximum for each year.
+
+>>> sf.Batch(bus.items())[['score','gdp']].loc_max().to_frame()
+<Frame>
+<Index> score       gdp                  <<U29>
+<Index>
+2015    Switzerland Qatar
+2016    Denmark     Qatar
+2017    Norway      Qatar
+2018    Finland     United Arab Emirates
+2019    Finland     Qatar
+<int64> <<U24>      <<U24>
+
+>>> sf.Batch(bus.items()).loc[['Norway','Finland']].sort_values('rank').to_frame()
+<Frame>
+<Index>                  score            rank    gdp              <<U29>
+<IndexHierarchy>
+2015             Norway  7.522            4       1.459
+2015             Finland 7.406            6       1.29025
+2016             Norway  7.498            4       1.57744
+2016             Finland 7.413            5       1.40598
+2017             Norway  7.53700017929077 1       1.61646318435669
+2017             Finland 7.4689998626709  5       1.44357192516327
+2018             Finland 7.632            1       1.305
+2018             Norway  7.594            2       1.456
+2019             Finland 7.769            1       1.34
+2019             Norway  7.554            3       1.488
+<int64>          <<U24>  <float64>        <int64> <float64>
+
+
+Get the highest rank from among two countries.
+
+>>> sf.Batch(bus.items()).loc[['Norway','Finland']].sort_values('rank').apply(lambda f: f.index[-1]).to_frame()
+<Frame>
+<Index> None    <object>
+<Index>
+2015    Finland
+2016    Finland
+2017    Finland
+2018    Norway
+2019    Norway
+<int64> <<U7>
 
 
 
+Get standard deviation across all years and select
 
+>>> std = quilt['gdp'].std()
+>>> (quilt['gdp'] > std*4).sum()
+11
 
-Function Application
-...............................
-
-
+>>> quilt.loc[quilt['gdp'] > std*4]
+<Frame>
+<Index>                                        score            rank    gdp              <<U29>
+<IndexHierarchy: country>
+2015                      Qatar                6.611            28      1.69042
+2016                      Luxembourg           6.871            20      1.69752
+2016                      Singapore            6.739            22      1.64555
+2016                      Qatar                6.375            36      1.82427
+2017                      Luxembourg           6.86299991607666 18      1.74194359779358
+2017                      Singapore            6.57200002670288 26      1.69227766990662
+2017                      Qatar                6.375            35      1.87076568603516
+2017                      Kuwait               6.10500001907349 39      1.63295245170593
+2018                      United Arab Emirates 6.774            20      2.096
+2018                      Qatar                6.374            32      1.649
+2019                      Qatar                6.374            29      1.684
+<int64>                   <<U20>               <float64>        <int64> <float64>
 
 
 

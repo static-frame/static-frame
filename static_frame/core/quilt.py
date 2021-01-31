@@ -690,9 +690,12 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
         row_key = NULL_SLICE if row_key is None else row_key
+        row_key_is_array = isinstance(row_key, np.ndarray)
         column_key = NULL_SLICE if column_key is None else column_key
+        column_key_is_array = isinstance(column_key, np.ndarray)
 
-        if row_key == NULL_SLICE and column_key == NULL_SLICE:
+        if (not row_key_is_array and row_key == NULL_SLICE
+                and not column_key_is_array and column_key == NULL_SLICE):
             if self._retain_labels and self._axis == 0:
                 frames = (extractor(f.relabel_level_add(index=k))
                         for k, f in self._bus.items())
