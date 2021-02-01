@@ -3,7 +3,6 @@ import zipfile
 import pickle
 from io import StringIO
 from io import BytesIO
-from functools import partial
 from concurrent.futures import ProcessPoolExecutor
 
 from static_frame.core.frame import Frame
@@ -11,15 +10,58 @@ from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
 from static_frame.core.store import StoreConfigMap
+from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.util import DtypesSpecifier
 
+
+class BuildFrameParams(tp.NamedTuple):
+    src: bytes
+    name: tp.Hashable
+    config: StoreConfig
+    container_type: tp.Type[Frame]
+
+
+FrameConstructor = tp.Callable[[tp.Any], Frame]
+
+
 class _StoreZip(Store):
 
     _EXT: tp.FrozenSet[str] = frozenset(('.zip',))
     _EXT_CONTAINED: str = ''
+
+    @classmethod
+    def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
+        raise NotImplementedError
+
+    @classmethod
+    def _build_frame_explicit(cls,
+            src: bytes,
+            index_depth: int,
+            columns_depth: int,
+            columns_select: tp.Optional[tp.Iterable[str]],
+            dtypes: DtypesSpecifier,
+            name: tp.Hashable,
+            consolidate_blocks: bool,
+            constructor: FrameConstructor,
+        ) -> Frame:
+        raise NotImplementedError
+
+    @classmethod
+    def _build_frame_from_params(cls, params: BuildFrameParams) -> Frame:
+        config = params.config
+        return cls._build_frame_explicit(
+                src=params.src,
+                index_depth=config.index_depth,
+                columns_depth=config.columns_depth,
+                columns_select=config.columns_select,
+                dtypes=config.dtypes,
+                name=params.name,
+                consolidate_blocks=config.consolidate_blocks,
+                constructor=cls._container_type_to_constructor(params.container_type),
+        )
 
     @store_coherent_non_write
     def labels(self, *,
@@ -36,39 +78,78 @@ class _StoreZip(Store):
                 # always use default decoder
                 yield config_map.default.label_decode(name)
 
-
-class _StoreZipDelimited(_StoreZip):
-    # store attribute of passed-in container_type to use for construction
-    _EXPORTER: AnyCallable
-    _CONSTRUCTOR_ATTR: str
-
     @store_coherent_non_write
     def read_many(self,
             labels: tp.Iterable[tp.Hashable],
             *,
             config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,
-            ) -> tp.Iterator[Frame]:
+        ) -> tp.Iterator[Frame]:
 
         config_map = StoreConfigMap.from_initializer(config)
+        multiprocess: bool = config_map.default.read_max_workers is not None
 
-        with zipfile.ZipFile(self._fp) as zf:
-            for label in labels:
-                c = config_map[label]
-                label_encoded = config_map.default.label_encode(label)
+        def gen() -> tp.Iterable[tp.Union[BuildFrameParams, Frame]]:
+            with zipfile.ZipFile(self._fp) as zf:
+                for label in labels:
+                    c: StoreConfig = config_map[label]
 
-                src = StringIO()
-                src.write(zf.read(label_encoded + self._EXT_CONTAINED).decode())
-                src.seek(0)
-                # call from class to explicitly pass self as frame
-                constructor = getattr(container_type, self._CONSTRUCTOR_ATTR)
-                yield constructor(src,
-                        index_depth=c.index_depth,
-                        columns_depth=c.columns_depth,
-                        dtypes=c.dtypes,
-                        name=label,
-                        consolidate_blocks=c.consolidate_blocks
+                    label_encoded: str = config_map.default.label_encode(label)
+                    src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
+
+                    if multiprocess:
+                        yield BuildFrameParams(src, label, c, container_type)
+                    else:
+                        yield self._build_frame_explicit(
+                                src=src,
+                                index_depth=c.index_depth,
+                                columns_depth=c.columns_depth,
+                                columns_select=c.columns_select,
+                                dtypes=c.dtypes,
+                                name=label,
+                                consolidate_blocks=c.consolidate_blocks,
+                                constructor=self._container_type_to_constructor(container_type),
                         )
+
+        if multiprocess:
+            chunksize = config_map.default.read_chunksize
+
+            with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
+                yield from executor.map(self._build_frame_from_params, gen(), chunksize=chunksize)
+        else:
+            yield from gen() # type: ignore
+
+
+class _StoreZipDelimited(_StoreZip):
+    # store attribute of passed-in container_type to use for construction
+    _EXPORTER: AnyCallable
+    _CONSTRUCTOR_ATTR: str
+
+    @classmethod
+    def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
+        return getattr(container_type, cls._CONSTRUCTOR_ATTR) # type: ignore
+
+    @classmethod
+    def _build_frame_explicit(cls,
+            src: bytes,
+            index_depth: int,
+            columns_depth: int,
+            columns_select: tp.Optional[tp.Iterable[str]], # Ignored
+            dtypes: DtypesSpecifier,
+            name: tp.Hashable,
+            consolidate_blocks: bool,
+            constructor: FrameConstructor,
+        ) -> Frame:
+        #src2 = StringIO()
+        #src2.write(src.decode())
+        return constructor( # type: ignore
+            StringIO(src.decode()),
+            index_depth=index_depth,
+            columns_depth=columns_depth,
+            dtypes=dtypes,
+            name=name,
+            consolidate_blocks=consolidate_blocks,
+        )
 
     @store_coherent_write
     def write(self,
@@ -106,6 +187,7 @@ class StoreZipTSV(_StoreZipDelimited):
     _EXPORTER = Frame.to_tsv
     _CONSTRUCTOR_ATTR = Frame.from_tsv.__name__
 
+
 class StoreZipCSV(_StoreZipDelimited):
     '''
     Store of CSV files contained within a ZIP file.
@@ -123,6 +205,23 @@ class StoreZipPickle(_StoreZip):
 
     _EXT_CONTAINED = '.pickle'
 
+    @classmethod
+    def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
+        return pickle.loads
+
+    @classmethod
+    def _build_frame_explicit(cls,
+            src: bytes,
+            index_depth: int,
+            columns_depth: int,
+            columns_select: tp.Optional[tp.Iterable[str]],
+            dtypes: DtypesSpecifier,
+            name: tp.Hashable,
+            consolidate_blocks: bool,
+            constructor: FrameConstructor,
+        ) -> Frame:
+        return constructor(src)
+
     @store_coherent_non_write
     def read_many(self,
             labels: tp.Iterable[tp.Hashable],
@@ -131,17 +230,13 @@ class StoreZipPickle(_StoreZip):
             container_type: tp.Type[Frame] = Frame,
             ) -> tp.Iterator[Frame]:
 
-        config_map = StoreConfigMap.from_initializer(config)
         exporter = container_to_exporter_attr(container_type)
 
-        with zipfile.ZipFile(self._fp) as zf:
-            for label in labels:
-                label_encoded = config_map.default.label_encode(label)
-                frame = pickle.loads(zf.read(label_encoded + self._EXT_CONTAINED))
-                if frame.__class__ is container_type:
-                    yield frame
-                else:
-                    yield getattr(frame, exporter)()
+        for frame in super().read_many(labels, config=config, container_type=container_type):
+            if frame.__class__ is container_type:
+                yield frame
+            else:
+                yield getattr(frame, exporter)()
 
     @store_coherent_write
     def write(self,
@@ -166,21 +261,23 @@ class StoreZipParquet(_StoreZip):
 
     _EXT_CONTAINED = '.parquet'
 
-    @staticmethod
-    def _build_frame_explicit(
-            src_and_name: tp.Tuple[BytesIO, tp.Hashable],
-            *,
+    @classmethod
+    def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
+        return container_type.from_parquet
+
+    @classmethod
+    def _build_frame_explicit(cls,
+            src: bytes,
             index_depth: int,
             columns_depth: int,
-            columns_select: int,
+            columns_select: tp.Optional[tp.Iterable[str]],
             dtypes: DtypesSpecifier,
+            name: tp.Hashable,
             consolidate_blocks: bool,
-            container_type: tp.Type[Frame],
+            constructor: FrameConstructor,
         ) -> Frame:
-        '''Used when a single configuration exists. Allows client to partial in the configuration once'''
-        src, name = src_and_name
-        return container_type.from_parquet(
-            src,
+        return constructor( # type: ignore
+            BytesIO(src),
             index_depth=index_depth,
             columns_depth=columns_depth,
             columns_select=columns_select,
@@ -188,74 +285,6 @@ class StoreZipParquet(_StoreZip):
             name=name,
             consolidate_blocks=consolidate_blocks,
         )
-
-    @classmethod
-    def _build_frame_from_parameters(cls,
-            parameters: tp.Dict[str, tp.Any],
-            container_type: tp.Type[Frame],
-        ) -> Frame:
-        '''Used when multiple configurations exist. Allows client to pass in the configuration for each frame'''
-        return cls._build_frame_explicit(**parameters, container_type=container_type)
-
-    @store_coherent_non_write
-    def read_many(self,
-            labels: tp.Iterable[tp.Hashable],
-            *,
-            config: StoreConfigMapInitializer = None,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> tp.Iterator[Frame]:
-
-        config_map = StoreConfigMap.from_initializer(config)
-        single_config = config_map.is_empty()
-        frames_parameters = []
-
-        # Load in all byte & kwarg information needed to build the frames
-        with zipfile.ZipFile(self._fp) as zf:
-            for label in labels:
-                c = config_map[label]
-
-                label_encoded = config_map.default.label_encode(label)
-                src = BytesIO(zf.read(label_encoded + self._EXT_CONTAINED))
-
-                src_and_name = src, label
-
-                if single_config:
-                    # No need to duplicate config info here
-                    frames_parameters.append(src_and_name)
-                else:
-                    frames_parameters.append(dict(
-                        src_and_name=src_and_name,
-                        index_depth=c.index_depth,
-                        columns_depth=c.columns_depth,
-                        columns_select=c.columns_select,
-                        dtypes=c.dtypes,
-                        consolidate_blocks=c.consolidate_blocks,
-                ))
-
-        config = config_map.default
-
-        if single_config:
-            # Partial in each config parameter explicitly since there is only one config
-            func = partial(self._build_frame_explicit,
-                    index_depth=config.index_depth,
-                    columns_depth=config.columns_depth,
-                    columns_select=config.columns_select,
-                    dtypes=config.dtypes,
-                    consolidate_blocks=config.consolidate_blocks,
-                    container_type=container_type,
-            )
-        else:
-            # Config information will come from the parameters
-            func = partial(self._build_frame_from_parameters, container_type=container_type)
-
-        if config.read_max_workers is None:
-            for frame_parameters in frames_parameters:
-                yield func(frame_parameters)
-        else:
-            chunksize = config.read_chunksize
-
-            with ProcessPoolExecutor(max_workers=config.read_max_workers) as executor:
-                yield from executor.map(func, frame_parameters, chunksize=chunksize)
 
     @store_coherent_write
     def write(self,
