@@ -243,9 +243,6 @@ class StoreConfigMap:
     def __getitem__(self, key: tp.Optional[tp.Hashable]) -> StoreConfig:
         return self._map.get(key, self._default)
 
-    def is_empty(self) -> bool:
-        return len(self._map) == 0
-
     @property
     def default(self) -> StoreConfig:
         return self._default

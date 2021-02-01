@@ -33,7 +33,6 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitStoreConfig):
             sc1m = StoreConfigMap.from_initializer(maps)
 
-
     def test_store_config_map_init_b(self) -> None:
         maps = {'a': StoreConfig(index_depth=2, label_encoder=str),
                 'b': StoreConfig(index_depth=3, label_encoder=str)}
@@ -41,6 +40,79 @@ class TestUnit(TestCase):
 
         sc1m = StoreConfigMap(maps, default=default)
         self.assertEqual(sc1m.default.label_encoder, str)
+
+    def test_store_config_map_init_c(self) -> None:
+        maps1 = {'a': StoreConfig(read_max_workers=2),
+                'b': StoreConfig(read_max_workers=3)}
+
+        default = StoreConfig(read_max_workers=2)
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps1, default=default) # Config has conflicting info
+
+        maps2 = {'a': StoreConfig(read_max_workers=2),
+                'b': StoreConfig(read_max_workers=2)}
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps2) # Default is None
+
+        sc1m = StoreConfigMap(maps2, default=default)
+        self.assertEqual(sc1m.default.read_max_workers, 2)
+
+    def test_store_config_map_init_d(self) -> None:
+        maps1 = {'a': StoreConfig(read_chunksize=2),
+                'b': StoreConfig(read_chunksize=3)}
+
+        default = StoreConfig(read_chunksize=2)
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps1, default=default) # Config has conflicting info
+
+        maps2 = {'a': StoreConfig(read_chunksize=2),
+                'b': StoreConfig(read_chunksize=2)}
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps2) # Default is 1
+
+        sc1m = StoreConfigMap(maps2, default=default)
+        self.assertEqual(sc1m.default.read_chunksize, 2)
+
+
+    def test_store_config_map_init_e(self) -> None:
+        maps1 = {'a': StoreConfig(write_max_workers=2),
+                'b': StoreConfig(write_max_workers=3)}
+
+        default = StoreConfig(write_max_workers=2)
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps1, default=default) # Config has conflicting info
+
+        maps2 = {'a': StoreConfig(write_max_workers=2),
+                'b': StoreConfig(write_max_workers=2)}
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps2) # Default is None
+
+        sc1m = StoreConfigMap(maps2, default=default)
+        self.assertEqual(sc1m.default.write_max_workers, 2)
+
+    def test_store_config_map_init_f(self) -> None:
+        maps1 = {'a': StoreConfig(write_chunksize=2),
+                'b': StoreConfig(write_chunksize=3)}
+
+        default = StoreConfig(write_chunksize=2)
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps1, default=default) # Config has conflicting info
+
+        maps2 = {'a': StoreConfig(write_chunksize=2),
+                'b': StoreConfig(write_chunksize=2)}
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps2) # Default is 1
+
+        sc1m = StoreConfigMap(maps2, default=default)
+        self.assertEqual(sc1m.default.write_chunksize, 2)
 
     #---------------------------------------------------------------------------
     def test_store_config_map_a(self) -> None:
