@@ -17,14 +17,18 @@ from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.util import DtypesSpecifier
 
 
+FrameConstructor = tp.Callable[[tp.Any], Frame]
+
+
 class BuildFrameParams(tp.NamedTuple):
     src: bytes
     name: tp.Hashable
-    config: StoreConfig
-    container_type: tp.Type[Frame]
-
-
-FrameConstructor = tp.Callable[[tp.Any], Frame]
+    index_depth: int
+    columns_depth: int
+    columns_select: tp.Iterable[str]
+    dtypes: DtypesSpecifier
+    consolidate_blocks: bool
+    constructor: FrameConstructor
 
 
 class _StoreZip(Store):
@@ -51,16 +55,15 @@ class _StoreZip(Store):
 
     @classmethod
     def _build_frame_from_params(cls, params: BuildFrameParams) -> Frame:
-        config = params.config
         return cls._build_frame_explicit(
                 src=params.src,
-                index_depth=config.index_depth,
-                columns_depth=config.columns_depth,
-                columns_select=config.columns_select,
-                dtypes=config.dtypes,
+                index_depth=params.index_depth,
+                columns_depth=params.columns_depth,
+                columns_select=params.columns_select,
+                dtypes=params.dtypes,
                 name=params.name,
-                consolidate_blocks=config.consolidate_blocks,
-                constructor=cls._container_type_to_constructor(params.container_type),
+                consolidate_blocks=params.consolidate_blocks,
+                constructor=params.constructor,
         )
 
     @store_coherent_non_write
@@ -98,8 +101,18 @@ class _StoreZip(Store):
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
                     if multiprocess:
-                        yield BuildFrameParams(src, label, c, container_type)
+                        yield BuildFrameParams(
+                                src=src,
+                                index_depth=c.index_depth,
+                                columns_depth=c.columns_depth,
+                                columns_select=c.columns_select,
+                                dtypes=c.dtypes,
+                                name=label,
+                                consolidate_blocks=c.consolidate_blocks,
+                                constructor=self._container_type_to_constructor(container_type),
+                        )
                     else:
+                        # Avoid unpacking an unnecessary intermediate data structure since we know all the args now
                         yield self._build_frame_explicit(
                                 src=src,
                                 index_depth=c.index_depth,
