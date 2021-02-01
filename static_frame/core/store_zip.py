@@ -25,7 +25,7 @@ class BuildFrameParams(tp.NamedTuple):
     name: tp.Hashable
     index_depth: int
     columns_depth: int
-    columns_select: tp.Iterable[str]
+    columns_select: tp.Optional[tp.Iterable[str]]
     dtypes: DtypesSpecifier
     consolidate_blocks: bool
     constructor: FrameConstructor
