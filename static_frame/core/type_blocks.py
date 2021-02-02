@@ -662,7 +662,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[:, columns_ic.iloc_src]
                 else:
                     dst_to_src = dict(
-                            zip(columns_ic.iloc_dst, columns_ic.iloc_src))
+                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
                     for idx in range(columns_ic.size):
                         if idx in dst_to_src:
                             block_idx, block_col = self._index[dst_to_src[idx]]
@@ -695,7 +695,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
                 else:
                     columns_dst_to_src = dict(
-                            zip(columns_ic.iloc_dst, columns_ic.iloc_src))
+                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
 
                     for idx in range(columns_ic.size):
                         if idx in columns_dst_to_src:
