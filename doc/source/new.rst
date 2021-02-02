@@ -12,6 +12,8 @@ Added ``index_name_depth_level``, ``columns_name_depth_level`` parameters to ``F
 
 Added ``index_name_depth_level``, ``columns_name_depth_level`` parameters to ``Frame.from_parquet``
 
+Fixed issue where non-optimal dtype would be used for new columns added in reindexing.
+
 
 0.7.14
 ----------
