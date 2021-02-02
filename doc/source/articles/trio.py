@@ -1,6 +1,8 @@
 
 
 import static_frame as sf
+import os
+from static_frame.test.test_case import Timer
 
 
 
@@ -409,8 +411,7 @@ def bus_aggregate() -> None:
 #-------------------------------------------------------------------------------
 
 def main() -> None:
-    fp = '/tmp/archive.zip'
-
+    fp = '/home/ariza/Downloads/archive.zip'
 
     config = sf.StoreConfig(index_depth=0, label_decoder=int, label_encoder=str)
 
@@ -440,10 +441,11 @@ def tables():
     name = 'For n Frame of shape (x, y)'
     columns = (  'Bus', 'Batch', 'Quilt')
     records_items = (
-    ('ndim',     (1,      1,      2)),
-    ('shape',    ('(n,)', '(n,)', '(xn, y) or (x, yn)'  )),
-    ('Iterable', (True,   True,   True)),
-    ('Iterator', (False,  True,   False)),
+    ('ndim',                  (1,        1,       2)),
+    ('shape',                 ('(n,)',   '(n,)',  '(xn, y) or (x, yn)'  )),
+    ('Approximate Interface', ('Series', 'Frame', 'Frame')),
+    ('Iterable',              (True,     True,     True)),
+    ('Iterator',              (False,    True,     False)),
     )
 
     f = sf.Frame.from_records_items(records_items, columns=columns, name=name)
@@ -469,9 +471,36 @@ def tables():
     print(f.to_rst(sf.DisplayConfig(include_index=False, type_show=False)))
 
 
+
+def stocks_write():
+
+    t = Timer()
+    d = '/home/ariza/Downloads/archive/Stocks'
+    fps = ((fn, os.path.join(d, fn)) for fn in os.listdir(d))
+    items = ((fn.replace('.us.txt', ''), sf.Frame.from_csv(fp, index_depth=1)) for fn, fp in fps if os.path.getsize(fp))
+    sf.Batch(items).to_zip_pickle('/tmp/stocks.zip')
+    print(t)
+
+def stocks():
+    t = Timer()
+    bus = sf.Bus.from_zip_pickle('/tmp/stocks.zip')[:]
+    print(t, 'done loading')
+
+    t = Timer()
+    post = sf.Batch(bus.items())[['Open', 'Close']].loc_max().to_frame()
+    print(t, 'serial')
+
+
+    #>> quilt.loc[sf.HLoc[:, '2017-11-10']]
+
+
+    import ipdb; ipdb.set_trace()
+
+
 if __name__ == '__main__':
+    stocks()
     tables()
-    main()
+    # main()
 
 
 
