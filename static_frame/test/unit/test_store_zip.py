@@ -39,12 +39,8 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _StoreZip._build_frame_explicit(
                     src=bytes(),
-                    index_depth=0,
-                    columns_depth=0,
-                    columns_select=None,
-                    dtypes={},
                     name=None,
-                    consolidate_blocks=False,
+                    config=None, # type: ignore
                     constructor=lambda x: Frame(),
             )
 

@@ -20,14 +20,20 @@ from static_frame.core.util import DtypesSpecifier
 FrameConstructor = tp.Callable[[tp.Any], Frame]
 
 
-class BuildFrameParams(tp.NamedTuple):
-    src: bytes
-    name: tp.Hashable
+class HashableConfigParams(tp.NamedTuple):
     index_depth: int
+    index_name_depth_level: tp.Optional[tp.Union[int, tp.Iterable[int]]]
     columns_depth: int
+    columns_name_depth_level: tp.Optional[tp.Union[int, tp.Iterable[int]]]
     columns_select: tp.Optional[tp.Iterable[str]]
     dtypes: DtypesSpecifier
     consolidate_blocks: bool
+
+
+class BuildFrameParams(tp.NamedTuple):
+    src: bytes
+    name: tp.Hashable
+    config: HashableConfigParams
     constructor: FrameConstructor
 
 
@@ -43,12 +49,8 @@ class _StoreZip(Store):
     @classmethod
     def _build_frame_explicit(cls,
             src: bytes,
-            index_depth: int,
-            columns_depth: int,
-            columns_select: tp.Optional[tp.Iterable[str]],
-            dtypes: DtypesSpecifier,
             name: tp.Hashable,
-            consolidate_blocks: bool,
+            config: HashableConfigParams,
             constructor: FrameConstructor,
         ) -> Frame:
         raise NotImplementedError
@@ -57,12 +59,8 @@ class _StoreZip(Store):
     def _build_frame_from_params(cls, params: BuildFrameParams) -> Frame:
         return cls._build_frame_explicit(
                 src=params.src,
-                index_depth=params.index_depth,
-                columns_depth=params.columns_depth,
-                columns_select=params.columns_select,
-                dtypes=params.dtypes,
                 name=params.name,
-                consolidate_blocks=params.consolidate_blocks,
+                config=params.config,
                 constructor=params.constructor,
         )
 
@@ -100,27 +98,29 @@ class _StoreZip(Store):
                     label_encoded: str = config_map.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
+                    hashable_config = HashableConfigParams( # pylint: disable=no-value-for-parameter
+                            index_depth=c.index_depth,
+                            index_name_depth_level=c.index_name_depth_level,
+                            columns_depth=c.columns_depth,
+                            columns_name_depth_level=c.columns_name_depth_level,
+                            columns_select=c.columns_select,
+                            dtypes=c.dtypes,
+                            consolidate_blocks=c.consolidate_blocks,
+                    )
+
                     if multiprocess:
-                        yield BuildFrameParams(
+                        yield BuildFrameParams( # pylint: disable=no-value-for-parameter
                                 src=src,
-                                index_depth=c.index_depth,
-                                columns_depth=c.columns_depth,
-                                columns_select=c.columns_select,
-                                dtypes=c.dtypes,
                                 name=label,
-                                consolidate_blocks=c.consolidate_blocks,
+                                config=hashable_config,
                                 constructor=self._container_type_to_constructor(container_type),
                         )
                     else:
                         # Avoid unpacking an unnecessary intermediate data structure since we know all the args now
                         yield self._build_frame_explicit(
                                 src=src,
-                                index_depth=c.index_depth,
-                                columns_depth=c.columns_depth,
-                                columns_select=c.columns_select,
-                                dtypes=c.dtypes,
                                 name=label,
-                                consolidate_blocks=c.consolidate_blocks,
+                                config=hashable_config,
                                 constructor=self._container_type_to_constructor(container_type),
                         )
 
@@ -145,23 +145,17 @@ class _StoreZipDelimited(_StoreZip):
     @classmethod
     def _build_frame_explicit(cls,
             src: bytes,
-            index_depth: int,
-            columns_depth: int,
-            columns_select: tp.Optional[tp.Iterable[str]], # Ignored
-            dtypes: DtypesSpecifier,
             name: tp.Hashable,
-            consolidate_blocks: bool,
+            config: HashableConfigParams,
             constructor: FrameConstructor,
         ) -> Frame:
-        #src2 = StringIO()
-        #src2.write(src.decode())
         return constructor( # type: ignore
             StringIO(src.decode()),
-            index_depth=index_depth,
-            columns_depth=columns_depth,
-            dtypes=dtypes,
+            index_depth=config.index_depth,
+            columns_depth=config.columns_depth,
+            dtypes=config.dtypes,
             name=name,
-            consolidate_blocks=consolidate_blocks,
+            consolidate_blocks=config.consolidate_blocks,
         )
 
     @store_coherent_write
@@ -225,12 +219,8 @@ class StoreZipPickle(_StoreZip):
     @classmethod
     def _build_frame_explicit(cls,
             src: bytes,
-            index_depth: int,
-            columns_depth: int,
-            columns_select: tp.Optional[tp.Iterable[str]],
-            dtypes: DtypesSpecifier,
             name: tp.Hashable,
-            consolidate_blocks: bool,
+            config: HashableConfigParams,
             constructor: FrameConstructor,
         ) -> Frame:
         return constructor(src)
@@ -281,24 +271,20 @@ class StoreZipParquet(_StoreZip):
     @classmethod
     def _build_frame_explicit(cls,
             src: bytes,
-            index_depth: int,
-            columns_depth: int,
-            columns_select: tp.Optional[tp.Iterable[str]],
-            dtypes: DtypesSpecifier,
             name: tp.Hashable,
-            consolidate_blocks: bool,
+            config: HashableConfigParams,
             constructor: FrameConstructor,
         ) -> Frame:
         return constructor( # type: ignore
             BytesIO(src),
-            index_depth=index_depth,
-            index_name_depth_level=index_name_depth_level,
-            columns_depth=columns_depth,
-            columns_name_depth_level=c.columns_name_depth_level,
-            columns_select=columns_select,
-            dtypes=dtypes,
+            index_depth=config.index_depth,
+            index_name_depth_level=config.index_name_depth_level,
+            columns_depth=config.columns_depth,
+            columns_name_depth_level=config.columns_name_depth_level,
+            columns_select=config.columns_select,
+            dtypes=config.dtypes,
             name=name,
-            consolidate_blocks=consolidate_blocks,
+            consolidate_blocks=config.consolidate_blocks,
         )
 
     @store_coherent_write
