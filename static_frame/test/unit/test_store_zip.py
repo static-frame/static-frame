@@ -10,6 +10,7 @@ from static_frame.core.frame import FrameHE
 from static_frame.core.store import StoreConfig
 # from static_frame.core.store import StoreConfigMap
 
+from static_frame.core.store_zip import _StoreZip
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipPickle
@@ -30,6 +31,22 @@ class TestUnit(TestCase):
     def test_store_init_a(self) -> None:
         with self.assertRaises(ErrorInitStore):
             StoreZipTSV('test.txt') # must be a zip
+
+    def test_store_base_class_init(self) -> None:
+        with self.assertRaises(NotImplementedError):
+            _StoreZip._container_type_to_constructor(None)
+
+        with self.assertRaises(NotImplementedError):
+            _StoreZip._build_frame_explicit(
+                    src=bytes(),
+                    index_depth=0,
+                    columns_depth=0,
+                    columns_select=None,
+                    dtypes={},
+                    name=None,
+                    consolidate_blocks=False,
+                    constructor=None,
+            )
 
     def test_store_zip_tsv_a(self) -> None:
 
