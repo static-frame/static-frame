@@ -1,7 +1,11 @@
 
 
-import static_frame as sf
 import os
+import typing as tp
+
+import numpy as np
+
+import static_frame as sf
 from static_frame.test.test_case import Timer
 
 
@@ -420,13 +424,13 @@ def main() -> None:
     def normalize(f: sf.Frame) -> sf.Frame:
         fields = ['country', 'score', 'rank', 'gdp']
 
-        def relabel(label):
+        def relabel(label: str) -> str:
             for field in fields:
                 if field in label.lower():
                     return field
             return label
 
-        return f.relabel(columns=relabel)[fields].set_index(fields[0], drop=True)
+        return f.relabel(columns=relabel)[fields].set_index(fields[0], drop=True) #type: ignore
 
     bus = sf.Batch.from_zip_csv(fp, config=config).apply(normalize).to_bus()
 
@@ -434,12 +438,11 @@ def main() -> None:
     batch = sf.Batch(bus.items())
     quilt = sf.Quilt(bus, axis=0, retain_labels=True)
 
-    import ipdb; ipdb.set_trace()
 
 
-def tables():
+def tables() -> None:
     name = 'For n Frame of shape (x, y)'
-    columns = (  'Bus', 'Batch', 'Quilt')
+    columns = ('Bus', 'Batch', 'Quilt')
     records_items = (
     ('ndim',                  (1,        1,       2)),
     ('shape',                 ('(n,)',   '(n,)',  '(xn, y) or (x, yn)'  )),
@@ -454,7 +457,7 @@ def tables():
     print(f.to_rst())
 
     name = 'Constructors & Exporters'
-    columns = (  'Constructor', 'Exporter')
+    columns = ('Constructor', 'Exporter') #type: ignore
     records = (
         ('from_zip_tsv', 'to_zip_tsv',),
         ('from_zip_csv', 'to_zip_csv',),
@@ -472,7 +475,7 @@ def tables():
 
 
 
-def stocks_write():
+def stocks_write() -> None:
 
     t = Timer()
     d = '/home/ariza/Downloads/archive/Stocks'
@@ -481,7 +484,7 @@ def stocks_write():
     sf.Batch(items).to_zip_pickle('/tmp/stocks.zip')
     print(t)
 
-def stocks():
+def stocks() -> None:
     t = Timer()
     bus = sf.Bus.from_zip_pickle('/tmp/stocks.zip')[:]
     print(t, 'done loading')
@@ -492,9 +495,6 @@ def stocks():
 
 
     #>> quilt.loc[sf.HLoc[:, '2017-11-10']]
-
-
-    import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
