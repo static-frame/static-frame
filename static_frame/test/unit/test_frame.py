@@ -3348,6 +3348,33 @@ class TestUnit(TestCase):
             _ = f1.reindex()
 
 
+    def test_frame_reindex_i(self) -> None:
+
+        f1 = sf.Frame.from_dict(
+                dict(a=[0.1,1,2], b=['str1', 'str2', 'str3']),
+                )
+        f2 = f1.reindex(columns=['a', 'c'], fill_value=np.nan)
+        self.assertEqual([d.kind for d in f2.dtypes.values],
+                ['f', 'f']
+                )
+        self.assertEqual(f2.fillna(-1).to_pairs(0),
+                (('a', ((0, 0.1), (1, 1.0), (2, 2.0))), ('c', ((0, -1.0), (1, -1.0), (2, -1.0)))))
+
+    def test_frame_reindex_j(self) -> None:
+
+        f1 = sf.Frame.from_dict(
+                dict(a=[0.1,1,2], b=['str1', 'str2', 'str3']),
+                )
+        f2 = f1.reindex(columns=('c', 'd'), fill_value=0)
+        self.assertEqual([d.kind for d in f2.dtypes.values],
+                ['i', 'i']
+                )
+
+        f3 = f1.reindex(columns=('c', 'd'), index=(10, 11), fill_value=0)
+        self.assertEqual([d.kind for d in f3.dtypes.values],
+                ['i', 'i']
+                )
+
     #---------------------------------------------------------------------------
     def test_frame_contains_a(self) -> None:
 

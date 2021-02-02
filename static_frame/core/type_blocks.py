@@ -648,10 +648,9 @@ class TypeBlocks(ContainerOperand):
                     yield values
 
         elif columns_ic is not None and index_ic is None:
-            if not columns_ic.has_common:
-                # just return an empty frame; what type it shold be is not clear
+            if not columns_ic.has_common: # no columns in common
                 shape = self.shape[0], columns_ic.size
-                values = full_for_fill(self._row_dtype, shape, fill_value)
+                values = full_for_fill(None, shape, fill_value)
                 values.flags.writeable = False
                 yield values
             else:
@@ -663,11 +662,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[:, columns_ic.iloc_src]
                 else:
                     dst_to_src = dict(
-                            zip(
-                                    tp.cast(tp.Iterable[int], columns_ic.iloc_dst),
-                                    tp.cast(tp.Iterable[int], columns_ic.iloc_src),
-                            )
-                    )
+                            zip(columns_ic.iloc_dst, columns_ic.iloc_src))
                     for idx in range(columns_ic.size):
                         if idx in dst_to_src:
                             block_idx, block_col = self._index[dst_to_src[idx]]
@@ -676,10 +671,8 @@ class TypeBlocks(ContainerOperand):
                                 yield b
                             else:
                                 yield b[:, block_col]
-                        else:
-                            # just get an empty position
-                            # dtype should be the same as the column replacing?
-                            values = full_for_fill(self._row_dtype,
+                        else: # just get an empty position, fill_value determines type
+                            values = full_for_fill(None,
                                     self.shape[0],
                                     fill_value)
                             values.flags.writeable = False
@@ -688,9 +681,9 @@ class TypeBlocks(ContainerOperand):
         else: # both defined
             assert columns_ic is not None and index_ic is not None
             if not columns_ic.has_common and not index_ic.has_common:
-                # just return an empty frame; what type it shold be is not clear
+                # return an empty frame
                 shape = index_ic.size, columns_ic.size
-                values = full_for_fill(self._row_dtype, shape, fill_value)
+                values = full_for_fill(None, shape, fill_value)
                 values.flags.writeable = False
                 yield values
             else:
@@ -702,11 +695,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
                 else:
                     columns_dst_to_src = dict(
-                            zip(
-                                    tp.cast(tp.Iterable[int], columns_ic.iloc_dst),
-                                    tp.cast(tp.Iterable[int], columns_ic.iloc_src),
-                            )
-                    )
+                            zip(columns_ic.iloc_dst, columns_ic.iloc_src))
 
                     for idx in range(columns_ic.size):
                         if idx in columns_dst_to_src:
@@ -718,8 +707,8 @@ class TypeBlocks(ContainerOperand):
                                     yield b[index_ic.iloc_src]
                                 else:
                                     yield b[index_ic.iloc_src, block_col]
-                            else: # need an empty to fill
-                                values = full_for_fill(self._row_dtype,
+                            else: # need an empty to fill, compatible with this block
+                                values = full_for_fill(b.dtype,
                                         index_ic.size,
                                         fill_value)
                                 if b.ndim == 1:
@@ -729,7 +718,7 @@ class TypeBlocks(ContainerOperand):
                                 values.flags.writeable = False
                                 yield values
                         else:
-                            values = full_for_fill(self._row_dtype,
+                            values = full_for_fill(None,
                                         index_ic.size,
                                         fill_value)
                             values.flags.writeable = False
