@@ -34,7 +34,7 @@ class TestUnit(TestCase):
 
     def test_store_base_class_init(self) -> None:
         with self.assertRaises(NotImplementedError):
-            _StoreZip._container_type_to_constructor(None)
+            _StoreZip._container_type_to_constructor(None) # type: ignore
 
         with self.assertRaises(NotImplementedError):
             _StoreZip._build_frame_explicit(
@@ -45,7 +45,7 @@ class TestUnit(TestCase):
                     dtypes={},
                     name=None,
                     consolidate_blocks=False,
-                    constructor=None,
+                    constructor=lambda x: Frame(),
             )
 
     def test_store_zip_tsv_a(self) -> None:
