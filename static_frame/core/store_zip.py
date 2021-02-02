@@ -292,7 +292,9 @@ class StoreZipParquet(_StoreZip):
         return constructor( # type: ignore
             BytesIO(src),
             index_depth=index_depth,
+            index_name_depth_level=index_name_depth_level,
             columns_depth=columns_depth,
+            columns_name_depth_level=c.columns_name_depth_level,
             columns_select=columns_select,
             dtypes=dtypes,
             name=name,
@@ -318,7 +320,9 @@ class StoreZipParquet(_StoreZip):
                 frame.to_parquet(
                         dst,
                         include_index=c.include_index,
+                        include_index_name=c.include_index_name,
                         include_columns=c.include_columns,
+                        include_columns_name=c.include_columns_name,
                         )
                 dst.seek(0)
                 # this will write it without a container

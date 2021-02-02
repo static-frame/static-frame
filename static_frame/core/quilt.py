@@ -690,9 +690,12 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
         row_key = NULL_SLICE if row_key is None else row_key
+        row_key_is_array = isinstance(row_key, np.ndarray)
         column_key = NULL_SLICE if column_key is None else column_key
+        column_key_is_array = isinstance(column_key, np.ndarray)
 
-        if row_key == NULL_SLICE and column_key == NULL_SLICE:
+        if (not row_key_is_array and row_key == NULL_SLICE
+                and not column_key_is_array and column_key == NULL_SLICE):
             if self._retain_labels and self._axis == 0:
                 frames = (extractor(f.relabel_level_add(index=k))
                         for k, f in self._bus.items())
@@ -993,10 +996,32 @@ class Quilt(ContainerBase, StoreClientMixin):
                 yield_type=IterNodeType.ITEMS
                 )
 
+    #---------------------------------------------------------------------------
+    # transformations resulting in changed dimensionality
+    @doc_inject(selector='head', class_name='Frame')
+    def head(self, count: int = 5) -> 'Frame':
+        '''{doc}
+
+        Args:
+            {count}
+        '''
+        return self.iloc[:count]
+
+    @doc_inject(selector='tail', class_name='Frame')
+    def tail(self, count: int = 5) -> 'Frame':
+        '''{doc}
+
+        Args:
+            {count}
+        '''
+        return self.iloc[-count:]
+
 
     #---------------------------------------------------------------------------
     def to_frame(self) -> Frame:
         '''
         Return a consolidated :obj:`Frame`.
         '''
+        if self._assign_axis:
+            self._update_axis_labels()
         return self._extract(NULL_SLICE, NULL_SLICE) #type: ignore

@@ -524,16 +524,22 @@ def concat_resolved(
 
 
 def full_for_fill(
-        dtype: np.dtype,
+        dtype: tp.Optional[np.dtype],
         shape: tp.Union[int, tp.Tuple[int, ...]],
-        fill_value: object) -> np.ndarray:
+        fill_value: object,
+        ) -> np.ndarray:
     '''
     Return a "full" NP array for the given fill_value
     Args:
-        dtype: target dtype, which may or may not be possible given the fill_value.
+        dtype: target dtype, which may or may not be possible given the fill_value. This can be set to None to only use the fill_value to determine dtype.
     '''
-    dtype = resolve_dtype(dtype, np.array(fill_value).dtype)
-    return np.full(shape, fill_value, dtype=dtype)
+    dtype_element = dtype_from_element(fill_value)
+    if dtype is not None:
+        dtype_final = resolve_dtype(dtype, dtype_element)
+    else:
+        dtype_final = dtype_element
+    # NOTE: we do not make this array immutable as we sometimes need to mutate it before adding it to TypeBlocks
+    return np.full(shape, fill_value, dtype=dtype_final)
 
 
 def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:

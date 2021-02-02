@@ -34,6 +34,7 @@ from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import MessagePackElement
+
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
@@ -2179,7 +2180,9 @@ class Frame(ContainerOperand):
             value: 'pyarrow.Table',
             *,
             index_depth: int = 0,
+            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_depth: int = 1,
+            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
@@ -2201,12 +2204,14 @@ class Frame(ContainerOperand):
         if index_depth > 0:
             index_start_pos = 0
             index_end_pos = index_start_pos + index_depth - 1
-
-        index_arrays = []
-        if columns_depth > 0:
-            columns = []
+            apex_labels = []
+            index_arrays = []
         else:
-            columns = None
+            apex_labels = None
+
+        if columns_depth > 0:
+            columns_labels = []
+
 
         # by using value.columns_names, we expose access to the index arrays, which is deemed desirable as that is what we do in from_delimited
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
@@ -2242,42 +2247,71 @@ class Frame(ContainerOperand):
 
                 if is_index_col:
                     index_arrays.append(array_final)
+                    apex_labels.append(name)
                     continue
 
                 if not is_index_col and columns_depth > 0:
                     # only accumulate column names after index extraction
-                    columns.append(name)
+                    columns_labels.append(name)
 
                 yield array_final
 
         if consolidate_blocks:
-            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+            data = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
         else:
-            block_gen = blocks
+            data = TypeBlocks.from_blocks(blocks())
 
-        columns_constructor = None
-        if columns_depth > 1:
-            columns_constructor = partial(
-                    cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
-                    delimiter=' ')
+        # will be none if name_depth_level is None
+        columns_name = None if not apex_labels else apex_to_name(rows=(apex_labels,),
+                depth_level=columns_name_depth_level,
+                axis=1,
+                axis_depth=columns_depth,
+                )
 
-        kwargs = dict(
-                data=TypeBlocks.from_blocks(block_gen()),
-                own_data=True,
-                columns=columns,
-                columns_constructor=columns_constructor,
-                name=name
+        if columns_depth == 0:
+            columns = None
+            own_columns = False
+        elif columns_depth == 1:
+            columns = cls._COLUMNS_CONSTRUCTOR(columns_labels, name=columns_name)
+            own_columns = True
+        elif columns_depth > 1:
+            columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited(
+                    columns_labels,
+                    delimiter=' ',
+                    name=columns_name,
+                    )
+            own_columns = True
+
+        index_name = None if not apex_labels else apex_to_name(rows=(apex_labels,),
+                depth_level=index_name_depth_level,
+                axis=0,
+                axis_depth=index_depth,
                 )
 
         if index_depth == 0:
-            return cls(index=None, **kwargs)
-        if index_depth == 1:
-            return cls(index=index_arrays[0], **kwargs)
+            index = None
+            own_index = False
+        elif index_depth == 1:
+            index = Index(index_arrays[0], name=index_name)
+            own_index = True
+        elif index_depth > 1:
+            index = IndexHierarchy._from_type_blocks(
+                    TypeBlocks.from_blocks(index_arrays),
+                    name=index_name,
+                    own_blocks=True,
+                    )
+            own_index = False
+
         return cls(
-                index=zip(*index_arrays),
-                index_constructor=IndexHierarchy.from_labels,
-                **kwargs
+                data=data,
+                columns=columns,
+                index=index,
+                name=name,
+                own_data=True,
+                own_columns=own_columns,
+                own_index=own_index,
                 )
+
 
     @classmethod
     @doc_inject(selector='from_any')
@@ -2285,7 +2319,9 @@ class Frame(ContainerOperand):
             fp: PathSpecifier,
             *,
             index_depth: int = 0,
+            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_depth: int = 1,
+            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
@@ -2323,7 +2359,9 @@ class Frame(ContainerOperand):
 
         return cls.from_arrow(table,
                 index_depth=index_depth,
+                index_name_depth_level=index_name_depth_level,
                 columns_depth=columns_depth,
+                columns_name_depth_level=columns_name_depth_level,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 name=name
@@ -6060,7 +6098,9 @@ class Frame(ContainerOperand):
     def to_arrow(self,
             *,
             include_index: bool = True,
+            include_index_name: bool = True,
             include_columns: bool = True,
+            include_columns_name: bool = False,
             ) -> 'pyarrow.Table':
         '''
         Return a ``pyarrow.Table`` from this :obj:`Frame`.
@@ -6071,8 +6111,10 @@ class Frame(ContainerOperand):
         field_names, dtypes = Store.get_field_names_and_dtypes(
                 frame=self,
                 include_index=include_index,
+                include_index_name=include_index_name,
                 include_columns=include_columns,
-                force_str_names=True
+                include_columns_name=include_columns_name,
+                force_str_names=True,
                 )
 
         def arrays() -> tp.Iterator[np.ndarray]:
@@ -6094,7 +6136,9 @@ class Frame(ContainerOperand):
             fp: tp.Union[PathSpecifier, BytesIO],
             *,
             include_index: bool = True,
+            include_index_name: bool = True,
             include_columns: bool = True,
+            include_columns_name: bool = False,
             ) -> None:
         '''
         Write an Arrow Parquet binary file.
@@ -6103,10 +6147,13 @@ class Frame(ContainerOperand):
 
         table = self.to_arrow(
                 include_index=include_index,
-                include_columns=include_columns
+                include_index_name=include_index_name,
+                include_columns=include_columns,
+                include_columns_name=include_columns_name,
                 )
         fp = path_filter(fp)
         pq.write_table(table, fp)
+
 
     def to_msgpack(self) -> 'bin':
         '''
