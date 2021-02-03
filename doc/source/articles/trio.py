@@ -454,7 +454,7 @@ def tables() -> None:
     f = sf.Frame.from_records_items(records_items, columns=columns, name=name)
     # print(f)
     print(f.name)
-    print(f.to_rst())
+    print(f.to_markdown())
 
     name = 'Constructors & Exporters'
     columns = ('Constructor', 'Exporter') #type: ignore
@@ -471,7 +471,7 @@ def tables() -> None:
     f = sf.Frame.from_records(records, columns=columns, name=name)
     # print(f)
     print(f.name)
-    print(f.to_rst(sf.DisplayConfig(include_index=False, type_show=False)))
+    print(f.to_markdown(sf.DisplayConfig(include_index=False, type_show=False)))
 
 
 
@@ -498,7 +498,7 @@ def stocks() -> None:
 
 
 if __name__ == '__main__':
-    stocks()
+    # stocks()
     tables()
     # main()
 
