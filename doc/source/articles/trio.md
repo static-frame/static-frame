@@ -78,7 +78,7 @@ The Quilt can be thought of as a Frame built from many smaller Frames, and align
 
 These abstractions can be compared in terms of shape, interface, and iteration characteristics. The Bus and Batch are one-dimensional collections of Frames; the Quilt presents a single, two-dimensional Frame. While the shape of the Bus and the (iterated) Batch is the number of Frames, the shape of the Quilt depends on its contained Frames and its axis of orientation. While the Bus exposes a Series-like interface, the Batch and Quilt expose a Frame-like interface, operating on individual Frames or the virtually concatenated Frame, respectively. While each container is iterable, only the Batch is an iterator: its length cannot be known until iteration is completed.
 
-*For n Frame of shape (x, y)*
+**For n Frame of shape (x, y)**
 |                      |Bus    |Batch |Quilt             |
 |----------------------|-------|------|------------------|
 |ndim                  |1      |1     |2                 |
@@ -114,7 +114,7 @@ A Quilt can be initialized with a Bus instance, and requires specification of wh
 
 The Bus, Batch, and Quilt all share the same file-based constructors and exporters, such as ``from_zip_csv()`` (shown above) or ``from_xlsx()``; each constructor has a corresponding exporter, e.g., ``to_zip_csv()`` or ``to_xlsx()``, respectively, permitting round-strip reading and writing, or conversion from on format to another. The following table summarize the file-based constructors and exporters available.
 
-*File-Based Constructors & Exporters*
+**File-Based Constructors & Exporters**
 |Constructor      |Exporter      |
 |-----------------|--------------|
 |from_zip_tsv     |to_zip_tsv    |
