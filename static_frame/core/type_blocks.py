@@ -1456,7 +1456,8 @@ class TypeBlocks(ContainerOperand):
                 isinstance(row_key, slice) and row_key == NULL_SLICE)
 
         # get a mutable list in reverse order for pop/pushing
-        values_source = list(reversed(values)) #type: ignore
+        values_source = list(values)
+        values_source.reverse()
 
         def get_block_match(
                 width: int
@@ -2236,12 +2237,14 @@ class TypeBlocks(ContainerOperand):
         if lower_is_element or lower_is_array:
             lower_source = lower
         else:
-            lower_source = list(reversed(lower)) #type: ignore
+            lower_source = list(lower) #type: ignore
+            lower_source.reverse()
 
         if upper_is_element or upper_is_array:
             upper_source = upper
         else:
-            upper_source = list(reversed(upper)) #type: ignore
+            upper_source = list(upper) #type: ignore
+            upper_source.reverse()
 
         def get_block_match(
                 start: int, # relative to total size
