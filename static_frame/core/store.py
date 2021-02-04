@@ -30,10 +30,19 @@ class StoreConfig(metaclass=InterfaceMeta):
     '''
 
     index_depth: int
+    index_name_depth_level: tp.Optional[DepthLevelSpecifier]
     columns_depth: int
+    columns_name_depth_level: tp.Optional[DepthLevelSpecifier]
+    columns_select: tp.Optional[tp.Iterable[str]]
     dtypes: DtypesSpecifier
+    consolidate_blocks: bool
+    skip_header: int
+    skip_footer: int
+    trim_nadir: bool
     include_index: bool
+    include_index_name: bool
     include_columns: bool
+    include_columns_name: bool
     merge_hierarchical_labels: bool
     label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]]
     label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]]
@@ -106,6 +115,7 @@ class StoreConfig(metaclass=InterfaceMeta):
             # store label serializer
             label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]] = None,
             label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]] = None,
+            # multiprocessing configuration
             read_max_workers: tp.Optional[int] = None,
             read_chunksize: int = 1,
             write_max_workers: tp.Optional[int] = None,
@@ -158,6 +168,13 @@ class StoreConfig(metaclass=InterfaceMeta):
             return self.label_decoder(label)
         return label
 
+    def to_store_config_he(self) -> 'StoreConfigHE':
+        '''
+        Return a ``StoreConfigHE`` version of this StoreConfig.
+        '''
+        return StoreConfigHE(**{attr: getattr(self, attr) for attr in self.__slots__})
+
+
 SCMMapType = tp.Mapping[tp.Any, StoreConfig]
 SCMMapInitializer = tp.Optional[SCMMapType]
 
@@ -166,6 +183,45 @@ StoreConfigMapInitializer = tp.Union[
         SCMMapInitializer,
         'StoreConfigMap'
         ]
+
+
+class StoreConfigHE(StoreConfig):
+    '''
+    A hash/equals subclass of :obj:`StoreConfig`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed.
+
+    To support hashability, label_encoder/label_decoder are ignored
+    '''
+    __slots__ = ('_hash',)
+
+    _not_hashable = ('label_encoder', 'label_decoder')
+
+    _hash: tp.Optional[int]
+
+    def __init__(self, **kwargs):
+        for attr in self._not_hashable:
+            kwargs[attr] = None
+        super().__init__(**kwargs)
+        self._hash = None
+
+    def __eq__(self, other: tp.Any) -> bool:
+        if not isinstance(other, StoreConfig):
+            return False
+
+        for attr in StoreConfig.__slots__:
+            if attr in self._not_hashable:
+                pass
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+
+        return True
+
+    def __ne__(self, other: tp.Any) -> bool:
+        return not self.__eq__(other)
+
+    def __hash__(self) -> int:
+        if self._hash is None:
+            self._hash = hash(tuple(getattr(self, attr) for attr in StoreConfig.__slots__))
+        return tp.cast(int, self._hash)
 
 
 class StoreConfigMap:
@@ -178,6 +234,16 @@ class StoreConfigMap:
             )
 
     _DEFAULT: StoreConfig = StoreConfig()
+
+    # These attrs (when set) must align with default
+    _ALIGN_WITH_DEFAULT_ATTRS = (
+            'label_encoder',
+            'label_decoder',
+            'read_max_workers',
+            'read_chunksize',
+            'write_max_workers',
+            'write_chunksize',
+    )
 
     @classmethod
     def from_frames(cls, frames: tp.Iterable[Frame]) -> 'StoreConfigMap':
@@ -231,15 +297,11 @@ class StoreConfigMap:
                 if not isinstance(config, self._DEFAULT.__class__):
                     raise ErrorInitStoreConfig(
                         f'unspported class {config}, must be {self._DEFAULT.__class__}')
-                if (config.label_encoder != self._default.label_encoder or
-                        config.label_decoder != self._default.label_decoder):
-                    raise ErrorInitStoreConfig(f'config {label} has encoder/decoder inconsistent with default; align values and/or pass a default StoreConfig.')
-                if (config.read_max_workers != self._default.read_max_workers or
-                        config.read_chunksize != self._default.read_chunksize):
-                    raise ErrorInitStoreConfig(f'config {label} has read_max_workers/chunksize inconsistent with default; align values and/or pass a default StoreConfig.')
-                if (config.write_max_workers != self._default.write_max_workers or
-                        config.write_chunksize != self._default.write_chunksize):
-                    raise ErrorInitStoreConfig(f'config {label} has write_max_workers/chunksize inconsistent with default; align values and/or pass a default StoreConfig.')
+
+                for attr in self._ALIGN_WITH_DEFAULT_ATTRS:
+                    if getattr(config, attr) != getattr(self._default, attr):
+                        raise ErrorInitStoreConfig(f'config {label} has {attr} inconsistent with default; align values and/or pass a default StoreConfig.')
+
                 self._map[label] = config
 
     def __getitem__(self, key: tp.Optional[tp.Hashable]) -> StoreConfig:

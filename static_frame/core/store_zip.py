@@ -11,6 +11,7 @@ from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigHE
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
 from static_frame.core.container_util import container_to_exporter_attr
@@ -20,20 +21,13 @@ from static_frame.core.util import DtypesSpecifier
 FrameConstructor = tp.Callable[[tp.Any], Frame]
 
 
-class HashableConfigParams(tp.NamedTuple):
-    index_depth: int
-    index_name_depth_level: tp.Optional[tp.Union[int, tp.Iterable[int]]]
-    columns_depth: int
-    columns_name_depth_level: tp.Optional[tp.Union[int, tp.Iterable[int]]]
-    columns_select: tp.Optional[tp.Iterable[str]]
-    dtypes: DtypesSpecifier
-    consolidate_blocks: bool
-
-
-class BuildFrameParams(tp.NamedTuple):
+class DeferredFrameInitPayload(tp.NamedTuple):
+    '''
+    Defines the necessary objects to construct a frame. Used for multiprocessing.
+    '''
     src: bytes
     name: tp.Hashable
-    config: HashableConfigParams
+    config: StoreConfigHE
     constructor: FrameConstructor
 
 
@@ -47,21 +41,21 @@ class _StoreZip(Store):
         raise NotImplementedError
 
     @classmethod
-    def _build_frame_explicit(cls,
+    def _build_frame(cls,
             src: bytes,
             name: tp.Hashable,
-            config: HashableConfigParams,
+            config: StoreConfigHE,
             constructor: FrameConstructor,
-        ) -> Frame:
+            ) -> Frame:
         raise NotImplementedError
 
     @classmethod
-    def _build_frame_from_params(cls, params: BuildFrameParams) -> Frame:
-        return cls._build_frame_explicit(
-                src=params.src,
-                name=params.name,
-                config=params.config,
-                constructor=params.constructor,
+    def _build_frame_from_payload(cls, payload: DeferredFrameInitPayload) -> Frame:
+        return cls._build_frame(
+                src=payload.src,
+                name=payload.name,
+                config=payload.config,
+                constructor=payload.constructor,
         )
 
     @store_coherent_non_write
@@ -90,7 +84,7 @@ class _StoreZip(Store):
         config_map = StoreConfigMap.from_initializer(config)
         multiprocess: bool = config_map.default.read_max_workers is not None
 
-        def gen() -> tp.Iterable[tp.Union[BuildFrameParams, Frame]]:
+        def gen() -> tp.Iterable[tp.Union[DeferredFrameInitPayload, Frame]]:
             with zipfile.ZipFile(self._fp) as zf:
                 for label in labels:
                     c: StoreConfig = config_map[label]
@@ -98,7 +92,7 @@ class _StoreZip(Store):
                     label_encoded: str = config_map.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
-                    hashable_config = HashableConfigParams( # pylint: disable=no-value-for-parameter
+                    hashable_config = StoreConfigHE( # pylint: disable=no-value-for-parameter
                             index_depth=c.index_depth,
                             index_name_depth_level=c.index_name_depth_level,
                             columns_depth=c.columns_depth,
@@ -109,7 +103,7 @@ class _StoreZip(Store):
                     )
 
                     if multiprocess:
-                        yield BuildFrameParams( # pylint: disable=no-value-for-parameter
+                        yield DeferredFrameInitPayload( # pylint: disable=no-value-for-parameter
                                 src=src,
                                 name=label,
                                 config=hashable_config,
@@ -117,7 +111,7 @@ class _StoreZip(Store):
                         )
                     else:
                         # Avoid unpacking an unnecessary intermediate data structure since we know all the args now
-                        yield self._build_frame_explicit(
+                        yield self._build_frame(
                                 src=src,
                                 name=label,
                                 config=hashable_config,
@@ -128,7 +122,7 @@ class _StoreZip(Store):
             chunksize = config_map.default.read_chunksize
 
             with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
-                yield from executor.map(self._build_frame_from_params, gen(), chunksize=chunksize)
+                yield from executor.map(self._build_frame_from_payload, gen(), chunksize=chunksize)
         else:
             yield from gen() # type: ignore
 
@@ -143,10 +137,10 @@ class _StoreZipDelimited(_StoreZip):
         return getattr(container_type, cls._CONSTRUCTOR_ATTR) # type: ignore
 
     @classmethod
-    def _build_frame_explicit(cls,
+    def _build_frame(cls,
             src: bytes,
             name: tp.Hashable,
-            config: HashableConfigParams,
+            config: StoreConfigHE,
             constructor: FrameConstructor,
         ) -> Frame:
         return constructor( # type: ignore
@@ -217,10 +211,10 @@ class StoreZipPickle(_StoreZip):
         return pickle.loads
 
     @classmethod
-    def _build_frame_explicit(cls,
+    def _build_frame(cls,
             src: bytes,
             name: tp.Hashable,
-            config: HashableConfigParams,
+            config: StoreConfigHE,
             constructor: FrameConstructor,
         ) -> Frame:
         return constructor(src)
@@ -269,10 +263,10 @@ class StoreZipParquet(_StoreZip):
         return container_type.from_parquet
 
     @classmethod
-    def _build_frame_explicit(cls,
+    def _build_frame(cls,
             src: bytes,
             name: tp.Hashable,
-            config: HashableConfigParams,
+            config: StoreConfigHE,
             constructor: FrameConstructor,
         ) -> Frame:
         return constructor( # type: ignore
