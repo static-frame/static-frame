@@ -296,27 +296,8 @@ class StoreConfig(StoreConfigHE):
         '''
         Return a ``StoreConfigHE`` version of this StoreConfig.
         '''
-        return StoreConfigHE(
-                index_depth=self.index_depth,
-                index_name_depth_level=self.index_name_depth_level,
-                columns_depth=self.columns_depth,
-                columns_name_depth_level=self.columns_name_depth_level,
-                columns_select=self.columns_select,
-                dtypes=self.dtypes,
-                consolidate_blocks=self.consolidate_blocks,
-                skip_header=self.skip_header,
-                skip_footer=self.skip_footer,
-                trim_nadir=self.trim_nadir,
-                include_index=self.include_index,
-                include_index_name=self.include_index_name,
-                include_columns=self.include_columns,
-                include_columns_name=self.include_columns_name,
-                merge_hierarchical_labels=self.merge_hierarchical_labels,
-                read_max_workers=self.read_max_workers,
-                read_chunksize=self.read_chunksize,
-                write_max_workers=self.write_max_workers,
-                write_chunksize=self.write_chunksize,
-        )
+        return StoreConfigHE(**{attr: getattr(self, attr)
+            for attr in StoreConfigHE.__slots__ if not attr.startswith('_')})
 
     def __hash__(self) -> int:
         raise NotImplementedError()

@@ -180,6 +180,10 @@ class TestUnit(TestCase):
         config2 = StoreConfig(index_name_depth_level=(1, 2))
         compare_configs(config1, config2)
 
+    def test_store_config_not_hashable(self) -> None:
+        with self.assertRaises(NotImplementedError):
+            hash(StoreConfig())
+
     #---------------------------------------------------------------------------
     def test_store_config_map_a(self) -> None:
 
