@@ -15,7 +15,6 @@ from static_frame.core.store import StoreConfigHE
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
 from static_frame.core.container_util import container_to_exporter_attr
-from static_frame.core.util import DtypesSpecifier
 
 
 FrameConstructor = tp.Callable[[tp.Any], Frame]
@@ -44,7 +43,7 @@ class _StoreZip(Store):
     def _build_frame(cls,
             src: bytes,
             name: tp.Hashable,
-            config: StoreConfigHE,
+            config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
             ) -> Frame:
         raise NotImplementedError
@@ -92,29 +91,18 @@ class _StoreZip(Store):
                     label_encoded: str = config_map.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
-                    hashable_config = StoreConfigHE( # pylint: disable=no-value-for-parameter
-                            index_depth=c.index_depth,
-                            index_name_depth_level=c.index_name_depth_level,
-                            columns_depth=c.columns_depth,
-                            columns_name_depth_level=c.columns_name_depth_level,
-                            columns_select=c.columns_select,
-                            dtypes=c.dtypes,
-                            consolidate_blocks=c.consolidate_blocks,
-                    )
-
                     if multiprocess:
                         yield DeferredFrameInitPayload( # pylint: disable=no-value-for-parameter
                                 src=src,
                                 name=label,
-                                config=hashable_config,
+                                config=c.to_store_config_he(),
                                 constructor=self._container_type_to_constructor(container_type),
                         )
                     else:
-                        # Avoid unpacking an unnecessary intermediate data structure since we know all the args now
                         yield self._build_frame(
                                 src=src,
                                 name=label,
-                                config=hashable_config,
+                                config=c,
                                 constructor=self._container_type_to_constructor(container_type),
                         )
 
@@ -140,7 +128,7 @@ class _StoreZipDelimited(_StoreZip):
     def _build_frame(cls,
             src: bytes,
             name: tp.Hashable,
-            config: StoreConfigHE,
+            config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> Frame:
         return constructor( # type: ignore
@@ -214,7 +202,7 @@ class StoreZipPickle(_StoreZip):
     def _build_frame(cls,
             src: bytes,
             name: tp.Hashable,
-            config: StoreConfigHE,
+            config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> Frame:
         return constructor(src)
@@ -266,7 +254,7 @@ class StoreZipParquet(_StoreZip):
     def _build_frame(cls,
             src: bytes,
             name: tp.Hashable,
-            config: StoreConfigHE,
+            config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> Frame:
         return constructor( # type: ignore

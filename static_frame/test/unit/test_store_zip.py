@@ -37,10 +37,10 @@ class TestUnit(TestCase):
             _StoreZip._container_type_to_constructor(None) # type: ignore
 
         with self.assertRaises(NotImplementedError):
-            _StoreZip._build_frame_explicit(
+            _StoreZip._build_frame(
                     src=bytes(),
                     name=None,
-                    config=None, # type: ignore
+                    config=StoreConfig(),
                     constructor=lambda x: Frame(),
             )
 

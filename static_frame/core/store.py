@@ -172,7 +172,7 @@ class StoreConfig(metaclass=InterfaceMeta):
         '''
         Return a ``StoreConfigHE`` version of this StoreConfig.
         '''
-        return StoreConfigHE(**{attr: getattr(self, attr) for attr in self.__slots__})
+        return StoreConfigHE(**{attr: getattr(self, attr) for attr in self.__slots__})  #type: ignore [no-untyped-call]
 
 
 SCMMapType = tp.Mapping[tp.Any, StoreConfig]
@@ -197,7 +197,7 @@ class StoreConfigHE(StoreConfig):
 
     _hash: tp.Optional[int]
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs): #type: ignore [no-untyped-def]
         for attr in self._not_hashable:
             kwargs[attr] = None
         super().__init__(**kwargs)
@@ -221,7 +221,7 @@ class StoreConfigHE(StoreConfig):
     def __hash__(self) -> int:
         if self._hash is None:
             self._hash = hash(tuple(getattr(self, attr) for attr in StoreConfig.__slots__))
-        return tp.cast(int, self._hash)
+        return self._hash
 
 
 class StoreConfigMap:
