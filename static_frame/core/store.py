@@ -206,21 +206,70 @@ class StoreConfigHE(StoreConfig):
     def __eq__(self, other: tp.Any) -> bool:
         if not isinstance(other, StoreConfig):
             return False
-
-        for attr in StoreConfig.__slots__:
-            if attr in self._not_hashable:
-                pass
-            if getattr(self, attr) != getattr(other, attr):
-                return False
-
-        return True
+        return (
+                self.index_depth == other.index_depth and
+                self.index_name_depth_level == other.index_name_depth_level and
+                self.columns_depth == other.columns_depth and
+                self.columns_name_depth_level == other.columns_name_depth_level and
+                self.columns_select == other.columns_select and
+                self.dtypes == other.dtypes and
+                self.consolidate_blocks == other.consolidate_blocks and
+                self.skip_header == other.skip_header and
+                self.skip_footer == other.skip_footer and
+                self.trim_nadir == other.trim_nadir and
+                self.include_index == other.include_index and
+                self.include_index_name == other.include_index_name and
+                self.include_columns == other.include_columns and
+                self.include_columns_name == other.include_columns_name and
+                self.merge_hierarchical_labels == other.merge_hierarchical_labels and
+                self.read_max_workers == other.read_max_workers and
+                self.read_chunksize == other.read_chunksize and
+                self.write_max_workers == other.write_max_workers and
+                self.write_chunksize == other.write_chunksize
+        )
 
     def __ne__(self, other: tp.Any) -> bool:
         return not self.__eq__(other)
 
+    @staticmethod
+    def _hash_depth_specifier(depth_specifier: tp.Optional[DepthLevelSpecifier]) -> tp.Hashable:
+        if depth_specifier is None or isinstance(depth_specifier, int):
+            return depth_specifier
+        return tuple(depth_specifier)
+
+    @staticmethod
+    def _hash_dtypes_specifier(dtypes_specifier: DtypesSpecifier) -> tp.Hashable:
+        if dtypes_specifier is None :
+            return dtypes_specifier
+        if isinstance(dtypes_specifier, dict):
+            return dtypes_specifier.items()
+        if isinstance(dtypes_specifier, list):
+            return tuple(dtypes_specifier)
+        return dtypes_specifier # type: ignore [return-value]
+
     def __hash__(self) -> int:
         if self._hash is None:
-            self._hash = hash(tuple(getattr(self, attr) for attr in StoreConfig.__slots__))
+            self._hash = hash((
+                    self.index_depth, # int
+                    self._hash_depth_specifier(self.index_name_depth_level),
+                    self.columns_depth, # int
+                    self._hash_depth_specifier(self.columns_name_depth_level),
+                    self.columns_select if self.columns_select is None else tuple(self.columns_select),
+                    self._hash_dtypes_specifier(self.dtypes),
+                    self.consolidate_blocks, # bool
+                    self.skip_header, # int
+                    self.skip_footer, # int
+                    self.trim_nadir, # bool
+                    self.include_index, # bool
+                    self.include_index_name, # bool
+                    self.include_columns, # bool
+                    self.include_columns_name, # bool
+                    self.merge_hierarchical_labels, # bool
+                    self.read_max_workers, # Optional[int]
+                    self.read_chunksize, # int
+                    self.write_max_workers, # Optional[int]
+                    self.write_chunksize, # int
+            ))
         return self._hash
 
 

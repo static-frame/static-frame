@@ -1,4 +1,5 @@
 import unittest
+from itertools import product
 # from io import StringIO
 import numpy as np
 
@@ -113,6 +114,71 @@ class TestUnit(TestCase):
 
         sc1m = StoreConfigMap(maps2, default=default)
         self.assertEqual(sc1m.default.write_chunksize, 2)
+
+    #---------------------------------------------------------------------------
+    def test_store_config_he_a(self) -> None:
+        kwargs = dict(
+                index_depth=1,
+                columns_depth=1,
+                consolidate_blocks=True,
+                skip_header=1,
+                skip_footer=1,
+                trim_nadir=True,
+                include_index=True,
+                include_index_name=True,
+                include_columns=True,
+                include_columns_name=True,
+                merge_hierarchical_labels=True,
+                read_max_workers=1,
+                read_chunksize=1,
+                write_max_workers=1,
+                write_chunksize=1,
+                label_encoder=lambda x: x, # These will be ignore
+                label_decoder=lambda x: x, # These will be ignore
+        )
+
+        for (depth_levels, columns_select, dtypes) in product(
+            (None, 1, [1, 2], (1, 2)),
+            (None, ['a'], ('a',)),
+            (None, 'int', int, np.int64, [int], (int,), {'a': int}),
+        ):
+            config = StoreConfig(**kwargs, # type: ignore [arg-type]
+                    index_name_depth_level=depth_levels,
+                    columns_name_depth_level=depth_levels,
+                    columns_select=columns_select,
+                    dtypes=dtypes,
+            )
+
+            config_he = config.to_store_config_he()
+            self.assertEqual(config_he, config)
+
+    def test_store_config_he_b(self) -> None:
+        def compare_configs(config1: StoreConfig, config2: StoreConfig) -> None:
+            self.assertEqual(config1.to_store_config_he(), config1)
+            self.assertEqual(config2.to_store_config_he(), config2)
+            self.assertNotEqual(config1.to_store_config_he(), config2)
+            self.assertNotEqual(config2.to_store_config_he(), config1)
+            self.assertNotEqual(config1.to_store_config_he(), config2.to_store_config_he())
+
+        config1 = StoreConfig(index_depth=1)
+        config2 = StoreConfig(index_depth=2)
+        compare_configs(config1, config2)
+
+        config1 = StoreConfig(columns_select=['a'])
+        config2 = StoreConfig(columns_select=('b',))
+        compare_configs(config1, config2)
+
+        config1 = StoreConfig(dtypes=str)
+        config2 = StoreConfig(dtypes=int)
+        compare_configs(config1, config2)
+
+        config1 = StoreConfig(dtypes=str)
+        config2 = StoreConfig(dtypes=dict(a=int))
+        compare_configs(config1, config2)
+
+        config1 = StoreConfig(index_name_depth_level=None)
+        config2 = StoreConfig(index_name_depth_level=(1, 2))
+        compare_configs(config1, config2)
 
     #---------------------------------------------------------------------------
     def test_store_config_map_a(self) -> None:
