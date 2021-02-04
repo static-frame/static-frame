@@ -1280,8 +1280,9 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        v = self._blocks.values
-        order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
+        values_for_lex = [self._blocks._extract_array(column_key=i)
+                for i in range(self._blocks.shape[1]-1, -1, -1)]
+        order = np.lexsort(values_for_lex)
 
         if not ascending:
             order = order[::-1]
