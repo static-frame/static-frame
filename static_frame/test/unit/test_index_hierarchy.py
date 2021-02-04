@@ -2341,6 +2341,7 @@ class TestUnit(TestCase):
     #     self.assertEqual(ih1.get((20, 200)), None)
 
 
+    #---------------------------------------------------------------------------
     def test_index_hierarchy_sort_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
@@ -2350,7 +2351,20 @@ class TestUnit(TestCase):
             )
 
 
+    def test_index_hierarchy_sort_b(self) -> None:
 
+        ih1 = IndexHierarchy.from_labels(((1, 1000), (30, 25), (100, 3)))
+
+        self.assertEqual(ih1.sort(key=lambda i: i / -1).values.tolist(),
+                [[100, 3], [30, 25], [1, 1000]])
+
+        self.assertEqual(ih1.sort(
+                key=lambda i: i.values.sum(axis=1)).values.tolist(),
+                [[30, 25], [100, 3], [1, 1000]],
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_index_hierarchy_isin_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))

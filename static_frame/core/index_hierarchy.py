@@ -1269,8 +1269,10 @@ class IndexHierarchy(IndexBase):
 
 
     def sort(self: IH,
+            *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[['IndexHierarchy'], tp.Union[np.ndarray, 'IndexHierarchy']]] = None,
             ) -> IH:
         '''Return a new Index with the labels sorted.
 
@@ -1280,9 +1282,28 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        values_for_lex = [self._blocks._extract_array(column_key=i)
-                for i in range(self._blocks.shape[1]-1, -1, -1)]
-        order = np.lexsort(values_for_lex)
+        if key:
+            cfs = key(self)
+            cfs_is_array = isinstance(cfs, np.ndarray)
+            if cfs_is_array:
+                cfs_depth = 1 if cfs.ndim == 1 else cfs.shape[1]
+            else:
+                cfs_depth = cfs.depth
+            if cfs_depth > 1:
+                if cfs_is_array:
+                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
+                else:
+                    values_for_lex = [cfs.values_at_depth(i)
+                            for i in range(cfs.depth-1, -1, -1)]
+                order = np.lexsort(values_for_lex)
+            else:
+                v = cfs if cfs_is_array else cfs.values
+                order = np.argsort(v, kind=kind)
+
+        else:
+            values_for_lex = [self._blocks._extract_array(column_key=i)
+                    for i in range(self._blocks.shape[1]-1, -1, -1)]
+            order = np.lexsort(values_for_lex)
 
         if not ascending:
             order = order[::-1]
