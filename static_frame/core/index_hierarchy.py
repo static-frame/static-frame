@@ -11,6 +11,7 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import key_from_container_key
+from static_frame.core.container_util import sort_index_for_order
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1282,31 +1283,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        if key:
-            cfs = key(self)
-            cfs_is_array = isinstance(cfs, np.ndarray)
-            if cfs_is_array:
-                cfs_depth = 1 if cfs.ndim == 1 else cfs.shape[1]
-            else:
-                cfs_depth = cfs.depth
-            if cfs_depth > 1:
-                if cfs_is_array:
-                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
-                else:
-                    values_for_lex = [cfs.values_at_depth(i)
-                            for i in range(cfs.depth-1, -1, -1)]
-                order = np.lexsort(values_for_lex)
-            else:
-                v = cfs if cfs_is_array else cfs.values
-                order = np.argsort(v, kind=kind)
-
-        else:
-            values_for_lex = [self._blocks._extract_array(column_key=i)
-                    for i in range(self._blocks.shape[1]-1, -1, -1)]
-            order = np.lexsort(values_for_lex)
-
-        if not ascending:
-            order = order[::-1]
+        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
 
         blocks = self._blocks._extract(row_key=order)
         index_constructors = tuple(self._levels.index_types())

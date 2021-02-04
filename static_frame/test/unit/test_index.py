@@ -493,7 +493,7 @@ class TestUnit(TestCase):
         index = Index(('ax', 'cb', 'dg', 'eb', 'bq'))
 
         self.assertEqual(index.sort(
-                key=lambda i:i.iter_label().apply(lambda x: x[1])
+                key=lambda i: (i.iter_label().apply(lambda x: x[1]).values)
                 ).values.tolist(),
                 ['cb', 'eb', 'dg', 'bq', 'ax']
                 )

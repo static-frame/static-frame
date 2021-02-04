@@ -4429,7 +4429,8 @@ class Frame(ContainerOperand):
     def sort_index(self,
             *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted Index.
@@ -4458,7 +4459,9 @@ class Frame(ContainerOperand):
     def sort_columns(self,
             *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND) -> 'Frame':
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
+            ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted ``columns``.
         '''
@@ -4488,7 +4491,9 @@ class Frame(ContainerOperand):
             *,
             ascending: bool = True,
             axis: int = 1,
-            kind: str = DEFAULT_SORT_KIND) -> 'Frame':
+            kind: str = DEFAULT_SORT_KIND,
+            # key: tp.Optional[tp.Callable[['Series'], tp.Union[np.ndarray, 'Series']]] = None,
+            ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
 

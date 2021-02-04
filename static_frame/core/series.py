@@ -18,6 +18,7 @@ from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import index_many_set
 from static_frame.core.container_util import index_many_concat
+from static_frame.core.container_util import sort_index_for_order
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1733,36 +1734,8 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
-        # cfs is container_for_sort
+        order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
-        if key:
-            cfs = key(self._index)
-            cfs_is_array = isinstance(cfs, np.ndarray)
-            if cfs_is_array:
-                cfs_depth = 1 if cfs.ndim == 1 else cfs.shape[1]
-            else:
-                cfs_depth = cfs.depth
-            if len(cfs) != len(self._index):
-                raise RuntimeError('key function returned a container of invalid length')
-        else:
-            cfs = self._index
-            cfs_is_array = False
-            cfs_depth = cfs.depth
-
-        # argsort lets us do the sort once and reuse the results
-        if cfs_depth > 1:
-            if cfs_is_array:
-                values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
-            else:
-                values_for_lex = [cfs.values_at_depth(i)
-                        for i in range(cfs.depth-1, -1, -1)]
-            order = np.lexsort(values_for_lex)
-        else: # depth is 1
-            v = cfs if cfs_is_array else cfs.values
-            order = np.argsort(v, kind=kind)
-
-        if not ascending:
-            order = order[::-1]
 
         index = self._index[order]
 

@@ -15,6 +15,7 @@ from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import key_from_container_key
+from static_frame.core.container_util import sort_index_for_order
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1191,15 +1192,7 @@ class Index(IndexBase):
         Args:
             kind: Sort algorithm passed to NumPy.
         '''
-        if key:
-            cfs = key(self)
-            cfs_values = cfs if isinstance(cfs, np.ndarray) else cfs.values
-        else:
-            cfs_values = self.values
-
-        order = np.argsort(cfs_values, kind=kind)
-        if not ascending:
-            order = order[::-1]
+        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
 
         return self._extract_iloc(order)
 
