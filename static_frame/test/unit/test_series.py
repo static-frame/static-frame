@@ -1695,6 +1695,27 @@ class TestUnit(TestCase):
 
 
 
+    def test_series_sort_index_e(self) -> None:
+
+        index = IndexHierarchy.from_product(('c', 'b', 'a'), (20, 10), name='foo')
+        s1 = Series(range(6), index=index)
+        s2 = s1.sort_index()
+        self.assertEqual(s2.values.tolist(),
+                [5, 4, 3, 2, 1, 0])
+
+        # this is a stable sort, so we retain inner order
+        s3 = s1.sort_index(key=lambda i: i.values_at_depth(0))
+        self.assertEqual(s3.values.tolist(),
+                [4, 5, 2, 3, 0, 1])
+
+        s4 = s1.sort_index(key=lambda i: i.rehierarch([1, 0]))
+        self.assertEqual(s4.values.tolist(),
+                [5, 4, 3, 2, 1, 0])
+
+        with self.assertRaises(RuntimeError):
+            _ = s1.sort_index(key=lambda i: i.values_at_depth(0)[:2])
+
+
 
 
     #---------------------------------------------------------------------------

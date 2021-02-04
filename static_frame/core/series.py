@@ -1718,7 +1718,8 @@ class Series(ContainerOperand):
     def sort_index(self,
             *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted Index.
@@ -1727,17 +1728,38 @@ class Series(ContainerOperand):
             *
             ascending: if True, values are sorted low to high
             kind: sort algorithm
+            key: A function that takes an Index and returns a new Index to use for sorting.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
-        # argsort lets us do the sort once and reuse the results
-        if self._index.depth > 1:
-            v = self._index.values
-            order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
+        # cfs is container_for_sort
+
+        if key:
+            cfs = key(self._index)
+            cfs_is_array = isinstance(cfs, np.ndarray)
+            if cfs_is_array:
+                cfs_depth = 1 if cfs.ndim == 1 else cfs.shape[1]
+            else:
+                cfs_depth = cfs.depth
+            if len(cfs) != len(self._index):
+                raise RuntimeError('key function returned a container of invalid length')
         else:
-            # this technique does not work when values is a 2d array
-            order = np.argsort(self._index.values, kind=kind)
+            cfs = self._index
+            cfs_is_array = False
+            cfs_depth = cfs.depth
+
+        # argsort lets us do the sort once and reuse the results
+        if cfs_depth > 1:
+            if cfs_is_array:
+                values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
+            else:
+                values_for_lex = [cfs.values_at_depth(i)
+                        for i in range(cfs.depth-1, -1, -1)]
+            order = np.lexsort(values_for_lex)
+        else: # depth is 1
+            v = cfs if cfs_is_array else cfs.values
+            order = np.argsort(v, kind=kind)
 
         if not ascending:
             order = order[::-1]
@@ -1758,7 +1780,7 @@ class Series(ContainerOperand):
     def sort_values(self,
             *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND
+            kind: str = DEFAULT_SORT_KIND,
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.
