@@ -136,27 +136,14 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     def __eq__(self, other: tp.Any) -> bool:
         if not isinstance(other, StoreConfigHE):
             return False
-        return (
-                self.index_depth == other.index_depth and
-                self.index_name_depth_level == other.index_name_depth_level and
-                self.columns_depth == other.columns_depth and
-                self.columns_name_depth_level == other.columns_name_depth_level and
-                self.columns_select == other.columns_select and
-                self.dtypes == other.dtypes and
-                self.consolidate_blocks == other.consolidate_blocks and
-                self.skip_header == other.skip_header and
-                self.skip_footer == other.skip_footer and
-                self.trim_nadir == other.trim_nadir and
-                self.include_index == other.include_index and
-                self.include_index_name == other.include_index_name and
-                self.include_columns == other.include_columns and
-                self.include_columns_name == other.include_columns_name and
-                self.merge_hierarchical_labels == other.merge_hierarchical_labels and
-                self.read_max_workers == other.read_max_workers and
-                self.read_chunksize == other.read_chunksize and
-                self.write_max_workers == other.write_max_workers and
-                self.write_chunksize == other.write_chunksize
-        )
+
+        for attr in self.__slots__:
+            if attr.startswith('_'):
+                continue
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+
+        return True
 
     def __ne__(self, other: tp.Any) -> bool:
         return not self.__eq__(other)
@@ -298,6 +285,11 @@ class StoreConfig(StoreConfigHE):
         '''
         return StoreConfigHE(**{attr: getattr(self, attr)
             for attr in StoreConfigHE.__slots__ if not attr.startswith('_')})
+
+    def __eq__(self, other: tp.Any) -> bool:
+        if not isinstance(other, StoreConfig):
+            return False
+        return id(self) == id(other)
 
     def __hash__(self) -> int:
         raise NotImplementedError()
