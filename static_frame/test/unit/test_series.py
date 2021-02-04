@@ -1708,7 +1708,7 @@ class TestUnit(TestCase):
         self.assertEqual(s3.values.tolist(),
                 [4, 5, 2, 3, 0, 1])
 
-        s4 = s1.sort_index(key=lambda i: i.rehierarch([1, 0]))
+        s4 = s1.sort_index(key=lambda i: i.rehierarch([1, 0])) #type: ignore
         self.assertEqual(s4.values.tolist(),
                 [5, 4, 3, 2, 1, 0])
 
@@ -1747,8 +1747,30 @@ class TestUnit(TestCase):
 
         self.assertEqual(post.index.__class__, IndexHierarchy)
 
+    def test_series_sort_values_c(self) -> None:
+
+        index = IndexDate(('2017-12-03', '2020-03-15', '2016-01-31'), name='foo')
+        s = Series(list('abc'), index=index)
+
+        self.assertEqual(s.sort_values(
+                key=lambda s: s.index.via_dt.year).values.tolist(), #type: ignore
+                ['c', 'a', 'b'])
+
+        self.assertEqual(s.sort_values(
+                key=lambda s: s.index.via_dt.month).values.tolist(), #type: ignore
+                ['c', 'b', 'a'])
+
+        self.assertEqual(s.sort_values(
+                key=lambda s: s.index.via_dt.day).values.tolist(), #type: ignore
+                ['a', 'b', 'c'])
 
 
+        self.assertEqual(s.sort_values(
+                key=lambda s:s.via_str.find('b')).values.tolist(),
+                ['a', 'c', 'b'])
+
+
+    #---------------------------------------------------------------------------
     def test_series_reversed(self) -> None:
 
         idx = tuple('abcd')

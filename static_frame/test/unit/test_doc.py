@@ -777,11 +777,11 @@ dtype('int64')
 #start_Series-interface
 >>> sf.Series.interface.loc[sf.Series.interface.index.via_str.startswith('sort')]
 <Frame: Series>
-<Index>                         cls_name group  doc                  <<U18>
+<Index>                              cls_name group  doc                  <<U18>
 <Index: signature>
-sort_index(*, ascending, kind)  Series   Method Return a new Seri...
-sort_values(*, ascending, kind) Series   Method Return a new Seri...
-<<U94>                          <<U6>    <<U17> <<U83>
+sort_index(*, ascending, kind, key)  Series   Method Return a new Seri...
+sort_values(*, ascending, kind, key) Series   Method Return a new Seri...
+<<U94>                               <<U6>    <<U17> <<U83>
 
 #end_Series-interface
 

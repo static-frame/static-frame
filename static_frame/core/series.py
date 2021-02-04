@@ -1764,9 +1764,7 @@ class Series(ContainerOperand):
         if not ascending:
             order = order[::-1]
 
-        index_values = self._index.values[order]
-        index_values.flags.writeable = False
-        index = self._index.from_labels(index_values, name=self._index._name)
+        index = self._index[order]
 
         values = self.values[order]
         values.flags.writeable = False
@@ -1781,6 +1779,7 @@ class Series(ContainerOperand):
             *,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[['Series'], tp.Union[np.ndarray, 'Series']]] = None,
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.
@@ -1788,14 +1787,18 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
+        if key:
+            cfs = key(self)
+            cfs_values = cfs if isinstance(cfs, np.ndarray) else cfs.values
+        else:
+            cfs_values = self.values
+
         # argsort lets us do the sort once and reuse the results
-        order = np.argsort(self.values, kind=kind)
+        order = np.argsort(cfs_values, kind=kind)
         if not ascending:
             order = order[::-1]
 
-        index_values = self._index.values[order]
-        index_values.flags.writeable = False
-        index = self._index.from_labels(index_values, name=self._index._name)
+        index = self._index[order]
 
         values = self.values[order]
         values.flags.writeable = False
