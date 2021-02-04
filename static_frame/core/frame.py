@@ -4444,9 +4444,7 @@ class Frame(ContainerOperand):
         if not ascending:
             order = order[::-1]
 
-        index_values = self._index.values[order]
-        index_values.flags.writeable = False
-        index = self._index.from_labels(index_values, name=self._index.name)
+        index = self._index[order]
 
         blocks = self._blocks.iloc[order]
         return self.__class__(blocks,
@@ -4474,9 +4472,7 @@ class Frame(ContainerOperand):
         if not ascending:
             order = order[::-1]
 
-        columns_values = self._columns.values[order]
-        columns_values.flags.writeable = False
-        columns = self._columns.from_labels(columns_values,  name=self._columns.name)
+        columns = self._columns[order]
 
         blocks = self._blocks[order]
         return self.__class__(blocks,
