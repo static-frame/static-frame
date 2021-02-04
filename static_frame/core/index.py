@@ -1183,19 +1183,25 @@ class Index(IndexBase):
 
     def sort(self,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND) -> 'Index':
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[['Index'], tp.Union[np.ndarray, 'Index']]] = None,
+            ) -> 'Index':
         '''Return a new Index with the labels sorted.
 
         Args:
             kind: Sort algorithm passed to NumPy.
         '''
-        # force usage of property for caching
-        v = np.sort(self.values, kind=kind)
-        if not ascending:
-            v = v[::-1]
+        if key:
+            cfs = key(self)
+            cfs_values = cfs if isinstance(cfs, np.ndarray) else cfs.values
+        else:
+            cfs_values = self.values
 
-        v.flags.writeable = False
-        return self.__class__(v, name=self._name)
+        order = np.argsort(cfs_values, kind=kind)
+        if not ascending:
+            order = order[::-1]
+
+        return self._extract_iloc(order)
 
     def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
         '''

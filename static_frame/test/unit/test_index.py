@@ -486,6 +486,20 @@ class TestUnit(TestCase):
                 [index.sort(ascending=False).loc_to_iloc(x) for x in sorted(index.values)],
                 [4, 3, 2, 1, 0])
 
+
+
+    def test_index_sort_b(self) -> None:
+
+        index = Index(('ax', 'cb', 'dg', 'eb', 'bq'))
+
+        self.assertEqual(index.sort(
+                key=lambda i:i.iter_label().apply(lambda x: x[1])
+                ).values.tolist(),
+                ['cb', 'eb', 'dg', 'bq', 'ax']
+                )
+
+    #---------------------------------------------------------------------------
+
     def test_index_relable(self) -> None:
 
         index = Index(('a', 'c', 'd', 'e', 'b'))
