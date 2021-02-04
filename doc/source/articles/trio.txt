@@ -101,7 +101,7 @@ Initialization
 _______________________
 
 
-Any iterable of pairs of label and Frame can be used to construct these containers. An ``items()`` method, such as the one found on the Bus or a dictionary, provides such an iterable.
+Any iterable of pairs of label and Frame can be used to construct these containers. Any ``items()`` method, such as the one found on the Bus or a dictionary, provides such an iterable.
 
 As the Batch is a generator-like iterator, it can only be iterated once before it is exhausted. For this reason a fresh Batch will be created for each example below. The following example demonstrates that, just like a generator, a Batch can only be iterated once:
 
