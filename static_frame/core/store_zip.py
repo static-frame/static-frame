@@ -82,6 +82,7 @@ class _StoreZip(Store):
 
         config_map = StoreConfigMap.from_initializer(config)
         multiprocess: bool = config_map.default.read_max_workers is not None
+        constructor: FrameConstructor = self._container_type_to_constructor(container_type)
 
         def gen() -> tp.Iterable[tp.Union[DeferredFrameInitPayload, Frame]]:
             with zipfile.ZipFile(self._fp) as zf:
@@ -96,14 +97,14 @@ class _StoreZip(Store):
                                 src=src,
                                 name=label,
                                 config=c.to_store_config_he(),
-                                constructor=self._container_type_to_constructor(container_type),
+                                constructor=constructor,
                         )
                     else:
                         yield self._build_frame(
                                 src=src,
                                 name=label,
                                 config=c,
-                                constructor=self._container_type_to_constructor(container_type),
+                                constructor=constructor,
                         )
 
         if multiprocess:
