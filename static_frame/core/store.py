@@ -24,19 +24,32 @@ from static_frame.core.util import DepthLevelSpecifier
 
 
 #-------------------------------------------------------------------------------
-class StoreConfig(metaclass=InterfaceMeta):
+
+class StoreConfigHE(metaclass=InterfaceMeta):
     '''
-    A read-only container of parameters used by :obj:`Store` subclasses for reading from and writing to multi-table storage formats.
+    A read-only, hashable container used by :obj:`Store` subclasses for reading from and writing to multi-table storage formats.
     '''
 
     index_depth: int
+    index_name_depth_level: tp.Optional[DepthLevelSpecifier]
     columns_depth: int
+    columns_name_depth_level: tp.Optional[DepthLevelSpecifier]
+    columns_select: tp.Optional[tp.Iterable[str]]
     dtypes: DtypesSpecifier
+    consolidate_blocks: bool
+    skip_header: int
+    skip_footer: int
+    trim_nadir: bool
     include_index: bool
+    include_index_name: bool
     include_columns: bool
+    include_columns_name: bool
     merge_hierarchical_labels: bool
-    label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]]
-    label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]]
+    read_max_workers: tp.Optional[int]
+    read_chunksize: int
+    write_max_workers: tp.Optional[int]
+    write_chunksize: int
+    _hash: tp.Optional[int]
 
     __slots__ = (
             'index_depth',
@@ -54,26 +67,12 @@ class StoreConfig(metaclass=InterfaceMeta):
             'include_columns',
             'include_columns_name',
             'merge_hierarchical_labels',
-            'label_encoder',
-            'label_decoder',
+            'read_max_workers',
+            'read_chunksize',
+            'write_max_workers',
+            'write_chunksize',
+            '_hash'
             )
-
-    @classmethod
-    def from_frame(cls, frame: Frame) -> 'StoreConfig':
-        '''Derive a config from a Frame.
-        '''
-        include_index = frame.index.depth > 1 or not frame.index._map is None
-        index_depth = 0 if not include_index else frame.index.depth
-
-        include_columns = frame.columns.depth > 1 or not frame.columns._map is None
-        columns_depth = 0 if not include_columns else frame.columns.depth
-
-        return cls(
-                index_depth=index_depth,
-                columns_depth=columns_depth,
-                include_index=include_index,
-                include_columns=include_columns
-                )
 
     def __init__(self, *,
             # constructors
@@ -95,9 +94,11 @@ class StoreConfig(metaclass=InterfaceMeta):
             include_columns_name: bool = False,
             # not used by all exporters
             merge_hierarchical_labels: bool = True,
-            # store label serializer
-            label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]] = None,
-            label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]] = None,
+            # multiprocessing configuration
+            read_max_workers: tp.Optional[int] = None,
+            read_chunksize: int = 1,
+            write_max_workers: tp.Optional[int] = None,
+            write_chunksize: int = 1,
             ):
         '''
         Args:
@@ -125,10 +126,146 @@ class StoreConfig(metaclass=InterfaceMeta):
         # self.format_columns = format_columns
         self.merge_hierarchical_labels = merge_hierarchical_labels
 
+        self.read_max_workers = read_max_workers
+        self.read_chunksize = read_chunksize
+        self.write_max_workers = write_max_workers
+        self.write_chunksize = write_chunksize
+
+        self._hash = None
+
+    def __eq__(self, other: tp.Any) -> bool:
+        if not isinstance(other, StoreConfigHE):
+            return False
+
+        for attr in self.__slots__:
+            if attr.startswith('_'):
+                continue
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+
+        return True
+
+    def __ne__(self, other: tp.Any) -> bool:
+        return not self.__eq__(other)
+
+    @staticmethod
+    def _hash_depth_specifier(depth_specifier: tp.Optional[DepthLevelSpecifier]) -> tp.Hashable:
+        if depth_specifier is None or isinstance(depth_specifier, int):
+            return depth_specifier
+        return tuple(depth_specifier)
+
+    @staticmethod
+    def _hash_dtypes_specifier(dtypes_specifier: DtypesSpecifier) -> tp.Hashable:
+        if dtypes_specifier is None :
+            return dtypes_specifier
+        if isinstance(dtypes_specifier, dict):
+            return dtypes_specifier.items()
+        if isinstance(dtypes_specifier, list):
+            return tuple(dtypes_specifier)
+        return dtypes_specifier # type: ignore [return-value]
+
+    def __hash__(self) -> int:
+        if self._hash is None:
+            self._hash = hash((
+                    self.index_depth, # int
+                    self._hash_depth_specifier(self.index_name_depth_level),
+                    self.columns_depth, # int
+                    self._hash_depth_specifier(self.columns_name_depth_level),
+                    self.columns_select if self.columns_select is None else tuple(self.columns_select),
+                    self._hash_dtypes_specifier(self.dtypes),
+                    self.consolidate_blocks, # bool
+                    self.skip_header, # int
+                    self.skip_footer, # int
+                    self.trim_nadir, # bool
+                    self.include_index, # bool
+                    self.include_index_name, # bool
+                    self.include_columns, # bool
+                    self.include_columns_name, # bool
+                    self.merge_hierarchical_labels, # bool
+                    self.read_max_workers, # Optional[int]
+                    self.read_chunksize, # int
+                    self.write_max_workers, # Optional[int]
+                    self.write_chunksize, # int
+            ))
+        return self._hash
+
+
+class StoreConfig(StoreConfigHE):
+    '''
+    A read-only container of parameters used by :obj:`Store` subclasses for reading from and writing to multi-table storage formats.
+    '''
+    label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]]
+    label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]]
+
+    __slots__ = (
+            'label_encoder',
+            'label_decoder',
+            )
+
+    @classmethod
+    def from_frame(cls, frame: Frame) -> 'StoreConfig':
+        '''Derive a config from a Frame.
+        '''
+        include_index = frame.index.depth > 1 or not frame.index._map is None
+        index_depth = 0 if not include_index else frame.index.depth
+
+        include_columns = frame.columns.depth > 1 or not frame.columns._map is None
+        columns_depth = 0 if not include_columns else frame.columns.depth
+
+        return cls(
+                index_depth=index_depth,
+                columns_depth=columns_depth,
+                include_index=include_index,
+                include_columns=include_columns
+                )
+
+    def __init__(self, *,
+            index_depth: int = 0,
+            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_depth: int = 1,
+            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_select: tp.Optional[tp.Iterable[str]] = None,
+            dtypes: DtypesSpecifier = None,
+            consolidate_blocks: bool = False,
+            skip_header: int = 0,
+            skip_footer: int = 0,
+            trim_nadir: bool = False,
+            include_index: bool = True,
+            include_index_name: bool = True,
+            include_columns: bool = True,
+            include_columns_name: bool = False,
+            merge_hierarchical_labels: bool = True,
+            label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]] = None,
+            label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]] = None,
+            read_max_workers: tp.Optional[int] = None,
+            read_chunksize: int = 1,
+            write_max_workers: tp.Optional[int] = None,
+            write_chunksize: int = 1,
+            ):
+        super().__init__(
+                index_depth=index_depth,
+                index_name_depth_level=index_name_depth_level,
+                columns_depth=columns_depth,
+                columns_name_depth_level=columns_name_depth_level,
+                columns_select=columns_select,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
+                trim_nadir=trim_nadir,
+                include_index=include_index,
+                include_index_name=include_index_name,
+                include_columns=include_columns,
+                include_columns_name=include_columns_name,
+                merge_hierarchical_labels=merge_hierarchical_labels,
+                read_max_workers=read_max_workers,
+                read_chunksize=read_chunksize,
+                write_max_workers=write_max_workers,
+                write_chunksize=write_chunksize,
+        )
         # NOTE: if only encode is provide, should we raise?
         self.label_encoder = label_encoder
         self.label_decoder = label_decoder
-
 
     def label_encode(self, label: tp.Hashable) -> str:
         if self.label_encoder:
@@ -141,6 +278,22 @@ class StoreConfig(metaclass=InterfaceMeta):
         if self.label_decoder:
             return self.label_decoder(label)
         return label
+
+    def to_store_config_he(self) -> 'StoreConfigHE':
+        '''
+        Return a ``StoreConfigHE`` version of this StoreConfig.
+        '''
+        return StoreConfigHE(**{attr: getattr(self, attr)
+            for attr in StoreConfigHE.__slots__ if not attr.startswith('_')})
+
+    def __eq__(self, other: tp.Any) -> bool:
+        if not isinstance(other, StoreConfig):
+            return False
+        return id(self) == id(other)
+
+    def __hash__(self) -> int:
+        raise NotImplementedError()
+
 
 SCMMapType = tp.Mapping[tp.Any, StoreConfig]
 SCMMapInitializer = tp.Optional[SCMMapType]
@@ -162,6 +315,16 @@ class StoreConfigMap:
             )
 
     _DEFAULT: StoreConfig = StoreConfig()
+
+    # These attrs (when set) must align with default
+    _ALIGN_WITH_DEFAULT_ATTRS = (
+            'label_encoder',
+            'label_decoder',
+            'read_max_workers',
+            'read_chunksize',
+            'write_max_workers',
+            'write_chunksize',
+    )
 
     @classmethod
     def from_frames(cls, frames: tp.Iterable[Frame]) -> 'StoreConfigMap':
@@ -215,9 +378,11 @@ class StoreConfigMap:
                 if not isinstance(config, self._DEFAULT.__class__):
                     raise ErrorInitStoreConfig(
                         f'unspported class {config}, must be {self._DEFAULT.__class__}')
-                if (config.label_encoder != self._default.label_encoder or
-                        config.label_decoder != self._default.label_decoder):
-                    raise ErrorInitStoreConfig(f'config {label} has encoder/decoder inconsistent with default; align values and/or pass a default StoreConfig.')
+
+                for attr in self._ALIGN_WITH_DEFAULT_ATTRS:
+                    if getattr(config, attr) != getattr(self._default, attr):
+                        raise ErrorInitStoreConfig(f'config {label} has {attr} inconsistent with default; align values and/or pass a default StoreConfig.')
+
                 self._map[label] = config
 
     def __getitem__(self, key: tp.Optional[tp.Hashable]) -> StoreConfig:

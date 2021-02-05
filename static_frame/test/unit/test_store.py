@@ -1,9 +1,11 @@
 import unittest
+from itertools import product
 # from io import StringIO
 import numpy as np
 
 from static_frame.core.store import Store
 from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigHE
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.frame import Frame
 
@@ -33,7 +35,6 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitStoreConfig):
             sc1m = StoreConfigMap.from_initializer(maps)
 
-
     def test_store_config_map_init_b(self) -> None:
         maps = {'a': StoreConfig(index_depth=2, label_encoder=str),
                 'b': StoreConfig(index_depth=3, label_encoder=str)}
@@ -41,6 +42,153 @@ class TestUnit(TestCase):
 
         sc1m = StoreConfigMap(maps, default=default)
         self.assertEqual(sc1m.default.label_encoder, str)
+
+    def test_store_config_map_init_c(self) -> None:
+        maps1 = {'a': StoreConfig(read_max_workers=2),
+                'b': StoreConfig(read_max_workers=3)}
+
+        default = StoreConfig(read_max_workers=2)
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps1, default=default) # Config has conflicting info
+
+        maps2 = {'a': StoreConfig(read_max_workers=2),
+                'b': StoreConfig(read_max_workers=2)}
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps2) # Default is None
+
+        sc1m = StoreConfigMap(maps2, default=default)
+        self.assertEqual(sc1m.default.read_max_workers, 2)
+
+    def test_store_config_map_init_d(self) -> None:
+        maps1 = {'a': StoreConfig(read_chunksize=2),
+                'b': StoreConfig(read_chunksize=3)}
+
+        default = StoreConfig(read_chunksize=2)
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps1, default=default) # Config has conflicting info
+
+        maps2 = {'a': StoreConfig(read_chunksize=2),
+                'b': StoreConfig(read_chunksize=2)}
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps2) # Default is 1
+
+        sc1m = StoreConfigMap(maps2, default=default)
+        self.assertEqual(sc1m.default.read_chunksize, 2)
+
+
+    def test_store_config_map_init_e(self) -> None:
+        maps1 = {'a': StoreConfig(write_max_workers=2),
+                'b': StoreConfig(write_max_workers=3)}
+
+        default = StoreConfig(write_max_workers=2)
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps1, default=default) # Config has conflicting info
+
+        maps2 = {'a': StoreConfig(write_max_workers=2),
+                'b': StoreConfig(write_max_workers=2)}
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps2) # Default is None
+
+        sc1m = StoreConfigMap(maps2, default=default)
+        self.assertEqual(sc1m.default.write_max_workers, 2)
+
+    def test_store_config_map_init_f(self) -> None:
+        maps1 = {'a': StoreConfig(write_chunksize=2),
+                'b': StoreConfig(write_chunksize=3)}
+
+        default = StoreConfig(write_chunksize=2)
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps1, default=default) # Config has conflicting info
+
+        maps2 = {'a': StoreConfig(write_chunksize=2),
+                'b': StoreConfig(write_chunksize=2)}
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            StoreConfigMap(maps2) # Default is 1
+
+        sc1m = StoreConfigMap(maps2, default=default)
+        self.assertEqual(sc1m.default.write_chunksize, 2)
+
+    #---------------------------------------------------------------------------
+    def test_store_config_he_a(self) -> None:
+        he_kwargs = dict(
+                index_depth=1,
+                columns_depth=1,
+                consolidate_blocks=True,
+                skip_header=1,
+                skip_footer=1,
+                trim_nadir=True,
+                include_index=True,
+                include_index_name=True,
+                include_columns=True,
+                include_columns_name=True,
+                merge_hierarchical_labels=True,
+                read_max_workers=1,
+                read_chunksize=1,
+                write_max_workers=1,
+                write_chunksize=1,
+        )
+
+        kwargs = dict(**he_kwargs,
+                label_encoder=lambda x: x,
+                label_decoder=lambda x: x,
+        )
+
+        for (depth_levels, columns_select, dtypes) in product(
+            (None, 1, [1, 2], (1, 2)),
+            (None, ['a'], ('a',)),
+            (None, 'int', int, np.int64, [int], (int,), {'a': int}),
+        ):
+            config = StoreConfig(**kwargs, # type: ignore [arg-type]
+                    index_name_depth_level=depth_levels,
+                    columns_name_depth_level=depth_levels,
+                    columns_select=columns_select,
+                    dtypes=dtypes,
+            )
+
+            config_he = StoreConfigHE(**he_kwargs, # type: ignore [arg-type]
+                    index_name_depth_level=depth_levels,
+                    columns_name_depth_level=depth_levels,
+                    columns_select=columns_select,
+                    dtypes=dtypes,
+            )
+            self.assertNotEqual(config_he, config)
+            self.assertEqual(config_he, config.to_store_config_he())
+
+    def test_store_config_he_b(self) -> None:
+        def compare_configs(config1: StoreConfigHE, config2: StoreConfigHE) -> None:
+            self.assertNotEqual(config1, config2)
+
+        config1 = StoreConfigHE(index_depth=1)
+        config2 = StoreConfigHE(index_depth=2)
+        compare_configs(config1, config2)
+
+        config1 = StoreConfigHE(columns_select=['a'])
+        config2 = StoreConfigHE(columns_select=('b',))
+        compare_configs(config1, config2)
+
+        config1 = StoreConfigHE(dtypes=str)
+        config2 = StoreConfigHE(dtypes=int)
+        compare_configs(config1, config2)
+
+        config1 = StoreConfigHE(dtypes=str)
+        config2 = StoreConfigHE(dtypes=dict(a=int))
+        compare_configs(config1, config2)
+
+        config1 = StoreConfigHE(index_name_depth_level=None)
+        config2 = StoreConfigHE(index_name_depth_level=(1, 2))
+        compare_configs(config1, config2)
+
+    def test_store_config_not_hashable(self) -> None:
+        with self.assertRaises(NotImplementedError):
+            hash(StoreConfig())
 
     #---------------------------------------------------------------------------
     def test_store_config_map_a(self) -> None:
