@@ -437,7 +437,7 @@ def main() -> None:
     # selection
     batch = sf.Batch(bus.items())
     quilt = sf.Quilt(bus, axis=0, retain_labels=True)
-
+    import ipdb; ipdb.set_trace()
 
 
 def tables() -> None:
@@ -499,8 +499,8 @@ def stocks() -> None:
 
 if __name__ == '__main__':
     # stocks()
-    tables()
-    # main()
+    # tables()
+    main()
 
 
 

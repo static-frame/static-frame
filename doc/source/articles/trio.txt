@@ -3,7 +3,6 @@
 The Bus, Batch, & Quilt: Abstractions for Working with Collections of DataFrames
 ============================================================================================
 
-
 It is common in DataFrame processing routines to work with collections of tables. Examples include a multi-year dataset with a single table per year, historical stock data with a table per stock, or data from multiple sheets in an XLSX file. This presentation introduces three novel containers for working with such collections of DataFrames: the Bus, Batch, and Quilt.
 
 While hierarchical indices can be used to bring multiple tables into a single DataFrame, this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
@@ -27,7 +26,7 @@ The "World Happiness Report" dataset consists of five tables: a table for each o
 After creating a ``StoreConfig`` instance to specify table and archive characteristics, the Bus can directly load the zip. A critical feature of the Bus is demonstrated by this example: the Bus is lazy, only loading data from the zip when that data is accessed. The container is initialized with placeholder objects named ``FrameDeferred``.
 
 >>> import static_frame as sf
->>> config = sf.StoreConfig(index_depth=1, label_decoder=int, label_encoder=str)
+>>> config = sf.StoreConfig(index_depth=0, label_decoder=int, label_encoder=str)
 >>> bus = sf.Bus.from_zip_csv('archive.zip', config=config)
 >>> bus
 <Bus>
@@ -70,7 +69,9 @@ As the Bus supports reading from and writing to XLSX and HDF5 (as well as other 
 
 The Batch can be thought of as a generator-like iterator of pairs of label and Frame. Pairs are only iterated when creating a composite Frame with the ``to_frame()`` method, or using dictionary-like methods such as ``keys()``, ``items()``, or ``values``. The Batch exposes nearly the entire Frame interface; method calls (and even operator applications) are composed and deferred in a newly returned Batch, composing operations upon the stored iterator.
 
+
 The Batch is related to the Pandas ``DataFrameGroupBy`` and ``Rolling`` objects: interfaces that, after configuring a group-by or rolling window iterable, expose function application on those groups or windows. The Batch generalizes this functionality, supporting those cases as well as any iterator of labels and Frames.
+
 
 The Quilt can be thought of as a Frame built from many smaller Frames, and aligned either vertically or horizontally. This larger frame is not eagerly concatenated; rather, Frames are accessed from a contained Bus as needed, providing a lazy, "virtual concatenation" of tables along an axis. The Quilt exposes a subset of the Frame interface. Contained Frames are read from a Bus which can be configured with the ``max_persist`` argument to limit the total number of Frames held in memory. Such explicit memory management can permit doing operations on a virtual Frame that might not be possible to load into memory.
 
@@ -79,6 +80,8 @@ Characteristics
 ______________________________________________
 
 These abstractions can be compared in terms of shape, interface, and iteration characteristics. The Bus and Batch are one-dimensional collections of Frames; the Quilt presents a single, two-dimensional Frame. While the shape of the Bus and the (iterated) Batch is the number of Frames, the shape of the Quilt depends on its contained Frames and its axis of orientation. While the Bus exposes a Series-like interface, the Batch and Quilt expose a Frame-like interface, operating on individual Frames or the virtually concatenated Frame, respectively. While each container is iterable, only the Batch is an iterator: its length cannot be known until iteration is completed.
+
+### Review table
 
 For n Frame of shape (x, y)
 +----------------------+-------+------+------------------+
@@ -102,6 +105,8 @@ _______________________
 
 
 Any iterable of pairs of label and Frame can be used to construct these containers. Any ``items()`` method, such as the one found on the Bus or a dictionary, provides such an iterable.
+
+### items(), pairs of label and Frame, can be used to construct
 
 As the Batch is a generator-like iterator, it can only be iterated once before it is exhausted. For this reason a fresh Batch will be created for each example below. The following example demonstrates that, just like a generator, a Batch can only be iterated once:
 
@@ -142,8 +147,8 @@ File-Based Constructors & Exporters
 +-----------------+--------------+
 
 
-Cross-Container Comparisons
-______________________________
+Cross-Container Comparisons: Same Method, Different Selections
+__________________________________________________________________________
 
 Performing the same method on each container will illustrate their differences. The ``head(2)`` method, for example, returns different results with each container. The Bus, behaving as a Series, returns a new Bus consisting of the first two Frames:
 
@@ -185,21 +190,15 @@ The Quilt represents the contained Frames as if they were a single, contiguous F
 <int64>                   <<U24>      <float64> <int64> <float64>
 
 
-The ``head`` method is a pre-configured type of row selector. The full range of ``loc`` and ``iloc`` selection interfaces is supported in all containers, though specialized within each containers' dimensional context. With the Bus, the index is formed from Frame labels. Using ``loc``, we can select one or more of the contained Frames.
 
->>> bus.loc[2017].tail()
-<Frame: 2017>
-<Index>                  score            rank    gdp               <<U29>
-<Index: country>
-Rwanda                   3.47099995613098 151     0.368745893239975
-Syria                    3.46199989318848 152     0.777153134346008
-Tanzania                 3.34899997711182 153     0.511135876178741
-Burundi                  2.90499997138977 154     0.091622568666935
-Central African Republic 2.69300007820129 155     0.0
-<<U24>                   <float64>        <int64> <float64>
+Cross-Container Comparisons: Same Selections, Different Methods
+__________________________________________________________________________
 
+Next, we will perform the same selection on each container using different selection methods.
 
-If we want to select from each Frame individually, we can iterate through each Frame, do a selection, and then concatenate these into a new Frame:
+The ``head`` method is a pre-configured type of row selector. The full range of ``loc`` and ``iloc`` selection interfaces is supported in all containers, though specialized within each containers' dimensional context.
+
+If we want to select from each Frame individually with a Bus, we can iterate through each Frame, do a selection, and then concatenate these into a new Frame:
 
 >>> sf.Frame.from_concat_items(((label, f.loc['Tanzania', ['score', 'rank']]) for label, f in bus.items()))
 <Frame>
@@ -213,7 +212,7 @@ If we want to select from each Frame individually, we can iterate through each F
 <int64>          <<U8>    <float64>        <float64>
 
 
-As already seen, the Batch is desigend for operating on each Frame and concatenating the results. Additionally, the Batch offers a more compact interface than that shown above using the Bus. We can select row and column values from within each contained Frame and bring the resultd together under their individual Frame labels.
+As already seen, the Batch is designed for operating on each Frame and concatenating the results. Additionally, the Batch offers a more compact interface than that shown above using the Bus. We can select row and column values from within each contained Frame and bring the resulted together under their individual Frame labels.
 
 >>> sf.Batch(bus.items()).loc['Tanzania', ['score', 'rank']].to_frame()
 <Frame>
