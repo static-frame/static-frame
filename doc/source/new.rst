@@ -6,6 +6,10 @@ What is New in Static Frame
 
 Added ``key`` argument for sort pre-processing to ``Index.sort()``, ``IndexHierarchy.sort()``, ``Series.sort_index()``, ``Series.sort_values()``, ``Frame.sort_index()``, ``Frame.sort_columns``
 
+Implemented support for multiprocessing Frame loading from ``StoreZip`` subclasses used by ``Bus``, ``Batch``, and ``Quilt``.
+
+Added ``read_max_workers``, ``read_chunksize``, ``write_max_workers``, ``write_chunksize`` to ``StoreConfig``.
+
 Added ``include_index_name``, ``include_columns_name`` parameters to ``Frame.to_arrow``
 
 Added ``include_index_name``, ``include_columns_name`` parameters to ``Frame.to_parquet``
