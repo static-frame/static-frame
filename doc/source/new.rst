@@ -4,6 +4,8 @@ What is New in Static Frame
 0.7.15
 ----------
 
+Added ``key`` argument for sort pre-processing to ``Index.sort()``, ``IndexHierarchy.sort()``, ``Series.sort_index()``, ``Series.sort_values()``, ``Frame.sort_index()``, ``Frame.sort_columns``
+
 Added ``include_index_name``, ``include_columns_name`` parameters to ``Frame.to_arrow``
 
 Added ``include_index_name``, ``include_columns_name`` parameters to ``Frame.to_parquet``

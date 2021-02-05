@@ -1736,7 +1736,6 @@ class Series(ContainerOperand):
         '''
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
-
         index = self._index[order]
 
         values = self.values[order]

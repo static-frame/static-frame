@@ -34,6 +34,7 @@ from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import MessagePackElement
+from static_frame.core.container_util import sort_index_for_order
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -4435,15 +4436,7 @@ class Frame(ContainerOperand):
         '''
         Return a new :obj:`Frame` ordered by the sorted Index.
         '''
-        if self._index.depth > 1:
-            v = self._index.values
-            order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
-        else:
-            # argsort lets us do the sort once and reuse the results
-            order = np.argsort(self._index.values, kind=kind)
-
-        if not ascending:
-            order = order[::-1]
+        order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
         index = self._index[order]
 
@@ -4465,15 +4458,7 @@ class Frame(ContainerOperand):
         '''
         Return a new :obj:`Frame` ordered by the sorted ``columns``.
         '''
-        if self._columns.depth > 1:
-            v = self._columns.values
-            order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
-        else:
-            # argsort lets us do the sort once and reuse the results
-            order = np.argsort(self._columns.values, kind=kind)
-
-        if not ascending:
-            order = order[::-1]
+        order = sort_index_for_order(self._columns, kind=kind, ascending=ascending, key=key)
 
         columns = self._columns[order]
 
@@ -4492,7 +4477,7 @@ class Frame(ContainerOperand):
             ascending: bool = True,
             axis: int = 1,
             kind: str = DEFAULT_SORT_KIND,
-            # key: tp.Optional[tp.Callable[['Series'], tp.Union[np.ndarray, 'Series']]] = None,
+            # key: tp.Optional[tp.Callable[['Frame'], tp.Union[np.ndarray, 'Frame']]] = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.

@@ -4350,6 +4350,14 @@ class TestUnit(TestCase):
                 (('p', (((2, 20), 'd'), ((2, 10), 'c'), ((1, 20), 'b'), ((1, 10), 'a'))), ('q', (((2, 20), True), ((2, 10), False), ((1, 20), True), ((1, 10), False))), ('r', (((2, 20), True), ((2, 10), False), ((1, 20), False), ((1, 10), False))))
                 )
 
+    def test_frame_sort_index_c(self) -> None:
+        f1 = ff.parse('s(6,2)|v(int)|i(I,str)')
+        f2 = f1.sort_index(key=lambda i: np.array([label[-1].lower() for label in i]))
+
+        self.assertEqual(f2.index.values.tolist(),
+                ['zmVj', 'z2Oo', 'zZbu', 'ztsv', 'zUvW', 'zkuW'])
+
+
 
     #---------------------------------------------------------------------------
 
@@ -4420,6 +4428,16 @@ class TestUnit(TestCase):
         )
 
         self.assertEqual(f2.columns.__class__, IndexYearMonth)
+
+
+    def test_frame_sort_columns_d(self) -> None:
+        f1 = ff.parse('s(2,6)|v(int)|c(I,str)')
+        f2 = f1.sort_columns(key=lambda i: np.array([label[-1].lower() for label in i]))
+
+        self.assertEqual(f2.columns.values.tolist(),
+                ['zmVj', 'z2Oo', 'zZbu', 'ztsv', 'zUvW', 'zkuW'])
+
+
 
     #---------------------------------------------------------------------------
 
