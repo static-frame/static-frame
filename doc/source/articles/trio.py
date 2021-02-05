@@ -437,7 +437,6 @@ def main() -> None:
     # selection
     batch = sf.Batch(bus.items())
     quilt = sf.Quilt(bus, axis=0, retain_labels=True)
-    import ipdb; ipdb.set_trace()
 
 
 def tables() -> None:

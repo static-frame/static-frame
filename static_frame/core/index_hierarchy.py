@@ -1283,7 +1283,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
+        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key) #type: ignore [arg-type]
 
         blocks = self._blocks._extract(row_key=order)
         index_constructors = tuple(self._levels.index_types())

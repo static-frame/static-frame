@@ -1192,9 +1192,9 @@ class Index(IndexBase):
         Args:
             kind: Sort algorithm passed to NumPy.
         '''
-        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
+        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key) #type: ignore [arg-type]
 
-        return self._extract_iloc(order)
+        return self._extract_iloc(order) #type: ignore [return-value]
 
     def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
         '''
