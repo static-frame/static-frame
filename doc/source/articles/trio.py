@@ -1,13 +1,14 @@
 
 
+import os
 import typing as tp
 
 import numpy as np
 
-from static_frame.core.frame import Frame
-from static_frame.core.batch import Batch
-
 import static_frame as sf
+from static_frame.test.test_case import Timer
+
+
 
 # def func_b(frame: Frame) -> Frame:
 #     for row in frame.iter_series():
@@ -403,6 +404,122 @@ def bus_aggregate() -> None:
 
 
 
+#-------------------------------------------------------------------------------
+
+# https://www.kaggle.com/unsdsn/world-happiness
+#
+
+# Other possibility:
+# https://www.kaggle.com/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
+
+#-------------------------------------------------------------------------------
+
+def main() -> None:
+    fp = '/home/ariza/Downloads/archive.zip'
+
+    config = sf.StoreConfig(index_depth=0, label_decoder=int, label_encoder=str)
+
+    bus = sf.Bus.from_zip_csv(fp, config=config)
+
+    def normalize(f: sf.Frame) -> sf.Frame:
+        fields = ['country', 'score', 'rank', 'gdp']
+
+        def relabel(label: str) -> str:
+            for field in fields:
+                if field in label.lower():
+                    return field
+            return label
+
+        return f.relabel(columns=relabel)[fields].set_index(fields[0], drop=True) #type: ignore
+
+    bus = sf.Batch.from_zip_csv(fp, config=config).apply(normalize).to_bus()
+
+    # selection
+    batch = sf.Batch(bus.items())
+    quilt = sf.Quilt(bus, axis=0, retain_labels=True)
+
+
+def tables() -> None:
+    name = 'For n Frame of shape (x, y)'
+    columns = ('Bus', 'Batch', 'Quilt')
+    records_items = (
+    ('ndim',                  (1,        1,       2)),
+    ('shape',                 ('(n,)',   '(n,)',  '(xn, y) or (x, yn)'  )),
+    ('Approximate Interface', ('Series', 'Frame', 'Frame')),
+    ('Iterable',              (True,     True,     True)),
+    ('Iterator',              (False,    True,     False)),
+    )
+
+    f = sf.Frame.from_records_items(records_items, columns=columns, name=name)
+    # print(f)
+    print(f.name)
+    print(f.to_markdown())
+
+    name = 'Constructors & Exporters'
+    columns = ('Constructor', 'Exporter') #type: ignore
+    records = (
+        ('from_zip_tsv', 'to_zip_tsv',),
+        ('from_zip_csv', 'to_zip_csv',),
+        ('from_zip_pickle', 'to_zip_pickle',),
+        ('from_zip_parquet', 'to_zip_parquet',),
+        ('from_xlsx',  'to_xlsx'),
+        ('from_sqlite',  'to_sqlite'),
+        ('from_hdf5',  'to_hdf5'),
+        )
+
+    f = sf.Frame.from_records(records, columns=columns, name=name)
+    # print(f)
+    print(f.name)
+    print(f.to_markdown(sf.DisplayConfig(include_index=False, type_show=False)))
+
+
+
+def stocks_write() -> None:
+
+    t = Timer()
+    d = '/home/ariza/Downloads/archive/Stocks'
+    fps = ((fn, os.path.join(d, fn)) for fn in os.listdir(d))
+    items = ((fn.replace('.us.txt', ''), sf.Frame.from_csv(fp, index_depth=1)) for fn, fp in fps if os.path.getsize(fp))
+    sf.Batch(items).to_zip_pickle('/tmp/stocks.zip')
+    print(t)
+
+def stocks() -> None:
+    t = Timer()
+    bus = sf.Bus.from_zip_pickle('/tmp/stocks.zip')[:]
+    print(t, 'done loading')
+
+    t = Timer()
+    post = sf.Batch(bus.items())[['Open', 'Close']].loc_max().to_frame()
+    print(t, 'serial')
+
+
+    #>> quilt.loc[sf.HLoc[:, '2017-11-10']]
+
 
 if __name__ == '__main__':
-    bus_aggregate()
+    # stocks()
+    # tables()
+    main()
+
+
+
+
+
+
+
+    # def format(f: sf.Frame) -> sf.Frame:
+    #     field_to_name = {
+    #         'country': ('Country', 'Country or region'),
+    #         'score': ('Score', 'Happiness.Score', 'Happiness Score'),
+    #         'rank': ('Overall rank', 'Happiness.Rank', 'Happiness Rank'),
+    #         'gdppc': ('Economy (GDP per Capita)', 'Economy..GDP.per.Capita.', 'GDP per capita'),
+    #     }
+
+    #     def get_fields(label):
+    #         for field, names in field_to_name.items():
+    #             if label in names:
+    #                 return field
+    #         return label
+
+    #     return f.relabel(columns=get_fields)[list(field_to_name)].set_index(
+    #             'country', drop=True)

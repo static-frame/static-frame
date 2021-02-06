@@ -38,7 +38,7 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
 #-------------------------------------------------------------------------------
 class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     '''
-    A lazy, randomly-accessible container of :obj:`Frame`.
+    A randomly-accessible container of :obj:`Frame`. When created from a multi-table storage format (such as a zip-pickle or XLSX), a Bus will lazily read in components as they are accessed. When combined with the ``max_persist`` parameter, a Bus will not hold on to more than ``max_persist`` references, permitting low-memory reading of collections of :obj:`Frame`.
     '''
 
     __slots__ = (
@@ -64,7 +64,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
         '''
         # NOTE: need to accept an  IndexConstructor to support reanimating Index subtypes, IH
-        return Series.from_element(FrameDeferred, index=labels, dtype=object)
+        return Series.from_element(FrameDeferred, index=labels, dtype=DTYPE_OBJECT)
 
     @classmethod
     def from_frames(cls,
@@ -75,12 +75,23 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             ) -> 'Bus':
         '''Return a :obj:`Bus` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
         '''
-        # could take a StoreConfigMap
         series = Series.from_items(
                     ((f.name, f) for f in frames),
-                    dtype=object,
+                    dtype=DTYPE_OBJECT,
                     name=name,
                     )
+        return cls(series, config=config)
+
+    @classmethod
+    def from_items(cls,
+            pairs: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            *,
+            config: StoreConfigMapInitializer = None,
+            name: NameType = None,
+            ) -> 'Bus':
+        '''Return a :obj:`Bus` from an iterable of pairs of label, :obj:`Frame`.
+        '''
+        series = Series.from_items(pairs, dtype=DTYPE_OBJECT, name=name)
         return cls(series, config=config)
 
     @classmethod
@@ -115,6 +126,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
 
         if max_persist is not None:
+            # use an (ordered) dictionary to give use an ordered set, simply pointing to None for all keys
             self._last_accessed: tp.Dict[str, None] = {}
 
         # do a one time iteration of series
@@ -165,6 +177,34 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             return [self.index.values[key],] # needs to be a list for usage in loc assignment
         return self.index.values[key]
 
+    @staticmethod
+    def _store_reader(
+            store: Store,
+            config: StoreConfigMap,
+            labels: tp.Iterator[tp.Hashable],
+            max_persist: tp.Optional[int],
+            ) -> tp.Iterator[Frame]:
+        '''
+        Ready as many labels as possible from Store, then yield back each one at a time. If max_persist is active, max_persist will set the maximum number of Frame to load per read. Using Store.read_many is shown to have significant performance benefits on large collections of Frame.
+        '''
+        if max_persist is None:
+            for frame in store.read_many(labels, config=config):
+                yield frame
+        elif max_persist > 1:
+            coll = []
+            for label in labels:
+                coll.append(label)
+                if len(coll) == max_persist:
+                    for frame in store.read_many(coll, config=config):
+                        yield frame
+                    coll.clear()
+            if coll: # less than max persist remaining
+                for frame in store.read_many(coll, config=config):
+                    yield frame
+        else: # max persist is 1
+            for label in labels:
+                yield store.read(label, config=config[labels])
+
 
     def _update_series_cache_iloc(self, key: GetItemKeyType) -> None:
         '''
@@ -175,64 +215,61 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         max_persist_active = self._max_persist is not None
 
-        load: bool
-        if self._loaded_all:
-            load = False
-        else:
-            load = not self._loaded[key].all() # works with elements
-
+        load = False if self._loaded_all else not self._loaded[key].all()
         if not load and not max_persist_active:
             return
 
+        index = self._series.index
         if not load and max_persist_active: # must update LRU position
-            if isinstance(key, INT_TYPES):
-                labels = (self._series.index.iloc[key],)
-            else:
-                labels = self._series.index.iloc[key].values
+            labels = (index.iloc[key],) if isinstance(key, INT_TYPES) else index.iloc[key].values
             for label in labels: # update LRU position
                 self._last_accessed[label] = self._last_accessed.pop(label, None)
             return
 
-        # load and max_persist_active True or False
-        if self._store is None:
-            # there has to be a Store defined if we are partially loaded
+        if self._store is None: # there has to be a Store defined if we are partially loaded
             raise RuntimeError('no store defined')
-
         if max_persist_active:
             loaded_count = self._loaded.sum()
 
-        index = self._series.index
         array = self._series.values.copy() # not a deepcopy
         targets = self._series.iloc[key] # key is iloc key
-        if not isinstance(targets, Series):
-            targets = {index[key]: targets} # present element as items
 
-        for label, frame in targets.items(): # this is a Series, not a Bus
+        if not isinstance(targets, Series):
+            label = index[key] #type: ignore [unreachable]
+            targets_items = ((label, targets),) # present element as items
+            store_reader = (self._store.read(label, config=self._config[label]) for _ in  range(1))
+        else: # more than one Frame
+            store_reader = self._store_reader(
+                    store=self._store,
+                    config=self._config,
+                    labels=(label for label, f in targets.items() if f is FrameDeferred),
+                    max_persist=self._max_persist,
+                    )
+            targets_items = targets.items()
+
+        for label, frame in targets_items:
             idx = index.loc_to_iloc(label)
 
             if max_persist_active: # update LRU position
                 self._last_accessed[label] = self._last_accessed.pop(label, None)
 
             if frame is FrameDeferred:
-                # as we are iterating from `targets`, we might be holding on to references of Frames that we already removed in `array`; in this case we do not need to `read`, but we still need to update the new array
-                frame = self._store.read(label, config=self._config[label])
+                frame = next(store_reader)
 
             if not self._loaded[idx]:
+                # as we are iterating from `targets`, we might be holding on to references of Frames that we already removed in `array`; in this case we do not need to `read`, but we still need to update the new array
                 array[idx] = frame
                 self._loaded[idx] = True # update loaded status
                 if max_persist_active:
                     loaded_count += 1
 
             if max_persist_active and loaded_count > self._max_persist:
-                assert loaded_count == self._max_persist + 1 # type: ignore
-
                 label_remove = next(iter(self._last_accessed))
                 del self._last_accessed[label_remove]
                 idx_remove = index.loc_to_iloc(label_remove)
                 self._loaded[idx_remove] = False
                 array[idx_remove] = FrameDeferred
                 loaded_count -= 1
-                assert loaded_count >= 0
 
         array.flags.writeable = False
         self._series = Series(array,
@@ -487,3 +524,32 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 return False
 
         return True
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in changed dimensionality
+
+    @doc_inject(selector='head', class_name='Bus')
+    def head(self, count: int = 5) -> 'Bus':
+        '''{doc}
+
+        Args:
+            {count}
+
+        Returns:
+            :obj:`Bus`
+        '''
+        return self.iloc[:count]
+
+    @doc_inject(selector='tail', class_name='Bus')
+    def tail(self, count: int = 5) -> 'Bus':
+        '''{doc}s
+
+        Args:
+            {count}
+
+        Returns:
+            :obj:`Bus`
+        '''
+        return self.iloc[-count:]
+
+

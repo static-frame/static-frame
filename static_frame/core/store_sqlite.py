@@ -6,18 +6,13 @@ from contextlib import suppress
 import numpy as np
 
 
-from static_frame.core.doc_str import doc_inject
+# from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
-from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
-
-# from static_frame.core.store_filter import STORE_FILTER_DEFAULT
-# from static_frame.core.store_filter import StoreFilter
-
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_INEXACT_KINDS
@@ -28,13 +23,7 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 class StoreSQLite(Store):
 
     _EXT: tp.FrozenSet[str] =  frozenset(('.db', '.sqlite'))
-
-    # _EXT: str = '.sqlite'
     _BYTES_ONE = b'1'
-
-    # _BYTES_NONE = b'None'
-    # _BYTES_NEGINF = b'-Inf'
-    # _BYTES_POSINF = b'Inf'
 
     @staticmethod
     def _dtype_to_affinity_type(
@@ -69,8 +58,10 @@ class StoreSQLite(Store):
         field_names, dtypes = cls.get_field_names_and_dtypes(
                 frame=frame,
                 include_index=include_index,
+                include_index_name=True,
                 include_columns=include_columns,
-                force_brackets=True # needed for having nu7mbers as field names
+                include_columns_name=False,
+                force_brackets=True # needed for having numbers as field names
                 )
 
         index = frame._index
@@ -144,58 +135,41 @@ class StoreSQLite(Store):
                         )
 
             conn.commit()
-            # conn.close()
 
-
-    @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
-    def read(self,
-            label: tp.Hashable,
+    def read_many(self,
+            labels: tp.Iterable[tp.Hashable],
             *,
-            config: tp.Optional[StoreConfig] = None,
+            config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
-            ) -> Frame:
-        '''
-        Args:
-            {dtypes}
-        '''
-        if config is None:
-            config = StoreConfig() # get default
+            ) -> tp.Iterator[Frame]:
 
-        if label is STORE_LABEL_DEFAULT:
-            label = 'None'
-        else:
-            label = config.label_encode(label)
-
+        config_map = StoreConfigMap.from_initializer(config)
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
-
-        # def bytes_to_types(x):
-        #     if x == self._BYTES_NONE:
-        #         return None
-        #     elif x == self._BYTES_NEGINF:
-        #         return -np.inf
-        #     elif x == self._BYTES_POSINF:
-        #         return np.inf
-        #     # import ipdb; ipdb.set_trace()
-        #     return x.decode()
-            # return x
-        # sqlite3.register_converter('NONE', bytes_to_types)
 
         with sqlite3.connect(self._fp,
                 detect_types=sqlite3.PARSE_DECLTYPES
                 ) as conn:
-            # cursor = conn.cursor()
-            query = f'SELECT * from "{label}"'
-            return tp.cast(Frame, container_type.from_sql(query=query,
-                    connection=conn,
-                    index_depth=config.index_depth,
-                    columns_depth=config.columns_depth,
-                    columns_select=config.columns_select,
-                    dtypes=config.dtypes,
-                    name=label,
-                    consolidate_blocks=config.consolidate_blocks
-                    ))
+
+            for label in labels:
+                c = config_map[label]
+
+                if label is STORE_LABEL_DEFAULT:
+                    label_encoded = 'None'
+                else:
+                    label_encoded = config_map.default.label_encode(label)
+
+                query = f'SELECT * from "{label_encoded}"'
+
+                yield tp.cast(Frame, container_type.from_sql(query=query,
+                        connection=conn,
+                        index_depth=c.index_depth,
+                        columns_depth=c.columns_depth,
+                        columns_select=c.columns_select,
+                        dtypes=c.dtypes,
+                        name=label,
+                        consolidate_blocks=c.consolidate_blocks
+                        ))
 
     @store_coherent_non_write
     def labels(self, *,

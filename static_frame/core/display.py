@@ -250,7 +250,7 @@ class DisplayHeader:
         '''
         Provide string representation before additon of outer delimiters.
         '''
-        if self.name:
+        if self.name is not None:
             return '{}: {}'.format(self.cls.__name__, self.name)
         return self.cls.__name__
 
@@ -466,7 +466,7 @@ class Display:
             rows: tp.Sequence[tp.Sequence[DisplayCell]],
             col_idx_src: int,
             col_last_src: int,
-            row_indices: tp.Iterable[int],
+            row_indices: tp.Iterable[tp.Optional[int]],
             config: tp.Optional[DisplayConfig] = None,
             ) -> tp.Tuple[int, int]:
         '''

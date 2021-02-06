@@ -1107,8 +1107,6 @@ class TestUnit(TestCase):
                 [(3, 3), (3, 2), (3, 1), (3, 1), (3, 2)])
 
 
-
-
     def test_type_blocks_assign_blocks_h(self) -> None:
 
         a1 = np.array([[True, True, True], [True, True, True], [True, True, True]])
@@ -1164,7 +1162,6 @@ class TestUnit(TestCase):
         self.assertTypeBlocksArrayEqual(tb2,
             [[20.1, False], [40.1, True], [3.1, True]], match_dtype=object)
 
-    #--------------------------------------------------------------------------
 
     def test_type_blocks_assign_blocks_j(self) -> None:
 
@@ -1214,6 +1211,108 @@ class TestUnit(TestCase):
 
         self.assertEqual(tb2.values.tolist(),
                 [[0, 1, 2], [3, 'a', 'b'], [6, 7, 8]])
+
+    #--------------------------------------------------------------------------
+    def test_type_blocks_assign_blocks_from_keys_by_blocks_a(self) -> None:
+
+        a1 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+        a2 = np.array([[False, False, False], [False, False, False], [False, False, False]])
+        a3 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        values = [np.array([3, 4, 5]), np.array(['a', 'b', 'c'])]
+
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys_by_blocks(
+                        row_key=None,
+                        column_key=[2, 7],
+                        values=values,
+                        ))
+        self.assertEqual([dt.kind for dt in tb2.dtypes],
+                ['b', 'b', 'i', 'b', 'b', 'b', 'b', 'U', 'b'])
+        self.assertEqual(tb2.iloc[1].values.tolist(),
+                [[True, True, 4, False, False, False, True, 'b', True]])
+
+        values = [np.array([3, 4, 5]),]
+
+        tb3 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys_by_blocks(
+                        row_key=None,
+                        column_key=5,
+                        values=values,
+                        ))
+        self.assertEqual([dt.kind for dt in tb3.dtypes],
+                ['b', 'b', 'b', 'b', 'b', 'i', 'b', 'b', 'b'])
+        self.assertEqual(tb3.iloc[1].values.tolist(),
+                [[True, True, True, False, False, 4, True, True, True]])
+
+
+        values = [np.array([[3, 3], [4, 4], [5, 5]]),]
+
+        tb4 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys_by_blocks(
+                        row_key=None,
+                        column_key=slice(2, 4),
+                        values=values,
+                        ))
+        self.assertEqual([dt.kind for dt in tb4.dtypes],
+                ['b', 'b', 'i', 'i', 'b', 'b', 'b', 'b', 'b'])
+        self.assertEqual(tb4.iloc[1].values.tolist(),
+                [[True, True, 4, 4, False, False, True, True, True]])
+
+
+        values = [np.array([[3, 3], [4, 4], [5, 5]]),
+                np.array(['a', 'b', 'c'])]
+
+        tb5 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys_by_blocks(
+                        row_key=None,
+                        column_key=[2, 4, 7],
+                        values=values,
+                        ))
+
+        self.assertEqual([dt.kind for dt in tb5.dtypes],
+                ['b', 'b', 'i', 'b', 'i', 'b', 'b', 'U', 'b'])
+        self.assertEqual(tb5.iloc[1].values.tolist(),
+                [[True, True, 4, False, 4, False, True, 'b', True]])
+
+
+    def test_type_blocks_assign_blocks_from_keys_by_blocks_b(self) -> None:
+
+        a1 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+        a2 = np.array([[False, False, False], [False, False, False], [False, False, False]])
+        a3 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        values = [np.array([3, 4]), np.array(['a', 'b'])]
+
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys_by_blocks(
+                        row_key=slice(1, None),
+                        column_key=[2, 7],
+                        values=values,
+                        ))
+
+        self.assertEqual([dt.kind for dt in tb2.dtypes],
+                ['b', 'b', 'O', 'b', 'b', 'b', 'b', 'O', 'b'])
+        self.assertEqual(tb2.values.tolist(),
+                [[True, True, True, False, False, False, True, True, True], [True, True, 3, False, False, False, True, 'a', True], [True, True, 4, False, False, False, True, 'b', True]])
+
+        tb3 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys_by_blocks(
+                        row_key=[0, 2],
+                        column_key=[2, 7],
+                        values=values,
+                        ))
+
+        self.assertEqual([dt.kind for dt in tb3.dtypes],
+                ['b', 'b', 'O', 'b', 'b', 'b', 'b', 'O', 'b'])
+        self.assertEqual(tb3.values.tolist(),
+                [[True, True, 3, False, False, False, True, 'a', True], [True, True, True, False, False, False, True, True, True], [True, True, 4, False, False, False, True, 'b', True]]
+                )
+
 
 
 

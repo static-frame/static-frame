@@ -2,8 +2,9 @@
 .hypothesis
 .mypy_cache
 .pytest_cache
-.tox
 .vscode
+.env
+.env-sf
 
 __pycache__
 build

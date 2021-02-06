@@ -7,8 +7,6 @@ import sqlite3
 import gc
 
 import numpy as np
-
-# from hypothesis import strategies as st
 from hypothesis import given
 
 
@@ -249,10 +247,10 @@ class TestUnit(TestCase):
             ))
     def test_frame_to_msgpack(self, f1: Frame) -> None:
         msg = f1.to_msgpack()
-        
+
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-        
+
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 

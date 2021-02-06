@@ -18,7 +18,7 @@ import static_frame as sf
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import Series
-from static_frame import SeriesHE
+# from static_frame import SeriesHE
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import mloc
@@ -1695,6 +1695,27 @@ class TestUnit(TestCase):
 
 
 
+    def test_series_sort_index_e(self) -> None:
+
+        index = IndexHierarchy.from_product(('c', 'b', 'a'), (20, 10), name='foo')
+        s1 = Series(range(6), index=index)
+        s2 = s1.sort_index()
+        self.assertEqual(s2.values.tolist(),
+                [5, 4, 3, 2, 1, 0])
+
+        # this is a stable sort, so we retain inner order
+        s3 = s1.sort_index(key=lambda i: i.values_at_depth(0))
+        self.assertEqual(s3.values.tolist(),
+                [4, 5, 2, 3, 0, 1])
+
+        s4 = s1.sort_index(key=lambda i: i.rehierarch([1, 0])) #type: ignore
+        self.assertEqual(s4.values.tolist(),
+                [5, 4, 3, 2, 1, 0])
+
+        with self.assertRaises(RuntimeError):
+            _ = s1.sort_index(key=lambda i: i.values_at_depth(0)[:2])
+
+
 
 
     #---------------------------------------------------------------------------
@@ -1726,8 +1747,30 @@ class TestUnit(TestCase):
 
         self.assertEqual(post.index.__class__, IndexHierarchy)
 
+    def test_series_sort_values_c(self) -> None:
+
+        index = IndexDate(('2017-12-03', '2020-03-15', '2016-01-31'), name='foo')
+        s = Series(list('abc'), index=index)
+
+        self.assertEqual(s.sort_values(
+                key=lambda s: s.index.via_dt.year).values.tolist(), #type: ignore
+                ['c', 'a', 'b'])
+
+        self.assertEqual(s.sort_values(
+                key=lambda s: s.index.via_dt.month).values.tolist(), #type: ignore
+                ['c', 'b', 'a'])
+
+        self.assertEqual(s.sort_values(
+                key=lambda s: s.index.via_dt.day).values.tolist(), #type: ignore
+                ['a', 'b', 'c'])
 
 
+        self.assertEqual(s.sort_values(
+                key=lambda s:s.via_str.find('b')).values.tolist(),
+                ['a', 'c', 'b'])
+
+
+    #---------------------------------------------------------------------------
     def test_series_reversed(self) -> None:
 
         idx = tuple('abcd')

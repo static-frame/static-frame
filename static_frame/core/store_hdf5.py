@@ -3,12 +3,11 @@ import warnings
 
 import numpy as np
 
-from static_frame.core.doc_str import doc_inject
+# from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
-from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.type_blocks import TypeBlocks
@@ -43,7 +42,9 @@ class StoreHDF5(Store):
                 field_names, dtypes = self.get_field_names_and_dtypes(
                         frame=frame,
                         include_index=c.include_index,
-                        include_columns=c.include_columns
+                        include_index_name=True,
+                        include_columns=c.include_columns,
+                        include_columns_name=False,
                         )
 
                 # Must set pos to have stable position
@@ -64,70 +65,63 @@ class StoreHDF5(Store):
                 table.append(tuple(values()))
                 table.flush()
 
-
-    @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
-    def read(self,
-            label: tp.Hashable,
+    def read_many(self,
+            labels: tp.Iterable[tp.Hashable],
             *,
-            config: tp.Optional[StoreConfig] = None,
+            config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
-            ) -> Frame:
-        '''
-        Args:
-            {dtypes}
-        '''
+            ) -> tp.Iterator[Frame]:
         import tables
-
-        if config is None:
-            config = StoreConfig() # get default
-        if config.dtypes:
-            raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
-
-        label = config.label_encode(label)
-
-        index_depth = config.index_depth
-        columns_depth = config.columns_depth
-
-        index_arrays = []
-        columns_labels = []
+        config_map = StoreConfigMap.from_initializer(config)
 
         with tables.open_file(self._fp, mode='r') as file:
-            table = file.get_node(f'/{label}')
-            colnames = table.cols._v_colnames
+            for label in labels:
+                c = config_map[label]
+                label_encoded = config_map.default.label_encode(label)
 
-            def blocks() -> tp.Iterator[np.ndarray]:
-                for col_idx, colname in enumerate(colnames):
+                index_depth = c.index_depth
+                columns_depth = c.columns_depth
+                consolidate_blocks = c.consolidate_blocks
+                if c.dtypes:
+                    raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
 
-                    # can also do: table.read(field=colname)
-                    array = table.col(colname)
+                index_arrays = []
+                columns_labels = []
 
-                    if array.dtype.kind in DTYPE_STR_KINDS:
-                        array = array.astype(str)
-                    array.flags.writeable = False
+                table = file.get_node(f'/{label_encoded}')
+                colnames = table.cols._v_colnames
 
-                    if col_idx < index_depth:
-                        index_arrays.append(array)
-                        continue
-                    # only store column labels for those yielded
-                    columns_labels.append(colname)
-                    yield array
+                def blocks() -> tp.Iterator[np.ndarray]:
+                    for col_idx, colname in enumerate(colnames):
+                        # can also do: table.read(field=colname)
+                        array = table.col(colname)
+                        if array.dtype.kind in DTYPE_STR_KINDS:
+                            array = array.astype(str)
+                        array.flags.writeable = False
 
-            if config.consolidate_blocks:
-                data = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
-            else:
-                data = TypeBlocks.from_blocks(blocks())
+                        if col_idx < index_depth:
+                            index_arrays.append(array)
+                            continue
 
-        return container_type._from_data_index_arrays_column_labels(
-                data=data,
-                index_depth=index_depth,
-                index_arrays=index_arrays,
-                columns_depth=columns_depth,
-                columns_labels=columns_labels,
-                name=tp.cast(tp.Hashable, label) # not sure why this is necessary
-                )
+                        # only store column labels for those yielded
+                        columns_labels.append(colname)
+                        yield array
 
+                if consolidate_blocks:
+                    data = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
+                else:
+                    data = TypeBlocks.from_blocks(blocks())
+
+                # this will own_data in subsequent constructor call
+                yield container_type._from_data_index_arrays_column_labels(
+                        data=data,
+                        index_depth=index_depth,
+                        index_arrays=index_arrays,
+                        columns_depth=columns_depth,
+                        columns_labels=columns_labels,
+                        name=label,
+                        )
 
     @store_coherent_non_write
     def labels(self, *,

@@ -1,8 +1,38 @@
 What is New in Static Frame
 ===============================
 
+0.7.15
+----------
+
+Added ``key`` argument for sort pre-processing to ``Index.sort()``, ``IndexHierarchy.sort()``, ``Series.sort_index()``, ``Series.sort_values()``, ``Frame.sort_index()``, ``Frame.sort_columns``
+
+Implemented support for multiprocessing Frame loading from ``StoreZip`` subclasses used by ``Bus``, ``Batch``, and ``Quilt``.
+
+Added ``read_max_workers``, ``read_chunksize``, ``write_max_workers``, ``write_chunksize`` to ``StoreConfig``.
+
+Added ``include_index_name``, ``include_columns_name`` parameters to ``Frame.to_arrow``
+
+Added ``include_index_name``, ``include_columns_name`` parameters to ``Frame.to_parquet``
+
+Added ``index_name_depth_level``, ``columns_name_depth_level`` parameters to ``Frame.from_arrow``
+
+Added ``index_name_depth_level``, ``columns_name_depth_level`` parameters to ``Frame.from_parquet``
+
+Fixed issue where non-optimal dtype would be used for new columns added in reindexing.
+
+
 0.7.14
 ----------
+
+Added immutable, hashable containers ``SeriesHE`` and ``FrameHE``.
+
+Implemented ``read_many`` for all ``Store`` subclasses; ``Bus`` now uses these interfaces for significantly faster reads of multi-``Frame`` selections.
+
+Improved handling of connection object given to ``Frame.from_sql``.
+
+Improved type-preservation and performance when assigning ``Frame`` into ``Frame``.
+
+Added ``Bus.from_items()`` constructor.
 
 
 0.7.13

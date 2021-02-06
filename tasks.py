@@ -140,7 +140,7 @@ def mypy(context):
 def lint(context):
     '''Run pylint static analysis.
     '''
-    context.run('pylint static_frame')
+    context.run('pylint -f colorized static_frame')
 
 @invoke.task(pre=(mypy, lint))
 def quality(context):

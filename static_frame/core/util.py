@@ -411,15 +411,19 @@ def _gen_skip_middle(
     yield from reversed(values)
 
 
-def dtype_from_element(value: tp.Hashable) -> np.dtype:
+def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
     '''Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object.
     '''
+    if value is np.nan:
+        # NOTE: this will not catch all NaN instances, but will catch any default NaNs in function signatures that reference the same NaN object found on the NP root namespace
+        return DTYPE_FLOAT_DEFAULT
     if value is None:
         return DTYPE_OBJECT
     if isinstance(value, tuple):
         return DTYPE_OBJECT
     if hasattr(value, 'dtype'):
         return value.dtype #type: ignore
+    # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
     return np.array(value).dtype
 
 def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
@@ -524,16 +528,22 @@ def concat_resolved(
 
 
 def full_for_fill(
-        dtype: np.dtype,
+        dtype: tp.Optional[np.dtype],
         shape: tp.Union[int, tp.Tuple[int, ...]],
-        fill_value: object) -> np.ndarray:
+        fill_value: object,
+        ) -> np.ndarray:
     '''
     Return a "full" NP array for the given fill_value
     Args:
-        dtype: target dtype, which may or may not be possible given the fill_value.
+        dtype: target dtype, which may or may not be possible given the fill_value. This can be set to None to only use the fill_value to determine dtype.
     '''
-    dtype = resolve_dtype(dtype, np.array(fill_value).dtype)
-    return np.full(shape, fill_value, dtype=dtype)
+    dtype_element = dtype_from_element(fill_value)
+    if dtype is not None:
+        dtype_final = resolve_dtype(dtype, dtype_element)
+    else:
+        dtype_final = dtype_element
+    # NOTE: we do not make this array immutable as we sometimes need to mutate it before adding it to TypeBlocks
+    return np.full(shape, fill_value, dtype=dtype_final)
 
 
 def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:
@@ -2416,7 +2426,7 @@ def write_optional_file(
     else: # string IO
         f.write(content)
         f.seek(0)
-    return tp.cast(str, fp) # this migh return None with a StringIO
+    return fp #type: ignore
 
 
 #-------------------------------------------------------------------------------

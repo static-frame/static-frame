@@ -46,7 +46,7 @@ def get_extractor(
         deepcopy_from_bus: bool,
         is_array: bool,
         memo_active: bool,
-        ) -> tp.Any:
+        ) -> AnyCallable:
     '''
     Args:
         memo_active: enable usage of a common memoization dictionary accross all calls to extract from this extractor.
@@ -56,7 +56,6 @@ def get_extractor(
         if is_array:
             return partial(array_deepcopy, memo=memo)
         return partial(deepcopy, memo=memo)
-
     return lambda x: x
 
 class AxisMap:
@@ -90,7 +89,8 @@ class AxisMap:
         extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
         tree = {}
-        opposite = None
+        opposite: tp.Optional[IndexBase] = None
+
         for label, f in bus.items():
             if axis == 0:
                 tree[label] = extractor(f.index)
@@ -627,6 +627,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     )
 
         parts: tp.List[np.ndarray] = []
+        bus_keys: tp.Iterable[tp.Hashable]
 
         if self._axis == 0:
             sel_key = row_key
@@ -642,7 +643,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel[sel_key] = True
 
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-        axis_map_sub = self._axis_map.iloc[sel_key]
+        axis_map_sub: tp.Union[Series, tp.Hashable] = self._axis_map.iloc[sel_key]
         if not isinstance(axis_map_sub, Series): # we have an element integer
             bus_keys = (axis_map_sub,)
         else:
@@ -689,9 +690,12 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
         row_key = NULL_SLICE if row_key is None else row_key
+        row_key_is_array = isinstance(row_key, np.ndarray)
         column_key = NULL_SLICE if column_key is None else column_key
+        column_key_is_array = isinstance(column_key, np.ndarray)
 
-        if row_key == NULL_SLICE and column_key == NULL_SLICE:
+        if (not row_key_is_array and row_key == NULL_SLICE
+                and not column_key_is_array and column_key == NULL_SLICE):
             if self._retain_labels and self._axis == 0:
                 frames = (extractor(f.relabel_level_add(index=k))
                         for k, f in self._bus.items())
@@ -707,6 +711,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     )
 
         parts: tp.List[tp.Any] = []
+        bus_keys: tp.Iterable[tp.Hashable]
 
         if self._axis == 0:
             sel_key = row_key
@@ -721,7 +726,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel[sel_key] = True
 
         # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-        axis_map_sub = self._axis_map.iloc[sel_key]
+        axis_map_sub: tp.Union[Series, int] = self._axis_map.iloc[sel_key]
         if not isinstance(axis_map_sub, Series): # we have an element integer
             bus_keys = (axis_map_sub,)
         else:
@@ -991,10 +996,32 @@ class Quilt(ContainerBase, StoreClientMixin):
                 yield_type=IterNodeType.ITEMS
                 )
 
+    #---------------------------------------------------------------------------
+    # transformations resulting in changed dimensionality
+    @doc_inject(selector='head', class_name='Frame')
+    def head(self, count: int = 5) -> 'Frame':
+        '''{doc}
+
+        Args:
+            {count}
+        '''
+        return self.iloc[:count]
+
+    @doc_inject(selector='tail', class_name='Frame')
+    def tail(self, count: int = 5) -> 'Frame':
+        '''{doc}
+
+        Args:
+            {count}
+        '''
+        return self.iloc[-count:]
+
 
     #---------------------------------------------------------------------------
     def to_frame(self) -> Frame:
         '''
         Return a consolidated :obj:`Frame`.
         '''
+        if self._assign_axis:
+            self._update_axis_labels()
         return self._extract(NULL_SLICE, NULL_SLICE) #type: ignore

@@ -125,7 +125,7 @@ class TestUnit(TestCase):
 
     def test_index_level_values_at_depth_b(self) -> None:
 
-        hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 2, None))) #type: ignore
+        hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 2, None)))
         lvl = hidx._levels
         self.assertEqual(lvl.values_at_depth(2).tolist(), ['x', 'y', 'foo', None])
 
@@ -224,7 +224,7 @@ class TestUnit(TestCase):
 
         level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
         self.assertEqual(level0.leaf_loc_to_iloc(('b',)), 1)
-        self.assertEqual(level0.leaf_loc_to_iloc(ILoc[1]), 1) #type: ignore
+        self.assertEqual(level0.leaf_loc_to_iloc(ILoc[1]), 1)
 
 
     def test_index_level_leaf_loc_to_iloc_c(self) -> None:

@@ -135,7 +135,7 @@ class TypeBlocks(ContainerOperand):
                 r, c = shape_filter(block)
 
                 # check number of rows is the same for all blocks
-                if row_count is not None and r != row_count:
+                if row_count is not None and r != row_count: #type: ignore [unreachable]
                     raise ErrorInitTypeBlocks(f'mismatched row count: {r}: {row_count}')
                 else: # assign on first
                     row_count = r
@@ -500,7 +500,7 @@ class TypeBlocks(ContainerOperand):
 
         This is a generator to permit lazy pairwise comparison.
         '''
-        group_dtype = None # store type found along contiguous blocks
+        group_dtype: tp.Optional[np.dtype] = None # store type found along contiguous blocks
         group_cols = 0
         for block in self._blocks:
             if group_dtype is None: # first block of a type
@@ -579,7 +579,7 @@ class TypeBlocks(ContainerOperand):
         '''
         Generator consumer, generator producer of np.ndarray, consolidating if types are exact matches.
         '''
-        group_dtype = None # store type found along contiguous blocks
+        group_dtype: tp.Optional[np.dtype] = None # store type found along contiguous blocks
         group = []
 
         for block in raw_blocks:
@@ -648,10 +648,9 @@ class TypeBlocks(ContainerOperand):
                     yield values
 
         elif columns_ic is not None and index_ic is None:
-            if not columns_ic.has_common:
-                # just return an empty frame; what type it shold be is not clear
+            if not columns_ic.has_common: # no columns in common
                 shape = self.shape[0], columns_ic.size
-                values = full_for_fill(self._row_dtype, shape, fill_value)
+                values = full_for_fill(None, shape, fill_value)
                 values.flags.writeable = False
                 yield values
             else:
@@ -663,11 +662,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[:, columns_ic.iloc_src]
                 else:
                     dst_to_src = dict(
-                            zip(
-                                    tp.cast(tp.Iterable[int], columns_ic.iloc_dst),
-                                    tp.cast(tp.Iterable[int], columns_ic.iloc_src),
-                            )
-                    )
+                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
                     for idx in range(columns_ic.size):
                         if idx in dst_to_src:
                             block_idx, block_col = self._index[dst_to_src[idx]]
@@ -676,10 +671,8 @@ class TypeBlocks(ContainerOperand):
                                 yield b
                             else:
                                 yield b[:, block_col]
-                        else:
-                            # just get an empty position
-                            # dtype should be the same as the column replacing?
-                            values = full_for_fill(self._row_dtype,
+                        else: # just get an empty position, fill_value determines type
+                            values = full_for_fill(None,
                                     self.shape[0],
                                     fill_value)
                             values.flags.writeable = False
@@ -688,9 +681,9 @@ class TypeBlocks(ContainerOperand):
         else: # both defined
             assert columns_ic is not None and index_ic is not None
             if not columns_ic.has_common and not index_ic.has_common:
-                # just return an empty frame; what type it shold be is not clear
+                # return an empty frame
                 shape = index_ic.size, columns_ic.size
-                values = full_for_fill(self._row_dtype, shape, fill_value)
+                values = full_for_fill(None, shape, fill_value)
                 values.flags.writeable = False
                 yield values
             else:
@@ -702,11 +695,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
                 else:
                     columns_dst_to_src = dict(
-                            zip(
-                                    tp.cast(tp.Iterable[int], columns_ic.iloc_dst),
-                                    tp.cast(tp.Iterable[int], columns_ic.iloc_src),
-                            )
-                    )
+                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
 
                     for idx in range(columns_ic.size):
                         if idx in columns_dst_to_src:
@@ -718,8 +707,8 @@ class TypeBlocks(ContainerOperand):
                                     yield b[index_ic.iloc_src]
                                 else:
                                     yield b[index_ic.iloc_src, block_col]
-                            else: # need an empty to fill
-                                values = full_for_fill(self._row_dtype,
+                            else: # need an empty to fill, compatible with this block
+                                values = full_for_fill(b.dtype,
                                         index_ic.size,
                                         fill_value)
                                 if b.ndim == 1:
@@ -729,7 +718,7 @@ class TypeBlocks(ContainerOperand):
                                 values.flags.writeable = False
                                 yield values
                         else:
-                            values = full_for_fill(self._row_dtype,
+                            values = full_for_fill(None,
                                         index_ic.size,
                                         fill_value)
                             values.flags.writeable = False
@@ -930,7 +919,7 @@ class TypeBlocks(ContainerOperand):
         # NOTE: the TypeBlocks Display is not composed into other Displays
 
         config = config or DisplayActive.get()
-        d = None
+        d: tp.Optional[Display] = None
         outermost = True # only for the first
         idx = 0
         for block in self._blocks:
@@ -987,7 +976,8 @@ class TypeBlocks(ContainerOperand):
             indices: can be a generator
         '''
         # store pairs of block idx, ascending col list
-        last = None
+        last: tp.Optional[tp.Tuple[int, int]] = None
+
         for block_idx, col in indices:
             if not last:
                 last = (block_idx, col)
@@ -1445,39 +1435,144 @@ class TypeBlocks(ContainerOperand):
                     b.flags.writeable = False
                     yield b
 
+    #---------------------------------------------------------------------------
+    def _assign_blocks_from_keys_by_blocks(self,
+            values: tp.Iterable[np.ndarray],
+            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            column_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Given row, column key selections, assign from an iterable of 1D or 2D block arrays.
+        '''
+        # see clip().get_block_match() for one example of drawing values from another sequence of blocks, where we take blocks and slices from blocks using a list as a stack
+        target_block_slices = self._key_to_block_slices(
+                column_key,
+                retain_key_order=True)
+        target_key: tp.Optional[tp.Union[int, slice]] = None
+        target_block_idx: tp.Optional[int] = None
+        targets_remain: bool = True
+        target_is_slice: bool
+        row_key_is_null_slice = row_key is None or (
+                isinstance(row_key, slice) and row_key == NULL_SLICE)
+
+        # get a mutable list in reverse order for pop/pushing
+        values_source = list(values)
+        values_source.reverse()
+
+        def get_block_match(
+                width: int
+                ) -> tp.Iterator[np.ndarray]:
+            '''Draw from values to provide as many columns as specified by width.
+            '''
+            if width == 1: # no loop necessary
+                v = values_source.pop()
+                if v.ndim == 1:
+                    yield v
+                else: # ndim == 2
+                    if v.shape[1] > 1: # more than one column
+                        # restore remained to values source
+                        values_source.append(v[NULL_SLICE, 1:])
+                    yield v[NULL_SLICE, 0]
+            else:
+                width_found = 0
+                while width_found < width:
+                    v = values_source.pop()
+                    if v.ndim == 1:
+                        yield v
+                        width_found += 1
+                        continue
+                    # ndim == 2
+                    width_v = v.shape[1]
+                    width_needed = width - width_found
+                    if width_v <= width_needed:
+                        yield v
+                        width_found += width_v
+                        continue
+                    # width_v > width_needed
+                    values_source.append(v[NULL_SLICE, width_needed:])
+                    yield v[NULL_SLICE, :width_needed]
+                    break
+
+        for block_idx, b in enumerate(self._blocks):
+            assigned_stop = 0 # exclusive maximum
+
+            while targets_remain:
+                if target_block_idx is None:
+                    try:
+                        target_block_idx, target_key = next(target_block_slices)
+                    except StopIteration:
+                        targets_remain = False # stop entering while loop
+                        break
+                    target_is_slice = isinstance(target_key, slice)
+
+                if block_idx != target_block_idx:
+                    break # need to advance blocks, keep targets
+
+                if target_is_slice:
+                    t_start = target_key.start #type: ignore
+                    t_stop = target_key.stop #type: ignore
+                    t_width = t_stop - t_start
+                else:
+                    t_start = target_key
+                    t_stop = t_start + 1
+                    t_width = 1
+
+                # yield all block slices up to the target, then then the target; remain components of this block will be yielded on next iteration (if there is another target) or out of while by looking at assigned stop
+                if t_start != 0:
+                    yield b[NULL_SLICE, assigned_stop: t_start]
+                if row_key_is_null_slice:
+                    yield from get_block_match(t_width)
+                else:
+                    assigned_blocks = tuple(
+                            column_2d_filter(a) for a in get_block_match(t_width))
+                    assigned_dtype = resolve_dtype_iter(
+                            chain((a.dtype for a in assigned_blocks), (b.dtype,)))
+                    if b.ndim == 2:
+                        assigned = b[NULL_SLICE, t_start: t_stop].astype(assigned_dtype)
+                        assigned[row_key, NULL_SLICE] = concat_resolved(assigned_blocks, axis=1)
+                    else:
+                        assigned = b.astype(assigned_dtype)
+                        assigned[row_key] = column_1d_filter(assigned_blocks[0])
+                    assigned.flags.writeable = False
+                    yield assigned
+
+                assigned_stop = t_stop
+                target_block_idx = target_key = None # get a new target
+
+            if assigned_stop == 0:
+                yield b # no targets were found for this block; or no targets remain
+            elif b.ndim == 1 and assigned_stop == 1:
+                pass
+            elif b.ndim == 2 and assigned_stop < b.shape[1]:
+                yield b[NULL_SLICE, assigned_stop:]
+
+
 
     def _assign_blocks_from_keys(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
             value: object = None
             ) -> tp.Iterator[np.ndarray]:
-        '''Assign value into all blocks, returning blocks of the same size and shape.
+        '''Assign a single value (a tuple, array, or element) into all blocks, returning blocks of the same size and shape.
 
         Args:
             column_key: must be sorted in ascending order.
         '''
-        # value_dtype = np.array(value).dtype
         value_dtype = dtype_from_element(value)
 
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
-        target_block_slices = iter(self._key_to_block_slices(
+        target_block_slices = self._key_to_block_slices(
                 column_key,
-                retain_key_order=True),
-                )
+                retain_key_order=True)
         target_key: tp.Optional[tp.Union[int, slice]] = None
         target_block_idx: tp.Optional[int] = None
         targets_remain: bool = True
         target_is_slice: bool
-        start: int
-
         row_key_is_null_slice = row_key is None or (
                 isinstance(row_key, slice) and row_key == NULL_SLICE)
 
-        assigned_components: tp.List[np.ndarray] = []
-
         for block_idx, b in enumerate(self._blocks):
-            assigned_components.clear()
-            assigned_stop: int = 0 # exclusive maximum
+            assigned_stop = 0 # exclusive maximum
 
             while targets_remain:
                 if target_block_idx is None: # can be zero
@@ -1491,17 +1586,13 @@ class TypeBlocks(ContainerOperand):
                 if block_idx != target_block_idx:
                     break # need to advance blocks, keep targets
 
-                #---------------------------------------------------------------
-                # from here, we have at least one target we need to apply in the current block.
-
+                # at least one target we need to apply in the current block.
                 block_is_column = b.ndim == 1 or (b.ndim > 1 and b.shape[1] == 1)
-                start = target_key if not target_is_slice else target_key.start # type: ignore
+                start: int = target_key if not target_is_slice else target_key.start # type: ignore
 
-                if start > assigned_stop:
-                    # backfill, from block, from the last assigned position
-                    b_component = b[NULL_SLICE, slice(assigned_stop, start)]
-                    b_component.flags.writeable = False
-                    assigned_components.append(b_component)
+                if start > assigned_stop: # yield component from the last assigned position
+                    b_component = b[NULL_SLICE, slice(assigned_stop, start)] # keeps writeable=False
+                    yield b_component
 
                 # add empty components for the assignment region
                 if target_is_slice and not block_is_column:
@@ -1512,28 +1603,21 @@ class TypeBlocks(ContainerOperand):
                     t_width = 1
                     t_shape = b.shape[0]
 
-                if row_key_is_null_slice:
-                    # use value_dtype; will replace entire sub block, can be empty
+                if row_key_is_null_slice: #will replace entire sub block, can be empty
                     assigned_target = np.empty(t_shape, dtype=value_dtype)
                 else: # will need to mix types
                     assigned_dtype = resolve_dtype(value_dtype, b.dtype)
                     if block_is_column:
-                        if b.ndim == 1:
-                            assigned_target_pre = b
-                        else: # reshape into 1d array
-                            assigned_target_pre = b.reshape(b.shape[0])
+                        assigned_target_pre = b if b.ndim == 1 else b.reshape(b.shape[0]) # make 1D
                     else:
                         assigned_target_pre = b[NULL_SLICE, target_key]
-
                     if b.dtype == assigned_dtype:
                         assigned_target = assigned_target_pre.copy()
                     else:
                         assigned_target = assigned_target_pre.astype(assigned_dtype)
 
-                # add assigned_target to assigned_components below, after mutating
                 assigned_stop = start + t_width
 
-                #---------------------------------------------------------------
                 # match sliceable, when target_key is a slice (can be an element)
                 if (target_is_slice and
                         not isinstance(value, str)
@@ -1548,57 +1632,42 @@ class TypeBlocks(ContainerOperand):
                         value_piece_column_key = slice(0, v_width)
 
                     if isinstance(value, np.ndarray) and value.ndim > 1:
-                        # if value is 2D array, we want value[:, 0]
-                        value_piece = value[:, value_piece_column_key]
-                        value = value[:, slice(v_width, None)]
-                        # reassign remainder for next iteration
-                    else: # value is 1D array or tuple
-                        # we assume we assigning into a horizontal position
+                        value_piece = value[NULL_SLICE, value_piece_column_key]
+                        value = value[NULL_SLICE, slice(v_width, None)] # restore for next iter
+                    else: # value is 1D array or tuple, assume assigning into a horizontal position
                         value_piece = value[value_piece_column_key] #type: ignore
                         value = value[slice(v_width, None)] #type: ignore
                 else: # not sliceable; this can be a single column
                     value_piece = value
 
-                #---------------------------------------------------------------
-                # write `value` into assigned (or assigned components
+                # write `value` into assigned
                 row_target = NULL_SLICE if row_key_is_null_slice else row_key
-
                 if assigned_target.ndim == 1:
                     assigned_target[row_target] = value_piece
                 else: # we are editing the entire assigned target sub block
                     assigned_target[row_target, NULL_SLICE] = value_piece
 
                 assigned_target.flags.writeable = False
-                assigned_components.append(assigned_target)
-                # reset after completing assignment to get new target
-                target_block_idx = target_key = None
+                yield assigned_target
+                target_block_idx = target_key = None # get a new target
 
-            #-------------------------------------------------------------------
-            # all assignments for this block have been made
+            if assigned_stop == 0:
+                yield b # no targets were found for this block; or no targets remain
+            elif b.ndim == 1 and assigned_stop == 1:
+                pass
+            elif b.ndim == 2 and assigned_stop < b.shape[1]:
+                yield b[NULL_SLICE, assigned_stop:]
 
-            if assigned_components:
-                if block_is_column:
-                    # only have one sub-component and no remaining parts, do not need to get from list
-                    yield assigned_target
-                else:
-                    yield from assigned_components
-                    # get any remaining part of the block; will only have remainders if b.ndim > 1
-                    if assigned_stop < b.shape[1]:
-                        sub = b[NULL_SLICE, assigned_stop:]
-                        sub.flags.writeable = False
-                        yield sub
-            else:
-                yield b # no change
 
     #---------------------------------------------------------------------------
-    # There are three approaches to setting values from Boolean indicators; the difference between the first two is if the Booleans are given in a single array, or in block-aligned arrays. The third approach uses block-alinged arrays, but values are provided as an iterable of arrays.
+    # There are three approaches to setting values from Boolean indicators; the difference between the first two is if the Booleans are given in a single array, or in block-aligned arrays. The third approach uses block-aligned arrays, but values are provided as an iterable of arrays.
 
     def _assign_blocks_from_boolean_blocks(self,
             targets: tp.Iterable[np.ndarray],
             value: object,
             value_valid: tp.Optional[np.ndarray]
             ) -> tp.Iterator[np.ndarray]:
-        '''Assign value (a single element or a matching array) into all blocks based on a Bolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. Value is set where the Boolean is True.
+        '''Assign value (a single element or a matching array) into all blocks based on a Boolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. Value is set where the Boolean is True.
 
         Args:
             value: Must be a single value or an array
@@ -1640,7 +1709,7 @@ class TypeBlocks(ContainerOperand):
             else:
                 value_part = value
 
-            # evalaute after updating target
+            # evaluate after updating target
             if not target.any(): # works for ndim 1 and 2
                 yield block
 
@@ -1928,12 +1997,25 @@ class TypeBlocks(ContainerOperand):
 
     def extract_iloc_assign(self,
             key: GetItemKeyTypeCompound,
-            value: object
+            value: object,
+            value_is_blocks: bool = False,
             ) -> 'TypeBlocks':
         if isinstance(key, tuple):
-            key = tp.cast(tp.Tuple[int, int], key)
-            return TypeBlocks.from_blocks(self._assign_blocks_from_keys(*key, value=value))
-        return TypeBlocks.from_blocks(self._assign_blocks_from_keys(row_key=key, value=value))
+            row_key, column_key = key
+        else:
+            row_key = key
+            column_key = None
+
+        if value_is_blocks:
+            return TypeBlocks.from_blocks(self._assign_blocks_from_keys_by_blocks(
+                    row_key=row_key,
+                    column_key=column_key,
+                    values=value, #type: ignore
+                    ))
+        return TypeBlocks.from_blocks(self._assign_blocks_from_keys(
+                row_key=row_key,
+                column_key=column_key,
+                value=value))
 
     def extract_bloc_assign(self,
             key: np.ndarray,
@@ -1976,7 +2058,9 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     # operators
 
-    def _ufunc_unary_operator(self, operator: tp.Callable[[np.ndarray], np.ndarray]) -> 'TypeBlocks':
+    def _ufunc_unary_operator(self,
+            operator: tp.Callable[[np.ndarray], np.ndarray],
+            ) -> 'TypeBlocks':
         # for now, do no reblocking; though, in many cases, operating on a unified block will be faster
         def operation() -> tp.Iterator[np.ndarray]:
             for b in self._blocks:
@@ -2149,17 +2233,18 @@ class TypeBlocks(ContainerOperand):
         lower_is_array = isinstance(lower, np.ndarray)
         upper_is_array = isinstance(upper, np.ndarray)
 
-        # from collections import deque
         # get a mutable list in reverse order for pop/pushing
         if lower_is_element or lower_is_array:
             lower_source = lower
         else:
-            lower_source = list(reversed(lower)) #type: ignore
+            lower_source = list(lower) #type: ignore
+            lower_source.reverse()
 
         if upper_is_element or upper_is_array:
             upper_source = upper
         else:
-            upper_source = list(reversed(upper)) #type: ignore
+            upper_source = list(upper) #type: ignore
+            upper_source.reverse()
 
         def get_block_match(
                 start: int, # relative to total size

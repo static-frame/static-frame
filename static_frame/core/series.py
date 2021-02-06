@@ -18,6 +18,7 @@ from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import index_many_set
 from static_frame.core.container_util import index_many_concat
+from static_frame.core.container_util import sort_index_for_order
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -422,7 +423,7 @@ class Series(ContainerOperand):
         #-----------------------------------------------------------------------
         # values assignment
 
-        values_constructor = None # if deferred
+        values_constructor: tp.Optional[tp.Callable[[int], None]] = None # if deferred
 
         if not isinstance(values, np.ndarray):
             if isinstance(values, dict):
@@ -847,7 +848,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='relabel', class_name='Series')
     def relabel(self,
-            index: RelabelInput
+            index: tp.Optional[RelabelInput]
             ) -> 'Series':
         '''
         {doc}
@@ -860,11 +861,11 @@ class Series(ContainerOperand):
         own_index = False
         if index is IndexAutoFactory:
             index_init = None
+        elif index is None:
+            index_init = self._index
         elif is_callable_or_mapping(index): #type: ignore
             index_init = self._index.relabel(index)
             own_index = True
-        elif index is None:
-            index_init = self._index
         else:
             index_init = index #type: ignore
 
@@ -1718,7 +1719,8 @@ class Series(ContainerOperand):
     def sort_index(self,
             *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted Index.
@@ -1727,24 +1729,14 @@ class Series(ContainerOperand):
             *
             ascending: if True, values are sorted low to high
             kind: sort algorithm
+            key: A function that takes an Index and returns a new Index to use for sorting.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
-        # argsort lets us do the sort once and reuse the results
-        if self._index.depth > 1:
-            v = self._index.values
-            order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
-        else:
-            # this technique does not work when values is a 2d array
-            order = np.argsort(self._index.values, kind=kind)
+        order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
-        if not ascending:
-            order = order[::-1]
-
-        index_values = self._index.values[order]
-        index_values.flags.writeable = False
-        index = self._index.from_labels(index_values, name=self._index._name)
+        index = self._index[order]
 
         values = self.values[order]
         values.flags.writeable = False
@@ -1758,7 +1750,8 @@ class Series(ContainerOperand):
     def sort_values(self,
             *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[['Series'], tp.Union[np.ndarray, 'Series']]] = None,
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.
@@ -1766,14 +1759,18 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
+        if key:
+            cfs = key(self)
+            cfs_values = cfs if isinstance(cfs, np.ndarray) else cfs.values
+        else:
+            cfs_values = self.values
+
         # argsort lets us do the sort once and reuse the results
-        order = np.argsort(self.values, kind=kind)
+        order = np.argsort(cfs_values, kind=kind)
         if not ascending:
             order = order[::-1]
 
-        index_values = self._index.values[order]
-        index_values.flags.writeable = False
-        index = self._index.from_labels(index_values, name=self._index._name)
+        index = self._index[order]
 
         values = self.values[order]
         values.flags.writeable = False
@@ -2061,7 +2058,7 @@ class Series(ContainerOperand):
         post = argmin_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
-        return self.index[post]
+        return self.index[post] #type: ignore [unreachable]
 
     @doc_inject(selector='argminmax')
     def iloc_min(self, *,
@@ -2094,7 +2091,7 @@ class Series(ContainerOperand):
         post = argmax_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
-        return self.index[post]
+        return self.index[post] #type: ignore [unreachable]
 
     @doc_inject(selector='argminmax')
     def iloc_max(self, *,
@@ -2242,7 +2239,7 @@ class Series(ContainerOperand):
 
         # NOTE: will only be False, or an array
         if eq is False:
-            return eq #type: ignore
+            return eq
 
         if skipna:
             isna_both = (isna_array(self.values, include_none=False) &
@@ -2455,7 +2452,7 @@ class SeriesAssign(Assign):
 #-------------------------------------------------------------------------------
 class SeriesHE(Series):
     '''
-    Hashable subclass of ``Series``. To support hashability, this ``Series`` subclass implements ``__eq__`` to return a Boolean rather than an ``np.ndarray``.
+    A hash/equals subclass of :obj:`Series`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than an Boolean :obj:`Series`.
     '''
 
     __slots__ = (
@@ -2468,19 +2465,26 @@ class SeriesHE(Series):
     _hash: int
 
     def __eq__(self, other: tp.Any) -> bool:
+        '''
+        Return True if other is a ``Series`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
+        '''
         return self.equals(other, #type: ignore
                 compare_name=True,
-                compare_dtype=True,
-                compare_class=True,
+                compare_dtype=False,
+                compare_class=False,
                 skipna=True,
                 )
 
+    def __ne__(self, other: tp.Any) -> bool:
+        '''
+        Return False if other is a ``Series`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
+        '''
+        return not self.__eq__(other)
+
+
     def __hash__(self) -> int:
         if not hasattr(self, '_hash'):
-            self._hash = hash((
-                    tuple(self.index.values),
-                    self.values.dtype.str,
-                    ))
+            self._hash = hash(tuple(self.index.values))
         return self._hash
 
     def to_series(self) -> Series:
@@ -2492,3 +2496,6 @@ class SeriesHE(Series):
                 name=self._name,
                 own_index=True,
                 )
+
+
+

@@ -62,6 +62,11 @@ class StoreFileMutation(RuntimeError):
     A Stores file was mutated in an unexpected way.
     '''
 
+class StoreParameterConflict(RuntimeError):
+    '''
+    A Stores file was mutated in an unexpected way.
+    '''
+
 class NotImplementedAxis(NotImplementedError):
     def __init__(self) -> None:
         super().__init__('iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')

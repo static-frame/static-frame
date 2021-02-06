@@ -121,6 +121,22 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f1, f1_loaded)
             self.assertEqualFrames(f2, f2_loaded)
 
+    #---------------------------------------------------------------------------
+    def test_bus_from_items_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                )
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                )
+
+        b1 = Bus.from_items((('a', f1), ('b', f2)))
+        self.assertEqual(b1.index.values.tolist(), ['a', 'b'])
+
+
+    #---------------------------------------------------------------------------
     def test_bus_shapes_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -625,9 +641,6 @@ class TestUnit(TestCase):
         for frame in (f1, f2):
             self.assertEqualFrames(frame, b2[frame.name])
 
-
-
-
     #---------------------------------------------------------------------------
     def test_bus_to_sqlite_a(self) -> None:
         f1 = Frame.from_dict(
@@ -857,7 +870,8 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         self.assertTrue(b1.equals(b1))
 
-        class BusDerived(Bus): pass
+        class BusDerived(Bus):
+            pass
 
         b2 = BusDerived.from_frames((f1, f2, f3))
 

@@ -1,9 +1,6 @@
 import unittest
-
 import numpy as np
 import frame_fixtures as ff
-
-nan = np.nan
 
 from static_frame.core.frame import Frame
 from static_frame.core.batch import Batch
@@ -13,6 +10,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.test.test_case import temp_file
 from static_frame.core.store import StoreConfig
 
+nan = np.nan
 
 class TestUnit(TestCase):
 

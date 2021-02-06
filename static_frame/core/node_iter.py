@@ -459,6 +459,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
             # when this is used with hierarchical indices, we are likely to not get a unique values; thus, passing this to an Index constructor is awkward. instead, simply create a Series
             apply_constructor = Series.from_items
+            # TODO: replace with array constructor
         else:
             raise NotImplementedError() #pragma: no cover
 

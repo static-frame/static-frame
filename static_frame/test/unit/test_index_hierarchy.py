@@ -860,7 +860,7 @@ class TestUnit(TestCase):
                 (None, 'B', 2),
                 )
 
-        ih = IndexHierarchy.from_labels(labels1, continuation_token=None) # type: ignore
+        ih = IndexHierarchy.from_labels(labels1, continuation_token=None)
 
         self.assertEqual(ih.values.tolist(),
                 [['I', 'A', 1], ['I', 'A', 2], ['I', 'B', 1], ['I', 'B', 2], ['II', 'A', 1], ['II', 'A', 2], ['II', 'B', 1], ['II', 'B', 2]]
@@ -1173,7 +1173,7 @@ class TestUnit(TestCase):
         # self.assertEqual(len(f.to_pairs(0)), 8)
 
 
-        f2 = f1.assign.loc[('I', 'B', 2), ('II', 'A', 1)](200)
+        f2 = f1.assign.loc[('I', 'B', 2), ('II', 'A', 1)](200) #type: ignore
 
         post = f2.to_pairs(0)
         self.assertEqual(post,
@@ -2341,6 +2341,7 @@ class TestUnit(TestCase):
     #     self.assertEqual(ih1.get((20, 200)), None)
 
 
+    #---------------------------------------------------------------------------
     def test_index_hierarchy_sort_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
@@ -2350,7 +2351,20 @@ class TestUnit(TestCase):
             )
 
 
+    def test_index_hierarchy_sort_b(self) -> None:
 
+        ih1 = IndexHierarchy.from_labels(((1, 1000), (30, 25), (100, 3)))
+
+        self.assertEqual(ih1.sort(key=lambda i: i / -1).values.tolist(),
+                [[100, 3], [30, 25], [1, 1000]])
+
+        self.assertEqual(ih1.sort(
+                key=lambda i: i.values.sum(axis=1)).values.tolist(),
+                [[30, 25], [100, 3], [1, 1000]],
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_index_hierarchy_isin_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
@@ -2713,7 +2727,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_index_hierarchy_fillna_a(self) -> None:
 
-        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, None)) #type: ignore
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, None))
         ih2 = ih1.fillna(20)
         self.assertEqual(ih2.values.tolist(),
                 [[1, 'a', 2], [1, 'a', 20], [1, 'b', 2], [1, 'b', 20], [2, 'a', 2], [2, 'a', 20], [2, 'b', 2], [2, 'b', 20]]

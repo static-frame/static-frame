@@ -15,6 +15,7 @@ from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import key_from_container_key
+from static_frame.core.container_util import sort_index_for_order
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -93,7 +94,7 @@ class ILocMeta(type):
 
     def __getitem__(cls,
             key: GetItemKeyType
-            ) -> tp.Iterable[GetItemKeyType]:
+            ) -> 'ILoc':
         return cls(key) #type: ignore
 
 class ILoc(metaclass=ILocMeta):
@@ -129,10 +130,11 @@ class LocMap:
                 yield None
 
             elif isinstance(attr, np.datetime64):
+                assert labels is not None
                 # if a datetime, we assume that the labels are ordered;
-                if attr.dtype == labels.dtype: #type: ignore
+                if attr.dtype == labels.dtype:
                     if field != SLICE_STEP_ATTR:
-                        pos: int = label_to_pos(attr)
+                        pos: tp.Optional[int] = label_to_pos(attr)
                         if pos is None:
                             # if same type, and that atter is not in labels, we fail, just as we do in then non-datetime64 case. Only when datetimes are given in a different unit are we "loose" about matching.
                             raise LocInvalid('Invalid loc given in a slice', attr, field)
@@ -140,11 +142,11 @@ class LocMap:
                         pos = attr # should be an integer
 
                     if field == SLICE_STOP_ATTR:
-                        pos += 1 # stop is inclusive
+                        pos += 1 #type: ignore  # stop is inclusive
 
                 elif field == SLICE_START_ATTR:
                     # convert to the type of the atrs; this should get the relevant start
-                    pos = label_to_pos(attr.astype(labels.dtype)) #type: ignore
+                    pos: tp.Optional[int] = label_to_pos(attr.astype(labels.dtype)) #type: ignore
                     if pos is None: # we did not find a start position
                         matches = np.flatnonzero(labels.astype(attr.dtype) == attr)
                         if len(matches):
@@ -156,7 +158,7 @@ class LocMap:
                     # convert labels to the slice attr value, compare, then get last
                     # add one, as this is an inclusive stop
                     # pos = np.flatnonzero(labels.astype(attr.dtype) == attr)[-1] + 1
-                    matches = np.flatnonzero(labels.astype(attr.dtype) == attr) #type: ignore
+                    matches = np.flatnonzero(labels.astype(attr.dtype) == attr)
                     if len(matches):
                         pos = matches[-1] + 1
                     else:
@@ -183,7 +185,7 @@ class LocMap:
 
                 if field == SLICE_STOP_ATTR:
                     # loc selections are inclusive, so iloc gets one more
-                    pos += 1
+                    pos += 1 #type: ignore
 
                 yield pos
 
@@ -1119,7 +1121,7 @@ class Index(IndexBase):
         if self._map is None: # loc_is_iloc
             if isinstance(value, INT_TYPES):
                 return value >= 0 and value < len(self) #type: ignore
-            return False
+            return False #type: ignore [unreachable]
         return self._map.__contains__(value) #type: ignore
 
 
@@ -1169,7 +1171,7 @@ class Index(IndexBase):
 
         # NOTE: will only be False, or an array
         if eq is False:
-            return eq #type: ignore
+            return eq
 
         if skipna:
             isna_both = (isna_array(self.values, include_none=False)
@@ -1182,19 +1184,17 @@ class Index(IndexBase):
 
     def sort(self,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND) -> 'Index':
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[['Index'], tp.Union[np.ndarray, 'Index']]] = None,
+            ) -> 'Index':
         '''Return a new Index with the labels sorted.
 
         Args:
             kind: Sort algorithm passed to NumPy.
         '''
-        # force usage of property for caching
-        v = np.sort(self.values, kind=kind)
-        if not ascending:
-            v = v[::-1]
+        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key) #type: ignore [arg-type]
 
-        v.flags.writeable = False
-        return self.__class__(v, name=self._name)
+        return self._extract_iloc(order) #type: ignore [return-value]
 
     def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
         '''

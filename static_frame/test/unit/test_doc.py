@@ -2,6 +2,8 @@ import doctest
 import os
 import typing as tp
 
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
 
 # useful constructors
 # >>> f = sf.FrameGO.from_records((('Encke', 3.30, '2003-12-28'), ('Giacobini-Zinner', 6.52, '1998-11-21'), ('Tempel-Tuttle', 32.92, '1998-02-28'), ('Wild 2', 6.39, '2003-09-25')), columns=('Name', 'Orbital Period', 'Perihelion Date'))
@@ -775,11 +777,11 @@ dtype('int64')
 #start_Series-interface
 >>> sf.Series.interface.loc[sf.Series.interface.index.via_str.startswith('sort')]
 <Frame: Series>
-<Index>                         cls_name group  doc                  <<U18>
+<Index>                              cls_name group  doc                  <<U18>
 <Index: signature>
-sort_index(*, ascending, kind)  Series   Method Return a new Seri...
-sort_values(*, ascending, kind) Series   Method Return a new Seri...
-<<U94>                          <<U6>    <<U17> <<U83>
+sort_index(*, ascending, kind, key)  Series   Method Return a new Seri...
+sort_values(*, ascending, kind, key) Series   Method Return a new Seri...
+<<U94>                               <<U6>    <<U17> <<U83>
 
 #end_Series-interface
 
@@ -1287,8 +1289,8 @@ d'Arrest 6.51           1.346
 <Frame: Frame>
 <Index>                              cls_name group  doc                  <<U18>
 <Index: signature>
-sort_columns(*, ascending, kind)     Frame    Method Return a new Fram...
-sort_index(*, ascending, kind)       Frame    Method Return a new Fram...
+sort_columns(*, ascending, kind, ... Frame    Method Return a new Fram...
+sort_index(*, ascending, kind, key)  Frame    Method Return a new Fram...
 sort_values(key, *, ascending, ax... Frame    Method Return a new Fram...
 <<U94>                               <<U5>    <<U18> <<U83>
 
@@ -2734,9 +2736,6 @@ from_year_range(start, stop, step... IndexDateGO Constructor Get an IndexDate ..
 
 '''
 
-
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
 
 @skip_win
 class TestUnit(doctest.DocTestCase, TestCase):
