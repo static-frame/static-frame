@@ -1182,6 +1182,7 @@ class Index(IndexBase):
             return False
         return True
 
+    @doc_inject(selector='sort')
     def sort(self,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
@@ -1190,7 +1191,9 @@ class Index(IndexBase):
         '''Return a new Index with the labels sorted.
 
         Args:
-            kind: Sort algorithm passed to NumPy.
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key) #type: ignore [arg-type]
 

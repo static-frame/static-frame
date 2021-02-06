@@ -4427,6 +4427,7 @@ class Frame(ContainerOperand):
         '''
         return reversed(self._columns)
 
+    @doc_inject(selector='sort')
     def sort_index(self,
             *,
             ascending: bool = True,
@@ -4435,6 +4436,11 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted Index.
+
+        Args:
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
@@ -4449,6 +4455,7 @@ class Frame(ContainerOperand):
                 own_index=True,
                 )
 
+    @doc_inject(selector='sort')
     def sort_columns(self,
             *,
             ascending: bool = True,
@@ -4457,6 +4464,11 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted ``columns``.
+
+        Args:
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
         order = sort_index_for_order(self._columns, kind=kind, ascending=ascending, key=key)
 
@@ -4471,43 +4483,48 @@ class Frame(ContainerOperand):
                 own_columns=True,
                 )
 
+    @doc_inject(selector='sort')
     def sort_values(self,
-            key: KeyOrKeys,
+            label: KeyOrKeys,
             *,
             ascending: bool = True,
             axis: int = 1,
             kind: str = DEFAULT_SORT_KIND,
-            # key: tp.Optional[tp.Callable[['Frame'], tp.Union[np.ndarray, 'Frame']]] = None,
+            key: tp.Optional[tp.Callable[['Frame'], tp.Union[np.ndarray, 'Frame']]] = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
 
         Args:
-            key: a key or iterable of keys.
+            label: A label or iterable of labels to select the the columns (for axis 1) or rows (for axis 0) to sort.
+            *
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
         # argsort lets us do the sort once and reuse the results
         if axis == 0: # get a column ordering based on one or more rows
             col_count = self._columns.__len__()
-            if is_hashable(key) and key in self._index:
-                iloc_key = self._index.loc_to_iloc(key)
+            if is_hashable(label) and label in self._index:
+                iloc_key = self._index.loc_to_iloc(label)
                 sort_array = self._blocks._extract_array(row_key=iloc_key)
                 order = np.argsort(sort_array, kind=kind)
             else: # assume an iterable of keys
                 # order so that highest priority is last
-                iloc_keys = (self._index.loc_to_iloc(k) for k in reversed_iter(key))
-                sort_array = [self._blocks._extract_array(row_key=key)
-                        for key in iloc_keys]
+                iloc_keys = (self._index.loc_to_iloc(k) for k in reversed_iter(label))
+                sort_array = [self._blocks._extract_array(row_key=label)
+                        for label in iloc_keys]
                 order = np.lexsort(sort_array)
         elif axis == 1: # get a row ordering based on one or more columns
-            if is_hashable(key) and key in self._columns:
-                iloc_key = self._columns.loc_to_iloc(key)
+            if is_hashable(label) and label in self._columns:
+                iloc_key = self._columns.loc_to_iloc(label)
                 sort_array = self._blocks._extract_array(column_key=iloc_key)
                 order = np.argsort(sort_array, kind=kind)
             else: # assume an iterable of keys
                 # order so that highest priority is last
-                iloc_keys = (self._columns.loc_to_iloc(k) for k in reversed_iter(key))
-                sort_array = [self._blocks._extract_array(column_key=key)
-                        for key in iloc_keys]
+                iloc_keys = (self._columns.loc_to_iloc(k) for k in reversed_iter(label))
+                sort_array = [self._blocks._extract_array(column_key=label)
+                        for label in iloc_keys]
                 order = np.lexsort(sort_array)
         else:
             raise AxisInvalid(f'invalid axis: {axis}')

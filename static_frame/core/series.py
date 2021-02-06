@@ -1716,6 +1716,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
+    @doc_inject(selector='sort')
     def sort_index(self,
             *,
             ascending: bool = True,
@@ -1727,9 +1728,9 @@ class Series(ContainerOperand):
 
         Args:
             *
-            ascending: if True, values are sorted low to high
-            kind: sort algorithm
-            key: A function that takes an Index and returns a new Index to use for sorting.
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
 
         Returns:
             :obj:`Series`
@@ -1747,6 +1748,7 @@ class Series(ContainerOperand):
                 own_index=True
                 )
 
+    @doc_inject(selector='sort')
     def sort_values(self,
             *,
             ascending: bool = True,
@@ -1755,6 +1757,12 @@ class Series(ContainerOperand):
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.
+
+        Args:
+            *
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
 
         Returns:
             :obj:`Series`

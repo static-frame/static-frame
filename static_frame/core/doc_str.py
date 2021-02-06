@@ -246,7 +246,11 @@ class DOC_TEMPLATE:
             key_loc=LOC_SELECTOR,
             key_iloc=ILOC_SELECTOR,
             )
-
+    sort = dict(
+            ascending='If True, sort in ascending order; if False, sort in descending order.',
+            kind='Name of the sort algorithm as passed to NumPy.',
+            key='A function that is used to pre-process the selected columns or rows and derive new values to sort by.'
+            )
     head = dict(
             doc='''Return a :obj:`{class_name}` consisting only of the top elements as specified by ``count``.
             ''',
