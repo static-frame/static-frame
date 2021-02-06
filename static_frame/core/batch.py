@@ -477,7 +477,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     def sort_values(self,
-            key: KeyOrKeys,
+            label: KeyOrKeys,
             *,
             ascending: bool = True,
             axis: int = 1,
@@ -486,11 +486,11 @@ class Batch(ContainerOperand, StoreClientMixin):
         Return a new :obj:`Batch` with contained :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
 
         Args:
-            key: a key or iterable of keys.
+            label: a label or iterable of keys.
         '''
         return self._apply_attr(
                 attr='sort_values',
-                key=key,
+                label=label,
                 ascending=ascending,
                 axis=axis,
                 kind=kind,

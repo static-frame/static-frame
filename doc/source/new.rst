@@ -4,7 +4,10 @@ What is New in Static Frame
 0.8.0
 ----------
 
-API change:
+API change: ``Frame.sort_values()`` now has a ``label`` positional argument that replaces the former ``key`` positional argument.
+
+
+Added ``key`` argument for sort pre-processing to ``Frame.sort_values()``.
 
 
 0.7.15
