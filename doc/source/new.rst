@@ -12,7 +12,7 @@ API change: ``iter_labels.apply()`` on ``Index`` and ``IndexHierarchy`` now retu
 
 API change: ``iter_tuple`` and ``iter_tuple_items`` interfaces now require ``axis`` to be kwarg-only.
 
-API change: ``iter_array``, ``iter_series``, and related interfaces now require ``axis`` to be kwarg-only.
+API change: ``iter_array``, ``iter_array_items``, ``iter_series``, and ``iter_series_items`` now require ``axis`` to be kwarg-only.
 
 
 Added ``key`` argument for sort pre-processing to ``Frame.sort_values()``.

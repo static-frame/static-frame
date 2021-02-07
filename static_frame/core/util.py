@@ -2436,12 +2436,14 @@ def get_tuple_constructor(
         fields: np.ndarray,
         ) -> TupleConstructorType:
     '''
-    Given fields, try to create a Namedtuple; if that fails, return a normal tuple.
+    Given fields, try to create a Namedtuple and return the `_make` method
     '''
+    # this will raise if attrs are invalid
     try:
         return namedtuple('Axis', fields)._make #type: ignore
     except ValueError:
-        return tuple
+        pass
+    raise ValueError('invalid fields for namedtuple; pass `tuple` as constructor')
 
 
 def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:

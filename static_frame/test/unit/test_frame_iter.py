@@ -167,7 +167,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_frame_iter_tuple_a(self) -> None:
-        post = tuple(sf.Frame.from_elements(range(5)).iter_tuple(axis=0))
+        post = tuple(sf.Frame.from_elements(range(5)).iter_tuple(axis=0, constructor=tuple))
         self.assertEqual(post, ((0, 1, 2, 3, 4),))
 
 
@@ -185,7 +185,7 @@ class TestUnit(TestCase):
 
     def test_frame_iter_tuple_d(self) -> None:
         f = sf.FrameGO(index=IndexDate.from_date_range('2020-01-01', '2020-01-03'))
-        post = list(f.iter_tuple(axis=0))
+        post = list(f.iter_tuple(constructor=tuple, axis=0))
         self.assertEqual(post, [])
 
         post = list(f.iter_tuple(axis=1))
