@@ -604,12 +604,12 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         q1 = Quilt(b1, retain_labels=True)
 
-        arrays = tuple(q1.iter_array(1))
+        arrays = tuple(q1.iter_array(axis=1))
         self.assertEqual(len(arrays), 7)
         self.assertEqual(arrays[0].tolist(), [1, 3])
         self.assertEqual(arrays[-1].tolist(), [20, 60])
 
-        arrays = tuple(q1.iter_array_items(1))
+        arrays = tuple(q1.iter_array_items(axis=1))
         self.assertEqual(len(arrays), 7)
         self.assertEqual(arrays[0][0], ('f1', 'x'))
         self.assertEqual(arrays[0][1].tolist(), [1, 3])
@@ -618,10 +618,10 @@ class TestUnit(TestCase):
         self.assertEqual(arrays[-1][1].tolist(), [20, 60])
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array(0))
+            _ = tuple(q1.iter_array(axis=0))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array_items(0))
+            _ = tuple(q1.iter_array_items(axis=0))
 
 
     def test_quilt_iter_array_a2(self) -> None:
@@ -643,12 +643,12 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         q1 = Quilt(b1, retain_labels=True, deepcopy_from_bus=True)
 
-        arrays = tuple(q1.iter_array(1))
+        arrays = tuple(q1.iter_array(axis=1))
         self.assertEqual(len(arrays), 7)
         self.assertEqual(arrays[0].tolist(), [1, 3])
         self.assertEqual(arrays[-1].tolist(), [20, 60])
 
-        arrays = tuple(q1.iter_array_items(1))
+        arrays = tuple(q1.iter_array_items(axis=1))
         self.assertEqual(len(arrays), 7)
         self.assertEqual(arrays[0][0], ('f1', 'x'))
         self.assertEqual(arrays[0][1].tolist(), [1, 3])
@@ -657,10 +657,10 @@ class TestUnit(TestCase):
         self.assertEqual(arrays[-1][1].tolist(), [20, 60])
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array(0))
+            _ = tuple(q1.iter_array(axis=0))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array_items(0))
+            _ = tuple(q1.iter_array_items(axis=0))
 
 
 
@@ -669,7 +669,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,6)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
 
-        arrays = tuple(q1.iter_array_items(0))
+        arrays = tuple(q1.iter_array_items(axis=0))
         self.assertEqual(len(arrays), 6)
         self.assertEqual(arrays[0][0], 'zZbu')
         self.assertEqual(arrays[0][1].tolist(), [-88017, 92867])
@@ -679,10 +679,10 @@ class TestUnit(TestCase):
         self.assertEqual(arrays[-1][1].tolist(), [84967, 13448])
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array(1))
+            _ = tuple(q1.iter_array(axis=1))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array_items(1))
+            _ = tuple(q1.iter_array_items(axis=1))
 
 
 
@@ -691,7 +691,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,6)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False, deepcopy_from_bus=True)
 
-        arrays = tuple(q1.iter_array_items(0))
+        arrays = tuple(q1.iter_array_items(axis=0))
         self.assertEqual(len(arrays), 6)
         self.assertEqual(arrays[0][0], 'zZbu')
         self.assertEqual(arrays[0][1].tolist(), [-88017, 92867])
@@ -701,10 +701,10 @@ class TestUnit(TestCase):
         self.assertEqual(arrays[-1][1].tolist(), [84967, 13448])
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array(1))
+            _ = tuple(q1.iter_array(axis=1))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array_items(1))
+            _ = tuple(q1.iter_array_items(axis=1))
 
 
     def test_quilt_iter_array_b3(self) -> None:
@@ -713,12 +713,12 @@ class TestUnit(TestCase):
 
         q2 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=False)
         a2_src_id = id(q2._bus._series.values[0]._extract_array(None, 0))
-        a2_dst_id = id(next(iter(q2.iter_array(0))))
+        a2_dst_id = id(next(iter(q2.iter_array(axis=0))))
         self.assertTrue(a2_src_id == a2_dst_id)
 
         q1 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=True)
         a1_src_id = id(q1._bus._series.values[0]._extract_array(None, 0))
-        a1_dst_id = id(next(iter(q1.iter_array(0))))
+        a1_dst_id = id(next(iter(q1.iter_array(axis=0))))
         self.assertTrue(a1_src_id != a1_dst_id)
 
     #---------------------------------------------------------------------------
@@ -750,10 +750,10 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(), (('a', 20), ('b', 60)))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_series(0))
+            _ = tuple(q1.iter_series(axis=0))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_series_items(0))
+            _ = tuple(q1.iter_series_items(axis=0))
 
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.items())
@@ -785,10 +785,10 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(), (('a', 20), ('b', 60)))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_series(0))
+            _ = tuple(q1.iter_series(axis=0))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_series_items(0))
+            _ = tuple(q1.iter_series_items(axis=0))
 
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.items())

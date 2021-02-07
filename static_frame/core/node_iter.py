@@ -497,7 +497,7 @@ class IterNodeAxis(IterNode[FrameOrSeries]):
     __slots__ = _ITER_NODE_SLOTS
 
     def __call__(self,
-            # *,
+            *,
             axis: int = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.get_delegate(self, axis=axis)

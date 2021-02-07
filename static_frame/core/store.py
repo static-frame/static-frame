@@ -545,7 +545,7 @@ class Store:
                     yield tuple(chain(index_row, row))
             return values
 
-        return partial(frame.iter_array, 1) #type: ignore
+        return partial(frame.iter_array, axis=1) #type: ignore
 
     @staticmethod
     def get_column_iterator(

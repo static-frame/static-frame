@@ -142,26 +142,26 @@ class TestUnit(TestCase):
         f = sf.Frame(np.arange(12).reshape(3,4),
                 index=IndexDate.from_date_range('2020-01-01', '2020-01-03'))
 
-        post = f.iter_array(0).apply(np.sum, name='foo')
+        post = f.iter_array(axis=0).apply(np.sum, name='foo')
         self.assertEqual(post.name, 'foo')
 
         self.assertEqual(
-                f.iter_array(0).apply(np.sum).to_pairs(),
+                f.iter_array(axis=0).apply(np.sum).to_pairs(),
                 ((0, 12), (1, 15), (2, 18), (3, 21))
                 )
 
         self.assertEqual(
-                f.iter_array(1).apply(np.sum).to_pairs(),
+                f.iter_array(axis=1).apply(np.sum).to_pairs(),
                 ((np.datetime64('2020-01-01'), 6), (np.datetime64('2020-01-02'), 22), (np.datetime64('2020-01-03'), 38))
                 )
 
     def test_frame_iter_array_g(self) -> None:
 
         f = sf.FrameGO(index=IndexDate.from_date_range('2020-01-01', '2020-01-03'))
-        post = list(f.iter_array(0))
+        post = list(f.iter_array(axis=0))
         self.assertEqual(post, [])
 
-        post = list(f.iter_array(1))
+        post = list(f.iter_array(axis=1))
         self.assertEqual([x.tolist() for x in post], [[], [], []])
 
 
@@ -214,12 +214,12 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_frame_iter_series_a(self) -> None:
         f1 = ff.parse('f(Fg)|s(2,8)|i(I,str)|c(Ig,str)|v(int)')
-        post1 = tuple(f1.iter_series(0))
+        post1 = tuple(f1.iter_series(axis=0))
         self.assertEqual(len(post1), 8)
         self.assertEqual(post1[0].to_pairs(),
                 (('zZbu', -88017), ('ztsv', 92867)))
 
-        post2 = tuple(f1.iter_series(1))
+        post2 = tuple(f1.iter_series(axis=1))
         self.assertEqual(len(post2), 2)
         self.assertEqual(post2[0].to_pairs(),
                 (('zZbu', -88017), ('ztsv', 162197), ('zUvW', -3648), ('zkuW', 129017), ('zmVj', 58768), ('z2Oo', 84967), ('z5l6', 146284), ('zCE3', 137759)))
@@ -258,7 +258,7 @@ class TestUnit(TestCase):
                 [x for x in f1.iter_element()],
                 [2, 2, 'a', False, False, 30, 34, 'b', True, False, 2, 95, 'c', False, False, 30, 73, 'd', True, True])
 
-        self.assertEqual(list(f1.iter_element(1)),
+        self.assertEqual(list(f1.iter_element(axis=1)),
                 [2, 30, 2, 30, 2, 34, 95, 73, 'a', 'b', 'c', 'd', False, True, False, True, False, False, False, True])
 
         self.assertEqual([x for x in f1.iter_element_items()],
@@ -270,7 +270,7 @@ class TestUnit(TestCase):
         self.assertEqual(post1.to_pairs(0),
                 (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
 
-        post2 = f1.iter_element(1).apply(lambda x: '_' + str(x) + '_')
+        post2 = f1.iter_element(axis=1).apply(lambda x: '_' + str(x) + '_')
 
         self.assertEqual(post2.to_pairs(0),
                 (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
@@ -342,11 +342,11 @@ class TestUnit(TestCase):
     def test_frame_iter_element_e(self) -> None:
         f1 = Frame.from_records(np.arange(9).reshape(3, 3))
 
-        self.assertEqual(list(f1.iter_element(1)),
+        self.assertEqual(list(f1.iter_element(axis=1)),
                 [0, 3, 6, 1, 4, 7, 2, 5, 8])
 
         mapping = {x: x*3 for x in range(9)}
-        f2 = f1.iter_element(1).map_all(mapping)
+        f2 = f1.iter_element(axis=1).map_all(mapping)
         self.assertEqual([d.kind for d in f2.dtypes.values],
                 ['i', 'i', 'i'])
 
