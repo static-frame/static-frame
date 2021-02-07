@@ -493,7 +493,7 @@ class TestUnit(TestCase):
         index = Index(('ax', 'cb', 'dg', 'eb', 'bq'))
 
         self.assertEqual(index.sort(
-                key=lambda i: (i.iter_label().apply(lambda x: x[1]).values)
+                key=lambda i: i.iter_label().apply(lambda x: x[1])
                 ).values.tolist(),
                 ['cb', 'eb', 'dg', 'bq', 'ax']
                 )
@@ -872,8 +872,7 @@ class TestUnit(TestCase):
         self.assertEqual(list(idx1.iter_label(0)), ['a', 'b', 'c', 'd'])
 
         post = idx1.iter_label(0).apply(lambda x: x.upper())
-        self.assertEqual(post.to_pairs(),
-                ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D')))
+        self.assertEqual(post.tolist(), ['A', 'B', 'C', 'D'])
 
 
     #---------------------------------------------------------------------------

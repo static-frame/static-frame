@@ -18,6 +18,7 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TupleConstructorType
+from static_frame.core.util import iterable_to_array_1d
 
 
 if tp.TYPE_CHECKING:
@@ -457,11 +458,19 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     columns_constructor=self._container._columns.from_labels
                     )
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
-            # when this is used with hierarchical indices, we are likely to not get a unique values; thus, passing this to an Index constructor is awkward. instead, simply create a Series
-            apply_constructor = Series.from_items
-            # TODO: replace with array constructor
+            # apply_constructor = Series.from_items
+            def apply_constructor(items: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
+                    dtype: DtypeSpecifier = None,
+                    name: NameType = None,
+                    ) -> np.ndarray:
+                # NOTE: cannot use name argument, here for compat
+                array, _ = iterable_to_array_1d(
+                        (v for _, v in items),
+                        dtype,
+                        )
+                return array
         else:
-            raise NotImplementedError() #pragma: no cover
+            raise NotImplementedError(self._apply_type) #pragma: no cover
 
         return IterNodeDelegate(
                 func_values=func_values,
