@@ -10,6 +10,9 @@ API change: ``Frame.sort_values()`` now requires multiple labels to be provided 
 
 API change: ``iter_labels.apply()`` on ``Index`` and ``IndexHierarchy`` now returns an np.ndarray rather than a ``Series``.
 
+API change: ``iter_tuple`` and ``iter_tuple_items`` interfaces now require ``axis`` to be kwarg-only.
+
+
 Added ``key`` argument for sort pre-processing to ``Frame.sort_values()``.
 
 

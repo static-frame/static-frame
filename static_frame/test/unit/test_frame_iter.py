@@ -185,10 +185,10 @@ class TestUnit(TestCase):
 
     def test_frame_iter_tuple_d(self) -> None:
         f = sf.FrameGO(index=IndexDate.from_date_range('2020-01-01', '2020-01-03'))
-        post = list(f.iter_tuple(0))
+        post = list(f.iter_tuple(axis=0))
         self.assertEqual(post, [])
 
-        post = list(f.iter_tuple(1))
+        post = list(f.iter_tuple(axis=1))
         self.assertEqual([len(x) for x in post], [0, 0, 0])
 
     def test_frame_iter_tuple_e(self) -> None:

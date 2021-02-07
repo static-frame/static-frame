@@ -804,7 +804,7 @@ class TestUnit(TestCase):
         self.assertEqual(post[0]._fields, ('zZbu', 'ztsv'))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_tuple(1))
+            _ = tuple(q1.iter_tuple(axis=1))
 
     def test_quilt_iter_tuple_a2(self) -> None:
 
@@ -815,7 +815,7 @@ class TestUnit(TestCase):
         self.assertEqual(post[0]._fields, ('zZbu', 'ztsv'))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_tuple(1))
+            _ = tuple(q1.iter_tuple(axis=1))
 
 
     def test_quilt_iter_tuple_b1(self) -> None:
@@ -828,7 +828,7 @@ class TestUnit(TestCase):
         self.assertEqual(post[0][1]._fields, ('zZbu', 'ztsv'))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_tuple_items(1))
+            _ = tuple(q1.iter_tuple_items(axis=1))
 
     def test_quilt_iter_tuple_b2(self) -> None:
 
@@ -840,7 +840,7 @@ class TestUnit(TestCase):
         self.assertEqual(post[0][1]._fields, ('zZbu', 'ztsv'))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_tuple_items(1))
+            _ = tuple(q1.iter_tuple_items(axis=1))
 
     #---------------------------------------------------------------------------
     def test_quilt_to_frame_a1(self) -> None:

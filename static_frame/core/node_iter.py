@@ -497,6 +497,7 @@ class IterNodeAxis(IterNode[FrameOrSeries]):
     __slots__ = _ITER_NODE_SLOTS
 
     def __call__(self,
+            # *,
             axis: int = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.get_delegate(self, axis=axis)
@@ -507,8 +508,8 @@ class IterNodeConstructorAxis(IterNode[FrameOrSeries]):
     __slots__ = _ITER_NODE_SLOTS
 
     def __call__(self,
-            axis: int = 0, # make both kwarg only
             *,
+            axis: int = 0,
             constructor: tp.Optional[TupleConstructorType] = None,
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.get_delegate(self,
