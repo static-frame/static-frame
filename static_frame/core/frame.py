@@ -114,7 +114,6 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import is_callable_or_mapping
-from static_frame.core.util import is_hashable
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
 from static_frame.core.util import isna_array
@@ -136,7 +135,6 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import resolve_dtype
-from static_frame.core.util import reversed_iter
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
