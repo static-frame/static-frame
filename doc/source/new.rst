@@ -8,6 +8,8 @@ API change: ``Frame.sort_values()`` now has a ``label`` positional argument that
 
 API change: ``Frame.sort_values()`` now requires multiple labels to be provided as a list to permit distinguishing selection of single tuple labels.
 
+API change: ``iter_labels.apply()`` on ``Index`` and ``IndexHierarchy`` now returns an np.ndarray rather than a ``Series``.
+
 Added ``key`` argument for sort pre-processing to ``Frame.sort_values()``.
 
 

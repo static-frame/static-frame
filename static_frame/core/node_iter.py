@@ -459,7 +459,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     )
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
             # apply_constructor = Series.from_items
-            def apply_constructor(items: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
+            def apply_constructor(items: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]], #pylint: disable=function-redefined
                     dtype: DtypeSpecifier = None,
                     name: NameType = None,
                     ) -> np.ndarray:
