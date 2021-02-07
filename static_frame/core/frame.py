@@ -2774,7 +2774,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_tuple(self) -> IterNodeAxis['Frame']:
+    def iter_tuple(self) -> IterNodeConstructorAxis['Frame']:
         '''
         Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
         '''
@@ -2786,7 +2786,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_tuple_items(self) -> IterNodeAxis['Frame']:
+    def iter_tuple_items(self) -> IterNodeConstructorAxis['Frame']:
         '''
         Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
         '''
