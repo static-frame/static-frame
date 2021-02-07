@@ -4521,7 +4521,7 @@ class TestUnit(TestCase):
 
         f2 = FrameGO(a1, columns=('a', 'b'))
         f2 = f2.set_index('a') # type: ignore
-        f2 = f2.sort_values('b', ascending=False) # type: ignore
+        f2 = f2.sort_values('b', ascending=False)
         self.assertEqual(f2.to_pairs(0), match)
         self.assertEqual(f2.index.name, 'a')
 

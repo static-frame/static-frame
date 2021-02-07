@@ -1708,7 +1708,7 @@ class TestUnit(TestCase):
         self.assertEqual(s3.values.tolist(),
                 [4, 5, 2, 3, 0, 1])
 
-        s4 = s1.sort_index(key=lambda i: i.rehierarch([1, 0])) #type: ignore
+        s4 = s1.sort_index(key=lambda i: i.rehierarch([1, 0]))
         self.assertEqual(s4.values.tolist(),
                 [5, 4, 3, 2, 1, 0])
 
@@ -1753,15 +1753,15 @@ class TestUnit(TestCase):
         s = Series(list('abc'), index=index)
 
         self.assertEqual(s.sort_values(
-                key=lambda s: s.index.via_dt.year).values.tolist(), #type: ignore
+                key=lambda s: s.index.via_dt.year).values.tolist(),
                 ['c', 'a', 'b'])
 
         self.assertEqual(s.sort_values(
-                key=lambda s: s.index.via_dt.month).values.tolist(), #type: ignore
+                key=lambda s: s.index.via_dt.month).values.tolist(),
                 ['c', 'b', 'a'])
 
         self.assertEqual(s.sort_values(
-                key=lambda s: s.index.via_dt.day).values.tolist(), #type: ignore
+                key=lambda s: s.index.via_dt.day).values.tolist(),
                 ['a', 'b', 'c'])
 
 
