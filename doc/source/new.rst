@@ -6,6 +6,7 @@ What is New in Static Frame
 
 API change: ``Frame.sort_values()`` now has a ``label`` positional argument that replaces the former ``key`` positional argument.
 
+API change: ``Frame.sort_values()`` now requires multiple labels to be provided as a list to permit distinguishing selection of single tuple labels.
 
 Added ``key`` argument for sort pre-processing to ``Frame.sort_values()``.
 

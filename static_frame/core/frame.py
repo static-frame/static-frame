@@ -4490,7 +4490,7 @@ class Frame(ContainerOperand):
             ascending: bool = True,
             axis: int = 1,
             kind: str = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[['Frame'], tp.Union[np.ndarray, 'Frame']]] = None,
+            key: tp.Optional[tp.Callable[[tp.Union['Frame', Series]], tp.Union[np.ndarray, 'Series', 'Frame']]] = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
@@ -4502,32 +4502,75 @@ class Frame(ContainerOperand):
             kind: {kind}
             key: {key}
         '''
-        # argsort lets us do the sort once and reuse the results
+        values_for_sort: tp.Optional[np.ndarray] = None
+        values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
+
         if axis == 0: # get a column ordering based on one or more rows
-            col_count = self._columns.__len__()
-            if is_hashable(label) and label in self._index:
-                iloc_key = self._index.loc_to_iloc(label)
-                sort_array = self._blocks._extract_array(row_key=iloc_key)
-                order = np.argsort(sort_array, kind=kind)
-            else: # assume an iterable of keys
-                # order so that highest priority is last
-                iloc_keys = (self._index.loc_to_iloc(k) for k in reversed_iter(label))
-                sort_array = [self._blocks._extract_array(row_key=label)
-                        for label in iloc_keys]
-                order = np.lexsort(sort_array)
+            iloc_key = self._index.loc_to_iloc(label)
+            if key:
+                cfs = key(self._extract(row_key=iloc_key))
+                cfs_is_array = isinstance(cfs, np.ndarray)
+                if (cfs.ndim == 1 and len(cfs) != self.shape[1]) or (cfs.ndim == 2 and cfs.shape[1] != self.shape[1]):
+                    raise RuntimeError('key function returned a container of invalid length')
+            else: # go straigt to array as, since this is row-wise, have to find a consolidated
+                cfs = self._blocks._extract_array(row_key=iloc_key)
+                cfs_is_array = True
+
+            if cfs_is_array:
+                if cfs.ndim == 1:
+                    values_for_sort = cfs
+                elif cfs.ndim == 2 and cfs.shape[0] == 1:
+                    values_for_sort = cfs[0]
+                else:
+                    values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
+            elif cfs.ndim == 1: # Series
+                values_for_sort = cfs.values
+            elif isinstance(cfs, Frame):
+                cfs = cfs._blocks
+                if cfs.shape[0] == 1:
+                    values_for_sort = cfs._extract_array(row_key=0)
+                else:
+                    values_for_lex = [cfs._extract_array(row_key=i)
+                            for i in range(cfs.shape[0]-1, -1, -1)]
+
         elif axis == 1: # get a row ordering based on one or more columns
-            if is_hashable(label) and label in self._columns:
-                iloc_key = self._columns.loc_to_iloc(label)
-                sort_array = self._blocks._extract_array(column_key=iloc_key)
-                order = np.argsort(sort_array, kind=kind)
-            else: # assume an iterable of keys
-                # order so that highest priority is last
-                iloc_keys = (self._columns.loc_to_iloc(k) for k in reversed_iter(label))
-                sort_array = [self._blocks._extract_array(column_key=label)
-                        for label in iloc_keys]
-                order = np.lexsort(sort_array)
+            iloc_key = self._columns.loc_to_iloc(label)
+            if key:
+                cfs = key(self._extract(column_key=iloc_key))
+                cfs_is_array = isinstance(cfs, np.ndarray)
+                if (cfs.ndim == 1 and len(cfs) != self.shape[0]) or (cfs.ndim == 2 and cfs.shape[0] != self.shape[0]):
+                    raise RuntimeError('key function returned a container of invalid length')
+            else: # get array from blocks
+                cfs = self._blocks._extract(column_key=iloc_key) # get TypeBlocks
+                cfs_is_array = False
+
+            if cfs_is_array:
+                if cfs.ndim == 1:
+                    values_for_sort = cfs
+                elif cfs.ndim == 2 and cfs.shape[1] == 1:
+                    values_for_sort = cfs[:, 0]
+                else:
+                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
+            elif cfs.ndim == 1: # Series
+                values_for_sort = cfs.values
+            else: #Frame/TypeBlocks from here
+                if isinstance(cfs, Frame):
+                    cfs = cfs._blocks
+                if cfs.shape[1] == 1:
+                    values_for_sort = cfs._extract_array(column_key=0)
+                else:
+                    values_for_lex = [cfs._extract_array(column_key=i)
+                            for i in range(cfs.shape[1]-1, -1, -1)]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
+
+
+        if values_for_lex is not None:
+            order = np.lexsort(values_for_lex)
+        elif values_for_sort is not None:
+            order = np.argsort(values_for_sort, kind=kind)
+        else:
+            raise RuntimeError('unable to resovle sort type')
 
         if not ascending:
             order = order[::-1]
@@ -4545,7 +4588,8 @@ class Frame(ContainerOperand):
                     columns=columns,
                     name=self._name,
                     own_data=True,
-                    own_columns=True
+                    own_columns=True,
+                    own_index=True,
                     )
 
         index_values = self._index.values[order]

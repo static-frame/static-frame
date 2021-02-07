@@ -4480,7 +4480,7 @@ class TestUnit(TestCase):
                 columns=('p', 'r', 'q', 't', 's'),
                 index=('z', 'x', 'w', 'y'))
 
-        post = f1.sort_values(('p', 't'))
+        post = f1.sort_values(['p', 't'])
 
         self.assertEqual(post.to_pairs(0),
                 (('p', (('z', 2), ('w', 2), ('y', 30), ('x', 30))), ('r', (('z', 2), ('w', 95), ('y', 73), ('x', 34))), ('q', (('z', 'c'), ('w', 'a'), ('y', 'b'), ('x', 'd'))), ('t', (('z', False), ('w', True), ('y', False), ('x', True))), ('s', (('z', False), ('w', False), ('y', True), ('x', False)))))
@@ -4568,20 +4568,104 @@ class TestUnit(TestCase):
         with self.assertRaises(AxisInvalid):
             _ = f1.sort_values(('x', 'z'), axis=-1)
 
-        f1_sorted = f1.sort_values(('x', 'z'), axis=0)
-        self.assertEqual(f1_sorted.to_pairs(0),
-                (('a', (('x', 3), ('y', 8), ('z', 2))), ('c', (('x', 3), ('y', 4), ('z', 6))), ('b', (('x', 7), ('y', 1), ('z', 9))))
-                )
+        with self.assertRaises(KeyError):
+            _ = f1.sort_values(('x', 'z'), axis=0)
 
         f2_sorted = f1.sort_values(['x', 'z'], axis=0)
         self.assertEqual(f2_sorted.to_pairs(0),
                 (('a', (('x', 3), ('y', 8), ('z', 2))), ('c', (('x', 3), ('y', 4), ('z', 6))), ('b', (('x', 7), ('y', 1), ('z', 9))))
                 )
 
-        f3_sorted = f1.sort_values((k for k in 'xz'), axis=0)
+        f3_sorted = f1.sort_values(list(k for k in 'xz'), axis=0)
         self.assertEqual(f3_sorted.to_pairs(0),
                 (('a', (('x', 3), ('y', 8), ('z', 2))), ('c', (('x', 3), ('y', 4), ('z', 6))), ('b', (('x', 7), ('y', 1), ('z', 9))))
                 )
+
+    def test_frame_sort_values_g(self) -> None:
+
+        records = (
+                (2, 2, 3.5),
+                (30, 34, 60.2),
+                (2, 95, 1.2),
+                (30, 73, 50.2),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
+
+        self.assertEqual(f1.sort_values('q', key=lambda s: -s).to_pairs(0),
+                (('p', (('y', 2), ('z', 30), ('x', 30), ('w', 2))), ('q', (('y', 95), ('z', 73), ('x', 34), ('w', 2))), ('r', (('y', 1.2), ('z', 50.2), ('x', 60.2), ('w', 3.5))))
+                )
+
+        self.assertEqual(f1.sort_values('q', key=lambda s: -s.values).to_pairs(0),
+                (('p', (('y', 2), ('z', 30), ('x', 30), ('w', 2))), ('q', (('y', 95), ('z', 73), ('x', 34), ('w', 2))), ('r', (('y', 1.2), ('z', 50.2), ('x', 60.2), ('w', 3.5))))
+                )
+
+        self.assertEqual(f1.sort_values('z', axis=0, key=lambda s: -s).to_pairs(),
+                (('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 3.5), ('x', 60.2), ('y', 1.2), ('z', 50.2))), ('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))))
+                )
+
+        self.assertEqual(f1.sort_values('z', axis=0, key=lambda s: -s.values).to_pairs(),
+                (('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 3.5), ('x', 60.2), ('y', 1.2), ('z', 50.2))), ('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))))
+                )
+
+    def test_frame_sort_values_h(self) -> None:
+
+        records = (
+                (2, 2, 3.5),
+                (30, 34, 60.2),
+                (2, 95, 1.2),
+                (30, 73, 50.2),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.sort_values(['r', 'p'], key=lambda f: f.mean().values)
+
+        self.assertEqual(f1.sort_values(['r', 'p'], axis=1, key=lambda f: f.mean(axis=1)).to_pairs(),
+                (('p', (('y', 2), ('w', 2), ('z', 30), ('x', 30))), ('q', (('y', 95), ('w', 2), ('z', 73), ('x', 34))), ('r', (('y', 1.2), ('w', 3.5), ('z', 50.2), ('x', 60.2))))
+                )
+
+        self.assertEqual(f1.sort_values(['r', 'p'], axis=1, key=lambda f: f.mean(axis=1).values).to_pairs(),
+                (('p', (('y', 2), ('w', 2), ('z', 30), ('x', 30))), ('q', (('y', 95), ('w', 2), ('z', 73), ('x', 34))), ('r', (('y', 1.2), ('w', 3.5), ('z', 50.2), ('x', 60.2))))
+                )
+
+        self.assertEqual(f1.sort_values(['r', 'p'], axis=1, key=lambda f: -f).to_pairs(),
+                (('p', (('x', 30), ('z', 30), ('w', 2), ('y', 2))), ('q', (('x', 34), ('z', 73), ('w', 2), ('y', 95))), ('r', (('x', 60.2), ('z', 50.2), ('w', 3.5), ('y', 1.2))))
+                )
+
+        self.assertEqual(f1.sort_values(['r', 'p'], axis=1, key=lambda f: -f.values).to_pairs(),
+                (('p', (('x', 30), ('z', 30), ('w', 2), ('y', 2))), ('q', (('x', 34), ('z', 73), ('w', 2), ('y', 95))), ('r', (('x', 60.2), ('z', 50.2), ('w', 3.5), ('y', 1.2))))
+                )
+
+    def test_frame_sort_values_i(self) -> None:
+
+        records = (
+                (2, 2, 3.5),
+                (30, 34, 60.2),
+                (2, 95, 1.2),
+                (30, 73, 50.2),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.sort_values(['w', 'z'], axis=0, key=lambda f: f.mean(axis=1).values)
+
+        self.assertEqual(f1.sort_values(['z', 'w'], axis=0, key=lambda f:-f).to_pairs(0),
+                (('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 3.5), ('x', 60.2), ('y', 1.2), ('z', 50.2))), ('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))))
+                )
+
+        self.assertEqual(f1.sort_values(['z', 'w'], axis=0, key=lambda f:-f.values).to_pairs(0),
+                (('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 3.5), ('x', 60.2), ('y', 1.2), ('z', 50.2))), ('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))))
+                )
+
 
 
     #---------------------------------------------------------------------------
