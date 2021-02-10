@@ -424,7 +424,7 @@ class Index(IndexBase):
                 labels = labels._labels
             else: # IndexHierarchy
                 # will be a generator of tuples; already updated caches
-                labels = array2d_to_tuples(labels.__iter__())
+                labels = labels.__iter__()
         elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
             array = labels.values # NOTE: should we take values or keys here?
