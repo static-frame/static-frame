@@ -263,6 +263,31 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         return self._apply_pool(labels, arg_gen(), call_func)
 
+    def apply_except(self,
+            func: AnyCallable,
+            exception: tp.Type[Exception],
+            ) -> 'Batch':
+        '''
+        Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the :obj:`Frame` as an argument. Exceptions raised that matching the `except` argument will be silenced.
+        '''
+        if self._max_workers is None:
+            def gen() -> IteratorFrameItems:
+                for label, frame in self._items:
+                    try:
+                        yield label, call_func((frame, func))
+                    except exception:
+                        pass
+            return self._derive(gen)
+
+        # TODO: add exception to apply_pool
+        labels = []
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable]]:
+            for label, frame in self._items:
+                labels.append(label)
+                yield frame, func
+
+        return self._apply_pool(labels, arg_gen(), call_func)
+
     def apply_items(self, func: AnyCallable) -> 'Batch':
         '''
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument.

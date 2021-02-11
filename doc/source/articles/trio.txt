@@ -7,7 +7,7 @@ It is common in DataFrame processing routines to work with collections of tables
 
 While hierarchical indices can be used to bring multiple tables into a single DataFrame, this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
 
-This presentation introduces three abstractions for working with large collections of DataFrames. The first, the Bus, provides a dictionary-like interface for lazily loading (and forgetting) tables in a collection; collections can stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, pickle, or delimited files. The second, the Batch, is a deferred  processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The third, the Quilt, is a lazy, virtual concatenation of all tables, permitting operating on partitioned data as if it was unified in a single table.
+This presentation introduces three abstractions for working with large collections of DataFrames. The first, the Bus (named after buses used in circuits), provides a dictionary-like interface for lazily loading (and forgetting) tables in a collection; collections can stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, pickle, or delimited files. The second, the Batch (named after batch processing), is a deferred  processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The third, the Quilt (named after a textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operating on partitioned data as if it was unified in a single table.
 
 All three containers provide identical interfaces for reading from, and writing to, multi-table storage formats such as XLSX, SQLite, HDF5, or zipped containers of pickle, Parquet, or delimited-text files. This uniformity permits sharing the same data store for different usage contexts.
 
@@ -51,7 +51,7 @@ As the Bus supports reading from and writing to XLSX and HDF5 (as well as other 
 Batch
 --------
 
-The Batch can be thought of as a generator-like iterator of pairs of label and Frame. Pairs are only iterated when creating a composite Frame with the ``to_frame()`` method, or using dictionary-like methods such as ``keys()``, ``items()``, or ``values``. The Batch exposes nearly the entire Frame interface; method calls (and even operator applications) are composed and deferred in a newly returned Batch, composing operations upon the stored iterator.
+The Batch can be thought of as an iterator of pairs of label and Frame. Beyond just an iterator, the Batch is a tool for composing deferred operations on each contained Frame. Operations are executed, and pairs are iterated, only when creating a composite Frame with the ``to_frame()`` method, or using dictionary-like methods such as ``keys()``, ``items()``, or ``values``. The Batch exposes nearly the entire Frame interface; method calls (and even operator applications) are composed and deferred in a newly returned Batch, composing operations upon the stored iterator.
 
 >>> sf.Batch(bus.items()).sum()
 <Batch at 0x7fabd09779a0>
@@ -127,6 +127,8 @@ z        4.0
 Common & Distinguishing Characteristics
 -------------------------------------------------
 
+As already mentioned, all three container support instantiation from an iterator of pairs of labels and Frames.
+
 
 The Bus, Batch, and Quilt all share the same file-based constructors, such as ``from_zip_csv()`` or ``from_xlsx()``; each constructor has a corresponding exporter, e.g., ``to_zip_csv()`` or ``to_xlsx()``, respectively, permitting round-trip reading and writing, or conversion from one format to another. The following table summarize the file-based constructors and exporters available.
 
@@ -172,7 +174,7 @@ Sample Data
 ___________________________
 
 
-The "Huge Stock Market Dataset" dataset is a collection of over seven thousand tables, each table a time series of characteristics for a US stock. The file "archive.zip" is available at https://www.kaggle.com/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
+The "Huge Stock Market Dataset" dataset is a collection of seven thousand, one hundred three tables, each a time series of characteristics for a US stock. The file "archive.zip" is available at https://www.kaggle.com/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
 
 This zip archive contains subdirectories and thus cannot be directly read from a Bus. After opening the archive, we can read from the contained "Stocks" directory and create a zip pickle of the stock data for fast reading in subsequent examples. As some files are empty, we must also filter out files with no size.
 
@@ -263,39 +265,66 @@ Performing the same method on each container will illustrate their differences. 
 >>> bus.head(2)
 <Bus>
 <Index>
-2015    Frame
-2016    Frame
-<int64> <object>
+fljh    Frame
+bgt     Frame
+<<U9>   <object>
 
 
 The Batch operates on each Frame, in this case calling ``head(2)`` on each contained Frame and returning, after combination with ``to_frame()``, the top two rows from each Frame in the Bus.
 
 >>> sf.Batch(bus.items()).head(2).to_frame()
 <Frame>
-<Index>                      score            rank    gdp              <<U29>
+<Index>                     Open      High      Low       Close     Volume  OpenInt <<U7>
 <IndexHierarchy>
-2015             Switzerland 7.587            1       1.39651
-2015             Iceland     7.561            2       1.30232
-2016             Denmark     7.526            1       1.44178
-2016             Switzerland 7.509            2       1.52733
-2017             Norway      7.53700017929077 1       1.61646318435669
-2017             Denmark     7.52199983596802 2       1.48238301277161
-2018             Finland     7.632            1       1.305
-2018             Norway      7.594            2       1.456
-2019             Finland     7.769            1       1.34
-2019             Denmark     7.6              2       1.383
-<int64>          <<U24>      <float64>        <int64> <float64>
+fljh             2017-11-07 26.199    26.199    26.177    26.189    1300    0
+fljh             2017-11-08 26.359    26.39     26.349    26.3875   3600    0
+bgt              2005-02-25 11.605    11.649    11.527    11.618    97637   0
+bgt              2005-02-28 11.594    11.683    11.594    11.683    90037   0
+angi             2011-11-21 15.15     15.75     14.31     15.4      469578  0
+angi             2011-11-22 15.01     16.79     15.01     16.12     202970  0
+ccj              2005-02-25 20.099    20.92     20.021    20.235    3830399 0
+ccj              2005-02-28 20.696    20.696    19.245    19.501    3911079 0
+uhs              2005-02-25 21.629    23.016    21.377    22.822    4700749 0
+uhs              2005-02-28 22.783    23.134    22.656    23.056    1739084 0
+eqfn             2015-07-09 8.57      8.7       8.5       8.68      489900  0
+eqfn             2015-07-10 8.58      8.61      8.58      8.58      44100   0
+ivfgc            2016-12-02 99.97     99.97     99.97     99.97     5005    0
+ivfgc            2016-12-05 99.97     99.97     99.97     99.97     6002    0
+achn             2006-10-25 11.5      11.5      11.5      11.5      0       0
+achn             2006-10-26 11.6      12.75     11.6      12.39     361420  0
+eurz             2015-08-19 24.75     24.75     24.75     24.75     200     0
+...              ...        ...       ...       ...       ...       ...     ...
+cai              2007-05-16 15.02     15.32     14.5      15.0      3960000 0
+desc             2016-07-26 27.131    27.131    27.062    27.062    1015    0
+desc             2016-07-27 27.15     27.15     27.15     27.15     193     0
+swks             2005-02-25 7.0421    7.1476    6.975     7.0997    1838285 0
+swks             2005-02-28 7.0421    7.2819    6.9462    6.9653    2737207 0
+hair             2017-10-12 8.55      11.95     8.55      9.92      2818561 0
+hair             2017-10-13 9.93      10.1948   9.19      9.6       294724  0
+jnj              1970-01-02 0.6104    0.6104    0.5941    0.5941    1468563 0
+jnj              1970-01-05 0.5941    0.5941    0.5776    0.5776    1185461 0
+rosg             2011-08-05 198.0     216.0     180.0     181.8     183     0
+rosg             2011-08-08 189.0     189.0     163.8     169.2     79      0
+wbbw             2013-04-12 13.54     14.0      13.5      13.8      162747  0
+wbbw             2013-04-15 13.63     13.785    13.45     13.67     126845  0
+twow             2017-10-23 16.7      16.7      16.66     16.7      10045   0
+twow             2017-10-24 16.75     16.75     16.682    16.682    850     0
+gsjy             2016-03-07 25.238    25.238    25.208    25.238    14501   0
+gsjy             2016-03-08 25.081    25.194    25.071    25.158    12457   0
+<<U9>            <<U10>     <float64> <float64> <float64> <float64> <int64> <int64>
+
 
 
 The Quilt represents the contained Frames as if they were a single, contiguous Frame. Calling ``head(2)`` returns the first two rows of that virtual frame, labelled with a hierarchical index whose outer label is the Frame's label.
 
->> quilt.head(2)
-<Frame: 2015>
-<Index>                               score     rank    gdp       <<U29>
-<IndexHierarchy: country>
-2015                      Switzerland 7.587     1       1.39651
-2015                      Iceland     7.561     2       1.30232
-<int64>                   <<U24>      <float64> <int64> <float64>
+>>> quilt.head(2)
+<Frame>
+<Index>                     Open      High      Low       Close     Volume  OpenInt <<U7>
+<IndexHierarchy>
+fljh             2017-11-07 26.199    26.199    26.177    26.189    1300    0
+fljh             2017-11-08 26.359    26.39     26.349    26.3875   3600    0
+<<U4>            <<U10>     <float64> <float64> <float64> <float64> <int64> <int64>
+
 
 
 
@@ -306,96 +335,63 @@ Next, we will perform the same selection on each container using different selec
 
 The ``head`` method is a pre-configured type of row selector. The full range of ``loc`` and ``iloc`` selection interfaces is supported in all containers, though specialized within each containers' dimensional context.
 
-If we want to select from each Frame individually with a Bus, we can iterate through each Frame, do a selection, and then concatenate these into a new Frame:
+If we want to select from each Frame individually with a Bus, we can iterate through each Frame and do a selection,
 
->>> sf.Frame.from_concat_items(((label, f.loc['Tanzania', ['score', 'rank']]) for label, f in bus.items()))
-<Frame>
-<Index>                   score            rank      <<U29>
-<IndexHierarchy>
-2015             Tanzania 3.781            146.0
-2016             Tanzania 3.666            149.0
-2017             Tanzania 3.34899997711182 153.0
-2018             Tanzania 3.303            153.0
-2019             Tanzania 3.231            153.0
-<int64>          <<U8>    <float64>        <float64>
+>>> for label, f in bus.items():
+...     if '1962-01-02' in f.index:
+...         print(f.loc['1962-01-02', ['Open', 'Close']].rename(label))
+...
+<Series: ge>
+<Index>
+Open         0.6277
+Close        0.6201
+<<U7>        <float64>
+<Series: ibm>
+<Index>
+Open          6.413
+Close         6.3378
+<<U7>         <float64>
+
 
 
 As already seen, the Batch is designed for operating on each Frame and concatenating the results. Additionally, the Batch offers a more compact interface than that shown above using the Bus. We can select row and column values from within each contained Frame and bring the resulted together under their individual Frame labels.
 
->>> sf.Batch(bus.items()).loc['Tanzania', ['score', 'rank']].to_frame()
+>>> sf.Batch(bus.items()).apply_except(lambda f: f.loc['1962-01-02', ['Open', 'Close']], KeyError).to_frame()
 <Frame>
-<Index> score            rank      <<U29>
+<Index> Open      Close     <<U7>
 <Index>
-2015    3.781            146.0
-2016    3.666            149.0
-2017    3.34899997711182 153.0
-2018    3.303            153.0
-2019    3.231            153.0
-<int64> <float64>        <float64>
+ge      0.6277    0.6201
+ibm     6.413     6.3378
+<<U3>   <float64> <float64>
 
 
-As a virtual concatenation of Frames, the Quilt permits selection as if from a single Frame. As shown below, a hierarchical selection on the inner label "Tanzania" brings together records for that country for all years.
+As a virtual concatenation of Frames, the Quilt permits selection as if from a single Frame. As shown below, a hierarchical selection on the inner label "1962-01-02" brings together any records for that date across all companies.
 
->>> quilt.loc[sf.HLoc[:, 'Tanzania'], ['score', 'rank']]
+>>> quilt.loc[sf.HLoc[:, '1962-01-02'], ['Open', 'Close']]
 <Frame>
-<Index>                            score            rank    <<U29>
-<IndexHierarchy: country>
-2015                      Tanzania 3.781            146
-2016                      Tanzania 3.666            149
-2017                      Tanzania 3.34899997711182 153
-2018                      Tanzania 3.303            153
-2019                      Tanzania 3.231            153
-<int64>                   <<U8>    <float64>        <int64>
+<Index>                     Open      Close     <<U7>
+<IndexHierarchy>
+ge               1962-01-02 0.6277    0.6201
+ibm              1962-01-02 6.413     6.3378
+<<U3>            <<U10>     <float64> <float64>
 
 
 These last examples demonstrate that, in some cases, the same operation can be done with the Bus, Batch, and Quilt. The difference is in the abstraction and the interface.
 
 
-Further Usage
-________________________
+Minimizing Memory Usage
+_____________________________________________
 
-
-Examples of iteration and function application demonstrate additional functionality of these containers. Just as with a Series, we can apply a function to each Frame with ``iter_element().apply()``.
-
->>> bus.iter_element().apply(lambda f: 'Laos' in f.index)
-<Series>
-<Index>
-2015     True
-2016     True
-2017     False
-2018     True
-2019     True
-<int64>  <bool>
-
-
-While explicit iteration and function application are available with a Bus, the Batch is specialized for this purpose, implicitly performing actions on each contained Frame. In the example below, a Batch is used to, per year, get the label of the maximum value of two fields.
-
->>> sf.Batch(bus.items())[['score','gdp']].loc_max().to_frame()
-<Frame>
-<Index> score       gdp                  <<U29>
-<Index>
-2015    Switzerland Qatar
-2016    Denmark     Qatar
-2017    Norway      Qatar
-2018    Finland     United Arab Emirates
-2019    Finland     Qatar
-<int64> <<U24>      <<U24>
-
-
-
-While per-Frame operations are idiomatic to the Batch, the Quilt permits making observations across the totality of Frames. For example, to find the maximum GDP per capita over all years, a Boolean array selecting the maximum value can be given to a ``loc`` selection.
-
->>> quilt.loc[quilt['gdp'] == quilt['gdp'].max()]
-<Frame: 2018>
-<Index>                                        score     rank    gdp       <<U28>
-<IndexHierarchy: country>
-2018                      United Arab Emirates 6.774     20      2.096
-<int64>                   <<U24>               <float64> <int64> <float64>
-
+In the previous examples, the Bus was shown lazily load in data as it was accessed. While this permits only loading what is needed, for large collections of data this will
 
 
 Conclusion
 _______________________
+
+Optimizations using multiprocessing and multi-threading in Batch processing.
+
+Multiprocessing reading from zipped stores.
+
 
 While related tools for working with collections of Frame exist, the Bus, Batch, and Quilt provide well-defined abstractions that cover common needs in working with collections of tables. Combined with lazy loading and lazy execution, as well as support for a variety of multi-table storage formats, these tools provide valuable resources for DataFrame processing.
 
