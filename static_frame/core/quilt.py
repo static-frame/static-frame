@@ -224,6 +224,43 @@ class Quilt(ContainerBase, StoreClientMixin):
                 deepcopy_from_bus=kwargs.get('deepcopy_from_bus', False),
                 )
 
+    @classmethod
+    def from_items(cls,
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            *,
+            axis: int = 0,
+            name: NameType = None,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            ) -> 'Quilt':
+        '''
+        Given an iterable of pairs of label, :obj:`Frame`, create a :obj:`Quilt`.
+        '''
+        bus = Bus.from_items(items, name=name)
+        return cls(bus,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                )
+
+    @classmethod
+    def from_frames(cls,
+            frames: tp.Iterable[Frame],
+            *,
+            axis: int = 0,
+            name: NameType = None,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            ) -> 'Quilt':
+        '''Return a :obj:`Quilt` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
+        '''
+        bus = Bus.from_frames(frames, name=name)
+        return cls(bus,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                )
+
     #---------------------------------------------------------------------------
     def __init__(self,
             bus: Bus,

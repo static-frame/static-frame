@@ -43,8 +43,14 @@ GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 def normalize_container(post: tp.Any
         ) -> FrameOrSeries:
     # post might be an element, promote to a Series to permit concatenation
-    # NOTE: do not set index as (container.name,), as this can lead to diagonal formations; will already be paired with stored labels
+    if isinstance(post, np.ndarray):
+        if post.ndim == 1:
+            return Series(post)
+        elif post.ndim == 2:
+            return Frame(post)
+        # let ndim 0 pass
     if not isinstance(post, (Frame, Series)):
+        # NOTE: do not set index as (container.name,), as this can lead to diagonal formations; will already be paired with stored labels
         return Series.from_element(post, index=ELEMENT_TUPLE)
     return post
 
@@ -223,6 +229,33 @@ class Batch(ContainerOperand, StoreClientMixin):
                         )
         return self._derive(gen_pool)
 
+    def _apply_pool_except(self,
+            labels: tp.List[tp.Hashable],
+            arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
+            caller: tp.Callable[..., FrameOrSeries],
+            exception: tp.Type[Exception],
+            ) -> 'Batch':
+
+        if self._chunksize != 1:
+            raise NotImplementedError('Cannot use apply_except idioms with chunksize other than 1')
+
+        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
+
+        def gen_pool() -> IteratorFrameItems:
+            futures = []
+            with pool_executor(max_workers=self._max_workers) as executor:
+                for args in arg_iter:
+                    futures.append(executor.submit(caller, args))
+
+                for label, future in zip(labels, futures):
+                    try:
+                        container = future.result()
+                    except exception:
+                        continue
+                    yield label, container
+
+        return self._derive(gen_pool)
+
     def _apply_attr(self,
             *args: tp.Any,
             attr: str,
@@ -279,14 +312,17 @@ class Batch(ContainerOperand, StoreClientMixin):
                         pass
             return self._derive(gen)
 
-        # TODO: add exception to apply_pool
         labels = []
         def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable]]:
             for label, frame in self._items:
                 labels.append(label)
                 yield frame, func
 
-        return self._apply_pool(labels, arg_gen(), call_func)
+        return self._apply_pool_except(labels,
+                arg_gen(),
+                call_func,
+                exception,
+                )
 
     def apply_items(self, func: AnyCallable) -> 'Batch':
         '''
@@ -305,6 +341,34 @@ class Batch(ContainerOperand, StoreClientMixin):
                 yield frame, func, label
 
         return self._apply_pool(labels, arg_gen(), call_func_items)
+
+    def apply_items_except(self,
+            func: AnyCallable,
+            exception: tp.Type[Exception],
+            ) -> 'Batch':
+        '''
+        Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument. Exceptions raised that matching the `except` argument will be silenced.
+        '''
+        if self._max_workers is None:
+            def gen() -> IteratorFrameItems:
+                for label, frame in self._items:
+                    try:
+                        yield label, call_func_items((frame, func, label))
+                    except exception:
+                        pass
+            return self._derive(gen)
+
+        labels = []
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]]:
+            for label, frame in self._items:
+                labels.append(label)
+                yield frame, func, label
+
+        return self._apply_pool_except(labels,
+                arg_gen(),
+                call_func_items,
+                exception,
+                )
 
     #---------------------------------------------------------------------------
     # extraction
@@ -785,6 +849,21 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(
                 attr='iloc_max',
                 skipna=skipna,
+                axis=axis,
+                )
+
+    #---------------------------------------------------------------------------
+    # utility function to numpy array
+
+    def unique(self, *,
+            axis: tp.Optional[int] = None,
+            ) -> 'Batch':
+        '''
+        Return a NumPy array of unqiue values. If the axis argument is provied, uniqueness is determined by columns or row.
+
+        '''
+        return self._apply_attr(
+                attr='unique',
                 axis=axis,
                 )
 

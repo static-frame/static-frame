@@ -90,6 +90,55 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndexNonUnique):
             self.assertEqual(q3.shape, (7, 2))
 
+    #---------------------------------------------------------------------------
+    def test_quilt_from_items_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), c=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(2,3), b=(4,6)),
+                index=('x', 'y'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(c=(10,20), b=(50,60)),
+                index=('x', 'y'),
+                name='f3')
+
+        q1 = Quilt.from_items(((f.name, f) for f in (f1, f2, f3)),
+                axis=1,
+                retain_labels=True)
+
+        self.assertEqual(q1.to_frame().to_pairs(),
+                ((('f1', 'a'), (('x', 1), ('y', 2))), (('f1', 'c'), (('x', 3), ('y', 4))), (('f2', 'a'), (('x', 2), ('y', 3))), (('f2', 'b'), (('x', 4), ('y', 6))), (('f3', 'c'), (('x', 10), ('y', 20))), (('f3', 'b'), (('x', 50), ('y', 60)))))
+
+
+    #---------------------------------------------------------------------------
+    def test_quilt_from_frames_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), c=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(2,3), b=(4,6)),
+                index=('x', 'y'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(c=(10,20), b=(50,60)),
+                index=('x', 'y'),
+                name='f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3),
+                axis=1,
+                retain_labels=True)
+
+        self.assertEqual(q1.to_frame().to_pairs(),
+                ((('f1', 'a'), (('x', 1), ('y', 2))), (('f1', 'c'), (('x', 3), ('y', 4))), (('f2', 'a'), (('x', 2), ('y', 3))), (('f2', 'b'), (('x', 4), ('y', 6))), (('f3', 'c'), (('x', 10), ('y', 20))), (('f3', 'b'), (('x', 50), ('y', 60)))))
+
+
+
 
     #---------------------------------------------------------------------------
     def test_quilt_display_a(self) -> None:

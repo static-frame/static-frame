@@ -6084,7 +6084,9 @@ class Frame(ContainerOperand):
         return True
 
 
-    def unique(self, axis: tp.Optional[int] = None) -> np.ndarray:
+    def unique(self, *,
+            axis: tp.Optional[int] = None,
+            ) -> np.ndarray:
         '''
         Return a NumPy array of unqiue values. If the axis argument is provied, uniqueness is determined by columns or row.
         '''

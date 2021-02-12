@@ -6,6 +6,14 @@ What is New in Static Frame
 
 ``IndexDatetime`` subclasses now properly assign ``name`` attrs from an `Index` given as an initializer.
 
+Added ``Batch.apply_except`` and ``Batch.apply_items_except`` to permit ignore exceptions on function application to contained Frames.
+
+Added ``Batch.unique``.
+
+``Batch`` now supports operations on ``Frame`` that return an ``np.ndarray``.
+
+Added ``Quilt.from_items`` and ``Quilt.from_frames``.
+
 
 0.8.0
 ----------

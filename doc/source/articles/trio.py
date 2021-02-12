@@ -486,8 +486,6 @@ def stocks() -> None:
     bus = sf.Bus.from_zip_pickle('/tmp/stocks.zip')[:]
     print(t, 'done loading')
 
-    import ipdb; ipdb.set_trace()
-
     t = Timer()
     post = sf.Batch(bus.items())[['Open', 'Close']].loc_max().to_frame()
     print(t, 'serial')
