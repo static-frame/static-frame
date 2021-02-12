@@ -13,6 +13,8 @@ All three containers provide identical interfaces for reading from, and writing 
 
 These tools evolved from the context of my work: processing financial data and modelling investment systems. There, data sets are naturally partitioned by date or characteristic. For historical simulations, the data needed can be large. The Bus, Batch, and Quilt have provided convenient and efficient tools for this domain. Out-of-core solutions like Vaex and Dask offer related approaches to dealing with large collections of data, though with different tradeoffs.
 
+# observing my colleagues repeatedly group and un-group data with hierarchical indices.
+
 While these containers are implemented in the Python StaticFrame package (a Pandas alternative that offers immutable DataFrames), the abstractions are useful for application in any DataFrame or table processing library. StaticFrame calls DataFrames simply "Frames," and that convention will be used here.
 
 
@@ -39,6 +41,8 @@ Two simple Frames can be created to demonstrate initializing a Bus.
 f1      Frame
 f2      Frame
 <<U2>   <object>
+
+# selecting by loc, iloc
 
 The Bus can be thought of as a Series (or an ordered dictionary) of Frames, permitting random access by label. When reading from a file store, Frames are loaded lazily: only when a Frame is accessed is it loaded into memory, and the Bus can be configured to only hold strong references to a limited number of Frames defined by the ``max_persist`` argument. This permits limiting the total memory loaded by the Bus.
 
@@ -385,7 +389,7 @@ _____________________________________________
 In the previous examples, the Bus was shown lazily load in data as it was accessed. While this permits only loading what is needed, for large collections of data this will
 
 
-Conclusion
+Going Further
 _______________________
 
 Optimizations using multiprocessing and multi-threading in Batch processing.

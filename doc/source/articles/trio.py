@@ -446,8 +446,6 @@ def tables() -> None:
     ('ndim',                  (1,        1,       2)),
     ('shape',                 ('(n,)',   '(n,)',  '(xn, y) or (x, yn)'  )),
     ('Approximate Interface', ('Series', 'Frame', 'Frame')),
-    ('Iterable',              (True,     True,     True)),
-    ('Iterator',              (False,    True,     False)),
     )
 
     f = sf.Frame.from_records_items(records_items, columns=columns, name=name)
@@ -499,8 +497,8 @@ def stocks() -> None:
 
 
 if __name__ == '__main__':
-    stocks()
-    # tables()
+    # stocks()
+    tables()
     # main()
 
 
