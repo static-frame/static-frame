@@ -384,7 +384,7 @@ class Index(IndexBase):
             *,
             loc_is_iloc: bool = False,
             name: NameType = NAME_DEFAULT,
-            dtype: DtypeSpecifier = None
+            dtype: DtypeSpecifier = None,
             ) -> None:
         '''Initializer.
 

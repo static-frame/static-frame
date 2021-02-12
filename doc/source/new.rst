@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.1
+----------
+
+``IndexDatetime`` subclasses now properly assign ``name`` attrs from an `Index` given as an initializer.
+
+
 0.8.0
 ----------
 

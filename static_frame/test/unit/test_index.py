@@ -108,6 +108,12 @@ class TestUnit(TestCase):
         self.assertEqual(index.values.tolist(), list(range(10, 20, 2)))
 
 
+    def test_index_init_i(self) -> None:
+        i1 = Index([10, 20, 30], name='foo')
+        i2 = Index(i1)
+        self.assertEqual(i2.name, 'foo')
+
+
     #---------------------------------------------------------------------------
 
     def test_index_loc_to_iloc_a(self) -> None:
