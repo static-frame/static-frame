@@ -5,42 +5,46 @@ from copy import deepcopy
 
 import numpy as np
 
+from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import axis_window_items
-from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.frame import Frame
-from static_frame.core.index_base import IndexBase
-from static_frame.core.bus import Bus
-from static_frame.core.util import NameType
-from static_frame.core.store import StoreConfigMapInitializer
-from static_frame.core.doc_str import doc_inject
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import Display
-from static_frame.core.series import Series
+from static_frame.core.display_config import DisplayConfig
+from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
-from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.hloc import HLoc
-from static_frame.core.util import duplicate_filter
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import AnyCallable
-from static_frame.core.store import Store
-from static_frame.core.node_iter import IterNodeAxis
-from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_iter import IterNodeConstructorAxis
-from static_frame.core.node_iter import IterNodeWindow
-
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import NotImplementedAxis
-from static_frame.core.util import get_tuple_constructor
+from static_frame.core.frame import Frame
+from static_frame.core.hloc import HLoc
+from static_frame.core.index_base import IndexBase
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.node_iter import IterNodeAxis
+from static_frame.core.node_iter import IterNodeConstructorAxis
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.series import Series
+from static_frame.core.store import Store
+from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.store_client_mixin import StoreClientMixin
+from static_frame.core.store_hdf5 import StoreHDF5
+from static_frame.core.store_sqlite import StoreSQLite
+from static_frame.core.store_xlsx import StoreXLSX
+from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipParquet
+from static_frame.core.store_zip import StoreZipPickle
+from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_deepcopy
+from static_frame.core.util import duplicate_filter
+from static_frame.core.util import get_tuple_constructor
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NameType
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import PathSpecifier
 
-
-# from static_frame.core.store import StoreConfigMap
-# from static_frame.core.store import StoreConfigMapInitializer
 
 def get_extractor(
         deepcopy_from_bus: bool,
@@ -204,25 +208,211 @@ class Quilt(ContainerBase, StoreClientMixin):
                 deepcopy_from_bus=deepcopy_from_bus,
                 )
 
+    #---------------------------------------------------------------------------
+    # constructors by data format
+
     @classmethod
     def _from_store(cls,
             store: Store,
             *,
             config: StoreConfigMapInitializer = None,
-            **kwargs: tp.Any,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
-        '''
-        For compatibility with StoreClientMixin.
-        '''
         bus = Bus._from_store(store=store,
                 config=config,
-                max_persist=kwargs.get('max_persist'), # None is default
+                max_persist=max_persist, # None is default
                 )
         return cls(bus,
-                axis=kwargs.get('axis', 0),
-                retain_labels=kwargs['retain_labels'],
-                deepcopy_from_bus=kwargs.get('deepcopy_from_bus', False),
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
                 )
+
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_tsv(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipTSV(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_csv(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipCSV(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_pickle(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipPickle(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
+
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_parquet(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipParquet(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
+
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_xlsx(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        # how to pass configuration for multiple sheets?
+        store = StoreXLSX(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
+
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_sqlite(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreSQLite(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
+
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_hdf5(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreHDF5(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
+
+    #---------------------------------------------------------------------------
 
     @classmethod
     def from_items(cls,

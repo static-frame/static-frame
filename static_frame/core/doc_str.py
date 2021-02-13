@@ -43,7 +43,15 @@ COLUMNS_CONSTRUCTOR = "columns_constructor: Optional class or constructor functi
 
 FP = 'fp: A string file path or :obj:`Path` instance.'
 
+STORE = 'store: A :obj:`Store` subclass.'
+
 STORE_CONFIG_MAP = 'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
+
+MAX_PERSIST = 'max_persist: When loading :obj:`Frame` from a :obj:`Store`, optionally define the maximum number of :obj:`Frame` to remain in the :obj:`Bus`, regardless of the size of the :obj:`Bus`. If more than ``max_persist`` number of :obj:`Frame` are loaded, least-recently loaded :obj:`Frame` will be replaced by ``FrameDeferred``. A ``max_persist`` of 1, for example, permits reading one :obj:`Frame` at a time without ever holding in memory more than 1 :obj:`Frame`.'
+
+MAX_WORKERS = ''
+CHUNKSIZE = ''
+USE_THREADS = ''
 
 class DOC_TEMPLATE:
 
@@ -96,7 +104,7 @@ class DOC_TEMPLATE:
     '''
 
     values_2d = '''
-    A 2D NumPy array of all values in the :obj:`{class_name}`. As this is a single array, hereogenous columnar types might be coerced to a compatible type.
+    A 2D NumPy array of all values in the :obj:`{class_name}`. As this is a single array, heterogenous columnar types might be coerced to a compatible type.
     '''
 
     values_1d = '''
@@ -286,10 +294,42 @@ class DOC_TEMPLATE:
         Args:
             {FP}
             {STORE_CONFIG_MAP}
+            {MAX_PERSIST}
             '''
             )
 
-    bus_exporter = dict(
+    bus_init = dict(
+            args = f'''
+        Args:
+            {STORE}
+            {STORE_CONFIG_MAP}
+            {MAX_PERSIST}
+            '''
+            )
+
+    batch_constructor = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            {MAX_WORKERS}
+            {CHUNKSIZE}
+            {USE_THREADS}
+            '''
+            )
+
+    batch_init = dict(
+            args = f'''
+        Args:
+            {NAME}
+            {STORE_CONFIG_MAP}
+            {MAX_WORKERS}
+            {CHUNKSIZE}
+            {USE_THREADS}
+            '''
+            )
+
+    store_client_exporter = dict(
             args = f'''
         Args:
             {FP}

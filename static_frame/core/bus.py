@@ -3,7 +3,6 @@ import typing as tp
 
 import numpy as np
 
-
 from static_frame.core.container import ContainerBase
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -18,12 +17,20 @@ from static_frame.core.store import Store
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.store_client_mixin import StoreClientMixin
+from static_frame.core.store_hdf5 import StoreHDF5
+from static_frame.core.store_sqlite import StoreSQLite
+from static_frame.core.store_xlsx import StoreXLSX
+from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipParquet
+from static_frame.core.store_zip import StoreZipPickle
+from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import NameType
 from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NameType
+from static_frame.core.util import PathSpecifier
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
@@ -94,20 +101,163 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         series = Series.from_items(pairs, dtype=DTYPE_OBJECT, name=name)
         return cls(series, config=config)
 
+    #---------------------------------------------------------------------------
+    # constructors by data format
     @classmethod
     def _from_store(cls,
             store: Store,
             *,
             config: StoreConfigMapInitializer = None,
-            **kwargs: tp.Any,
+            max_persist: tp.Optional[int] = None,
             ) -> 'Bus':
         return cls(cls._deferred_series(store.labels(config=config)),
                 store=store,
                 config=config,
-                **kwargs,
+                max_persist=max_persist,
                 )
 
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_tsv(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Bus':
+        '''
+        Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipTSV(fp)
+        return cls._from_store(store,
+                config=config,
+                max_persist=max_persist,
+                )
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_csv(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Bus':
+        '''
+        Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipCSV(fp)
+        return cls._from_store(store,
+                config=config,
+                max_persist=max_persist,
+                )
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_pickle(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Bus':
+        '''
+        Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipPickle(fp)
+        return cls._from_store(store,
+                config=config,
+                max_persist=max_persist,
+                )
+
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_parquet(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Bus':
+        '''
+        Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipParquet(fp)
+        return cls._from_store(store,
+                config=config,
+                max_persist=max_persist,
+                )
+
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_xlsx(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Bus':
+        '''
+        Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        # how to pass configuration for multiple sheets?
+        store = StoreXLSX(fp)
+        return cls._from_store(store,
+                config=config,
+                max_persist=max_persist,
+                )
+
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_sqlite(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Bus':
+        '''
+        Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreSQLite(fp)
+        return cls._from_store(store,
+                config=config,
+                max_persist=max_persist,
+                )
+
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_hdf5(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Bus':
+        '''
+        Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreHDF5(fp)
+        return cls._from_store(store,
+                config=config,
+                max_persist=max_persist,
+                )
+
+
     #---------------------------------------------------------------------------
+    @doc_inject(selector='bus_init')
     def __init__(self,
             series: Series,
             *,
@@ -116,9 +266,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             max_persist: tp.Optional[int] = None,
             ):
         '''
-        Args:
-            config: StoreConfig for handling :obj:`Frame` construction and exporting from Store.
-            max_persist: When loading :obj:`Frame` from a :obj:`Store`, optionally define the maximum number of :obj:`Frame` to remain in the :obj:`Bus`, regardless of the size of the :obj:`Bus`. If more than ``max_persist`` number of :obj:`Frame` are loaded, least-recently loaded :obj:`Frame` will be replaced by ``FrameDeferred``. A ``max_persist`` of 1, for example, permits reading one :obj:`Frame` at a time without ever holding in memory more than 1 :obj:`Frame`.
+        Default Bus constructor.
+
+        {args}
         '''
 
         if series.dtype != DTYPE_OBJECT:
