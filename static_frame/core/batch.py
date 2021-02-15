@@ -1113,7 +1113,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return f
 
     def to_bus(self) -> 'Bus':
-        '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily)
+        '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''
         series = Series.from_items(
                 self.items(),

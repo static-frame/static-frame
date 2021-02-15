@@ -20,49 +20,48 @@ ILOC_SELECTOR = '''An iloc selector, either an index, a list of indicces, a slic
 #-------------------------------------------------------------------------------
 # full parameter definitions
 
-OWN_INDEX = '''own_index: Flag the passed index as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
-
-OWN_DATA = '''own_data: Flag the data values as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
-
-OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
-
-
-DTYPE_SPECIFIER = '''dtype: A value suitable for specyfying a NumPy dtype, such as a Python type (float), NumPy array protocol strings ('f8'), or a dtype instance.'''
-
 AXIS = '''axis: Integer specifying axis, where 0 is rows and 1 is columns. Axis 0 is set by default.'''
 
-CONSOLIDATE_BLOCKS = 'consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
-
-NAME = 'name: A hashable object to label the container.'
-
-DTYPES = "dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used."
-
-INDEX_CONSTRUCTOR = "index_constructor: Optional class or constructor function to create the :obj:`Index` applied to the rows."
+CHUNKSIZE = 'chunksize: Units of work per executor, as passed to the Thread- or ProcessPoolExecutor.'
 
 COLUMNS_CONSTRUCTOR = "columns_constructor: Optional class or constructor function to create the :obj:`Index` applied to the columns."
 
+CONSOLIDATE_BLOCKS = 'consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
+
+DEEPCOPY_FROM_BUS = 'deepcopy_from_bus: Boolean to determine if containers are deep-copied from the contained :obj:`Bus` during extraction. Set to ``True`` to avoid holding references from the :obj:`Bus`.'
+
+DTYPE_SPECIFIER = '''dtype: A value suitable for specyfying a NumPy dtype, such as a Python type (float), NumPy array protocol strings ('f8'), or a dtype instance.'''
+
+DTYPES = "dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used."
+
 FP = 'fp: A string file path or :obj:`Path` instance.'
 
-STORE = 'store: A :obj:`Store` subclass.'
-
-STORE_CONFIG_MAP = 'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
+INDEX_CONSTRUCTOR = "index_constructor: Optional class or constructor function to create the :obj:`Index` applied to the rows."
 
 MAX_PERSIST = 'max_persist: When loading :obj:`Frame` from a :obj:`Store`, optionally define the maximum number of :obj:`Frame` to remain in the :obj:`Bus`, regardless of the size of the :obj:`Bus`. If more than ``max_persist`` number of :obj:`Frame` are loaded, least-recently loaded :obj:`Frame` will be replaced by ``FrameDeferred``. A ``max_persist`` of 1, for example, permits reading one :obj:`Frame` at a time without ever holding in memory more than 1 :obj:`Frame`.'
 
 MAX_WORKERS = 'max_workers: Number of parallel executors, as passed to the Thread- or ProcessPoolExecutor; ``None`` defaults to the max number of machine processes.'
 
-CHUNKSIZE = 'chunksize: Units of work per executor, as passed to the Thread- or ProcessPoolExecutor.'
+NAME = 'name: A hashable object to label the container.'
 
-USE_THREADS = 'use_threads: Use the ThreadPoolExecutor instead of the ProcessPoolExecutor.'
+OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
 
-DEEPCOPY_FROM_BUS = 'deepcopy_from_bus: Boolean to determine if containers are deep-copied from the contained :obj:`Bus` during extraction. Set to ``True`` to avoid holding references from the :obj:`Bus`.'
+OWN_DATA = '''own_data: Flag the data values as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
+
+OWN_INDEX = '''own_index: Flag the passed index as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
 
 RETAIN_LABELS = 'retain_labels: Boolean to determine if, along the axis of virtual concatentation, if component :obj:`Frame` labels should be used to form the outer depth of an :obj:`IndexHierarchy`. This is required to be ``True`` if component :obj:`Frame` labels are not globally unique along the axis of concatenation.'
+
+STORE = 'store: A :obj:`Store` subclass.'
+
+STORE_CONFIG_MAP = 'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
+
+USE_THREADS = 'use_threads: Use the ThreadPoolExecutor instead of the ProcessPoolExecutor.'
 
 class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
-    # complete function doc strings
+    # complete or partial function doc strings
 
     to_html = '''
     Return an HTML table representation of this :obj:`{class_name}` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
@@ -86,10 +85,16 @@ class DOC_TEMPLATE:
         :obj:`str`, absolute file path to the file written.
     '''
 
-    #---------------------------------------------------------------------------
-    # common strings
+    name = '''
+    A hashable label attached to this container.
 
-    clip = '''Apply a clip opertion to this :obj:`{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
+    Returns:
+        :obj:`Hashable`
+    '''
+
+    interface = '''
+    A :obj:`Frame` documenting the interface of this class.
+    '''
 
     label_widths_at_depth = '''
     A generator of pairs, where each pair is the label and the count of that label found at the depth specified by  ``depth_level``.
@@ -98,16 +103,8 @@ class DOC_TEMPLATE:
         depth_level: a depth level, starting from zero.
     '''
 
-    interface = '''
-    A :obj:`Frame` documenting the interface of this class.
-    '''
+    clip = '''Apply a clip operation to this :obj:`{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
 
-    name = '''
-    A hashable label attached to this container.
-
-    Returns:
-        :obj:`Hashable`
-    '''
 
     values_2d = '''
     A 2D NumPy array of all values in the :obj:`{class_name}`. As this is a single array, heterogenous columnar types might be coerced to a compatible type.
@@ -141,6 +138,45 @@ class DOC_TEMPLATE:
             )
 
 
+    batch_constructor = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            {MAX_WORKERS}
+            {CHUNKSIZE}
+            {USE_THREADS}
+            '''
+            )
+
+    batch_init = dict(
+            args = f'''
+        Args:
+            {NAME}
+            {STORE_CONFIG_MAP}
+            {MAX_WORKERS}
+            {CHUNKSIZE}
+            {USE_THREADS}
+            '''
+            )
+
+    bus_constructor = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            {MAX_PERSIST}
+            '''
+            )
+
+    bus_init = dict(
+            args = f'''
+        Args:
+            {STORE}
+            {STORE_CONFIG_MAP}
+            {MAX_PERSIST}
+            '''
+            )
 
     container_init = dict(
             index='''index: Optional index initializer. If provided in addition to data values, lengths must be compatible.''',
@@ -173,7 +209,7 @@ class DOC_TEMPLATE:
             compare_name="compare_name: Include equality of the container's name (and all composed containers) in the comparison.",
             compare_dtype="compare_dtype: Include equality of the container's dtype (and all composed containers) in the comparison.",
             compare_class="compare_class: Include equality of the container's class (and all composed containers) in the comparison.",
-            skipna="skipna: If True, comparisons between missing valeus are equal.",
+            skipna="skipna: If True, comparisons between missing values are equal.",
             )
 
     from_any = dict(
@@ -203,6 +239,29 @@ class DOC_TEMPLATE:
             axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
             )
 
+    head = dict(
+            doc='''Return a :obj:`{class_name}` consisting only of the top elements as specified by ``count``.
+            ''',
+            count='''count: Number of elements to be returned from the top of the :obj:`{class_name}`''',
+            )
+
+    index_init = dict(
+            args = f'''
+        Args:
+            labels: {INDEX_INITIALIZER}
+            {NAME}
+            loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
+            {DTYPE_SPECIFIER}'''
+            )
+
+    index_date_time_init = dict(
+            args = f'''
+        Args:
+            labels: Iterable of hashable values to be used as the index labels. If strings, NumPy datetime conversions will be applied.
+            {NAME}
+            '''
+            )
+
     insert = dict(
             key_before="key: Label before which the new container will be inserted.",
             key_after="key: Label after which the new container will be inserted.",
@@ -219,6 +278,53 @@ class DOC_TEMPLATE:
             fill_value='fill_value: A value to be used to fill space created in the join.',
             composite_index='composite_index: If True, an index of tuples will be returned, formed from the left index label and the right index label; if False, an index of matching labels, if unique, will be returned.',
             composite_index_fill_value='composite_index_fill_value: Value to be used when forming a composite index when a label is missing.'
+            )
+
+    mloc = dict(
+            doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
+            doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
+            )
+
+    map_any = dict(
+            doc='Apply a mapping; for values not in the mapping, the value is returned.',
+            mapping='mapping: A mapping type, such as a dictionary or Series.',
+            dtype=DTYPE_SPECIFIER,
+            )
+
+    map_fill = dict(
+            doc = 'Apply a mapping; for values not in the mapping, the ``fill_value`` is returned.',
+            mapping = 'mapping: A mapping type, such as a dictionary or Series.',
+            fill_value = 'fill_value: Value to be returned if the values is not a key in the mapping.',
+            dtype=DTYPE_SPECIFIER
+            )
+
+    map_all = dict(
+            doc = 'Apply a mapping; for values not in the mapping, an Exception is raised.',
+            mapping='mapping: A mapping type, such as a dictionary or Series.',
+            dtype=DTYPE_SPECIFIER
+            )
+
+
+    quilt_constructor = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            axis: Integer specifying axis of virtual concatenation, where 0 is vertically (stacking rows) and 1 is horizontally (extending columns).
+            {RETAIN_LABELS}
+            {DEEPCOPY_FROM_BUS}
+            {MAX_PERSIST}
+            '''
+            )
+
+    quilt_init = dict(
+            args = f'''
+        Args:
+            bus: :obj:`Bus` of :obj:`Frame` to be used for virtual concatenation.
+            axis: Integer specifying axis of virtual concatenation, where 0 is vertically (stacking rows) and 1 is horizontally (extending columns).
+            {RETAIN_LABELS}
+            {DEEPCOPY_FROM_BUS}
+            '''
             )
 
     reindex = dict(
@@ -270,97 +376,6 @@ class DOC_TEMPLATE:
             kind='Name of the sort algorithm as passed to NumPy.',
             key='A function that is used to pre-process the selected columns or rows and derive new values to sort by.'
             )
-    head = dict(
-            doc='''Return a :obj:`{class_name}` consisting only of the top elements as specified by ``count``.
-            ''',
-            count='''count: Number of elements to be returned from the top of the :obj:`{class_name}`''',
-            )
-
-    tail = dict(
-            doc='''Return a :obj:`{class_name}` consisting only of the bottom elements as specified by ``count``.
-            ''',
-            count='''count: Number of elements to be returned from the bottom of the :obj:`{class_name}`''',
-            )
-
-
-    index_init = dict(
-            args = f'''
-        Args:
-            labels: {INDEX_INITIALIZER}
-            {NAME}
-            loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
-            {DTYPE_SPECIFIER}'''
-            )
-
-    index_date_time_init = dict(
-            args = f'''
-        Args:
-            labels: Iterable of hashable values to be used as the index labels. If strings, NumPy datetime conversions will be applied.
-            {NAME}
-            '''
-            )
-
-    bus_constructor = dict(
-            args = f'''
-        Args:
-            {FP}
-            {STORE_CONFIG_MAP}
-            {MAX_PERSIST}
-            '''
-            )
-
-    bus_init = dict(
-            args = f'''
-        Args:
-            {STORE}
-            {STORE_CONFIG_MAP}
-            {MAX_PERSIST}
-            '''
-            )
-
-    batch_constructor = dict(
-            args = f'''
-        Args:
-            {FP}
-            {STORE_CONFIG_MAP}
-            {MAX_WORKERS}
-            {CHUNKSIZE}
-            {USE_THREADS}
-            '''
-            )
-
-    batch_init = dict(
-            args = f'''
-        Args:
-            {NAME}
-            {STORE_CONFIG_MAP}
-            {MAX_WORKERS}
-            {CHUNKSIZE}
-            {USE_THREADS}
-            '''
-            )
-
-    quilt_constructor = dict(
-            args = f'''
-        Args:
-            {FP}
-            {STORE_CONFIG_MAP}
-            axis: Integer specifying axis of virtual concatenation, where 0 is vertically (stacking rows) and 1 is horizontally (extending columns).
-            {RETAIN_LABELS}
-            {DEEPCOPY_FROM_BUS}
-            {MAX_PERSIST}
-            '''
-            )
-
-    quilt_init = dict(
-            args = f'''
-        Args:
-            bus: :obj:`Bus` of :obj:`Frame` to be used for virtual concatenation.
-            axis: Integer specifying axis of virtual concatenation, where 0 is vertically (stacking rows) and 1 is horizontally (extending columns).
-            {RETAIN_LABELS}
-            {DEEPCOPY_FROM_BUS}
-            '''
-            )
 
     store_client_exporter = dict(
             args = f'''
@@ -370,29 +385,12 @@ class DOC_TEMPLATE:
             '''
             )
 
-    mloc = dict(
-            doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
-            doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
+    tail = dict(
+            doc='''Return a :obj:`{class_name}` consisting only of the bottom elements as specified by ``count``.
+            ''',
+            count='''count: Number of elements to be returned from the bottom of the :obj:`{class_name}`''',
             )
 
-    map_any = dict(
-            doc='Apply a mapping; for values not in the mapping, the value is returned.',
-            mapping='mapping: A mapping type, such as a dictionary or Series.',
-            dtype=DTYPE_SPECIFIER,
-            )
-
-    map_fill = dict(
-            doc = 'Apply a mapping; for values not in the mapping, the ``fill_value`` is returned.',
-            mapping = 'mapping: A mapping type, such as a dictionary or Series.',
-            fill_value = 'fill_value: Value to be returned if the values is not a key in the mapping.',
-            dtype=DTYPE_SPECIFIER
-            )
-
-    map_all = dict(
-            doc = 'Apply a mapping; for values not in the mapping, an Exception is raised.',
-            mapping='mapping: A mapping type, such as a dictionary or Series.',
-            dtype=DTYPE_SPECIFIER
-            )
 
     ufunc_skipna = dict(
             args = '''
