@@ -15,7 +15,7 @@ StaticFrame targets comparable or better performance than Pandas. While this is 
 
 StaticFrame relies entirely on NumPy for types and numeric computation routines. NumPy offers desirable stability in performance and interface. For working with SciPy and related tools, StaticFrame exposes easy access to NumPy arrays, conversion to and from Pandas and Arrow, and support for reading from and writing to a wide variety of storage formats.
 
-Please assist in development by reporting bugs or requesting features. We are a welcoming community and appreciate all feedback! Visit `GitHub Issues <https://github.com/InvestmentSystems/static-frame/issues>`_. To get started developing StaticFrame, see See :ref:`developer`.
+Please assist in development by reporting bugs or requesting features. We are a welcoming community and appreciate all feedback! Visit `GitHub Issues <https://github.com/InvestmentSystems/static-frame/issues>`_. To get started contributing to StaticFrame, see :ref:`contributing`.
 
 
 Immutability

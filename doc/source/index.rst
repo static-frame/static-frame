@@ -30,7 +30,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
 
    intro
    new
-   developer
+   contributing
 
 .. toctree::
    :maxdepth: 1
