@@ -11,6 +11,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
 
 - Code: https://github.com/InvestmentSystems/static-frame
 - Packages: https://pypi.org/project/static-frame
+- Benchmarks: https://investmentsystems.github.io/static-frame-benchmark
 
 
 .. toctree::
