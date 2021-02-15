@@ -312,7 +312,7 @@ def bus_batch_demo() -> None:
     sp2018.iter_group_items('year_mo')
 
     # we can feed the iterator of pairs of label, frame to Batch, then process
-    sf.Batch(sp2018.iter_group_items('year_mo'))['WVHT'].max().to_frame() #type: ignore
+    sf.Batch(sp2018.iter_group_items('year_mo'))['WVHT'].max().to_frame()
 
 
     # any time we have iterators of pairs of label, Frame, we can use a Batch
