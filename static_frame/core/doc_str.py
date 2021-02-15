@@ -14,7 +14,7 @@ INDEX_INITIALIZER = '''An iterable of unique, hashable values, or another ``Inde
 
 LOC_SELECTOR = '''A loc selector, either a label, a list of labels, a slice of labels, or a Boolean array.'''
 
-ILOC_SELECTOR = '''An iloc selector, either an index, a list of indicces, a slice of indices, or a Boolean array.'''
+ILOC_SELECTOR = '''An iloc selector, either an index, a list of indices, a slice of indices, or a Boolean array.'''
 
 
 #-------------------------------------------------------------------------------
