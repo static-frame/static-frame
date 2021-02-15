@@ -350,10 +350,12 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         Args:
             {func}
+            *
             {dtype}
-            max_workers: Passed to the pool_executor, where None defaults to the max number of machine processes.
-            chunksize: Passed to the pool executor.
-            use_thread: When True, the ThreadPoolExecutor will be used rather than the default ProcessPoolExecutor.
+            {name}
+            {max_workers}
+            {chunksize}
+            {use_threads}
         '''
         return self._apply_constructor(
                 self._apply_iter_items_parallel(

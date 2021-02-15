@@ -233,7 +233,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
 
     @classmethod
-    @doc_inject(selector='bus_constructor')
+    @doc_inject(selector='quilt_constructor')
     def from_zip_tsv(cls,
             fp: PathSpecifier,
             *,
@@ -244,7 +244,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
         '''
-        Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
+        Given a file path to zipped TSV :obj:`Quilt` store, return a :obj:`Quilt` instance.
 
         {args}
         '''
@@ -258,7 +258,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @classmethod
-    @doc_inject(selector='bus_constructor')
+    @doc_inject(selector='quilt_constructor')
     def from_zip_csv(cls,
             fp: PathSpecifier,
             *,
@@ -269,7 +269,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
         '''
-        Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
+        Given a file path to zipped CSV :obj:`Quilt` store, return a :obj:`Quilt` instance.
 
         {args}
         '''
@@ -283,7 +283,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @classmethod
-    @doc_inject(selector='bus_constructor')
+    @doc_inject(selector='quilt_constructor')
     def from_zip_pickle(cls,
             fp: PathSpecifier,
             *,
@@ -294,7 +294,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
         '''
-        Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
+        Given a file path to zipped pickle :obj:`Quilt` store, return a :obj:`Quilt` instance.
 
         {args}
         '''
@@ -309,7 +309,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
 
     @classmethod
-    @doc_inject(selector='bus_constructor')
+    @doc_inject(selector='quilt_constructor')
     def from_zip_parquet(cls,
             fp: PathSpecifier,
             *,
@@ -320,7 +320,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
         '''
-        Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
+        Given a file path to zipped parquet :obj:`Quilt` store, return a :obj:`Quilt` instance.
 
         {args}
         '''
@@ -335,7 +335,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
 
     @classmethod
-    @doc_inject(selector='bus_constructor')
+    @doc_inject(selector='quilt_constructor')
     def from_xlsx(cls,
             fp: PathSpecifier,
             *,
@@ -346,7 +346,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
         '''
-        Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
+        Given a file path to an XLSX :obj:`Quilt` store, return a :obj:`Quilt` instance.
 
         {args}
         '''
@@ -362,7 +362,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
 
     @classmethod
-    @doc_inject(selector='bus_constructor')
+    @doc_inject(selector='quilt_constructor')
     def from_sqlite(cls,
             fp: PathSpecifier,
             *,
@@ -373,7 +373,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
         '''
-        Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
+        Given a file path to an SQLite :obj:`Quilt` store, return a :obj:`Quilt` instance.
 
         {args}
         '''
@@ -388,7 +388,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
 
     @classmethod
-    @doc_inject(selector='bus_constructor')
+    @doc_inject(selector='quilt_constructor')
     def from_hdf5(cls,
             fp: PathSpecifier,
             *,
@@ -399,7 +399,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
         '''
-        Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
+        Given a file path to a HDF5 :obj:`Quilt` store, return a :obj:`Quilt` instance.
 
         {args}
         '''
@@ -452,6 +452,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
+    @doc_inject(selector='quilt_init')
     def __init__(self,
             bus: Bus,
             *,
@@ -461,6 +462,9 @@ class Quilt(ContainerBase, StoreClientMixin):
             axis_opposite: tp.Optional[IndexBase] = None,
             deepcopy_from_bus: bool = False,
             ) -> None:
+        '''
+        {args}
+        '''
         self._bus = bus
         self._axis = axis
         self._retain_labels = retain_labels
@@ -527,7 +531,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
 
     def __repr__(self) -> str:
-        '''Provide a display of the :obj:`Quilt` that does not exhaust the generator.
+        '''Provide a display of the :obj:`Quilt` that does not realize the entire :obj:`Frame`.
         '''
         if self.name:
             header = f'{self.__class__.__name__}: {self.name}'
@@ -625,7 +629,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @property
     def status(self) -> Frame:
         '''
-        Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in the contained :obj:`Bus`.
+        Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in the contained :obj:`Quilt`.
         '''
         return self._bus.status
 
@@ -679,7 +683,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     # compatibility with StoreClientMixin
 
     def _items_store(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
-        '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
+        '''Iterator of pairs of :obj:`Quilt` label and contained :obj:`Frame`.
         '''
         yield from self._bus.items()
 
@@ -1225,7 +1229,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
-    @doc_inject(selector='head', class_name='Frame')
+    @doc_inject(selector='head', class_name='Quilt')
     def head(self, count: int = 5) -> 'Frame':
         '''{doc}
 
@@ -1234,7 +1238,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         return self.iloc[:count]
 
-    @doc_inject(selector='tail', class_name='Frame')
+    @doc_inject(selector='tail', class_name='Quilt')
     def tail(self, count: int = 5) -> 'Frame':
         '''{doc}
 

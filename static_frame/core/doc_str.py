@@ -49,9 +49,15 @@ STORE_CONFIG_MAP = 'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:
 
 MAX_PERSIST = 'max_persist: When loading :obj:`Frame` from a :obj:`Store`, optionally define the maximum number of :obj:`Frame` to remain in the :obj:`Bus`, regardless of the size of the :obj:`Bus`. If more than ``max_persist`` number of :obj:`Frame` are loaded, least-recently loaded :obj:`Frame` will be replaced by ``FrameDeferred``. A ``max_persist`` of 1, for example, permits reading one :obj:`Frame` at a time without ever holding in memory more than 1 :obj:`Frame`.'
 
-MAX_WORKERS = ''
-CHUNKSIZE = ''
-USE_THREADS = ''
+MAX_WORKERS = 'max_workers: Number of parallel executors, as passed to the Thread- or ProcessPoolExecutor; ``None`` defaults to the max number of machine processes.'
+
+CHUNKSIZE = 'chunksize: Units of work per executor, as passed to the Thread- or ProcessPoolExecutor.'
+
+USE_THREADS = 'use_threads: Use the ThreadPoolExecutor instead of the ProcessPoolExecutor.'
+
+DEEPCOPY_FROM_BUS = 'deepcopy_from_bus: Boolean to determine if containers are deep-copied from the contained :obj:`Bus` during extraction. Set to ``True`` to avoid holding references from the :obj:`Bus`.'
+
+RETAIN_LABELS = 'retain_labels: Boolean to determine if, along the axis of virtual concatentation, if component :obj:`Frame` labels should be used to form the outer depth of an :obj:`IndexHierarchy`. This is required to be ``True`` if component :obj:`Frame` labels are not globally unique along the axis of concatenation.'
 
 class DOC_TEMPLATE:
 
@@ -118,8 +124,13 @@ class DOC_TEMPLATE:
     apply = dict(
             doc='Apply a function to each value.',
             func='func: A function that takes a value.',
-            dtype=DTYPE_SPECIFIER
+            name=NAME,
+            dtype=DTYPE_SPECIFIER,
+            max_workers=MAX_WORKERS,
+            chunksize=CHUNKSIZE,
+            use_threads=USE_THREADS,
             )
+
     argminmax = dict(
             skipna='skipna: if True, NaN or None values will be ignored; if False, a found NaN will propagate.',
             axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
@@ -326,6 +337,28 @@ class DOC_TEMPLATE:
             {MAX_WORKERS}
             {CHUNKSIZE}
             {USE_THREADS}
+            '''
+            )
+
+    quilt_constructor = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            axis: Integer specifying axis of virtual concatenation, where 0 is vertically (stacking rows) and 1 is horizontally (extending columns).
+            {RETAIN_LABELS}
+            {DEEPCOPY_FROM_BUS}
+            {MAX_PERSIST}
+            '''
+            )
+
+    quilt_init = dict(
+            args = f'''
+        Args:
+            bus: :obj:`Bus` of :obj:`Frame` to be used for virtual concatenation.
+            axis: Integer specifying axis of virtual concatenation, where 0 is vertically (stacking rows) and 1 is horizontally (extending columns).
+            {RETAIN_LABELS}
+            {DEEPCOPY_FROM_BUS}
             '''
             )
 
