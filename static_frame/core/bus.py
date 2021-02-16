@@ -11,6 +11,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.frame import Frame
+from static_frame.core.index_base import IndexBase
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.series import Series
 from static_frame.core.store import Store
@@ -24,6 +25,7 @@ from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
@@ -31,6 +33,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
+
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
@@ -703,3 +706,70 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self.iloc[-count:]
 
 
+    #---------------------------------------------------------------------------
+    # transformations resulting in the same dimensionality
+
+    @doc_inject(selector='sort')
+    def sort_index(self,
+            *,
+            ascending: bool = True,
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
+            ) -> 'Bus':
+        '''
+        Return a new Bus ordered by the sorted Index.
+
+        Args:
+            *
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
+
+        Returns:
+            :obj:`Bus`
+        '''
+        self._series = self._series.sort_index(
+                ascending=ascending,
+                kind=kind,
+                key=key,
+                )
+
+        return self.__class__(self._series,
+                store=self._store,
+                config=self._config,
+                max_persist=self._max_persist,
+                )
+
+    @doc_inject(selector='sort')
+    def sort_values(self,
+            *,
+            ascending: bool = True,
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Callable[['Series'], tp.Union[np.ndarray, 'Series']],
+            ) -> 'Bus':
+        '''
+        Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value
+
+        Args:
+            *
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
+
+        Returns:
+            :obj:`Bus`
+        '''
+        self._series = self._series.sort_values(
+                ascending=ascending,
+                kind=kind,
+                key=key,
+                )
+
+        return self.__class__(self._series,
+                store=self._store,
+                config=self._config,
+                max_persist=self._max_persist,
+                )
+
+
+    #----------------------------------------------------------------------------

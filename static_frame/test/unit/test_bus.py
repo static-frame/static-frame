@@ -1405,6 +1405,36 @@ class TestUnit(TestCase):
 
 
 
+    #---------------------------------------------------------------------------
+    def test_bus_sort_index_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp)
+            b3 = b2.sort_index() # this was getting a Series, not a Bus
+            self.assertTrue(isinstance(b3, Bus))
+
+            f4 = b3['f2']
+            self.assertEqual(f4.to_pairs(0),
+                    (('c', (('x', 1), ('y', 2), ('z', 3))), ('b', (('x', 4), ('y', 5), ('z', 6)))))
+
+            f5 = b3['f1']
+            self.assertEqual(f5.to_pairs(),
+                    (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4)))))
+
 
 if __name__ == '__main__':
 

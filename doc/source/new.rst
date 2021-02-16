@@ -12,7 +12,9 @@ Added ``Batch.unique``.
 
 ``Batch`` now supports operations on ``Frame`` that return an ``np.ndarray``.
 
-Added ``Quilt.from_items`` and ``Quilt.from_frames``.
+Added ``Quilt.from_items()`` and ``Quilt.from_frames()``.
+
+``Bus.sort_index()`` and ``Bus.sort_values`` now return a ``Bus`` instance.
 
 
 0.8.0
