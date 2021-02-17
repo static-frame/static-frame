@@ -33,6 +33,10 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeType
 
 
 #-------------------------------------------------------------------------------
@@ -67,6 +71,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     _name: NameType
 
     STATIC = False
+    _NDIM: int = 1
 
     @staticmethod
     def _deferred_series(labels: tp.Iterable[tp.Hashable]) -> Series:
@@ -98,10 +103,42 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             name: NameType = None,
+            index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> 'Bus':
         '''Return a :obj:`Bus` from an iterable of pairs of label, :obj:`Frame`.
+
+        Returns:
+            :obj:`Bus`
         '''
-        series = Series.from_items(pairs, dtype=DTYPE_OBJECT, name=name)
+        series = Series.from_items(pairs,
+                dtype=DTYPE_OBJECT,
+                name=name,
+                index_constructor=index_constructor,
+                )
+        return cls(series, config=config)
+
+    @classmethod
+    def from_dict(cls,
+            mapping: tp.Dict[tp.Hashable, tp.Any],
+            *,
+            config: StoreConfigMapInitializer = None,
+            name: NameType = None,
+            index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
+            ) -> 'Bus':
+        '''Bus construction from a dictionary, where the first pair value is the index and the second is the value.
+
+        Args:
+            mapping: a dictionary or similar mapping interface.
+            dtype: dtype or valid dtype specifier.
+
+        Returns:
+            :obj:`Bus`
+        '''
+        series = Series.from_dict(mapping,
+                dtype=DTYPE_OBJECT,
+                name=name,
+                index_constructor=index_constructor,
+                )
         return cls(series, config=config)
 
     #---------------------------------------------------------------------------
@@ -177,7 +214,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 max_persist=max_persist,
                 )
 
-
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_parquet(cls,
@@ -196,7 +232,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 config=config,
                 max_persist=max_persist,
                 )
-
 
     @classmethod
     @doc_inject(selector='bus_constructor')
@@ -218,7 +253,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 max_persist=max_persist,
                 )
 
-
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_sqlite(cls,
@@ -238,7 +272,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 max_persist=max_persist,
                 )
 
-
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_hdf5(cls,
@@ -257,7 +290,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 config=config,
                 max_persist=max_persist,
                 )
-
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='bus_init')
@@ -308,14 +340,99 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         self._config = StoreConfigMap.from_initializer(config)
 
     #---------------------------------------------------------------------------
+    def _derive(self,
+            series: Series,
+            ) -> 'Bus':
+        '''Utility for creating derived Bus
+        '''
+        return self.__class__(series,
+                store=self._store,
+                config=self._config,
+                max_persist=self._max_persist,
+                )
+
+    # ---------------------------------------------------------------------------
+    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Returns a reverse iterator on the series' index.
+
+        Returns:
+            :obj:`Index`
+        '''
+        return reversed(self._series._index) #type: ignore
+
+    #---------------------------------------------------------------------------
+    # name interface
+
+    @property #type: ignore
+    @doc_inject()
+    def name(self) -> NameType:
+        '''{}'''
+        return self._series._name
+
+    def rename(self, name: NameType) -> 'Bus':
+        '''
+        Return a new Series with an updated name attribute.
+        '''
+        series = self._series.rename(name)
+        return self._derive(series)
+
+    #---------------------------------------------------------------------------
+    # interfaces
+
+    @property
+    def loc(self) -> InterfaceGetItem['Bus']:
+        return InterfaceGetItem(self._extract_loc)
+
+    @property
+    def iloc(self) -> InterfaceGetItem['Bus']:
+        return InterfaceGetItem(self._extract_iloc)
+
+    @property
+    def drop(self) -> InterfaceSelectTrio['Bus']:
+        '''
+        Interface for dropping elements from :obj:`static_frame.Bus`.
+        '''
+        return InterfaceSelectTrio( #type: ignore
+                func_iloc=self._drop_iloc,
+                func_loc=self._drop_loc,
+                func_getitem=self._drop_loc
+                )
+
+    #---------------------------------------------------------------------------
+    @property
+    def iter_element(self) -> IterNodeNoArg['Series']:
+        '''
+        Iterator of elements.
+        '''
+        return IterNodeNoArg(
+                container=self,
+                function_items=self._axis_element_items,
+                function_values=self._axis_element,
+                yield_type=IterNodeType.VALUES
+                )
+
+    @property
+    def iter_element_items(self) -> IterNodeNoArg['Series']:
+        '''
+        Iterator of label, element pairs.
+        '''
+        return IterNodeNoArg(
+                container=self,
+                function_items=self._axis_element_items,
+                function_values=self._axis_element,
+                yield_type=IterNodeType.ITEMS
+                )
+
+    #---------------------------------------------------------------------------
     # delegation
 
-    def __getattr__(self, attr: str) -> tp.Any:
-        try:
-            return getattr(self._series, attr)
-        except AttributeError:
-            # fix the attribute error to reference the Bus
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'") from None
+    # def __getattr__(self, attr: str) -> tp.Any:
+    #     try:
+    #         return getattr(self._series, attr)
+    #     except AttributeError:
+    #         # fix the attribute error to reference the Bus
+    #         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'") from None
 
     #---------------------------------------------------------------------------
     # cache management
@@ -338,7 +455,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             max_persist: tp.Optional[int],
             ) -> tp.Iterator[Frame]:
         '''
-        Ready as many labels as possible from Store, then yield back each one at a time. If max_persist is active, max_persist will set the maximum number of Frame to load per read. Using Store.read_many is shown to have significant performance benefits on large collections of Frame.
+        Read as many labels as possible from Store, then yield back each one at a time. If max_persist is active, max_persist will set the maximum number of Frame to load per read. Using Store.read_many is shown to have significant performance benefits on large collections of Frame.
         '''
         if max_persist is None:
             for frame in store.read_many(labels, config=config):
@@ -452,11 +569,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 values,
                 index=self._series._index.iloc[key],
                 name=self._series._name)
-        return self.__class__(series=series,
-                store=self._store,
-                config=self._config,
-                max_persist=self._max_persist,
-                )
+
+        return self._derive(series)
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
 
@@ -475,11 +589,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 own_index=True,
                 name=self._series._name)
 
-        return self.__class__(series=series,
-                store=self._store,
-                config=self._config,
-                max_persist=self._max_persist,
-                )
+        return self._derive(series)
+
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> 'Bus':
@@ -491,15 +602,27 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self._extract_loc(key)
 
     #---------------------------------------------------------------------------
-    # interfaces
+    # utilities for alternate extraction: drop
 
-    @property
-    def loc(self) -> InterfaceGetItem['Bus']:
-        return InterfaceGetItem(self._extract_loc)
+    def _drop_iloc(self, key: GetItemKeyType) -> 'Bus':
+        series = self._series._drop_iloc(key)
+        return self._derive(series)
 
-    @property
-    def iloc(self) -> InterfaceGetItem['Bus']:
-        return InterfaceGetItem(self._extract_iloc)
+    def _drop_loc(self, key: GetItemKeyType) -> 'Bus':
+        return self._drop_iloc(self._series._index.loc_to_iloc(key))
+
+    #---------------------------------------------------------------------------
+    # axis functions
+
+    def _axis_element_items(self,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+        '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
+        '''
+        yield from zip(self._series._index, self._series.values)
+
+    def _axis_element(self,
+            ) -> tp.Iterator[tp.Any]:
+        yield from self._series.values
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
@@ -514,9 +637,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
-        # force new iteration to account for max_persist
-        for i, label in enumerate(self._series._index):
-            yield label, self._extract_iloc(i) #type: ignore
+        if self._max_persist is None: # load all at once if possible
+            if not self._loaded_all:
+                self._update_series_cache_iloc(key=NULL_SLICE)
+            yield from self._series.items()
+
+        else: # force new iteration to account for max_persist
+            for i, label in enumerate(self._series._index):
+                yield label, self._extract_iloc(i) #type: ignore
 
     _items_store = items
 
@@ -524,9 +652,16 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def values(self) -> np.ndarray:
         '''A 1D object array of all Frame contained in the Bus.
         '''
+        if self._max_persist is None: # load all at once if possible
+            if not self._loaded_all:
+                self._update_series_cache_iloc(key=NULL_SLICE)
+            return self._series.values
+
+        # force new iteration to account for max_persist
         post = np.empty(self.__len__(), dtype=object)
         for i, _ in enumerate(self._series._index):
             post[i] = self._extract_iloc(i)
+        post.flags.writeable = False
 
         return post
 
@@ -618,6 +753,117 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 yield Series(values, index=self._series._index, dtype=dtype, name=attr)
 
         return tp.cast(Frame, Frame.from_concat(gen(), axis=1))
+
+
+    #---------------------------------------------------------------------------
+    # common attributes from the numpy array
+
+    @property
+    def dtype(self) -> np.dtype:
+        '''
+        Return the dtype of the underlying NumPy array.
+
+        Returns:
+            :obj:`numpy.dtype`
+        '''
+        return self._series.values.dtype
+
+    @property
+    def shape(self) -> tp.Tuple[int]:
+        '''
+        Return a tuple describing the shape of the underlying NumPy array.
+
+        Returns:
+            :obj:`Tuple[int]`
+        '''
+        return self._series.values.shape #type: ignore
+
+    @property
+    def ndim(self) -> int:
+        '''
+        Return the number of dimensions, which for a `Series` is always 1.
+
+        Returns:
+            :obj:`int`
+        '''
+        return self._NDIM
+
+    @property
+    def size(self) -> int:
+        '''
+        Return the size of the underlying NumPy array.
+
+        Returns:
+            :obj:`int`
+        '''
+        return self._series.values.size #type: ignore
+
+    #---------------------------------------------------------------------------
+
+    @property
+    def index(self) -> IndexBase:
+        '''
+        The index instance assigned to this container.
+
+        Returns:
+            :obj:`Index`
+        '''
+        return self._series._index
+
+    @property
+    def _index(self) -> IndexBase:
+        return self._series._index
+
+    #---------------------------------------------------------------------------
+    # dictionary-like interface
+
+    def keys(self) -> IndexBase:
+        '''
+        Iterator of index labels.
+
+        Returns:
+            :obj:`Iterator[Hashable]`
+        '''
+        return self._series._index
+
+    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Iterator of index labels, same as :obj:`static_frame.Series.keys`.
+
+        Returns:
+            :obj:`Iterator[Hashasble]`
+        '''
+        return self._series._index.__iter__()
+
+    def __contains__(self, value: tp.Hashable) -> bool:
+        '''
+        Inclusion of value in index labels.
+
+        Returns:
+            :obj:`bool`
+        '''
+        return self._series._index.__contains__(value)
+
+    def items(self) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
+        '''Iterator of pairs of index label and value.
+
+        Returns:
+            :obj:`Iterator[Tuple[Hashable, Any]]`
+        '''
+        return zip(self._series._index.__iter__(), self.values)
+
+    def get(self, key: tp.Hashable,
+            default: tp.Any = None,
+            ) -> tp.Any:
+        '''
+        Return the value found at the index key, else the default if the key is not found.
+
+        Returns:
+            :obj:`Any`
+        '''
+        if key not in self._series._index:
+            return default
+        return self._series.__getitem__(key)
 
     #---------------------------------------------------------------------------
     @doc_inject()
@@ -728,17 +974,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Bus`
         '''
-        self._series = self._series.sort_index(
+        series = self._series.sort_index(
                 ascending=ascending,
                 kind=kind,
                 key=key,
                 )
-
-        return self.__class__(self._series,
-                store=self._store,
-                config=self._config,
-                max_persist=self._max_persist,
-                )
+        return self._derive(series)
 
     @doc_inject(selector='sort')
     def sort_values(self,
@@ -748,7 +989,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             key: tp.Callable[['Series'], tp.Union[np.ndarray, 'Series']],
             ) -> 'Bus':
         '''
-        Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value
+        Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value.
 
         Args:
             *
@@ -759,17 +1000,20 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Bus`
         '''
-        self._series = self._series.sort_values(
+        values = self.values # this will handle max_persist, but will deliver an array with all Frame loaded
+        cfs = Series(values,
+                index=self._series.index,
+                own_index=True,
+                name=self._series.name,
+                )
+
+        series = cfs.sort_values(
                 ascending=ascending,
                 kind=kind,
                 key=key,
                 )
 
-        return self.__class__(self._series,
-                store=self._store,
-                config=self._config,
-                max_persist=self._max_persist,
-                )
+        return self._derive(series)
 
 
     #----------------------------------------------------------------------------

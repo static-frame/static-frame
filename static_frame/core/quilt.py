@@ -514,7 +514,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''
-        return self._bus._name
+        return self._bus._series._name
 
     def rename(self, name: NameType) -> 'Quilt':
         '''

@@ -7,36 +7,32 @@ import numpy as np
 from numpy.ma import MaskedArray #type: ignore
 
 from static_frame.core.assign import Assign
-
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import index_many_concat
+from static_frame.core.container_util import index_many_set
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
-from static_frame.core.container_util import index_many_set
-from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import sort_index_for_order
-
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
-from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
-
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.index_base import IndexBase
 from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
-
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
@@ -48,10 +44,10 @@ from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
-
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
+from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_to_groups_and_locations
@@ -60,8 +56,10 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import dtype_from_element
+from static_frame.core.util import dtype_kind_to_na
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import FLOAT_TYPES
@@ -85,14 +83,10 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import slices_from_targets
+from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import UFunc
-from static_frame.core.util import dtype_kind_to_na
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import array_deepcopy
-
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
@@ -114,7 +108,6 @@ class Series(ContainerOperand):
             )
 
     values: np.ndarray
-
     _index: IndexBase
 
     _NDIM: int = 1
@@ -162,7 +155,6 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
 
-
     @classmethod
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
@@ -193,7 +185,6 @@ class Series(ContainerOperand):
                 name=name,
                 index_constructor=index_constructor)
 
-
     @classmethod
     def from_dict(cls,
             mapping: tp.Dict[tp.Hashable, tp.Any],
@@ -209,7 +200,7 @@ class Series(ContainerOperand):
             dtype: dtype or valid dtype specifier.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         return cls.from_items(mapping.items(),
                 name=name,
@@ -344,10 +335,7 @@ class Series(ContainerOperand):
             post = post.fillna(container)
             if not post.isna().any(): # NOTE: should we short circuit, or get more out of fillna?
                 break
-
         return post
-
-
 
     @classmethod
     @doc_inject()
@@ -396,7 +384,6 @@ class Series(ContainerOperand):
                 name=name,
                 own_index=own_index
                 )
-
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='container_init', class_name='Series')
@@ -498,7 +485,6 @@ class Series(ContainerOperand):
                 f'Index has incorrect size (got {index_count}, expected {value_count})'
                 )
 
-
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Any) -> None:
         '''
@@ -540,7 +526,7 @@ class Series(ContainerOperand):
         Returns a reverse iterator on the series' index.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Index`
         '''
         return reversed(self._index) #type: ignore
 
@@ -670,7 +656,7 @@ class Series(ContainerOperand):
     @property
     def iter_group(self) -> IterNodeGroup['Series']:
         '''
-        Iterator of :obj:`static_frame.Series`, where each :obj:`static_frame.Series` is matches unique values.
+        Iterator of :obj:`Series`, where each :obj:`Series` matches unique values.
         '''
         return IterNodeGroup(
                 container=self,
@@ -1328,40 +1314,6 @@ class Series(ContainerOperand):
                 config=config)
         return self._display(config, display_cls)
 
-        # config = config or DisplayActive.get()
-        # index_depth = self._index.depth if config.include_index else 0
-        # display_index = self._index.display(config=config)
-
-        # # When showing type we need 2: one for the Series type, the other for the index type.
-        # header_depth = 2 * config.type_show
-
-        # # create an empty display based on index display
-        # d = Display([list() for _ in range(len(display_index))],
-        #         config=config,
-        #         outermost=True,
-        #         index_depth=index_depth,
-        #         header_depth=header_depth
-        #         )
-
-        # if config.include_index:
-        #     d.extend_display(display_index)
-        #     header_values = '' if config.type_show else None
-        # else:
-        #     header_values = None
-
-        # d.extend_display(Display.from_values(
-        #         self.values,
-        #         header=header_values,
-        #         config=config))
-
-        # if config.type_show:
-        #     display_cls = Display.from_values((),
-        #             header=DisplayHeader(self.__class__, self._name),
-        #             config=config)
-        #     d.insert_displays(display_cls.flatten())
-
-        # return d
-
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 
@@ -1422,13 +1374,6 @@ class Series(ContainerOperand):
         '''
         return self.values.nbytes #type: ignore
 
-    # def __bool__(self) -> bool:
-    #     '''
-    #     True if this container has size.
-    #     '''
-    #     return bool(self.values.size)
-
-
     #---------------------------------------------------------------------------
     # extraction
 
@@ -1477,7 +1422,7 @@ class Series(ContainerOperand):
         return self._extract_loc(key)
 
     #---------------------------------------------------------------------------
-    # utilites for alternate extraction: drop, mask and assignment
+    # utilities for alternate extraction: drop, mask and assignment
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
         if isinstance(key, np.ndarray) and key.dtype == bool:
@@ -1559,7 +1504,7 @@ class Series(ContainerOperand):
 
     def _axis_element_items(self,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
-        '''Generator of index, value pairs, equivalent to Series.items(). Rpeated to have a common signature as other axis functions.
+        '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
         yield from zip(self._index, self.values)
 
@@ -1648,8 +1593,6 @@ class Series(ContainerOperand):
                 as_array=as_array
                 ))
 
-
-
     #---------------------------------------------------------------------------
 
     @property
@@ -1698,7 +1641,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Iterator[Tuple[Hashable, Any]]`
         '''
-        return zip(self._index.values, self.values)
+        return zip(self._index.__iter__(), self.values)
 
     def get(self, key: tp.Hashable,
             default: tp.Any = None,

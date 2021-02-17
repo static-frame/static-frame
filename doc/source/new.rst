@@ -14,7 +14,15 @@ Added ``Batch.unique``.
 
 Added ``Quilt.from_items()`` and ``Quilt.from_frames()``.
 
-``Bus.sort_index()`` and ``Bus.sort_values`` now return a ``Bus`` instance.
+``Bus.sort_index()`` and ``Bus.sort_values()`` now return a ``Bus`` instance.
+
+Improvements to ``Bus.items()``, ``Bus.values`` for optimal ``Store`` reads when ``max_persist`` is None.
+
+``Series.items()`` now returns labels of ``IndexHierarchy`` as tuples instead of ``np.ndarray``.
+
+Implemented ``Bus.rename()`` to return a ``Bus`` instance.
+
+Implemented ``Bus.drop[]`` to return a ``Bus`` instance.
 
 
 0.8.0

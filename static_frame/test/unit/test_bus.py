@@ -47,6 +47,7 @@ class TestUnit(TestCase):
         with self.assertRaises(AttributeError):
             b1.__dict__ #pylint: disable=W0104
 
+    #---------------------------------------------------------------------------
     def test_bus_init_a(self) -> None:
 
         f1 = Frame.from_dict(
@@ -120,6 +121,23 @@ class TestUnit(TestCase):
 
             self.assertEqualFrames(f1, f1_loaded)
             self.assertEqualFrames(f2, f2_loaded)
+
+    #---------------------------------------------------------------------------
+    def test_bus_rename_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Bus.from_frames((f1, f2,), name='foo')
+        self.assertEqual(b1.name, 'foo')
+        b2 = b1.rename('bar')
+        self.assertTrue(b2.__class__ is Bus)
+        self.assertEqual(b2.name, 'bar')
 
     #---------------------------------------------------------------------------
     def test_bus_from_items_a(self) -> None:
@@ -1395,7 +1413,6 @@ class TestUnit(TestCase):
             b1.to_zip_pickle(fp)
 
             b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
-
             # insure that items delivers Frame, not FrameDeferred
             post = b2.values
             self.assertEqual(len(post), 5)
@@ -1424,7 +1441,12 @@ class TestUnit(TestCase):
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
             b2 = Bus.from_zip_pickle(fp)
-            b3 = b2.sort_index() # this was getting a Series, not a Bus
+            b3 = b2.sort_index()
+            self.assertEqual(b2.index.values.tolist(),
+                    ['f3', 'f2', 'f1'])
+            self.assertEqual(b3.index.values.tolist(),
+                    ['f1', 'f2', 'f3'])
+
             self.assertTrue(isinstance(b3, Bus))
 
             f4 = b3['f2']
@@ -1434,6 +1456,91 @@ class TestUnit(TestCase):
             f5 = b3['f1']
             self.assertEqual(f5.to_pairs(),
                     (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4)))))
+
+    #---------------------------------------------------------------------------
+    def test_bus_sort_values_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(30000,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(1,2), b=(5,6)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp)
+            b3 = b2.sort_values(key=lambda b: b.iter_element().apply(lambda f: f.sum().sum()))
+
+            self.assertEqual(b3.index.values.tolist(),
+                ['f3', 'f2', 'f1']
+                )
+
+    #---------------------------------------------------------------------------
+    def test_bus_drop_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp)
+
+            b3 = b2.drop[['f3', 'f1']]
+            self.assertEqual(b3.status['loaded'].sum(), 0)
+            self.assertEqual(b3['f2'].to_pairs(),
+                    (('c', (('x', 1), ('y', 2), ('z', 3))), ('b', (('x', 4), ('y', 5), ('z', 6))))
+                    )
+
+    #---------------------------------------------------------------------------
+    def test_bus_from_dict_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Bus.from_dict(dict(a=f1, b=f2))
+        self.assertEqual(b1.index.values.tolist(),
+                ['a', 'b'])
+
+    #---------------------------------------------------------------------------
+    def test_bus_iter_element_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Bus.from_dict(dict(a=f1, b=f2))
+        post = tuple(b1.iter_element())
+        self.assertEqual(len(post), 2)
+        self.assertEqual(post[1].to_pairs(),
+            (('c', (('x', 1), ('y', 2), ('z', 3))), ('b', (('x', 4), ('y', 5), ('z', 6))))
+            )
+
 
 
 if __name__ == '__main__':
