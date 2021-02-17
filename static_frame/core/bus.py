@@ -11,8 +11,12 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.frame import Frame
+from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
+from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store import StoreConfigMap
@@ -30,15 +34,11 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import INT_TYPES
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
-from static_frame.core.util import PathSpecifier
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_iter import IterNodeNoArg
-from static_frame.core.node_iter import IterNodeType
-
+from static_frame.core.util import PathSpecifier
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
