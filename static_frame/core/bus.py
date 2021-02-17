@@ -401,7 +401,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Series']:
+    def iter_element(self) -> IterNodeNoArg['Bus']:
         '''
         Iterator of elements.
         '''
@@ -413,7 +413,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Series']:
+    def iter_element_items(self) -> IterNodeNoArg['Bus']:
         '''
         Iterator of label, element pairs.
         '''
@@ -614,13 +614,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             ) -> tp.Iterator[tp.Any]:
         yield from self._series.values
 
-    # ---------------------------------------------------------------------------
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
-        return reversed(self._series._index) #type: ignore
-
-    def __len__(self) -> int:
-        return self._series.__len__()
-
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loadings contained Frame
 
@@ -656,6 +649,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return post
 
     #---------------------------------------------------------------------------
+    def __len__(self) -> int:
+        '''Length of values.
+        '''
+        return self._series.__len__()
+
     @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None
@@ -833,14 +831,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             :obj:`bool`
         '''
         return self._series._index.__contains__(value)
-
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
-        '''Iterator of pairs of index label and value.
-
-        Returns:
-            :obj:`Iterator[Tuple[Hashable, Any]]`
-        '''
-        return zip(self._series._index.__iter__(), self.values)
 
     def get(self, key: tp.Hashable,
             default: tp.Any = None,

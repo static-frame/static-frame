@@ -34,7 +34,6 @@ class IndexBase(ContainerOperand):
     __slots__ = () # defined in dervied classes
 
     #---------------------------------------------------------------------------
-    # type defsn
 
     _recache: bool
     _name: NameType
@@ -44,6 +43,7 @@ class IndexBase(ContainerOperand):
 
     loc: tp.Any
     iloc: tp.Any # this does not work: InterfaceGetItem[I]
+    dtype: np.dtype
 
     __pos__: tp.Callable[['IndexBase'], np.ndarray]
     __neg__: tp.Callable[['IndexBase'], np.ndarray]

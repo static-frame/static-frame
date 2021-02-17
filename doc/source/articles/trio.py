@@ -209,7 +209,7 @@ def bus_batch_demo() -> None:
 
     # [TALK] what other formats can we export to
     # show interface, constructors and exporters
-    b1.interace
+    b1.interface
 
     b1.to_sqlite('/tmp/sp_2018.sqlite')
 
