@@ -452,7 +452,66 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
         return self._derive(series)
 
+    @doc_inject(selector='relabel', class_name='Bus')
+    def relabel(self,
+            index: tp.Optional[RelabelInput]
+            ) -> 'Bus':
+        '''
+        {doc}
 
+        Args:
+            index: {relabel_input}
+        '''
+        series = self._series.relabel(index)
+        return self._derive(series)
+
+    @doc_inject(selector='relabel_flat', class_name='Bus')
+    def relabel_flat(self) -> 'Bus':
+        '''
+        {doc}
+        '''
+        series = self._series.relabel_flat()
+        return self._derive(series)
+
+    @doc_inject(selector='relabel_level_add', class_name='Bus')
+    def relabel_level_add(self,
+            level: tp.Hashable
+            ) -> 'Bus':
+        '''
+        {doc}
+
+        Args:
+            level: {level}
+        '''
+        series = self._series.relabel_level_add(level)
+        return self._derive(series)
+
+    @doc_inject(selector='relabel_level_drop', class_name='Bus')
+    def relabel_level_drop(self,
+            count: int = 1
+            ) -> 'Bus':
+        '''
+        {doc}
+
+        Args:
+            count: {count}
+        '''
+        series = self._series.relabel_level_drop(count)
+        return self._derive(series)
+
+    def rehierarch(self,
+            depth_map: tp.Sequence[int]
+            ) -> 'Bus':
+        '''
+        Return a new :obj:`Bus` with new a hierarchy based on the supplied ``depth_map``.
+        '''
+        series = self._series.relabel_level_drop(depth_map)
+        return self._derive(series)
+
+    #---------------------------------------------------------------------------
+    # na handling
+
+    # NOTE: not implemented, as a Bus must contain only Frame or FrameDeferred
 
     #---------------------------------------------------------------------------
     # cache management

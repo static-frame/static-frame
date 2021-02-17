@@ -902,7 +902,6 @@ class Series(ContainerOperand):
                 index=self._index.level_drop(count),
                 name=self._name)
 
-
     def rehierarch(self,
             depth_map: tp.Sequence[int]
             ) -> 'Series':
@@ -922,7 +921,6 @@ class Series(ContainerOperand):
         return self.__class__(values,
                 index=index,
                 name=self._name)
-
 
     #---------------------------------------------------------------------------
     # na handling
@@ -1008,8 +1006,6 @@ class Series(ContainerOperand):
                 index=self._index,
                 name=self._name)
 
-
-
     @staticmethod
     def _fillna_directional(
             array: np.ndarray,
@@ -1074,7 +1070,6 @@ class Series(ContainerOperand):
                     limit=limit),
                 index=self._index,
                 name=self._name)
-
 
     @staticmethod
     def _fillna_sided(array: np.ndarray,

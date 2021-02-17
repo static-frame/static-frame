@@ -1559,8 +1559,8 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f3, f2, f1))
         b2 = b1.reindex(('f1', 'f2', 'f4'), fill_value=f3)
         self.assertTrue(b2['f4'].equals(f3))
+        self.assertTrue(b2.__class__ is Bus)
 
-        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
