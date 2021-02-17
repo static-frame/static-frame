@@ -843,7 +843,6 @@ class Series(ContainerOperand):
             index: {relabel_input}
         '''
         #NOTE: we name the parameter index for alignment with the corresponding Frame method
-
         own_index = False
         if index is IndexAutoFactory:
             index_init = None

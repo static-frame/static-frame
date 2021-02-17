@@ -63,7 +63,7 @@ from static_frame.test.test_case import Timer
 
 def bus_batch_streaming() -> None:
 
-    TypeIterFrameItems = tp.Iterator[tp.Tuple[str, sf.Frame]]
+    TypeIterFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, sf.Frame]]
 
     # do a bunch of processing on large Frames while maintaining single frame overhead
 
@@ -97,7 +97,7 @@ def bus_batch_streaming() -> None:
 
     # a function that reads through the derived data and produces single in-memory result
     def derive_characteristic(bus: sf.Bus) -> sf.Series:
-        def gen() -> tp.Iterator[tp.Tuple[str, float]]:
+        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, float]]:
             for label in bus.keys():
                 f = bus[label]
                 yield label, f.mean().mean()
@@ -129,7 +129,7 @@ def bus_batch_streaming() -> None:
             yield label, f_post
 
     def derive_characteristic_alt(items: TypeIterFrameItems) -> sf.Series:
-        def gen() -> tp.Iterator[tp.Tuple[str, float]]:
+        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, float]]:
             for label, f in items:
                 yield label, f.mean().mean()
         return sf.Series.from_items(gen())

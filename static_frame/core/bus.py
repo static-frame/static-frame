@@ -31,6 +31,7 @@ from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import INT_TYPES
+from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import NULL_SLICE
@@ -423,6 +424,35 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 function_values=self._axis_element,
                 yield_type=IterNodeType.ITEMS
                 )
+
+    #---------------------------------------------------------------------------
+    # index manipulation
+
+    @doc_inject(selector='reindex', class_name='Bus')
+    def reindex(self,
+            index: IndexInitializer,
+            *,
+            fill_value: tp.Any = FrameDeferred,
+            own_index: bool = False,
+            check_equals: bool = True
+            ) -> 'Bus':
+        '''
+        {doc}
+
+        Args:
+            index: {index_initializer}
+            columns: {index_initializer}
+            {fill_value}
+            {own_index}
+        '''
+        series = self._series.reindex(index,
+                fill_value=fill_value,
+                own_index=own_index,
+                check_equals=check_equals,
+                )
+        return self._derive(series)
+
+
 
     #---------------------------------------------------------------------------
     # cache management
@@ -969,7 +999,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             key: tp.Callable[['Series'], tp.Union[np.ndarray, 'Series']],
             ) -> 'Bus':
         '''
-        Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value.
+        Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
 
         Args:
             *

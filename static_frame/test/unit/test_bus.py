@@ -1541,6 +1541,26 @@ class TestUnit(TestCase):
             (('c', (('x', 1), ('y', 2), ('z', 3))), ('b', (('x', 4), ('y', 5), ('z', 6))))
             )
 
+    #---------------------------------------------------------------------------
+    def test_bus_reindex_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        b2 = b1.reindex(('f1', 'f2', 'f4'), fill_value=f3)
+        self.assertTrue(b2['f4'].equals(f3))
+
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':

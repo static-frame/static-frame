@@ -6,6 +6,8 @@ What is New in Static Frame
 
 ``IndexDatetime`` subclasses now properly assign ``name`` attrs from an `Index` given as an initializer.
 
+``Series.items()`` now returns labels of ``IndexHierarchy`` as tuples instead of ``np.ndarray``.
+
 Added ``Batch.apply_except`` and ``Batch.apply_items_except`` to permit ignore exceptions on function application to contained Frames.
 
 Added ``Batch.unique``.
@@ -17,8 +19,6 @@ Added ``Quilt.from_items()`` and ``Quilt.from_frames()``.
 ``Bus.sort_index()`` and ``Bus.sort_values()`` now return a ``Bus`` instance.
 
 Improvements to ``Bus.items()``, ``Bus.values`` for optimal ``Store`` reads when ``max_persist`` is None.
-
-``Series.items()`` now returns labels of ``IndexHierarchy`` as tuples instead of ``np.ndarray``.
 
 Implemented ``Bus.rename()`` to return a ``Bus`` instance.
 

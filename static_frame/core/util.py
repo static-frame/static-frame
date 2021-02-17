@@ -543,7 +543,17 @@ def full_for_fill(
     else:
         dtype_final = dtype_element
     # NOTE: we do not make this array immutable as we sometimes need to mutate it before adding it to TypeBlocks
-    return np.full(shape, fill_value, dtype=dtype_final)
+    if dtype_final != DTYPE_OBJECT:
+        return np.full(shape, fill_value, dtype=dtype_final)
+
+    # for tuples and other objects, better to create and fill
+    array = np.empty(shape, dtype=dtype_final)
+    if fill_value is None:
+        return array # None is already set for empty object arrays
+
+    for iloc in np.ndindex(shape):
+        array[iloc] = fill_value
+    return array
 
 
 def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:

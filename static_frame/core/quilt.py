@@ -884,11 +884,11 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_map.index.loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key]._extract_array(sel_component, opposite_key)
+                component = self._bus.loc[key]._extract_array(sel_component, opposite_key) #type: ignore [attr-defined]
                 if sel_reduces:
                     component = component[0]
             else:
-                component = self._bus.loc[key]._extract_array(opposite_key, sel_component)
+                component = self._bus.loc[key]._extract_array(opposite_key, sel_component) #type: ignore [attr-defined]
                 if sel_reduces:
                     if component.ndim == 1:
                         component = component[0]
