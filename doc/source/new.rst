@@ -4,7 +4,7 @@ What is New in Static Frame
 0.8.1
 ----------
 
-API change: ``Frame.from_element_iloc_items()`` renamed ``Frame.from_element_items``; ``Frame.from_element_iloc_items`` is removed.
+API change: ``Frame.from_element_loc_items()`` renamed ``Frame.from_element_items``; ``Frame.from_element_iloc_items`` is removed.
 
 ``Frame.assign`` now returns a ``FrameAssign`` instance with an ``apply`` method to permit using the assignment target, after function application, as the assignment value.
 

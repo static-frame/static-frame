@@ -78,6 +78,7 @@ from static_frame.core.node_selector import InterfaceSelectQuartet
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.platform import Platform
 from static_frame.core.quilt import Quilt as Quilt
 from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
