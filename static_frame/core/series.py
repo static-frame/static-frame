@@ -1790,7 +1790,7 @@ class Series(ContainerOperand):
             exclude_last: bool = False,
             ) -> np.ndarray:
         '''
-        Return a same-sized Boolean Series that shows True for all b values that are duplicated.
+        Return a same-sized Boolean Series that shows True for all values that are duplicated.
 
         Args:
             {exclude_first}
@@ -1865,11 +1865,12 @@ class Series(ContainerOperand):
     def roll(self,
             shift: int,
             *,
-            include_index: bool = False) -> 'Series':
-        '''Return a Series with values rotated forward and wrapped around the index (with a postive shift) or backward and wrapped around the index (with a negative shift).
+            include_index: bool = False,
+            ) -> 'Series':
+        '''Return a Series with values rotated forward and wrapped around the index (with a positive shift) or backward and wrapped around the index (with a negative shift).
 
         Args:
-            shift: Postive or negative integer shift.
+            shift: Positive or negative integer shift.
             include_index: Determine if the Index is shifted with the underlying data.
 
         Returns:
@@ -1901,11 +1902,12 @@ class Series(ContainerOperand):
     def shift(self,
             shift: int,
             *,
-            fill_value: tp.Any = np.nan) -> 'Series':
-        '''Return a Series with values shifted forward on the index (with a postive shift) or backward on the index (with a negative shift).
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Return a Series with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
 
         Args:
-            shift: Postive or negative integer shift.
+            shift: Positive or negative integer shift.
             fill_value: Value to be used to fill data missing after the shift.
 
         Returns:

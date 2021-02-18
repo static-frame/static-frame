@@ -10,7 +10,7 @@ What is New in Static Frame
 
 Added ``Batch.apply_except`` and ``Batch.apply_items_except`` to permit ignore exceptions on function application to contained Frames.
 
-Added ``Batch.unique``.
+Added ``Batch.unique()``.
 
 ``Batch`` now supports operations on ``Frame`` that return an ``np.ndarray``.
 
@@ -25,6 +25,8 @@ Implemented ``Bus.rename()`` to return a ``Bus`` instance.
 Implemented ``Bus.drop[]`` to return a ``Bus`` instance.
 
 Implemented ``Bus.reindex()``, ``Bus.relabel()``, ``Bus.relabel_flat()``, ``Bus.relabel_level_add()``, ``Bus.relabel_level_drop()``, ``Bus.rehierarch()``.
+
+Implemented ``Bus.roll()``, ``Bus.shift()``.
 
 
 0.8.0

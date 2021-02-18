@@ -1647,6 +1647,54 @@ class TestUnit(TestCase):
         self.assertEqual(b3.index.values.tolist(),
                 [['f3', 'X'], ['f2', 'X'], ['f1', 'X']])
 
+    #---------------------------------------------------------------------------
+    def test_bus_roll_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        b2 = b1.roll(2, include_index=True)
+        self.assertEqual(b2.index.values.tolist(),
+                ['f2', 'f1', 'f3']
+                )
+        self.assertTrue(b2['f2'].equals(b1['f2']))
+
+
+
+    #---------------------------------------------------------------------------
+    def test_bus_shift_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = b1.shift(2, fill_value=f1)
+        self.assertTrue(b2['f3'].equals(b1['f1']))
+        self.assertTrue(b2['f2'].equals(b1['f1']))
+        self.assertTrue(b2['f1'].equals(b1['f1']))
+
+
+
+
 
 if __name__ == '__main__':
 

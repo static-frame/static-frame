@@ -432,7 +432,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def reindex(self,
             index: IndexInitializer,
             *,
-            fill_value: tp.Any = FrameDeferred,
+            fill_value: tp.Any,
             own_index: bool = False,
             check_equals: bool = True
             ) -> 'Bus':
@@ -1085,4 +1085,37 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self._derive(series)
 
 
-    #----------------------------------------------------------------------------
+    def roll(self,
+            shift: int,
+            *,
+            include_index: bool = False,
+            ) -> 'Series':
+        '''Return a Bus with values rotated forward and wrapped around the index (with a positive shift) or backward and wrapped around the index (with a negative shift).
+
+        Args:
+            shift: Positive or negative integer shift.
+            include_index: Determine if the Index is shifted with the underlying data.
+
+        Returns:
+            :obj:`Series`
+        '''
+        series = self._series.roll(shift=shift, include_index=include_index)
+        return self._derive(series)
+
+    def shift(self,
+            shift: int,
+            *,
+            fill_value: tp.Any,
+            ) -> 'Series':
+        '''Return a Series with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
+
+        Args:
+            shift: Positive or negative integer shift.
+            fill_value: Value to be used to fill data missing after the shift.
+
+        Returns:
+            :obj:`Series`
+        '''
+        series = self._series.shift(shift=shift, fill_value=fill_value)
+        return self._derive(series)
+
