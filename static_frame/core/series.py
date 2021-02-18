@@ -2395,6 +2395,18 @@ class SeriesAssign(Assign):
                 index=self.container._index,
                 name=self.container._name)
 
+    def apply(self,
+            func: AnyCallable,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''
+        Provide a function to apply to the assignment target, and use that as the assignment value.
+        '''
+        value = func(self.container.iloc[self.iloc_key])
+        return self.__call__(value, fill_value=fill_value)
+
+
 
 #-------------------------------------------------------------------------------
 class SeriesHE(Series):

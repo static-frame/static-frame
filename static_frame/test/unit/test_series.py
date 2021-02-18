@@ -1325,6 +1325,13 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(), ['a', 'b', 'c', 3, 4])
 
 
+    def test_series_assign_h(self) -> None:
+        s1 = Series(range(5), index=('a', 'b', 'c', 'd', 'e'))
+        self.assertEqual(s1.assign['c':].apply(lambda s: -s).to_pairs(),
+                (('a', 0), ('b', 1), ('c', -2), ('d', -3), ('e', -4)))
+
+
+    #---------------------------------------------------------------------------
     def test_series_iloc_extract_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
