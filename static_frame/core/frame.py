@@ -4574,12 +4574,7 @@ class Frame(ContainerOperand):
             order = order[::-1]
 
         if axis == 0:
-            column_values = self._columns.values[order]
-            column_values.flags.writeable = False
-            columns = self._columns.from_labels(
-                    column_values,
-                    name=self._columns._name
-                    )
+            columns = self._columns[order]
             blocks = self._blocks[order] # order columns
             return self.__class__(blocks,
                     index=self._index,
@@ -4590,12 +4585,7 @@ class Frame(ContainerOperand):
                     own_index=True,
                     )
 
-        index_values = self._index.values[order]
-        index_values.flags.writeable = False
-        index = self._index.from_labels(
-                index_values,
-                name=self._index._name
-                )
+        index = self._index[order]
         blocks = self._blocks.iloc[order]
         return self.__class__(blocks,
                 index=index,

@@ -505,7 +505,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         Return a new :obj:`Bus` with new a hierarchy based on the supplied ``depth_map``.
         '''
-        series = self._series.relabel_level_drop(depth_map)
+        series = self._series.rehierarch(depth_map)
         return self._derive(series)
 
     #---------------------------------------------------------------------------

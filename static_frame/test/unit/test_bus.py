@@ -1561,6 +1561,91 @@ class TestUnit(TestCase):
         self.assertTrue(b2['f4'].equals(f3))
         self.assertTrue(b2.__class__ is Bus)
 
+    #---------------------------------------------------------------------------
+    def test_bus_relabel_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        b2 = b1.relabel(('a', 'b', 'c'))
+
+        self.assertTrue(b2['a'].equals(f3))
+        self.assertTrue(b2.__class__ is Bus)
+
+    #---------------------------------------------------------------------------
+    def test_bus_relabel_flat_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        b2 = b1.relabel_level_add('X')
+        self.assertEqual(b2.relabel_flat().index.values.tolist(),
+                [('X', 'f3'), ('X', 'f2'), ('X', 'f1')])
+
+        self.assertTrue(b2[('X', 'f2')].equals(f2))
+        self.assertTrue(b2.__class__ is Bus)
+
+    #---------------------------------------------------------------------------
+    def test_bus_relabel_level_drop_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        b2 = b1.relabel_level_add('X')
+        b3 = b2.relabel_level_drop(1)
+        self.assertTrue(b3.__class__ is Bus)
+        self.assertTrue(b3.index.equals(b1.index))
+
+    #---------------------------------------------------------------------------
+    def test_bus_relabel_rehierarch_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        b2 = b1.relabel_level_add('X')
+        b3 = b2.rehierarch([1, 0])
+        self.assertEqual(b3.index.values.tolist(),
+                [['f3', 'X'], ['f2', 'X'], ['f1', 'X']])
 
 
 if __name__ == '__main__':
