@@ -1327,7 +1327,7 @@ class TestUnit(TestCase):
 
     def test_series_assign_h(self) -> None:
         s1 = Series(range(5), index=('a', 'b', 'c', 'd', 'e'))
-        self.assertEqual(s1.assign['c':].apply(lambda s: -s).to_pairs(),
+        self.assertEqual(s1.assign['c':].apply(lambda s: -s).to_pairs(), #type: ignore
                 (('a', 0), ('b', 1), ('c', -2), ('d', -3), ('e', -4)))
 
 
