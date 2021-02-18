@@ -11,7 +11,6 @@ assignees: ''
 
 Describe the issue.
 
-
 **Platform**
 
 Run the following function (static-frame >= 0.8.1) and provide the results to define your platform and environment:

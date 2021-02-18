@@ -11,10 +11,9 @@ assignees: ''
 
 Describe the feature.
 
-
 **Platform**
 
-Run the following StaticFrame function (>= 0.8.1) and provide the results to define your platform and environment:
+Run the following function (static-frame >= 0.8.1) and provide the results to define your platform and environment:
 
 ```python
 >>> import static_frame as sf
