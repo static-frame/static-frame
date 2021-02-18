@@ -1,20 +1,31 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
+name: Feature Request
+about: Suggest an enhancement
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+**Description**
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+Describe the feature.
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+**Platform**
+
+Run the following StaticFrame function (>= 0.8.1) and provide the results to define your platform and environment:
+
+```python
+>>> import static_frame as sf
+>>> sf.Platform.display()
+```
+
+**Example**
+
+Provide code or pseudo code demonstrating how the feature might work, or how current behavior might be changed.
+
+```python
+
+```
+
