@@ -4090,41 +4090,39 @@ class TestUnit(TestCase):
     def test_frame_from_element_iloc_items_a(self) -> None:
         items = (((0,1), 'g'), ((1,0), 'q'))
 
-        f1 = Frame.from_element_iloc_items(items,
-                index=('a', 'b'),
-                columns=('x', 'y'),
+        f1 = Frame.from_element_items(items,
+                index=range(2),
+                columns=range(2),
                 dtype=object,
                 name='foo'
                 )
 
-        self.assertEqual(f1.to_pairs(0),
-                (('x', (('a', None), ('b', 'q'))), ('y', (('a', 'g'), ('b', None)))))
-
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((0, None), (1, 'q'))), (1, ((0, 'g'), (1, None)))))
 
         self.assertEqual(f1.name, 'foo')
-
 
     def test_frame_from_element_iloc_items_b(self) -> None:
 
         items = (((0,1), .5), ((1,0), 1.5))
 
-        f2 = Frame.from_element_iloc_items(items,
-                index=('a', 'b'),
-                columns=('x', 'y'),
+        f2 = Frame.from_element_items(items,
+                index=range(2),
+                columns=range(2),
                 dtype=float
                 )
 
-        self.assertAlmostEqualItems(tuple(f2['x'].items()),
-                (('a', nan), ('b', 1.5)))
+        self.assertAlmostEqualItems(tuple(f2[0].items()),
+                ((0, nan), (1, 1.5)))
 
-        self.assertAlmostEqualItems(tuple(f2['y'].items()),
-                (('a', 0.5), ('b', nan)))
+        self.assertAlmostEqualItems(tuple(f2[1].items()),
+                ((0, 0.5), (1, nan)))
 
     #---------------------------------------------------------------------------
     def test_frame_from_element_loc_items_a(self) -> None:
         items = ((('b', 'x'), 'g'), (('a','y'), 'q'))
 
-        f1 = Frame.from_element_loc_items(items,
+        f1 = Frame.from_element_items(items,
                 index=('a', 'b'),
                 columns=('x', 'y'),
                 dtype=object,
@@ -4149,7 +4147,7 @@ class TestUnit(TestCase):
 
         items = f1.iter_element_items(axis=0)
 
-        f2 = Frame.from_element_loc_items(items,
+        f2 = Frame.from_element_items(items,
                 index=f1.index,
                 columns=f1.columns,
                 axis=0,

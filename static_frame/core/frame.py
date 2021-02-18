@@ -1327,39 +1327,8 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    # NOTE: # remove from_element_iloc_items, rename from_element_loc_items to from_element_items
-
     @classmethod
-    def from_element_iloc_items(cls,
-            items: tp.Iterable[tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
-            *,
-            index: IndexInitializer,
-            columns: IndexInitializer,
-            dtype: DtypeSpecifier,
-            name: NameType = None
-            ) -> 'Frame':
-        '''
-        Given an iterable of pairs of iloc coordinates and values, populate a Frame as defined by the given index and columns. The dtype must be specified, and must be the same for all values.
-
-        Returns:
-            :obj:`static_frame.Frame`
-        '''
-        index = Index(index)
-        columns = cls._COLUMNS_CONSTRUCTOR(columns)
-
-        tb = TypeBlocks.from_element_items(items,
-                shape=(len(index), len(columns)),
-                dtype=dtype)
-        return cls(tb,
-                index=index,
-                columns=columns,
-                name=name,
-                own_data=True,
-                own_index=True,
-                own_columns=True)
-
-    @classmethod
-    def from_element_loc_items(cls,
+    def from_element_items(cls,
             items: tp.Iterable[tp.Tuple[
                     tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
             *,
@@ -1406,7 +1375,7 @@ class Frame(ContainerOperand):
                 raise ErrorInitFrame('cannot provide multiple dtypes when creating a Frame from element items and axis is None')
             items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
                     for k, v in items)
-            dtype = dtype if dtype is not None else object
+            dtype = dtype if dtype is not None else DTYPE_OBJECT
             tb = TypeBlocks.from_element_items(
                     items,
                     shape=(len(index), len(columns)),
