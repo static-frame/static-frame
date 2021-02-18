@@ -6870,13 +6870,15 @@ class FrameAssign(Assign):
 
     def __call__(self,
             value: tp.Any,
-            fill_value: tp.Any = np.nan
+            *,
+            fill_value: tp.Any = np.nan,
             ) -> 'Frame':
         '''
         Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
 
         Args:
             value: Value to assign, which can be a :obj:`Series`, :obj:`Frame`, np.ndarray, or element.
+            *,
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
         is_frame = isinstance(value, Frame)
@@ -6913,16 +6915,25 @@ class FrameAssign(Assign):
                     key=self.bloc_key,
                     container=self.container
                     )
+            if is_series:
+                # assumes a Series from a bloc selection
+                index = self.container._index
+                columns = self.container._columns
+                # NOTE: this can be done more efficiently with a new function on TypeBlocks
+                array = np.empty(bloc_key.shape, dtype=value.dtype)
+                for (i, c), e in value.items():
+                    array[index.loc_to_iloc(i), columns.loc_to_iloc(c)] = e
+                value = array
+
             if is_frame:
-                invalid = object()
                 value = value.reindex(
                         index=self.container._index,
                         columns=self.container._columns,
-                        fill_value=invalid
+                        fill_value=FILL_VALUE_DEFAULT
                         ).values
 
                 # if we produced any invalid entries, cannot select them
-                invalid_found = value == invalid
+                invalid_found = value == FILL_VALUE_DEFAULT
                 if invalid_found.any():
                     bloc_key = bloc_key.copy() # mutate a copy
                     bloc_key[invalid_found] = False
@@ -6941,6 +6952,23 @@ class FrameAssign(Assign):
                 name=self.container._name,
                 own_data=True
                 )
+
+
+    def apply(self,
+            func: AnyCallable,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''
+        Provide a function to apply to the assignment target, and use that as the assignment value.
+        '''
+        if self.iloc_key is not None:
+            value = func(self.container.iloc[self.iloc_key])
+        else: # use bloc
+            value = func(self.container.bloc[self.bloc_key])
+
+        return self.__call__(value, fill_value=fill_value)
+
 
 
 class FrameAsType:

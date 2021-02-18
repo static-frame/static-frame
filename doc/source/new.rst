@@ -4,6 +4,8 @@ What is New in Static Frame
 0.8.1
 ----------
 
+``Frame.assign`` now returns a ``FrameAssign`` instance with an ``apply`` method to permit using the assignment target, after function application, as the assignment value.
+
 ``IndexDatetime`` subclasses now properly assign ``name`` attrs from an `Index` given as an initializer.
 
 ``Series.items()`` now returns labels of ``IndexHierarchy`` as tuples instead of ``np.ndarray``.

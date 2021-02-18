@@ -2856,6 +2856,14 @@ class TestUnit(TestCase):
                 ((0, ((0, False), (1, False), (2, False), (3, True))), (1, ((0, False), (1, False), (2, False), (3, False))), (2, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'), (3, 'zB7E'))), (3, ((0, False), (1, False), (2, True), (3, True))), (4, ((0, 58768), (1, 146284), (2, 170440), (3, 32395))), (5, ((0, np.datetime64('164167')), (1, np.datetime64('43127')), (2, np.datetime64('7699')), (3, np.datetime64('170357')))), (6, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'), (3, 'zmVj'))), (7, ((0, 137759), (1, -62964), (2, 172142), (3, -154686))))
                 )
 
+    def test_frame_assign_loc_h(self) -> None:
+        f1 = ff.parse('s(3,4)|c(I,str)|v(int)')
+        f2 = f1.assign.loc[1:, ['ztsv', 'zUvW']].apply(lambda f: -f)
+
+        self.assertEqual(f2.to_pairs(),
+                (('zZbu', ((0, -88017), (1, 92867), (2, 84967))), ('ztsv', ((0, 162197), (1, 41157), (2, -5729))), ('zUvW', ((0, -3648), (1, -91301), (2, -30205))), ('zkuW', ((0, 129017), (1, 35021), (2, 166924))))
+                )
+
 
     #---------------------------------------------------------------------------
 
@@ -2999,6 +3007,14 @@ class TestUnit(TestCase):
 
         self.assertTrue((f1.values == f2.values).all())
 
+
+    def test_frame_assign_bloc_g(self) -> None:
+        f = sf.Frame.from_records(((None, np.datetime64('2020-01-01')), (np.datetime64('1764-01-01'), None)))
+        f2 = f.assign.bloc[~f.isna()].apply(lambda s: s.astype('datetime64[ms]'))
+
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, None), (1, datetime.datetime(1764, 1, 1, 0, 0)))), (1, ((0, datetime.datetime(2020, 1, 1, 0, 0)), (1, None))))
+                )
 
     #---------------------------------------------------------------------------
     def test_frame_mask_loc_a(self) -> None:
