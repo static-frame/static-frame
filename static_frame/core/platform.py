@@ -3,8 +3,6 @@ import importlib
 import platform as platform_mod
 import sys
 
-import numpy as np
-
 from static_frame.core.series import Series
 import static_frame
 
@@ -49,3 +47,5 @@ class Platform:
     @classmethod
     def display(cls) -> None:
         print(cls.to_series().display_wide())
+
+
