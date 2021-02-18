@@ -3718,7 +3718,7 @@ class Frame(ContainerOperand):
         bloc_key = bloc_key_normalize(key=key, container=self)
         values = self.values[bloc_key]
         values.flags.writeable = False
-
+        # NOTE: the usage of np.nonzero forces a row-major, C-style ordering of labels; would prefer a column major ordering
         index = Index(
                 (self._index[x], self._columns[y])
                 for x, y in zip(*np.nonzero(bloc_key))
