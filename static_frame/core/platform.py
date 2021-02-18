@@ -38,9 +38,9 @@ class Platform:
                     continue
 
                 if hasattr(mod, '__version__'):
-                    yield package, mod.__version__
+                    yield package, mod.__version__ #type: ignore
                 elif hasattr(mod, 'version'): # msgpack
-                    yield package, mod.version
+                    yield package, mod.version #type: ignore
                 else:
                     yield package, None
 
