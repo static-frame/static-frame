@@ -1548,7 +1548,7 @@ class TypeBlocks(ContainerOperand):
 
 
 
-    def _assign_blocks_from_keys(self,
+    def _assign_blocks_from_keys_by_unit(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
             value: object = None
@@ -1995,27 +1995,43 @@ class TypeBlocks(ContainerOperand):
             return TypeBlocks.from_blocks(self._mask_blocks(*key))
         return TypeBlocks.from_blocks(self._mask_blocks(row_key=key))
 
-    def extract_iloc_assign(self,
+    def extract_iloc_assign_by_unit(self,
             key: GetItemKeyTypeCompound,
             value: object,
-            value_is_blocks: bool = False,
             ) -> 'TypeBlocks':
+        '''
+        Assign with value via a unit: a single array or element.
+        '''
         if isinstance(key, tuple):
             row_key, column_key = key
         else:
             row_key = key
             column_key = None
 
-        if value_is_blocks:
-            return TypeBlocks.from_blocks(self._assign_blocks_from_keys_by_blocks(
-                    row_key=row_key,
-                    column_key=column_key,
-                    values=value, #type: ignore
-                    ))
-        return TypeBlocks.from_blocks(self._assign_blocks_from_keys(
+        return TypeBlocks.from_blocks(self._assign_blocks_from_keys_by_unit(
                 row_key=row_key,
                 column_key=column_key,
                 value=value))
+
+    def extract_iloc_assign_by_blocks(self,
+            key: GetItemKeyTypeCompound,
+            value: tp.Iterable[np.ndarray],
+            ) -> 'TypeBlocks':
+        '''
+        Assign with value via an iterable of blocks.
+        '''
+        if isinstance(key, tuple):
+            row_key, column_key = key
+        else:
+            row_key = key
+            column_key = None
+
+        return TypeBlocks.from_blocks(self._assign_blocks_from_keys_by_blocks(
+                row_key=row_key,
+                column_key=column_key,
+                values=value, #type: ignore
+                ))
+
 
     def extract_bloc_assign(self,
             key: np.ndarray,

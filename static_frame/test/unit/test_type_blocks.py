@@ -851,7 +851,7 @@ class TestUnit(TestCase):
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys_by_unit(
                 column_key=[2,3,5], value=300))
 
         self.assertTypeBlocksArrayEqual(tb2,
@@ -872,7 +872,7 @@ class TestUnit(TestCase):
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys_by_unit(
                 column_key=slice(-3, None), value=300))
 
         self.assertTypeBlocksArrayEqual(tb2,
@@ -894,7 +894,7 @@ class TestUnit(TestCase):
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys_by_unit(
                 column_key=[0, 2, 3, 5, 7], value=300))
 
         self.assertTypeBlocksArrayEqual(tb2,
@@ -920,7 +920,7 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
         value = np.array([1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1])
-        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys_by_unit(
                 row_key=[1], value=value))
 
         self.assertEqual(tb2.dtypes.tolist(),
@@ -944,7 +944,7 @@ class TestUnit(TestCase):
         value = np.array([1.1, 2.1, 3.1, 4.1])
 
         tb2 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(row_key=[1], column_key=slice(1, 5), value=value))
+                tb1._assign_blocks_from_keys_by_unit(row_key=[1], column_key=slice(1, 5), value=value))
 
         self.assertEqual(tb1.shape, tb2.shape)
         self.assertEqual(tb2.dtypes.tolist(),
@@ -956,7 +956,7 @@ class TestUnit(TestCase):
 
 
         tb3 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(row_key=[1], column_key=slice(2, 6), value=value))
+                tb1._assign_blocks_from_keys_by_unit(row_key=[1], column_key=slice(2, 6), value=value))
 
         self.assertEqual(tb1.shape, tb3.shape)
         self.assertEqual(tb3.dtypes.tolist(),
@@ -967,7 +967,7 @@ class TestUnit(TestCase):
 
 
         tb4 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(row_key=[1], column_key=slice(3, 7), value=value))
+                tb1._assign_blocks_from_keys_by_unit(row_key=[1], column_key=slice(3, 7), value=value))
 
         self.assertEqual(tb1.shape, tb4.shape)
         self.assertEqual(tb4.dtypes.tolist(),
@@ -978,7 +978,7 @@ class TestUnit(TestCase):
 
 
         tb5 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(row_key=[1], column_key=slice(4, 8), value=value))
+                tb1._assign_blocks_from_keys_by_unit(row_key=[1], column_key=slice(4, 8), value=value))
 
         self.assertEqual(tb1.shape, tb5.shape)
         self.assertEqual(tb5.dtypes.tolist(),
@@ -989,7 +989,7 @@ class TestUnit(TestCase):
 
 
         tb6 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(row_key=[1], column_key=slice(5, 9), value=value))
+                tb1._assign_blocks_from_keys_by_unit(row_key=[1], column_key=slice(5, 9), value=value))
 
         self.assertEqual(tb1.shape, tb6.shape)
         self.assertEqual(tb6.dtypes.tolist(),
@@ -1011,7 +1011,7 @@ class TestUnit(TestCase):
         value = np.array([1.1, 2.1, 3.1, 4.1])
 
         tb2 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(column_key=slice(1, 5), value=value))
+                tb1._assign_blocks_from_keys_by_unit(column_key=slice(1, 5), value=value))
 
         self.assertEqual(tb1.shape, tb2.shape)
         self.assertEqual(tb2.dtypes.tolist(),
@@ -1022,7 +1022,7 @@ class TestUnit(TestCase):
 
 
         tb3 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(column_key=slice(2, 6), value=value))
+                tb1._assign_blocks_from_keys_by_unit(column_key=slice(2, 6), value=value))
 
         self.assertEqual(tb1.shape, tb3.shape)
         self.assertEqual(tb3.dtypes.tolist(),
@@ -1033,7 +1033,7 @@ class TestUnit(TestCase):
 
 
         tb4 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(column_key=slice(3, 7), value=value))
+                tb1._assign_blocks_from_keys_by_unit(column_key=slice(3, 7), value=value))
 
         self.assertEqual(tb1.shape, tb4.shape)
         self.assertEqual(tb4.dtypes.tolist(),
@@ -1044,7 +1044,7 @@ class TestUnit(TestCase):
 
 
         tb5 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(column_key=slice(4, 8), value=value))
+                tb1._assign_blocks_from_keys_by_unit(column_key=slice(4, 8), value=value))
 
         self.assertEqual(tb1.shape, tb5.shape)
         self.assertEqual(tb5.dtypes.tolist(),
@@ -1055,7 +1055,7 @@ class TestUnit(TestCase):
 
 
         tb6 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(column_key=slice(5, 9), value=value))
+                tb1._assign_blocks_from_keys_by_unit(column_key=slice(5, 9), value=value))
 
         self.assertEqual(tb1.shape, tb6.shape)
         self.assertEqual(tb6.dtypes.tolist(),
@@ -1077,7 +1077,7 @@ class TestUnit(TestCase):
         value = np.array([[1.1, 2.1], [3.1, 4.1]])
 
         tb2 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(row_key=slice(1, 3), column_key=slice(3, 5), value=value))
+                tb1._assign_blocks_from_keys_by_unit(row_key=slice(1, 3), column_key=slice(3, 5), value=value))
 
         self.assertEqual(tb2.dtypes.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
@@ -1088,7 +1088,7 @@ class TestUnit(TestCase):
 
 
         tb3 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(row_key=slice(1, 3), column_key=slice(4, 6), value=value))
+                tb1._assign_blocks_from_keys_by_unit(row_key=slice(1, 3), column_key=slice(4, 6), value=value))
 
         self.assertEqual(tb3.dtypes.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
@@ -1098,7 +1098,7 @@ class TestUnit(TestCase):
 
 
         tb4 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(row_key=slice(1, 3), column_key=slice(5, 7), value=value))
+                tb1._assign_blocks_from_keys_by_unit(row_key=slice(1, 3), column_key=slice(5, 7), value=value))
 
         self.assertEqual(tb4.dtypes.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool')])
@@ -1118,7 +1118,7 @@ class TestUnit(TestCase):
         value = np.array([[1.1, 2.1], [3.1, 4.1], [5.1, 6.1]])
 
         tb2 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(column_key=slice(3, 5), value=value))
+                tb1._assign_blocks_from_keys_by_unit(column_key=slice(3, 5), value=value))
 
         self.assertEqual(tb2.dtypes.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
@@ -1129,7 +1129,7 @@ class TestUnit(TestCase):
 
 
         tb3 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(column_key=slice(4, 6), value=value))
+                tb1._assign_blocks_from_keys_by_unit(column_key=slice(4, 6), value=value))
 
         self.assertEqual(tb3.dtypes.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
@@ -1139,7 +1139,7 @@ class TestUnit(TestCase):
 
 
         tb4 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(column_key=slice(5, 7), value=value))
+                tb1._assign_blocks_from_keys_by_unit(column_key=slice(5, 7), value=value))
 
         self.assertEqual(tb4.dtypes.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool')])
@@ -1157,7 +1157,7 @@ class TestUnit(TestCase):
 
         value = (20.1, 40.1)
         tb2 = TypeBlocks.from_blocks(
-                tb1._assign_blocks_from_keys(column_key=0, row_key=np.array([True, True, False]), value=value))
+                tb1._assign_blocks_from_keys_by_unit(column_key=0, row_key=np.array([True, True, False]), value=value))
 
         self.assertTypeBlocksArrayEqual(tb2,
             [[20.1, False], [40.1, True], [3.1, True]], match_dtype=object)
@@ -1580,7 +1580,7 @@ class TestUnit(TestCase):
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
 
-        self.assertEqual(tb.extract_iloc_assign(1, 600).values.tolist(),
+        self.assertEqual(tb.extract_iloc_assign_by_unit(1, 600).values.tolist(),
                 [[1, 2, 3, False, False, True, 'a', 'b'],
                 [600, 600, 600, 600, 600, 600, 600, 600],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
@@ -1593,7 +1593,7 @@ class TestUnit(TestCase):
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
-        self.assertEqual(tb.extract_iloc_assign((1, 5), 20).values.tolist(),
+        self.assertEqual(tb.extract_iloc_assign_by_unit((1, 5), 20).values.tolist(),
                 [[1, 2, 3, False, False, True, 'a', 'b'],
                 [4, 5, 6, True, False, 20, 'c', 'd'],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
@@ -1606,7 +1606,7 @@ class TestUnit(TestCase):
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
-        self.assertEqual(tb.extract_iloc_assign((slice(2), slice(5)), 'X').values.tolist(),
+        self.assertEqual(tb.extract_iloc_assign_by_unit((slice(2), slice(5)), 'X').values.tolist(),
                 [['X', 'X', 'X', 'X', 'X', True, 'a', 'b'],
                 ['X', 'X', 'X', 'X', 'X', True, 'c', 'd'],
                 [0, 0, 1, True, False, True, 'oe', 'od']]
@@ -1620,7 +1620,7 @@ class TestUnit(TestCase):
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
-        self.assertEqual(tb.extract_iloc_assign(([0,1], [1,4,7]), -5).values.tolist(),
+        self.assertEqual(tb.extract_iloc_assign_by_unit(([0,1], [1,4,7]), -5).values.tolist(),
                 [[1, -5, 3, False, -5, True, 'a', -5],
                 [4, -5, 6, True, -5, True, 'c', -5],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
@@ -1634,7 +1634,7 @@ class TestUnit(TestCase):
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertEqual(
-                tb.extract_iloc_assign((1, slice(4)), (-1, -2, -3, -4)).values.tolist(),
+                tb.extract_iloc_assign_by_unit((1, slice(4)), (-1, -2, -3, -4)).values.tolist(),
                 [[1, 2, 3, False, False, True, 'a', 'b'],
                 [-1, -2, -3, -4, False, True, 'c', 'd'],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
@@ -1648,7 +1648,7 @@ class TestUnit(TestCase):
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertEqual(
-                tb.extract_iloc_assign((2, slice(3,7)), (-1, -2, -3, -4)).values.tolist(),
+                tb.extract_iloc_assign_by_unit((2, slice(3,7)), (-1, -2, -3, -4)).values.tolist(),
                 [[1, 2, 3, False, False, True, 'a', 'b'],
                 [4, 5, 6, True, False, True, 'c', 'd'],
                 [0, 0, 1, -1, -2, -3, -4, 'od']])
@@ -1662,7 +1662,7 @@ class TestUnit(TestCase):
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertEqual(
-                tb.extract_iloc_assign((0, slice(4,8)), (-1, -2, -3, -4)).values.tolist(),
+                tb.extract_iloc_assign_by_unit((0, slice(4,8)), (-1, -2, -3, -4)).values.tolist(),
                 [[1, 2, 3, False, -1, -2, -3, -4],
                 [4, 5, 6, True, False, True, 'c', 'd'],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
