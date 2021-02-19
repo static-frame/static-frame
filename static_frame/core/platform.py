@@ -4,6 +4,7 @@ import platform as platform_mod
 import sys
 
 from static_frame.core.series import Series
+from static_frame.core.display import Display
 import static_frame
 
 class Platform:
@@ -45,7 +46,7 @@ class Platform:
         return Series.from_items(items(), name='platform')
 
     @classmethod
-    def display(cls) -> None:
-        print(cls.to_series().display_wide())
+    def display(cls) -> Display:
+        return cls.to_series().display_wide() #type: ignore [no-any-return]
 
 
