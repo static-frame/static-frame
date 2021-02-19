@@ -1436,7 +1436,7 @@ class TypeBlocks(ContainerOperand):
                     yield b
 
     #---------------------------------------------------------------------------
-    def _assign_blocks_from_keys_by_blocks(self,
+    def _assign_from_iloc_by_blocks(self,
             values: tp.Iterable[np.ndarray],
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
@@ -1547,8 +1547,7 @@ class TypeBlocks(ContainerOperand):
                 yield b[NULL_SLICE, assigned_stop:]
 
 
-
-    def _assign_blocks_from_keys_by_unit(self,
+    def _assign_from_iloc_by_unit(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
             value: object = None
@@ -1658,11 +1657,9 @@ class TypeBlocks(ContainerOperand):
             elif b.ndim == 2 and assigned_stop < b.shape[1]:
                 yield b[NULL_SLICE, assigned_stop:]
 
-
     #---------------------------------------------------------------------------
-    # There are three approaches to setting values from Boolean indicators; the difference between the first two is if the Booleans are given in a single array, or in block-aligned arrays. The third approach uses block-aligned arrays, but values are provided as an iterable of arrays.
 
-    def _assign_blocks_from_boolean_blocks(self,
+    def _assign_from_boolean_blocks_by_unit(self,
             targets: tp.Iterable[np.ndarray],
             value: object,
             value_valid: tp.Optional[np.ndarray]
@@ -1725,7 +1722,7 @@ class TypeBlocks(ContainerOperand):
                 yield assigned
 
 
-    def _assign_blocks_from_boolean_blocks_and_value_arrays(self,
+    def _assign_from_boolean_blocks_by_blocks(self,
             targets: tp.Iterable[np.ndarray],
             values: tp.Sequence[np.ndarray],
             ) -> tp.Iterator[np.ndarray]:
@@ -1778,13 +1775,14 @@ class TypeBlocks(ContainerOperand):
                             yield assigned
             start = end # always update start
 
+    #---------------------------------------------------------------------------
 
-    def _assign_blocks_from_bloc_key(self,
+    def _assign_from_bloc_by_unit(self,
             bloc_key: np.ndarray,
             value: tp.Any # an array, or element for single assignment
             ) -> tp.Iterator[np.ndarray]:
         '''
-        Given an Boolean array of targets, fill targets from value, where value is either a single value or an array. Unlike with _assign_blocks_from_boolean_blocks, this method takes a single block_key.
+        Given an Boolean array of targets, fill targets from value, where value is either a single value or an array. Unlike with _assign_from_boolean_blocks_by_unit, this method takes a single block_key.
         '''
         if isinstance(value, np.ndarray):
             value_dtype = value.dtype
@@ -2008,7 +2006,7 @@ class TypeBlocks(ContainerOperand):
             row_key = key
             column_key = None
 
-        return TypeBlocks.from_blocks(self._assign_blocks_from_keys_by_unit(
+        return TypeBlocks.from_blocks(self._assign_from_iloc_by_unit(
                 row_key=row_key,
                 column_key=column_key,
                 value=value))
@@ -2026,18 +2024,18 @@ class TypeBlocks(ContainerOperand):
             row_key = key
             column_key = None
 
-        return TypeBlocks.from_blocks(self._assign_blocks_from_keys_by_blocks(
+        return TypeBlocks.from_blocks(self._assign_from_iloc_by_blocks(
                 row_key=row_key,
                 column_key=column_key,
                 values=value, #type: ignore
                 ))
 
 
-    def extract_bloc_assign(self,
+    def extract_bloc_assign_by_unit(self,
             key: np.ndarray,
             value: tp.Any
             ) -> 'TypeBlocks':
-        return TypeBlocks.from_blocks(self._assign_blocks_from_bloc_key(
+        return TypeBlocks.from_blocks(self._assign_from_bloc_by_unit(
                 bloc_key=key,
                 value=value
                 ))
@@ -2864,7 +2862,7 @@ class TypeBlocks(ContainerOperand):
             value_valid: Optionally provide a same-size array mask of the value setting (useful for carrying forward information from labels).
         '''
         return self.from_blocks(
-                self._assign_blocks_from_boolean_blocks(
+                self._assign_from_boolean_blocks_by_unit(
                         targets=(isna_array(b) for b in self._blocks),
                         value=value,
                         value_valid=value_valid
@@ -2881,7 +2879,7 @@ class TypeBlocks(ContainerOperand):
             values: iterable of arrays to be aligned as columns.
         '''
         return self.from_blocks(
-                self._assign_blocks_from_boolean_blocks_and_value_arrays(
+                self._assign_from_boolean_blocks_by_blocks(
                         targets=(isna_array(b) for b in self._blocks),
                         values=values,
                         )

@@ -6955,6 +6955,7 @@ class FrameAssignBLoc(FrameAssign):
             value = array
 
         if is_frame:
+            # NOTE: we are forcing a values consolidation here; should be avoided.
             value = value.reindex(
                     index=self.container._index,
                     columns=self.container._columns,
@@ -6971,7 +6972,7 @@ class FrameAssignBLoc(FrameAssign):
             if value.shape != self.container.shape:
                 raise RuntimeError(f'value must match shape {self.container.shape}')
 
-        blocks = self.container._blocks.extract_bloc_assign(key, value)
+        blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
 
         return self.container.__class__(
                 data=blocks,

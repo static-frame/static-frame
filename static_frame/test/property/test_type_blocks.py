@@ -204,7 +204,7 @@ class TestUnit(TestCase):
 
         # assigning a single value from a list of column keys
         for i in range(tb1.shape[1]):
-            tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys_by_unit(
+            tb2 = TypeBlocks.from_blocks(tb1._assign_from_iloc_by_unit(
                     column_key=[i], value=300))
             self.assertTrue(tb1.shape == tb2.shape)
             # no more than one type should be changed
@@ -212,14 +212,14 @@ class TestUnit(TestCase):
 
         # assigning a single value from a list of row keys
         for i in range(tb1.shape[0]):
-            tb3 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys_by_unit(
+            tb3 = TypeBlocks.from_blocks(tb1._assign_from_iloc_by_unit(
                     row_key=[i], value=300))
             self.assertTrue(tb1.shape == tb3.shape)
             self.assertTrue(tb3.iloc[i, 0] == 300)
 
         # column slices to the end
         for i in range(tb1.shape[1]):
-            tb4 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys_by_unit(
+            tb4 = TypeBlocks.from_blocks(tb1._assign_from_iloc_by_unit(
                     column_key=slice(i, None), value=300))
             self.assertTrue(tb1.shape == tb4.shape)
             # we have as many or more blocks
