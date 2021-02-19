@@ -1470,11 +1470,11 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
 
     def _extract_iloc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
-        return SeriesAssign(self, iloc_key=key)
+        return SeriesAssign(self, key)
 
     def _extract_loc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
         iloc_key = self._index.loc_to_iloc(key)
-        return SeriesAssign(self, iloc_key=iloc_key)
+        return SeriesAssign(self, iloc_key)
 
     #---------------------------------------------------------------------------
     # axis functions
@@ -2346,14 +2346,18 @@ class Series(ContainerOperand):
 
 #-------------------------------------------------------------------------------
 class SeriesAssign(Assign):
-    __slots__ = ('container', 'iloc_key')
+    __slots__ = ('container', 'key')
 
     def __init__(self,
             container: Series,
-            iloc_key: GetItemKeyType
+            key: GetItemKeyType
             ) -> None:
+        '''
+        Args:
+            key: an iloc-style key.
+        '''
         self.container = container
-        self.iloc_key = iloc_key
+        self.key = key
 
     def __call__(self,
             value: tp.Any, # any possible assignment type
@@ -2369,7 +2373,7 @@ class SeriesAssign(Assign):
         if isinstance(value, Series):
             # instead of using fill_value here, might be better to use dtype_to_fill_value, so as to not coerce the type of the value to be assigned
             value = self.container._reindex_other_like_iloc(value,
-                    self.iloc_key,
+                    self.key,
                     fill_value=fill_value).values
 
         if isinstance(value, np.ndarray):
@@ -2388,7 +2392,7 @@ class SeriesAssign(Assign):
         else:
             array = self.container.values.astype(dtype)
 
-        array[self.iloc_key] = value
+        array[self.key] = value
         array.flags.writeable = False
 
         return self.container.__class__(array,
@@ -2403,7 +2407,7 @@ class SeriesAssign(Assign):
         '''
         Provide a function to apply to the assignment target, and use that as the assignment value.
         '''
-        value = func(self.container.iloc[self.iloc_key])
+        value = func(self.container.iloc[self.key])
         return self.__call__(value, fill_value=fill_value)
 
 

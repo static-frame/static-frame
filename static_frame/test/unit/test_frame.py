@@ -33,7 +33,8 @@ from static_frame import TypeBlocks
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.frame import FrameAssign
+from static_frame.core.frame import FrameAssignILoc
+from static_frame.core.frame import FrameAssignBLoc
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
@@ -9788,12 +9789,10 @@ class TestUnit(TestCase):
     def test_frame_frame_assign_a(self) -> None:
 
         f1 = Frame(columns=('a', 'b'))
-        with self.assertRaises(RuntimeError):
-            # can only set one at at ime
-            fa0 = FrameAssign(f1, iloc_key=(0, 0), bloc_key=f1)
 
-        fa1 = FrameAssign(f1, iloc_key=(0, 0), bloc_key=None)
-        fa2 = FrameAssign(f1, iloc_key=None, bloc_key=f1)
+
+        fa1 = FrameAssignILoc(f1, key=(0, 0))
+        fa2 = FrameAssignBLoc(f1, key=f1)
 
 
     #---------------------------------------------------------------------------

@@ -2637,7 +2637,6 @@ class Frame(ContainerOperand):
 
     @property
     def assign(self) -> InterfaceAssignQuartet['Frame']:
-        # all functions that return a FrameAssign
         return InterfaceAssignQuartet(
             func_iloc=self._extract_iloc_assign,
             func_loc=self._extract_loc_assign,
@@ -3817,22 +3816,22 @@ class Frame(ContainerOperand):
         return self._extract_iloc_masked_array(key=key)
 
     #---------------------------------------------------------------------------
-    def _extract_iloc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssign':
-        return FrameAssign(self, iloc_key=key)
+    def _extract_iloc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssignILoc':
+        return FrameAssignILoc(self, key=key)
 
-    def _extract_loc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssign':
+    def _extract_loc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssignILoc':
         # extract if tuple, then pack back again
         key = self._compound_loc_to_iloc(key)
         return self._extract_iloc_assign(key=key)
 
-    def _extract_getitem_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssign':
+    def _extract_getitem_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssignILoc':
         # extract if tuple, then pack back again
         key = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_assign(key=key)
 
-    def _extract_bloc_assign(self, key: Bloc2DKeyType) -> 'FrameAssign':
+    def _extract_bloc_assign(self, key: Bloc2DKeyType) -> 'FrameAssignBLoc':
         '''Assignment based on a Boolean Frame or array.'''
-        return FrameAssign(self, bloc_key=key)
+        return FrameAssignBLoc(self, key=key)
 
     #---------------------------------------------------------------------------
 
@@ -6819,23 +6818,27 @@ class FrameGO(Frame):
 class FrameAssign(Assign):
     __slots__ = (
         'container',
-        'iloc_key',
-        'bloc_key',
+        'key',
+        )
+    # common base classe for supplying delegate
+
+class FrameAssignILoc(FrameAssign):
+    __slots__ = (
+        'container',
+        'key',
         )
 
     def __init__(self,
             container: Frame,
-            iloc_key: GetItemKeyTypeCompound = None,
-            bloc_key: tp.Optional[Bloc2DKeyType] = None,
+            key: GetItemKeyTypeCompound = None,
             ) -> None:
         '''Store a reference to ``Frame``, as well as a key to be used for assignment with ``__call__``
+
+        Args:
+            key: an iloc key.
         '''
         self.container = container
-        self.iloc_key = iloc_key
-        self.bloc_key = bloc_key
-
-        if not (self.iloc_key is not None) ^ (self.bloc_key is not None):
-            raise RuntimeError('must set only one of ``iloc_key``, ``bloc_key``')
+        self.key = key
 
     def __call__(self,
             value: tp.Any,
@@ -6853,66 +6856,30 @@ class FrameAssign(Assign):
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
-        if self.iloc_key is not None:
-            # NOTE: the iloc key's order is not relevant in assignment
-            value_is_blocks = False
-            if is_series:
-                iloc_key = self.iloc_key
-                assigned = self.container._reindex_other_like_iloc(value,
-                        iloc_key,
-                        fill_value=fill_value).values
-            elif is_frame:
-                # block assignment requires that column keys are ascending
-                # conform the passed in value to the targets given by self.iloc_key
-                iloc_key = (self.iloc_key[0], #type: ignore [index]
-                        key_to_ascending_key(self.iloc_key[1], self.container.shape[1])) #type: ignore [index]
-                assigned = self.container._reindex_other_like_iloc(value, #type: ignore [union-attr]
-                        iloc_key,
-                        fill_value=fill_value)._blocks._blocks
-                value_is_blocks = True
-            else: # could be array or single element
-                iloc_key = self.iloc_key
-                assigned = value
+        # NOTE: the iloc key's order is not relevant in assignment
+        value_is_blocks = False
+        if is_series:
+            key = self.key
+            assigned = self.container._reindex_other_like_iloc(value,
+                    key,
+                    fill_value=fill_value).values
+        elif is_frame:
+            # block assignment requires that column keys are ascending
+            # conform the passed in value to the targets given by self.key
+            key = (self.key[0], #type: ignore [index]
+                    key_to_ascending_key(self.key[1], self.container.shape[1])) #type: ignore [index]
+            assigned = self.container._reindex_other_like_iloc(value, #type: ignore [union-attr]
+                    key,
+                    fill_value=fill_value)._blocks._blocks
+            value_is_blocks = True
+        else: # could be array or single element
+            key = self.key
+            assigned = value
 
-            blocks = self.container._blocks.extract_iloc_assign(iloc_key,
-                    assigned,
-                    value_is_blocks=value_is_blocks,
-                    )
-
-        else: # use bloc
-            bloc_key = bloc_key_normalize(
-                    key=self.bloc_key,
-                    container=self.container
-                    )
-            if is_series:
-                # assumes a Series from a bloc selection
-                index = self.container._index
-                columns = self.container._columns
-                # NOTE: this can be done more efficiently with a new function on TypeBlocks
-                array = np.empty(bloc_key.shape, dtype=value.dtype)
-                for (i, c), e in value.items():
-                    array[index.loc_to_iloc(i), columns.loc_to_iloc(c)] = e
-                value = array
-
-            if is_frame:
-                value = value.reindex(
-                        index=self.container._index,
-                        columns=self.container._columns,
-                        fill_value=FILL_VALUE_DEFAULT
-                        ).values
-
-                # if we produced any invalid entries, cannot select them
-                invalid_found = value == FILL_VALUE_DEFAULT
-                if invalid_found.any():
-                    bloc_key = bloc_key.copy() # mutate a copy
-                    bloc_key[invalid_found] = False
-
-            elif isinstance(value, np.ndarray):
-                if value.shape != self.container.shape:
-                    raise RuntimeError(f'value must match shape {self.container.shape}')
-
-            blocks = self.container._blocks.extract_bloc_assign(bloc_key, value)
-
+        blocks = self.container._blocks.extract_iloc_assign(key,
+                assigned,
+                value_is_blocks=value_is_blocks,
+                )
 
         return self.container.__class__(
                 data=blocks,
@@ -6922,6 +6889,92 @@ class FrameAssign(Assign):
                 own_data=True
                 )
 
+    def apply(self,
+            func: AnyCallable,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''
+        Provide a function to apply to the assignment target, and use that as the assignment value.
+        '''
+        value = func(self.container.iloc[self.key])
+        return self.__call__(value, fill_value=fill_value)
+
+
+class FrameAssignBLoc(FrameAssign):
+    __slots__ = (
+        'container',
+        'key',
+        )
+
+    def __init__(self,
+            container: Frame,
+            key: tp.Optional[Bloc2DKeyType] = None,
+            ) -> None:
+        '''Store a reference to ``Frame``, as well as a key to be used for assignment with ``__call__``
+
+        Args:
+            key: a bloc-style key.
+        '''
+        self.container = container
+        self.key = key
+
+    def __call__(self,
+            value: tp.Any,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''
+        Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
+
+        Args:
+            value: Value to assign, which can be a :obj:`Series`, :obj:`Frame`, np.ndarray, or element.
+            *,
+            fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
+        '''
+        is_frame = isinstance(value, Frame)
+        is_series = isinstance(value, Series)
+
+        key = bloc_key_normalize(
+                key=self.key,
+                container=self.container
+                )
+        if is_series:
+            # assumes a Series from a bloc selection
+            index = self.container._index
+            columns = self.container._columns
+            # NOTE: this can be done more efficiently with a new function on TypeBlocks
+            array = np.empty(key.shape, dtype=value.dtype)
+            for (i, c), e in value.items():
+                array[index.loc_to_iloc(i), columns.loc_to_iloc(c)] = e
+            value = array
+
+        if is_frame:
+            value = value.reindex(
+                    index=self.container._index,
+                    columns=self.container._columns,
+                    fill_value=FILL_VALUE_DEFAULT
+                    ).values
+
+            # if we produced any invalid entries, cannot select them
+            invalid_found = value == FILL_VALUE_DEFAULT
+            if invalid_found.any():
+                key = key.copy() # mutate a copy
+                key[invalid_found] = False
+
+        elif isinstance(value, np.ndarray):
+            if value.shape != self.container.shape:
+                raise RuntimeError(f'value must match shape {self.container.shape}')
+
+        blocks = self.container._blocks.extract_bloc_assign(key, value)
+
+        return self.container.__class__(
+                data=blocks,
+                columns=self.container._columns,
+                index=self.container._index,
+                name=self.container._name,
+                own_data=True
+                )
 
     def apply(self,
             func: AnyCallable,
@@ -6931,15 +6984,10 @@ class FrameAssign(Assign):
         '''
         Provide a function to apply to the assignment target, and use that as the assignment value.
         '''
-        if self.iloc_key is not None:
-            value = func(self.container.iloc[self.iloc_key])
-        else: # use bloc
-            value = func(self.container.bloc[self.bloc_key])
-
+        value = func(self.container.bloc[self.key])
         return self.__call__(value, fill_value=fill_value)
 
-
-
+#-------------------------------------------------------------------------------
 class FrameAsType:
     '''
     The object returned from the getitem selector, exposing the functional (__call__) interface to pass in the dtype, as well as (optionally) whether blocks are consolidated.
