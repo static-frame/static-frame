@@ -6820,7 +6820,39 @@ class FrameAssign(Assign):
         'container',
         'key',
         )
-    # common base classe for supplying delegate
+
+   # common base classe for supplying delegate; need to define interface for docs
+    def __call__(self,
+            value: tp.Any,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''
+        Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
+
+        Args:
+            value: Value to assign, which can be a :obj:`Series`, :obj:`Frame`, np.ndarray, or element.
+            *.
+            fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
+        '''
+        raise NotImplementedError()
+
+    def apply(self,
+            func: AnyCallable,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''
+        Provide a function to apply to the assignment target, and use that as the assignment value.
+
+        Args:
+            func: A function to apply to the assignment target.
+            *.
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
+        '''
+        raise NotImplementedError()
+
+
 
 class FrameAssignILoc(FrameAssign):
     __slots__ = (
@@ -6832,8 +6864,7 @@ class FrameAssignILoc(FrameAssign):
             container: Frame,
             key: GetItemKeyTypeCompound = None,
             ) -> None:
-        '''Store a reference to ``Frame``, as well as a key to be used for assignment with ``__call__``
-
+        '''
         Args:
             key: an iloc key.
         '''
@@ -6845,14 +6876,6 @@ class FrameAssignILoc(FrameAssign):
             *,
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
-        '''
-        Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
-
-        Args:
-            value: Value to assign, which can be a :obj:`Series`, :obj:`Frame`, np.ndarray, or element.
-            *,
-            fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
-        '''
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
@@ -6899,9 +6922,6 @@ class FrameAssignILoc(FrameAssign):
             *,
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
-        '''
-        Provide a function to apply to the assignment target, and use that as the assignment value.
-        '''
         value = func(self.container.iloc[self.key])
         return self.__call__(value, fill_value=fill_value)
 
@@ -6916,8 +6936,7 @@ class FrameAssignBLoc(FrameAssign):
             container: Frame,
             key: tp.Optional[Bloc2DKeyType] = None,
             ) -> None:
-        '''Store a reference to ``Frame``, as well as a key to be used for assignment with ``__call__``
-
+        '''
         Args:
             key: a bloc-style key.
         '''
@@ -6929,14 +6948,6 @@ class FrameAssignBLoc(FrameAssign):
             *,
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
-        '''
-        Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
-
-        Args:
-            value: Value to assign, which can be a :obj:`Series`, :obj:`Frame`, np.ndarray, or element.
-            *,
-            fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
-        '''
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
@@ -6987,9 +6998,6 @@ class FrameAssignBLoc(FrameAssign):
             *,
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
-        '''
-        Provide a function to apply to the assignment target, and use that as the assignment value.
-        '''
         value = func(self.container.bloc[self.key])
         return self.__call__(value, fill_value=fill_value)
 

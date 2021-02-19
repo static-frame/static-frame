@@ -5,3 +5,8 @@ class Assign:
     Common base class for SeriesAssign and FrameAssign classes.
     '''
     __slots__ = EMPTY_TUPLE
+
+    INTERFACE = (
+        '__call__',
+        'apply',
+        )

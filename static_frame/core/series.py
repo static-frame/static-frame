@@ -2361,6 +2361,7 @@ class SeriesAssign(Assign):
 
     def __call__(self,
             value: tp.Any, # any possible assignment type
+            *,
             fill_value: tp.Any = np.nan
             ) -> Series:
         '''
@@ -2368,6 +2369,7 @@ class SeriesAssign(Assign):
 
         Args:
             value:  Value to assign, which can be a :obj:`Series`, np.ndarray, or element.
+            *.
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
         if isinstance(value, Series):
@@ -2406,6 +2408,11 @@ class SeriesAssign(Assign):
             ) -> 'Series':
         '''
         Provide a function to apply to the assignment target, and use that as the assignment value.
+
+        Args:
+            func: A function to apply to the assignment target.
+            *.
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
         '''
         value = func(self.container.iloc[self.key])
         return self.__call__(value, fill_value=fill_value)
