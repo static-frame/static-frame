@@ -100,6 +100,6 @@ from static_frame.core.util import mloc as mloc
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 
-__version__ = '0.8.0' # use -dev for new version in development
+__version__ = '0.8.1' # use -dev for new version in development
 
 
