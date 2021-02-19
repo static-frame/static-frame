@@ -2027,7 +2027,7 @@ class TypeBlocks(ContainerOperand):
         return TypeBlocks.from_blocks(self._assign_from_iloc_by_blocks(
                 row_key=row_key,
                 column_key=column_key,
-                values=value, #type: ignore
+                values=value,
                 ))
 
 

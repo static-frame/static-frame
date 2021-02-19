@@ -72,12 +72,11 @@ class TestUnit(TestCase):
                 ['cls_name', 'group', 'doc', 'reference', 'use_signature', 'is_attr', 'delegate_reference', 'delegate_is_attr', 'signature_no_args']
                 )
 
-    def test_interface_assign_a(self):
+    def test_interface_assign_a(self) -> None:
         f = Frame.interface.loc[Frame.interface.index.via_str.startswith('assign')]
         # assignmewnt interface is one of the most complex, so we can check the signatures here explicitly
         self.assertEqual(f.index.values.tolist(),
                 ['assign[key](value, *, fill_value)', 'assign[key].apply(func, *, fill_value)', 'assign.iloc[key](value, *, fill_value)', 'assign.iloc[key].apply(func, *, fill_value)', 'assign.loc[key](value, *, fill_value)', 'assign.loc[key].apply(func, *, fill_value)', 'assign.bloc[key](value, *, fill_value)', 'assign.bloc[key].apply(func, *, fill_value)'])
-        import ipdb; ipdb.set_trace()
 
 
 
