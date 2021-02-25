@@ -2214,7 +2214,7 @@ class Series(ContainerOperand):
             tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]
         '''
         if isinstance(self._index, IndexHierarchy):
-            index_values = list(array2d_to_tuples(self._index.values))
+            index_values = array2d_to_tuples(self._index.values)
         else:
             index_values = self._index.values
 
