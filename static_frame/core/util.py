@@ -1550,8 +1550,7 @@ def array_shift(*,
     return result
 
 def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
-    for row in array: # assuming 2d
-        yield tuple(row)
+    yield from map(tuple, array)
 
 
 def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
