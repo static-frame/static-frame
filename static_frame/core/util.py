@@ -821,8 +821,7 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
             copy_values |= is_iifa
     return is_gen, copy_values
 
-# TODO: rename, to similar to resolve_dtype_iter
-def resolve_type_iter(
+def prepare_iter_for_array(
         values: tp.Iterable[tp.Any],
         restrict_copy: bool = False
         ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
@@ -938,7 +937,7 @@ def iterable_to_array_1d(
         values_for_construct = (values,)
     elif dtype is None:
         # this gives as dtype only None, or object, letting array constructor do the rest
-        dtype, has_tuple, values_for_construct = resolve_type_iter(values)
+        dtype, has_tuple, values_for_construct = prepare_iter_for_array(values)
         if len(values_for_construct) == 0:
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
     else:
@@ -1004,8 +1003,8 @@ def iterable_to_array_2d(
     if not hasattr(values, '__len__'):
         values = tuple(values)
 
-    # if we provide whole generator to resolve_type_iter, it will copy the entire sequence unless restrict copy is True
-    dtype, _, _ = resolve_type_iter(
+    # if we provide whole generator to prepare_iter_for_array, it will copy the entire sequence unless restrict copy is True
+    dtype, _, _ = prepare_iter_for_array(
             (y for z in values for y in z),
             restrict_copy=True
             )
