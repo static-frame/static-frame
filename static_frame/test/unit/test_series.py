@@ -2829,6 +2829,7 @@ class TestUnit(TestCase):
                 ((('circle', 'rough'), 12), (('circle', 'smooth'), 10), (('square', 'rough'), 4), (('square', 'smooth'), 2), (('triangle', 'rough'), 20), (('triangle', 'smooth'), 18))
                 )
 
+    #---------------------------------------------------------------------------
 
     def test_series_locmin_a(self) -> None:
         s1 = Series((2, 3, 0,), index=list('abc'))
@@ -2854,6 +2855,63 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             s1.loc_max(skipna=False)
 
+
+    #---------------------------------------------------------------------------
+    def test_series_iloc_searchsorted(self) -> None:
+        s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        self.assertEqual(s1.iloc_searchsorted(88), 3)
+        self.assertEqual(s1.iloc_searchsorted(88, side_left=False), 3)
+
+        self.assertEqual(s1.iloc_searchsorted(87), 2)
+        self.assertEqual(s1.iloc_searchsorted(87, side_left=False), 3)
+
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual(s1.iloc_searchsorted([0, 123]).tolist(), [0, 3])
+        self.assertEqual(s1.iloc_searchsorted([0, 6]).tolist(), [0, 1])
+        self.assertEqual(s1.iloc_searchsorted([3, 8234]).tolist(), [0, 6])
+        self.assertEqual(s1.iloc_searchsorted([3, 8234], side_left=False).tolist(), [1, 7])
+
+    #---------------------------------------------------------------------------
+    def test_series_loc_searchsorted_a(self) -> None:
+        s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        self.assertEqual(s1.loc_searchsorted(88), 'd')
+        self.assertEqual(s1.loc_searchsorted(88, side_left=False), 'd')
+
+        self.assertEqual(s1.loc_searchsorted(87), 'c')
+        self.assertEqual(s1.loc_searchsorted(87, side_left=False), 'd')
+
+        self.assertEqual(s1.loc_searchsorted([0, 123]).tolist(), ['a', 'd'])
+        self.assertEqual(s1.loc_searchsorted([0, 6]).tolist(), ['a', 'b'])
+        self.assertEqual(s1.loc_searchsorted([3, 8234]).tolist(), ['a', 'g'])
+        self.assertEqual(s1.loc_searchsorted([3, 8234],
+                side_left=False,
+                fill_value=None).tolist(),
+                ['b', None])
+
+        self.assertEqual(
+                s1.loc_searchsorted([3, 8235, 3, 8235], fill_value=None).tolist(),
+                ['a', None, 'a', None])
+        self.assertEqual(
+                s1.loc_searchsorted(8235, fill_value=None),
+                None)
+
+        self.assertEqual(s1.loc_searchsorted(8234), 'g')
+        self.assertTrue(np.isnan(s1.loc_searchsorted(8235)))
+
+    def test_series_loc_searchsorted_b(self) -> None:
+
+        s1 = Series(range(10), index=IndexDate.from_date_range('2020-01-01', '2020-01-10'))
+
+        self.assertEqual(s1.astype(float).loc_searchsorted(2.5).tolist(),
+                datetime.date(2020, 1, 4))
+
+        self.assertEqual(
+                s1.astype(float).loc_searchsorted((2.5, 5.5, 2000), fill_value=None).tolist(),
+                [datetime.date(2020, 1, 4), datetime.date(2020, 1, 7), None]
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_series_from_concat_items_a(self) -> None:
 
