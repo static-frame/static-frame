@@ -6308,6 +6308,118 @@ class Frame(ContainerOperand):
         return self._to_frame(FrameGO) #type: ignore
 
 
+    def _to_records(self,
+            *,
+            include_index: bool = True,
+            include_index_name: bool = True,
+            include_columns: bool = True,
+            include_columns_name: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ) -> None:
+        '''
+        Iterator of records with values converted to strings.
+
+
+        '''
+
+        index = self._index
+        columns = self._columns
+
+        if include_index:
+            index_values = index.values # get once for caching
+            index_names = index.names # normalized presentation
+            index_depth = index.depth
+
+        if include_columns:
+            columns_names = columns.names
+
+        if store_filter:
+            filter_func = store_filter.from_type_filter_element
+
+        if include_columns:
+            if columns.depth == 1:
+                columns_rows = (columns,)
+            else:
+                columns_rows = columns.values.T
+
+            for row_idx, columns_row in enumerate(columns_rows):
+                row = [] # column depth is a row
+
+                if include_index:
+                    # only have apex space if include columns and index
+                    if include_index_name:
+                        # index_names serves as a proxy for the index_depth
+                        for name in index_names:
+                            row.append(f'{name}' if row_idx == 0 else '')
+                            # if row_idx == 0:
+                            #     # we always write index name labels on the top-most row
+                            #     f.write(f'{name}{delimiter}')
+                            # else:
+                            #     f.write(f'{delimiter}')
+                    elif include_columns_name:
+                        for col_idx in range(index_depth):
+                            row.append(f'{columns_names[row_idx]}' if col_idx == 0 else '')
+                            # if col_idx == 0:
+                            #     f.write(f'{columns_names[row_idx]}{delimiter}')
+                            # else:
+                            #     f.write(f'{delimiter}')
+                    else:
+                        row.extend(('' for _ in range(index_depth)))
+                        # f.write(f'{delimiter * index_depth}')
+                # write the rest of the line
+                if store_filter:
+                    row.extend(f'{filter_func(x)}' for x in columns_row)
+                    # f.write(delimiter.join(f'{filter_func(x)}' for x in columns_row))
+                else:
+                    row.extend(f'{x}' for x in columns_row)
+                    # f.write(delimiter.join(f'{x}' for x in columns_row))
+
+                # f.write(line_terminator)
+                yield row
+
+        col_idx_last = self._blocks._shape[1] - 1
+        # avoid row creation to avoid joining types; avoide creating a list for each row
+        row_current_idx: tp.Optional[int] = None
+
+        for (row_idx, col_idx), element in self._iter_element_iloc_items():
+            if row_idx != row_current_idx: # each new row
+                if row_current_idx is not None: # if not the first
+                    yield row
+                    # f.write(line_terminator)
+                row = []
+                if include_index:
+                    if index_depth == 1:
+                        index_value = index_values[row_idx]
+                        if store_filter:
+                            row.append(f'{filter_func(index_value)}')
+                            # f.write(f'{filter_func(index_value)}{delimiter}')
+                        else:
+                            row.append(f'{index_value}')
+                            # f.write(f'{index_value}{delimiter}')
+                    else:
+                        for index_value in index_values[row_idx]:
+                            if store_filter:
+                                row.append(f'{filter_func(index_value)}')
+                                # f.write(f'{filter_func(index_value)}{delimiter}')
+                            else:
+                                row.append(f'{index_value}')
+                                # f.write(f'{index_value}{delimiter}')
+                row_current_idx = row_idx
+            if store_filter:
+                row.append(f'{filter_func(element)}')
+                # f.write(f'{filter_func(element)}')
+            else:
+                row.append(f'{element}')
+                # f.write(f'{element}')
+            # if col_idx != col_idx_last:
+            #     f.write(delimiter)
+
+        if row_current_idx is not None: # if not an empty Frame, write the last terminator
+            yield row
+            # f.write(line_terminator)
+
+
+
     def to_delimited(self,
             fp: PathSpecifierOrFileLike,
             *,
@@ -6328,6 +6440,10 @@ class Frame(ContainerOperand):
             include_index_name: if including columns, populate the row above the index with the ``name``. Cannot be True if ``include_columns_name`` is True.
             incldue_columns_nmae: if including index, populate the column to the left of the columns with the ``name``. Cannot be True if ``include_index_name`` is True.
         '''
+        # TODO:
+        # escape_char
+        # quote_char
+
         fp = path_filter(fp)
 
         if sum((include_columns_name, include_index_name)) > 1:
