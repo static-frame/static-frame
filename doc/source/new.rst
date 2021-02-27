@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.2
+----------
+
+Added ``Series.iloc_searchsorted`` and ``Series.loc_searchsorted``.
+
+
 0.8.1
 ----------
 

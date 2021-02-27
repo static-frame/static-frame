@@ -268,6 +268,7 @@ class DOC_TEMPLATE:
             container="container: Container to be inserted.",
             fill_value='fill_value: A value to be used to fill space after reindexing the new container.'
             )
+
     join = dict(
             left_depth_level="left_depth_level: Specify one or more left index depths to include in the join predicate.",
             left_columns="left_columns: Specify one or more left columns to include in the join predicate.",
@@ -337,7 +338,7 @@ class DOC_TEMPLATE:
             )
 
     relabel = dict(
-            doc ='''Return a new :obj:`{class_name}` with transformed labels on the index. The size and ordering of the data is never chagned in a relabeling operation. The resulting index must be unique.
+            doc ='''Return a new :obj:`{class_name}` with transformed labels on the index. The size and ordering of the data is never changed in a relabeling operation. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most levels; a negative integer drops that many inner-most levels.''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
@@ -366,6 +367,12 @@ class DOC_TEMPLATE:
             index='''Number of labels to select from the index.''',
             columns='''Number of labels to select from the columns.''',
             seed='''Initial state of random selection.''',
+            )
+    searchsorted = dict(
+            doc='Given a sorted :obj:`Series`, return the {label_type} position(s) at which insertion in ``values`` would retain sort order.',
+            values='values: a single value, or iterable of values.',
+            side_left='side_left: If True, the index of the first suitable location found is given, else return the last such index. If matching an existing value, `side_left==True` will return that position, `side_left==Right` will return the next position (or the length).',
+            fill_value='fill_value: A value to be used to fill the label beyond the last label.',
             )
     selector = dict(
             key_loc=LOC_SELECTOR,

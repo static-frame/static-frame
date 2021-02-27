@@ -2056,42 +2056,51 @@ class Series(ContainerOperand):
         return argmax_1d(self.values, skipna=skipna) #type: ignore
 
     #---------------------------------------------------------------------------
+    @doc_inject(selector='searchsorted', label_type='iloc (integer)')
     def iloc_searchsorted(self,
             values: tp.Any, # a single value, or an iterable of values
             *,
             side_left: bool = True,
             ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
         '''
-        Given a sorted :obj:`Series`, return the iloc (integer) position(s) in which placing ``values`` would retain sort order.
+        {doc}
 
         Args:
-            values: a single value, or iterable of values.
-            side_left: If True, the index of the first suitable location found is given, else return the last such index. If matching an existing value, `side_left==True` will return that position, `side_left==Right` will return the next position (or the length).
+            {values}
+            {side_left}
         '''
         if not isinstance(values, str) and hasattr(values, '__len__'):
             if not isinstance(values, np.ndarray):
                 values, _ = iterable_to_array_1d(values)
-        return np.searchsorted(self.values,
+        return np.searchsorted(self.values, #type: ignore [no-any-return]
                 values,
                 'left' if side_left else 'right',
                 )
 
+    @doc_inject(selector='searchsorted', label_type='loc (label)')
     def loc_searchsorted(self,
             values: tp.Any, # a single value, or an iterable of values
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
             ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+        '''
+        {doc}
 
+        Args:
+            {values}
+            {side_left}
+            {fill_value}
+        '''
         sel = self.iloc_searchsorted(values, side_left=side_left)
 
         length = self.__len__()
         if sel.ndim == 0 and sel == length: # an element:
-            return fill_value
+            return fill_value #type: ignore [no-any-return]
 
         mask = sel == length
         if not mask.any():
-            return self._index.values[sel]
+            return self._index.values[sel] #type: ignore [no-any-return]
 
         post = np.empty(len(sel),
                 dtype=resolve_dtype(self._index.dtype,
@@ -2100,9 +2109,7 @@ class Series(ContainerOperand):
         sel[mask] = 0 # set out of range values to zero
         post[:] = self._index.values[sel]
         post[mask] = fill_value
-        return post
-
-
+        return post #type: ignore [no-any-return]
 
     #---------------------------------------------------------------------------
     def _insert(self,
