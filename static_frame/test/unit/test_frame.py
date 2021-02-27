@@ -5707,6 +5707,55 @@ class TestUnit(TestCase):
                 (('w', (('r', 2), ('s', 'a'))), ('x', (('r', 3), ('s', 'b')))))
 
 
+    #---------------------------------------------------------------------------
+    def test_frame_to_str_records_a(self) -> None:
+        records = (
+                (2, None),
+                (3, np.nan),
+                (0, False),
+                (3, 'x')
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's'),
+                index=IndexHierarchy.from_product((1, 2), ('a', 'b')))
+
+        self.assertEqual(tuple(f1._to_str_records()),
+            (['__index0__', '__index1__', 'r', 's'],
+            ['1', 'a', '2', 'None'],
+            ['1', 'b', '3', ''],
+            ['2', 'a', '0', 'False'],
+            ['2', 'b', '3', 'x']))
+
+
+        self.assertEqual(tuple(f1._to_str_records(include_index_name=False)),
+            (['', '', 'r', 's'],
+            ['1', 'a', '2', 'None'],
+            ['1', 'b', '3', ''],
+            ['2', 'a', '0', 'False'],
+            ['2', 'b', '3', 'x']))
+
+
+        self.assertEqual(
+            tuple(f1._to_str_records(include_index=False)),
+            (['r', 's'],
+            ['2', 'None'],
+            ['3', ''],
+            ['0', 'False'],
+            ['3', 'x'])
+            )
+        self.assertEqual(
+            tuple(f1._to_str_records(include_index=False, include_columns=False)),
+            (['2', 'None'],
+            ['3', ''],
+            ['0', 'False'],
+            ['3', 'x'])
+            )
+
+        with self.assertRaises(RuntimeError):
+            _ = tuple(f1._to_str_records(
+                    include_index_name=True,
+                    include_columns_name=True))
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
     @skip_win # type: ignore

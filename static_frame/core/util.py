@@ -11,6 +11,7 @@ from os import PathLike
 from urllib import request
 from copy import deepcopy
 
+import contextlib
 import datetime
 import operator
 import os
@@ -2436,6 +2437,30 @@ def write_optional_file(
         f.seek(0)
     return fp #type: ignore
 
+
+@contextlib.contextmanager
+def file_like_manager(
+        file_like: PathSpecifierOrFileLikeOrIterator,
+        encoding: tp.Optional[str] = None,
+        mode: str = 'r',
+        ) -> tp.Iterator[tp.Iterator[str]]:
+    '''
+    Return an file or file-like object. Manage closing of file if necessary.
+    '''
+    file_like = path_filter(file_like)
+
+    try:
+        if isinstance(file_like, str):
+            f = open(file_like, mode=mode, encoding=encoding)
+            is_file = True
+        else:
+            f = file_like # assume an open file-like object
+            is_file = False
+        yield f
+
+    finally:
+        if is_file:
+            f.close()
 
 #-------------------------------------------------------------------------------
 # trivial, non NP util

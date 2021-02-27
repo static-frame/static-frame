@@ -144,6 +144,7 @@ from static_frame.core.util import DTU_PYARROW
 from static_frame.core.util import DT64_NS
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import file_like_manager
 
 
 if tp.TYPE_CHECKING:
@@ -6308,7 +6309,8 @@ class Frame(ContainerOperand):
         return self._to_frame(FrameGO) #type: ignore
 
 
-    def _to_records(self,
+    #---------------------------------------------------------------------------
+    def _to_str_records(self,
             *,
             include_index: bool = True,
             include_index_name: bool = True,
@@ -6318,9 +6320,9 @@ class Frame(ContainerOperand):
             ) -> None:
         '''
         Iterator of records with values converted to strings.
-
-
         '''
+        if sum((include_columns_name, include_index_name)) > 1:
+            raise RuntimeError('cannot set both `include_columns_name` and `include_index_name`')
 
         index = self._index
         columns = self._columns
@@ -6350,31 +6352,18 @@ class Frame(ContainerOperand):
                     if include_index_name:
                         # index_names serves as a proxy for the index_depth
                         for name in index_names:
+                            # we always write index name labels on the top-most
                             row.append(f'{name}' if row_idx == 0 else '')
-                            # if row_idx == 0:
-                            #     # we always write index name labels on the top-most row
-                            #     f.write(f'{name}{delimiter}')
-                            # else:
-                            #     f.write(f'{delimiter}')
                     elif include_columns_name:
                         for col_idx in range(index_depth):
                             row.append(f'{columns_names[row_idx]}' if col_idx == 0 else '')
-                            # if col_idx == 0:
-                            #     f.write(f'{columns_names[row_idx]}{delimiter}')
-                            # else:
-                            #     f.write(f'{delimiter}')
                     else:
                         row.extend(('' for _ in range(index_depth)))
-                        # f.write(f'{delimiter * index_depth}')
                 # write the rest of the line
                 if store_filter:
                     row.extend(f'{filter_func(x)}' for x in columns_row)
-                    # f.write(delimiter.join(f'{filter_func(x)}' for x in columns_row))
                 else:
                     row.extend(f'{x}' for x in columns_row)
-                    # f.write(delimiter.join(f'{x}' for x in columns_row))
-
-                # f.write(line_terminator)
                 yield row
 
         col_idx_last = self._blocks._shape[1] - 1
@@ -6385,39 +6374,28 @@ class Frame(ContainerOperand):
             if row_idx != row_current_idx: # each new row
                 if row_current_idx is not None: # if not the first
                     yield row
-                    # f.write(line_terminator)
                 row = []
                 if include_index:
                     if index_depth == 1:
                         index_value = index_values[row_idx]
                         if store_filter:
                             row.append(f'{filter_func(index_value)}')
-                            # f.write(f'{filter_func(index_value)}{delimiter}')
                         else:
                             row.append(f'{index_value}')
-                            # f.write(f'{index_value}{delimiter}')
                     else:
                         for index_value in index_values[row_idx]:
                             if store_filter:
                                 row.append(f'{filter_func(index_value)}')
-                                # f.write(f'{filter_func(index_value)}{delimiter}')
                             else:
                                 row.append(f'{index_value}')
-                                # f.write(f'{index_value}{delimiter}')
                 row_current_idx = row_idx
             if store_filter:
                 row.append(f'{filter_func(element)}')
-                # f.write(f'{filter_func(element)}')
             else:
                 row.append(f'{element}')
-                # f.write(f'{element}')
-            # if col_idx != col_idx_last:
-            #     f.write(delimiter)
 
-        if row_current_idx is not None: # if not an empty Frame, write the last terminator
+        if row_current_idx is not None:
             yield row
-            # f.write(line_terminator)
-
 
 
     def to_delimited(self,
@@ -6430,6 +6408,10 @@ class Frame(ContainerOperand):
             include_columns_name: bool = False,
             encoding: tp.Optional[str] = None,
             line_terminator: str = '\n',
+            quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            quoting: int = csv.QUOTE_MINIMAL,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
@@ -6440,99 +6422,134 @@ class Frame(ContainerOperand):
             include_index_name: if including columns, populate the row above the index with the ``name``. Cannot be True if ``include_columns_name`` is True.
             incldue_columns_nmae: if including index, populate the column to the left of the columns with the ``name``. Cannot be True if ``include_index_name`` is True.
         '''
-        # TODO:
-        # escape_char
-        # quote_char
+        with file_like_manager(fp, encoding=encoding, mode='w') as fl:
+            csvw = csv.writer(fl,
+                    delimiter=delimiter,
+                    escapechar=escape_char,
+                    quotechar=quote_char,
+                    lineterminator=line_terminator,
+                    quoting=quoting,
+                    doublequote=quote_double,
+                    )
+            for row in self._to_str_records(
+                    include_index=include_index,
+                    include_index_name=include_index_name,
+                    include_columns=include_columns,
+                    include_columns_name=include_columns_name,
+                    store_filter=store_filter,
+                    ):
+                csvw.writerow(row)
 
-        fp = path_filter(fp)
 
-        if sum((include_columns_name, include_index_name)) > 1:
-            raise RuntimeError('cannot set both `include_columns_name` and `include_index_name`')
+    # def to_delimited(self,
+    #         fp: PathSpecifierOrFileLike,
+    #         *,
+    #         delimiter: str,
+    #         include_index: bool = True,
+    #         include_index_name: bool = True,
+    #         include_columns: bool = True,
+    #         include_columns_name: bool = False,
+    #         encoding: tp.Optional[str] = None,
+    #         line_terminator: str = '\n',
+    #         store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+    #         ) -> None:
+    #     '''
+    #     Given a file path or file-like object, write the Frame as delimited text.
 
-        if isinstance(fp, str):
-            f = open(fp, 'w', encoding=encoding)
-            is_file = True
-        else:
-            f = fp # assume an open file like
-            is_file = False
+    #     Args:
+    #         delimiter: character to be used for delimiterarating elements.
+    #         include_index_name: if including columns, populate the row above the index with the ``name``. Cannot be True if ``include_columns_name`` is True.
+    #         incldue_columns_nmae: if including index, populate the column to the left of the columns with the ``name``. Cannot be True if ``include_index_name`` is True.
+    #     '''
+    #     if sum((include_columns_name, include_index_name)) > 1:
+    #         raise RuntimeError('cannot set both `include_columns_name` and `include_index_name`')
 
-        index = self._index
-        columns = self._columns
+    #     fp = path_filter(fp)
 
-        if include_index:
-            index_values = index.values # get once for caching
-            index_names = index.names # normalized presentation
-            index_depth = index.depth
+    #     if isinstance(fp, str):
+    #         f = open(fp, 'w', encoding=encoding)
+    #         is_file = True
+    #     else:
+    #         f = fp # assume an open file like
+    #         is_file = False
 
-        if include_columns:
-            columns_names = columns.names
+    #     index = self._index
+    #     columns = self._columns
 
-        if store_filter:
-            filter_func = store_filter.from_type_filter_element
+    #     if include_index:
+    #         index_values = index.values # get once for caching
+    #         index_names = index.names # normalized presentation
+    #         index_depth = index.depth
 
-        try: # manage finally closing of file
-            if include_columns:
-                if columns.depth == 1:
-                    columns_rows = (columns,)
-                else:
-                    columns_rows = columns.values.T
-                for row_idx, columns_row in enumerate(columns_rows):
-                    if include_index:
-                        if include_index_name:
-                            # index_names serves as a proxy for the index_depth
-                            for name in index_names:
-                                if row_idx == 0:
-                                    # we always write index name labels on the top-most row
-                                    f.write(f'{name}{delimiter}')
-                                else:
-                                    f.write(f'{delimiter}')
-                        elif include_columns_name:
-                            for col_idx in range(index_depth):
-                                if col_idx == 0:
-                                    f.write(f'{columns_names[row_idx]}{delimiter}')
-                                else:
-                                    f.write(f'{delimiter}')
-                        else:
-                            f.write(f'{delimiter * index_depth}')
-                    # write the rest of the line
-                    if store_filter:
-                        f.write(delimiter.join(f'{filter_func(x)}' for x in columns_row))
-                    else:
-                        f.write(delimiter.join(f'{x}' for x in columns_row))
-                    f.write(line_terminator)
+    #     if include_columns:
+    #         columns_names = columns.names
 
-            col_idx_last = self._blocks._shape[1] - 1
-            # avoid row creation to avoid joining types; avoide creating a list for each row
-            row_current_idx: tp.Optional[int] = None
-            for (row_idx, col_idx), element in self._iter_element_iloc_items():
-                if row_idx != row_current_idx:
-                    if row_current_idx is not None: # if not the first
-                        f.write(line_terminator)
-                    if include_index:
-                        if index_depth == 1:
-                            index_value = index_values[row_idx]
-                            if store_filter:
-                                f.write(f'{filter_func(index_value)}{delimiter}')
-                            else:
-                                f.write(f'{index_value}{delimiter}')
-                        else:
-                            for index_value in index_values[row_idx]:
-                                if store_filter:
-                                    f.write(f'{filter_func(index_value)}{delimiter}')
-                                else:
-                                    f.write(f'{index_value}{delimiter}')
-                    row_current_idx = row_idx
-                if store_filter:
-                    f.write(f'{filter_func(element)}')
-                else:
-                    f.write(f'{element}')
-                if col_idx != col_idx_last:
-                    f.write(delimiter)
-            if row_current_idx is not None: # if not an empty Frame, write the last terminator
-                f.write(line_terminator)
-        finally:
-            if is_file:
-                f.close()
+    #     if store_filter:
+    #         filter_func = store_filter.from_type_filter_element
+
+    #     try: # manage finally closing of file
+    #         if include_columns:
+    #             if columns.depth == 1:
+    #                 columns_rows = (columns,)
+    #             else:
+    #                 columns_rows = columns.values.T
+    #             for row_idx, columns_row in enumerate(columns_rows):
+    #                 if include_index:
+    #                     if include_index_name:
+    #                         # index_names serves as a proxy for the index_depth
+    #                         for name in index_names:
+    #                             if row_idx == 0:
+    #                                 # we always write index name labels on the top-most row
+    #                                 f.write(f'{name}{delimiter}')
+    #                             else:
+    #                                 f.write(f'{delimiter}')
+    #                     elif include_columns_name:
+    #                         for col_idx in range(index_depth):
+    #                             if col_idx == 0:
+    #                                 f.write(f'{columns_names[row_idx]}{delimiter}')
+    #                             else:
+    #                                 f.write(f'{delimiter}')
+    #                     else:
+    #                         f.write(f'{delimiter * index_depth}')
+    #                 # write the rest of the line
+    #                 if store_filter:
+    #                     f.write(delimiter.join(f'{filter_func(x)}' for x in columns_row))
+    #                 else:
+    #                     f.write(delimiter.join(f'{x}' for x in columns_row))
+    #                 f.write(line_terminator)
+
+    #         col_idx_last = self._blocks._shape[1] - 1
+    #         # avoid row creation to avoid joining types; avoide creating a list for each row
+    #         row_current_idx: tp.Optional[int] = None
+    #         for (row_idx, col_idx), element in self._iter_element_iloc_items():
+    #             if row_idx != row_current_idx:
+    #                 if row_current_idx is not None: # if not the first
+    #                     f.write(line_terminator)
+    #                 if include_index:
+    #                     if index_depth == 1:
+    #                         index_value = index_values[row_idx]
+    #                         if store_filter:
+    #                             f.write(f'{filter_func(index_value)}{delimiter}')
+    #                         else:
+    #                             f.write(f'{index_value}{delimiter}')
+    #                     else:
+    #                         for index_value in index_values[row_idx]:
+    #                             if store_filter:
+    #                                 f.write(f'{filter_func(index_value)}{delimiter}')
+    #                             else:
+    #                                 f.write(f'{index_value}{delimiter}')
+    #                 row_current_idx = row_idx
+    #             if store_filter:
+    #                 f.write(f'{filter_func(element)}')
+    #             else:
+    #                 f.write(f'{element}')
+    #             if col_idx != col_idx_last:
+    #                 f.write(delimiter)
+    #         if row_current_idx is not None: # if not an empty Frame, write the last terminator
+    #             f.write(line_terminator)
+    #     finally:
+    #         if is_file:
+    #             f.close()
 
     def to_csv(self,
             fp: PathSpecifierOrFileLike,
