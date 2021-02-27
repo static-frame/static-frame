@@ -6451,7 +6451,7 @@ class Frame(ContainerOperand):
                     ):
                 csvw.writerow(row)
 
-
+    @doc_inject(selector='delimited')
     def to_csv(self,
             fp: PathSpecifierOrFileLike,
             *,
@@ -6500,6 +6500,7 @@ class Frame(ContainerOperand):
                 store_filter=store_filter
                 )
 
+    @doc_inject(selector='delimited')
     def to_tsv(self,
             fp: PathSpecifierOrFileLike,
             *,
@@ -6548,6 +6549,7 @@ class Frame(ContainerOperand):
                 store_filter=store_filter
                 )
 
+    @doc_inject(selector='delimited')
     def to_clipboard(self,
             *,
             delimiter: str = '\t',
@@ -6564,7 +6566,7 @@ class Frame(ContainerOperand):
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
-        {doc} The delimiter defaults to a tab.
+        {doc} The ``delimiter`` defaults to a tab.
 
         Args:
             {fp}

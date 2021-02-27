@@ -25,6 +25,7 @@ from static_frame.core.exception import LocEmpty
 from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import StoreFileMutation
 from static_frame.core.frame import Frame as Frame
+from static_frame.core.frame import FrameAssign as FrameAssign
 from static_frame.core.frame import FrameAssignILoc as FrameAssignILoc
 from static_frame.core.frame import FrameAssignBLoc as FrameAssignBLoc
 from static_frame.core.frame import FrameGO as FrameGO
