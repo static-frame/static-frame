@@ -4,7 +4,9 @@ What is New in Static Frame
 0.8.2
 ----------
 
-Added ``Series.iloc_searchsorted`` and ``Series.loc_searchsorted``.
+Added ``Series.iloc_searchsorted()`` and ``Series.loc_searchsorted()``.
+
+Interfaces of ``Frame.to_delimited()``, ``Frame.to_csv()``, ``Frame.to_tsv()``, and ``Frame.to_clipboard()`` are extended with parameters for control of quoting and escaping delimiters and other characters. The standard library's ``csv`` module is now used for writing.
 
 
 0.8.1
