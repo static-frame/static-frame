@@ -70,7 +70,7 @@ class TestUnit(TestCase):
                 datetime.datetime,
                 fractions.Fraction
                 ))
-        resolved, has_tuple, values_post = util.resolve_type_iter(objects)
+        resolved, has_tuple, values_post = util.prepare_iter_for_array(objects)
         self.assertTrue(resolved in known_types)
 
 

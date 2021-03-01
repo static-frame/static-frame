@@ -7,36 +7,32 @@ import numpy as np
 from numpy.ma import MaskedArray #type: ignore
 
 from static_frame.core.assign import Assign
-
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import index_many_concat
+from static_frame.core.container_util import index_many_set
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
-from static_frame.core.container_util import index_many_set
-from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import sort_index_for_order
-
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
-from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
-
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.index_base import IndexBase
 from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
-
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
@@ -48,10 +44,10 @@ from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
-
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
+from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_to_groups_and_locations
@@ -60,8 +56,10 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import dtype_from_element
+from static_frame.core.util import dtype_kind_to_na
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import FLOAT_TYPES
@@ -85,14 +83,10 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import slices_from_targets
+from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import UFunc
-from static_frame.core.util import dtype_kind_to_na
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import array_deepcopy
-
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
@@ -114,7 +108,6 @@ class Series(ContainerOperand):
             )
 
     values: np.ndarray
-
     _index: IndexBase
 
     _NDIM: int = 1
@@ -162,7 +155,6 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
 
-
     @classmethod
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
@@ -193,7 +185,6 @@ class Series(ContainerOperand):
                 name=name,
                 index_constructor=index_constructor)
 
-
     @classmethod
     def from_dict(cls,
             mapping: tp.Dict[tp.Hashable, tp.Any],
@@ -209,7 +200,7 @@ class Series(ContainerOperand):
             dtype: dtype or valid dtype specifier.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         return cls.from_items(mapping.items(),
                 name=name,
@@ -344,10 +335,7 @@ class Series(ContainerOperand):
             post = post.fillna(container)
             if not post.isna().any(): # NOTE: should we short circuit, or get more out of fillna?
                 break
-
         return post
-
-
 
     @classmethod
     @doc_inject()
@@ -396,7 +384,6 @@ class Series(ContainerOperand):
                 name=name,
                 own_index=own_index
                 )
-
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='container_init', class_name='Series')
@@ -498,7 +485,6 @@ class Series(ContainerOperand):
                 f'Index has incorrect size (got {index_count}, expected {value_count})'
                 )
 
-
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Any) -> None:
         '''
@@ -540,7 +526,7 @@ class Series(ContainerOperand):
         Returns a reverse iterator on the series' index.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Index`
         '''
         return reversed(self._index) #type: ignore
 
@@ -670,7 +656,7 @@ class Series(ContainerOperand):
     @property
     def iter_group(self) -> IterNodeGroup['Series']:
         '''
-        Iterator of :obj:`static_frame.Series`, where each :obj:`static_frame.Series` is matches unique values.
+        Iterator of :obj:`Series`, where each :obj:`Series` matches unique values.
         '''
         return IterNodeGroup(
                 container=self,
@@ -857,7 +843,6 @@ class Series(ContainerOperand):
             index: {relabel_input}
         '''
         #NOTE: we name the parameter index for alignment with the corresponding Frame method
-
         own_index = False
         if index is IndexAutoFactory:
             index_init = None
@@ -917,7 +902,6 @@ class Series(ContainerOperand):
                 index=self._index.level_drop(count),
                 name=self._name)
 
-
     def rehierarch(self,
             depth_map: tp.Sequence[int]
             ) -> 'Series':
@@ -937,7 +921,6 @@ class Series(ContainerOperand):
         return self.__class__(values,
                 index=index,
                 name=self._name)
-
 
     #---------------------------------------------------------------------------
     # na handling
@@ -1023,8 +1006,6 @@ class Series(ContainerOperand):
                 index=self._index,
                 name=self._name)
 
-
-
     @staticmethod
     def _fillna_directional(
             array: np.ndarray,
@@ -1089,7 +1070,6 @@ class Series(ContainerOperand):
                     limit=limit),
                 index=self._index,
                 name=self._name)
-
 
     @staticmethod
     def _fillna_sided(array: np.ndarray,
@@ -1328,40 +1308,6 @@ class Series(ContainerOperand):
                 config=config)
         return self._display(config, display_cls)
 
-        # config = config or DisplayActive.get()
-        # index_depth = self._index.depth if config.include_index else 0
-        # display_index = self._index.display(config=config)
-
-        # # When showing type we need 2: one for the Series type, the other for the index type.
-        # header_depth = 2 * config.type_show
-
-        # # create an empty display based on index display
-        # d = Display([list() for _ in range(len(display_index))],
-        #         config=config,
-        #         outermost=True,
-        #         index_depth=index_depth,
-        #         header_depth=header_depth
-        #         )
-
-        # if config.include_index:
-        #     d.extend_display(display_index)
-        #     header_values = '' if config.type_show else None
-        # else:
-        #     header_values = None
-
-        # d.extend_display(Display.from_values(
-        #         self.values,
-        #         header=header_values,
-        #         config=config))
-
-        # if config.type_show:
-        #     display_cls = Display.from_values((),
-        #             header=DisplayHeader(self.__class__, self._name),
-        #             config=config)
-        #     d.insert_displays(display_cls.flatten())
-
-        # return d
-
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 
@@ -1422,13 +1368,6 @@ class Series(ContainerOperand):
         '''
         return self.values.nbytes #type: ignore
 
-    # def __bool__(self) -> bool:
-    #     '''
-    #     True if this container has size.
-    #     '''
-    #     return bool(self.values.size)
-
-
     #---------------------------------------------------------------------------
     # extraction
 
@@ -1477,7 +1416,7 @@ class Series(ContainerOperand):
         return self._extract_loc(key)
 
     #---------------------------------------------------------------------------
-    # utilites for alternate extraction: drop, mask and assignment
+    # utilities for alternate extraction: drop, mask and assignment
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
         if isinstance(key, np.ndarray) and key.dtype == bool:
@@ -1531,11 +1470,11 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
 
     def _extract_iloc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
-        return SeriesAssign(self, iloc_key=key)
+        return SeriesAssign(self, key)
 
     def _extract_loc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
         iloc_key = self._index.loc_to_iloc(key)
-        return SeriesAssign(self, iloc_key=iloc_key)
+        return SeriesAssign(self, iloc_key)
 
     #---------------------------------------------------------------------------
     # axis functions
@@ -1559,7 +1498,7 @@ class Series(ContainerOperand):
 
     def _axis_element_items(self,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
-        '''Generator of index, value pairs, equivalent to Series.items(). Rpeated to have a common signature as other axis functions.
+        '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
         yield from zip(self._index, self.values)
 
@@ -1648,8 +1587,6 @@ class Series(ContainerOperand):
                 as_array=as_array
                 ))
 
-
-
     #---------------------------------------------------------------------------
 
     @property
@@ -1698,7 +1635,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Iterator[Tuple[Hashable, Any]]`
         '''
-        return zip(self._index.values, self.values)
+        return zip(self._index.__iter__(), self.values)
 
     def get(self, key: tp.Hashable,
             default: tp.Any = None,
@@ -1716,6 +1653,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
+    @doc_inject(selector='sort')
     def sort_index(self,
             *,
             ascending: bool = True,
@@ -1727,9 +1665,9 @@ class Series(ContainerOperand):
 
         Args:
             *
-            ascending: if True, values are sorted low to high
-            kind: sort algorithm
-            key: A function that takes an Index and returns a new Index to use for sorting.
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
 
         Returns:
             :obj:`Series`
@@ -1747,6 +1685,7 @@ class Series(ContainerOperand):
                 own_index=True
                 )
 
+    @doc_inject(selector='sort')
     def sort_values(self,
             *,
             ascending: bool = True,
@@ -1755,6 +1694,12 @@ class Series(ContainerOperand):
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.
+
+        Args:
+            *
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
 
         Returns:
             :obj:`Series`
@@ -1845,7 +1790,7 @@ class Series(ContainerOperand):
             exclude_last: bool = False,
             ) -> np.ndarray:
         '''
-        Return a same-sized Boolean Series that shows True for all b values that are duplicated.
+        Return a same-sized Boolean Series that shows True for all values that are duplicated.
 
         Args:
             {exclude_first}
@@ -1920,11 +1865,12 @@ class Series(ContainerOperand):
     def roll(self,
             shift: int,
             *,
-            include_index: bool = False) -> 'Series':
-        '''Return a Series with values rotated forward and wrapped around the index (with a postive shift) or backward and wrapped around the index (with a negative shift).
+            include_index: bool = False,
+            ) -> 'Series':
+        '''Return a Series with values rotated forward and wrapped around the index (with a positive shift) or backward and wrapped around the index (with a negative shift).
 
         Args:
-            shift: Postive or negative integer shift.
+            shift: Positive or negative integer shift.
             include_index: Determine if the Index is shifted with the underlying data.
 
         Returns:
@@ -1956,11 +1902,12 @@ class Series(ContainerOperand):
     def shift(self,
             shift: int,
             *,
-            fill_value: tp.Any = np.nan) -> 'Series':
-        '''Return a Series with values shifted forward on the index (with a postive shift) or backward on the index (with a negative shift).
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Return a Series with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
 
         Args:
-            shift: Postive or negative integer shift.
+            shift: Positive or negative integer shift.
             fill_value: Value to be used to fill data missing after the shift.
 
         Returns:
@@ -2095,8 +2042,8 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='argminmax')
     def iloc_max(self, *,
-                skipna: bool = True,
-                ) -> int:
+            skipna: bool = True,
+            ) -> int:
         '''
         Return the integer index corresponding to the maximum value.
 
@@ -2107,6 +2054,62 @@ class Series(ContainerOperand):
             int
         '''
         return argmax_1d(self.values, skipna=skipna) #type: ignore
+
+    #---------------------------------------------------------------------------
+    @doc_inject(selector='searchsorted', label_type='iloc (integer)')
+    def iloc_searchsorted(self,
+            values: tp.Any, # a single value, or an iterable of values
+            *,
+            side_left: bool = True,
+            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+        '''
+        {doc}
+
+        Args:
+            {values}
+            {side_left}
+        '''
+        if not isinstance(values, str) and hasattr(values, '__len__'):
+            if not isinstance(values, np.ndarray):
+                values, _ = iterable_to_array_1d(values)
+        return np.searchsorted(self.values, #type: ignore [no-any-return]
+                values,
+                'left' if side_left else 'right',
+                )
+
+    @doc_inject(selector='searchsorted', label_type='loc (label)')
+    def loc_searchsorted(self,
+            values: tp.Any, # a single value, or an iterable of values
+            *,
+            side_left: bool = True,
+            fill_value: tp.Any = np.nan,
+            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+        '''
+        {doc}
+
+        Args:
+            {values}
+            {side_left}
+            {fill_value}
+        '''
+        sel = self.iloc_searchsorted(values, side_left=side_left)
+
+        length = self.__len__()
+        if sel.ndim == 0 and sel == length: # an element:
+            return fill_value #type: ignore [no-any-return]
+
+        mask = sel == length
+        if not mask.any():
+            return self._index.values[sel] #type: ignore [no-any-return]
+
+        post = np.empty(len(sel),
+                dtype=resolve_dtype(self._index.dtype,
+                dtype_from_element(fill_value))
+                )
+        sel[mask] = 0 # set out of range values to zero
+        post[:] = self._index.values[sel]
+        post[mask] = fill_value
+        return post #type: ignore [no-any-return]
 
     #---------------------------------------------------------------------------
     def _insert(self,
@@ -2267,7 +2270,7 @@ class Series(ContainerOperand):
             tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]
         '''
         if isinstance(self._index, IndexHierarchy):
-            index_values = list(array2d_to_tuples(self._index.values))
+            index_values = array2d_to_tuples(self._index.values)
         else:
             index_values = self._index.values
 
@@ -2399,17 +2402,22 @@ class Series(ContainerOperand):
 
 #-------------------------------------------------------------------------------
 class SeriesAssign(Assign):
-    __slots__ = ('container', 'iloc_key')
+    __slots__ = ('container', 'key')
 
     def __init__(self,
             container: Series,
-            iloc_key: GetItemKeyType
+            key: GetItemKeyType
             ) -> None:
+        '''
+        Args:
+            key: an iloc-style key.
+        '''
         self.container = container
-        self.iloc_key = iloc_key
+        self.key = key
 
     def __call__(self,
             value: tp.Any, # any possible assignment type
+            *,
             fill_value: tp.Any = np.nan
             ) -> Series:
         '''
@@ -2417,12 +2425,13 @@ class SeriesAssign(Assign):
 
         Args:
             value:  Value to assign, which can be a :obj:`Series`, np.ndarray, or element.
+            *.
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
         if isinstance(value, Series):
             # instead of using fill_value here, might be better to use dtype_to_fill_value, so as to not coerce the type of the value to be assigned
             value = self.container._reindex_other_like_iloc(value,
-                    self.iloc_key,
+                    self.key,
                     fill_value=fill_value).values
 
         if isinstance(value, np.ndarray):
@@ -2441,12 +2450,29 @@ class SeriesAssign(Assign):
         else:
             array = self.container.values.astype(dtype)
 
-        array[self.iloc_key] = value
+        array[self.key] = value
         array.flags.writeable = False
 
         return self.container.__class__(array,
                 index=self.container._index,
                 name=self.container._name)
+
+    def apply(self,
+            func: AnyCallable,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''
+        Provide a function to apply to the assignment target, and use that as the assignment value.
+
+        Args:
+            func: A function to apply to the assignment target.
+            *.
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
+        '''
+        value = func(self.container.iloc[self.key])
+        return self.__call__(value, fill_value=fill_value)
+
 
 
 #-------------------------------------------------------------------------------

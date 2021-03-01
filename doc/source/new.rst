@@ -1,6 +1,66 @@
 What is New in Static Frame
 ===============================
 
+0.8.2
+----------
+
+Added ``Series.iloc_searchsorted()`` and ``Series.loc_searchsorted()``.
+
+Interfaces of ``Frame.to_delimited()``, ``Frame.to_csv()``, ``Frame.to_tsv()``, and ``Frame.to_clipboard()`` are extended with parameters for control of quoting and escaping delimiters and other characters. The standard library's ``csv`` module is now used for writing.
+
+
+0.8.1
+----------
+
+API change: ``Frame.from_element_loc_items()`` renamed ``Frame.from_element_items``; ``Frame.from_element_iloc_items`` is removed.
+
+``Frame.assign`` now returns a ``FrameAssign`` instance with an ``apply`` method to permit using the assignment target, after function application, as the assignment value.
+
+``Series.assign`` now returns a ``SeriesAssign`` instance with an ``apply`` method to permit using the assignment target, after function application, as the assignment value.
+
+``IndexDatetime`` subclasses now properly assign ``name`` attrs from an `Index` given as an initializer.
+
+``Series.items()`` now returns labels of ``IndexHierarchy`` as tuples instead of ``np.ndarray``.
+
+Added ``Batch.apply_except`` and ``Batch.apply_items_except`` to permit ignore exceptions on function application to contained Frames.
+
+Added ``Batch.unique()``.
+
+``Batch`` now supports operations on ``Frame`` that return an ``np.ndarray``.
+
+Added ``Quilt.from_items()`` and ``Quilt.from_frames()``.
+
+``Bus.sort_index()`` and ``Bus.sort_values()`` now return a ``Bus`` instance.
+
+Improvements to ``Bus.items()``, ``Bus.values`` for optimal ``Store`` reads when ``max_persist`` is None.
+
+Implemented ``Bus.rename()`` to return a ``Bus`` instance.
+
+Implemented ``Bus.drop[]`` to return a ``Bus`` instance.
+
+Implemented ``Bus.reindex()``, ``Bus.relabel()``, ``Bus.relabel_flat()``, ``Bus.relabel_level_add()``, ``Bus.relabel_level_drop()``, ``Bus.rehierarch()``.
+
+Implemented ``Bus.roll()``, ``Bus.shift()``.
+
+
+0.8.0
+----------
+
+API change: ``Frame.sort_values()`` now has a ``label`` positional argument that replaces the former ``key`` positional argument.
+
+API change: ``Frame.sort_values()`` now requires multiple labels to be provided as a list to permit distinguishing selection of single tuple labels.
+
+API change: ``iter_labels.apply()`` on ``Index`` and ``IndexHierarchy`` now returns an np.ndarray rather than a ``Series``.
+
+API change: ``iter_tuple`` and ``iter_tuple_items`` interfaces now require ``axis`` to be kwarg-only.
+
+API change: ``iter_tuple``, ``iter_tuple_items`` methods now require an explicit ``tuple`` as constructor if fields are invalid NamedTuple attrs.
+
+API change: ``iter_array``, ``iter_array_items``, ``iter_series``, and ``iter_series_items`` now require ``axis`` to be kwarg-only.
+
+Added ``key`` argument for sort pre-processing to ``Frame.sort_values()``.
+
+
 0.7.15
 ----------
 

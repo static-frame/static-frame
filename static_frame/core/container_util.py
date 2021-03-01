@@ -1023,7 +1023,7 @@ def sort_index_for_order(
     # argsort lets us do the sort once and reuse the results
     if cfs_depth > 1:
         if cfs_is_array:
-            values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
+            values_for_lex = [cfs[NULL_SLICE, i] for i in range(cfs.shape[1]-1, -1, -1)]
         else: # cfs is an IndexHierarchy
             values_for_lex = [cfs.values_at_depth(i)
                     for i in range(cfs.depth-1, -1, -1)]

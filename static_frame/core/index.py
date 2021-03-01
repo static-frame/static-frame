@@ -384,7 +384,7 @@ class Index(IndexBase):
             *,
             loc_is_iloc: bool = False,
             name: NameType = NAME_DEFAULT,
-            dtype: DtypeSpecifier = None
+            dtype: DtypeSpecifier = None,
             ) -> None:
         '''Initializer.
 
@@ -424,7 +424,7 @@ class Index(IndexBase):
                 labels = labels._labels
             else: # IndexHierarchy
                 # will be a generator of tuples; already updated caches
-                labels = array2d_to_tuples(labels.__iter__())
+                labels = labels.__iter__()
         elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
             array = labels.values # NOTE: should we take values or keys here?
@@ -1182,6 +1182,7 @@ class Index(IndexBase):
             return False
         return True
 
+    @doc_inject(selector='sort')
     def sort(self,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
@@ -1190,7 +1191,9 @@ class Index(IndexBase):
         '''Return a new Index with the labels sorted.
 
         Args:
-            kind: Sort algorithm passed to NumPy.
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key) #type: ignore [arg-type]
 

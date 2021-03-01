@@ -116,7 +116,6 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import is_callable_or_mapping
-from static_frame.core.util import is_hashable
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
 from static_frame.core.util import isna_array
@@ -138,7 +137,6 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import resolve_dtype
-from static_frame.core.util import reversed_iter
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
@@ -148,6 +146,7 @@ from static_frame.core.util import DTU_PYARROW
 from static_frame.core.util import DT64_NS
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import file_like_manager
 
 from static_frame.core import io_util
 
@@ -1342,39 +1341,8 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    # NOTE: # remove from_element_iloc_items, rename from_element_loc_items to from_element_items
-
     @classmethod
-    def from_element_iloc_items(cls,
-            items: tp.Iterable[tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
-            *,
-            index: IndexInitializer,
-            columns: IndexInitializer,
-            dtype: DtypeSpecifier,
-            name: NameType = None
-            ) -> 'Frame':
-        '''
-        Given an iterable of pairs of iloc coordinates and values, populate a Frame as defined by the given index and columns. The dtype must be specified, and must be the same for all values.
-
-        Returns:
-            :obj:`static_frame.Frame`
-        '''
-        index = Index(index)
-        columns = cls._COLUMNS_CONSTRUCTOR(columns)
-
-        tb = TypeBlocks.from_element_items(items,
-                shape=(len(index), len(columns)),
-                dtype=dtype)
-        return cls(tb,
-                index=index,
-                columns=columns,
-                name=name,
-                own_data=True,
-                own_index=True,
-                own_columns=True)
-
-    @classmethod
-    def from_element_loc_items(cls,
+    def from_element_items(cls,
             items: tp.Iterable[tp.Tuple[
                     tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
             *,
@@ -1421,7 +1389,7 @@ class Frame(ContainerOperand):
                 raise ErrorInitFrame('cannot provide multiple dtypes when creating a Frame from element items and axis is None')
             items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
                     for k, v in items)
-            dtype = dtype if dtype is not None else object
+            dtype = dtype if dtype is not None else DTYPE_OBJECT
             tb = TypeBlocks.from_element_items(
                     items,
                     shape=(len(index), len(columns)),
@@ -2780,7 +2748,6 @@ class Frame(ContainerOperand):
 
     @property
     def assign(self) -> InterfaceAssignQuartet['Frame']:
-        # all functions that return a FrameAssign
         return InterfaceAssignQuartet(
             func_iloc=self._extract_iloc_assign,
             func_loc=self._extract_loc_assign,
@@ -2886,7 +2853,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_tuple(self) -> IterNodeAxis['Frame']:
+    def iter_tuple(self) -> IterNodeConstructorAxis['Frame']:
         '''
         Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
         '''
@@ -2898,7 +2865,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_tuple_items(self) -> IterNodeAxis['Frame']:
+    def iter_tuple_items(self) -> IterNodeConstructorAxis['Frame']:
         '''
         Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3861,7 +3828,7 @@ class Frame(ContainerOperand):
         bloc_key = bloc_key_normalize(key=key, container=self)
         values = self.values[bloc_key]
         values.flags.writeable = False
-
+        # NOTE: the usage of np.nonzero forces a row-major, C-style ordering of labels; would prefer a column major ordering
         index = Index(
                 (self._index[x], self._columns[y])
                 for x, y in zip(*np.nonzero(bloc_key))
@@ -3960,22 +3927,22 @@ class Frame(ContainerOperand):
         return self._extract_iloc_masked_array(key=key)
 
     #---------------------------------------------------------------------------
-    def _extract_iloc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssign':
-        return FrameAssign(self, iloc_key=key)
+    def _extract_iloc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssignILoc':
+        return FrameAssignILoc(self, key=key)
 
-    def _extract_loc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssign':
+    def _extract_loc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssignILoc':
         # extract if tuple, then pack back again
         key = self._compound_loc_to_iloc(key)
         return self._extract_iloc_assign(key=key)
 
-    def _extract_getitem_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssign':
+    def _extract_getitem_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssignILoc':
         # extract if tuple, then pack back again
         key = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_assign(key=key)
 
-    def _extract_bloc_assign(self, key: Bloc2DKeyType) -> 'FrameAssign':
+    def _extract_bloc_assign(self, key: Bloc2DKeyType) -> 'FrameAssignBLoc':
         '''Assignment based on a Boolean Frame or array.'''
-        return FrameAssign(self, bloc_key=key)
+        return FrameAssignBLoc(self, key=key)
 
     #---------------------------------------------------------------------------
 
@@ -4537,6 +4504,7 @@ class Frame(ContainerOperand):
         '''
         return reversed(self._columns)
 
+    @doc_inject(selector='sort')
     def sort_index(self,
             *,
             ascending: bool = True,
@@ -4545,6 +4513,11 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted Index.
+
+        Args:
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
@@ -4559,6 +4532,7 @@ class Frame(ContainerOperand):
                 own_index=True,
                 )
 
+    @doc_inject(selector='sort')
     def sort_columns(self,
             *,
             ascending: bool = True,
@@ -4567,6 +4541,11 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted ``columns``.
+
+        Args:
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
         order = sort_index_for_order(self._columns, kind=kind, ascending=ascending, key=key)
 
@@ -4581,72 +4560,111 @@ class Frame(ContainerOperand):
                 own_columns=True,
                 )
 
+    @doc_inject(selector='sort')
     def sort_values(self,
-            key: KeyOrKeys,
+            label: KeyOrKeys,
             *,
             ascending: bool = True,
             axis: int = 1,
             kind: str = DEFAULT_SORT_KIND,
-            # key: tp.Optional[tp.Callable[['Frame'], tp.Union[np.ndarray, 'Frame']]] = None,
+            key: tp.Optional[tp.Callable[[tp.Union['Frame', Series]], tp.Union[np.ndarray, 'Series', 'Frame']]] = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
 
         Args:
-            key: a key or iterable of keys.
+            label: A label or iterable of labels to select the the columns (for axis 1) or rows (for axis 0) to sort.
+            *
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
-        # argsort lets us do the sort once and reuse the results
+        values_for_sort: tp.Optional[np.ndarray] = None
+        values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
+
         if axis == 0: # get a column ordering based on one or more rows
-            col_count = self._columns.__len__()
-            if is_hashable(key) and key in self._index:
-                iloc_key = self._index.loc_to_iloc(key)
-                sort_array = self._blocks._extract_array(row_key=iloc_key)
-                order = np.argsort(sort_array, kind=kind)
-            else: # assume an iterable of keys
-                # order so that highest priority is last
-                iloc_keys = (self._index.loc_to_iloc(k) for k in reversed_iter(key))
-                sort_array = [self._blocks._extract_array(row_key=key)
-                        for key in iloc_keys]
-                order = np.lexsort(sort_array)
+            iloc_key = self._index.loc_to_iloc(label)
+            if key:
+                cfs = key(self._extract(row_key=iloc_key))
+                cfs_is_array = isinstance(cfs, np.ndarray)
+                if (cfs.ndim == 1 and len(cfs) != self.shape[1]) or (cfs.ndim == 2 and cfs.shape[1] != self.shape[1]):
+                    raise RuntimeError('key function returned a container of invalid length')
+            else: # go straigt to array as, since this is row-wise, have to find a consolidated
+                cfs = self._blocks._extract_array(row_key=iloc_key)
+                cfs_is_array = True
+
+            if cfs_is_array:
+                if cfs.ndim == 1:
+                    values_for_sort = cfs
+                elif cfs.ndim == 2 and cfs.shape[0] == 1:
+                    values_for_sort = cfs[0]
+                else:
+                    values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
+            elif cfs.ndim == 1: # Series
+                values_for_sort = cfs.values
+            elif isinstance(cfs, Frame):
+                cfs = cfs._blocks
+                if cfs.shape[0] == 1:
+                    values_for_sort = cfs._extract_array(row_key=0)
+                else:
+                    values_for_lex = [cfs._extract_array(row_key=i)
+                            for i in range(cfs.shape[0]-1, -1, -1)]
+
         elif axis == 1: # get a row ordering based on one or more columns
-            if is_hashable(key) and key in self._columns:
-                iloc_key = self._columns.loc_to_iloc(key)
-                sort_array = self._blocks._extract_array(column_key=iloc_key)
-                order = np.argsort(sort_array, kind=kind)
-            else: # assume an iterable of keys
-                # order so that highest priority is last
-                iloc_keys = (self._columns.loc_to_iloc(k) for k in reversed_iter(key))
-                sort_array = [self._blocks._extract_array(column_key=key)
-                        for key in iloc_keys]
-                order = np.lexsort(sort_array)
+            iloc_key = self._columns.loc_to_iloc(label)
+            if key:
+                cfs = key(self._extract(column_key=iloc_key))
+                cfs_is_array = isinstance(cfs, np.ndarray)
+                if (cfs.ndim == 1 and len(cfs) != self.shape[0]) or (cfs.ndim == 2 and cfs.shape[0] != self.shape[0]):
+                    raise RuntimeError('key function returned a container of invalid length')
+            else: # get array from blocks
+                cfs = self._blocks._extract(column_key=iloc_key) # get TypeBlocks
+                cfs_is_array = False
+
+            if cfs_is_array:
+                if cfs.ndim == 1:
+                    values_for_sort = cfs
+                elif cfs.ndim == 2 and cfs.shape[1] == 1:
+                    values_for_sort = cfs[:, 0]
+                else:
+                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
+            elif cfs.ndim == 1: # Series
+                values_for_sort = cfs.values
+            else: #Frame/TypeBlocks from here
+                if isinstance(cfs, Frame):
+                    cfs = cfs._blocks
+                if cfs.shape[1] == 1:
+                    values_for_sort = cfs._extract_array(column_key=0)
+                else:
+                    values_for_lex = [cfs._extract_array(column_key=i)
+                            for i in range(cfs.shape[1]-1, -1, -1)]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
+
+
+        if values_for_lex is not None:
+            order = np.lexsort(values_for_lex)
+        elif values_for_sort is not None:
+            order = np.argsort(values_for_sort, kind=kind)
+        else:
+            raise RuntimeError('unable to resovle sort type')
 
         if not ascending:
             order = order[::-1]
 
         if axis == 0:
-            column_values = self._columns.values[order]
-            column_values.flags.writeable = False
-            columns = self._columns.from_labels(
-                    column_values,
-                    name=self._columns._name
-                    )
+            columns = self._columns[order]
             blocks = self._blocks[order] # order columns
             return self.__class__(blocks,
                     index=self._index,
                     columns=columns,
                     name=self._name,
                     own_data=True,
-                    own_columns=True
+                    own_columns=True,
+                    own_index=True,
                     )
 
-        index_values = self._index.values[order]
-        index_values.flags.writeable = False
-        index = self._index.from_labels(
-                index_values,
-                name=self._index._name
-                )
+        index = self._index[order]
         blocks = self._blocks.iloc[order]
         return self.__class__(blocks,
                 index=index,
@@ -6135,7 +6153,9 @@ class Frame(ContainerOperand):
         return True
 
 
-    def unique(self, axis: tp.Optional[int] = None) -> np.ndarray:
+    def unique(self, *,
+            axis: tp.Optional[int] = None,
+            ) -> np.ndarray:
         '''
         Return a NumPy array of unqiue values. If the axis argument is provied, uniqueness is determined by columns or row.
         '''
@@ -6399,37 +6419,20 @@ class Frame(ContainerOperand):
         return self._to_frame(FrameGO) #type: ignore
 
 
-    def to_delimited(self,
-            fp: PathSpecifierOrFileLike,
+    #---------------------------------------------------------------------------
+    def _to_str_records(self,
             *,
-            delimiter: str,
             include_index: bool = True,
             include_index_name: bool = True,
             include_columns: bool = True,
             include_columns_name: bool = False,
-            encoding: tp.Optional[str] = None,
-            line_terminator: str = '\n',
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
-        Given a file path or file-like object, write the Frame as delimited text.
-
-        Args:
-            delimiter: character to be used for delimiterarating elements.
-            include_index_name: if including columns, populate the row above the index with the ``name``. Cannot be True if ``include_columns_name`` is True.
-            incldue_columns_nmae: if including index, populate the column to the left of the columns with the ``name``. Cannot be True if ``include_index_name`` is True.
+        Iterator of records with values converted to strings.
         '''
-        fp = path_filter(fp)
-
         if sum((include_columns_name, include_index_name)) > 1:
             raise RuntimeError('cannot set both `include_columns_name` and `include_index_name`')
-
-        if isinstance(fp, str):
-            f = open(fp, 'w', encoding=encoding)
-            is_file = True
-        else:
-            f = fp # assume an open file like
-            is_file = False
 
         index = self._index
         columns = self._columns
@@ -6445,70 +6448,120 @@ class Frame(ContainerOperand):
         if store_filter:
             filter_func = store_filter.from_type_filter_element
 
-        try: # manage finally closing of file
-            if include_columns:
-                if columns.depth == 1:
-                    columns_rows = (columns,)
-                else:
-                    columns_rows = columns.values.T
-                for row_idx, columns_row in enumerate(columns_rows):
-                    if include_index:
-                        if include_index_name:
-                            # index_names serves as a proxy for the index_depth
-                            for name in index_names:
-                                if row_idx == 0:
-                                    # we always write index name labels on the top-most row
-                                    f.write(f'{name}{delimiter}')
-                                else:
-                                    f.write(f'{delimiter}')
-                        elif include_columns_name:
-                            for col_idx in range(index_depth):
-                                if col_idx == 0:
-                                    f.write(f'{columns_names[row_idx]}{delimiter}')
-                                else:
-                                    f.write(f'{delimiter}')
-                        else:
-                            f.write(f'{delimiter * index_depth}')
-                    # write the rest of the line
-                    if store_filter:
-                        f.write(delimiter.join(f'{filter_func(x)}' for x in columns_row))
+        if include_columns:
+            if columns.depth == 1:
+                columns_rows = (columns,)
+            else:
+                columns_rows = columns.values.T
+
+            for row_idx, columns_row in enumerate(columns_rows):
+                row = [] # column depth is a row
+
+                if include_index:
+                    # only have apex space if include columns and index
+                    if include_index_name:
+                        # index_names serves as a proxy for the index_depth
+                        for name in index_names:
+                            # we always write index name labels on the top-most
+                            row.append(f'{name}' if row_idx == 0 else '')
+                    elif include_columns_name:
+                        for col_idx in range(index_depth):
+                            row.append(f'{columns_names[row_idx]}' if col_idx == 0 else '')
                     else:
-                        f.write(delimiter.join(f'{x}' for x in columns_row))
-                    f.write(line_terminator)
-
-            col_idx_last = self._blocks._shape[1] - 1
-            # avoid row creation to avoid joining types; avoide creating a list for each row
-            row_current_idx: tp.Optional[int] = None
-            for (row_idx, col_idx), element in self._iter_element_iloc_items():
-                if row_idx != row_current_idx:
-                    if row_current_idx is not None: # if not the first
-                        f.write(line_terminator)
-                    if include_index:
-                        if index_depth == 1:
-                            index_value = index_values[row_idx]
-                            if store_filter:
-                                f.write(f'{filter_func(index_value)}{delimiter}')
-                            else:
-                                f.write(f'{index_value}{delimiter}')
-                        else:
-                            for index_value in index_values[row_idx]:
-                                if store_filter:
-                                    f.write(f'{filter_func(index_value)}{delimiter}')
-                                else:
-                                    f.write(f'{index_value}{delimiter}')
-                    row_current_idx = row_idx
+                        row.extend(('' for _ in range(index_depth)))
+                # write the rest of the line
                 if store_filter:
-                    f.write(f'{filter_func(element)}')
+                    row.extend(f'{filter_func(x)}' for x in columns_row)
                 else:
-                    f.write(f'{element}')
-                if col_idx != col_idx_last:
-                    f.write(delimiter)
-            if row_current_idx is not None: # if not an empty Frame, write the last terminator
-                f.write(line_terminator)
-        finally:
-            if is_file:
-                f.close()
+                    row.extend(f'{x}' for x in columns_row)
+                yield row
 
+        col_idx_last = self._blocks._shape[1] - 1
+        # avoid row creation to avoid joining types; avoide creating a list for each row
+        row_current_idx: tp.Optional[int] = None
+
+        for (row_idx, col_idx), element in self._iter_element_iloc_items():
+            if row_idx != row_current_idx: # each new row
+                if row_current_idx is not None: # if not the first
+                    yield row
+                row = []
+                if include_index:
+                    if index_depth == 1:
+                        index_value = index_values[row_idx]
+                        if store_filter:
+                            row.append(f'{filter_func(index_value)}')
+                        else:
+                            row.append(f'{index_value}')
+                    else:
+                        for index_value in index_values[row_idx]:
+                            if store_filter:
+                                row.append(f'{filter_func(index_value)}')
+                            else:
+                                row.append(f'{index_value}')
+                row_current_idx = row_idx
+            if store_filter:
+                row.append(f'{filter_func(element)}')
+            else:
+                row.append(f'{element}')
+
+        if row_current_idx is not None:
+            yield row
+
+    @doc_inject(selector='delimited')
+    def to_delimited(self,
+            fp: PathSpecifierOrFileLike,
+            *,
+            delimiter: str,
+            include_index: bool = True,
+            include_index_name: bool = True,
+            include_columns: bool = True,
+            include_columns_name: bool = False,
+            encoding: tp.Optional[str] = None,
+            line_terminator: str = '\n',
+            quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            quoting: int = csv.QUOTE_MINIMAL,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ) -> None:
+        '''
+        {doc} A ``delimiter`` character must be specified.
+
+        Args:
+            {fp}
+            *
+            {delimiter}
+            {include_index}
+            {include_index_name}
+            {include_columns}
+            {include_columns_name}
+            {encoding}
+            {line_terminator}
+            {quote_char}
+            {quote_double}
+            {escape_char}
+            {quoting}
+            {store_filter}
+        '''
+        with file_like_manager(fp, encoding=encoding, mode='w') as fl:
+            csvw = csv.writer(fl,
+                    delimiter=delimiter,
+                    escapechar=escape_char,
+                    quotechar=quote_char,
+                    lineterminator=line_terminator,
+                    quoting=quoting,
+                    doublequote=quote_double,
+                    )
+            for row in self._to_str_records(
+                    include_index=include_index,
+                    include_index_name=include_index_name,
+                    include_columns=include_columns,
+                    include_columns_name=include_columns_name,
+                    store_filter=store_filter,
+                    ):
+                csvw.writerow(row)
+
+    @doc_inject(selector='delimited')
     def to_csv(self,
             fp: PathSpecifierOrFileLike,
             *,
@@ -6518,10 +6571,29 @@ class Frame(ContainerOperand):
             include_columns_name: bool = False,
             encoding: tp.Optional[str] = None,
             line_terminator: str = '\n',
+            quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            quoting: int = csv.QUOTE_MINIMAL,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
-        Given a file path or file-like object, write the Frame as tab-delimited text.
+        {doc} The delimiter is set to a comma.
+
+        Args:
+            {fp}
+            *
+            {include_index}
+            {include_index_name}
+            {include_columns}
+            {include_columns_name}
+            {encoding}
+            {line_terminator}
+            {quote_char}
+            {quote_double}
+            {escape_char}
+            {quoting}
+            {store_filter}
         '''
         return self.to_delimited(fp=fp,
                 delimiter=',',
@@ -6531,9 +6603,14 @@ class Frame(ContainerOperand):
                 include_columns_name=include_columns_name,
                 encoding=encoding,
                 line_terminator=line_terminator,
+                quote_char=quote_char,
+                quote_double=quote_double,
+                escape_char=escape_char,
+                quoting=quoting,
                 store_filter=store_filter
                 )
 
+    @doc_inject(selector='delimited')
     def to_tsv(self,
             fp: PathSpecifierOrFileLike,
             *,
@@ -6543,10 +6620,29 @@ class Frame(ContainerOperand):
             include_columns_name: bool = False,
             encoding: tp.Optional[str] = None,
             line_terminator: str = '\n',
+            quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            quoting: int = csv.QUOTE_MINIMAL,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
-        Given a file path or file-like object, write the Frame as tab-delimited text.
+        {doc} The delimiter is set to a tab.
+
+        Args:
+            {fp}
+            *
+            {include_index}
+            {include_index_name}
+            {include_columns}
+            {include_columns_name}
+            {encoding}
+            {line_terminator}
+            {quote_char}
+            {quote_double}
+            {escape_char}
+            {quoting}
+            {store_filter}
         '''
         return self.to_delimited(fp=fp,
                 delimiter='\t',
@@ -6556,9 +6652,14 @@ class Frame(ContainerOperand):
                 include_columns_name=include_columns_name,
                 encoding=encoding,
                 line_terminator=line_terminator,
+                quote_char=quote_char,
+                quote_double=quote_double,
+                escape_char=escape_char,
+                quoting=quoting,
                 store_filter=store_filter
                 )
 
+    @doc_inject(selector='delimited')
     def to_clipboard(self,
             *,
             delimiter: str = '\t',
@@ -6568,10 +6669,30 @@ class Frame(ContainerOperand):
             include_columns_name: bool = False,
             encoding: tp.Optional[str] = None,
             line_terminator: str = '\n',
+            quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            quoting: int = csv.QUOTE_MINIMAL,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
-        Given a file path or file-like object, write the Frame as tab-delimited text.
+        {doc} The ``delimiter`` defaults to a tab.
+
+        Args:
+            {fp}
+            *
+            {delimiter}
+            {include_index}
+            {include_index_name}
+            {include_columns}
+            {include_columns_name}
+            {encoding}
+            {line_terminator}
+            {quote_char}
+            {quote_double}
+            {escape_char}
+            {quoting}
+            {store_filter}
         '''
         sio = StringIO()
         self.to_delimited(fp=sio,
@@ -6582,6 +6703,10 @@ class Frame(ContainerOperand):
                 include_columns_name=include_columns_name,
                 encoding=encoding,
                 line_terminator=line_terminator,
+                quote_char=quote_char,
+                quote_double=quote_double,
+                escape_char=escape_char,
+                quoting=quoting,
                 store_filter=store_filter
                 )
         sio.seek(0)
@@ -6909,89 +7034,96 @@ class FrameGO(Frame):
 class FrameAssign(Assign):
     __slots__ = (
         'container',
-        'iloc_key',
-        'bloc_key',
+        'key',
         )
 
-    def __init__(self,
-            container: Frame,
-            iloc_key: GetItemKeyTypeCompound = None,
-            bloc_key: tp.Optional[Bloc2DKeyType] = None,
-            ) -> None:
-        '''Store a reference to ``Frame``, as well as a key to be used for assignment with ``__call__``
-        '''
-        self.container = container
-        self.iloc_key = iloc_key
-        self.bloc_key = bloc_key
-
-        if not (self.iloc_key is not None) ^ (self.bloc_key is not None):
-            raise RuntimeError('must set only one of ``iloc_key``, ``bloc_key``')
-
+   # common base classe for supplying delegate; need to define interface for docs
     def __call__(self,
             value: tp.Any,
-            fill_value: tp.Any = np.nan
+            *,
+            fill_value: tp.Any = np.nan,
             ) -> 'Frame':
         '''
         Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
 
         Args:
             value: Value to assign, which can be a :obj:`Series`, :obj:`Frame`, np.ndarray, or element.
+            *.
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
+        raise NotImplementedError()
+
+    def apply(self,
+            func: AnyCallable,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''
+        Provide a function to apply to the assignment target, and use that as the assignment value.
+
+        Args:
+            func: A function to apply to the assignment target.
+            *.
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
+        '''
+        raise NotImplementedError()
+
+
+
+class FrameAssignILoc(FrameAssign):
+    __slots__ = (
+        'container',
+        'key',
+        )
+
+    def __init__(self,
+            container: Frame,
+            key: GetItemKeyTypeCompound = None,
+            ) -> None:
+        '''
+        Args:
+            key: an iloc key.
+        '''
+        self.container = container
+        self.key = key
+
+    def __call__(self,
+            value: tp.Any,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
-        if self.iloc_key is not None:
-            # NOTE: the iloc key's order is not relevant in assignment
-            value_is_blocks = False
-            if is_series:
-                iloc_key = self.iloc_key
-                assigned = self.container._reindex_other_like_iloc(value,
-                        iloc_key,
-                        fill_value=fill_value).values
-            elif is_frame:
-                # block assignment requires that column keys are ascending
-                # conform the passed in value to the targets given by self.iloc_key
-                iloc_key = (self.iloc_key[0], #type: ignore [index]
-                        key_to_ascending_key(self.iloc_key[1], self.container.shape[1])) #type: ignore [index]
-                assigned = self.container._reindex_other_like_iloc(value, #type: ignore [union-attr]
-                        iloc_key,
-                        fill_value=fill_value)._blocks._blocks
-                value_is_blocks = True
-            else: # could be array or single element
-                iloc_key = self.iloc_key
-                assigned = value
-
-            blocks = self.container._blocks.extract_iloc_assign(iloc_key,
+        # NOTE: the iloc key's order is not relevant in assignment
+        if is_series:
+            key = self.key
+            assigned = self.container._reindex_other_like_iloc(value,
+                    key,
+                    fill_value=fill_value).values
+            blocks = self.container._blocks.extract_iloc_assign_by_unit(
+                    key,
                     assigned,
-                    value_is_blocks=value_is_blocks,
                     )
-
-        else: # use bloc
-            bloc_key = bloc_key_normalize(
-                    key=self.bloc_key,
-                    container=self.container
+        elif is_frame:
+            # block assignment requires that column keys are ascending
+            # conform the passed in value to the targets given by self.key
+            key = (self.key[0], #type: ignore [index]
+                    key_to_ascending_key(self.key[1], self.container.shape[1])) #type: ignore [index]
+            assigned = self.container._reindex_other_like_iloc(value, #type: ignore [union-attr]
+                    key,
+                    fill_value=fill_value)._blocks._blocks
+            blocks = self.container._blocks.extract_iloc_assign_by_blocks(
+                    key,
+                    assigned,
                     )
-            if is_frame:
-                invalid = object()
-                value = value.reindex(
-                        index=self.container._index,
-                        columns=self.container._columns,
-                        fill_value=invalid
-                        ).values
-
-                # if we produced any invalid entries, cannot select them
-                invalid_found = value == invalid
-                if invalid_found.any():
-                    bloc_key = bloc_key.copy() # mutate a copy
-                    bloc_key[invalid_found] = False
-
-            elif isinstance(value, np.ndarray):
-                if value.shape != self.container.shape:
-                    raise RuntimeError(f'value must match shape {self.container.shape}')
-
-            blocks = self.container._blocks.extract_bloc_assign(bloc_key, value)
-
+        else: # could be array or single element
+            key = self.key
+            assigned = value
+            blocks = self.container._blocks.extract_iloc_assign_by_unit(
+                    key,
+                    assigned,
+                    )
 
         return self.container.__class__(
                 data=blocks,
@@ -7001,7 +7133,91 @@ class FrameAssign(Assign):
                 own_data=True
                 )
 
+    def apply(self,
+            func: AnyCallable,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        value = func(self.container.iloc[self.key])
+        return self.__call__(value, fill_value=fill_value)
 
+
+class FrameAssignBLoc(FrameAssign):
+    __slots__ = (
+        'container',
+        'key',
+        )
+
+    def __init__(self,
+            container: Frame,
+            key: tp.Optional[Bloc2DKeyType] = None,
+            ) -> None:
+        '''
+        Args:
+            key: a bloc-style key.
+        '''
+        self.container = container
+        self.key = key
+
+    def __call__(self,
+            value: tp.Any,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        is_frame = isinstance(value, Frame)
+        is_series = isinstance(value, Series)
+
+        key = bloc_key_normalize(
+                key=self.key,
+                container=self.container
+                )
+        if is_series:
+            # assumes a Series from a bloc selection
+            index = self.container._index
+            columns = self.container._columns
+            # NOTE: this can be done more efficiently with a new function on TypeBlocks
+            array = np.empty(key.shape, dtype=value.dtype)
+            for (i, c), e in value.items():
+                array[index.loc_to_iloc(i), columns.loc_to_iloc(c)] = e
+            value = array
+
+        if is_frame:
+            # NOTE: we are forcing a values consolidation here; should be avoided.
+            value = value.reindex(
+                    index=self.container._index,
+                    columns=self.container._columns,
+                    fill_value=FILL_VALUE_DEFAULT
+                    ).values
+
+            # if we produced any invalid entries, cannot select them
+            invalid_found = value == FILL_VALUE_DEFAULT
+            if invalid_found.any():
+                key = key.copy() # mutate a copy
+                key[invalid_found] = False
+
+        elif isinstance(value, np.ndarray):
+            if value.shape != self.container.shape:
+                raise RuntimeError(f'value must match shape {self.container.shape}')
+
+        blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
+
+        return self.container.__class__(
+                data=blocks,
+                columns=self.container._columns,
+                index=self.container._index,
+                name=self.container._name,
+                own_data=True
+                )
+
+    def apply(self,
+            func: AnyCallable,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        value = func(self.container.bloc[self.key])
+        return self.__call__(value, fill_value=fill_value)
+
+#-------------------------------------------------------------------------------
 class FrameAsType:
     '''
     The object returned from the getitem selector, exposing the functional (__call__) interface to pass in the dtype, as well as (optionally) whether blocks are consolidated.

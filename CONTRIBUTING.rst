@@ -1,6 +1,5 @@
-.. _developer:
 
-Developer Guide
+Contributing
 *******************
 
 StaticFrame welcomes contributions to code and documentation via GitHub pull requests. For ideas on what to contribute, please see open issues on GitHub, particularly those marked "good first issue."

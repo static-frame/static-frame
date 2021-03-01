@@ -14,41 +14,54 @@ INDEX_INITIALIZER = '''An iterable of unique, hashable values, or another ``Inde
 
 LOC_SELECTOR = '''A loc selector, either a label, a list of labels, a slice of labels, or a Boolean array.'''
 
-ILOC_SELECTOR = '''An iloc selector, either an index, a list of indicces, a slice of indices, or a Boolean array.'''
+ILOC_SELECTOR = '''An iloc selector, either an index, a list of indices, a slice of indices, or a Boolean array.'''
 
 
 #-------------------------------------------------------------------------------
 # full parameter definitions
 
-OWN_INDEX = '''own_index: Flag the passed index as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
-
-OWN_DATA = '''own_data: Flag the data values as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
-
-OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
-
-
-DTYPE_SPECIFIER = '''dtype: A value suitable for specyfying a NumPy dtype, such as a Python type (float), NumPy array protocol strings ('f8'), or a dtype instance.'''
-
 AXIS = '''axis: Integer specifying axis, where 0 is rows and 1 is columns. Axis 0 is set by default.'''
 
-CONSOLIDATE_BLOCKS = 'consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
-
-NAME = 'name: A hashable object to label the container.'
-
-DTYPES = "dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used."
-
-INDEX_CONSTRUCTOR = "index_constructor: Optional class or constructor function to create the :obj:`Index` applied to the rows."
+CHUNKSIZE = 'chunksize: Units of work per executor, as passed to the Thread- or ProcessPoolExecutor.'
 
 COLUMNS_CONSTRUCTOR = "columns_constructor: Optional class or constructor function to create the :obj:`Index` applied to the columns."
 
+CONSOLIDATE_BLOCKS = 'consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
+
+DEEPCOPY_FROM_BUS = 'deepcopy_from_bus: Boolean to determine if containers are deep-copied from the contained :obj:`Bus` during extraction. Set to ``True`` to avoid holding references from the :obj:`Bus`.'
+
+DTYPE_SPECIFIER = '''dtype: A value suitable for specyfying a NumPy dtype, such as a Python type (float), NumPy array protocol strings ('f8'), or a dtype instance.'''
+
+DTYPES = "dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used."
+
 FP = 'fp: A string file path or :obj:`Path` instance.'
 
+INDEX_CONSTRUCTOR = "index_constructor: Optional class or constructor function to create the :obj:`Index` applied to the rows."
+
+MAX_PERSIST = 'max_persist: When loading :obj:`Frame` from a :obj:`Store`, optionally define the maximum number of :obj:`Frame` to remain in the :obj:`Bus`, regardless of the size of the :obj:`Bus`. If more than ``max_persist`` number of :obj:`Frame` are loaded, least-recently loaded :obj:`Frame` will be replaced by ``FrameDeferred``. A ``max_persist`` of 1, for example, permits reading one :obj:`Frame` at a time without ever holding in memory more than 1 :obj:`Frame`.'
+
+MAX_WORKERS = 'max_workers: Number of parallel executors, as passed to the Thread- or ProcessPoolExecutor; ``None`` defaults to the max number of machine processes.'
+
+NAME = 'name: A hashable object to label the container.'
+
+OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
+
+OWN_DATA = '''own_data: Flag the data values as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
+
+OWN_INDEX = '''own_index: Flag the passed index as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
+
+RETAIN_LABELS = 'retain_labels: Boolean to determine if, along the axis of virtual concatentation, if component :obj:`Frame` labels should be used to form the outer depth of an :obj:`IndexHierarchy`. This is required to be ``True`` if component :obj:`Frame` labels are not globally unique along the axis of concatenation.'
+
+STORE = 'store: A :obj:`Store` subclass.'
+
 STORE_CONFIG_MAP = 'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
+
+USE_THREADS = 'use_threads: Use the ThreadPoolExecutor instead of the ProcessPoolExecutor.'
 
 class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
-    # complete function doc strings
+    # complete or partial function doc strings
 
     to_html = '''
     Return an HTML table representation of this :obj:`{class_name}` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
@@ -72,10 +85,16 @@ class DOC_TEMPLATE:
         :obj:`str`, absolute file path to the file written.
     '''
 
-    #---------------------------------------------------------------------------
-    # common strings
+    name = '''
+    A hashable label attached to this container.
 
-    clip = '''Apply a clip opertion to this :obj:`{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
+    Returns:
+        :obj:`Hashable`
+    '''
+
+    interface = '''
+    A :obj:`Frame` documenting the interface of this class.
+    '''
 
     label_widths_at_depth = '''
     A generator of pairs, where each pair is the label and the count of that label found at the depth specified by  ``depth_level``.
@@ -84,19 +103,11 @@ class DOC_TEMPLATE:
         depth_level: a depth level, starting from zero.
     '''
 
-    interface = '''
-    A :obj:`Frame` documenting the interface of this class.
-    '''
+    clip = '''Apply a clip operation to this :obj:`{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
 
-    name = '''
-    A hashable label attached to this container.
-
-    Returns:
-        :obj:`Hashable`
-    '''
 
     values_2d = '''
-    A 2D NumPy array of all values in the :obj:`{class_name}`. As this is a single array, hereogenous columnar types might be coerced to a compatible type.
+    A 2D NumPy array of all values in the :obj:`{class_name}`. As this is a single array, heterogenous columnar types might be coerced to a compatible type.
     '''
 
     values_1d = '''
@@ -110,8 +121,13 @@ class DOC_TEMPLATE:
     apply = dict(
             doc='Apply a function to each value.',
             func='func: A function that takes a value.',
-            dtype=DTYPE_SPECIFIER
+            name=NAME,
+            dtype=DTYPE_SPECIFIER,
+            max_workers=MAX_WORKERS,
+            chunksize=CHUNKSIZE,
+            use_threads=USE_THREADS,
             )
+
     argminmax = dict(
             skipna='skipna: if True, NaN or None values will be ignored; if False, a found NaN will propagate.',
             axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
@@ -122,6 +138,45 @@ class DOC_TEMPLATE:
             )
 
 
+    batch_constructor = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            {MAX_WORKERS}
+            {CHUNKSIZE}
+            {USE_THREADS}
+            '''
+            )
+
+    batch_init = dict(
+            args = f'''
+        Args:
+            {NAME}
+            {STORE_CONFIG_MAP}
+            {MAX_WORKERS}
+            {CHUNKSIZE}
+            {USE_THREADS}
+            '''
+            )
+
+    bus_constructor = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            {MAX_PERSIST}
+            '''
+            )
+
+    bus_init = dict(
+            args = f'''
+        Args:
+            {STORE}
+            {STORE_CONFIG_MAP}
+            {MAX_PERSIST}
+            '''
+            )
 
     container_init = dict(
             index='''index: Optional index initializer. If provided in addition to data values, lengths must be compatible.''',
@@ -137,7 +192,22 @@ class DOC_TEMPLATE:
             name=NAME,
             consolidate_blocks=CONSOLIDATE_BLOCKS
     )
-
+    delimited = dict(
+            doc='Given a file path or file-like object, write the :obj:`Frame` as delimited text.',
+            fp='A file path, PathLib instance, or file-like object.',
+            delimiter='delimiter: Character to be used for delimiterarating elements.',
+            include_index='include_index: If True, the index will be written.',
+            include_index_name='include_index_name: If including columns, populate the row above the index with the index ``name``. Cannot be True if ``include_columns_name`` is ``True``.',
+            include_columns='include_columns: If ``True``, the columns will be written.',
+            include_columns_name='include_columns_name: If including index, populate the column to the left of the columns with the columns ``name``. Cannot be True if ``include_index_name`` is True.',
+            encoding='encoding: Encoding type to be used when opening the file.',
+            line_terminator='line_terminator: The string used to terminate lines.',
+            quote_char='quote_char: A one-character string used to quote fields containing special characters, such as the ``delimiter`` or ``quote_char``, or which contain new-line characters.',
+            quote_double='quote_double: Controls how instances of quote_char appearing inside a field should themselves be quoted. When ``True``, the character is doubled. When ``False``, the ``escape_char`` is used as a prefix to the ``quote_char``. It defaults to True.',
+            escape_char='escape_char: A one-character string used by the writer to escape the delimiter if quoting is set to QUOTE_NONE and the quotechar if quote_double is False.',
+            quoting='quoting: Controls when quotes should be generated. It can take on any of the QUOTE_* constants from the standard library csv module.',
+            store_filter='store_filter: A :obj:`StoreFilter` instance.',
+            )
     duplicated = dict(
             exclude_first='exclude_first: Boolean to select if the first duplicated value is excluded.',
             exclude_last='exclude_last: Boolean to select if the last duplicated value is excluded.',
@@ -154,7 +224,7 @@ class DOC_TEMPLATE:
             compare_name="compare_name: Include equality of the container's name (and all composed containers) in the comparison.",
             compare_dtype="compare_dtype: Include equality of the container's dtype (and all composed containers) in the comparison.",
             compare_class="compare_class: Include equality of the container's class (and all composed containers) in the comparison.",
-            skipna="skipna: If True, comparisons between missing valeus are equal.",
+            skipna="skipna: If True, comparisons between missing values are equal.",
             )
 
     from_any = dict(
@@ -184,12 +254,36 @@ class DOC_TEMPLATE:
             axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
             )
 
+    head = dict(
+            doc='''Return a :obj:`{class_name}` consisting only of the top elements as specified by ``count``.
+            ''',
+            count='''count: Number of elements to be returned from the top of the :obj:`{class_name}`''',
+            )
+
+    index_init = dict(
+            args = f'''
+        Args:
+            labels: {INDEX_INITIALIZER}
+            {NAME}
+            loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
+            {DTYPE_SPECIFIER}'''
+            )
+
+    index_date_time_init = dict(
+            args = f'''
+        Args:
+            labels: Iterable of hashable values to be used as the index labels. If strings, NumPy datetime conversions will be applied.
+            {NAME}
+            '''
+            )
+
     insert = dict(
             key_before="key: Label before which the new container will be inserted.",
             key_after="key: Label after which the new container will be inserted.",
             container="container: Container to be inserted.",
             fill_value='fill_value: A value to be used to fill space after reindexing the new container.'
             )
+
     join = dict(
             left_depth_level="left_depth_level: Specify one or more left index depths to include in the join predicate.",
             left_columns="left_columns: Specify one or more left columns to include in the join predicate.",
@@ -202,6 +296,53 @@ class DOC_TEMPLATE:
             composite_index_fill_value='composite_index_fill_value: Value to be used when forming a composite index when a label is missing.'
             )
 
+    mloc = dict(
+            doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
+            doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
+            )
+
+    map_any = dict(
+            doc='Apply a mapping; for values not in the mapping, the value is returned.',
+            mapping='mapping: A mapping type, such as a dictionary or Series.',
+            dtype=DTYPE_SPECIFIER,
+            )
+
+    map_fill = dict(
+            doc = 'Apply a mapping; for values not in the mapping, the ``fill_value`` is returned.',
+            mapping = 'mapping: A mapping type, such as a dictionary or Series.',
+            fill_value = 'fill_value: Value to be returned if the values is not a key in the mapping.',
+            dtype=DTYPE_SPECIFIER
+            )
+
+    map_all = dict(
+            doc = 'Apply a mapping; for values not in the mapping, an Exception is raised.',
+            mapping='mapping: A mapping type, such as a dictionary or Series.',
+            dtype=DTYPE_SPECIFIER
+            )
+
+
+    quilt_constructor = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            axis: Integer specifying axis of virtual concatenation, where 0 is vertically (stacking rows) and 1 is horizontally (extending columns).
+            {RETAIN_LABELS}
+            {DEEPCOPY_FROM_BUS}
+            {MAX_PERSIST}
+            '''
+            )
+
+    quilt_init = dict(
+            args = f'''
+        Args:
+            bus: :obj:`Bus` of :obj:`Frame` to be used for virtual concatenation.
+            axis: Integer specifying axis of virtual concatenation, where 0 is vertically (stacking rows) and 1 is horizontally (extending columns).
+            {RETAIN_LABELS}
+            {DEEPCOPY_FROM_BUS}
+            '''
+            )
+
     reindex = dict(
             doc='''Return a new :obj:`{class_name}` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.
             ''',
@@ -212,7 +353,7 @@ class DOC_TEMPLATE:
             )
 
     relabel = dict(
-            doc ='''Return a new :obj:`{class_name}` with transformed labels on the index. The size and ordering of the data is never chagned in a relabeling operation. The resulting index must be unique.
+            doc ='''Return a new :obj:`{class_name}` with transformed labels on the index. The size and ordering of the data is never changed in a relabeling operation. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most levels; a negative integer drops that many inner-most levels.''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
@@ -242,15 +383,28 @@ class DOC_TEMPLATE:
             columns='''Number of labels to select from the columns.''',
             seed='''Initial state of random selection.''',
             )
+    searchsorted = dict(
+            doc='Given a sorted :obj:`Series`, return the {label_type} position(s) at which insertion in ``values`` would retain sort order.',
+            values='values: a single value, or iterable of values.',
+            side_left='side_left: If True, the index of the first suitable location found is given, else return the last such index. If matching an existing value, `side_left==True` will return that position, `side_left==Right` will return the next position (or the length).',
+            fill_value='fill_value: A value to be used to fill the label beyond the last label.',
+            )
     selector = dict(
             key_loc=LOC_SELECTOR,
             key_iloc=ILOC_SELECTOR,
             )
+    sort = dict(
+            ascending='If True, sort in ascending order; if False, sort in descending order.',
+            kind='Name of the sort algorithm as passed to NumPy.',
+            key='A function that is used to pre-process the selected columns or rows and derive new values to sort by.'
+            )
 
-    head = dict(
-            doc='''Return a :obj:`{class_name}` consisting only of the top elements as specified by ``count``.
-            ''',
-            count='''count: Number of elements to be returned from the top of the :obj:`{class_name}`''',
+    store_client_exporter = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            '''
             )
 
     tail = dict(
@@ -259,63 +413,6 @@ class DOC_TEMPLATE:
             count='''count: Number of elements to be returned from the bottom of the :obj:`{class_name}`''',
             )
 
-
-    index_init = dict(
-            args = f'''
-        Args:
-            labels: {INDEX_INITIALIZER}
-            {NAME}
-            loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
-            {DTYPE_SPECIFIER}'''
-            )
-
-    index_date_time_init = dict(
-            args = f'''
-        Args:
-            labels: Iterable of hashable values to be used as the index labels. If strings, NumPy datetime conversions will be applied.
-            {NAME}
-            '''
-            )
-
-    bus_constructor = dict(
-            args = f'''
-        Args:
-            {FP}
-            {STORE_CONFIG_MAP}
-            '''
-            )
-
-    bus_exporter = dict(
-            args = f'''
-        Args:
-            {FP}
-            {STORE_CONFIG_MAP}
-            '''
-            )
-
-    mloc = dict(
-            doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
-            doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
-            )
-
-    map_any = dict(
-            doc='Apply a mapping; for values not in the mapping, the value is returned.',
-            mapping='mapping: A mapping type, such as a dictionary or Series.',
-            dtype=DTYPE_SPECIFIER,
-            )
-
-    map_fill = dict(
-            doc = 'Apply a mapping; for values not in the mapping, the ``fill_value`` is returned.',
-            mapping = 'mapping: A mapping type, such as a dictionary or Series.',
-            fill_value = 'fill_value: Value to be returned if the values is not a key in the mapping.',
-            dtype=DTYPE_SPECIFIER
-            )
-
-    map_all = dict(
-            doc = 'Apply a mapping; for values not in the mapping, an Exception is raised.',
-            mapping='mapping: A mapping type, such as a dictionary or Series.',
-            dtype=DTYPE_SPECIFIER
-            )
 
     ufunc_skipna = dict(
             args = '''

@@ -2776,8 +2776,7 @@ class TestUnit(TestCase):
         self.assertEqual(list(idx.iter_label(2)), [1, 2, 1, 2, 1, 2, 1, 2])
 
         post = idx.iter_label(1).apply(lambda x: x.lower())
-        self.assertEqual(post.to_pairs(),
-                ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'), (4, 'a'), (5, 'a'), (6, 'b'), (7, 'b')))
+        self.assertEqual(post.tolist(), ['a', 'a', 'b', 'b', 'a', 'a', 'b', 'b'])
 
     def test_hierarchy_iter_label_b(self) -> None:
 
@@ -2799,7 +2798,7 @@ class TestUnit(TestCase):
                 [('I', 'A', 1), ('I', 'A', 2), ('I', 'B', 1), ('I', 'B', 2), ('II', 'A', 1), ('II', 'A', 2), ('II', 'B', 1), ('II', 'B', 2)]
                 )
         # this returns a Series; probably should just be an array?
-        self.assertEqual(idx.iter_label().apply(lambda x: x[:2]).values.tolist(),
+        self.assertEqual(idx.iter_label().apply(lambda x: x[:2]).tolist(),
                 [('I', 'A'), ('I', 'A'), ('I', 'B'), ('I', 'B'), ('II', 'A'), ('II', 'A'), ('II', 'B'), ('II', 'B')]
                 )
 

@@ -11,6 +11,7 @@ from os import PathLike
 from urllib import request
 from copy import deepcopy
 
+import contextlib
 import datetime
 import operator
 import os
@@ -543,7 +544,17 @@ def full_for_fill(
     else:
         dtype_final = dtype_element
     # NOTE: we do not make this array immutable as we sometimes need to mutate it before adding it to TypeBlocks
-    return np.full(shape, fill_value, dtype=dtype_final)
+    if dtype_final != DTYPE_OBJECT:
+        return np.full(shape, fill_value, dtype=dtype_final)
+
+    # for tuples and other objects, better to create and fill
+    array = np.empty(shape, dtype=dtype_final)
+    if fill_value is None:
+        return array # None is already set for empty object arrays
+
+    for iloc in np.ndindex(shape):
+        array[iloc] = fill_value
+    return array
 
 
 def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:
@@ -811,8 +822,7 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
             copy_values |= is_iifa
     return is_gen, copy_values
 
-# TODO: rename, to similar to resolve_dtype_iter
-def resolve_type_iter(
+def prepare_iter_for_array(
         values: tp.Iterable[tp.Any],
         restrict_copy: bool = False
         ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
@@ -928,7 +938,7 @@ def iterable_to_array_1d(
         values_for_construct = (values,)
     elif dtype is None:
         # this gives as dtype only None, or object, letting array constructor do the rest
-        dtype, has_tuple, values_for_construct = resolve_type_iter(values)
+        dtype, has_tuple, values_for_construct = prepare_iter_for_array(values)
         if len(values_for_construct) == 0:
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
     else:
@@ -994,8 +1004,8 @@ def iterable_to_array_2d(
     if not hasattr(values, '__len__'):
         values = tuple(values)
 
-    # if we provide whole generator to resolve_type_iter, it will copy the entire sequence unless restrict copy is True
-    dtype, _, _ = resolve_type_iter(
+    # if we provide whole generator to prepare_iter_for_array, it will copy the entire sequence unless restrict copy is True
+    dtype, _, _ = prepare_iter_for_array(
             (y for z in values for y in z),
             restrict_copy=True
             )
@@ -1540,8 +1550,7 @@ def array_shift(*,
     return result
 
 def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
-    for row in array: # assuming 2d
-        yield tuple(row)
+    yield from map(tuple, array)
 
 
 def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
@@ -2381,14 +2390,14 @@ def slices_from_targets(
 #-------------------------------------------------------------------------------
 # URL handling, file downloading, file writing
 
-def path_filter(fp: PathSpecifierOrFileLike) -> tp.Union[str, tp.TextIO]:
+def path_filter(fp: PathSpecifierOrFileLikeOrIterator) -> tp.Union[str, tp.TextIO]:
     '''Realize Path objects as strings, let TextIO pass through, if given.
     '''
     if fp is None:
         raise ValueError('None cannot be interpreted as a file path')
     if isinstance(fp, PathLike):
         return str(fp)
-    return fp
+    return fp #type: ignore [return-value]
 
 
 def _read_url(fp: str) -> str:
@@ -2429,6 +2438,30 @@ def write_optional_file(
     return fp #type: ignore
 
 
+@contextlib.contextmanager
+def file_like_manager(
+        file_like: PathSpecifierOrFileLikeOrIterator,
+        encoding: tp.Optional[str] = None,
+        mode: str = 'r',
+        ) -> tp.Iterator[tp.Iterator[str]]:
+    '''
+    Return an file or file-like object. Manage closing of file if necessary.
+    '''
+    file_like = path_filter(file_like)
+
+    try:
+        if isinstance(file_like, str):
+            f = open(file_like, mode=mode, encoding=encoding)
+            is_file = True
+        else:
+            f = file_like # assume an open file-like object
+            is_file = False
+        yield f
+
+    finally:
+        if is_file:
+            f.close()
+
 #-------------------------------------------------------------------------------
 # trivial, non NP util
 
@@ -2436,12 +2469,14 @@ def get_tuple_constructor(
         fields: np.ndarray,
         ) -> TupleConstructorType:
     '''
-    Given fields, try to create a Namedtuple; if that fails, return a normal tuple.
+    Given fields, try to create a Namedtuple and return the `_make` method
     '''
+    # this will raise if attrs are invalid
     try:
         return namedtuple('Axis', fields)._make #type: ignore
     except ValueError:
-        return tuple
+        pass
+    raise ValueError('invalid fields for namedtuple; pass `tuple` as constructor')
 
 
 def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:

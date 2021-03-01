@@ -1270,7 +1270,7 @@ class IndexHierarchy(IndexBase):
                 skipna=skipna,
                 )
 
-
+    @doc_inject(selector='sort')
     def sort(self: IH,
             *,
             ascending: bool = True,
@@ -1280,7 +1280,9 @@ class IndexHierarchy(IndexBase):
         '''Return a new Index with the labels sorted.
 
         Args:
-            kind: Sort algorithm passed to NumPy.
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
         if self._recache:
             self._update_array_cache()

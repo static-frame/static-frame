@@ -261,7 +261,7 @@ class ContainerOperand(ContainerBase):
             skipna: bool = True,
             out: tp.Optional[np.ndarray] = None,
             ) -> tp.Any:
-        '''Logical and over values along the specified axis.
+        '''Logical ``and`` over values along the specified axis.
 
         {args}
         '''
@@ -281,7 +281,7 @@ class ContainerOperand(ContainerBase):
             skipna: bool = True,
             out: tp.Optional[np.ndarray] = None,
             ) -> tp.Any:
-        '''Logical or over values along the specified axis.
+        '''Logical ``or`` over values along the specified axis.
 
         {args}
         '''
