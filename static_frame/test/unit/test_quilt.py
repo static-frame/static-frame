@@ -90,6 +90,55 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndexNonUnique):
             self.assertEqual(q3.shape, (7, 2))
 
+    #---------------------------------------------------------------------------
+    def test_quilt_from_items_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), c=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(2,3), b=(4,6)),
+                index=('x', 'y'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(c=(10,20), b=(50,60)),
+                index=('x', 'y'),
+                name='f3')
+
+        q1 = Quilt.from_items(((f.name, f) for f in (f1, f2, f3)),
+                axis=1,
+                retain_labels=True)
+
+        self.assertEqual(q1.to_frame().to_pairs(),
+                ((('f1', 'a'), (('x', 1), ('y', 2))), (('f1', 'c'), (('x', 3), ('y', 4))), (('f2', 'a'), (('x', 2), ('y', 3))), (('f2', 'b'), (('x', 4), ('y', 6))), (('f3', 'c'), (('x', 10), ('y', 20))), (('f3', 'b'), (('x', 50), ('y', 60)))))
+
+
+    #---------------------------------------------------------------------------
+    def test_quilt_from_frames_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), c=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(2,3), b=(4,6)),
+                index=('x', 'y'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(c=(10,20), b=(50,60)),
+                index=('x', 'y'),
+                name='f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3),
+                axis=1,
+                retain_labels=True)
+
+        self.assertEqual(q1.to_frame().to_pairs(),
+                ((('f1', 'a'), (('x', 1), ('y', 2))), (('f1', 'c'), (('x', 3), ('y', 4))), (('f2', 'a'), (('x', 2), ('y', 3))), (('f2', 'b'), (('x', 4), ('y', 6))), (('f3', 'c'), (('x', 10), ('y', 20))), (('f3', 'b'), (('x', 50), ('y', 60)))))
+
+
+
 
     #---------------------------------------------------------------------------
     def test_quilt_display_a(self) -> None:
@@ -604,12 +653,12 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         q1 = Quilt(b1, retain_labels=True)
 
-        arrays = tuple(q1.iter_array(1))
+        arrays = tuple(q1.iter_array(axis=1))
         self.assertEqual(len(arrays), 7)
         self.assertEqual(arrays[0].tolist(), [1, 3])
         self.assertEqual(arrays[-1].tolist(), [20, 60])
 
-        arrays = tuple(q1.iter_array_items(1))
+        arrays = tuple(q1.iter_array_items(axis=1))
         self.assertEqual(len(arrays), 7)
         self.assertEqual(arrays[0][0], ('f1', 'x'))
         self.assertEqual(arrays[0][1].tolist(), [1, 3])
@@ -618,10 +667,10 @@ class TestUnit(TestCase):
         self.assertEqual(arrays[-1][1].tolist(), [20, 60])
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array(0))
+            _ = tuple(q1.iter_array(axis=0))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array_items(0))
+            _ = tuple(q1.iter_array_items(axis=0))
 
 
     def test_quilt_iter_array_a2(self) -> None:
@@ -643,12 +692,12 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         q1 = Quilt(b1, retain_labels=True, deepcopy_from_bus=True)
 
-        arrays = tuple(q1.iter_array(1))
+        arrays = tuple(q1.iter_array(axis=1))
         self.assertEqual(len(arrays), 7)
         self.assertEqual(arrays[0].tolist(), [1, 3])
         self.assertEqual(arrays[-1].tolist(), [20, 60])
 
-        arrays = tuple(q1.iter_array_items(1))
+        arrays = tuple(q1.iter_array_items(axis=1))
         self.assertEqual(len(arrays), 7)
         self.assertEqual(arrays[0][0], ('f1', 'x'))
         self.assertEqual(arrays[0][1].tolist(), [1, 3])
@@ -657,10 +706,10 @@ class TestUnit(TestCase):
         self.assertEqual(arrays[-1][1].tolist(), [20, 60])
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array(0))
+            _ = tuple(q1.iter_array(axis=0))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array_items(0))
+            _ = tuple(q1.iter_array_items(axis=0))
 
 
 
@@ -669,7 +718,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,6)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False)
 
-        arrays = tuple(q1.iter_array_items(0))
+        arrays = tuple(q1.iter_array_items(axis=0))
         self.assertEqual(len(arrays), 6)
         self.assertEqual(arrays[0][0], 'zZbu')
         self.assertEqual(arrays[0][1].tolist(), [-88017, 92867])
@@ -679,10 +728,10 @@ class TestUnit(TestCase):
         self.assertEqual(arrays[-1][1].tolist(), [84967, 13448])
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array(1))
+            _ = tuple(q1.iter_array(axis=1))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array_items(1))
+            _ = tuple(q1.iter_array_items(axis=1))
 
 
 
@@ -691,7 +740,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,6)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=2, axis=1, retain_labels=False, deepcopy_from_bus=True)
 
-        arrays = tuple(q1.iter_array_items(0))
+        arrays = tuple(q1.iter_array_items(axis=0))
         self.assertEqual(len(arrays), 6)
         self.assertEqual(arrays[0][0], 'zZbu')
         self.assertEqual(arrays[0][1].tolist(), [-88017, 92867])
@@ -701,10 +750,10 @@ class TestUnit(TestCase):
         self.assertEqual(arrays[-1][1].tolist(), [84967, 13448])
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array(1))
+            _ = tuple(q1.iter_array(axis=1))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_array_items(1))
+            _ = tuple(q1.iter_array_items(axis=1))
 
 
     def test_quilt_iter_array_b3(self) -> None:
@@ -713,12 +762,12 @@ class TestUnit(TestCase):
 
         q2 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=False)
         a2_src_id = id(q2._bus._series.values[0]._extract_array(None, 0))
-        a2_dst_id = id(next(iter(q2.iter_array(0))))
+        a2_dst_id = id(next(iter(q2.iter_array(axis=0))))
         self.assertTrue(a2_src_id == a2_dst_id)
 
         q1 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=True)
         a1_src_id = id(q1._bus._series.values[0]._extract_array(None, 0))
-        a1_dst_id = id(next(iter(q1.iter_array(0))))
+        a1_dst_id = id(next(iter(q1.iter_array(axis=0))))
         self.assertTrue(a1_src_id != a1_dst_id)
 
     #---------------------------------------------------------------------------
@@ -750,10 +799,10 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(), (('a', 20), ('b', 60)))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_series(0))
+            _ = tuple(q1.iter_series(axis=0))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_series_items(0))
+            _ = tuple(q1.iter_series_items(axis=0))
 
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.items())
@@ -785,10 +834,10 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(), (('a', 20), ('b', 60)))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_series(0))
+            _ = tuple(q1.iter_series(axis=0))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_series_items(0))
+            _ = tuple(q1.iter_series_items(axis=0))
 
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.items())
@@ -804,7 +853,7 @@ class TestUnit(TestCase):
         self.assertEqual(post[0]._fields, ('zZbu', 'ztsv'))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_tuple(1))
+            _ = tuple(q1.iter_tuple(axis=1))
 
     def test_quilt_iter_tuple_a2(self) -> None:
 
@@ -815,7 +864,7 @@ class TestUnit(TestCase):
         self.assertEqual(post[0]._fields, ('zZbu', 'ztsv'))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_tuple(1))
+            _ = tuple(q1.iter_tuple(axis=1))
 
 
     def test_quilt_iter_tuple_b1(self) -> None:
@@ -828,7 +877,7 @@ class TestUnit(TestCase):
         self.assertEqual(post[0][1]._fields, ('zZbu', 'ztsv'))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_tuple_items(1))
+            _ = tuple(q1.iter_tuple_items(axis=1))
 
     def test_quilt_iter_tuple_b2(self) -> None:
 
@@ -840,7 +889,7 @@ class TestUnit(TestCase):
         self.assertEqual(post[0][1]._fields, ('zZbu', 'ztsv'))
 
         with self.assertRaises(NotImplementedError):
-            _ = tuple(q1.iter_tuple_items(1))
+            _ = tuple(q1.iter_tuple_items(axis=1))
 
     #---------------------------------------------------------------------------
     def test_quilt_to_frame_a1(self) -> None:

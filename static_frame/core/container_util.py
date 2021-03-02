@@ -996,6 +996,47 @@ def container_to_exporter_attr(container_type: tp.Type['Frame']) -> str:
         return 'to_frame_he'
     raise NotImplementedError(f'no handling for {container_type}')
 
+
+def sort_index_for_order(
+        index: IndexBase,
+        ascending: bool,
+        kind: str,
+        key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]],
+        ) -> np.ndarray:
+    '''Return an integer array defing the new ordering.
+    '''
+    # cfs is container_for_sort
+    if key:
+        cfs = key(index)
+        cfs_is_array = isinstance(cfs, np.ndarray)
+        if cfs_is_array:
+            cfs_depth = 1 if cfs.ndim == 1 else cfs.shape[1]
+        else:
+            cfs_depth = cfs.depth
+        if len(cfs) != len(index):
+            raise RuntimeError('key function returned a container of invalid length')
+    else:
+        cfs = index
+        cfs_is_array = False
+        cfs_depth = cfs.depth
+
+    # argsort lets us do the sort once and reuse the results
+    if cfs_depth > 1:
+        if cfs_is_array:
+            values_for_lex = [cfs[NULL_SLICE, i] for i in range(cfs.shape[1]-1, -1, -1)]
+        else: # cfs is an IndexHierarchy
+            values_for_lex = [cfs.values_at_depth(i)
+                    for i in range(cfs.depth-1, -1, -1)]
+        order = np.lexsort(values_for_lex)
+    else:
+        # depth is 1
+        v = cfs if cfs_is_array else cfs.values
+        order = np.argsort(v, kind=kind)
+
+    if not ascending:
+        order = order[::-1]
+    return order
+
 #-------------------------------------------------------------------------------
 
 class MessagePackElement:

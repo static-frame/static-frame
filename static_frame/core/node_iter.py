@@ -18,6 +18,7 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TupleConstructorType
+from static_frame.core.util import iterable_to_array_1d
 
 
 if tp.TYPE_CHECKING:
@@ -25,9 +26,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.quilt import Quilt # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.bus import Bus # pylint: disable=W0611 #pragma: no cover
 
 
-FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Quilt')
+FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt')
 # FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')
 
 
@@ -349,10 +351,12 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         Args:
             {func}
+            *
             {dtype}
-            max_workers: Passed to the pool_executor, where None defaults to the max number of machine processes.
-            chunksize: Passed to the pool executor.
-            use_thread: When True, the ThreadPoolExecutor will be used rather than the default ProcessPoolExecutor.
+            {name}
+            {max_workers}
+            {chunksize}
+            {use_threads}
         '''
         return self._apply_constructor(
                 self._apply_iter_items_parallel(
@@ -446,9 +450,9 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
         elif self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
             assert isinstance(self._container, Frame) # for typing
-            # for element-wise function application, axis will always be 0 or 1, as we always do full iteration; from_element_loc_items accepts axis of None for incomplete specification, but that will never be used here.
+            # for element-wise function application, axis will always be 0 or 1, as we always do full iteration; from_element_items accepts axis of None for incomplete specification, but that will never be used here.
             apply_constructor = partial(
-                    self._container.__class__.from_element_loc_items,
+                    self._container.__class__.from_element_items,
                     index=self._container._index,
                     columns=self._container._columns,
                     axis=kwargs['axis'],
@@ -457,10 +461,19 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     columns_constructor=self._container._columns.from_labels
                     )
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
-            # when this is used with hierarchical indices, we are likely to not get a unique values; thus, passing this to an Index constructor is awkward. instead, simply create a Series
-            apply_constructor = Series.from_items
+            # apply_constructor = Series.from_items
+            def apply_constructor(items: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]], #pylint: disable=function-redefined
+                    dtype: DtypeSpecifier = None,
+                    name: NameType = None,
+                    ) -> np.ndarray:
+                # NOTE: cannot use name argument, here for compat
+                array, _ = iterable_to_array_1d(
+                        (v for _, v in items),
+                        dtype,
+                        )
+                return array
         else:
-            raise NotImplementedError() #pragma: no cover
+            raise NotImplementedError(self._apply_type) #pragma: no cover
 
         return IterNodeDelegate(
                 func_values=func_values,
@@ -487,6 +500,7 @@ class IterNodeAxis(IterNode[FrameOrSeries]):
     __slots__ = _ITER_NODE_SLOTS
 
     def __call__(self,
+            *,
             axis: int = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.get_delegate(self, axis=axis)
@@ -497,8 +511,8 @@ class IterNodeConstructorAxis(IterNode[FrameOrSeries]):
     __slots__ = _ITER_NODE_SLOTS
 
     def __call__(self,
-            axis: int = 0, # make both kwarg only
             *,
+            axis: int = 0,
             constructor: tp.Optional[TupleConstructorType] = None,
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.get_delegate(self,

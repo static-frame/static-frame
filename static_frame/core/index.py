@@ -15,6 +15,7 @@ from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import key_from_container_key
+from static_frame.core.container_util import sort_index_for_order
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -383,7 +384,7 @@ class Index(IndexBase):
             *,
             loc_is_iloc: bool = False,
             name: NameType = NAME_DEFAULT,
-            dtype: DtypeSpecifier = None
+            dtype: DtypeSpecifier = None,
             ) -> None:
         '''Initializer.
 
@@ -423,7 +424,7 @@ class Index(IndexBase):
                 labels = labels._labels
             else: # IndexHierarchy
                 # will be a generator of tuples; already updated caches
-                labels = array2d_to_tuples(labels.__iter__())
+                labels = labels.__iter__()
         elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
             array = labels.values # NOTE: should we take values or keys here?
@@ -1181,21 +1182,22 @@ class Index(IndexBase):
             return False
         return True
 
+    @doc_inject(selector='sort')
     def sort(self,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND) -> 'Index':
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[['Index'], tp.Union[np.ndarray, 'Index']]] = None,
+            ) -> 'Index':
         '''Return a new Index with the labels sorted.
 
         Args:
-            kind: Sort algorithm passed to NumPy.
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
-        # force usage of property for caching
-        v = np.sort(self.values, kind=kind)
-        if not ascending:
-            v = v[::-1]
+        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key) #type: ignore [arg-type]
 
-        v.flags.writeable = False
-        return self.__class__(v, name=self._name)
+        return self._extract_iloc(order) #type: ignore [return-value]
 
     def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
         '''

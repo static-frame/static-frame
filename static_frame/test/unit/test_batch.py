@@ -1,4 +1,6 @@
 import unittest
+import typing as tp
+
 import numpy as np
 import frame_fixtures as ff
 
@@ -11,6 +13,13 @@ from static_frame.test.test_case import temp_file
 from static_frame.core.store import StoreConfig
 
 nan = np.nan
+
+def func1(f: Frame) -> Frame:
+    return f.loc['q']
+
+
+def func2(label: tp.Hashable, f: Frame) -> Frame:
+    return f.loc['q']
 
 class TestUnit(TestCase):
 
@@ -210,7 +219,6 @@ class TestUnit(TestCase):
         self.assertEqual(b1.shapes.to_pairs(),
                 (('x', (1, 2)), ('z', (2, 2)))
                 )
-        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
     def test_batch_apply_a(self) -> None:
@@ -263,6 +271,92 @@ class TestUnit(TestCase):
                 post.to_pairs(0),
                 ((None, (('f1', 4), ('f2', 3))),)
                 )
+
+    #---------------------------------------------------------------------------
+
+    def test_batch_apply_except_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('x', 'q'),
+                name='f3')
+
+        post = Batch.from_frames((f1, f2, f3)
+                ).apply_except(lambda f: f.loc['q'], KeyError).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('d', (('f3', 20),)), ('b', (('f3', 60),))))
+
+    def test_batch_apply_except_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('x', 'q'),
+                name='f3')
+
+        post = Batch.from_frames((f1, f2, f3), max_workers=3
+                ).apply_except(func1, KeyError).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('d', (('f3', 20),)), ('b', (('f3', 60),))))
+
+        with self.assertRaises(NotImplementedError):
+            _ = Batch.from_frames((f1, f2, f3), max_workers=3, chunksize=2,
+                    ).apply_except(func1, KeyError).to_frame()
+
+    def test_batch_apply_except_c(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('x', 'q'),
+                name='f3')
+
+        post = Batch.from_frames((f1, f2, f3)
+                ).apply_items_except(lambda label, f: f.loc['q'], KeyError).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('d', (('f3', 20),)), ('b', (('f3', 60),))))
+
+    def test_batch_apply_except_d(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('x', 'q'),
+                name='f3')
+
+        post = Batch.from_frames((f1, f2, f3), max_workers=3
+                ).apply_items_except(func2, KeyError).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('d', (('f3', 20),)), ('b', (('f3', 60),))))
 
     #---------------------------------------------------------------------------
     def test_batch_apply_items_a(self) -> None:
@@ -922,6 +1016,30 @@ class TestUnit(TestCase):
                 Batch.from_frames((f1, f2)).sample(1, 1, seed=22).to_frame().to_pairs(0),
                 (('a', ((('f1', 'x'), 1), (('f2', 'z'), 3))),)
                 )
+
+    #---------------------------------------------------------------------------
+    def test_batch_apply_array_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('x', 'q'),
+                name='f3')
+
+        post = Batch.from_frames((f1, f2, f3)).unique().to_frame(axis=1, fill_value=None)
+        self.assertEqual(post.to_pairs(0),
+                (('f1', ((0, 1), (1, 2), (2, 3), (3, 4), (4, None), (5, None))), ('f2', ((0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6))), ('f3', ((0, 10), (1, 20), (2, 50), (3, 60), (4, None), (5, None))))
+                )
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

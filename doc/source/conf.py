@@ -78,10 +78,13 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
     post['interface'] = {}
     for target in (
             sf.Series,
+            sf.SeriesHE,
             sf.Frame,
             sf.FrameGO,
-            sf.Batch,
+            sf.FrameHE,
             sf.Bus,
+            sf.Batch,
+            sf.Quilt,
             sf.Index,
             sf.IndexGO,
             sf.IndexHierarchy,

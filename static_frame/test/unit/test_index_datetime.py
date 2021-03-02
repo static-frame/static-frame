@@ -276,6 +276,12 @@ class TestUnit(TestCase):
         idx8 = IndexMinute(idx2)
         self.assertTrue(id(idx8._map) != id(idx2._map))
 
+    def test_index_date_init_b(self) -> None:
+        i1 = IndexDate(('2017-12-30', '2017-12-31', '2018-01-05'), name='foo')
+        i2 = IndexDate(i1)
+        self.assertEqual(i1.name, i2.name)
+        self.assertEqual(i2.values.tolist(),
+                [datetime.date(2017, 12, 30), datetime.date(2017, 12, 31), datetime.date(2018, 1, 5)])
 
     #---------------------------------------------------------------------------
     def test_index_date_from_year_month_range_a(self) -> None:

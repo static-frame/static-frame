@@ -2341,6 +2341,7 @@ class TestUnit(TestCase):
     #     self.assertEqual(ih1.get((20, 200)), None)
 
 
+    #---------------------------------------------------------------------------
     def test_index_hierarchy_sort_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
@@ -2350,7 +2351,20 @@ class TestUnit(TestCase):
             )
 
 
+    def test_index_hierarchy_sort_b(self) -> None:
 
+        ih1 = IndexHierarchy.from_labels(((1, 1000), (30, 25), (100, 3)))
+
+        self.assertEqual(ih1.sort(key=lambda i: i / -1).values.tolist(),
+                [[100, 3], [30, 25], [1, 1000]])
+
+        self.assertEqual(ih1.sort(
+                key=lambda i: i.values.sum(axis=1)).values.tolist(),
+                [[30, 25], [100, 3], [1, 1000]],
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_index_hierarchy_isin_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
@@ -2762,8 +2776,7 @@ class TestUnit(TestCase):
         self.assertEqual(list(idx.iter_label(2)), [1, 2, 1, 2, 1, 2, 1, 2])
 
         post = idx.iter_label(1).apply(lambda x: x.lower())
-        self.assertEqual(post.to_pairs(),
-                ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'), (4, 'a'), (5, 'a'), (6, 'b'), (7, 'b')))
+        self.assertEqual(post.tolist(), ['a', 'a', 'b', 'b', 'a', 'a', 'b', 'b'])
 
     def test_hierarchy_iter_label_b(self) -> None:
 
@@ -2785,7 +2798,7 @@ class TestUnit(TestCase):
                 [('I', 'A', 1), ('I', 'A', 2), ('I', 'B', 1), ('I', 'B', 2), ('II', 'A', 1), ('II', 'A', 2), ('II', 'B', 1), ('II', 'B', 2)]
                 )
         # this returns a Series; probably should just be an array?
-        self.assertEqual(idx.iter_label().apply(lambda x: x[:2]).values.tolist(),
+        self.assertEqual(idx.iter_label().apply(lambda x: x[:2]).tolist(),
                 [('I', 'A'), ('I', 'A'), ('I', 'B'), ('I', 'B'), ('II', 'A'), ('II', 'A'), ('II', 'B'), ('II', 'B')]
                 )
 

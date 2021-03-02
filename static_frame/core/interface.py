@@ -176,11 +176,11 @@ def _get_signatures(
 
     if delegate_func:
         delegate = _get_parameters(delegate_func, max_args=max_args)
-        if delegate_name:
+        if delegate_name and delegate_name != '__call__':
             # prefix with name
             delegate = f'.{delegate_name}{delegate}'
             delegate_no_args = f'.{delegate_name}()'
-        else:
+        else: # assume just function call
             delegate_no_args = '()'
     else:
         delegate = ''
@@ -675,40 +675,43 @@ class InterfaceRecord(tp.NamedTuple):
             delegate_doc = Features.scrub_doc(delegate_obj.__doc__)
 
             # will be either SeriesAssign or FrameAssign
-            terminus_obj = obj.delegate.__call__
-            terminus_reference = f'{obj.delegate.__name__}.__call__'
-            terminus_doc = Features.scrub_doc(terminus_obj.__doc__)
+            for field_terminus in obj.delegate.INTERFACE:
+                terminus_obj = getattr(obj.delegate, field_terminus)
+                terminus_reference = f'{obj.delegate.__name__}.{field_terminus}'
+                terminus_doc = Features.scrub_doc(terminus_obj.__doc__)
 
-            # use the delegate to get the root signature, as the root is just a property that returns an InterfaceAssignTrio or similar
-            if field != Features.GETITEM:
-                delegate_is_attr = True
-                signature, signature_no_args = _get_signatures(
-                        f'{name}.{field}', # make compound interface
-                        delegate_obj.__getitem__,
-                        is_getitem=True,
-                        delegate_func=terminus_obj,
-                        max_args=max_args,
-                        )
-            else: # is getitem
-                delegate_is_attr = False
-                signature, signature_no_args = _get_signatures(
-                        name, # on the root, no change necessary
-                        delegate_obj,
-                        is_getitem=True,
-                        delegate_func=terminus_obj,
-                        max_args=max_args,
-                        )
+                # use the delegate to get the root signature, as the root is just a property that returns an InterfaceAssignTrio or similar
+                if field != Features.GETITEM:
+                    delegate_is_attr = True
+                    signature, signature_no_args = _get_signatures(
+                            f'{name}.{field}', # make compound interface
+                            delegate_obj.__getitem__,
+                            is_getitem=True,
+                            delegate_func=terminus_obj,
+                            delegate_name=field_terminus,
+                            max_args=max_args,
+                            )
+                else: # is getitem
+                    delegate_is_attr = False
+                    signature, signature_no_args = _get_signatures(
+                            name, # on the root, no change necessary
+                            delegate_obj,
+                            is_getitem=True,
+                            delegate_func=terminus_obj,
+                            delegate_name=field_terminus,
+                            max_args=max_args,
+                            )
 
-            yield InterfaceRecord(cls_name,
-                    InterfaceGroup.Assignment,
-                    signature,
-                    terminus_doc,
-                    reference,
-                    use_signature=True,
-                    is_attr=True,
-                    delegate_reference=terminus_reference,
-                    signature_no_args=signature_no_args
-                    )
+                yield InterfaceRecord(cls_name,
+                        InterfaceGroup.Assignment,
+                        signature,
+                        terminus_doc,
+                        reference,
+                        use_signature=True,
+                        is_attr=True,
+                        delegate_reference=terminus_reference,
+                        signature_no_args=signature_no_args
+                        )
 
     @classmethod
     def gen_from_method(cls, *,

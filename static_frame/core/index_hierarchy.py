@@ -11,6 +11,7 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import key_from_container_key
+from static_frame.core.container_util import sort_index_for_order
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1267,24 +1268,24 @@ class IndexHierarchy(IndexBase):
                 skipna=skipna,
                 )
 
-
+    @doc_inject(selector='sort')
     def sort(self: IH,
+            *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND
+            kind: str = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[['IndexHierarchy'], tp.Union[np.ndarray, 'IndexHierarchy']]] = None,
             ) -> IH:
         '''Return a new Index with the labels sorted.
 
         Args:
-            kind: Sort algorithm passed to NumPy.
+            ascending: {ascending}
+            kind: {kind}
+            key: {key}
         '''
         if self._recache:
             self._update_array_cache()
 
-        v = self._blocks.values
-        order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
-
-        if not ascending:
-            order = order[::-1]
+        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key) #type: ignore [arg-type]
 
         blocks = self._blocks._extract(row_key=order)
         index_constructors = tuple(self._levels.index_types())

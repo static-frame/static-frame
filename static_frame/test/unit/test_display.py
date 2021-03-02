@@ -861,7 +861,7 @@ class TestUnit(TestCase):
         from itertools import product
         index: tp.Iterable[tp.Hashable] = (0x2210, 0x2330)
         columns: tp.Iterable[tp.Hashable] = (0x1, 0xe)
-        f = sf.Frame.from_element_loc_items(
+        f = sf.Frame.from_element_items(
                 ((x, chr(sum(x))) for x in product(index, columns)),  # type: ignore  # Should probably open a typeshed issue for this.
                 index=index,
                 columns=columns,
@@ -878,7 +878,7 @@ class TestUnit(TestCase):
         columns = tuple('efgh')
         index = range(3, 0, -1)
 
-        f = sf.Frame.from_element_loc_items(
+        f = sf.Frame.from_element_items(
                 (
                 ((2, 'f'), chr(0x265F)), # pawn
                 ((2, 'g'), chr(0x265F)),
@@ -894,7 +894,7 @@ class TestUnit(TestCase):
         columns = tuple('hgfe')
         index = range(6, 9)
 
-        f = Frame.from_element_loc_items(
+        f = Frame.from_element_items(
                 (
                 ((7, 'h'), chr(0x265F)), # pawn
                 ((6, 'g'), chr(0x265F)),

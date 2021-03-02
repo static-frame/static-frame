@@ -108,6 +108,12 @@ class TestUnit(TestCase):
         self.assertEqual(index.values.tolist(), list(range(10, 20, 2)))
 
 
+    def test_index_init_i(self) -> None:
+        i1 = Index([10, 20, 30], name='foo')
+        i2 = Index(i1)
+        self.assertEqual(i2.name, 'foo')
+
+
     #---------------------------------------------------------------------------
 
     def test_index_loc_to_iloc_a(self) -> None:
@@ -486,6 +492,20 @@ class TestUnit(TestCase):
                 [index.sort(ascending=False).loc_to_iloc(x) for x in sorted(index.values)],
                 [4, 3, 2, 1, 0])
 
+
+
+    def test_index_sort_b(self) -> None:
+
+        index = Index(('ax', 'cb', 'dg', 'eb', 'bq'))
+
+        self.assertEqual(index.sort(
+                key=lambda i: i.iter_label().apply(lambda x: x[1])
+                ).values.tolist(),
+                ['cb', 'eb', 'dg', 'bq', 'ax']
+                )
+
+    #---------------------------------------------------------------------------
+
     def test_index_relable(self) -> None:
 
         index = Index(('a', 'c', 'd', 'e', 'b'))
@@ -858,8 +878,7 @@ class TestUnit(TestCase):
         self.assertEqual(list(idx1.iter_label(0)), ['a', 'b', 'c', 'd'])
 
         post = idx1.iter_label(0).apply(lambda x: x.upper())
-        self.assertEqual(post.to_pairs(),
-                ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D')))
+        self.assertEqual(post.tolist(), ['A', 'B', 'C', 'D'])
 
 
     #---------------------------------------------------------------------------

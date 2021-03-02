@@ -218,47 +218,6 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
 
 #-------------------------------------------------------------------------------
 
-# class InterfaceBatchQuartet(InterfaceSelectQuartet[TContainer]):
-#     '''For bulk operations on groups with __getitem__, iloc, loc, bloc.
-#     '''
-#     __slots__ = (
-#             '_func_iloc',
-#             '_func_loc',
-#             '_func_getitem',
-#             '_func_bloc',
-#             'delegate'
-#             )
-
-#     def __init__(self, *,
-#             container_items: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']],
-#             constructor: tp.Type[ContainerOperand]
-#             ) -> None:
-#         InterfaceSelectQuartet.__init__(self, #type: ignore
-#                 func_iloc=partial(BatchProcessor,
-#                         selector=BatchSelector.ILoc,
-#                         container_items=container_items,
-#                         constructor=constructor,
-#                         ),
-#                 func_loc=partial(BatchProcessor,
-#                         selector=BatchSelector.Loc,
-#                         container_items=container_items,
-#                         constructor=constructor,
-#                         ),
-#                 func_getitem=partial(BatchProcessor,
-#                         selector=BatchSelector.GetItem,
-#                         container_items=container_items,
-#                         constructor=constructor,
-#                         ),
-#                 func_bloc=partial(BatchProcessor,
-#                         selector=BatchSelector.BLoc,
-#                         container_items=container_items,
-#                         constructor=constructor,
-#                         ),
-#                 )
-#         self.delegate = BatchProcessor #pylint: disable=E0237
-
-#-------------------------------------------------------------------------------
-
 class InterfaceAsType(Interface[TContainer]):
     '''An instance to serve as an interface to __getitem__ extractors. Used by both :obj:`Frame` and :obj:`IndexHierarchy`.
     '''

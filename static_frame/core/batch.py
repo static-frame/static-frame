@@ -18,19 +18,28 @@ from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store import StoreConfigMap
-from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.store_client_mixin import StoreClientMixin
+from static_frame.core.store_hdf5 import StoreHDF5
+from static_frame.core.store_sqlite import StoreSQLite
+from static_frame.core.store_xlsx import StoreXLSX
+from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipParquet
+from static_frame.core.store_zip import StoreZipPickle
+from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
+from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
-from static_frame.core.util import ELEMENT_TUPLE
+
 
 FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
@@ -43,8 +52,14 @@ GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 def normalize_container(post: tp.Any
         ) -> FrameOrSeries:
     # post might be an element, promote to a Series to permit concatenation
-    # NOTE: do not set index as (container.name,), as this can lead to diagonal formations; will already be paired with stored labels
+    if isinstance(post, np.ndarray):
+        if post.ndim == 1:
+            return Series(post)
+        elif post.ndim == 2:
+            return Frame(post)
+        # let ndim 0 pass
     if not isinstance(post, (Frame, Series)):
+        # NOTE: do not set index as (container.name,), as this can lead to diagonal formations; will already be paired with stored labels
         return Series.from_element(post, index=ELEMENT_TUPLE)
     return post
 
@@ -101,12 +116,17 @@ class Batch(ContainerOperand, StoreClientMixin):
                 use_threads=use_threads,
                 )
 
+    #---------------------------------------------------------------------------
+    # constructors by data format
+
     @classmethod
     def _from_store(cls,
             store: Store,
             *,
             config: StoreConfigMapInitializer = None,
-            **kwargs: tp.Any,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
             ) -> 'Batch':
         config_map = StoreConfigMap.from_initializer(config)
 
@@ -115,10 +135,181 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         return cls(items,
                 config=config,
-                **kwargs,
-                )
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                                )
 
 
+    @classmethod
+    @doc_inject(selector='batch_constructor')
+    def from_zip_tsv(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> 'Batch':
+        '''
+        Given a file path to zipped TSV :obj:`Batch` store, return a :obj:`Batch` instance.
+
+        {args}
+        '''
+        store = StoreZipTSV(fp)
+        return cls._from_store(store,
+                config=config,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                                )
+
+    @classmethod
+    @doc_inject(selector='batch_constructor')
+    def from_zip_csv(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> 'Batch':
+        '''
+        Given a file path to zipped CSV :obj:`Batch` store, return a :obj:`Batch` instance.
+
+        {args}
+        '''
+        store = StoreZipCSV(fp)
+        return cls._from_store(store,
+                config=config,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                                )
+
+    @classmethod
+    @doc_inject(selector='batch_constructor')
+    def from_zip_pickle(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> 'Batch':
+        '''
+        Given a file path to zipped pickle :obj:`Batch` store, return a :obj:`Batch` instance.
+
+        {args}
+        '''
+        store = StoreZipPickle(fp)
+        return cls._from_store(store,
+                config=config,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                                )
+
+
+    @classmethod
+    @doc_inject(selector='batch_constructor')
+    def from_zip_parquet(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> 'Batch':
+        '''
+        Given a file path to zipped parquet :obj:`Batch` store, return a :obj:`Batch` instance.
+
+        {args}
+        '''
+        store = StoreZipParquet(fp)
+        return cls._from_store(store,
+                config=config,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                                )
+
+
+    @classmethod
+    @doc_inject(selector='batch_constructor')
+    def from_xlsx(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> 'Batch':
+        '''
+        Given a file path to an XLSX :obj:`Batch` store, return a :obj:`Batch` instance.
+
+        {args}
+        '''
+        # how to pass configuration for multiple sheets?
+        store = StoreXLSX(fp)
+        return cls._from_store(store,
+                config=config,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                                )
+
+
+    @classmethod
+    @doc_inject(selector='batch_constructor')
+    def from_sqlite(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> 'Batch':
+        '''
+        Given a file path to an SQLite :obj:`Batch` store, return a :obj:`Batch` instance.
+
+        {args}
+        '''
+        store = StoreSQLite(fp)
+        return cls._from_store(store,
+                config=config,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                                )
+
+
+    @classmethod
+    @doc_inject(selector='batch_constructor')
+    def from_hdf5(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> 'Batch':
+        '''
+        Given a file path to a HDF5 :obj:`Batch` store, return a :obj:`Batch` instance.
+
+        {args}
+        '''
+        store = StoreHDF5(fp)
+        return cls._from_store(store,
+                config=config,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                                )
+
+    #---------------------------------------------------------------------------
+
+    @doc_inject(selector='batch_init')
     def __init__(self,
             items: IteratorFrameItems,
             *,
@@ -128,6 +319,11 @@ class Batch(ContainerOperand, StoreClientMixin):
             chunksize: int = 1,
             use_threads: bool = False,
             ):
+        '''
+        Default constructor of a :obj:`Batch`.
+
+        {args}
+        '''
         self._items = items # might be a generator!
         self._name = name
 
@@ -223,6 +419,33 @@ class Batch(ContainerOperand, StoreClientMixin):
                         )
         return self._derive(gen_pool)
 
+    def _apply_pool_except(self,
+            labels: tp.List[tp.Hashable],
+            arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
+            caller: tp.Callable[..., FrameOrSeries],
+            exception: tp.Type[Exception],
+            ) -> 'Batch':
+
+        if self._chunksize != 1:
+            raise NotImplementedError('Cannot use apply_except idioms with chunksize other than 1')
+
+        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
+
+        def gen_pool() -> IteratorFrameItems:
+            futures = []
+            with pool_executor(max_workers=self._max_workers) as executor:
+                for args in arg_iter:
+                    futures.append(executor.submit(caller, args))
+
+                for label, future in zip(labels, futures):
+                    try:
+                        container = future.result()
+                    except exception:
+                        continue
+                    yield label, container
+
+        return self._derive(gen_pool)
+
     def _apply_attr(self,
             *args: tp.Any,
             attr: str,
@@ -263,6 +486,34 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         return self._apply_pool(labels, arg_gen(), call_func)
 
+    def apply_except(self,
+            func: AnyCallable,
+            exception: tp.Type[Exception],
+            ) -> 'Batch':
+        '''
+        Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the :obj:`Frame` as an argument. Exceptions raised that matching the `except` argument will be silenced.
+        '''
+        if self._max_workers is None:
+            def gen() -> IteratorFrameItems:
+                for label, frame in self._items:
+                    try:
+                        yield label, call_func((frame, func))
+                    except exception:
+                        pass
+            return self._derive(gen)
+
+        labels = []
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable]]:
+            for label, frame in self._items:
+                labels.append(label)
+                yield frame, func
+
+        return self._apply_pool_except(labels,
+                arg_gen(),
+                call_func,
+                exception,
+                )
+
     def apply_items(self, func: AnyCallable) -> 'Batch':
         '''
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument.
@@ -280,6 +531,34 @@ class Batch(ContainerOperand, StoreClientMixin):
                 yield frame, func, label
 
         return self._apply_pool(labels, arg_gen(), call_func_items)
+
+    def apply_items_except(self,
+            func: AnyCallable,
+            exception: tp.Type[Exception],
+            ) -> 'Batch':
+        '''
+        Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument. Exceptions raised that matching the `except` argument will be silenced.
+        '''
+        if self._max_workers is None:
+            def gen() -> IteratorFrameItems:
+                for label, frame in self._items:
+                    try:
+                        yield label, call_func_items((frame, func, label))
+                    except exception:
+                        pass
+            return self._derive(gen)
+
+        labels = []
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]]:
+            for label, frame in self._items:
+                labels.append(label)
+                yield frame, func, label
+
+        return self._apply_pool_except(labels,
+                arg_gen(),
+                call_func_items,
+                exception,
+                )
 
     #---------------------------------------------------------------------------
     # extraction
@@ -477,7 +756,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     def sort_values(self,
-            key: KeyOrKeys,
+            label: KeyOrKeys,
             *,
             ascending: bool = True,
             axis: int = 1,
@@ -486,11 +765,11 @@ class Batch(ContainerOperand, StoreClientMixin):
         Return a new :obj:`Batch` with contained :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
 
         Args:
-            key: a key or iterable of keys.
+            label: a label or iterable of keys.
         '''
         return self._apply_attr(
                 attr='sort_values',
-                key=key,
+                label=label,
                 ascending=ascending,
                 axis=axis,
                 kind=kind,
@@ -764,6 +1043,21 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
+    # utility function to numpy array
+
+    def unique(self, *,
+            axis: tp.Optional[int] = None,
+            ) -> 'Batch':
+        '''
+        Return a NumPy array of unqiue values. If the axis argument is provied, uniqueness is determined by columns or row.
+
+        '''
+        return self._apply_attr(
+                attr='unique',
+                axis=axis,
+                )
+
+    #---------------------------------------------------------------------------
     # exporter
 
     def to_frame(self, *,
@@ -819,7 +1113,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return f
 
     def to_bus(self) -> 'Bus':
-        '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily)
+        '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''
         series = Series.from_items(
                 self.items(),

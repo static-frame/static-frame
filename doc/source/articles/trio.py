@@ -63,7 +63,7 @@ from static_frame.test.test_case import Timer
 
 def bus_batch_streaming() -> None:
 
-    TypeIterFrameItems = tp.Iterator[tp.Tuple[str, sf.Frame]]
+    TypeIterFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, sf.Frame]]
 
     # do a bunch of processing on large Frames while maintaining single frame overhead
 
@@ -97,7 +97,7 @@ def bus_batch_streaming() -> None:
 
     # a function that reads through the derived data and produces single in-memory result
     def derive_characteristic(bus: sf.Bus) -> sf.Series:
-        def gen() -> tp.Iterator[tp.Tuple[str, float]]:
+        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, float]]:
             for label in bus.keys():
                 f = bus[label]
                 yield label, f.mean().mean()
@@ -129,7 +129,7 @@ def bus_batch_streaming() -> None:
             yield label, f_post
 
     def derive_characteristic_alt(items: TypeIterFrameItems) -> sf.Series:
-        def gen() -> tp.Iterator[tp.Tuple[str, float]]:
+        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, float]]:
             for label, f in items:
                 yield label, f.mean().mean()
         return sf.Series.from_items(gen())
@@ -209,7 +209,7 @@ def bus_batch_demo() -> None:
 
     # [TALK] what other formats can we export to
     # show interface, constructors and exporters
-    b1.interace
+    b1.interface
 
     b1.to_sqlite('/tmp/sp_2018.sqlite')
 
@@ -312,7 +312,7 @@ def bus_batch_demo() -> None:
     sp2018.iter_group_items('year_mo')
 
     # we can feed the iterator of pairs of label, frame to Batch, then process
-    sf.Batch(sp2018.iter_group_items('year_mo'))['WVHT'].max().to_frame() #type: ignore
+    sf.Batch(sp2018.iter_group_items('year_mo'))['WVHT'].max().to_frame()
 
 
     # any time we have iterators of pairs of label, Frame, we can use a Batch
@@ -439,7 +439,6 @@ def main() -> None:
     quilt = sf.Quilt(bus, axis=0, retain_labels=True)
 
 
-
 def tables() -> None:
     name = 'For n Frame of shape (x, y)'
     columns = ('Bus', 'Batch', 'Quilt')
@@ -447,14 +446,12 @@ def tables() -> None:
     ('ndim',                  (1,        1,       2)),
     ('shape',                 ('(n,)',   '(n,)',  '(xn, y) or (x, yn)'  )),
     ('Approximate Interface', ('Series', 'Frame', 'Frame')),
-    ('Iterable',              (True,     True,     True)),
-    ('Iterator',              (False,    True,     False)),
     )
 
     f = sf.Frame.from_records_items(records_items, columns=columns, name=name)
     # print(f)
     print(f.name)
-    print(f.to_rst())
+    print(f.to_markdown())
 
     name = 'Constructors & Exporters'
     columns = ('Constructor', 'Exporter') #type: ignore
@@ -471,7 +468,7 @@ def tables() -> None:
     f = sf.Frame.from_records(records, columns=columns, name=name)
     # print(f)
     print(f.name)
-    print(f.to_rst(sf.DisplayConfig(include_index=False, type_show=False)))
+    print(f.to_markdown(sf.DisplayConfig(include_index=False, type_show=False)))
 
 
 
@@ -498,7 +495,7 @@ def stocks() -> None:
 
 
 if __name__ == '__main__':
-    stocks()
+    # stocks()
     tables()
     # main()
 
