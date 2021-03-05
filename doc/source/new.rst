@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.3
+----------
+
+Added ``iloc_searchsorted()`` and ``loc_searchsorted()`` to ``Index``, ``IndexDatetime``, and ``IndexHierarchy``.
+
+
 0.8.2
 ----------
 

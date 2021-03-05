@@ -31,6 +31,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import IndexLevel
 from static_frame.core.index_level import IndexLevelGO
 from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_datetime import IndexDatetime
 
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
@@ -67,6 +68,8 @@ from static_frame.core.util import union2d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import array_sample
+from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import array2d_to_array1d_tuples
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -681,7 +684,6 @@ class IndexHierarchy(IndexBase):
                 container=self,
                 )
 
-
     #---------------------------------------------------------------------------
 
     def _update_array_cache(self) -> None:
@@ -1115,7 +1117,6 @@ class IndexHierarchy(IndexBase):
             raise KeyError('__getitem__ does not support multiple indexers')
         return IndexHierarchyAsType(self, key=key)
 
-
     #---------------------------------------------------------------------------
     # operators
 
@@ -1354,7 +1355,6 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True
                 )
 
-
     def _sample_and_key(self,
             count: int = 1,
             *,
@@ -1375,6 +1375,84 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True
                 )
         return container, key
+
+
+    @doc_inject(selector='searchsorted', label_type='iloc (integer)')
+    def iloc_searchsorted(self,
+            values: tp.Any,
+            *,
+            side_left: bool = True,
+            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+        '''
+        {doc}
+
+        Args:
+            {values}
+            {side_left}
+        '''
+        if isinstance(values, tuple):
+            match_pre = [values] # normalize a multiple selection
+            is_element = True
+        elif isinstance(values, list):
+            match_pre = values
+            is_element = False
+        else:
+            raise NotImplementedError('A single label (as a tuple) or multiple labels (as a list) must be provided.')
+
+        dt_pos = np.array([issubclass(idx_type, IndexDatetime)
+                for idx_type in self._levels.index_types()])
+        has_dt = dt_pos.any()
+
+        values_for_match = np.empty(len(match_pre), dtype=object)
+
+        for i, label in enumerate(match_pre):
+            if has_dt:
+                label = tuple(v if not dt_pos[j] else key_to_datetime_key(v)
+                        for j, v in enumerate(label))
+            values_for_match[i] = label
+
+        post = self.flat().iloc_searchsorted(values_for_match, side_left=side_left)
+        if is_element:
+            return post[0]
+        return post
+
+
+    @doc_inject(selector='searchsorted', label_type='loc (label)')
+    def loc_searchsorted(self,
+            values: tp.Any,
+            *,
+            side_left: bool = True,
+            fill_value: tp.Any = np.nan,
+            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+        '''
+        {doc}
+
+        Args:
+            {values}
+            {side_left}
+            {fill_value}
+        '''
+        # will return an integer or an array of integers
+        sel = self.iloc_searchsorted(values, side_left=side_left)
+
+        length = self.__len__()
+        if sel.ndim == 0 and sel == length: # an element:
+            return fill_value #type: ignore [no-any-return]
+
+        flat = self.flat().values
+        mask = sel == length
+        if not mask.any():
+            return flat[sel] #type: ignore [no-any-return]
+
+        post = np.empty(len(sel), dtype=object)
+        sel[mask] = 0 # set out of range values to zero
+        post[:] = flat[sel]
+        post[mask] = fill_value
+        post.flags.writeable = False
+        return post #type: ignore [no-any-return]
+
+
+
 
     #---------------------------------------------------------------------------
     # export

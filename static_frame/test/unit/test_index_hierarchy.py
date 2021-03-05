@@ -2815,8 +2815,56 @@ class TestUnit(TestCase):
         self.assertEqual(hidx.sample(3, seed=4).index_types.values.tolist(),
                 [Index, IndexDate, Index])
 
+    #---------------------------------------------------------------------------
+    def test_index_hierarchy_iloc_searchsorted_a(self) -> None:
 
+        idx1 = Index(('A', 'B'))
+        idx2 = Index((1, 2, 3))
+        hidx = IndexHierarchy.from_product(idx1, idx2)
 
+        self.assertEqual(hidx.iloc_searchsorted(('B', 1)).tolist(), 3)
+        self.assertEqual(hidx.iloc_searchsorted([('A', 1), ('B', 2)]).tolist(), [0, 4])
+
+    def test_index_hierarchy_loc_searchsorted_a(self) -> None:
+
+        idx1 = Index(('A', 'B'))
+        idx2 = Index((1, 2, 3))
+        hidx = IndexHierarchy.from_product(idx1, idx2)
+
+        self.assertEqual(hidx.loc_searchsorted(('B', 1)), ('B', 1))
+        self.assertEqual(hidx.loc_searchsorted([('A', 1), ('B', 2)]).tolist(),
+                [('A', 1), ('B', 2)])
+
+    def test_index_hierarchy_loc_searchsorted_b(self) -> None:
+
+        idx1 = Index(('A', 'B'))
+        idx2 = Index((1, 2, 3))
+        hidx = IndexHierarchy.from_product(idx1, idx2)
+
+        self.assertEqual(hidx.loc_searchsorted(('B', 3),
+                side_left=False,
+                fill_value=None),
+                None)
+        self.assertEqual(hidx.loc_searchsorted([('A', 1), ('B', 3)],
+                side_left=False,
+                fill_value=None).tolist(),
+                [('A', 2), None])
+
+    def test_index_hierarchy_loc_searchsorted_c(self) -> None:
+        idx1 = Index(('A', 'B'))
+        idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
+        idx3 = Index((1, 2))
+        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+
+        self.assertEqual(hidx.loc_searchsorted(('B', '2019-01-07', 2)),
+                ('B', np.datetime64('2019-01-07'), 2),
+                )
+
+        self.assertEqual(
+                hidx.loc_searchsorted(
+                [('B', '2019-01-07', 2), ('B', '2019-01-08', 1)]).tolist(),
+                [('B', np.datetime64('2019-01-07'), 2),
+                ('B', np.datetime64('2019-01-08'), 1)])
 
 if __name__ == '__main__':
     unittest.main()

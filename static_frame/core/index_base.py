@@ -280,7 +280,6 @@ class IndexBase(ContainerOperand):
 
         mask = sel == length
         if not mask.any():
-            # id 2D, return array of tuples
             return self.values[sel] #type: ignore [no-any-return]
 
         post = np.empty(len(sel),
