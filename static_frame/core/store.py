@@ -242,7 +242,7 @@ class StoreConfig(StoreConfigHE):
             write_max_workers: tp.Optional[int] = None,
             write_chunksize: int = 1,
             ):
-        super().__init__(
+        StoreConfigHE.__init__(self,
                 index_depth=index_depth,
                 index_name_depth_level=index_name_depth_level,
                 columns_depth=columns_depth,

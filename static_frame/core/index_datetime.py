@@ -129,6 +129,29 @@ class IndexDatetime(Index):
         return pandas.DatetimeIndex(self.values.copy(),
                 name=self._name)
 
+
+    #---------------------------------------------------------------------------
+
+    @doc_inject(selector='searchsorted', label_type='iloc (integer)')
+    def iloc_searchsorted(self,
+            values: tp.Any,
+            *,
+            side_left: bool = True,
+            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+        '''
+        {doc}
+
+        Args:
+            {values}
+            {side_left}
+        '''
+        # permit variable forms of date specification
+        return Index.iloc_searchsorted(self,
+                key_to_datetime_key(values),
+                side_left=side_left,
+                )
+
+
 #-------------------------------------------------------------------------------
 class _IndexDatetimeGOMixin(_IndexGOMixin):
 

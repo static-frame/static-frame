@@ -218,7 +218,11 @@ class StoreZipPickle(_StoreZip):
 
         exporter = container_to_exporter_attr(container_type)
 
-        for frame in super().read_many(labels, config=config, container_type=container_type):
+        for frame in _StoreZip.read_many(self,
+                labels,
+                config=config,
+                container_type=container_type,
+                ):
             if frame.__class__ is container_type:
                 yield frame
             else:
