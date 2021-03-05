@@ -146,7 +146,7 @@ class IndexDatetime(Index):
             {side_left}
         '''
         # permit variable forms of date specification
-        return Index.iloc_searchsorted(self,
+        return Index.iloc_searchsorted(self, #type: ignore [no-any-return]
                 key_to_datetime_key(values),
                 side_left=side_left,
                 )

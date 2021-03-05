@@ -69,7 +69,7 @@ from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import array_sample
 from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import array2d_to_array1d_tuples
+# from static_frame.core.util import array2d_to_array1d_tuples
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -1413,8 +1413,8 @@ class IndexHierarchy(IndexBase):
 
         post = self.flat().iloc_searchsorted(values_for_match, side_left=side_left)
         if is_element:
-            return post[0]
-        return post
+            return post[0] #type: ignore [no-any-return]
+        return post #type: ignore [no-any-return]
 
 
     @doc_inject(selector='searchsorted', label_type='loc (label)')

@@ -1552,12 +1552,13 @@ def array_shift(*,
 def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
     yield from map(tuple, array)
 
-def array2d_to_array1d_tuples(array: np.ndarray) -> np.ndarray:
-    post = np.empty(array.shape[0], dtype=object)
-    for i, row in enumerate(array):
-        post[i] = tuple(row)
-    post.flags.writeable = False
-    return post
+# might replace some usage of above with this
+# def array2d_to_array1d_tuples(array: np.ndarray) -> np.ndarray:
+#     post = np.empty(array.shape[0], dtype=object)
+#     for i, row in enumerate(array):
+#         post[i] = tuple(row)
+#     post.flags.writeable = False
+#     return post
 
 def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     '''
