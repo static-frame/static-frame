@@ -1987,6 +1987,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=index, name=self._name)
 
+    #---------------------------------------------------------------------------
 
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
@@ -2056,9 +2057,10 @@ class Series(ContainerOperand):
         return argmax_1d(self.values, skipna=skipna) #type: ignore
 
     #---------------------------------------------------------------------------
+
     @doc_inject(selector='searchsorted', label_type='iloc (integer)')
     def iloc_searchsorted(self,
-            values: tp.Any, # a single value, or an iterable of values
+            values: tp.Any,
             *,
             side_left: bool = True,
             ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
@@ -2079,7 +2081,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='searchsorted', label_type='loc (label)')
     def loc_searchsorted(self,
-            values: tp.Any, # a single value, or an iterable of values
+            values: tp.Any,
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
@@ -2109,6 +2111,7 @@ class Series(ContainerOperand):
         sel[mask] = 0 # set out of range values to zero
         post[:] = self._index.values[sel]
         post[mask] = fill_value
+        post.flags.writeable = False
         return post #type: ignore [no-any-return]
 
     #---------------------------------------------------------------------------

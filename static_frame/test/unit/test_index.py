@@ -1330,6 +1330,26 @@ class TestUnit(TestCase):
         self.assertTrue(id(idx1._labels) != id(idx2._labels))
         self.assertTrue(idx2._map is None)
 
+    #---------------------------------------------------------------------------
+    def test_index_iloc_searchsorted_a(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd'))
+        self.assertEqual(idx1.iloc_searchsorted('c'), 2)
+        self.assertEqual(idx1.iloc_searchsorted('c', side_left=False), 3)
+        self.assertEqual(idx1.iloc_searchsorted(('a', 'c'), side_left=False).tolist(), [1, 3])
+
+    def test_index_loc_searchsorted_b(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+        self.assertEqual(idx1.loc_searchsorted('c'), 'c')
+        self.assertEqual(idx1.loc_searchsorted('c', side_left=False), 'd')
+        self.assertEqual(idx1.loc_searchsorted(('a', 'c'), side_left=False).tolist(), ['b', 'd'])
+
+        self.assertEqual(idx1.loc_searchsorted(
+                ('a', 'e'), side_left=False, fill_value=None).tolist(),
+                ['b', None])
+
+
 if __name__ == '__main__':
     unittest.main()
 

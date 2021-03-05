@@ -15,7 +15,9 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
-
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import resolve_dtype
+from static_frame.core.util import dtype_from_element
 
 
 if tp.TYPE_CHECKING:
@@ -216,6 +218,7 @@ class IndexBase(ContainerOperand):
         raise NotImplementedError()
 
     #---------------------------------------------------------------------------
+
     @doc_inject(selector='sample')
     def sample(self: I,
             count: int = 1,
@@ -233,6 +236,65 @@ class IndexBase(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
+    @doc_inject(selector='searchsorted', label_type='iloc (integer)')
+    def iloc_searchsorted(self,
+            values: tp.Any,
+            *,
+            side_left: bool = True,
+            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+        '''
+        {doc}
+
+        Args:
+            {values}
+            {side_left}
+        '''
+        if not isinstance(values, str) and hasattr(values, '__len__'):
+            if not isinstance(values, np.ndarray):
+                values, _ = iterable_to_array_1d(values)
+        return np.searchsorted(self.values, #type: ignore [no-any-return]
+                values,
+                'left' if side_left else 'right',
+                )
+
+    @doc_inject(selector='searchsorted', label_type='loc (label)')
+    def loc_searchsorted(self,
+            values: tp.Any,
+            *,
+            side_left: bool = True,
+            fill_value: tp.Any = np.nan,
+            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+        '''
+        {doc}
+
+        Args:
+            {values}
+            {side_left}
+            {fill_value}
+        '''
+        sel = self.iloc_searchsorted(values, side_left=side_left)
+
+        length = self.__len__()
+        if sel.ndim == 0 and sel == length: # an element:
+            return fill_value #type: ignore [no-any-return]
+
+        mask = sel == length
+        if not mask.any():
+            # id 2D, return array of tuples
+            return self.values[sel] #type: ignore [no-any-return]
+
+        post = np.empty(len(sel),
+                dtype=resolve_dtype(self.dtype,
+                dtype_from_element(fill_value))
+                )
+        sel[mask] = 0 # set out of range values to zero
+        post[:] = self.values[sel]
+        post[mask] = fill_value
+        post.flags.writeable = False
+        return post #type: ignore [no-any-return]
+
+    #---------------------------------------------------------------------------
+
     def loc_to_iloc(self,
             key: GetItemKeyType,
             ) -> GetItemKeyType:
@@ -242,7 +304,6 @@ class IndexBase(ContainerOperand):
             key: GetItemKeyType
             ) -> tp.Union[I, tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
-
 
     #---------------------------------------------------------------------------
     # name interface

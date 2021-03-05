@@ -783,6 +783,33 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = IndexYearMonth.from_date_range(date_min, date_max)
 
+    #---------------------------------------------------------------------------
+    def test_index_datetime_iloc_searchsorted_a(self) -> None:
+        dt64 = np.datetime64
+        idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
+        self.assertEqual(idx.iloc_searchsorted(dt64('2020-01-05')), 4)
+
+        self.assertEqual(
+                idx.iloc_searchsorted([dt64('2020-01-05'), dt64('2020-01-31')]).tolist(),
+                [4, 30]
+                )
+        self.assertEqual(
+                idx.iloc_searchsorted([dt64('2020-01-05'), dt64('2020-01-31')], side_left=False).tolist(),
+                [5, 31]
+                )
+
+    def test_index_datetime_loc_searchsorted_a(self) -> None:
+        dt64 = np.datetime64
+        idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
+        self.assertEqual(idx.loc_searchsorted(dt64('2020-01-05')).tolist(), datetime.date(2020, 1, 5))
+
+        self.assertEqual(
+                idx.loc_searchsorted([dt64('2020-01-05'), dt64('2020-01-31')],
+                        side_left=False,
+                        fill_value=None).tolist(),
+                [datetime.date(2020, 1, 6), None]
+                )
+
 
 if __name__ == '__main__':
     unittest.main()
