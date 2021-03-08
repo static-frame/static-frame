@@ -5,6 +5,7 @@ import frame_fixtures as ff
 import numpy as np
 
 from static_frame.test.test_case import TestCase
+
 from static_frame.core.quilt import Quilt
 from static_frame.core.quilt import AxisMap
 from static_frame.core.index import Index
@@ -19,7 +20,7 @@ from static_frame.core.store import StoreConfig
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import ErrorInitIndexNonUnique
-
+from static_frame.core.exception import AxisInvalid
 
 class TestUnit(TestCase):
 
@@ -33,6 +34,18 @@ class TestUnit(TestCase):
         am = AxisMap.get_axis_series(components) #type: ignore
         self.assertEqual(am.to_pairs(),
                 ((('x', 'a'), 'x'), (('x', 'b'), 'x'), (('x', 'c'), 'x'), (('y', 'a'), 'y'), (('y', 'b'), 'y'), (('y', 'c'), 'y')))
+
+
+    def test_axis_map_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with self.assertRaises(AxisInvalid):
+            AxisMap.from_bus(b1, deepcopy_from_bus=False, axis=3)
 
     #---------------------------------------------------------------------------
     def test_quilt_init_a(self) -> None:
@@ -139,7 +152,6 @@ class TestUnit(TestCase):
 
 
 
-
     #---------------------------------------------------------------------------
     def test_quilt_display_a(self) -> None:
 
@@ -213,6 +225,12 @@ class TestUnit(TestCase):
         q1 = Quilt.from_frame(f1, chunksize=10, axis=1, retain_labels=False)
         self.assertEqual(q1.shape, (100, 4))
         self.assertEqual(len(q1._bus), 1)
+
+    def test_quilt_from_frame_d(self) -> None:
+
+        f1 = ff.parse('s(100,4)|v(int)|i(I,str)|c(I,str)')
+        with self.assertRaises(AxisInvalid):
+            q1 = Quilt.from_frame(f1, chunksize=10, axis=2, retain_labels=False)
 
 
     #---------------------------------------------------------------------------
@@ -604,7 +622,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_quilt_store_client_mixin_a(self) -> None:
+    def test_quilt_from_zip_pickle_a(self) -> None:
 
         # indexes are heterogenous but columns are not
         f1 = Frame.from_dict(
@@ -630,6 +648,77 @@ class TestUnit(TestCase):
 
             self.assertEqual(q1.loc[:, :].to_pairs(0),
                     (('a', ((('f1', 'x'), 1), (('f1', 'y'), 2), (('f2', 'x'), 1), (('f2', 'y'), 2), (('f2', 'z'), 3), (('f3', 'p'), 10), (('f3', 'q'), 20))), ('b', ((('f1', 'x'), 3), (('f1', 'y'), 4), (('f2', 'x'), 4), (('f2', 'y'), 5), (('f2', 'z'), 6), (('f3', 'p'), 50), (('f3', 'q'), 60)))))
+
+    def test_quilt_from_zip_pickle_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
+
+        sc = StoreConfig(index_depth=1, columns_depth=1, include_index=True, include_columns=True)
+
+        with temp_file('.zip') as fp:
+
+            q1.to_zip_pickle(fp, config=sc)
+            q2 = Quilt.from_zip_pickle(fp, config=sc, retain_labels=True)
+            self.assertTrue(q2.to_frame().equals(q1.to_frame()))
+
+
+    #---------------------------------------------------------------------------
+    def test_quilt_from_zip_tsv_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
+
+        sc = StoreConfig(index_depth=1, columns_depth=1, include_index=True, include_columns=True)
+
+        with temp_file('.zip') as fp:
+
+            q1.to_zip_tsv(fp, config=sc)
+            q2 = Quilt.from_zip_tsv(fp, config=sc, retain_labels=True)
+            self.assertTrue(q2.to_frame().equals(q1.to_frame()))
+
+    #---------------------------------------------------------------------------
+    def test_quilt_from_zip_csv_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
+
+        sc = StoreConfig(index_depth=1, columns_depth=1, include_index=True, include_columns=True)
+
+        with temp_file('.zip') as fp:
+
+            q1.to_zip_csv(fp, config=sc)
+            q2 = Quilt.from_zip_csv(fp, config=sc, retain_labels=True)
+            self.assertTrue(q2.to_frame().equals(q1.to_frame()))
+
+    #---------------------------------------------------------------------------
+    def test_quilt_from_zip_parquet_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
+
+        sc = StoreConfig(index_depth=1, columns_depth=1, include_index=True, include_columns=True)
+
+        with temp_file('.zip') as fp:
+
+            q1.to_zip_parquet(fp, config=sc)
+            # NOTE: columns come back from parquet as str, not int
+            q2 = Quilt.from_zip_parquet(fp, config=sc, retain_labels=True)
+            self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
+
+
 
 
     #---------------------------------------------------------------------------
