@@ -103,6 +103,20 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndexNonUnique):
             self.assertEqual(q3.shape, (7, 2))
 
+
+    def test_quilt_init_c(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        axis_map = AxisMap.from_bus(b1, axis=0, deepcopy_from_bus=True)
+
+        with self.assertRaises(ErrorInitQuilt):
+            _ = Quilt(b1, retain_labels=True, axis=0, axis_map=axis_map, axis_opposite=None)
+
+
     #---------------------------------------------------------------------------
     def test_quilt_from_items_a(self) -> None:
 
@@ -718,6 +732,54 @@ class TestUnit(TestCase):
             q2 = Quilt.from_zip_parquet(fp, config=sc, retain_labels=True)
             self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
 
+    #---------------------------------------------------------------------------
+    def test_quilt_from_xlsx_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
+
+        sc = StoreConfig(index_depth=1, columns_depth=1, include_index=True, include_columns=True)
+
+        with temp_file('.xlsx') as fp:
+
+            q1.to_xlsx(fp, config=sc)
+            q2 = Quilt.from_xlsx(fp, config=sc, retain_labels=True)
+            self.assertTrue(q2.to_frame().equals(q1.to_frame()))
+
+    #---------------------------------------------------------------------------
+    def test_quilt_from_sqlite_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
+
+        sc = StoreConfig(index_depth=1, columns_depth=1, include_index=True, include_columns=True)
+
+        with temp_file('.sqlite') as fp:
+            q1.to_sqlite(fp, config=sc)
+            q2 = Quilt.from_sqlite(fp, config=sc, retain_labels=True)
+            self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
+
+    #---------------------------------------------------------------------------
+    def test_quilt_from_hdf5_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)|c(I,str)').rename('f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
+
+        sc = StoreConfig(index_depth=1, columns_depth=1, include_index=True, include_columns=True)
+
+        with temp_file('.hdf5') as fp:
+            q1.to_hdf5(fp, config=sc)
+            q2 = Quilt.from_hdf5(fp, config=sc, retain_labels=True)
+            self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
 
 
 
@@ -1132,6 +1194,21 @@ class TestUnit(TestCase):
         self.assertEqual(s1.to_pairs(),
                 (('zmVj', 377853), ('zr4u', 597832), ('zGDJ', 46996), ('zO5l', 391169)))
 
+
+    #---------------------------------------------------------------------------
+    def test_quilt_repr_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2), name='foo')
+        b2 = Bus.from_frames((f1, f2))
+
+        q1 = Quilt(b1, retain_labels=True)
+        q2 = Quilt(b2, retain_labels=True)
+
+        self.assertTrue(repr(q1).startswith('<Quilt: foo'))
+        self.assertTrue(repr(q2).startswith('<Quilt at'))
 
 
 if __name__ == '__main__':
