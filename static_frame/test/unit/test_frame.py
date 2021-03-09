@@ -11415,6 +11415,25 @@ class TestUnit(TestCase):
         self.assertEqual(id(f2._blocks._blocks[1]), a2_id)
         self.assertEqual(id(f2._blocks._blocks[2]), a2_id)
 
+    #---------------------------------------------------------------------------
+    def test_frame_std_a(self) -> None:
+
+        f1 = Frame(np.arange(1, 21).reshape(4, 5))
+        self.assertEqual(round(f1.std(), 2).values.tolist(),
+                [5.59, 5.59, 5.59, 5.59, 5.59])
+        self.assertEqual(round(f1.std(ddof=1), 2).values.tolist(),
+                [6.45, 6.45, 6.45, 6.45, 6.45])
+
+    #---------------------------------------------------------------------------
+    def test_frame_var_a(self) -> None:
+
+        f1 = Frame(np.arange(1, 21).reshape(4, 5))
+
+        self.assertEqual(round(f1.var(), 2).values.tolist(),
+                [31.25, 31.25, 31.25, 31.25, 31.25])
+        self.assertEqual(round(f1.var(ddof=1), 2).values.tolist(),
+                [41.67, 41.67, 41.67, 41.67, 41.67])
+
 
 
 if __name__ == '__main__':
