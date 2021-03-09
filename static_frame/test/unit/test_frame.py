@@ -3548,8 +3548,15 @@ class TestUnit(TestCase):
                 f1.std(axis=1).values.tolist(),
                 np.std(f1.values, axis=1).tolist())
 
+    def test_frame_std_b(self) -> None:
 
+        f1 = Frame(np.arange(1, 21).reshape(4, 5))
+        self.assertEqual(round(f1.std(), 2).values.tolist(), #type: ignore [attr-defined]
+                [5.59, 5.59, 5.59, 5.59, 5.59])
+        self.assertEqual(round(f1.std(ddof=1), 2).values.tolist(), #type: ignore [attr-defined]
+                [6.45, 6.45, 6.45, 6.45, 6.45])
 
+    #---------------------------------------------------------------------------
     def test_frame_var_a(self) -> None:
 
         a1 = np.array([
@@ -3572,7 +3579,16 @@ class TestUnit(TestCase):
                 f1.var(axis=1).values.tolist(),
                 np.var(f1.values, axis=1).tolist())
 
+    def test_frame_var_b(self) -> None:
 
+        f1 = Frame(np.arange(1, 21).reshape(4, 5))
+
+        self.assertEqual(round(f1.var(), 2).values.tolist(), #type: ignore [attr-defined]
+                [31.25, 31.25, 31.25, 31.25, 31.25])
+        self.assertEqual(round(f1.var(ddof=1), 2).values.tolist(), #type: ignore [attr-defined]
+                [41.67, 41.67, 41.67, 41.67, 41.67])
+
+    #---------------------------------------------------------------------------
 
     def test_frame_prod_a(self) -> None:
 
@@ -11415,24 +11431,6 @@ class TestUnit(TestCase):
         self.assertEqual(id(f2._blocks._blocks[1]), a2_id)
         self.assertEqual(id(f2._blocks._blocks[2]), a2_id)
 
-    #---------------------------------------------------------------------------
-    def test_frame_std_a(self) -> None:
-
-        f1 = Frame(np.arange(1, 21).reshape(4, 5))
-        self.assertEqual(round(f1.std(), 2).values.tolist(),
-                [5.59, 5.59, 5.59, 5.59, 5.59])
-        self.assertEqual(round(f1.std(ddof=1), 2).values.tolist(),
-                [6.45, 6.45, 6.45, 6.45, 6.45])
-
-    #---------------------------------------------------------------------------
-    def test_frame_var_a(self) -> None:
-
-        f1 = Frame(np.arange(1, 21).reshape(4, 5))
-
-        self.assertEqual(round(f1.var(), 2).values.tolist(),
-                [31.25, 31.25, 31.25, 31.25, 31.25])
-        self.assertEqual(round(f1.var(ddof=1), 2).values.tolist(),
-                [41.67, 41.67, 41.67, 41.67, 41.67])
 
 
 
