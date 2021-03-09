@@ -1993,6 +1993,9 @@ class TypeBlocks(ContainerOperand):
             return TypeBlocks.from_blocks(self._mask_blocks(*key))
         return TypeBlocks.from_blocks(self._mask_blocks(row_key=key))
 
+    #---------------------------------------------------------------------------
+    # assignment interfaces
+
     def extract_iloc_assign_by_unit(self,
             key: GetItemKeyTypeCompound,
             value: object,
@@ -2000,12 +2003,7 @@ class TypeBlocks(ContainerOperand):
         '''
         Assign with value via a unit: a single array or element.
         '''
-        if isinstance(key, tuple):
-            row_key, column_key = key
-        else:
-            row_key = key
-            column_key = None
-
+        row_key, column_key = key
         return TypeBlocks.from_blocks(self._assign_from_iloc_by_unit(
                 row_key=row_key,
                 column_key=column_key,
@@ -2018,18 +2016,12 @@ class TypeBlocks(ContainerOperand):
         '''
         Assign with value via an iterable of blocks.
         '''
-        if isinstance(key, tuple):
-            row_key, column_key = key
-        else:
-            row_key = key
-            column_key = None
-
+        row_key, column_key = key
         return TypeBlocks.from_blocks(self._assign_from_iloc_by_blocks(
                 row_key=row_key,
                 column_key=column_key,
                 values=value,
                 ))
-
 
     def extract_bloc_assign_by_unit(self,
             key: np.ndarray,
@@ -2040,7 +2032,7 @@ class TypeBlocks(ContainerOperand):
                 value=value
                 ))
 
-
+    #---------------------------------------------------------------------------
     def drop(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
         '''
         Drop rows or columns from a TyepBlocks instance.

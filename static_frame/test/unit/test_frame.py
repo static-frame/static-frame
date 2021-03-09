@@ -2866,6 +2866,13 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_assign_loc_i(self) -> None:
+        f1 = ff.parse('s(3,4)|c(I,str)')
+        f2 = f1.assign.loc[[0, 2], ['zkuW','zUvW']](0)
+        self.assertEqual(f2.to_pairs(),
+                (('zZbu', ((0, 1930.4), (1, -1760.34), (2, 1857.34))), ('ztsv', ((0, -610.8), (1, 3243.94), (2, -823.14))), ('zUvW', ((0, 0.0), (1, -72.96), (2, 0.0))), ('zkuW', ((0, 0.0), (1, 2580.34), (2, 0.0))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_assign_coercion_a(self) -> None:

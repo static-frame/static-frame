@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Added ``iloc_searchsorted()`` and ``loc_searchsorted()`` to ``Index``, ``IndexDatetime``, and ``IndexHierarchy``.
 
+Added ``ddof`` parameter to all containers that expose ``std`` and ``var``.
+
 Improved handling for NumPy Boolean types stored in SQLite DBs via ``StoreSQLite`` interfaces.
 
 

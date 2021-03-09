@@ -6985,9 +6985,16 @@ class FrameAssignILoc(FrameAssign):
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
-        # NOTE: the iloc key's order is not relevant in assignment
+        if isinstance(self.key, tuple):
+            # NOTE: the iloc key's order is not relevant in assignment, and block assignment requires that column keys are ascending
+            key = (self.key[0], #type: ignore [index]
+                    key_to_ascending_key(
+                    self.key[1],
+                    self.container.shape[1])) #type: ignore [index]
+        else:
+            key = (self.key, None)
+
         if is_series:
-            key = self.key
             assigned = self.container._reindex_other_like_iloc(value,
                     key,
                     fill_value=fill_value).values
@@ -6996,10 +7003,6 @@ class FrameAssignILoc(FrameAssign):
                     assigned,
                     )
         elif is_frame:
-            # block assignment requires that column keys are ascending
-            # conform the passed in value to the targets given by self.key
-            key = (self.key[0], #type: ignore [index]
-                    key_to_ascending_key(self.key[1], self.container.shape[1])) #type: ignore [index]
             assigned = self.container._reindex_other_like_iloc(value, #type: ignore [union-attr]
                     key,
                     fill_value=fill_value)._blocks._blocks
@@ -7008,7 +7011,6 @@ class FrameAssignILoc(FrameAssign):
                     assigned,
                     )
         else: # could be array or single element
-            key = self.key
             assigned = value
             blocks = self.container._blocks.extract_iloc_assign_by_unit(
                     key,
