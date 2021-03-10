@@ -597,7 +597,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             targets_items = targets.items()
 
         for label, frame in targets_items:
-            idx = index.loc_to_iloc(label)
+            idx = index._loc_to_iloc(label)
 
             if max_persist_active: # update LRU position
                 self._last_accessed[label] = self._last_accessed.pop(label, None)
@@ -615,7 +615,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             if max_persist_active and loaded_count > self._max_persist:
                 label_remove = next(iter(self._last_accessed))
                 del self._last_accessed[label_remove]
-                idx_remove = index.loc_to_iloc(label_remove)
+                idx_remove = index._loc_to_iloc(label_remove)
                 self._loaded[idx_remove] = False
                 array[idx_remove] = FrameDeferred
                 loaded_count -= 1
@@ -653,7 +653,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
 
-        iloc_key = self._series._index.loc_to_iloc(key)
+        iloc_key = self._series._index._loc_to_iloc(key)
 
         # NOTE: if we update before slicing, we change the local and the object handed back
         self._update_series_cache_iloc(key=iloc_key)
@@ -688,7 +688,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self._derive(series)
 
     def _drop_loc(self, key: GetItemKeyType) -> 'Bus':
-        return self._drop_iloc(self._series._index.loc_to_iloc(key))
+        return self._drop_iloc(self._series._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
     # axis functions

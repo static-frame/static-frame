@@ -1387,7 +1387,7 @@ class Series(ContainerOperand):
         Compatibility:
             Pandas supports taking in iterables of keys, where some keys are not found in the index; a Series is returned as if a reindex operation was performed. This is undesirable. Better instead is to use reindex()
         '''
-        iloc_key = self._index.loc_to_iloc(key)
+        iloc_key = self._index._loc_to_iloc(key)
         values = self.values[iloc_key]
 
         if not isinstance(values, np.ndarray): # if we have a single element
@@ -1435,7 +1435,7 @@ class Series(ContainerOperand):
                 )
 
     def _drop_loc(self, key: GetItemKeyType) -> 'Series':
-        return self._drop_iloc(self._index.loc_to_iloc(key))
+        return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
 
@@ -1450,7 +1450,7 @@ class Series(ContainerOperand):
     def _extract_loc_mask(self, key: GetItemKeyType) -> 'Series':
         '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True. The `name` attribute is not propagated.
         '''
-        iloc_key = self._index.loc_to_iloc(key)
+        iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc_mask(key=iloc_key)
 
     #---------------------------------------------------------------------------
@@ -1464,7 +1464,7 @@ class Series(ContainerOperand):
     def _extract_loc_masked_array(self, key: GetItemKeyType) -> MaskedArray:
         '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True.
         '''
-        iloc_key = self._index.loc_to_iloc(key)
+        iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc_masked_array(key=iloc_key)
 
     #---------------------------------------------------------------------------
@@ -1473,7 +1473,7 @@ class Series(ContainerOperand):
         return SeriesAssign(self, key)
 
     def _extract_loc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
-        iloc_key = self._index.loc_to_iloc(key)
+        iloc_key = self._index._loc_to_iloc(key)
         return SeriesAssign(self, iloc_key)
 
     #---------------------------------------------------------------------------
@@ -2166,7 +2166,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
-        iloc_key = self._index.loc_to_iloc(key)
+        iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
         return self._insert(iloc_key, container)
@@ -2186,7 +2186,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
-        iloc_key = self._index.loc_to_iloc(key)
+        iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
         return self._insert(iloc_key + 1, container)

@@ -90,7 +90,7 @@ class TestUnit(TestCase):
 
         idx1 = IndexDate(['2017', '2018'])
         self.assertTrue(idx1[0].__class__ == np.datetime64)
-        self.assertEqual(idx1.loc_to_iloc('2018-01-01'), 1)
+        self.assertEqual(idx1._loc_to_iloc('2018-01-01'), 1)
 
         idx2 = IndexDate(['2017-01', '2018-07'])
         self.assertTrue(idx2[0].__class__ == np.datetime64)
@@ -440,13 +440,13 @@ class TestUnit(TestCase):
         index = IndexDate.from_date_range('2018-01-01', '2018-03-01')
 
         self.assertEqual(
-                index.loc_to_iloc(np.datetime64('2018-02-11')),
+                index._loc_to_iloc(np.datetime64('2018-02-11')),
                 41)
 
-        self.assertEqual(index.loc_to_iloc('2018-02-11'), 41)
+        self.assertEqual(index._loc_to_iloc('2018-02-11'), 41)
 
         self.assertEqual(
-                index.loc_to_iloc(slice('2018-02-11', '2018-02-24')),
+                index._loc_to_iloc(slice('2018-02-11', '2018-02-24')),
                 slice(41, 55, None))
 
     def test_index_date_loc_to_iloc_b(self) -> None:
@@ -456,7 +456,7 @@ class TestUnit(TestCase):
         # with self.assertRaises(RuntimeError):
         #     _ = index.loc_to_iloc(['2017-12-01', '2018-01-01', '2018-02-01'])
 
-        post = index.loc_to_iloc(
+        post = index._loc_to_iloc(
                 ['2017-12-01', '2018-01-01', '2018-02-01'],
                 partial_selection=True)
         self.assertEqual(post, [0, 31])

@@ -88,9 +88,9 @@ class IndexCorrespondence:
                 values_dst = dst_index.values
                 if values_dst.dtype == DTYPE_BOOL:
                     # if the index values are a Boolean array, loc_to_iloc will try to do a Boolean selection, which is incorrect. Using a list avoids this problem.
-                    iloc_src = src_index.loc_to_iloc(values_dst.tolist())
+                    iloc_src = src_index._loc_to_iloc(values_dst.tolist())
                 else:
-                    iloc_src = src_index.loc_to_iloc(values_dst)
+                    iloc_src = src_index._loc_to_iloc(values_dst)
                 iloc_dst = np.arange(size)
                 return cls(has_common=has_common,
                         is_subset=True,
@@ -100,8 +100,8 @@ class IndexCorrespondence:
                         )
 
             # these will be equal sized
-            iloc_src = src_index.loc_to_iloc(common_labels)
-            iloc_dst = dst_index.loc_to_iloc(common_labels)
+            iloc_src = src_index._loc_to_iloc(common_labels)
+            iloc_dst = dst_index._loc_to_iloc(common_labels)
 
             return cls(has_common=has_common,
                     is_subset=False,

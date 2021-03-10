@@ -104,7 +104,7 @@ class IndexDatetime(Index):
         array.flags.writeable = False
         return array
 
-    def loc_to_iloc(self,  # type: ignore
+    def _loc_to_iloc(self,  # type: ignore
             key: GetItemKeyType,
             *,
             offset: tp.Optional[int] = None,
@@ -114,7 +114,7 @@ class IndexDatetime(Index):
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
         # not passing self.dtype to key_to_datetime_key so as to allow translation to a foreign datetime; slice comparison will be handled by map_slice_args
-        return Index.loc_to_iloc(self,
+        return Index._loc_to_iloc(self,
                 key=key,
                 offset=offset,
                 key_transform=key_to_datetime_key,

@@ -121,25 +121,25 @@ class TestUnit(TestCase):
         idx = Index(('a', 'b', 'c', 'd'))
 
         self.assertEqual(
-                tp.cast(np.ndarray, idx.loc_to_iloc(np.array([True, False, True, False]))).tolist(),
+                tp.cast(np.ndarray, idx._loc_to_iloc(np.array([True, False, True, False]))).tolist(),
                 [0, 2])
 
-        self.assertEqual(idx.loc_to_iloc(slice('c',)), slice(None, 3, None))
-        self.assertEqual(idx.loc_to_iloc(slice('b','d')), slice(1, 4, None))
-        self.assertEqual(idx.loc_to_iloc('d'), 3)
+        self.assertEqual(idx._loc_to_iloc(slice('c',)), slice(None, 3, None))
+        self.assertEqual(idx._loc_to_iloc(slice('b','d')), slice(1, 4, None))
+        self.assertEqual(idx._loc_to_iloc('d'), 3)
 
 
     def test_index_loc_to_iloc_b(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
-        post = idx.loc_to_iloc(Series(['b', 'c']))
+        post = idx._loc_to_iloc(Series(['b', 'c']))
         self.assertEqual(post, [1, 2])
 
     def test_index_loc_to_iloc_c(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
         with self.assertRaises(KeyError):
-            _ = idx.loc_to_iloc(['c', 'd', 'e'])
+            _ = idx._loc_to_iloc(['c', 'd', 'e'])
 
-        post = idx.loc_to_iloc(['c', 'd', 'e'], partial_selection=True)
+        post = idx._loc_to_iloc(['c', 'd', 'e'], partial_selection=True)
         self.assertEqual(post, [2, 3])
 
     #---------------------------------------------------------------------------
@@ -244,7 +244,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.loc['b':'d'].values.tolist(), ['b', 'c', 'd'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
 
-        self.assertEqual(idx.loc_to_iloc(['b', 'b', 'c']), [1, 1, 2])
+        self.assertEqual(idx._loc_to_iloc(['b', 'b', 'c']), [1, 1, 2])
 
         self.assertEqual(idx.loc['c'], 'c')
 
@@ -260,8 +260,8 @@ class TestUnit(TestCase):
 
     def test_index_creation_b(self) -> None:
         idx = Index((x for x in ('a', 'b', 'c', 'd') if x in {'b', 'd'}))
-        self.assertEqual(idx.loc_to_iloc('b'), 0)
-        self.assertEqual(idx.loc_to_iloc('d'), 1)
+        self.assertEqual(idx._loc_to_iloc('b'), 0)
+        self.assertEqual(idx._loc_to_iloc('d'), 1)
 
     #---------------------------------------------------------------------------
 
@@ -406,11 +406,11 @@ class TestUnit(TestCase):
 
         index = IndexGO(('a', 'b', 'c'))
         index.append('d')
-        self.assertEqual(index.loc_to_iloc('d'), 3)
+        self.assertEqual(index._loc_to_iloc('d'), 3)
 
         index.extend(('e', 'f'))
-        self.assertEqual(index.loc_to_iloc('e'), 4)
-        self.assertEqual(index.loc_to_iloc('f'), 5)
+        self.assertEqual(index._loc_to_iloc('e'), 4)
+        self.assertEqual(index._loc_to_iloc('f'), 5)
 
         # creating an index form an Index go takes the np arrays, but not the mutable bits
         index2 = Index(index)
@@ -486,10 +486,10 @@ class TestUnit(TestCase):
 
         index = Index(('a', 'c', 'd', 'e', 'b'))
         self.assertEqual(
-                [index.sort().loc_to_iloc(x) for x in sorted(index.values)],
+                [index.sort()._loc_to_iloc(x) for x in sorted(index.values)],
                 [0, 1, 2, 3, 4])
         self.assertEqual(
-                [index.sort(ascending=False).loc_to_iloc(x) for x in sorted(index.values)],
+                [index.sort(ascending=False)._loc_to_iloc(x) for x in sorted(index.values)],
                 [4, 3, 2, 1, 0])
 
 
@@ -586,8 +586,8 @@ class TestUnit(TestCase):
 
         idx = Index(('a', 'b', 'c', 'd'))
 
-        self.assertEqual(idx.loc_to_iloc(ILoc[1]), 1)
-        self.assertEqual(idx.loc_to_iloc(ILoc[[0, 2]]), [0, 2])
+        self.assertEqual(idx._loc_to_iloc(ILoc[1]), 1)
+        self.assertEqual(idx._loc_to_iloc(ILoc[[0, 2]]), [0, 2])
 
     def test_index_extract_iloc_a(self) -> None:
 
@@ -624,13 +624,13 @@ class TestUnit(TestCase):
 
         # unlike Pandas, both of these presently fail
         with self.assertRaises(KeyError):
-            idx.loc_to_iloc([False, True])
+            idx._loc_to_iloc([False, True])
 
         with self.assertRaises(KeyError):
-            idx.loc_to_iloc([False, True, False, True])
+            idx._loc_to_iloc([False, True, False, True])
 
         # but a Boolean array works
-        post = idx.loc_to_iloc(np.array([False, True, False, True]))
+        post = idx._loc_to_iloc(np.array([False, True, False, True]))
         assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1, 3])
 
@@ -640,15 +640,15 @@ class TestUnit(TestCase):
         idx = Index(('a', 'b', 'c', 'd'))
 
         # returns nothing as index does not match anything
-        post = idx.loc_to_iloc(Series([False, True, False, True]))
+        post = idx._loc_to_iloc(Series([False, True, False, True]))
         self.assertTrue(len(tp.cast(tp.Sized, post)) == 0)
 
-        post = idx.loc_to_iloc(Series([False, True, False, True],
+        post = idx._loc_to_iloc(Series([False, True, False, True],
                 index=('b', 'c', 'd', 'a')))
         assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [0, 2])
 
-        post = idx.loc_to_iloc(Series([False, True, False, True],
+        post = idx._loc_to_iloc(Series([False, True, False, True],
                 index=list('abcd')))
         assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1,3])

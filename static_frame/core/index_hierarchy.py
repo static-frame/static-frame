@@ -917,7 +917,7 @@ class IndexHierarchy(IndexBase):
     def _drop_loc(self, key: GetItemKeyType) -> 'IndexHierarchy':
         '''Create a new index after removing the values specified by the loc key.
         '''
-        return self._drop_iloc(self.loc_to_iloc(key))
+        return self._drop_iloc(self._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
 
@@ -1047,7 +1047,7 @@ class IndexHierarchy(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def loc_to_iloc(self,
+    def _loc_to_iloc(self,
             key: tp.Union[GetItemKeyType, HLoc]
             ) -> GetItemKeyType:
         '''
@@ -1099,7 +1099,7 @@ class IndexHierarchy(IndexBase):
     def _extract_loc(self,
             key: GetItemKeyType
             ) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
-        return self._extract_iloc(self.loc_to_iloc(key))
+        return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self, #pylint: disable=E0102
             key: GetItemKeyType

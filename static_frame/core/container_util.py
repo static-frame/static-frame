@@ -795,7 +795,7 @@ def arrays_from_index_frame(
         # NOTE: if a multi-column selection, might be better to yield one depth at a time
         yield container.index.values_at_depth(depth_level)
     if columns is not None:
-        column_key = container.columns.loc_to_iloc(columns)
+        column_key = container.columns._loc_to_iloc(columns)
         yield from container._blocks._slice_blocks(column_key=column_key)
 
 

@@ -294,7 +294,7 @@ class IndexBase(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def loc_to_iloc(self,
+    def _loc_to_iloc(self,
             key: GetItemKeyType,
             ) -> GetItemKeyType:
         raise NotImplementedError()

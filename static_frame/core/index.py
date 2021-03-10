@@ -209,7 +209,7 @@ class LocMap:
         '''
         offset_apply = not offset is None
 
-        # ILoc is handled prior to this call, in the Index.loc_to_iloc method
+        # ILoc is handled prior to this call, in the Index._loc_to_iloc method
 
         if isinstance(key, slice):
             if offset_apply and key == NULL_SLICE:
@@ -710,7 +710,7 @@ class Index(IndexBase):
     def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
         '''Create a new index after removing the values specified by the loc key.
         '''
-        return self._drop_iloc(self.loc_to_iloc(key))
+        return self._drop_iloc(self._loc_to_iloc(key))
 
 
     @property
@@ -900,7 +900,7 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
     # extraction and selection
 
-    def loc_to_iloc(self,
+    def _loc_to_iloc(self,
             key: GetItemKeyType,
             offset: tp.Optional[int] = None,
             key_transform: KeyTransformType = None,
@@ -1005,7 +1005,7 @@ class Index(IndexBase):
     def _extract_loc(self: I,
             key: GetItemKeyType
             ) -> tp.Union['Index', tp.Hashable]:
-        return self._extract_iloc(self.loc_to_iloc(key))
+        return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self: I,
             key: GetItemKeyType
