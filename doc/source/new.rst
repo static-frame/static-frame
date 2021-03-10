@@ -8,6 +8,8 @@ Added ``iloc_searchsorted()`` and ``loc_searchsorted()`` to ``Index``, ``IndexDa
 
 Added ``ddof`` parameter to all containers that expose ``std`` and ``var``.
 
+Fixed issue with ``Frame.assign`` where
+
 Improved handling for NumPy Boolean types stored in SQLite DBs via ``StoreSQLite`` interfaces.
 
 

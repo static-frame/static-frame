@@ -1997,7 +1997,7 @@ class TypeBlocks(ContainerOperand):
     # assignment interfaces
 
     def extract_iloc_assign_by_unit(self,
-            key: GetItemKeyTypeCompound,
+            key: tp.Tuple[GetItemKeyType, GetItemKeyType],
             value: object,
             ) -> 'TypeBlocks':
         '''
@@ -2010,7 +2010,7 @@ class TypeBlocks(ContainerOperand):
                 value=value))
 
     def extract_iloc_assign_by_blocks(self,
-            key: GetItemKeyTypeCompound,
+            key: tp.Tuple[GetItemKeyType, GetItemKeyType],
             value: tp.Iterable[np.ndarray],
             ) -> 'TypeBlocks':
         '''
