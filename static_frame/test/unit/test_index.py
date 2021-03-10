@@ -19,6 +19,7 @@ from static_frame import ILoc
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import LocInvalid
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import mloc
 
@@ -141,6 +142,52 @@ class TestUnit(TestCase):
 
         post = idx._loc_to_iloc(['c', 'd', 'e'], partial_selection=True)
         self.assertEqual(post, [2, 3])
+
+
+    def test_index_loc_to_iloc_d(self) -> None:
+        # testing the public interface
+        idx1 = Index(('a', 'b', 'c', 'd'))
+
+        self.assertEqual(idx1.loc_to_iloc('b'), 1)
+        with self.assertRaises(KeyError):
+            _ = idx1.loc_to_iloc('g')
+
+        self.assertEqual(idx1.loc_to_iloc(slice('b', 'd')), slice(1, 4, None))
+        with self.assertRaises(LocInvalid):
+            _ = idx1.loc_to_iloc(slice('x', 'y'))
+
+        self.assertEqual(idx1.loc_to_iloc(['d', 'a']), [3, 0])
+        with self.assertRaises(KeyError):
+            _ = idx1.loc_to_iloc(['d', 'x'])
+
+        self.assertEqual(idx1.loc_to_iloc(np.array([False, True, True, False])).tolist(), [1, 2])
+        with self.assertRaises(IndexError):
+            _ = idx1.loc_to_iloc(np.array([False, True, False]))
+
+    def test_index_loc_to_iloc_e(self) -> None:
+
+        idx2 = Index(range(4), loc_is_iloc=True)
+
+        self.assertEqual(idx2.loc_to_iloc(1), 1)
+        with self.assertRaises(KeyError):
+            _ = idx2.loc_to_iloc(5)
+
+        self.assertEqual(idx2.loc_to_iloc(slice(1, 3)), slice(1, 4))
+        with self.assertRaises(LocInvalid):
+            _ = idx2.loc_to_iloc(slice('x', 'y'))
+        with self.assertRaises(LocInvalid):
+            # loc slices are always interpreted as inclusive, so going beyond the inclusive boundary is an error
+            _ = idx2.loc_to_iloc(slice(0, 4))
+
+        self.assertEqual(idx2.loc_to_iloc([3, 0]), [3, 0])
+        with self.assertRaises(KeyError):
+            _ = idx2.loc_to_iloc([3, 20])
+
+        self.assertEqual(idx2.loc_to_iloc(np.array([False, True, True, False])).tolist(), [1, 2])
+        with self.assertRaises(IndexError):
+            _ = idx2.loc_to_iloc(np.array([False, True, False]))
+
+
 
     #---------------------------------------------------------------------------
     def test_index_mloc_a(self) -> None:

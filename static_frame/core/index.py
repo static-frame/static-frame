@@ -944,6 +944,7 @@ class Index(IndexBase):
 
                 key = slice_to_inclusive_slice(key)
 
+                # NOTE: this slice transformation could be a utility function in ArrayKit
                 def slice_attrs() -> tp.Iterator[int]:
                     for attr in SLICE_ATTRS:
                         if attr != SLICE_STEP_ATTR:
@@ -976,6 +977,42 @@ class Index(IndexBase):
                 offset=offset,
                 partial_selection=partial_selection,
                 )
+
+    def loc_to_iloc(self,
+            key: GetItemKeyType,
+            ):
+        '''Given a label (loc) style key (either a label, a list of labels, a slice, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
+
+        Args:
+            key: a label key.
+        '''
+        if self._map is None: # loc is iloc
+            is_bool_array = isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL
+
+            try:
+                result = self._positions[key]
+            except IndexError:
+                # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
+                if is_bool_array:
+                    raise # loc selection on Boolean array selection returns IndexError
+                raise KeyError(key)
+            except TypeError:
+                raise LocInvalid(f'Invalid loc: {key}')
+
+            if is_bool_array:
+                return result # return position as array
+
+            if isinstance(key, slice):
+                if key == NULL_SLICE:
+                    return slice(0, self.__len__())
+                if key.stop >= len(self):
+                    # while a valid slice of positions, loc lookups do not permit over-stating boundaries
+                    raise LocInvalid(f'Invalid loc: {key}')
+                key = slice_to_inclusive_slice(key)
+
+            return key
+
+        return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
             key: GetItemKeyType
