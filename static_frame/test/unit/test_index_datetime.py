@@ -830,6 +830,22 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
+    def test_index_datetime_loc_to_iloc_a(self) -> None:
+        dt64 = np.datetime64
+        idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
+
+        self.assertEqual(idx.loc_to_iloc(['2020-01-15', '2020-01-29']),
+                [14, 28])
+
+        self.assertEqual(idx.loc_to_iloc(idx == dt64('2020-01-13')).tolist(),
+                [12])
+        self.assertEqual(idx.loc_to_iloc(slice('2020-01-15', '2020-01-29')),
+                slice(14, 29, None))
+
+        self.assertEqual(idx.loc_to_iloc('2020-01-29'), 28)
+
+
 
 if __name__ == '__main__':
     unittest.main()
