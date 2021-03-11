@@ -160,7 +160,7 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             _ = idx1.loc_to_iloc(['d', 'x'])
 
-        self.assertEqual(idx1.loc_to_iloc(np.array([False, True, True, False])).tolist(), [1, 2])
+        self.assertEqual(idx1.loc_to_iloc(np.array([False, True, True, False])).tolist(), [1, 2]) #type: ignore [union-attr]
         with self.assertRaises(IndexError):
             _ = idx1.loc_to_iloc(np.array([False, True, False]))
 
@@ -183,7 +183,7 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             _ = idx2.loc_to_iloc([3, 20])
 
-        self.assertEqual(idx2.loc_to_iloc(np.array([False, True, True, False])).tolist(), [1, 2])
+        self.assertEqual(idx2.loc_to_iloc(np.array([False, True, True, False])).tolist(), [1, 2]) #type: ignore [union-attr]
         with self.assertRaises(IndexError):
             _ = idx2.loc_to_iloc(np.array([False, True, False]))
 

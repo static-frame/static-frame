@@ -980,7 +980,7 @@ class Index(IndexBase):
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
-            ):
+            ) -> GetItemKeyType:
         '''Given a label (loc) style key (either a label, a list of labels, a slice, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
 
         Args:

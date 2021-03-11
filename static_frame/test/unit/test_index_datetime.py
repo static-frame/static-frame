@@ -838,7 +838,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx.loc_to_iloc(['2020-01-15', '2020-01-29']),
                 [14, 28])
 
-        self.assertEqual(idx.loc_to_iloc(idx == dt64('2020-01-13')).tolist(),
+        self.assertEqual(idx.loc_to_iloc(idx == dt64('2020-01-13')).tolist(), #type: ignore [union-attr]
                 [12])
         self.assertEqual(idx.loc_to_iloc(slice('2020-01-15', '2020-01-29')),
                 slice(14, 29, None))
