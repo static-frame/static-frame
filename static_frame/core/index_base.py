@@ -299,6 +299,11 @@ class IndexBase(ContainerOperand):
             ) -> GetItemKeyType:
         raise NotImplementedError()
 
+    def loc_to_iloc(self,
+            key: GetItemKeyType,
+            ) -> GetItemKeyType:
+        raise NotImplementedError()
+
     def __getitem__(self: I,
             key: GetItemKeyType
             ) -> tp.Union[I, tp.Hashable]:

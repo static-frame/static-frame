@@ -1057,10 +1057,12 @@ class IndexHierarchy(IndexBase):
 
         if isinstance(key, ILoc):
             return key.key
-        elif isinstance(key, IndexHierarchy):
+
+        if isinstance(key, IndexHierarchy):
             # default iteration of IH is as tuple
             return [self._levels.leaf_loc_to_iloc(k) for k in key]
-        elif isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
+
+        if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
             return self.positions[key]
 
         if isinstance(key, HLoc):
@@ -1072,6 +1074,17 @@ class IndexHierarchy(IndexBase):
             key = key_from_container_key(self, key)
 
         return self._levels.loc_to_iloc(key)
+
+    def loc_to_iloc(self,
+            key: tp.Union[GetItemKeyType, HLoc]
+            ) -> GetItemKeyType:
+        '''Given a label (loc) style key (either a label, a list of labels, a slice, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
+
+        Args:
+            key: a label key.
+        '''
+        # NOTE: the public method is the same as the private method for IndexHierarchy, but not for Index
+        return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
             key: GetItemKeyType,
