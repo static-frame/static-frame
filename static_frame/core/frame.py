@@ -7059,6 +7059,7 @@ class FrameAssignBLoc(FrameAssign):
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
+        # get Bollean key of normalized shape; in most cases this will be a new, mutable array
         key = bloc_key_normalize(
                 key=self.key,
                 container=self.container
@@ -7072,26 +7073,30 @@ class FrameAssignBLoc(FrameAssign):
             for (i, c), e in value.items():
                 array[index._loc_to_iloc(i), columns._loc_to_iloc(c)] = e
             value = array
+            # TODO: implement special method
+            blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
 
-        if is_frame:
-            # NOTE: we are forcing a values consolidation here; should be avoided.
+        elif is_frame:
+            # NOTE: the type of FILL_VALUE_DEFAULT might coerce other blocks
             value = value.reindex(
                     index=self.container._index,
                     columns=self.container._columns,
-                    fill_value=FILL_VALUE_DEFAULT
-                    ).values
+                    fill_value=FILL_VALUE_DEFAULT)
+            values = value._blocks._blocks
 
             # if we produced any invalid entries, cannot select them
-            invalid_found = value == FILL_VALUE_DEFAULT
+            invalid_found = (value == FILL_VALUE_DEFAULT).values
             if invalid_found.any():
-                key = key.copy() # mutate a copy
+                if not key.flags.writeable:
+                    key = key.copy() # mutate a copy
                 key[invalid_found] = False
 
-        elif isinstance(value, np.ndarray):
-            if value.shape != self.container.shape:
-                raise RuntimeError(f'value must match shape {self.container.shape}')
+            blocks = self.container._blocks.extract_bloc_assign_by_blocks(key, values)
 
-        blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
+        else: # an array or an element
+            if isinstance(value, np.ndarray) and value.shape != self.container.shape:
+                raise RuntimeError(f'value must match shape {self.container.shape}')
+            blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
 
         return self.container.__class__(
                 data=blocks,

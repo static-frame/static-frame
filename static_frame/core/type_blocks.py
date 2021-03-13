@@ -13,6 +13,7 @@ from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
 from static_frame.core.container_util import apply_binary_operator_blocks_columnar
 from static_frame.core.container_util import get_col_dtype_factory
+from static_frame.core.container_util import get_block_match
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
@@ -1444,7 +1445,6 @@ class TypeBlocks(ContainerOperand):
         '''
         Given row, column key selections, assign from an iterable of 1D or 2D block arrays.
         '''
-        # see clip().get_block_match() for one example of drawing values from another sequence of blocks, where we take blocks and slices from blocks using a list as a stack
         target_block_slices = self._key_to_block_slices(
                 column_key,
                 retain_key_order=True)
@@ -1458,40 +1458,6 @@ class TypeBlocks(ContainerOperand):
         # get a mutable list in reverse order for pop/pushing
         values_source = list(values)
         values_source.reverse()
-
-        def get_block_match(
-                width: int
-                ) -> tp.Iterator[np.ndarray]:
-            '''Draw from values to provide as many columns as specified by width.
-            '''
-            if width == 1: # no loop necessary
-                v = values_source.pop()
-                if v.ndim == 1:
-                    yield v
-                else: # ndim == 2
-                    if v.shape[1] > 1: # more than one column
-                        # restore remained to values source
-                        values_source.append(v[NULL_SLICE, 1:])
-                    yield v[NULL_SLICE, 0]
-            else:
-                width_found = 0
-                while width_found < width:
-                    v = values_source.pop()
-                    if v.ndim == 1:
-                        yield v
-                        width_found += 1
-                        continue
-                    # ndim == 2
-                    width_v = v.shape[1]
-                    width_needed = width - width_found
-                    if width_v <= width_needed:
-                        yield v
-                        width_found += width_v
-                        continue
-                    # width_v > width_needed
-                    values_source.append(v[NULL_SLICE, width_needed:])
-                    yield v[NULL_SLICE, :width_needed]
-                    break
 
         for block_idx, b in enumerate(self._blocks):
             assigned_stop = 0 # exclusive maximum
@@ -1521,10 +1487,10 @@ class TypeBlocks(ContainerOperand):
                 if t_start != 0:
                     yield b[NULL_SLICE, assigned_stop: t_start]
                 if row_key_is_null_slice:
-                    yield from get_block_match(t_width)
+                    yield from get_block_match(t_width, values_source)
                 else:
                     assigned_blocks = tuple(
-                            column_2d_filter(a) for a in get_block_match(t_width))
+                            column_2d_filter(a) for a in get_block_match(t_width, values_source))
                     assigned_dtype = resolve_dtype_iter(
                             chain((a.dtype for a in assigned_blocks), (b.dtype,)))
                     if b.ndim == 2:
@@ -1702,7 +1668,7 @@ class TypeBlocks(ContainerOperand):
                     target &= value_valid_part
 
                 value_part = value[NULL_SLICE, value_slice][target] #type: ignore
-                start = end # always update start
+                start = end
             else:
                 value_part = value
 
@@ -1783,27 +1749,29 @@ class TypeBlocks(ContainerOperand):
             ) -> tp.Iterator[np.ndarray]:
         '''
         Given an Boolean array of targets, fill targets from value, where value is either a single value or an array. Unlike with _assign_from_boolean_blocks_by_unit, this method takes a single block_key.
+
+        Args:
+            value: can be a single element, or a single 2D array of shape equal to self.
         '''
         if isinstance(value, np.ndarray):
             value_dtype = value.dtype
             is_element = False
             assert value.shape == self.shape
         else:
-            # value_dtype = np.array(value).dtype
             value_dtype = dtype_from_element(value)
             is_element = True
 
-        start = 0
+        t_start = 0
         target_slice: tp.Union[int, slice]
 
         for block in self._blocks:
 
             if block.ndim == 1:
-                end = start + 1
-                target_slice = start
+                t_end = t_start + 1
+                target_slice = t_start
             else:
-                end = start + block.shape[1]
-                target_slice = slice(start, end)
+                t_end = t_start + block.shape[1]
+                target_slice = slice(t_start, t_end)
 
             target = bloc_key[NULL_SLICE, target_slice]
 
@@ -1824,7 +1792,79 @@ class TypeBlocks(ContainerOperand):
                 assigned.flags.writeable = False
                 yield assigned
 
-            start = end # always update start
+            t_start = t_end # always update start
+
+    def _assign_from_bloc_by_blocks(self,
+            bloc_key: np.ndarray,
+            values: tp.Sequence[np.ndarray],
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        A given a single Boolean array bloc-key, assign with `value`, a sequence of appropriately sized arrays.
+        '''
+        t_start = 0
+        target_slice: tp.Union[int, slice]
+
+        # get a mutable list in reverse order for pop/pushing
+        values_source = list(values)
+        values_source.reverse()
+
+        for block in self._blocks:
+
+            if block.ndim == 1:
+                t_end = t_start + 1
+                target_slice = t_start
+                t_width = 1
+            else:
+                t_end = t_start + block.shape[1]
+                target_slice = slice(t_start, t_end)
+                t_width = t_end - t_start
+
+            # target will only be 1D when block is 1d
+            target = bloc_key[NULL_SLICE, target_slice]
+
+            if not target.any():
+                # must extract from values source even if no match
+                for _ in get_block_match(t_width, values_source):
+                    pass
+                yield block
+            else: # something to assign, draw from values
+                a_start = 0
+                for value_part in get_block_match(t_width, values_source):
+                    # loop over one or more blocks less then or equal to target
+                    if value_part.ndim == 1:
+                        a_end = a_start + 1
+                    else:
+                        a_end = a_start + value_part.shape[1]
+
+                    assigned_dtype = resolve_dtype(value_part.dtype, block.dtype)
+
+                    if block.ndim == 1: # target is 1d
+                        if block.dtype == assigned_dtype:
+                            assigned = block.copy()
+                        else:
+                            assigned = block.astype(assigned_dtype)
+                        # target is 1D, value_part may be 1D, 2D
+                        assigned[target] = column_1d_filter(value_part)[target]
+
+                    else: # block is 2d, target is 2d, extract appropriate value
+                        value_part = column_2d_filter(value_part)
+                        a_slice = slice(a_start, a_end)
+                        target_part = target[NULL_SLICE, a_slice]
+
+                        if block.dtype == assigned_dtype:
+                            assigned = block[NULL_SLICE, a_slice].copy()
+                        else:
+                            assigned = block[NULL_SLICE, a_slice].astype(assigned_dtype)
+
+                        assigned[target_part] = value_part[target_part]
+
+                    assigned.flags.writeable = False
+                    yield assigned
+
+                    a_start = a_end
+
+            t_start = t_end
+
 
     #---------------------------------------------------------------------------
     def _slice_blocks(self,
@@ -2011,7 +2051,7 @@ class TypeBlocks(ContainerOperand):
 
     def extract_iloc_assign_by_blocks(self,
             key: tp.Tuple[GetItemKeyType, GetItemKeyType],
-            value: tp.Iterable[np.ndarray],
+            values: tp.Iterable[np.ndarray],
             ) -> 'TypeBlocks':
         '''
         Assign with value via an iterable of blocks.
@@ -2020,7 +2060,7 @@ class TypeBlocks(ContainerOperand):
         return TypeBlocks.from_blocks(self._assign_from_iloc_by_blocks(
                 row_key=row_key,
                 column_key=column_key,
-                values=value,
+                values=values,
                 ))
 
     def extract_bloc_assign_by_unit(self,
@@ -2030,6 +2070,15 @@ class TypeBlocks(ContainerOperand):
         return TypeBlocks.from_blocks(self._assign_from_bloc_by_unit(
                 bloc_key=key,
                 value=value
+                ))
+
+    def extract_bloc_assign_by_blocks(self,
+            key: np.ndarray,
+            values: tp.Any
+            ) -> 'TypeBlocks':
+        return TypeBlocks.from_blocks(self._assign_from_bloc_by_blocks(
+                bloc_key=key,
+                values=values
                 ))
 
     #---------------------------------------------------------------------------
