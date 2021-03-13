@@ -1053,6 +1053,18 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.iter_tuple_items(axis=1))
 
+    def test_quilt_iter_tuple_c(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+        from collections import namedtuple
+        NT = namedtuple('NT', tuple('abcd'))
+        post = tuple(q1.iter_tuple(constructor=NT))
+        self.assertEqual(len(post), 8)
+        self.assertEqual(post[0].__class__, NT)
+
     #---------------------------------------------------------------------------
     def test_quilt_to_frame_a1(self) -> None:
 
@@ -1181,6 +1193,20 @@ class TestUnit(TestCase):
             f1 = Batch(q1.iter_window_items(size=6)).mean().to_frame()
             self.assertEqual(f1.shape, (75, 3))
             self.assertEqual(q1.status['loaded'].sum(), 1)
+
+    #---------------------------------------------------------------------------
+
+    def test_quilt_iter_window_items_a(self) -> None:
+
+        f1 = ff.parse('s(8,8)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(8,8)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+        post = tuple(q1.iter_window_items(size=3))
+        self.assertEqual(len(post), 6)
+        self.assertEqual(post[0][1].to_pairs(),
+                ((('f1', 0), ((0, -88017), (1, 92867), (2, 84967))), (('f1', 1), ((0, -610.8), (1, 3243.94), (2, -823.14))), (('f1', 2), ((0, -3648), (1, 91301), (2, 30205))), (('f1', 3), ((0, 1080.4), (1, 2580.34), (2, 700.42))), (('f1', 4), ((0, 58768), (1, 146284), (2, 170440))), (('f1', 5), ((0, 1857.34), (1, 1699.34), (2, 268.96))), (('f1', 6), ((0, 146284), (1, 170440), (2, 32395))), (('f1', 7), ((0, 647.9), (1, 2755.18), (2, -1259.28))), (('f2', 0), ((0, False), (1, False), (2, False))), (('f2', 1), ((0, False), (1, False), (2, False))), (('f2', 2), ((0, True), (1, False), (2, False))), (('f2', 3), ((0, False), (1, False), (2, True))), (('f2', 4), ((0, True), (1, True), (2, True))), (('f2', 5), ((0, False), (1, True), (2, False))), (('f2', 6), ((0, True), (1, True), (2, False))), (('f2', 7), ((0, False), (1, True), (2, True))))
+)
 
     #---------------------------------------------------------------------------
     def test_quilt_iter_window_array_b1(self) -> None:
