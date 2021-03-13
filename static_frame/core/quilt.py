@@ -44,6 +44,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import concat_resolved
 
 
 def get_extractor(
@@ -850,9 +851,9 @@ class Quilt(ContainerBase, StoreClientMixin):
             if len(self._bus) == 1:
                 return extractor(self._bus.iloc[0].values)
 
-            # NOTE: do not need to call extractor when np.concatenate is called, as a new array is always allocated.
+            # NOTE: do not need to call extractor when concatenate is called, as a new array is always allocated.
             arrays = [f.values for _, f in self._bus.items()]
-            return np.concatenate(
+            return concat_resolved(
                     arrays,
                     axis=self._axis,
                     )
@@ -900,10 +901,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         if len(parts) == 1:
             return extractor(parts.pop())
 
-        # NOTE: np.concatenate always allocates a new array, thus no need for extractor above
+        # NOTE: concatenate always allocates a new array, thus no need for extractor above
         if sel_reduces or opposite_reduces:
-            return np.concatenate(parts)
-        return np.concatenate(parts, axis=self._axis)
+            # NOTE: not sure if concat_resolved is needed here
+            return concat_resolved(parts)
+        return concat_resolved(parts, axis=self._axis)
 
     def _extract(self,
             row_key: GetItemKeyType = None,

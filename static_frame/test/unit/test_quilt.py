@@ -575,6 +575,17 @@ class TestUnit(TestCase):
         self.assertNotEqual(a2_id_in_bus, a2_id_via_quilt)
 
 
+    def test_quilt_extract_array_c(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+        q1._update_axis_labels()
+        a1 = q1._extract_array(slice(None), slice(None))
+        self.assertTrue(a1.tolist(),
+                [[-88017.0, -610.8, -3648.0, 1080.4, False, False, True, False], [92867.0, 3243.94, 91301.0, 2580.34, False, False, False, False], [84967.0, -823.14, 30205.0, 700.42, False, False, False, True], [13448.0, 114.58, 54020.0, 3338.48, True, False, True, True]])
+
 
     #---------------------------------------------------------------------------
     def test_quilt_retain_labels_a(self) -> None:
@@ -1194,6 +1205,17 @@ class TestUnit(TestCase):
         self.assertEqual(s1.to_pairs(),
                 (('zmVj', 377853), ('zr4u', 597832), ('zGDJ', 46996), ('zO5l', 391169)))
 
+    #---------------------------------------------------------------------------
+    def test_quilt_iter_window_array_items_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+
+        s1 = q1.iter_window_array_items(size=2, step=1).apply(lambda _, a: a.sum())
+        self.assertEqual(round(s1, 2).to_pairs(),
+                ((1, 98797.88), (2, 305042.56), (3, 185974.34)))
 
     #---------------------------------------------------------------------------
     def test_quilt_repr_a(self) -> None:
@@ -1209,6 +1231,114 @@ class TestUnit(TestCase):
 
         self.assertTrue(repr(q1).startswith('<Quilt: foo'))
         self.assertTrue(repr(q2).startswith('<Quilt at'))
+
+    #---------------------------------------------------------------------------
+    def test_quilt_columns_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+        self.assertEqual(q1.columns.values.tolist(),
+                [['f1', 0], ['f1', 1], ['f1', 2], ['f1', 3], ['f2', 0], ['f2', 1], ['f2', 2], ['f2', 3]])
+
+    #---------------------------------------------------------------------------
+    def test_quilt_size_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+        self.assertEqual(q1.size, 32)
+
+    #---------------------------------------------------------------------------
+    def test_quilt_items_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+        items = dict(q1.items())
+        self.assertTrue(len(items), 8)
+        self.assertEqual(tuple(items.keys()),
+                (('f1', 0), ('f1', 1), ('f1', 2), ('f1', 3), ('f2', 0), ('f2', 1), ('f2', 2), ('f2', 3)))
+
+
+    #---------------------------------------------------------------------------
+    def test_quilt_axis_array_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+
+        with self.assertRaises(AxisInvalid):
+            _ = tuple(q1._axis_array(3))
+
+    #---------------------------------------------------------------------------
+    def test_quilt_axis_tuple_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+
+        with self.assertRaises(AxisInvalid):
+            _ = tuple(q1._axis_tuple(axis=3))
+
+    def test_quilt_axis_tuple_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+
+        rows = tuple(q1._axis_tuple(axis=0, constructor=tuple))
+        self.assertEqual(rows,
+                ((-88017, 92867, 84967, 13448),
+                (-610.8, 3243.94, -823.14, 114.58),
+                (-3648, 91301, 30205, 54020),
+                (1080.4, 2580.34, 700.42, 3338.48),
+                (False, False, False, True),
+                (False, False, False, False),
+                (True, False, False, True),
+                (False, False, True, True)))
+
+    #---------------------------------------------------------------------------
+    def test_quilt_iter_series_items_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+
+        items = dict(q1.iter_series_items())
+        self.assertEqual(tuple(items.keys()),
+                (('f1', 0), ('f1', 1), ('f1', 2), ('f1', 3), ('f2', 0), ('f2', 1), ('f2', 2), ('f2', 3))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_quilt_head_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+        self.assertEqual(q1.head(2).to_pairs(),
+                ((('f1', 0), ((0, -88017), (1, 92867))), (('f1', 1), ((0, -610.8), (1, 3243.94))), (('f1', 2), ((0, -3648), (1, 91301))), (('f1', 3), ((0, 1080.4), (1, 2580.34))), (('f2', 0), ((0, False), (1, False))), (('f2', 1), ((0, False), (1, False))), (('f2', 2), ((0, True), (1, False))), (('f2', 3), ((0, False), (1, False)))))
+
+
+    #---------------------------------------------------------------------------
+    def test_quilt_tail_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+        self.assertEqual(q1.tail(2).to_pairs(),
+                ((('f1', 0), ((2, 84967), (3, 13448))), (('f1', 1), ((2, -823.14), (3, 114.58))), (('f1', 2), ((2, 30205), (3, 54020))), (('f1', 3), ((2, 700.42), (3, 3338.48))), (('f2', 0), ((2, False), (3, True))), (('f2', 1), ((2, False), (3, False))), (('f2', 2), ((2, False), (3, True))), (('f2', 3), ((2, True), (3, True))))
+                )
+
 
 
 if __name__ == '__main__':
