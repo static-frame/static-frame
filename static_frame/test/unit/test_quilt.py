@@ -1060,8 +1060,8 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2))
         q1 = Quilt(b1, retain_labels=True, axis=1)
         from collections import namedtuple
-        NT = namedtuple('NT', tuple('abcd'))
-        post = tuple(q1.iter_tuple(constructor=NT))
+        NT = namedtuple('NT', tuple('abcd')) #type: ignore
+        post = tuple(q1.iter_tuple(constructor=NT)) #type: ignore
         self.assertEqual(len(post), 8)
         self.assertEqual(post[0].__class__, NT)
 
