@@ -1293,7 +1293,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2))
         q1 = Quilt(b1, retain_labels=True, axis=1)
 
-        rows = tuple(q1._axis_tuple(axis=0, constructor=tuple))
+        rows = tuple(q1._axis_tuple(axis=0, constructor=tuple)) #type: ignore [arg-type]
         self.assertEqual(rows,
                 ((-88017, 92867, 84967, 13448),
                 (-610.8, 3243.94, -823.14, 114.58),
