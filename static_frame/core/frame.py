@@ -7069,14 +7069,20 @@ class FrameAssignBLoc(FrameAssign):
             index = self.container._index
             columns = self.container._columns
 
-            # NOTE: this can be done more efficiently with a new function on TypeBlocks
-            array = np.empty(key.shape, dtype=value.dtype)
+            values_map = {}
             for (i, c), e in value.items():
-                array[index._loc_to_iloc(i), columns._loc_to_iloc(c)] = e
+                values_map[index._loc_to_iloc(i), columns._loc_to_iloc(c)] = e
 
-            value = array
-            # TODO: implement special method
-            blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
+            # array = np.empty(key.shape, dtype=value.dtype)
+            # for (i, c), e in value.items():
+            #     array[index._loc_to_iloc(i), columns._loc_to_iloc(c)] = e
+
+            # NOTE: should we pass dtype here, or re-evaluate dtype from observed values for each block?
+            blocks = self.container._blocks.extract_bloc_assign_by_coordinate(
+                    key,
+                    values_map,
+                    value.values.dtype,
+                    )
 
         elif is_frame:
             # NOTE: the type of FILL_VALUE_DEFAULT might coerce other blocks

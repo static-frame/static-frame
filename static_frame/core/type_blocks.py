@@ -1809,7 +1809,6 @@ class TypeBlocks(ContainerOperand):
         values_source.reverse()
 
         for block in self._blocks:
-
             if block.ndim == 1:
                 t_end = t_start + 1
                 target_slice = t_start
@@ -1864,6 +1863,62 @@ class TypeBlocks(ContainerOperand):
                     a_start = a_end
 
             t_start = t_end
+
+
+    def _assign_from_bloc_by_coordinate(self,
+            bloc_key: np.ndarray,
+            values_map: tp.Dict[tp.Tuple[int, int], tp.Any],
+            values_dtype: np.dtype,
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        For assignment from a Series of coordinate/value pairs, as extracted via a bloc selection.
+
+        Args:
+            values_coord: will be sorted by column
+        '''
+        t_start = 0
+        target_slice: tp.Union[int, slice]
+
+        # get a mutable list in reverse order for pop/pushing
+        # values_source = list(values)
+        # values_source.reverse()
+
+        for block in self._blocks:
+            if block.ndim == 1:
+                t_end = t_start + 1
+                target_slice = t_start
+                t_width = 1
+            else:
+                t_end = t_start + block.shape[1]
+                target_slice = slice(t_start, t_end)
+                t_width = t_end - t_start
+
+            # target will only be 1D when block is 1d
+            target = bloc_key[NULL_SLICE, target_slice]
+
+            if not target.any():
+                yield block
+            else:
+                assigned_dtype = resolve_dtype(values_dtype, block.dtype)
+                if block.dtype == assigned_dtype:
+                    assigned = block.copy()
+                else:
+                    assigned = block.astype(assigned_dtype)
+
+                # get coordinates and fill
+                # import ipdb; ipdb.set_trace()
+                if block.ndim == 1: # target will be 1D
+                    for row_pos in np.nonzero(target)[0]:
+                        assigned[row_pos] = values_map[(row_pos, t_start)]
+                else:
+                    for row_pos, col_pos in zip(np.nonzero(target)):
+                        assigned[row_pos, col_pos] = values_map[
+                                (row_pos, t_start + col_pos)]
+
+                assigned.flags.writeable = False
+                yield assigned
+
+            t_start = t_end # always update start
 
 
     #---------------------------------------------------------------------------
@@ -2080,6 +2135,18 @@ class TypeBlocks(ContainerOperand):
                 bloc_key=key,
                 values=values
                 ))
+
+    def extract_bloc_assign_by_coordinate(self,
+            key: np.ndarray,
+            values_map: tp.Dict[tp.Tuple[int, int], tp.Any],
+            values_dtype: np.dtype,
+            ) -> 'TypeBlocks':
+        return TypeBlocks.from_blocks(self._assign_from_bloc_by_coordinate(
+                bloc_key=key,
+                values_map=values_map,
+                values_dtype=values_dtype,
+                ))
+
 
     #---------------------------------------------------------------------------
     def drop(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
