@@ -7065,13 +7065,15 @@ class FrameAssignBLoc(FrameAssign):
                 container=self.container
                 )
         if is_series:
-            # assumes a Series from a bloc selection
+            # assumes a Series from a bloc selection, i.e., tuples of index/col loc labels
             index = self.container._index
             columns = self.container._columns
+
             # NOTE: this can be done more efficiently with a new function on TypeBlocks
             array = np.empty(key.shape, dtype=value.dtype)
             for (i, c), e in value.items():
                 array[index._loc_to_iloc(i), columns._loc_to_iloc(c)] = e
+
             value = array
             # TODO: implement special method
             blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
