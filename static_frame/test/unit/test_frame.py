@@ -3047,10 +3047,17 @@ class TestUnit(TestCase):
     def test_frame_assign_bloc_g(self) -> None:
         f = sf.Frame.from_records(((None, np.datetime64('2020-01-01')), (np.datetime64('1764-01-01'), None)))
         f2 = f.assign.bloc[~f.isna()].apply(lambda s: s.astype('datetime64[ms]'))
-
         self.assertEqual(f2.to_pairs(),
                 ((0, ((0, None), (1, datetime.datetime(1764, 1, 1, 0, 0)))), (1, ((0, datetime.datetime(2020, 1, 1, 0, 0)), (1, None))))
                 )
+
+    def test_frame_assign_bloc_h(self) -> None:
+
+        f1 = ff.parse('s(4,8)|v(int,int,float,float,bool,bool,int,int)')
+        f2 = f1.assign.bloc[f1 < 0].apply(lambda s: s * -1)
+        self.assertEqual([dt.kind for dt in f2.dtypes.values],
+                ['f', 'f', 'f', 'f', 'b', 'b', 'f', 'f'])
+        self.assertEqual((f2 >= 0).values.sum(), 32)
 
     #---------------------------------------------------------------------------
     def test_frame_mask_loc_a(self) -> None:
@@ -9347,8 +9354,9 @@ class TestUnit(TestCase):
                 name='f3')
 
         s1 = f1.bloc[(f1 <= 2) | (f1 > 4)]
+        # import ipdb; ipdb.set_trace()
         self.assertEqual(s1.to_pairs(),
-                ((('y', 'a'), 2), (('y', 'b'), 5), (('z', 'a'), 1), (('z', 'b'), 6))
+                ((('y', 'a'), 2), (('z', 'a'), 1), (('y', 'b'), 5), (('z', 'b'), 6))
                 )
 
         s2 = f2.bloc[(f2 < 0)]

@@ -3716,13 +3716,10 @@ class Frame(ContainerOperand):
         2D Boolean selector, selected by either a Boolean 2D Frame or array.
         '''
         bloc_key = bloc_key_normalize(key=key, container=self)
-        values = self.values[bloc_key]
-        values.flags.writeable = False
-        # NOTE: the usage of np.nonzero forces a row-major, C-style ordering of labels; would prefer a column major ordering
+        coords, values = self._blocks.extract_bloc(bloc_key) # immutable, 1D array
         index = Index(
-                (self._index[x], self._columns[y])
-                for x, y in zip(*np.nonzero(bloc_key))
-                )
+                ((self._index[x], self._columns[y]) for x, y in coords),
+                dtype=DTYPE_OBJECT)
         return Series(values, index=index, own_index=True)
 
     def _compound_loc_to_getitem_iloc(self,
@@ -7069,13 +7066,10 @@ class FrameAssignBLoc(FrameAssign):
             index = self.container._index
             columns = self.container._columns
 
+            # cannot assume order of coordinates, so create a mapping for lookup by coordinate
             values_map = {}
             for (i, c), e in value.items():
                 values_map[index._loc_to_iloc(i), columns._loc_to_iloc(c)] = e
-
-            # array = np.empty(key.shape, dtype=value.dtype)
-            # for (i, c), e in value.items():
-            #     array[index._loc_to_iloc(i), columns._loc_to_iloc(c)] = e
 
             # NOTE: should we pass dtype here, or re-evaluate dtype from observed values for each block?
             blocks = self.container._blocks.extract_bloc_assign_by_coordinate(
@@ -7119,6 +7113,7 @@ class FrameAssignBLoc(FrameAssign):
             *,
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
+        # use the Boolean key for a bloc selection, which always returns a Series
         value = func(self.container.bloc[self.key])
         return self.__call__(value, fill_value=fill_value)
 

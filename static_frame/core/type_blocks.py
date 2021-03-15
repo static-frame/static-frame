@@ -1879,10 +1879,6 @@ class TypeBlocks(ContainerOperand):
         t_start = 0
         target_slice: tp.Union[int, slice]
 
-        # get a mutable list in reverse order for pop/pushing
-        # values_source = list(values)
-        # values_source.reverse()
-
         for block in self._blocks:
             if block.ndim == 1:
                 t_end = t_start + 1
@@ -1906,12 +1902,11 @@ class TypeBlocks(ContainerOperand):
                     assigned = block.astype(assigned_dtype)
 
                 # get coordinates and fill
-                # import ipdb; ipdb.set_trace()
                 if block.ndim == 1: # target will be 1D
                     for row_pos in np.nonzero(target)[0]:
                         assigned[row_pos] = values_map[(row_pos, t_start)]
                 else:
-                    for row_pos, col_pos in zip(np.nonzero(target)):
+                    for row_pos, col_pos in zip(*np.nonzero(target)):
                         assigned[row_pos, col_pos] = values_map[
                                 (row_pos, t_start + col_pos)]
 
@@ -2073,7 +2068,6 @@ class TypeBlocks(ContainerOperand):
                 shape_reference=self._shape
                 )
 
-
     def _extract_iloc(self,
             key: GetItemKeyTypeCompound
             ) -> 'TypeBlocks':
@@ -2087,6 +2081,44 @@ class TypeBlocks(ContainerOperand):
         if isinstance(key, tuple):
             return TypeBlocks.from_blocks(self._mask_blocks(*key))
         return TypeBlocks.from_blocks(self._mask_blocks(row_key=key))
+
+    def extract_bloc(self,
+            bloc_key: np.ndarray,
+            ) -> tp.Tuple[tp.List[tp.Tuple[int, int]], np.ndarray]:
+        '''
+        Extract a 1D array from TypeBlocks, doing minimal type coercion.
+        '''
+        parts = []
+        coords = []
+        # dt_resolve = None
+        t_start = 0
+        for block in self._blocks:
+            if block.ndim == 1:
+                t_end = t_start + 1
+                target_slice = t_start
+            else:
+                t_end = t_start + block.shape[1]
+                target_slice = slice(t_start, t_end)
+
+            # target will only be 1D when block is 1d
+            target = bloc_key[NULL_SLICE, target_slice]
+            if not target.any():
+                t_start = t_end
+                continue
+            # will always reduce to a 1D array
+            parts.append(block[target])
+
+            # get coordinates
+            if block.ndim == 1: # target will be 1D
+                for row_pos in np.nonzero(target)[0]:
+                    coords.append((row_pos, t_start))
+            else:
+                for row_pos, col_pos in zip(*np.nonzero(target)):
+                    coords.append((row_pos, t_start + col_pos))
+            t_start = t_end
+
+        # NOTE: could be a little more efficient if observe dtype in first iteration and do on
+        return coords, concat_resolved(parts)
 
     #---------------------------------------------------------------------------
     # assignment interfaces
