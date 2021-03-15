@@ -2091,8 +2091,10 @@ class TypeBlocks(ContainerOperand):
         parts = []
         coords = []
 
+        dt_resolve: tp.Optional[np.dtype] = None
+        size: int = 0
         target_slice: tp.Union[int, slice]
-        # dt_resolve = None
+
         t_start = 0
         for block in self._blocks:
             if block.ndim == 1:
@@ -2107,8 +2109,15 @@ class TypeBlocks(ContainerOperand):
             if not target.any():
                 t_start = t_end
                 continue
+
             # will always reduce to a 1D array
-            parts.append(block[target])
+            part = block[target]
+            if dt_resolve is None:
+                dt_resolve = part.dtype
+            else:
+                dt_resolve = resolve_dtype(dt_resolve, part.dtype)
+            size += len(part)
+            parts.append(part)
 
             # get coordinates
             if block.ndim == 1: # target will be 1D
@@ -2119,8 +2128,11 @@ class TypeBlocks(ContainerOperand):
                     coords.append((row_pos, t_start + col_pos))
             t_start = t_end
 
-        # NOTE: could be a little more efficient if observe dtype in first iteration and do on
-        return coords, concat_resolved(parts)
+        array = np.empty(shape=size, dtype=dt_resolve)
+        np.concatenate(parts, out=array)
+        array.flags.writeable = False
+
+        return coords, array
 
     #---------------------------------------------------------------------------
     # assignment interfaces

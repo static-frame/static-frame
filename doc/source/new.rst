@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Refined ``Frame.bloc`` selections for better type preservation.
 
+Improved ``Frame.assign.bloc`` when assigning with ``Series`` and ``Frame``.
+
 
 0.8.3
 ----------
