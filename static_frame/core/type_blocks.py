@@ -2090,6 +2090,8 @@ class TypeBlocks(ContainerOperand):
         '''
         parts = []
         coords = []
+
+        target_slice: tp.Union[int, slice]
         # dt_resolve = None
         t_start = 0
         for block in self._blocks:

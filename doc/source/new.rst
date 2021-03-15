@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.4
+----------
+
+Refined ``Frame.bloc`` selections for better type preservation.
+
+
 0.8.3
 ----------
 
