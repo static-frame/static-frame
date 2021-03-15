@@ -4,7 +4,7 @@ What is New in Static Frame
 0.8.4
 ----------
 
-Refined ``Frame.bloc`` selections for better type preservation.
+Refined ``Frame.bloc`` selections to reduce type coercion.
 
 Improved ``Frame.assign.bloc`` when assigning with ``Series`` and ``Frame``.
 

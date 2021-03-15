@@ -3059,6 +3059,19 @@ class TestUnit(TestCase):
                 ['f', 'f', 'f', 'f', 'b', 'b', 'f', 'f'])
         self.assertEqual((f2 >= 0).values.sum(), 32)
 
+    def test_frame_assign_bloc_i(self) -> None:
+
+        f1 = ff.parse('s(4,8)|v(int,int,bool,bool,int,bool,int,int)')
+        s1 = f1.bloc[(f1 % 2) == 1]
+        self.assertEqual(s1.to_pairs(),
+                (((0, 0), -88017), ((0, 1), 162197), ((1, 0), 92867), ((1, 1), -41157), ((2, 0), 84967), ((2, 1), 5729), ((3, 1), -168387), ((0, 2), True), ((2, 3), True), ((3, 2), True), ((3, 3), True), ((3, 4), 32395), ((1, 5), True), ((3, 5), True), ((0, 7), 137759), ((2, 6), 32395), ((3, 6), 137759))
+                )
+
+        self.assertEqual(
+                f1.assign.bloc[(f1 % 2) == 1].apply(lambda s: s.clip(lower=-1, upper=1)).to_pairs(),
+                ((0, ((0, -1), (1, 1), (2, 1), (3, 13448))), (1, ((0, 1), (1, -1), (2, 1), (3, -1))), (2, ((0, True), (1, False), (2, False), (3, True))), (3, ((0, False), (1, False), (2, True), (3, True))), (4, ((0, 58768), (1, 146284), (2, 170440), (3, 1))), (5, ((0, False), (1, True), (2, False), (3, True))), (6, ((0, 146284), (1, 170440), (2, 1), (3, 1))), (7, ((0, 1), (1, -62964), (2, 172142), (3, -154686))))
+                )
+
     #---------------------------------------------------------------------------
     def test_frame_mask_loc_a(self) -> None:
 
