@@ -4017,6 +4017,19 @@ class TestUnit(TestCase):
         self.assertTrue(id(s1.index.values_at_depth(1)) != id(s2.index.values_at_depth(1)))
 
 
+    #---------------------------------------------------------------------------
+    def test_series_std_a(self) -> None:
+
+        s1 = Series(range(1, 6))
+        self.assertEqual(round(s1.std(), 2), 1.41)
+        self.assertEqual(round(s1.std(ddof=1), 2), 1.58)
+
+    #---------------------------------------------------------------------------
+    def test_series_var_a(self) -> None:
+
+        s1 = Series(range(1, 6))
+        self.assertEqual(round(s1.var(), 2), 2.0)
+        self.assertEqual(round(s1.var(ddof=1), 2), 2.5)
 
 
 if __name__ == '__main__':

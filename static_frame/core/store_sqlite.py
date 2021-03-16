@@ -102,10 +102,11 @@ class StoreSQLite(Store):
         config_map = StoreConfigMap.from_initializer(config)
 
         # NOTE: register adapters for NP types:
-        # numpy types go in as blobs if they are not individualy converted tp python types
+        # numpy types go in as blobs if they are not individually converted tp python types
         sqlite3.register_adapter(np.int64, int)
         sqlite3.register_adapter(np.int32, int)
         sqlite3.register_adapter(np.int16, int)
+        sqlite3.register_adapter(np.bool_, bool)
         # common python types
         sqlite3.register_adapter(Fraction, str)
         sqlite3.register_adapter(complex, lambda x: f'{x.real}:{x.imag}')

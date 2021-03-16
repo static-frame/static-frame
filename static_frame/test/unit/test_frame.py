@@ -2866,6 +2866,41 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_assign_loc_i(self) -> None:
+        f1 = ff.parse('s(3,4)|c(I,str)')
+        f2 = f1.assign.loc[[0, 2], ['zkuW','zUvW']](0)
+        self.assertEqual(f2.to_pairs(),
+                (('zZbu', ((0, 1930.4), (1, -1760.34), (2, 1857.34))), ('ztsv', ((0, -610.8), (1, 3243.94), (2, -823.14))), ('zUvW', ((0, 0.0), (1, -72.96), (2, 0.0))), ('zkuW', ((0, 0.0), (1, 2580.34), (2, 0.0))))
+                )
+
+    def test_frame_assign_loc_j(self) -> None:
+        f1 = sf.Frame.from_dict(dict(
+                comp_id=(1, 2, 3, 1, 2, 3, 1, 2, 3),
+                year=(2000, 2000, 2000, 2001, 2001, 2001, 2002, 2002, 2002),
+                return_total=(0.01,-0.02,0.05,-0.015,0.02,0.015,0.002,0.003,0.01),
+                return_price=(0.01,-0.02,0.05,-0.015,0.02,0.015,0.002,0.003,0.01),
+                ))
+        na_flds = ['return_price', 'return_total']
+        na_cells = f1['comp_id'].isin((2, )) & f1['year'].isin((2001, 2002))
+
+        f2 = f1.assign.loc[na_cells, na_flds](None)
+        self.assertEqual(f2.to_pairs(0),
+                (('comp_id', ((0, 1), (1, 2), (2, 3), (3, 1), (4, 2), (5, 3), (6, 1), (7, 2), (8, 3))), ('year', ((0, 2000), (1, 2000), (2, 2000), (3, 2001), (4, 2001), (5, 2001), (6, 2002), (7, 2002), (8, 2002))), ('return_total', ((0, 0.01), (1, -0.02), (2, 0.05), (3, -0.015), (4, None), (5, 0.015), (6, 0.002), (7, None), (8, 0.01))), ('return_price', ((0, 0.01), (1, -0.02), (2, 0.05), (3, -0.015), (4, None), (5, 0.015), (6, 0.002), (7, None), (8, 0.01))))
+                )
+
+    def test_frame_assign_loc_k(self) -> None:
+        f1 = ff.parse('s(2,6)|c(I,int)|v(int)').relabel(columns=range(6))
+        f2 = f1.assign.loc[1, [4, 2, 0, 1]](0)
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, -88017), (1, 0))), (1, ((0, 162197), (1, 0))), (2, ((0, -3648), (1, 0))), (3, ((0, 129017), (1, 35021))), (4, ((0, 58768), (1, 0))), (5, ((0, 84967), (1, 13448))))
+                )
+
+        f3 = f1.assign.loc[1, [4, 2, 0, 1]](Series(tuple('abcd'), index=(0,1,2,4)))
+        self.assertEqual(f3.to_pairs(),
+                ((0, ((0, -88017), (1, 'a'))), (1, ((0, 162197), (1, 'b'))), (2, ((0, -3648), (1, 'c'))), (3, ((0, 129017), (1, 35021))), (4, ((0, 58768), (1, 'd'))), (5, ((0, 84967), (1, 13448))))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_assign_coercion_a(self) -> None:
@@ -3012,9 +3047,29 @@ class TestUnit(TestCase):
     def test_frame_assign_bloc_g(self) -> None:
         f = sf.Frame.from_records(((None, np.datetime64('2020-01-01')), (np.datetime64('1764-01-01'), None)))
         f2 = f.assign.bloc[~f.isna()].apply(lambda s: s.astype('datetime64[ms]'))
-
         self.assertEqual(f2.to_pairs(),
                 ((0, ((0, None), (1, datetime.datetime(1764, 1, 1, 0, 0)))), (1, ((0, datetime.datetime(2020, 1, 1, 0, 0)), (1, None))))
+                )
+
+    def test_frame_assign_bloc_h(self) -> None:
+
+        f1 = ff.parse('s(4,8)|v(int,int,float,float,bool,bool,int,int)')
+        f2 = f1.assign.bloc[f1 < 0].apply(lambda s: s * -1)
+        self.assertEqual([dt.kind for dt in f2.dtypes.values],
+                ['f', 'f', 'f', 'f', 'b', 'b', 'f', 'f'])
+        self.assertEqual((f2 >= 0).values.sum(), 32)
+
+    def test_frame_assign_bloc_i(self) -> None:
+
+        f1 = ff.parse('s(4,8)|v(int,int,bool,bool,int,bool,int,int)')
+        s1 = f1.bloc[(f1 % 2) == 1]
+        self.assertEqual(s1.to_pairs(),
+                (((0, 0), -88017), ((0, 1), 162197), ((1, 0), 92867), ((1, 1), -41157), ((2, 0), 84967), ((2, 1), 5729), ((3, 1), -168387), ((0, 2), True), ((2, 3), True), ((3, 2), True), ((3, 3), True), ((3, 4), 32395), ((1, 5), True), ((3, 5), True), ((0, 7), 137759), ((2, 6), 32395), ((3, 6), 137759))
+                )
+
+        self.assertEqual(
+                f1.assign.bloc[(f1 % 2) == 1].apply(lambda s: s.clip(lower=-1, upper=1)).to_pairs(),
+                ((0, ((0, -1), (1, 1), (2, 1), (3, 13448))), (1, ((0, 1), (1, -1), (2, 1), (3, -1))), (2, ((0, True), (1, False), (2, False), (3, True))), (3, ((0, False), (1, False), (2, True), (3, True))), (4, ((0, 58768), (1, 146284), (2, 170440), (3, 1))), (5, ((0, False), (1, True), (2, False), (3, True))), (6, ((0, 146284), (1, 170440), (2, 1), (3, 1))), (7, ((0, 1), (1, -62964), (2, 172142), (3, -154686))))
                 )
 
     #---------------------------------------------------------------------------
@@ -3548,8 +3603,15 @@ class TestUnit(TestCase):
                 f1.std(axis=1).values.tolist(),
                 np.std(f1.values, axis=1).tolist())
 
+    def test_frame_std_b(self) -> None:
 
+        f1 = Frame(np.arange(1, 21).reshape(4, 5))
+        self.assertEqual(round(f1.std(), 2).values.tolist(), #type: ignore [attr-defined]
+                [5.59, 5.59, 5.59, 5.59, 5.59])
+        self.assertEqual(round(f1.std(ddof=1), 2).values.tolist(), #type: ignore [attr-defined]
+                [6.45, 6.45, 6.45, 6.45, 6.45])
 
+    #---------------------------------------------------------------------------
     def test_frame_var_a(self) -> None:
 
         a1 = np.array([
@@ -3572,7 +3634,16 @@ class TestUnit(TestCase):
                 f1.var(axis=1).values.tolist(),
                 np.var(f1.values, axis=1).tolist())
 
+    def test_frame_var_b(self) -> None:
 
+        f1 = Frame(np.arange(1, 21).reshape(4, 5))
+
+        self.assertEqual(round(f1.var(), 2).values.tolist(), #type: ignore [attr-defined]
+                [31.25, 31.25, 31.25, 31.25, 31.25])
+        self.assertEqual(round(f1.var(ddof=1), 2).values.tolist(), #type: ignore [attr-defined]
+                [41.67, 41.67, 41.67, 41.67, 41.67])
+
+    #---------------------------------------------------------------------------
 
     def test_frame_prod_a(self) -> None:
 
@@ -9296,8 +9367,9 @@ class TestUnit(TestCase):
                 name='f3')
 
         s1 = f1.bloc[(f1 <= 2) | (f1 > 4)]
+        # import ipdb; ipdb.set_trace()
         self.assertEqual(s1.to_pairs(),
-                ((('y', 'a'), 2), (('y', 'b'), 5), (('z', 'a'), 1), (('z', 'b'), 6))
+                ((('y', 'a'), 2), (('z', 'a'), 1), (('y', 'b'), 5), (('z', 'b'), 6))
                 )
 
         s2 = f2.bloc[(f2 < 0)]
@@ -11414,6 +11486,7 @@ class TestUnit(TestCase):
         self.assertEqual(id(f2._blocks._blocks[0]), a2_id)
         self.assertEqual(id(f2._blocks._blocks[1]), a2_id)
         self.assertEqual(id(f2._blocks._blocks[2]), a2_id)
+
 
 
 

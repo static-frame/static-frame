@@ -104,7 +104,7 @@ class IndexDatetime(Index):
         array.flags.writeable = False
         return array
 
-    def loc_to_iloc(self,  # type: ignore
+    def _loc_to_iloc(self,  # type: ignore
             key: GetItemKeyType,
             *,
             offset: tp.Optional[int] = None,
@@ -114,7 +114,7 @@ class IndexDatetime(Index):
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
         # not passing self.dtype to key_to_datetime_key so as to allow translation to a foreign datetime; slice comparison will be handled by map_slice_args
-        return Index.loc_to_iloc(self,
+        return Index._loc_to_iloc(self,
                 key=key,
                 offset=offset,
                 key_transform=key_to_datetime_key,
@@ -128,6 +128,29 @@ class IndexDatetime(Index):
         import pandas
         return pandas.DatetimeIndex(self.values.copy(),
                 name=self._name)
+
+
+    #---------------------------------------------------------------------------
+
+    @doc_inject(selector='searchsorted', label_type='iloc (integer)')
+    def iloc_searchsorted(self,
+            values: tp.Any,
+            *,
+            side_left: bool = True,
+            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+        '''
+        {doc}
+
+        Args:
+            {values}
+            {side_left}
+        '''
+        # permit variable forms of date specification
+        return Index.iloc_searchsorted(self, #type: ignore [no-any-return]
+                key_to_datetime_key(values),
+                side_left=side_left,
+                )
+
 
 #-------------------------------------------------------------------------------
 class _IndexDatetimeGOMixin(_IndexGOMixin):

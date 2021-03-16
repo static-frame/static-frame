@@ -209,7 +209,7 @@ class LocMap:
         '''
         offset_apply = not offset is None
 
-        # ILoc is handled prior to this call, in the Index.loc_to_iloc method
+        # ILoc is handled prior to this call, in the Index._loc_to_iloc method
 
         if isinstance(key, slice):
             if offset_apply and key == NULL_SLICE:
@@ -710,7 +710,7 @@ class Index(IndexBase):
     def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
         '''Create a new index after removing the values specified by the loc key.
         '''
-        return self._drop_iloc(self.loc_to_iloc(key))
+        return self._drop_iloc(self._loc_to_iloc(key))
 
 
     @property
@@ -900,7 +900,7 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
     # extraction and selection
 
-    def loc_to_iloc(self,
+    def _loc_to_iloc(self,
             key: GetItemKeyType,
             offset: tp.Optional[int] = None,
             key_transform: KeyTransformType = None,
@@ -944,6 +944,7 @@ class Index(IndexBase):
 
                 key = slice_to_inclusive_slice(key)
 
+                # NOTE: this slice transformation could be a utility function in ArrayKit
                 def slice_attrs() -> tp.Iterator[int]:
                     for attr in SLICE_ATTRS:
                         if attr != SLICE_STEP_ATTR:
@@ -977,6 +978,42 @@ class Index(IndexBase):
                 partial_selection=partial_selection,
                 )
 
+    def loc_to_iloc(self,
+            key: GetItemKeyType,
+            ) -> GetItemKeyType:
+        '''Given a label (loc) style key (either a label, a list of labels, a slice, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
+
+        Args:
+            key: a label key.
+        '''
+        if self._map is None: # loc is iloc
+            is_bool_array = isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL
+
+            try:
+                result = self._positions[key]
+            except IndexError:
+                # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
+                if is_bool_array:
+                    raise # loc selection on Boolean array selection returns IndexError
+                raise KeyError(key)
+            except TypeError:
+                raise LocInvalid(f'Invalid loc: {key}')
+
+            if is_bool_array:
+                return result # return position as array
+
+            if isinstance(key, slice):
+                if key == NULL_SLICE:
+                    return slice(0, self.__len__())
+                if key.stop >= len(self):
+                    # while a valid slice of positions, loc lookups do not permit over-stating boundaries
+                    raise LocInvalid(f'Invalid loc: {key}')
+                key = slice_to_inclusive_slice(key)
+
+            return key
+
+        return self._loc_to_iloc(key)
+
     def _extract_iloc(self,
             key: GetItemKeyType
             ) -> tp.Union['Index', tp.Hashable]:
@@ -1005,7 +1042,7 @@ class Index(IndexBase):
     def _extract_loc(self: I,
             key: GetItemKeyType
             ) -> tp.Union['Index', tp.Hashable]:
-        return self._extract_iloc(self.loc_to_iloc(key))
+        return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self: I,
             key: GetItemKeyType

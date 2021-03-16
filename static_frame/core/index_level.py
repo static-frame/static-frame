@@ -435,10 +435,10 @@ class IndexLevel:
                 return False
 
             if node.targets is not None:
-                node = node.targets[node.index.loc_to_iloc(k)]
+                node = node.targets[node.index._loc_to_iloc(k)]
                 continue
 
-            node.index.loc_to_iloc(k)
+            node.index._loc_to_iloc(k)
             return True # if above does not raise
 
         return False
@@ -462,11 +462,11 @@ class IndexLevel:
             if isinstance(k, KEY_MULTIPLE_TYPES):
                 raise RuntimeError(f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].')
             if node.targets is not None:
-                node = node.targets[node.index.loc_to_iloc(k)]
+                node = node.targets[node.index._loc_to_iloc(k)]
                 pos += node.offset
             else: # targets is None, meaning we are at max depth
                 # k returns an integer
-                offset = node.index.loc_to_iloc(k)
+                offset = node.index._loc_to_iloc(k)
                 assert isinstance(offset, INT_TYPES) # enforces leaf loc
                 if key_depth == key_depth_max:
                     return pos + offset
@@ -521,7 +521,7 @@ class IndexLevel:
             if level.targets is None:
                 try:
                     # NOTE: as a selection list might be given within the HLoc, it will be tested accross many indices, and should support a partial matching
-                    ilocs.append(level.index.loc_to_iloc(
+                    ilocs.append(level.index._loc_to_iloc(
                             depth_key,
                             offset=next_offset,
                             partial_selection=True,
@@ -530,7 +530,7 @@ class IndexLevel:
                     pass
             else: # when not at a leaf, we are selecting level_targets to descend withing
                 try: # NOTE: no offset necessary as not a leaf selection
-                    iloc = level.index.loc_to_iloc(depth_key, partial_selection=True)
+                    iloc = level.index._loc_to_iloc(depth_key, partial_selection=True)
                 except KeyError:
                     pass
                 else:

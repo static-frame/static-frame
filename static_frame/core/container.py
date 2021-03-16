@@ -1,5 +1,6 @@
 import typing as tp
 import operator as operator_mod
+from functools import partial
 
 import numpy as np
 
@@ -398,6 +399,7 @@ class ContainerOperand(ContainerBase):
     def std(self,
             axis: int = 0,
             skipna: bool = True,
+            ddof: int = 0,
             out: tp.Optional[np.ndarray] = None,
             ) -> tp.Any:
         '''Return the standard deviaton along the specified axis.
@@ -407,8 +409,8 @@ class ContainerOperand(ContainerBase):
         return self._ufunc_axis_skipna(
                 axis=axis,
                 skipna=skipna,
-                ufunc=np.std,
-                ufunc_skipna=np.nanstd,
+                ufunc=partial(np.std, ddof=ddof),
+                ufunc_skipna=partial(np.nanstd, ddof=ddof),
                 composable=False,
                 dtypes=(DTYPE_FLOAT_DEFAULT,), # Ufuncs only return real result.
                 size_one_unity=False
@@ -418,6 +420,7 @@ class ContainerOperand(ContainerBase):
     def var(self,
             axis: int = 0,
             skipna: bool = True,
+            ddof: int = 0,
             out: tp.Optional[np.ndarray] = None,
             ) -> tp.Any:
         '''Return the variance along the specified axis.
@@ -427,8 +430,8 @@ class ContainerOperand(ContainerBase):
         return self._ufunc_axis_skipna(
                 axis=axis,
                 skipna=skipna,
-                ufunc=np.var,
-                ufunc_skipna=np.nanvar,
+                ufunc=partial(np.var, ddof=ddof),
+                ufunc_skipna=partial(np.nanvar, ddof=ddof),
                 composable=False,
                 dtypes=(DTYPE_FLOAT_DEFAULT,), # Ufuncs only return real result.
                 size_one_unity=False

@@ -288,27 +288,6 @@ class PairRight(Pair):
 
 #-------------------------------------------------------------------------------
 
-def is_hashable(value: tp.Any) -> bool:
-    '''
-    Determine if a value is hashable without raising an exception.
-    '''
-    try:
-        hash(value)
-        return True
-    except TypeError:
-        pass
-    return False
-
-def reversed_iter(value: tp.Iterator[tp.Any]) -> tp.Iterator[tp.Any]:
-    '''Wrapper around built-in reversed() that handles generators by realizing them and then reversing.
-    '''
-    try:
-        yield from reversed(value) #type: ignore
-    except TypeError:
-        pass
-    yield from reversed(tuple(value))
-
-
 def mloc(array: np.ndarray) -> int:
     '''Return the memory location of an array.
     '''
@@ -1552,6 +1531,13 @@ def array_shift(*,
 def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
     yield from map(tuple, array)
 
+# might replace some usage of above with this
+# def array2d_to_array1d_tuples(array: np.ndarray) -> np.ndarray:
+#     post = np.empty(array.shape[0], dtype=object)
+#     for i, row in enumerate(array):
+#         post[i] = tuple(row)
+#     post.flags.writeable = False
+#     return post
 
 def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     '''
@@ -1563,24 +1549,25 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     if array[-1] == False: #pylint: disable=C0121
         # if last values is False, no contiguous region
         return length
-    if not array.any(): # if not any are true, no regions found
+    count = array.sum()
+    if count == 0: # if not any are true, no regions found
         return length
-    if array.all(): # if all are true
+    if count == length: # if all are true
         return 0
 
     transitions = np.empty(length, dtype=bool)
     transitions[0] = False # first value not a transition
     # compare current to previous; do not compare first
     np.not_equal(array[:-1], array[1:], out=transitions[1:])
-
+    # transition_idx must always contain at least one index from here
     transition_idx: tp.Sequence[int] = np.nonzero(transitions)[0]
-    if not len(transition_idx): # this may not ever happen
-        return length
-    # if last segment is all True
-    last_idx = transition_idx[-1]
-    if array[last_idx:].all():
-        return last_idx
-    return length
+    # last element must be True, so there will always be one transition, and the last transition will mark the boundary of a contiguous region
+    return transition_idx[-1]
+
+    # NOTE: last checks are not necessary
+    # if array[last_idx:].all():
+    #     return last_idx
+    # return length
 
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
@@ -2198,7 +2185,7 @@ def array_from_element_apply(*,
     '''
     Handle element-wise function application.
     '''
-    if array.ndim == 1 and dtype != DTYPE_OBJECT:
+    if array.ndim == 1 and dtype != DTYPE_OBJECT and dtype.kind not in DTYPE_STR_KINDS:
         post = np.fromiter(
                 (func(d) for d in array),
                 count=len(array),

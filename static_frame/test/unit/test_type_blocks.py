@@ -1580,7 +1580,7 @@ class TestUnit(TestCase):
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
 
-        self.assertEqual(tb.extract_iloc_assign_by_unit(1, 600).values.tolist(),
+        self.assertEqual(tb.extract_iloc_assign_by_unit((1, None), 600).values.tolist(),
                 [[1, 2, 3, False, False, True, 'a', 'b'],
                 [600, 600, 600, 600, 600, 600, 600, 600],
                 [0, 0, 1, True, False, True, 'oe', 'od']])

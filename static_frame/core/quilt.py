@@ -44,6 +44,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import concat_resolved
 
 
 def get_extractor(
@@ -850,9 +851,9 @@ class Quilt(ContainerBase, StoreClientMixin):
             if len(self._bus) == 1:
                 return extractor(self._bus.iloc[0].values)
 
-            # NOTE: do not need to call extractor when np.concatenate is called, as a new array is always allocated.
+            # NOTE: do not need to call extractor when concatenate is called, as a new array is always allocated.
             arrays = [f.values for _, f in self._bus.items()]
-            return np.concatenate(
+            return concat_resolved(
                     arrays,
                     axis=self._axis,
                     )
@@ -881,7 +882,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             bus_keys = duplicate_filter(axis_map_sub.values)
 
         for key_count, key in enumerate(bus_keys):
-            sel_component = sel[self._axis_map.index.loc_to_iloc(HLoc[key])]
+            sel_component = sel[self._axis_map.index._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
                 component = self._bus.loc[key]._extract_array(sel_component, opposite_key) #type: ignore [attr-defined]
@@ -900,10 +901,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         if len(parts) == 1:
             return extractor(parts.pop())
 
-        # NOTE: np.concatenate always allocates a new array, thus no need for extractor above
+        # NOTE: concatenate always allocates a new array, thus no need for extractor above
         if sel_reduces or opposite_reduces:
-            return np.concatenate(parts)
-        return np.concatenate(parts, axis=self._axis)
+            # NOTE: not sure if concat_resolved is needed here
+            return concat_resolved(parts)
+        return concat_resolved(parts, axis=self._axis)
 
     def _extract(self,
             row_key: GetItemKeyType = None,
@@ -964,7 +966,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             bus_keys = duplicate_filter(axis_map_sub.values)
 
         for key_count, key in enumerate(bus_keys):
-            sel_component = sel[self._axis_map.index.loc_to_iloc(HLoc[key])]
+            sel_component = sel[self._axis_map.index._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
                 component = self._bus.loc[key].iloc[sel_component, opposite_key]
@@ -1019,12 +1021,12 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if isinstance(key, tuple):
             loc_row_key, loc_column_key = key
-            iloc_column_key = self._columns.loc_to_iloc(loc_column_key)
+            iloc_column_key = self._columns._loc_to_iloc(loc_column_key)
         else:
             loc_row_key = key
             iloc_column_key = None
 
-        iloc_row_key = self._index.loc_to_iloc(loc_row_key)
+        iloc_row_key = self._index._loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
     def _extract_loc(self, key: GetItemKeyTypeCompound) -> tp.Union[Series, Frame]:
@@ -1036,7 +1038,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
         '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
-        iloc_column_key = self._columns.loc_to_iloc(key)
+        iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
     @doc_inject(selector='selector')

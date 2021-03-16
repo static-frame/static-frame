@@ -90,7 +90,7 @@ class TestUnit(TestCase):
 
         idx1 = IndexDate(['2017', '2018'])
         self.assertTrue(idx1[0].__class__ == np.datetime64)
-        self.assertEqual(idx1.loc_to_iloc('2018-01-01'), 1)
+        self.assertEqual(idx1._loc_to_iloc('2018-01-01'), 1)
 
         idx2 = IndexDate(['2017-01', '2018-07'])
         self.assertTrue(idx2[0].__class__ == np.datetime64)
@@ -440,13 +440,13 @@ class TestUnit(TestCase):
         index = IndexDate.from_date_range('2018-01-01', '2018-03-01')
 
         self.assertEqual(
-                index.loc_to_iloc(np.datetime64('2018-02-11')),
+                index._loc_to_iloc(np.datetime64('2018-02-11')),
                 41)
 
-        self.assertEqual(index.loc_to_iloc('2018-02-11'), 41)
+        self.assertEqual(index._loc_to_iloc('2018-02-11'), 41)
 
         self.assertEqual(
-                index.loc_to_iloc(slice('2018-02-11', '2018-02-24')),
+                index._loc_to_iloc(slice('2018-02-11', '2018-02-24')),
                 slice(41, 55, None))
 
     def test_index_date_loc_to_iloc_b(self) -> None:
@@ -456,7 +456,7 @@ class TestUnit(TestCase):
         # with self.assertRaises(RuntimeError):
         #     _ = index.loc_to_iloc(['2017-12-01', '2018-01-01', '2018-02-01'])
 
-        post = index.loc_to_iloc(
+        post = index._loc_to_iloc(
                 ['2017-12-01', '2018-01-01', '2018-02-01'],
                 partial_selection=True)
         self.assertEqual(post, [0, 31])
@@ -782,6 +782,69 @@ class TestUnit(TestCase):
         # we reject year-mos when calling from_date_range
         with self.assertRaises(RuntimeError):
             _ = IndexYearMonth.from_date_range(date_min, date_max)
+
+    #---------------------------------------------------------------------------
+    def test_index_datetime_iloc_searchsorted_a(self) -> None:
+        dt64 = np.datetime64
+        idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
+        self.assertEqual(idx.iloc_searchsorted(dt64('2020-01-05')), 4)
+
+        self.assertEqual(
+                idx.iloc_searchsorted([dt64('2020-01-05'), dt64('2020-01-31')]).tolist(),
+                [4, 30]
+                )
+        self.assertEqual(
+                idx.iloc_searchsorted([dt64('2020-01-05'), dt64('2020-01-31')], side_left=False).tolist(),
+                [5, 31]
+                )
+
+    def test_index_datetime_iloc_searchsorted_b(self) -> None:
+        dt64 = np.datetime64
+        idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
+        self.assertEqual(idx.iloc_searchsorted('2020-01-05'), 4)
+        self.assertEqual(idx.iloc_searchsorted(datetime.date(2020, 1, 5)), 4)
+
+
+    def test_index_datetime_loc_searchsorted_a(self) -> None:
+        dt64 = np.datetime64
+        idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
+        self.assertEqual(idx.loc_searchsorted(dt64('2020-01-05')).tolist(), datetime.date(2020, 1, 5))
+
+        self.assertEqual(
+                idx.loc_searchsorted([dt64('2020-01-05'), dt64('2020-01-31')],
+                        side_left=False,
+                        fill_value=None).tolist(),
+                [datetime.date(2020, 1, 6), None]
+                )
+
+    def test_index_datetime_loc_searchsorted_b(self) -> None:
+        dt64 = np.datetime64
+        idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
+        self.assertEqual(idx.loc_searchsorted('2020-01-05').tolist(), datetime.date(2020, 1, 5))
+
+        self.assertEqual(
+                idx.loc_searchsorted(['2020-01-05', '2020-01-31'],
+                        side_left=False,
+                        fill_value=None).tolist(),
+                [datetime.date(2020, 1, 6), None]
+                )
+
+
+    #---------------------------------------------------------------------------
+    def test_index_datetime_loc_to_iloc_a(self) -> None:
+        dt64 = np.datetime64
+        idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
+
+        self.assertEqual(idx.loc_to_iloc(['2020-01-15', '2020-01-29']),
+                [14, 28])
+
+        self.assertEqual(idx.loc_to_iloc(idx == dt64('2020-01-13')).tolist(), #type: ignore [union-attr]
+                [12])
+        self.assertEqual(idx.loc_to_iloc(slice('2020-01-15', '2020-01-29')),
+                slice(14, 29, None))
+
+        self.assertEqual(idx.loc_to_iloc('2020-01-29'), 28)
+
 
 
 if __name__ == '__main__':

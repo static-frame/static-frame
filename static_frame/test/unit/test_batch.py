@@ -520,7 +520,7 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1, f2))
         b2 = b1.bloc[f2 >= 2]
         post = list(s.values.tolist() for s in b2.values)
-        self.assertEqual(post, [[30, 40, 50], [4, 2, 5, 3, 6]])
+        self.assertEqual(post, [[30, 40, 50], [2, 3, 4, 5, 6]])
 
 
     #---------------------------------------------------------------------------

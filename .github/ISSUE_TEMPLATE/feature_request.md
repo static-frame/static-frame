@@ -11,6 +11,14 @@ assignees: ''
 
 Describe the feature.
 
+**Example**
+
+Provide code or pseudo code demonstrating how the feature might work, or how current behavior might be changed.
+
+```python
+
+```
+
 **Platform**
 
 Run the following function (static-frame >= 0.8.1) and provide the results to define your platform and environment:
@@ -18,13 +26,5 @@ Run the following function (static-frame >= 0.8.1) and provide the results to de
 ```python
 >>> import static_frame as sf
 >>> sf.Platform.display()
-```
-
-**Example**
-
-Provide code or pseudo code demonstrating how the feature might work, or how current behavior might be changed.
-
-```python
-
 ```
 

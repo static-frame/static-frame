@@ -1374,7 +1374,7 @@ class Frame(ContainerOperand):
         if axis is None:
             if not is_dtype_specifier(dtype):
                 raise ErrorInitFrame('cannot provide multiple dtypes when creating a Frame from element items and axis is None')
-            items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
+            items = (((index._loc_to_iloc(k[0]), columns._loc_to_iloc(k[1])), v)
                     for k, v in items)
             dtype = dtype if dtype is not None else DTYPE_OBJECT
             tb = TypeBlocks.from_element_items(
@@ -1503,7 +1503,7 @@ class Frame(ContainerOperand):
                 own_columns = True
 
                 if columns_select:
-                    iloc_sel = columns.loc_to_iloc(columns.isin(columns_select))
+                    iloc_sel = columns._loc_to_iloc(columns.isin(columns_select))
                     selector = itemgetter(*iloc_sel)
                     selector_reduces = len(iloc_sel) == 1
                     columns = columns.iloc[iloc_sel]
@@ -3698,12 +3698,12 @@ class Frame(ContainerOperand):
         '''
         if isinstance(key, tuple):
             loc_row_key, loc_column_key = key
-            iloc_column_key = self._columns.loc_to_iloc(loc_column_key)
+            iloc_column_key = self._columns._loc_to_iloc(loc_column_key)
         else:
             loc_row_key = key
             iloc_column_key = None
 
-        iloc_row_key = self._index.loc_to_iloc(loc_row_key)
+        iloc_row_key = self._index._loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
 
@@ -3716,20 +3716,17 @@ class Frame(ContainerOperand):
         2D Boolean selector, selected by either a Boolean 2D Frame or array.
         '''
         bloc_key = bloc_key_normalize(key=key, container=self)
-        values = self.values[bloc_key]
-        values.flags.writeable = False
-        # NOTE: the usage of np.nonzero forces a row-major, C-style ordering of labels; would prefer a column major ordering
+        coords, values = self._blocks.extract_bloc(bloc_key) # immutable, 1D array
         index = Index(
-                (self._index[x], self._columns[y])
-                for x, y in zip(*np.nonzero(bloc_key))
-                )
+                ((self._index[x], self._columns[y]) for x, y in coords),
+                dtype=DTYPE_OBJECT)
         return Series(values, index=index, own_index=True)
 
     def _compound_loc_to_getitem_iloc(self,
             key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
         '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
-        iloc_column_key = self._columns.loc_to_iloc(key)
+        iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
     @doc_inject(selector='selector')
@@ -4218,9 +4215,9 @@ class Frame(ContainerOperand):
             key: We accept any thing that can do loc to iloc. Note that a tuple is permitted as key, where it would be interpreted as a single label for an IndexHierarchy.
         '''
         if axis == 0: # row iterator, selecting columns for group by
-            iloc_key = self._columns.loc_to_iloc(key)
+            iloc_key = self._columns._loc_to_iloc(key)
         elif axis == 1: # column iterator, selecting rows for group by
-            iloc_key = self._index.loc_to_iloc(key)
+            iloc_key = self._index._loc_to_iloc(key)
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
@@ -4473,7 +4470,7 @@ class Frame(ContainerOperand):
         values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
 
         if axis == 0: # get a column ordering based on one or more rows
-            iloc_key = self._index.loc_to_iloc(label)
+            iloc_key = self._index._loc_to_iloc(label)
             if key:
                 cfs = key(self._extract(row_key=iloc_key))
                 cfs_is_array = isinstance(cfs, np.ndarray)
@@ -4501,7 +4498,7 @@ class Frame(ContainerOperand):
                             for i in range(cfs.shape[0]-1, -1, -1)]
 
         elif axis == 1: # get a row ordering based on one or more columns
-            iloc_key = self._columns.loc_to_iloc(label)
+            iloc_key = self._columns._loc_to_iloc(label)
             if key:
                 cfs = key(self._extract(column_key=iloc_key))
                 cfs_is_array = isinstance(cfs, np.ndarray)
@@ -4731,7 +4728,7 @@ class Frame(ContainerOperand):
         '''
         Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
         '''
-        column_iloc = self._columns.loc_to_iloc(column)
+        column_iloc = self._columns._loc_to_iloc(column)
 
         if drop:
             blocks = TypeBlocks.from_blocks(
@@ -4783,7 +4780,7 @@ class Frame(ContainerOperand):
             column_loc = columns
             column_name = None # could be a slice, must get post iloc conversion
 
-        column_iloc = self._columns.loc_to_iloc(column_loc)
+        column_iloc = self._columns._loc_to_iloc(column_loc)
 
         if column_name is None:
             column_name = tuple(self._columns.values[column_iloc])
@@ -5189,7 +5186,7 @@ class Frame(ContainerOperand):
         index_loc = index_fields if index_depth > 1 else index_fields[0]
         index_values = ufunc_unique(
                 self._blocks._extract_array(
-                        column_key=self._columns.loc_to_iloc(index_loc)),
+                        column_key=self._columns._loc_to_iloc(index_loc)),
                 axis=0)
 
         # index_inner is used for avoiding dealing with IndexHierarchy
@@ -5275,11 +5272,11 @@ class Frame(ContainerOperand):
             for group, sub in self.iter_group_items(columns_group):
                 if index_fields_len == 1:
                     sub_index_labels = sub._blocks._extract_array(row_key=None,
-                            column_key=sub.columns.loc_to_iloc(index_fields[0]))
+                            column_key=sub.columns._loc_to_iloc(index_fields[0]))
                 else: # match to an index of tuples; the order might not be the same as IH
                     sub_index_labels = tuple(zip(*(
                             sub._blocks._extract_array(row_key=None,
-                                    column_key=sub.columns.loc_to_iloc(f))
+                                    column_key=sub.columns._loc_to_iloc(f))
                             for f in index_fields)))
 
                 sub_columns = extrapolate_column_fields(
@@ -5321,9 +5318,9 @@ class Frame(ContainerOperand):
                 else:
                     if func_single: # assume no aggregation necessary
                         if len(data_fields) == 1:
-                            data_fields_iloc = sub.columns.loc_to_iloc(data_fields[0])
+                            data_fields_iloc = sub.columns._loc_to_iloc(data_fields[0])
                         else:
-                            data_fields_iloc = sub.columns.loc_to_iloc(data_fields)
+                            data_fields_iloc = sub.columns._loc_to_iloc(data_fields)
                         sub_frame = Frame(
                                 sub._blocks._extract(row_key=None,
                                         column_key=data_fields_iloc),
@@ -5334,7 +5331,7 @@ class Frame(ContainerOperand):
                             for field in data_fields:
                                 for _, func in func_map:
                                     yield sub._blocks._extract_array(row_key=None,
-                                            column_key=sub.columns.loc_to_iloc(field))
+                                            column_key=sub.columns._loc_to_iloc(field))
                         sub_frame = Frame(
                                 TypeBlocks.from_blocks(blocks()),
                                 index=sub_index_labels,
@@ -5644,8 +5641,8 @@ class Frame(ContainerOperand):
                 values = []
                 for loc in final_index:
                     # what if loc is in both left and rihgt?
-                    if loc in left_index and left_index.loc_to_iloc(loc) in map_iloc:
-                        iloc = map_iloc[left_index.loc_to_iloc(loc)]
+                    if loc in left_index and left_index._loc_to_iloc(loc) in map_iloc:
+                        iloc = map_iloc[left_index._loc_to_iloc(loc)]
                         assert len(iloc) == 1 # not is_many, so all have to be length 1
                         values.append(other.iloc[iloc[0], idx_col])
                     elif loc in right_index:
@@ -5660,11 +5657,11 @@ class Frame(ContainerOperand):
         final_index_left = []
         for p in final_index:
             if p.__class__ is Pair: # in both
-                iloc = left_index.loc_to_iloc(p[0])
+                iloc = left_index._loc_to_iloc(p[0])
                 row_key.append(iloc)
                 final_index_left.append(p)
             elif p.__class__ is PairLeft:
-                row_key.append(left_index.loc_to_iloc(p[0]))
+                row_key.append(left_index._loc_to_iloc(p[0]))
                 final_index_left.append(p)
 
         # extract potentially repeated rows
@@ -5954,7 +5951,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        iloc_key = self._columns.loc_to_iloc(key)
+        iloc_key = self._columns._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
         return self._insert(iloc_key, container, fill_value=fill_value)
@@ -5977,7 +5974,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        iloc_key = self._columns.loc_to_iloc(key)
+        iloc_key = self._columns._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
         return self._insert(iloc_key + 1, container, fill_value=fill_value)
@@ -6265,7 +6262,7 @@ class Frame(ContainerOperand):
 
                     for index_labels, value in c.items():
                         # translate to index positions
-                        insert_pos = [coords_index[k].loc_to_iloc(label)
+                        insert_pos = [coords_index[k]._loc_to_iloc(label)
                                 for k, label in zip(coords, index_labels)]
                         # must convert to tuple to give position per dimension
                         array[tuple(insert_pos)] = value
@@ -6985,9 +6982,16 @@ class FrameAssignILoc(FrameAssign):
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
-        # NOTE: the iloc key's order is not relevant in assignment
+        if isinstance(self.key, tuple):
+            # NOTE: the iloc key's order is not relevant in assignment, and block assignment requires that column keys are ascending
+            key = (self.key[0], #type: ignore [index]
+                    key_to_ascending_key(
+                    self.key[1],
+                    self.container.shape[1])) #type: ignore [index]
+        else:
+            key = (self.key, None)
+
         if is_series:
-            key = self.key
             assigned = self.container._reindex_other_like_iloc(value,
                     key,
                     fill_value=fill_value).values
@@ -6996,10 +7000,6 @@ class FrameAssignILoc(FrameAssign):
                     assigned,
                     )
         elif is_frame:
-            # block assignment requires that column keys are ascending
-            # conform the passed in value to the targets given by self.key
-            key = (self.key[0], #type: ignore [index]
-                    key_to_ascending_key(self.key[1], self.container.shape[1])) #type: ignore [index]
             assigned = self.container._reindex_other_like_iloc(value, #type: ignore [union-attr]
                     key,
                     fill_value=fill_value)._blocks._blocks
@@ -7008,7 +7008,6 @@ class FrameAssignILoc(FrameAssign):
                     assigned,
                     )
         else: # could be array or single element
-            key = self.key
             assigned = value
             blocks = self.container._blocks.extract_iloc_assign_by_unit(
                     key,
@@ -7057,39 +7056,49 @@ class FrameAssignBLoc(FrameAssign):
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
+        # get Bollean key of normalized shape; in most cases this will be a new, mutable array
         key = bloc_key_normalize(
                 key=self.key,
                 container=self.container
                 )
         if is_series:
-            # assumes a Series from a bloc selection
+            # assumes a Series from a bloc selection, i.e., tuples of index/col loc labels
             index = self.container._index
             columns = self.container._columns
-            # NOTE: this can be done more efficiently with a new function on TypeBlocks
-            array = np.empty(key.shape, dtype=value.dtype)
-            for (i, c), e in value.items():
-                array[index.loc_to_iloc(i), columns.loc_to_iloc(c)] = e
-            value = array
 
-        if is_frame:
-            # NOTE: we are forcing a values consolidation here; should be avoided.
+            # cannot assume order of coordinates, so create a mapping for lookup by coordinate
+            values_map = {}
+            for (i, c), e in value.items():
+                values_map[index._loc_to_iloc(i), columns._loc_to_iloc(c)] = e
+
+            # NOTE: should we pass dtype here, or re-evaluate dtype from observed values for each block?
+            blocks = self.container._blocks.extract_bloc_assign_by_coordinate(
+                    key,
+                    values_map,
+                    value.values.dtype,
+                    )
+
+        elif is_frame:
+            # NOTE: the type of FILL_VALUE_DEFAULT might coerce other blocks
             value = value.reindex(
                     index=self.container._index,
                     columns=self.container._columns,
-                    fill_value=FILL_VALUE_DEFAULT
-                    ).values
+                    fill_value=FILL_VALUE_DEFAULT)
+            values = value._blocks._blocks
 
             # if we produced any invalid entries, cannot select them
-            invalid_found = value == FILL_VALUE_DEFAULT
+            invalid_found = (value == FILL_VALUE_DEFAULT).values
             if invalid_found.any():
-                key = key.copy() # mutate a copy
+                if not key.flags.writeable:
+                    key = key.copy() # mutate a copy
                 key[invalid_found] = False
 
-        elif isinstance(value, np.ndarray):
-            if value.shape != self.container.shape:
-                raise RuntimeError(f'value must match shape {self.container.shape}')
+            blocks = self.container._blocks.extract_bloc_assign_by_blocks(key, values)
 
-        blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
+        else: # an array or an element
+            if isinstance(value, np.ndarray) and value.shape != self.container.shape:
+                raise RuntimeError(f'value must match shape {self.container.shape}')
+            blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
 
         return self.container.__class__(
                 data=blocks,
@@ -7104,6 +7113,7 @@ class FrameAssignBLoc(FrameAssign):
             *,
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
+        # use the Boolean key for a bloc selection, which always returns a Series
         value = func(self.container.bloc[self.key])
         return self.__call__(value, fill_value=fill_value)
 
@@ -7130,7 +7140,7 @@ class FrameAsType:
         if self.column_key == NULL_SLICE:
             if is_mapping(dtypes):
                 # translate keys loc to iloc
-                dtypes = {self.container._columns.loc_to_iloc(k): v
+                dtypes = {self.container._columns._loc_to_iloc(k): v
                         for k, v in dtypes.items()} #type: ignore [union-attr]
             gen = self.container._blocks._astype_blocks_from_dtypes(dtypes)
         else:

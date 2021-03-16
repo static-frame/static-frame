@@ -511,6 +511,42 @@ def axis_window_items( *,
         if count > count_window_max or idx_left > idx_left_max or size < 0:
             break
 
+def get_block_match(
+        width: int,
+        values_source: tp.List[np.ndarray],
+        ) -> tp.Iterator[np.ndarray]:
+    '''Utility method for assignment. Draw from values to provide as many columns as specified by width. Use `values_source` as a stack to draw and replace values.
+    '''
+    # see clip().get_block_match() for one example of drawing values from another sequence of blocks, where we take blocks and slices from blocks using a list as a stack
+
+    if width == 1: # no loop necessary
+        v = values_source.pop()
+        if v.ndim == 1:
+            yield v
+        else: # ndim == 2
+            if v.shape[1] > 1: # more than one column
+                # restore remained to values source
+                values_source.append(v[NULL_SLICE, 1:])
+            yield v[NULL_SLICE, 0]
+    else:
+        width_found = 0
+        while width_found < width:
+            v = values_source.pop()
+            if v.ndim == 1:
+                yield v
+                width_found += 1
+                continue
+            # ndim == 2
+            width_v = v.shape[1]
+            width_needed = width - width_found
+            if width_v <= width_needed:
+                yield v
+                width_found += width_v
+                continue
+            # width_v > width_needed
+            values_source.append(v[NULL_SLICE, width_needed:])
+            yield v[NULL_SLICE, :width_needed]
+            break
 
 def bloc_key_normalize(
         key: Bloc2DKeyType,
@@ -536,7 +572,7 @@ def bloc_key_normalize(
         raise RuntimeError(f'invalid bloc_key, must be Frame or array, not {key}')
 
     if not bloc_key.dtype == bool:
-        raise RuntimeError('cannot use non-Bolean dtype as bloc key')
+        raise RuntimeError('cannot use non-Boolean dtype as bloc key')
 
     return bloc_key
 
@@ -795,7 +831,7 @@ def arrays_from_index_frame(
         # NOTE: if a multi-column selection, might be better to yield one depth at a time
         yield container.index.values_at_depth(depth_level)
     if columns is not None:
-        column_key = container.columns.loc_to_iloc(columns)
+        column_key = container.columns._loc_to_iloc(columns)
         yield from container._blocks._slice_blocks(column_key=column_key)
 
 

@@ -1,6 +1,28 @@
 What is New in Static Frame
 ===============================
 
+0.8.4
+----------
+
+Refined ``Frame.bloc`` selections to reduce type coercion.
+
+Improved ``Frame.assign.bloc`` when assigning with ``Series`` and ``Frame``.
+
+
+0.8.3
+----------
+
+Added ``iloc_searchsorted()`` and ``loc_searchsorted()`` to ``Index``, ``IndexDatetime``, and ``IndexHierarchy``.
+
+Added ``ddof`` parameter to all containers that expose ``std`` and ``var``.
+
+Fixed issue with ``Frame.assign`` where there was a dependency on the order of column labels given in selection.
+
+Improved handling for NumPy Boolean types stored in SQLite DBs via ``StoreSQLite`` interfaces.
+
+Improved `loc_to_iloc()` methods to raise for missing keys in `Index` created where `loc_is_iloc`.
+
+
 0.8.2
 ----------
 
