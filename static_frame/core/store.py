@@ -409,7 +409,7 @@ def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
 
 
 def store_coherent_write(f: AnyCallable) -> AnyCallable:
-    '''Decorator for dervied Store classes implementation of write()
+    '''Decorator for derived Store classes implementation of write()
     '''
     @wraps(f)
     def wrapper(self: 'Store', *args: tp.Any, **kwargs: tp.Any) -> tp.Any:

@@ -274,6 +274,30 @@ class StoreZipParquet(_StoreZip):
             consolidate_blocks=config.consolidate_blocks,
         )
 
+    @staticmethod
+    def _frame_to_bytes(item):
+        config, label, frame = item
+        dst = BytesIO()
+        # call from class to explicitly pass self as frame
+        frame.to_parquet(
+                dst,
+                include_index=config.include_index,
+                include_index_name=config.include_index_name,
+                include_columns=config.include_columns,
+                include_columns_name=config.include_columns_name,
+                )
+        return label, dst.getvalue()
+
+    @classmethod
+    def _multiprocess_serialize(
+            cls,
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            chunksize: int,
+            max_workers:int,
+            ):
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            yield from executor.map(cls._frame_to_bytes, items, chunksize=chunksize)
+
     @store_coherent_write
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
@@ -282,21 +306,26 @@ class StoreZipParquet(_StoreZip):
             ) -> None:
 
         config_map = StoreConfigMap.from_initializer(config)
+        multiprocess = (config_map.default.write_max_workers is not None and
+                        config_map.default.write_max_workers > 1)
 
-        with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
+        def gen():
             for label, frame in items:
                 c = config_map[label]
+                yield c.to_store_config_he(), label, frame
+
+        if multiprocess:
+            label_and_bytes = self._multiprocess_serialize(
+                    gen(),
+                    chunksize=config_map.default.write_chunksize,
+                    max_workers=config_map.default.write_max_workers,
+            )
+        else:
+            label_and_bytes = (self._frame_to_bytes(x) for x in gen())
+
+        with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for label, bytes_ in label_and_bytes:
                 label_encoded = config_map.default.label_encode(label)
 
-                dst = BytesIO()
-                # call from class to explicitly pass self as frame
-                frame.to_parquet(
-                        dst,
-                        include_index=c.include_index,
-                        include_index_name=c.include_index_name,
-                        include_columns=c.include_columns,
-                        include_columns_name=c.include_columns_name,
-                        )
-                dst.seek(0)
                 # this will write it without a container
-                zf.writestr(label_encoded + self._EXT_CONTAINED, dst.read())
+                zf.writestr(label_encoded + self._EXT_CONTAINED, bytes_)

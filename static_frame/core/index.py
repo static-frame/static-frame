@@ -316,7 +316,7 @@ class Index(IndexBase):
     _name: NameType
 
     #---------------------------------------------------------------------------
-    # methods used in __init__ that are customized in dervied classes; there, we need to mutate instance state, this these are instance methods
+    # methods used in __init__ that are customized in derived classes; there, we need to mutate instance state, this these are instance methods
     @staticmethod
     def _extract_labels(
             mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
