@@ -92,7 +92,6 @@ def get_col_dtype_factory(
             dtypes = tuple(dtypes) #type: ignore
         return dtypes[col_idx] #type: ignore
 
-
     return get_col_dtype
 
 

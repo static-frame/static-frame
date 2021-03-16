@@ -8990,6 +8990,42 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_frame_from_sql_a(self) -> None:
+        conn: sqlite3.Connection = self.get_test_db_e()
+
+        f1 = sf.Frame.from_sql('select * from events',
+                connection=conn,
+                dtypes={'date': 'datetime64[D]'}
+                )
+        self.assertEqual([dt.kind for dt in f1.dtypes.values],
+                ['M', 'U', 'f', 'i'])
+
+        f2 = sf.Frame.from_sql('select * from events',
+                connection=conn,
+                dtypes={'date': 'datetime64[D]'},
+                index_depth=2,
+                )
+
+        self.assertEqual([dt.kind for dt in f2.index.dtypes.values],
+                ['M', 'U'])
+
+        self.assertEqual(f2.to_pairs(0),
+                (('value', (((np.datetime64('2006-01-01'), 'a1'), 12.5), ((np.datetime64('2006-01-01'), 'b2'), 12.5), ((np.datetime64('2006-01-02'), 'a1'), 12.5), ((np.datetime64('2006-01-02'), 'b2'), 12.5))), ('count', (((np.datetime64('2006-01-01'), 'a1'), 20), ((np.datetime64('2006-01-01'), 'b2'), 21), ((np.datetime64('2006-01-02'), 'a1'), 22), ((np.datetime64('2006-01-02'), 'b2'), 23))))
+                )
+
+    def test_frame_from_sql_b(self) -> None:
+        conn: sqlite3.Connection = self.get_test_db_f()
+
+        f1 = sf.Frame.from_sql('select * from events',
+                connection=conn,
+                dtypes={'date': 'datetime64[D]', 'count': 'float'},
+                index_depth=1,
+                )
+        self.assertEqual(f1.index.dtype.kind, 'f')
+        self.assertEqual(f1.to_pairs(),
+                (('date', ((20.0, np.datetime64('2006-01-01')), (21.0, np.datetime64('2006-01-01')), (22.0, np.datetime64('2006-01-02')), (23.0, np.datetime64('2006-01-02')))), ('identifier', ((20.0, 'a1'), (21.0, 'b2'), (22.0, 'a1'), (23.0, 'b2'))), ('value', ((20.0, 12.5), (21.0, 12.5), (22.0, 12.5), (23.0, 12.5))))
+                )
+
     def test_frame_from_sql_no_args(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_a()
 

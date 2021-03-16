@@ -213,6 +213,34 @@ class TestCase(unittest.TestCase):
         conn.commit()
         return conn
 
+    @staticmethod
+    def get_test_db_e() -> sqlite3.Connection:
+        conn = sqlite3.connect(':memory:')
+        c = conn.cursor()
+        c.execute('''CREATE TABLE events
+             (date text, identifier text, value real, count int)''')
+        count = 20
+        for date in ('2006-01-01', '2006-01-02'):
+            for identifier in ('a1', 'b2'):
+                c.execute(f"INSERT INTO events VALUES ('{date}','{identifier}',12.5,{count})")
+                count += 1
+        conn.commit()
+        return conn
+
+    @staticmethod
+    def get_test_db_f() -> sqlite3.Connection:
+        conn = sqlite3.connect(':memory:')
+        c = conn.cursor()
+        c.execute('''CREATE TABLE events
+             (count int, date text, identifier text, value real)''')
+        count = 20
+        for date in ('2006-01-01', '2006-01-02'):
+            for identifier in ('a1', 'b2'):
+                c.execute(f"INSERT INTO events VALUES ({count},'{date}','{identifier}',12.5)")
+                count += 1
+        conn.commit()
+        return conn
+
     #---------------------------------------------------------------------------
 
     def assertEqualWithNaN(self,
