@@ -1527,7 +1527,7 @@ class Frame(ContainerOperand):
                             yield row[1:]
                 else: # > 1
                     index = [list() for _ in range(index_depth)]
-                    def index_constructor(iterables) -> IndexHierarchy:
+                    def index_constructor(iterables) -> IndexHierarchy: #pylint: disable=function-redefined
                         if get_col_dtype:
                             blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
                                     for i, it in enumerate(iterables)]
