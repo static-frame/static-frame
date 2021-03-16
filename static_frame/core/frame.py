@@ -1510,18 +1510,37 @@ class Frame(ContainerOperand):
 
             index_constructor = None
             if index_depth > 0:
-                index = [] # lazily populate
+                # map dtypes in context of pre-index extraction
+                get_col_dtype = None if dtypes is None else get_col_dtype_factory(
+                        dtypes,
+                        [col for (col, *_) in cursor.description],
+                        )
                 if index_depth == 1:
-                    index_constructor = Index
+                    index = [] # lazily populate
+                    if get_col_dtype:
+                        index_constructor = partial(Index, dtype=get_col_dtype(0))
+                    else:
+                        index_constructor = Index
                     def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
                         for row in cursor:
                             index.append(row[0])
                             yield row[1:]
                 else: # > 1
-                    index_constructor = IndexHierarchy.from_labels
+                    index = [list() for _ in range(index_depth)]
+                    def index_constructor(iterables) -> IndexHierarchy:
+                        if get_col_dtype:
+                            blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
+                                    for i, it in enumerate(iterables)]
+                        else:
+                            blocks = [iterable_to_array_1d(it)[0] for it in iterables]
+                        return IndexHierarchy._from_type_blocks(
+                                TypeBlocks.from_blocks(blocks),
+                                own_blocks=True)
+
                     def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
                         for row in cursor:
-                            index.append(row[:index_depth])
+                            for i, label in enumerate(row[:index_depth]):
+                                index[i].append(label)
                             yield row[index_depth:]
             else:
                 index = None

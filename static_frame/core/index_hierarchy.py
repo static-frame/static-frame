@@ -480,6 +480,7 @@ class IndexHierarchy(IndexBase):
 
         return cls(levels=levels, name=name, blocks=blocks, own_blocks=own_blocks)
 
+    # NOTE: could have a _from_fields (or similar) that takes a sequence of column iterables/arrays
 
     #---------------------------------------------------------------------------
     def __init__(self,

@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.5
+----------
+
+``Frame.from_sql`` now properly applies ``dtypes`` to columns used by ``index_depth`` selections.
+
+
 0.8.4
 ----------
 
