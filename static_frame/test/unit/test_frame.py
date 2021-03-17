@@ -9439,11 +9439,11 @@ class TestUnit(TestCase):
                 index=('a', 'b'),
                 columns=['x', 'y', 'z'])
 
-        s1 = f.bloc[f == True] # return an empty Series
+        s1 = f.bloc[f == True] # pylint: disable=C0121
         self.assertEqual(len(s1), 0)
         self.assertEqual(s1.index.dtype, object)
 
-        s2 = f.bloc[f == False]
+        s2 = f.bloc[f == False] # pylint: disable=C0121
         self.assertEqual(s2.to_pairs(),
                 ((('a', 'x'), False), (('b', 'x'), False), (('a', 'y'), False), (('b', 'y'), False), (('a', 'z'), False), (('b', 'z'), False))
                 )
