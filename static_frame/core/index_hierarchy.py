@@ -1251,7 +1251,7 @@ class IndexHierarchy(IndexBase):
         Return a NumPy array of unique values.
 
         Args:
-            depth_level: defaults to 0 for for a 1D Index.
+            depth_level: Specify a single depth or multiple depths in an iterable.
 
         Returns:
             :obj:`numpy.ndarray`
