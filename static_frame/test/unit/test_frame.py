@@ -9386,6 +9386,7 @@ class TestUnit(TestCase):
                 (('x', 0), ('y', 1), ('z', 0)))
 
 
+    #---------------------------------------------------------------------------
     def test_frame_bloc_a(self) -> None:
 
         f1= Frame.from_dict(
@@ -9429,6 +9430,24 @@ class TestUnit(TestCase):
                 f.assign.bloc[f]('T').assign.bloc[~f]('').to_pairs(0),
                 (('d', (('a', 'T'), ('b', ''))), ('c', (('a', ''), ('b', 'T'))))
                 )
+
+
+    def test_frame_bloc_c(self) -> None:
+
+        f = sf.Frame.from_records(
+                [[False, False, False], [False, False, False]],
+                index=('a', 'b'),
+                columns=['x', 'y', 'z'])
+
+        s1 = f.bloc[f == True] # return an empty Series
+        self.assertEqual(len(s1), 0)
+        self.assertEqual(s1.index.dtype, object)
+
+        s2 = f.bloc[f == False]
+        self.assertEqual(s2.to_pairs(),
+                ((('a', 'x'), False), (('b', 'x'), False), (('a', 'y'), False), (('b', 'y'), False), (('a', 'z'), False), (('b', 'z'), False))
+                )
+
 
     #---------------------------------------------------------------------------
     def test_frame_unset_index_a(self) -> None:

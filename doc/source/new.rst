@@ -8,6 +8,8 @@ What is New in Static Frame
 
 Added ``Index.unique`` and ``IndexHierarchy.unique``, both taking a ``depth_level`` specifier for selecting one or more depths.
 
+Fixed issue with ``Frame.bloc`` selections that result in a zero-sized ``Series``.
+
 
 0.8.4
 ----------

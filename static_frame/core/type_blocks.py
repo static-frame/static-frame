@@ -2128,9 +2128,13 @@ class TypeBlocks(ContainerOperand):
                     coords.append((row_pos, t_start + col_pos))
             t_start = t_end
 
-        array = np.empty(shape=size, dtype=dt_resolve)
-        np.concatenate(parts, out=array)
-        array.flags.writeable = False
+        # if size is zero, dt_resolve will be None
+        if size > 0:
+            array = np.empty(shape=size, dtype=dt_resolve)
+            np.concatenate(parts, out=array)
+            array.flags.writeable = False
+        else:
+            array = EMPTY_ARRAY
 
         return coords, array
 
