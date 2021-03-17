@@ -65,11 +65,13 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import setdiff2d
 from static_frame.core.util import UFunc
 from static_frame.core.util import union2d
+from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import array_sample
 from static_frame.core.util import key_to_datetime_key
-# from static_frame.core.util import array2d_to_array1d_tuples
+from static_frame.core.util import concat_resolved
+
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -598,14 +600,14 @@ class IndexHierarchy(IndexBase):
 
         # if no type blocks, use a levels
         if self._recache:
-            if isinstance(depth_level, int):
+            if isinstance(depth_level, INT_TYPES):
                 yield from self._levels.labels_at_depth(depth_level=depth_level)
             else:
                 yield from zip(
                         *(self._levels.labels_at_depth(depth_level=d) for d in depth_level)
                         )
         else:
-            if isinstance(depth_level, int):
+            if isinstance(depth_level, INT_TYPES):
                 yield from self._blocks._extract_array(column_key=depth_level)
             else:
                 yield from array2d_to_tuples(
@@ -959,7 +961,7 @@ class IndexHierarchy(IndexBase):
 
         sel: GetItemKeyType
 
-        if isinstance(depth_level, int):
+        if isinstance(depth_level, INT_TYPES):
             sel = depth_level
         else:
             sel = list(depth_level)
@@ -970,7 +972,7 @@ class IndexHierarchy(IndexBase):
             depth_level: DepthLevelSpecifier = 0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
         '''{}'''
-        if isinstance(depth_level, int):
+        if isinstance(depth_level, INT_TYPES):
             sel = depth_level
         else:
             raise NotImplementedError('selection from iterables is not implemented')
@@ -1183,7 +1185,6 @@ class IndexHierarchy(IndexBase):
                 )
         return tb.values
 
-
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
@@ -1242,6 +1243,35 @@ class IndexHierarchy(IndexBase):
         return self._levels.__contains__(value)
     #---------------------------------------------------------------------------
     # utility functions
+
+    def unique(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> np.ndarray:
+        '''
+        Return a NumPy array of unique values.
+
+        Args:
+            depth_level: defaults to 0 for for a 1D Index.
+
+        Returns:
+            :obj:`numpy.ndarray`
+        '''
+        pos: tp.Optional[int] = None
+        if not isinstance(depth_level, INT_TYPES):
+            sel = list(depth_level)
+            if len(sel) == 1:
+                pos = sel.pop()
+        else: # is an int
+            pos = depth_level
+
+        if pos is not None:
+            if pos == 0:
+                return self._levels.index.values
+            return np.unique(
+                    concat_resolved(
+                    list(self._levels.index_array_at_depth(pos))
+                    ))
+        return np.unique(array2d_to_array1d(self.values_at_depth(sel)))
 
     @doc_inject()
     def equals(self,

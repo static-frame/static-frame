@@ -848,7 +848,7 @@ class Index(IndexBase):
         '''
         Handle all variety of depth_level specifications for a 1D index: only 0, -1, and lists of the same are valid.
         '''
-        if not isinstance(depth_level, int):
+        if not isinstance(depth_level, INT_TYPES):
             depth_level = tuple(depth_level)
             if len(depth_level) != 1:
                 raise RuntimeError('invalid depth_level', depth_level)
@@ -1164,6 +1164,21 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
     # utility functions
+
+    def unique(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> np.ndarray:
+        '''
+        Return a NumPy array of unique values.
+
+        Args:
+            depth_level: defaults to 0 for for a 1D Index.
+
+        Returns:
+            :obj:`numpy.ndarray`
+        '''
+        self._depth_level_validate(depth_level)
+        return self.values
 
     @doc_inject()
     def equals(self,

@@ -2877,10 +2877,23 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(
-                hidx.loc_searchsorted(
+                hidx.loc_searchsorted   (
                 [('B', '2019-01-07', 2), ('B', '2019-01-08', 1)]).tolist(),
                 [('B', np.datetime64('2019-01-07'), 2),
                 ('B', np.datetime64('2019-01-08'), 1)])
+
+    #---------------------------------------------------------------------------
+    def test_index_hierarchy_unique(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+
+        self.assertEqual(ih1.unique(0).tolist(), [1, 2])
+        self.assertEqual(ih1.unique(1).tolist(), ['a', 'b'])
+        self.assertEqual(ih1.unique(2).tolist(), [2, 5])
+        self.assertEqual(ih1.unique((0, 2)).tolist(),
+                [(1, 2), (1, 5), (2, 2), (2, 5)])
+        self.assertEqual(ih1.unique((1, 2)).tolist(),
+                [('a', 2), ('a', 5), ('b', 2), ('b', 5)])
+
 
 if __name__ == '__main__':
     unittest.main()

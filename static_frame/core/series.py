@@ -2191,16 +2191,12 @@ class Series(ContainerOperand):
             raise RuntimeError(f'Unsupported key type: {key}')
         return self._insert(iloc_key + 1, container)
 
-
-
-
-
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types
 
     def unique(self) -> np.ndarray:
         '''
-        Return a NumPy array of unqiue values.
+        Return a NumPy array of unique values.
 
         Returns:
             :obj:`numpy.ndarray`
