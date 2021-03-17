@@ -6,6 +6,8 @@ What is New in Static Frame
 
 ``Frame.from_sql`` now properly applies ``dtypes`` to columns used by ``index_depth`` selections.
 
+Added ``Index.unique`` and ``IndexHierarchy.unique``, both taking a ``depth_level`` specifier for selecting one or more depths.
+
 
 0.8.4
 ----------
