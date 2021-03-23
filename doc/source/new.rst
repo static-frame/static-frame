@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.6
+----------
+
+Fixed issue where ``Frame.dropna`` fails on single-columns ``Frame``.
+
+
 0.8.5
 ----------
 

@@ -5032,6 +5032,17 @@ class TestUnit(TestCase):
         f4 = f3.dropna()
         self.assertNotEqual(id(f3), id(f4))
 
+    def test_frame_dropna_e(self) -> None:
+
+        f1 = sf.Series([1, 2]).to_frame()
+        f2 = f1.dropna()
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, 1), (1, 2))),))
+
+        f3 = sf.Series([1, 2, np.nan]).to_frame()
+        f4 = f3.dropna()
+        self.assertEqual(f4.to_pairs(0),
+                ((0, ((0, 1), (1, 2))),))
 
 
     #---------------------------------------------------------------------------

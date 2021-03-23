@@ -3324,7 +3324,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0) -> 'Frame':
         '''
-        Return a new ``Frame`` after filling leading (and only leading) null (NaN or None) with the supplied value.
+        Return a new ``Frame`` after filling leading (and only leading) null (NaN or None) with the first observed value.
 
         Args:
             {value}
@@ -3342,7 +3342,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0) -> 'Frame':
         '''
-        Return a new ``Frame`` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
+        Return a new ``Frame`` after filling trailing (and only trailing) null (NaN or None) with the last observed value.
 
         Args:
             {value}
@@ -3360,7 +3360,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0) -> 'Frame':
         '''
-        Return a new ``Frame`` after filling forward null (NaN or None) with the supplied value.
+        Return a new ``Frame`` after filling forward null (NaN or None) with the last observed value.
 
         Args:
             {limit}
@@ -3378,7 +3378,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0) -> 'Frame':
         '''
-        Return a new ``Frame`` after filling backward null (NaN or None) with the supplied value.
+        Return a new ``Frame`` after filling backward null (NaN or None) with the first observed value.
 
         Args:
             {limit}

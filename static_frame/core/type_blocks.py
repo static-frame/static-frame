@@ -570,15 +570,18 @@ class TypeBlocks(ContainerOperand):
         post = np.concatenate([column_2d_filter(x) for x in group], axis=1)
         # NOTE: if give non-native byteorder dtypes, will convert them to native
         if dtype is not None and post.dtype != dtype:
-            # could use `out` arguement of np.concatenate to avoid copy, but would have to calculate resultant size first
+            # could use `out` argument of np.concatenate to avoid copy, but would have to calculate resultant size first
             return post.astype(dtype)
         return post
 
     @classmethod
     def consolidate_blocks(cls,
-            raw_blocks: tp.Iterable[np.ndarray]) -> tp.Iterator[np.ndarray]:
+            raw_blocks: tp.Iterable[np.ndarray],
+            ) -> tp.Iterator[np.ndarray]:
         '''
         Generator consumer, generator producer of np.ndarray, consolidating if types are exact matches.
+
+        Returns: an Iterator of 1D or 2D arrays, consolidated if adjacent.
         '''
         group_dtype: tp.Optional[np.dtype] = None # store type found along contiguous blocks
         group = []
@@ -2990,12 +2993,15 @@ class TypeBlocks(ContainerOperand):
         Args:
             axis: Dimension to drop, where 0 will drop rows and 1 will drop columns based on the condition function applied to a Boolean array.
         '''
-        # get a unified boolean array; as iisna will always return a Boolean, we can simply take the firtst block out of consolidation
+        # get a unified boolean array; as isna will always return a Boolean, we can simply take the first block out of consolidation
         unified = next(self.consolidate_blocks(isna_array(b) for b in self._blocks))
 
         # flip axis to condition funcion
-        condition_axis = 0 if axis else 1
-        to_drop = condition(unified, axis=condition_axis)
+        if unified.ndim == 2:
+            condition_axis = 0 if axis else 1
+            to_drop = condition(unified, axis=condition_axis)
+        else: #ndim == 1
+            to_drop = unified
         to_keep = np.logical_not(to_drop)
 
         if axis == 1:
