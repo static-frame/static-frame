@@ -8149,6 +8149,21 @@ class TestUnit(TestCase):
         f2 = Frame(f1)
         self.assertEqual(f2.name, 'foo')
 
+    def test_frame_rename_b(self) -> None:
+
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'),
+                name='foo')
+
+        f2 = f1.rename(None, index='a', columns='b')
+        self.assertEqual(f2.name, None)
+        self.assertEqual(f2.index.name, 'a')
+        self.assertEqual(f2.columns.name, 'b')
 
     #---------------------------------------------------------------------------
 
@@ -11553,8 +11568,23 @@ class TestUnit(TestCase):
         self.assertEqual(id(f2._blocks._blocks[1]), a2_id)
         self.assertEqual(id(f2._blocks._blocks[2]), a2_id)
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_relabel_shift_in(self) -> None:
+
+        f1 = ff.parse('s(5,4)|i(I,int)|c(I,str)|v(str)')
+
+        f2 = f1.relabel_shift_in('zUvW', axis=0)
+        self.assertEqual(f2.to_pairs(),
+                (('zZbu', (((34715, 'ztsv'), 'zjZQ'), ((-3648, 'zUvW'), 'zO5l'), ((91301, 'zkuW'), 'zEdH'), ((30205, 'zmVj'), 'zB7E'), ((54020, 'z2Oo'), 'zwIp'))), ('ztsv', (((34715, 'ztsv'), 'zaji'), ((-3648, 'zUvW'), 'zJnC'), ((91301, 'zkuW'), 'zDdR'), ((30205, 'zmVj'), 'zuVU'), ((54020, 'z2Oo'), 'zKka'))), ('zkuW', (((34715, 'ztsv'), 'z2Oo'), ((-3648, 'zUvW'), 'z5l6'), ((91301, 'zkuW'), 'zCE3'), ((30205, 'zmVj'), 'zr4u'), ((54020, 'z2Oo'), 'zYVB')))))
 
 
+        f3 = f1.relabel_shift_in(30205, axis=1)
+        self.assertEqual(f3.to_pairs(),
+                ((('zZbu', 'zB7E'), ((34715, 'zjZQ'), (-3648, 'zO5l'), (91301, 'zEdH'), (54020, 'zwIp'))), (('ztsv', 'zuVU'), ((34715, 'zaji'), (-3648, 'zJnC'), (91301, 'zDdR'), (54020, 'zKka'))), (('zUvW', 'zmVj'), ((34715, 'ztsv'), (-3648, 'zUvW'), (91301, 'zkuW'), (54020, 'z2Oo'))), (('zkuW', 'zr4u'), ((34715, 'z2Oo'), (-3648, 'z5l6'), (91301, 'zCE3'), (54020, 'zYVB'))))
+                )
+
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

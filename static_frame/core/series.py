@@ -539,12 +539,18 @@ class Series(ContainerOperand):
         '''{}'''
         return self._name
 
-    def rename(self, name: NameType) -> 'Series':
+    def rename(self,
+            name: NameType,
+            *,
+            index: NameType = NAME_DEFAULT,
+            ) -> 'Series':
         '''
         Return a new Series with an updated name attribute.
         '''
+        i = self._index if index is NAME_DEFAULT else self._index.rename(index)
+
         return self.__class__(self.values,
-                index=self._index,
+                index=i,
                 name=name,
                 )
 

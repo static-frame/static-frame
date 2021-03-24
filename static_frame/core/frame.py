@@ -2603,18 +2603,26 @@ class Frame(ContainerOperand):
 
     @property
     @doc_inject()
-    def name(self) -> tp.Hashable:
+    def name(self) -> NameType:
         '''{}'''
         return self._name
 
-    def rename(self, name: tp.Hashable) -> 'Frame':
+    def rename(self,
+            name: NameType,
+            *,
+            index: NameType = NAME_DEFAULT,
+            columns: NameType = NAME_DEFAULT,
+            ) -> 'Frame':
         '''
-        Return a new Frame with an updated name attribute.
+        Return a new Frame with an updated name attribute. Optionally update the name attribute of ``index`` and ``columns``.
         '''
         # copying blocks does not copy underlying data
+        i = self._index if index is NAME_DEFAULT else self._index.rename(index)
+        c = self._columns if columns is NAME_DEFAULT else self._columns.rename(columns)
+
         return self.__class__(self._blocks.copy(),
-                index=self._index,
-                columns=self._columns, # let constructor handle if GO
+                index=i,
+                columns=c, # let constructor handle if GO
                 name=name,
                 own_data=True,
                 own_index=True)
@@ -3191,6 +3199,61 @@ class Frame(ContainerOperand):
                 own_data=True,
                 own_index=True,
                 own_columns=True)
+
+    # @doc_inject(selector='relabel_level_add', class_name='Frame')
+    def relabel_shift_in(self,
+            key: GetItemKeyType = None,
+            *,
+            axis: int = 0,
+            ) -> 'Frame':
+        '''
+        Create, or augment, an :obj:`IndexHierarchy` by providing one or more selections via axis-appropriate ``loc`` selections.
+
+        Args:
+            key: a loc-style selection.
+            axis: 0 modifies the index by selecting columns with ``key``; 1 modifies the columns by selecting rows with ``key``.
+        '''
+
+        if axis == 0: # select from columns, add to index
+            index_target = self._index
+            index_opposite = self._columns
+        else:
+            index_target = self._columns
+            index_opposite = self._index
+
+        if index_target.ndim == 1:
+            ih_blocks = TypeBlocks.from_blocks((index_target.values,))
+        else:
+            if index_target._recache:
+                index_target._update_array_cache()
+            ih_blocks = index_target._blocks
+
+        iloc_key = index_opposite._loc_to_iloc(key)
+        index_opposite = index_opposite._drop_iloc(iloc_key)
+
+        if axis == 0: # select from columns, add to index
+            # get a new TypeBlocks, extend with its ih_blocks
+            ih_blocks.extend(self._blocks._extract(column_key=iloc_key))
+            blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(column_key=iloc_key))
+            index = IndexHierarchy._from_type_blocks(ih_blocks)
+            columns = index_opposite
+        else: # select from index, add to columns
+            # get a new TypeBlocks, extend with its ih_blocks
+            ih_blocks.extend(self._blocks._extract(row_key=iloc_key).transpose())
+            blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=iloc_key))
+            index = index_opposite
+            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(ih_blocks)
+
+        return self.__class__(
+                blocks, # does not copy arrays
+                index=index,
+                columns=columns,
+                name=self._name,
+                own_data=True,
+                own_index=True,
+                own_columns=True)
+
+
 
     def rehierarch(self,
             index: tp.Optional[tp.Iterable[int]] = None,

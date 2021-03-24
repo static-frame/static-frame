@@ -2204,7 +2204,7 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     def drop(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
         '''
-        Drop rows or columns from a TyepBlocks instance.
+        Drop rows or columns from a TypeBlocks instance.
 
         Args:
             key: if a single value, treated as a row key; if a tuple, treated as a pair of row, column keys.

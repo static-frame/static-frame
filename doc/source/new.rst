@@ -4,6 +4,10 @@ What is New in Static Frame
 0.8.6
 ----------
 
+``Frame.rename`` now accepts optional arguments for ``index`` and ``columns`` renaming.
+
+``Series.rename`` now accepts an optional argument for ``index`` renaming.
+
 Fixed issue where ``Frame.dropna`` fails on single-columns ``Frame``.
 
 
