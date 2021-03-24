@@ -338,10 +338,8 @@ class IndexBase(ContainerOperand):
                 for i in range(depth):
                     yield template.format(i)
 
-        names = tuple(gen())
-        # if len(names) != depth:
-        #     raise RuntimeError(f'unexpected names formation: {names}, does not meet depth {depth}')
-        return names
+        return tuple(gen())
+
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality

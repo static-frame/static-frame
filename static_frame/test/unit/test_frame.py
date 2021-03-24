@@ -11593,14 +11593,15 @@ class TestUnit(TestCase):
         f2 = f1.relabel_shift_in('zUvW', axis=0)
         self.assertEqual(f2.to_pairs(),
                 (('zZbu', (((34715, 'ztsv'), 'zjZQ'), ((-3648, 'zUvW'), 'zO5l'), ((91301, 'zkuW'), 'zEdH'), ((30205, 'zmVj'), 'zB7E'), ((54020, 'z2Oo'), 'zwIp'))), ('ztsv', (((34715, 'ztsv'), 'zaji'), ((-3648, 'zUvW'), 'zJnC'), ((91301, 'zkuW'), 'zDdR'), ((30205, 'zmVj'), 'zuVU'), ((54020, 'z2Oo'), 'zKka'))), ('zkuW', (((34715, 'ztsv'), 'z2Oo'), ((-3648, 'zUvW'), 'z5l6'), ((91301, 'zkuW'), 'zCE3'), ((30205, 'zmVj'), 'zr4u'), ((54020, 'z2Oo'), 'zYVB')))))
-
+        self.assertEqual(f2.index.name, ('__index0__', 'zUvW'))
 
         f3 = f1.relabel_shift_in(30205, axis=1)
         self.assertEqual(f3.to_pairs(),
                 ((('zZbu', 'zB7E'), ((34715, 'zjZQ'), (-3648, 'zO5l'), (91301, 'zEdH'), (54020, 'zwIp'))), (('ztsv', 'zuVU'), ((34715, 'zaji'), (-3648, 'zJnC'), (91301, 'zDdR'), (54020, 'zKka'))), (('zUvW', 'zmVj'), ((34715, 'ztsv'), (-3648, 'zUvW'), (91301, 'zkuW'), (54020, 'z2Oo'))), (('zkuW', 'zr4u'), ((34715, 'z2Oo'), (-3648, 'z5l6'), (91301, 'zCE3'), (54020, 'zYVB'))))
                 )
+        self.assertEqual(f3.columns.name, ('__index0__', 30205))
 
-        # import ipdb; ipdb.set_trace()
+
 
 if __name__ == '__main__':
     unittest.main()
