@@ -8165,6 +8165,22 @@ class TestUnit(TestCase):
         self.assertEqual(f2.index.name, 'a')
         self.assertEqual(f2.columns.name, 'b')
 
+
+    def test_frame_rename_c(self) -> None:
+
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'),
+                name='foo')
+
+        f2 = f1.rename(columns='x')
+        self.assertEqual(f2.name, 'foo')
+        self.assertEqual(f2.columns.name, 'x')
+
     #---------------------------------------------------------------------------
 
 

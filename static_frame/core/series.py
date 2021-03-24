@@ -540,13 +540,14 @@ class Series(ContainerOperand):
         return self._name
 
     def rename(self,
-            name: NameType,
+            name: NameType = NAME_DEFAULT,
             *,
             index: NameType = NAME_DEFAULT,
             ) -> 'Series':
         '''
         Return a new Series with an updated name attribute.
         '''
+        name = self.name if name is NAME_DEFAULT else name
         i = self._index if index is NAME_DEFAULT else self._index.rename(index)
 
         return self.__class__(self.values,

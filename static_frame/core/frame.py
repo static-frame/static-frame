@@ -2608,7 +2608,7 @@ class Frame(ContainerOperand):
         return self._name
 
     def rename(self,
-            name: NameType,
+            name: NameType = NAME_DEFAULT,
             *,
             index: NameType = NAME_DEFAULT,
             columns: NameType = NAME_DEFAULT,
@@ -2616,7 +2616,7 @@ class Frame(ContainerOperand):
         '''
         Return a new Frame with an updated name attribute. Optionally update the name attribute of ``index`` and ``columns``.
         '''
-        # copying blocks does not copy underlying data
+        name = self.name if name is NAME_DEFAULT else name
         i = self._index if index is NAME_DEFAULT else self._index.rename(index)
         c = self._columns if columns is NAME_DEFAULT else self._columns.rename(columns)
 
