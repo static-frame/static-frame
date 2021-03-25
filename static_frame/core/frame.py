@@ -3200,9 +3200,8 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True)
 
-    # @doc_inject(selector='relabel_level_add', class_name='Frame')
     def relabel_shift_in(self,
-            key: GetItemKeyType = None,
+            key: GetItemKeyType,
             *,
             axis: int = 0,
             ) -> 'Frame':
@@ -3267,6 +3266,78 @@ class Frame(ContainerOperand):
                 own_data=True,
                 own_index=True,
                 own_columns=True)
+
+
+    def relabel_shift_out(self,
+            depth_level: DepthLevelSpecifier,
+            *,
+            axis: int = 0,
+            ) -> 'Frame':
+        '''
+        Shift values from an index on an axis to the Frame by providing one or more depth level selections.
+
+        Args:
+            key: a loc-style selection.
+            axis: 0 modifies the index by selecting columns with ``key``; 1 modifies the columns by selecting rows with ``key``.
+        '''
+
+        if axis == 0: # select from index, remove from index
+            index_target = self._index
+            index_opposite = self._columns
+        else:
+            index_target = self._columns
+            index_opposite = self._index
+
+        if index_target.depth == 1:
+            index_target._depth_level_validate(depth_level) # will raise
+            new_target = IndexAutoFactory
+            add_blocks = (index_target.values,)
+            new_labels = index_target.names if index_target.name is None else (index_target.name,)
+        else:
+            if index_target._recache:
+                index_target._update_array_cache()
+
+            label_src = index_target.name if index_target._name_is_names() else index_target.names
+            if isinstance(depth_level, INT_TYPES):
+                new_labels = (label_src[depth_level],)
+            else:
+                new_labels = (label_src[i] for i in depth_level)
+
+            target_tb = index_target._blocks
+            add_blocks = target_tb._extract(column_key=depth_level)
+            # this might fail if nothing left
+            remain_blocks = target_tb.drop(None, columns_key=depth_level)
+
+            if remain_blocks.shape[1] == 0:
+                new_target = IndexAutoFactory
+            elif remain_blocks.shape[1] == 1:
+                # TODO: ensure that we have a 1D array
+                new_target = Index(remain_blocks._blocks[0])
+            else:
+                # TODO: get correct constructor
+                new_target = IndexHierarchy.__class__._from_type_blocks(
+                        remain_blocks
+                        )
+
+        if axis == 0: # select from index, remove from index
+            blocks = TypeBlocks.from_blocks(chain(add_blocks,
+                    self._blocks._blocks))
+            index = new_target
+            columns = self._columns.__class__.from_labels(
+                    chain(new_labels, self._columns.__iter__())
+                    )
+        else:
+            raise NotImplementedError()
+
+        return self.__class__(
+                blocks, # does not copy arrays
+                index=index,
+                columns=columns,
+                name=self._name,
+                own_data=True,
+                own_index=not index is IndexAutoFactory,
+                own_columns=not columns is IndexAutoFactory,
+                )
 
 
 
@@ -4546,7 +4617,7 @@ class Frame(ContainerOperand):
 
     @doc_inject(selector='sort')
     def sort_values(self,
-            label: KeyOrKeys,
+            label: KeyOrKeys, # elsewhere this is called 'key'
             *,
             ascending: bool = True,
             axis: int = 1,
@@ -4557,7 +4628,7 @@ class Frame(ContainerOperand):
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
 
         Args:
-            label: A label or iterable of labels to select the the columns (for axis 1) or rows (for axis 0) to sort.
+            label: A label or iterable of labels to select the columns (for axis 1) or rows (for axis 0) to sort.
             *
             ascending: {ascending}
             kind: {kind}
@@ -6055,7 +6126,7 @@ class Frame(ContainerOperand):
 
     @doc_inject(selector='insert')
     def insert_after(self,
-            key: tp.Hashable, # iloc positions
+            key: tp.Hashable,
             container: tp.Union['Frame', Series],
             *,
             fill_value: tp.Any = np.nan,

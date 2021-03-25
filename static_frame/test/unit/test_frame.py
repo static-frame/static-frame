@@ -11664,6 +11664,17 @@ class TestUnit(TestCase):
                 ((('zZbu', 105269, 'zO5l'), ((34715, 'zjZQ'), (91301, 'zEdH'))), (('zZbu', 119909, 'zJnC'), ((34715, 'zaji'), (91301, 'zDdR'))), (('ztsv', 194224, 'zUvW'), ((34715, 'ztsv'), (91301, 'zkuW'))), (('ztsv', 172133, 'z5l6'), ((34715, 'z2Oo'), (91301, 'zCE3'))))
                 )
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_relabel_shift_out_a(self) -> None:
+
+        f1 = ff.parse('s(3,4)|i(I,int)|c(I,str)|v(str)')
+        f2 = f1.relabel_shift_out(0, axis=0)
+
+        self.assertEqual(f2.to_pairs(),
+                (('__index0__', ((0, 34715), (1, -3648), (2, 91301))), ('zZbu', ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), ('ztsv', ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), ('zUvW', ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), ('zkuW', ((0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
+
+
 
 if __name__ == '__main__':
     unittest.main()
