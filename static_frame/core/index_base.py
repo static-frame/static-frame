@@ -192,6 +192,9 @@ class IndexBase(ContainerOperand):
     def relabel(self: I, mapper: 'RelabelInput') -> I:
         raise NotImplementedError() #pragma: no cover
 
+    def rename(self: I, name: NameType) -> I:
+        raise NotImplementedError() #pragma: no cover
+
     def _drop_iloc(self: I, key: GetItemKeyType) -> I:
         raise NotImplementedError() #pragma: no cover
 
@@ -318,6 +321,9 @@ class IndexBase(ContainerOperand):
         '''{}'''
         return self._name
 
+    def _name_is_names(self) -> bool:
+        return isinstance(self._name, tuple) and len(self._name) == self.depth
+
     @property
     def names(self) -> tp.Tuple[str, ...]:
         '''
@@ -331,8 +337,8 @@ class IndexBase(ContainerOperand):
             if name and depth == 1:
                 yield str(name)
             # try to use name only if it is a tuple of the right size
-            elif name and isinstance(name, tuple) and len(name) == depth:
-                for n in name:
+            elif name and self._name_is_names():
+                for n in name: #type: ignore [attr-defined]
                     yield str(n)
             else:
                 for i in range(depth):

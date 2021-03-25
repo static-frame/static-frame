@@ -3223,18 +3223,13 @@ class Frame(ContainerOperand):
 
         if index_target.depth == 1:
             ih_blocks = TypeBlocks.from_blocks((index_target.values,))
-            if index_target.name is not None:
-                name_prior = (index_target.name,) # might be None
-            else:
-                name_prior = index_target.names
+            name_prior = index_target.names if index_target.name is None else (index_target.name,)
         else:
             if index_target._recache:
                 index_target._update_array_cache()
-            ih_blocks = index_target._blocks
-            name_prior = index_target.nsame
-            if not (isinstance(name_prior, tuple) and len(name_prior) == index_target.depth):
-                # only use string form of labels if we are not storing a correctly sized tuple
-                name_prior = index_target.names
+            ih_blocks = index_target._blocks.copy() # will mutate copied blocks
+            # only use string form of labels if we are not storing a correctly sized tuple
+            name_prior = index_target.name if index_target._name_is_names() else index_target.names
 
         iloc_key = index_opposite._loc_to_iloc(key)
         # NOTE: must do this before dropping
@@ -3246,20 +3241,26 @@ class Frame(ContainerOperand):
         index_opposite = index_opposite._drop_iloc(iloc_key)
 
         if axis == 0: # select from columns, add to index
-            # get a new TypeBlocks, extend with its ih_blocks
             ih_blocks.extend(self._blocks._extract(column_key=iloc_key))
-            blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(column_key=iloc_key))
+            frame_blocks = TypeBlocks.from_blocks(
+                    self._blocks._drop_blocks(column_key=iloc_key),
+                    shape_reference=(self.shape[0], len(index_opposite)),
+                    )
+
             index = IndexHierarchy._from_type_blocks(ih_blocks, name=ih_name)
             columns = index_opposite
         else: # select from index, add to columns
-            # get a new TypeBlocks, extend with its ih_blocks
             ih_blocks.extend(self._blocks._extract(row_key=iloc_key).transpose())
-            blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=iloc_key))
+            frame_blocks = TypeBlocks.from_blocks(
+                    self._blocks._drop_blocks(row_key=iloc_key),
+                    shape_reference=(len(index_opposite), self.shape[1]),
+                    )
+
             index = index_opposite
             columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(ih_blocks, name=ih_name)
 
         return self.__class__(
-                blocks, # does not copy arrays
+                frame_blocks, # does not copy arrays
                 index=index,
                 columns=columns,
                 name=self._name,
