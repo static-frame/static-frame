@@ -3335,8 +3335,8 @@ class Frame(ContainerOperand):
                 columns=columns,
                 name=self._name,
                 own_data=True,
-                own_index=not index is IndexAutoFactory,
-                own_columns=not columns is IndexAutoFactory,
+                own_index=index is not IndexAutoFactory,
+                own_columns=columns is not IndexAutoFactory,
                 )
 
 
