@@ -8,6 +8,8 @@ What is New in Static Frame
 
 ``Series.rename`` now accepts an optional argument for ``index`` renaming.
 
+Added ``Frame.relabel_shift_in()`` and ``Frame.relabel_shift_out()``.
+
 Fixed issue where ``Frame.dropna`` fails on single-columns ``Frame``.
 
 
