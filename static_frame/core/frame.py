@@ -3192,7 +3192,7 @@ class Frame(ContainerOperand):
         Create, or augment, an :obj:`IndexHierarchy` by providing one or more selections via axis-appropriate ``loc`` selections.
 
         Args:
-            key: a loc-style selection.
+            key: a loc-style selection on the opposite axis.
             axis: 0 modifies the index by selecting columns with ``key``; 1 modifies the columns by selecting rows with ``key``.
         '''
 
@@ -3260,7 +3260,7 @@ class Frame(ContainerOperand):
         Shift values from an index on an axis to the Frame by providing one or more depth level selections.
 
         Args:
-            key: a loc-style selection.
+            key: an iloc-style selection on the axis.
             axis: 0 modifies the index by selecting columns with ``key``; 1 modifies the columns by selecting rows with ``key``.
         '''
 
@@ -3269,11 +3269,13 @@ class Frame(ContainerOperand):
             index_opposite = self._columns
             target_ctor = Index
             target_hctor = IndexHierarchy
-        else:
+        elif axis == 1:
             index_target = self._columns
             index_opposite = self._index
             target_ctor = self._COLUMNS_CONSTRUCTOR
             target_hctor = self._COLUMNS_HIERARCHY_CONSTRUCTOR
+        else:
+            raise AxisInvalid(f'invalid axis {axis}')
 
         if index_target.depth == 1:
             index_target._depth_level_validate(depth_level) # will raise
@@ -3287,37 +3289,58 @@ class Frame(ContainerOperand):
             label_src = index_target.name if index_target._name_is_names() else index_target.names
             if isinstance(depth_level, INT_TYPES):
                 new_labels = (label_src[depth_level],)
+                remain_labels = tuple(label for i, label in enumerate(label_src) if i != depth_level)
             else:
                 new_labels = (label_src[i] for i in depth_level)
+                remain_labels = tuple(label for i, label in enumerate(label_src) if i not in depth_level)
 
             target_tb = index_target._blocks
             add_blocks = target_tb._extract(column_key=depth_level)
+            if not isinstance(add_blocks, np.ndarray):
+                # get iterable off arrays
+                add_blocks = add_blocks._blocks
+            else:
+                add_blocks = (add_blocks,)
             # this might fail if nothing left
-            remain_blocks = target_tb.drop(None, columns_key=depth_level)
+            remain_blocks = TypeBlocks.from_blocks(
+                    target_tb._drop_blocks(column_key=depth_level),
+                    shape_reference=(len(index_target), 0))
 
             if remain_blocks.shape[1] == 0:
                 new_target = IndexAutoFactory
             elif remain_blocks.shape[1] == 1:
-                new_target = target_ctor(column_1d_filter(remain_blocks._blocks[0]))
+                new_target = target_ctor(
+                        column_1d_filter(remain_blocks._blocks[0]),
+                        name=remain_labels[0])
             else:
                 new_target = target_hctor._from_type_blocks(
-                        remain_blocks
+                        remain_blocks,
+                        name=remain_labels
                         )
 
         if axis == 0: # select from index, remove from index
             blocks = TypeBlocks.from_blocks(chain(add_blocks,
                     self._blocks._blocks))
             index = new_target
-            columns = self._columns.__class__.from_labels(
-                    chain(new_labels, self._columns.__iter__())
+            # if we already have a hierarchical index here, there is no way to ensure that the new labels coming in are of appropriate depth; only option is to get a flat version of columns
+            if self._columns.depth > 1:
+                extend_labels = self._columns.flat().__iter__()
+            else:
+                extend_labels = self._columns.__iter__()
+            columns = self._COLUMNS_CONSTRUCTOR.from_labels(
+                    chain(new_labels, extend_labels),
+                    name=self._columns.name,
                     )
         else:
             blocks = TypeBlocks.from_blocks(TypeBlocks.vstack_blocks_to_blocks(
                     (TypeBlocks.from_blocks(add_blocks).transpose(), self._blocks))
                     )
-            index = self._index.__class__.from_labels(
-                    chain(new_labels, self._index.__iter__())
-                    )
+            if self._index.depth > 1:
+                extend_labels = self._index.flat().__iter__()
+            else:
+                extend_labels = self._index.__iter__()
+            index = Index.from_labels(chain(new_labels, extend_labels),
+                    name=self._index.name)
             columns = new_target
 
         return self.__class__(
