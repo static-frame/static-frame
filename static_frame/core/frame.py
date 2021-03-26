@@ -422,7 +422,7 @@ class Frame(ContainerOperand):
                 own_columns = True
 
             def blocks() -> tp.Iterator[np.ndarray]:
-                aligned_frames = []
+                type_blocks = []
                 previous_frame = None
                 block_compatible = True
                 reblock_compatible = True
@@ -431,7 +431,7 @@ class Frame(ContainerOperand):
                     if len(frame.columns) != len(columns) or (frame.columns != columns).any():
                         frame = frame.reindex(columns=columns, fill_value=fill_value)
 
-                    aligned_frames.append(frame)
+                    type_blocks.append(frame._blocks)
                     # column size is all the same by this point
                     if previous_frame is not None: # after the first
                         if block_compatible:
@@ -443,30 +443,13 @@ class Frame(ContainerOperand):
                                     previous_frame._blocks)
                     previous_frame = frame
 
-                if block_compatible or reblock_compatible:
-                    if not block_compatible and reblock_compatible:
-                        # after reblocking, will be compatible
-                        type_blocks = [f._blocks.consolidate() for f in aligned_frames]
-                    else: # blocks by column are compatible
-                        type_blocks = [f._blocks for f in aligned_frames]
-
-                    # all TypeBlocks have the same number of blocks by here
-                    for block_idx in range(len(type_blocks[0]._blocks)):
-                        block_parts = []
-                        for frame_idx in range(len(type_blocks)): #pylint: disable=C0200
-                            b = column_2d_filter(
-                                    type_blocks[frame_idx]._blocks[block_idx])
-                            block_parts.append(b)
-                        # returns immutable array
-                        yield concat_resolved(block_parts)
-                else: # blocks not alignable
-                    # break into single column arrays for maximum type integrity; there might be an alternative reblocking that could be more efficient, but determining that shape might be complex
-                    for i in range(len(columns)):
-                        block_parts = [
-                            f._blocks._extract_array(column_key=i) for f in aligned_frames]
-                        yield concat_resolved(block_parts)
+                yield from TypeBlocks.vstack_blocks_to_blocks(
+                        type_blocks=type_blocks,
+                        block_compatible=block_compatible,
+                        reblock_compatible=reblock_compatible,
+                        )
         else:
-            raise NotImplementedError(f'no support for {axis}')
+            raise AxisInvalid(f'no support for {axis}')
 
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
@@ -3284,9 +3267,13 @@ class Frame(ContainerOperand):
         if axis == 0: # select from index, remove from index
             index_target = self._index
             index_opposite = self._columns
+            target_ctor = Index
+            target_hctor = IndexHierarchy
         else:
             index_target = self._columns
             index_opposite = self._index
+            target_ctor = self._COLUMNS_CONSTRUCTOR
+            target_hctor = self._COLUMNS_HIERARCHY_CONSTRUCTOR
 
         if index_target.depth == 1:
             index_target._depth_level_validate(depth_level) # will raise
@@ -3311,11 +3298,9 @@ class Frame(ContainerOperand):
             if remain_blocks.shape[1] == 0:
                 new_target = IndexAutoFactory
             elif remain_blocks.shape[1] == 1:
-                # TODO: ensure that we have a 1D array
-                new_target = Index(remain_blocks._blocks[0])
+                new_target = target_ctor(column_1d_filter(remain_blocks._blocks[0]))
             else:
-                # TODO: get correct constructor
-                new_target = IndexHierarchy.__class__._from_type_blocks(
+                new_target = target_hctor._from_type_blocks(
                         remain_blocks
                         )
 
@@ -3327,7 +3312,13 @@ class Frame(ContainerOperand):
                     chain(new_labels, self._columns.__iter__())
                     )
         else:
-            raise NotImplementedError()
+            blocks = TypeBlocks.from_blocks(TypeBlocks.vstack_blocks_to_blocks(
+                    (TypeBlocks.from_blocks(add_blocks).transpose(), self._blocks))
+                    )
+            index = self._index.__class__.from_labels(
+                    chain(new_labels, self._index.__iter__())
+                    )
+            columns = new_target
 
         return self.__class__(
                 blocks, # does not copy arrays

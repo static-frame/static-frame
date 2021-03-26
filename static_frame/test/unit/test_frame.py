@@ -7307,7 +7307,7 @@ class TestUnit(TestCase):
                 columns=('r', 's',),
                 index=('x', 'z'))
 
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(AxisInvalid):
             f = Frame.from_concat((f1, f2), axis=None)
 
 
@@ -11673,6 +11673,14 @@ class TestUnit(TestCase):
 
         self.assertEqual(f2.to_pairs(),
                 (('__index0__', ((0, 34715), (1, -3648), (2, 91301))), ('zZbu', ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), ('ztsv', ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), ('zUvW', ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), ('zkuW', ((0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
+
+        f3 = f1.relabel_shift_out(0, axis=1)
+        self.assertEqual(f3.to_pairs(),
+                ((0, (('__index0__', 'zZbu'), (34715, 'zjZQ'), (-3648, 'zO5l'), (91301, 'zEdH'))), (1, (('__index0__', 'ztsv'), (34715, 'zaji'), (-3648, 'zJnC'), (91301, 'zDdR'))), (2, (('__index0__', 'zUvW'), (34715, 'ztsv'), (-3648, 'zUvW'), (91301, 'zkuW'))), (3, (('__index0__', 'zkuW'), (34715, 'z2Oo'), (-3648, 'z5l6'), (91301, 'zCE3'))))
+                )
+
+
+
 
 
 

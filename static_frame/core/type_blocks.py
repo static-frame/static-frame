@@ -211,6 +211,49 @@ class TypeBlocks(ContainerOperand):
         # for arrays with no width, favor storing shape alone and not creating an array object; the shape will be binding for future appending
         return cls(blocks=list(), dtypes=list(), index=list(), shape=shape)
 
+    @staticmethod
+    def vstack_blocks_to_blocks(
+            type_blocks: tp.Sequence['TypeBlocks'],
+            block_compatible: tp.Optional[bool] = None,
+            reblock_compatible: tp.Optional[bool] = None,
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Given a sequence of TypeBlocks with shape[1] equal to this TB's shape[1], return an iterator of consolidated arrays.
+        '''
+        if block_compatible is None and reblock_compatible is None:
+            block_compatible = True
+            reblock_compatible = True
+            previous_tb = None
+            for tb in type_blocks:
+                if previous_tb is not None: # after the first
+                    if block_compatible: #type: ignore [unreachable]
+                        block_compatible &= tb.block_compatible(previous_tb, axis=1) # only compare columns
+                    if reblock_compatible:
+                        reblock_compatible &= tb.reblock_compatible(previous_tb)
+                previous_tb = tb
+
+        if block_compatible or reblock_compatible:
+            tb_proto: tp.Sequence[np.ndarray]
+            if not block_compatible and reblock_compatible:
+                # after reblocking, will be compatible
+                tb_proto = [tb.consolidate() for tb in type_blocks]
+            else: # blocks by column are compatible
+                tb_proto = type_blocks
+
+            # all TypeBlocks have the same number of blocks by here
+            for block_idx in range(len(tb_proto[0]._blocks)):
+                block_parts = []
+                for tb_proto_idx in range(len(tb_proto)): #pylint: disable=C0200
+                    b = column_2d_filter(tb_proto[tb_proto_idx]._blocks[block_idx])
+                    block_parts.append(b)
+                yield concat_resolved(block_parts) # returns immutable array
+        else: # blocks not alignable
+            # break into single column arrays for maximum type integrity; there might be an alternative reblocking that could be more efficient, but determining that shape might be complex
+            for i in range(type_blocks[0].shape[1]):
+                block_parts = [tb._extract_array(column_key=i) for tb in type_blocks]
+                yield concat_resolved(block_parts)
+
+
     #---------------------------------------------------------------------------
 
     def __init__(self, *,
@@ -779,7 +822,6 @@ class TypeBlocks(ContainerOperand):
                 yield g, selection, self._extract(row_key=selection)
             elif axis == 1: # return columns extractions
                 yield g, selection, self._extract(column_key=selection)
-
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
