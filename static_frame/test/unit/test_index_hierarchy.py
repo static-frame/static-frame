@@ -2037,6 +2037,47 @@ class TestUnit(TestCase):
         assert isinstance(post3, IndexHierarchy) # mypy
         self.assertEqual(ih._blocks.mloc[2:].tolist(), post3._blocks.mloc.tolist())
 
+    def test_hierarchy_drop_level_i(self) -> None:
+
+        labels = (
+                ('I', 'A', 1, False),
+                ('I', 'B', 2, True),
+                ('II', 'C', 3, None),
+                ('II', 'C', 4, ...),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels, name=('a', 'b', 'c', 'd'))
+
+        ih2 = ih1.level_drop(1)
+        self.assertEqual(ih2.name, ('b', 'c', 'd'))
+
+        ih3 = ih1.level_drop(2)
+        self.assertEqual(ih3.name, ('c', 'd'))
+
+        ih4 = ih1.level_drop(3)
+        self.assertEqual(ih4.name, 'd')
+
+    def test_hierarchy_drop_level_j(self) -> None:
+
+        labels = (
+                ('I', 'A', 1, False),
+                ('II', 'B', 2, True),
+                ('III', 'C', 3, None),
+                ('IV', 'D', 4, ...),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels, name=('a', 'b', 'c', 'd'))
+
+        ih2 = ih1.level_drop(-1)
+        self.assertEqual(ih2.name, ('a', 'b', 'c'))
+
+        ih3 = ih1.level_drop(-2)
+        self.assertEqual(ih3.name, ('a', 'b'))
+
+        ih4 = ih1.level_drop(-3)
+        self.assertEqual(ih4.name, 'a')
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_drop_loc_a(self) -> None:

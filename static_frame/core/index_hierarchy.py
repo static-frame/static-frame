@@ -1576,12 +1576,26 @@ class IndexHierarchy(IndexBase):
 
         return self.__class__(levels, name=self._name)
 
-    def level_drop(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:
+    def level_drop(self,
+            count: int = 1,
+            ) -> tp.Union[Index, 'IndexHierarchy']:
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the resulting index if the resulting levels are not unique.
 
         Args:
-            count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative values is the number of depths to remove from the leaf (inner) side of the hierarchy.
+            count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative value is the number of depths to remove from the leaf (inner) side of the hierarchy.
         '''
+        # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
+
+        if self._name_is_names():
+            if count < 0:
+                name = self._name[:count]
+            elif count > 0:
+                name = self._name[count:]
+            if len(name) == 1:
+                name = name[0]
+        else:
+            name = self._name
+
         if count < 0: # remove from inner
             levels = self._levels.to_index_level()
             for _ in range(abs(count)):
@@ -1595,18 +1609,19 @@ class IndexHierarchy(IndexBase):
                         levels_stack.extend(level.targets) #type: ignore
                 if levels.targets is None:  # if no targets, at the root
                     break
+
             if levels.targets is None: # fall back to 1D index
-                return levels.index
+                return levels.index.rename(name)
 
             # if we have TypeBlocks and levels is the same length
             if not self._recache and levels.__len__() == self.__len__():
                 blocks = self._blocks.iloc[NULL_SLICE, :count]
                 return self.__class__(levels,
-                        name=self._name,
                         blocks=blocks,
-                        own_blocks=True
+                        own_blocks=True,
+                        name=name,
                         )
-            return self.__class__(levels, name=self._name)
+            return self.__class__(levels, name=name)
 
         elif count > 0: # remove from outer
             levels = self._levels.to_index_level()
@@ -1619,7 +1634,7 @@ class IndexHierarchy(IndexBase):
                         targets.extend(target.targets)
                 index = levels.index.__class__(labels)
                 if not targets:
-                    return index
+                    return index.rename(name)
                 levels = levels.__class__(
                         index=index,
                         targets=ArrayGO(targets, own_iterable=True))
@@ -1628,11 +1643,11 @@ class IndexHierarchy(IndexBase):
             if not self._recache and levels.__len__() == self.__len__():
                 blocks = self._blocks.iloc[NULL_SLICE, count:]
                 return self.__class__(levels,
-                        name=self._name,
+                        name=name,
                         blocks=blocks,
                         own_blocks=True
                         )
-            return self.__class__(levels, name=self._name)
+            return self.__class__(levels, name=name)
 
         raise NotImplementedError('no handling for a 0 count drop level.')
 

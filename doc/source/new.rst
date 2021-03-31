@@ -10,7 +10,9 @@ What is New in Static Frame
 
 Added ``Frame.relabel_shift_in()`` and ``Frame.relabel_shift_out()``.
 
-Fixed issue where ``Frame.dropna`` fails on single-columns ``Frame``.
+Fixed issue where ``Frame.dropna()`` fails on single-columns ``Frame``.
+
+Extended ``IndexHierarchy.level_drop`` to perform corresponding drops on ``name`` when ``name`` is an appropriately sized tuple.
 
 
 0.8.5
