@@ -14,6 +14,8 @@ Fixed issue where ``Frame.dropna()`` fails on single-columns ``Frame``.
 
 Extended ``IndexHierarchy.level_drop`` to perform corresponding drops on ``name`` when ``name`` is an appropriately sized tuple.
 
+Extended ``Frame.set_index`` to support creating a 1D index of tuples when more than one column is selected.
+
 
 0.8.5
 ----------
