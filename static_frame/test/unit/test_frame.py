@@ -7705,6 +7705,20 @@ class TestUnit(TestCase):
                 f2 = f1.set_index(i, drop=True)
                 self.assertTrue(f2.shape == (3, f1.shape[1] - 1))
 
+    def test_frame_set_index_e(self) -> None:
+        f1 = ff.parse('s(3,5)|v(str)|i(I, int)')
+
+        f2 = f1.set_index([1, 2])
+        self.assertEqual(f2.index.name, (1, 2))
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((('zaji', 'ztsv'), 'zjZQ'), (('zJnC', 'zUvW'), 'zO5l'), (('zDdR', 'zkuW'), 'zEdH'))), (1, ((('zaji', 'ztsv'), 'zaji'), (('zJnC', 'zUvW'), 'zJnC'), (('zDdR', 'zkuW'), 'zDdR'))), (2, ((('zaji', 'ztsv'), 'ztsv'), (('zJnC', 'zUvW'), 'zUvW'), (('zDdR', 'zkuW'), 'zkuW'))), (3, ((('zaji', 'ztsv'), 'z2Oo'), (('zJnC', 'zUvW'), 'z5l6'), (('zDdR', 'zkuW'), 'zCE3'))), (4, ((('zaji', 'ztsv'), 'zDVQ'), (('zJnC', 'zUvW'), 'z5hI'), (('zDdR', 'zkuW'), 'zyT8'))))
+                )
+        f3 = f1.set_index(slice(2,None), drop=True)
+        self.assertEqual(f3.index.name, (2, 3, 4))
+        self.assertEqual(f3.to_pairs(),
+                ((0, ((('ztsv', 'z2Oo', 'zDVQ'), 'zjZQ'), (('zUvW', 'z5l6', 'z5hI'), 'zO5l'), (('zkuW', 'zCE3', 'zyT8'), 'zEdH'))), (1, ((('ztsv', 'z2Oo', 'zDVQ'), 'zaji'), (('zUvW', 'z5l6', 'z5hI'), 'zJnC'), (('zkuW', 'zCE3', 'zyT8'), 'zDdR'))))
+                )
+
 
     #---------------------------------------------------------------------------
     def test_frame_head_tail_a(self) -> None:

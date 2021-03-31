@@ -143,6 +143,7 @@ from static_frame.core.util import DT64_NS
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import file_like_manager
+from static_frame.core.util import array2d_to_array1d
 
 
 if tp.TYPE_CHECKING:
@@ -4922,8 +4923,15 @@ class Frame(ContainerOperand):
             own_data = False
             own_columns = False
 
-        index_values = self._blocks._extract_array(column_key=column_iloc)
-        index = index_constructor(index_values, name=column)
+        if isinstance(column_iloc, INT_TYPES):
+            index_values = self._blocks._extract_array(column_key=column_iloc)
+            name = column
+        else:
+            index_values = array2d_to_array1d(
+                    self._blocks._extract_array(column_key=column_iloc))
+            name = tuple(self._columns[column_iloc])
+
+        index = index_constructor(index_values, name=name)
 
         return self.__class__(blocks,
                 columns=columns,
