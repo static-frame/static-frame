@@ -1588,9 +1588,9 @@ class IndexHierarchy(IndexBase):
 
         if self._name_is_names():
             if count < 0:
-                name = self._name[:count]
+                name = self._name[:count] #type: ignore
             elif count > 0:
-                name = self._name[count:]
+                name = self._name[count:] #type: ignore
             if len(name) == 1:
                 name = name[0]
         else:
