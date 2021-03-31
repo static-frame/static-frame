@@ -7,7 +7,7 @@ hypothesis==4.26.3
 mypy==0.800
 codecov>=2.0.15
 pylint==2.4.4
-Pygments==2.2.0
+Pygments==2.7.4
 ipython==7.4.0
 invoke==1.4.0
 sphinx==3.5.0
