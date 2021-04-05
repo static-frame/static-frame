@@ -539,12 +539,19 @@ class Series(ContainerOperand):
         '''{}'''
         return self._name
 
-    def rename(self, name: NameType) -> 'Series':
+    def rename(self,
+            name: NameType = NAME_DEFAULT,
+            *,
+            index: NameType = NAME_DEFAULT,
+            ) -> 'Series':
         '''
         Return a new Series with an updated name attribute.
         '''
+        name = self.name if name is NAME_DEFAULT else name
+        i = self._index if index is NAME_DEFAULT else self._index.rename(index)
+
         return self.__class__(self.values,
-                index=self._index,
+                index=i,
                 name=name,
                 )
 
@@ -2191,16 +2198,12 @@ class Series(ContainerOperand):
             raise RuntimeError(f'Unsupported key type: {key}')
         return self._insert(iloc_key + 1, container)
 
-
-
-
-
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types
 
     def unique(self) -> np.ndarray:
         '''
-        Return a NumPy array of unqiue values.
+        Return a NumPy array of unique values.
 
         Returns:
             :obj:`numpy.ndarray`

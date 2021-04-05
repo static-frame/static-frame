@@ -211,6 +211,49 @@ class TypeBlocks(ContainerOperand):
         # for arrays with no width, favor storing shape alone and not creating an array object; the shape will be binding for future appending
         return cls(blocks=list(), dtypes=list(), index=list(), shape=shape)
 
+    @staticmethod
+    def vstack_blocks_to_blocks(
+            type_blocks: tp.Sequence['TypeBlocks'],
+            block_compatible: tp.Optional[bool] = None,
+            reblock_compatible: tp.Optional[bool] = None,
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Given a sequence of TypeBlocks with shape[1] equal to this TB's shape[1], return an iterator of consolidated arrays.
+        '''
+        if block_compatible is None and reblock_compatible is None:
+            block_compatible = True
+            reblock_compatible = True
+            previous_tb = None
+            for tb in type_blocks:
+                if previous_tb is not None: # after the first
+                    if block_compatible: #type: ignore [unreachable]
+                        block_compatible &= tb.block_compatible(previous_tb, axis=1) # only compare columns
+                    if reblock_compatible:
+                        reblock_compatible &= tb.reblock_compatible(previous_tb)
+                previous_tb = tb
+
+        if block_compatible or reblock_compatible:
+            tb_proto: tp.Sequence[np.ndarray]
+            if not block_compatible and reblock_compatible:
+                # after reblocking, will be compatible
+                tb_proto = [tb.consolidate() for tb in type_blocks]
+            else: # blocks by column are compatible
+                tb_proto = type_blocks
+
+            # all TypeBlocks have the same number of blocks by here
+            for block_idx in range(len(tb_proto[0]._blocks)):
+                block_parts = []
+                for tb_proto_idx in range(len(tb_proto)): #pylint: disable=C0200
+                    b = column_2d_filter(tb_proto[tb_proto_idx]._blocks[block_idx])
+                    block_parts.append(b)
+                yield concat_resolved(block_parts) # returns immutable array
+        else: # blocks not alignable
+            # break into single column arrays for maximum type integrity; there might be an alternative reblocking that could be more efficient, but determining that shape might be complex
+            for i in range(type_blocks[0].shape[1]):
+                block_parts = [tb._extract_array(column_key=i) for tb in type_blocks]
+                yield concat_resolved(block_parts)
+
+
     #---------------------------------------------------------------------------
 
     def __init__(self, *,
@@ -570,15 +613,18 @@ class TypeBlocks(ContainerOperand):
         post = np.concatenate([column_2d_filter(x) for x in group], axis=1)
         # NOTE: if give non-native byteorder dtypes, will convert them to native
         if dtype is not None and post.dtype != dtype:
-            # could use `out` arguement of np.concatenate to avoid copy, but would have to calculate resultant size first
+            # could use `out` argument of np.concatenate to avoid copy, but would have to calculate resultant size first
             return post.astype(dtype)
         return post
 
     @classmethod
     def consolidate_blocks(cls,
-            raw_blocks: tp.Iterable[np.ndarray]) -> tp.Iterator[np.ndarray]:
+            raw_blocks: tp.Iterable[np.ndarray],
+            ) -> tp.Iterator[np.ndarray]:
         '''
         Generator consumer, generator producer of np.ndarray, consolidating if types are exact matches.
+
+        Returns: an Iterator of 1D or 2D arrays, consolidated if adjacent.
         '''
         group_dtype: tp.Optional[np.dtype] = None # store type found along contiguous blocks
         group = []
@@ -776,7 +822,6 @@ class TypeBlocks(ContainerOperand):
                 yield g, selection, self._extract(row_key=selection)
             elif axis == 1: # return columns extractions
                 yield g, selection, self._extract(column_key=selection)
-
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
@@ -2128,9 +2173,13 @@ class TypeBlocks(ContainerOperand):
                     coords.append((row_pos, t_start + col_pos))
             t_start = t_end
 
-        array = np.empty(shape=size, dtype=dt_resolve)
-        np.concatenate(parts, out=array)
-        array.flags.writeable = False
+        # if size is zero, dt_resolve will be None
+        if size > 0:
+            array = np.empty(shape=size, dtype=dt_resolve)
+            np.concatenate(parts, out=array)
+            array.flags.writeable = False
+        else:
+            array = EMPTY_ARRAY
 
         return coords, array
 
@@ -2197,7 +2246,7 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     def drop(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
         '''
-        Drop rows or columns from a TyepBlocks instance.
+        Drop rows or columns from a TypeBlocks instance.
 
         Args:
             key: if a single value, treated as a row key; if a tuple, treated as a pair of row, column keys.
@@ -2986,12 +3035,15 @@ class TypeBlocks(ContainerOperand):
         Args:
             axis: Dimension to drop, where 0 will drop rows and 1 will drop columns based on the condition function applied to a Boolean array.
         '''
-        # get a unified boolean array; as iisna will always return a Boolean, we can simply take the firtst block out of consolidation
+        # get a unified boolean array; as isna will always return a Boolean, we can simply take the first block out of consolidation
         unified = next(self.consolidate_blocks(isna_array(b) for b in self._blocks))
 
         # flip axis to condition funcion
-        condition_axis = 0 if axis else 1
-        to_drop = condition(unified, axis=condition_axis)
+        if unified.ndim == 2:
+            condition_axis = 0 if axis else 1
+            to_drop = condition(unified, axis=condition_axis)
+        else: #ndim == 1
+            to_drop = unified
         to_keep = np.logical_not(to_drop)
 
         if axis == 1:

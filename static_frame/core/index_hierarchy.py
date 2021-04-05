@@ -65,11 +65,13 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import setdiff2d
 from static_frame.core.util import UFunc
 from static_frame.core.util import union2d
+from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import array_sample
 from static_frame.core.util import key_to_datetime_key
-# from static_frame.core.util import array2d_to_array1d_tuples
+from static_frame.core.util import concat_resolved
+
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -598,14 +600,14 @@ class IndexHierarchy(IndexBase):
 
         # if no type blocks, use a levels
         if self._recache:
-            if isinstance(depth_level, int):
+            if isinstance(depth_level, INT_TYPES):
                 yield from self._levels.labels_at_depth(depth_level=depth_level)
             else:
                 yield from zip(
                         *(self._levels.labels_at_depth(depth_level=d) for d in depth_level)
                         )
         else:
-            if isinstance(depth_level, int):
+            if isinstance(depth_level, INT_TYPES):
                 yield from self._blocks._extract_array(column_key=depth_level)
             else:
                 yield from array2d_to_tuples(
@@ -959,7 +961,7 @@ class IndexHierarchy(IndexBase):
 
         sel: GetItemKeyType
 
-        if isinstance(depth_level, int):
+        if isinstance(depth_level, INT_TYPES):
             sel = depth_level
         else:
             sel = list(depth_level)
@@ -970,7 +972,7 @@ class IndexHierarchy(IndexBase):
             depth_level: DepthLevelSpecifier = 0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
         '''{}'''
-        if isinstance(depth_level, int):
+        if isinstance(depth_level, INT_TYPES):
             sel = depth_level
         else:
             raise NotImplementedError('selection from iterables is not implemented')
@@ -1183,7 +1185,6 @@ class IndexHierarchy(IndexBase):
                 )
         return tb.values
 
-
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
@@ -1242,6 +1243,35 @@ class IndexHierarchy(IndexBase):
         return self._levels.__contains__(value)
     #---------------------------------------------------------------------------
     # utility functions
+
+    def unique(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> np.ndarray:
+        '''
+        Return a NumPy array of unique values.
+
+        Args:
+            depth_level: Specify a single depth or multiple depths in an iterable.
+
+        Returns:
+            :obj:`numpy.ndarray`
+        '''
+        pos: tp.Optional[int] = None
+        if not isinstance(depth_level, INT_TYPES):
+            sel = list(depth_level)
+            if len(sel) == 1:
+                pos = sel.pop()
+        else: # is an int
+            pos = depth_level
+
+        if pos is not None:
+            if pos == 0:
+                return self._levels.index.values
+            return np.unique(
+                    concat_resolved(
+                    list(self._levels.index_array_at_depth(pos))
+                    ))
+        return np.unique(array2d_to_array1d(self.values_at_depth(sel)))
 
     @doc_inject()
     def equals(self,
@@ -1546,12 +1576,26 @@ class IndexHierarchy(IndexBase):
 
         return self.__class__(levels, name=self._name)
 
-    def level_drop(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:
+    def level_drop(self,
+            count: int = 1,
+            ) -> tp.Union[Index, 'IndexHierarchy']:
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the resulting index if the resulting levels are not unique.
 
         Args:
-            count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative values is the number of depths to remove from the leaf (inner) side of the hierarchy.
+            count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative value is the number of depths to remove from the leaf (inner) side of the hierarchy.
         '''
+        # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
+
+        if self._name_is_names():
+            if count < 0:
+                name = self._name[:count] #type: ignore
+            elif count > 0:
+                name = self._name[count:] #type: ignore
+            if len(name) == 1:
+                name = name[0]
+        else:
+            name = self._name
+
         if count < 0: # remove from inner
             levels = self._levels.to_index_level()
             for _ in range(abs(count)):
@@ -1565,18 +1609,19 @@ class IndexHierarchy(IndexBase):
                         levels_stack.extend(level.targets) #type: ignore
                 if levels.targets is None:  # if no targets, at the root
                     break
+
             if levels.targets is None: # fall back to 1D index
-                return levels.index
+                return levels.index.rename(name)
 
             # if we have TypeBlocks and levels is the same length
             if not self._recache and levels.__len__() == self.__len__():
                 blocks = self._blocks.iloc[NULL_SLICE, :count]
                 return self.__class__(levels,
-                        name=self._name,
                         blocks=blocks,
-                        own_blocks=True
+                        own_blocks=True,
+                        name=name,
                         )
-            return self.__class__(levels, name=self._name)
+            return self.__class__(levels, name=name)
 
         elif count > 0: # remove from outer
             levels = self._levels.to_index_level()
@@ -1589,7 +1634,7 @@ class IndexHierarchy(IndexBase):
                         targets.extend(target.targets)
                 index = levels.index.__class__(labels)
                 if not targets:
-                    return index
+                    return index.rename(name)
                 levels = levels.__class__(
                         index=index,
                         targets=ArrayGO(targets, own_iterable=True))
@@ -1598,11 +1643,11 @@ class IndexHierarchy(IndexBase):
             if not self._recache and levels.__len__() == self.__len__():
                 blocks = self._blocks.iloc[NULL_SLICE, count:]
                 return self.__class__(levels,
-                        name=self._name,
+                        name=name,
                         blocks=blocks,
                         own_blocks=True
                         )
-            return self.__class__(levels, name=self._name)
+            return self.__class__(levels, name=name)
 
         raise NotImplementedError('no handling for a 0 count drop level.')
 

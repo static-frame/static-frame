@@ -298,7 +298,7 @@ class IndexLevel:
             depth_level: int = 0
             ) -> tp.Iterator[tp.Hashable]:
         '''
-        Generator all labels found at a specified level, realized at full length.
+        Generator of all labels found at a specified level, realized at full length.
         '''
         def get_labels(index: Index,
                 targets: tp.Optional[ArrayGO]
@@ -335,7 +335,7 @@ class IndexLevel:
             depth_level: int = 0
             ) -> tp.Iterator[np.ndarray]:
         '''
-        Generator of arrays found at a depth level. Used in values_at_depth. This does not provide full-width representation.
+        Generator of arrays found at a depth level. This does not provide full-width representation.
         '''
         levels = deque(((self, 0),))
         while levels:

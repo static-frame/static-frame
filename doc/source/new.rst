@@ -1,10 +1,30 @@
 What is New in Static Frame
 ===============================
 
+0.8.6
+----------
+
+``Frame.rename`` now accepts optional arguments for ``index`` and ``columns`` renaming.
+
+``Series.rename`` now accepts an optional argument for ``index`` renaming.
+
+Added ``Frame.relabel_shift_in()`` and ``Frame.relabel_shift_out()``.
+
+Fixed issue where ``Frame.dropna()`` fails on single-columns ``Frame``.
+
+Extended ``IndexHierarchy.level_drop`` to perform corresponding drops on ``name`` when ``name`` is an appropriately sized tuple.
+
+Extended ``Frame.set_index`` to support creating a 1D index of tuples when more than one column is selected.
+
+
 0.8.5
 ----------
 
 ``Frame.from_sql`` now properly applies ``dtypes`` to columns used by ``index_depth`` selections.
+
+Added ``Index.unique`` and ``IndexHierarchy.unique``, both taking a ``depth_level`` specifier for selecting one or more depths.
+
+Fixed issue with ``Frame.bloc`` selections that result in a zero-sized ``Series``.
 
 
 0.8.4

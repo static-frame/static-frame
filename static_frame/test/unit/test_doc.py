@@ -2262,13 +2262,13 @@ quark                              strange 0.1       -0.333
 
 >>> f.relabel_level_drop(index=1)
 <Frame>
-<Index> mass      charge    <<U6>
-<Index>
-muon    0.106     -1.0
-tau     1.777     -1.0
-charm   1.3       0.666
-strange 0.1       -0.333
-<<U7>   <float64> <float64>
+<Index>       mass      charge    <<U6>
+<Index: name>
+muon          0.106     -1.0
+tau           1.777     -1.0
+charm         1.3       0.666
+strange       0.1       -0.333
+<<U7>         <float64> <float64>
 
 #end_Frame-relabel_level_drop()
 

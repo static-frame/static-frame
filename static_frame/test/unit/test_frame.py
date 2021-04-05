@@ -5032,6 +5032,17 @@ class TestUnit(TestCase):
         f4 = f3.dropna()
         self.assertNotEqual(id(f3), id(f4))
 
+    def test_frame_dropna_e(self) -> None:
+
+        f1 = sf.Series([1, 2]).to_frame()
+        f2 = f1.dropna()
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, 1), (1, 2))),))
+
+        f3 = sf.Series([1, 2, np.nan]).to_frame()
+        f4 = f3.dropna()
+        self.assertEqual(f4.to_pairs(0),
+                ((0, ((0, 1), (1, 2))),))
 
 
     #---------------------------------------------------------------------------
@@ -7296,7 +7307,7 @@ class TestUnit(TestCase):
                 columns=('r', 's',),
                 index=('x', 'z'))
 
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(AxisInvalid):
             f = Frame.from_concat((f1, f2), axis=None)
 
 
@@ -7693,6 +7704,20 @@ class TestUnit(TestCase):
             for i in range(f1.shape[1]):
                 f2 = f1.set_index(i, drop=True)
                 self.assertTrue(f2.shape == (3, f1.shape[1] - 1))
+
+    def test_frame_set_index_e(self) -> None:
+        f1 = ff.parse('s(3,5)|v(str)|i(I, int)')
+
+        f2 = f1.set_index([1, 2])
+        self.assertEqual(f2.index.name, (1, 2))
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((('zaji', 'ztsv'), 'zjZQ'), (('zJnC', 'zUvW'), 'zO5l'), (('zDdR', 'zkuW'), 'zEdH'))), (1, ((('zaji', 'ztsv'), 'zaji'), (('zJnC', 'zUvW'), 'zJnC'), (('zDdR', 'zkuW'), 'zDdR'))), (2, ((('zaji', 'ztsv'), 'ztsv'), (('zJnC', 'zUvW'), 'zUvW'), (('zDdR', 'zkuW'), 'zkuW'))), (3, ((('zaji', 'ztsv'), 'z2Oo'), (('zJnC', 'zUvW'), 'z5l6'), (('zDdR', 'zkuW'), 'zCE3'))), (4, ((('zaji', 'ztsv'), 'zDVQ'), (('zJnC', 'zUvW'), 'z5hI'), (('zDdR', 'zkuW'), 'zyT8'))))
+                )
+        f3 = f1.set_index(slice(2,None), drop=True)
+        self.assertEqual(f3.index.name, (2, 3, 4))
+        self.assertEqual(f3.to_pairs(),
+                ((0, ((('ztsv', 'z2Oo', 'zDVQ'), 'zjZQ'), (('zUvW', 'z5l6', 'z5hI'), 'zO5l'), (('zkuW', 'zCE3', 'zyT8'), 'zEdH'))), (1, ((('ztsv', 'z2Oo', 'zDVQ'), 'zaji'), (('zUvW', 'z5l6', 'z5hI'), 'zJnC'), (('zkuW', 'zCE3', 'zyT8'), 'zDdR'))))
+                )
 
 
     #---------------------------------------------------------------------------
@@ -8138,6 +8163,37 @@ class TestUnit(TestCase):
         f2 = Frame(f1)
         self.assertEqual(f2.name, 'foo')
 
+    def test_frame_rename_b(self) -> None:
+
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'),
+                name='foo')
+
+        f2 = f1.rename(None, index='a', columns='b')
+        self.assertEqual(f2.name, None)
+        self.assertEqual(f2.index.name, 'a')
+        self.assertEqual(f2.columns.name, 'b')
+
+
+    def test_frame_rename_c(self) -> None:
+
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'),
+                name='foo')
+
+        f2 = f1.rename(columns='x')
+        self.assertEqual(f2.name, 'foo')
+        self.assertEqual(f2.columns.name, 'x')
 
     #---------------------------------------------------------------------------
 
@@ -9386,6 +9442,7 @@ class TestUnit(TestCase):
                 (('x', 0), ('y', 1), ('z', 0)))
 
 
+    #---------------------------------------------------------------------------
     def test_frame_bloc_a(self) -> None:
 
         f1= Frame.from_dict(
@@ -9429,6 +9486,24 @@ class TestUnit(TestCase):
                 f.assign.bloc[f]('T').assign.bloc[~f]('').to_pairs(0),
                 (('d', (('a', 'T'), ('b', ''))), ('c', (('a', ''), ('b', 'T'))))
                 )
+
+
+    def test_frame_bloc_c(self) -> None:
+
+        f = sf.Frame.from_records(
+                [[False, False, False], [False, False, False]],
+                index=('a', 'b'),
+                columns=['x', 'y', 'z'])
+
+        s1 = f.bloc[f == True] # pylint: disable=C0121
+        self.assertEqual(len(s1), 0)
+        self.assertEqual(s1.index.dtype, object)
+
+        s2 = f.bloc[f == False] # pylint: disable=C0121
+        self.assertEqual(s2.to_pairs(),
+                ((('a', 'x'), False), (('b', 'x'), False), (('a', 'y'), False), (('b', 'y'), False), (('a', 'z'), False), (('b', 'z'), False))
+                )
+
 
     #---------------------------------------------------------------------------
     def test_frame_unset_index_a(self) -> None:
@@ -11523,6 +11598,148 @@ class TestUnit(TestCase):
         self.assertEqual(id(f2._blocks._blocks[1]), a2_id)
         self.assertEqual(id(f2._blocks._blocks[2]), a2_id)
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_relabel_shift_in_a(self) -> None:
+
+        f1 = ff.parse('s(5,4)|i(I,int)|c(I,str)|v(str)')
+
+        f2 = f1.relabel_shift_in('zUvW', axis=0)
+        self.assertEqual(f2.to_pairs(),
+                (('zZbu', (((34715, 'ztsv'), 'zjZQ'), ((-3648, 'zUvW'), 'zO5l'), ((91301, 'zkuW'), 'zEdH'), ((30205, 'zmVj'), 'zB7E'), ((54020, 'z2Oo'), 'zwIp'))), ('ztsv', (((34715, 'ztsv'), 'zaji'), ((-3648, 'zUvW'), 'zJnC'), ((91301, 'zkuW'), 'zDdR'), ((30205, 'zmVj'), 'zuVU'), ((54020, 'z2Oo'), 'zKka'))), ('zkuW', (((34715, 'ztsv'), 'z2Oo'), ((-3648, 'zUvW'), 'z5l6'), ((91301, 'zkuW'), 'zCE3'), ((30205, 'zmVj'), 'zr4u'), ((54020, 'z2Oo'), 'zYVB')))))
+        self.assertEqual(f2.index.name, ('__index0__', 'zUvW'))
+
+        f3 = f1.relabel_shift_in(30205, axis=1)
+        self.assertEqual(f3.to_pairs(),
+                ((('zZbu', 'zB7E'), ((34715, 'zjZQ'), (-3648, 'zO5l'), (91301, 'zEdH'), (54020, 'zwIp'))), (('ztsv', 'zuVU'), ((34715, 'zaji'), (-3648, 'zJnC'), (91301, 'zDdR'), (54020, 'zKka'))), (('zUvW', 'zmVj'), ((34715, 'ztsv'), (-3648, 'zUvW'), (91301, 'zkuW'), (54020, 'z2Oo'))), (('zkuW', 'zr4u'), ((34715, 'z2Oo'), (-3648, 'z5l6'), (91301, 'zCE3'), (54020, 'zYVB'))))
+                )
+        self.assertEqual(f3.columns.name, ('__index0__', 30205))
+
+    def test_frame_relabel_shift_in_b(self) -> None:
+
+        f1 = ff.parse('s(5,4)|i(I,int)|c(I,str)|v(str)')
+
+        f2 = f1.relabel_shift_in(['ztsv', 'zkuW'], axis=0)
+        self.assertEqual(f2.to_pairs(),
+                (('zZbu', (((34715, 'zaji', 'z2Oo'), 'zjZQ'), ((-3648, 'zJnC', 'z5l6'), 'zO5l'), ((91301, 'zDdR', 'zCE3'), 'zEdH'), ((30205, 'zuVU', 'zr4u'), 'zB7E'), ((54020, 'zKka', 'zYVB'), 'zwIp'))), ('zUvW', (((34715, 'zaji', 'z2Oo'), 'ztsv'), ((-3648, 'zJnC', 'z5l6'), 'zUvW'), ((91301, 'zDdR', 'zCE3'), 'zkuW'), ((30205, 'zuVU', 'zr4u'), 'zmVj'), ((54020, 'zKka', 'zYVB'), 'z2Oo'))))
+                )
+        self.assertEqual(f2.index.name, ('__index0__', 'ztsv', 'zkuW'))
+
+
+        f3 = f1.relabel_shift_in([34715, 54020], axis=1)
+        self.assertEqual(f3.to_pairs(),
+                ((('zZbu', 'zjZQ', 'zwIp'), ((-3648, 'zO5l'), (91301, 'zEdH'), (30205, 'zB7E'))), (('ztsv', 'zaji', 'zKka'), ((-3648, 'zJnC'), (91301, 'zDdR'), (30205, 'zuVU'))), (('zUvW', 'ztsv', 'z2Oo'), ((-3648, 'zUvW'), (91301, 'zkuW'), (30205, 'zmVj'))), (('zkuW', 'z2Oo', 'zYVB'), ((-3648, 'z5l6'), (91301, 'zCE3'), (30205, 'zr4u')))))
+
+        self.assertEqual(f3.columns.name, ('__index0__', 34715, 54020))
+
+    def test_frame_relabel_shift_in_c(self) -> None:
+
+        f1 = ff.parse('s(5,4)|i(I,int)|c(I,str)|v(str)')
+        f2 = f1.relabel_shift_in(slice(None), axis=0)
+        self.assertEqual(f2.shape, (5, 0))
+        self.assertEqual(f2.index.name, ('__index0__', 'zZbu', 'ztsv', 'zUvW', 'zkuW'))
+
+        f3 = f1.relabel_shift_in(slice(None), axis=1)
+        self.assertEqual(f3.shape, (0, 4))
+        self.assertEqual(f3.columns.name, ('__index0__', 34715, -3648, 91301, 30205, 54020))
+
+    def test_frame_relabel_shift_in_d(self) -> None:
+
+        f1 = ff.parse('s(3,4)|i(IH,(int,str))|c(IH,(str,int))|v(str)')
+
+        f2 = f1.relabel_shift_in([('zZbu', 119909), ('ztsv', 172133)])
+        self.assertEqual(f1.shape, (3, 4))
+        self.assertEqual(f2.to_pairs(),
+                ((('zZbu', 105269), (((34715, 'zOyq', 'zaji', 'z2Oo'), 'zjZQ'), ((34715, 'zIA5', 'zJnC', 'z5l6'), 'zO5l'), ((-3648, 'zGDJ', 'zDdR', 'zCE3'), 'zEdH'))), (('ztsv', 194224), (((34715, 'zOyq', 'zaji', 'z2Oo'), 'ztsv'), ((34715, 'zIA5', 'zJnC', 'z5l6'), 'zUvW'), ((-3648, 'zGDJ', 'zDdR', 'zCE3'), 'zkuW')))))
+        self.assertEqual(f2.index.name, ('__index0__', '__index1__', ('zZbu', 119909), ('ztsv', 172133)))
+
+
+        f3 = f1.relabel_shift_in(slice((34715, 'zOyq'), None), axis=1)
+        self.assertEqual(f1.shape, (3, 4))
+        self.assertEqual(f3.to_pairs(),
+                ((('zZbu', 105269, 'zjZQ', 'zO5l', 'zEdH'), ()), (('zZbu', 119909, 'zaji', 'zJnC', 'zDdR'), ()), (('ztsv', 194224, 'ztsv', 'zUvW', 'zkuW'), ()), (('ztsv', 172133, 'z2Oo', 'z5l6', 'zCE3'), ()))
+                )
+        self.assertEqual(f3.columns.name,
+                ('__index0__', '__index1__', (34715, 'zOyq'), (34715, 'zIA5'), (-3648, 'zGDJ')))
+
+
+    def test_frame_relabel_shift_in_e(self) -> None:
+
+        f1 = ff.parse('f(Fg)|s(3,4)|i(I,int)|c(IHg,(str,int))|v(str)').rename(index='a', columns=('x', 'y'))
+
+        f2 = f1.relabel_shift_in(('zZbu', 119909), axis=0)
+        self.assertEqual(f2.index.name, ('a', ('zZbu', 119909)))
+        self.assertTrue(f2.__class__, FrameGO)
+
+        f3 = f1.relabel_shift_in(-3648, axis=1)
+        self.assertEqual(f3.columns.name, ('x', 'y', -3648))
+
+        self.assertEqual(f3.to_pairs(),
+                ((('zZbu', 105269, 'zO5l'), ((34715, 'zjZQ'), (91301, 'zEdH'))), (('zZbu', 119909, 'zJnC'), ((34715, 'zaji'), (91301, 'zDdR'))), (('ztsv', 194224, 'zUvW'), ((34715, 'ztsv'), (91301, 'zkuW'))), (('ztsv', 172133, 'z5l6'), ((34715, 'z2Oo'), (91301, 'zCE3'))))
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_relabel_shift_out_a(self) -> None:
+
+        f1 = ff.parse('s(3,4)|i(I,int)|c(I,str)|v(str)')
+        f2 = f1.relabel_shift_out(0, axis=0)
+
+        self.assertEqual(f2.to_pairs(),
+                (('__index0__', ((0, 34715), (1, -3648), (2, 91301))), ('zZbu', ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), ('ztsv', ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), ('zUvW', ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), ('zkuW', ((0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
+
+        f3 = f1.relabel_shift_out(0, axis=1)
+        self.assertEqual(f3.to_pairs(),
+                ((0, (('__index0__', 'zZbu'), (34715, 'zjZQ'), (-3648, 'zO5l'), (91301, 'zEdH'))), (1, (('__index0__', 'ztsv'), (34715, 'zaji'), (-3648, 'zJnC'), (91301, 'zDdR'))), (2, (('__index0__', 'zUvW'), (34715, 'ztsv'), (-3648, 'zUvW'), (91301, 'zkuW'))), (3, (('__index0__', 'zkuW'), (34715, 'z2Oo'), (-3648, 'z5l6'), (91301, 'zCE3'))))
+                )
+
+
+    def test_frame_relabel_shift_out_b(self) -> None:
+
+        f1 = ff.parse('s(3,4)|i(IH,(int,str))|c(IH,(str,int))|v(str)').rename(
+                index=('a', 'b'), columns=('x', 'y'))
+
+        f2 = f1.relabel_shift_out([0, 1], axis=0)
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 34715), (1, 34715), (2, -3648))), ('b', ((0, 'zOyq'), (1, 'zIA5'), (2, 'zGDJ'))), (('zZbu', 105269), ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (('zZbu', 119909), ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (('ztsv', 194224), ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), (('ztsv', 172133), ((0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
+        self.assertEqual(f2.columns.name, ('x', 'y'))
+
+
+        f3 = f1.relabel_shift_out(0, axis=0)
+        self.assertEqual(f3.to_pairs(),
+                (('a', (('zOyq', 34715), ('zIA5', 34715), ('zGDJ', -3648))), (('zZbu', 105269), (('zOyq', 'zjZQ'), ('zIA5', 'zO5l'), ('zGDJ', 'zEdH'))), (('zZbu', 119909), (('zOyq', 'zaji'), ('zIA5', 'zJnC'), ('zGDJ', 'zDdR'))), (('ztsv', 194224), (('zOyq', 'ztsv'), ('zIA5', 'zUvW'), ('zGDJ', 'zkuW'))), (('ztsv', 172133), (('zOyq', 'z2Oo'), ('zIA5', 'z5l6'), ('zGDJ', 'zCE3')))))
+        self.assertEqual(f3.index.name, 'b')
+        self.assertEqual(f3.columns.name, ('x', 'y'))
+
+
+        f4 = f1.relabel_shift_out(0, axis=1)
+        self.assertEqual(f4.index.name, ('a', 'b'))
+        self.assertEqual(f4.to_pairs(),
+                ((105269, (('x', 'zZbu'), ((34715, 'zOyq'), 'zjZQ'), ((34715, 'zIA5'), 'zO5l'), ((-3648, 'zGDJ'), 'zEdH'))), (119909, (('x', 'zZbu'), ((34715, 'zOyq'), 'zaji'), ((34715, 'zIA5'), 'zJnC'), ((-3648, 'zGDJ'), 'zDdR'))), (194224, (('x', 'ztsv'), ((34715, 'zOyq'), 'ztsv'), ((34715, 'zIA5'), 'zUvW'), ((-3648, 'zGDJ'), 'zkuW'))), (172133, (('x', 'ztsv'), ((34715, 'zOyq'), 'z2Oo'), ((34715, 'zIA5'), 'z5l6'), ((-3648, 'zGDJ'), 'zCE3'))))
+                )
+
+        f5 = f1.relabel_shift_out([0, 1], axis=1)
+        self.assertEqual(f5.index.name, ('a', 'b'))
+        self.assertEqual(f5.to_pairs(),
+                ((0, (('x', 'zZbu'), ('y', 105269), ((34715, 'zOyq'), 'zjZQ'), ((34715, 'zIA5'), 'zO5l'), ((-3648, 'zGDJ'), 'zEdH'))), (1, (('x', 'zZbu'), ('y', 119909), ((34715, 'zOyq'), 'zaji'), ((34715, 'zIA5'), 'zJnC'), ((-3648, 'zGDJ'), 'zDdR'))), (2, (('x', 'ztsv'), ('y', 194224), ((34715, 'zOyq'), 'ztsv'), ((34715, 'zIA5'), 'zUvW'), ((-3648, 'zGDJ'), 'zkuW'))), (3, (('x', 'ztsv'), ('y', 172133), ((34715, 'zOyq'), 'z2Oo'), ((34715, 'zIA5'), 'z5l6'), ((-3648, 'zGDJ'), 'zCE3'))))
+                )
+
+    def test_frame_relabel_shift_out_c(self) -> None:
+
+        f1 = ff.parse('s(3,4)|v(str)').rename(
+                index=('a', 'b'), columns=('x', 'y'))
+
+        f2 = f1.relabel_shift_out(0, axis=0)
+        self.assertEqual(f2.columns.name, ('x', 'y'))
+
+        self.assertEqual(f2.to_pairs(),
+                ((('a', 'b'), ((0, 0), (1, 1), (2, 2))), (0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), (3, ((0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
+
+
+        f3 = f1.relabel_shift_out(0, axis=1)
+        self.assertEqual(f3.index.name, ('a', 'b'))
+        self.assertEqual(f3.to_pairs(),
+                ((0, ((('x', 'y'), 0), (0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((('x', 'y'), 1), (0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((('x', 'y'), 2), (0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), (3, ((('x', 'y'), 3), (0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
 
 
 
