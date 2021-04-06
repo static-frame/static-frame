@@ -25,7 +25,6 @@ from static_frame.core.exception import ErrorInitStore
 
 
 class TestUnit(TestCase):
-
     #---------------------------------------------------------------------------
 
     def test_store_init_a(self) -> None:
@@ -312,7 +311,10 @@ class TestUnit(TestCase):
                 self.assertEqual(post[1].name, 'bar')
                 self.assertEqual(post[2].name, 'foo')
 
-    def test_store_zip_parquet_write_multiprocess(self) -> None:
+
+class TestUnitMultiProcess(TestCase):
+
+    def run_assertions(self, klass):
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
                 index=('x', 'y'),
@@ -327,21 +329,35 @@ class TestUnit(TestCase):
                 name='baz')
 
         with temp_file('.zip') as fp:
-            for max_workers in (1, 2):
-                config = StoreConfig(
-                        index_depth=1,
-                        include_index=True,
-                        columns_depth=1,
-                        write_max_workers=max_workers,
-                )
-                st = StoreZipParquet(fp)
-                st.write(((f.name, f) for f in (f1, f2, f3)), config=config)
+            for max_workers in range(1, 6):
+                for chunksize in (1, 2, 3):
+                    config = StoreConfig(
+                            index_depth=1,
+                            include_index=True,
+                            columns_depth=1,
+                            write_max_workers=max_workers,
+                            write_chunksize=chunksize,
+                    )
+                    st = klass(fp)
+                    st.write(((f.name, f) for f in (f1, f2, f3)), config=config)
 
-                post = tuple(st.read_many(('baz', 'bar', 'foo'), config=config))
-                self.assertEqual(len(post), 3)
-                self.assertEqual(post[0].name, 'baz')
-                self.assertEqual(post[1].name, 'bar')
-                self.assertEqual(post[2].name, 'foo')
+                    post = tuple(st.read_many(('baz', 'bar', 'foo'), config=config))
+                    self.assertEqual(len(post), 3)
+                    self.assertEqual(post[0].name, 'baz')
+                    self.assertEqual(post[1].name, 'bar')
+                    self.assertEqual(post[2].name, 'foo')
+
+    def test_store_zip_tsv_mp(self):
+        self.run_assertions(StoreZipTSV)
+
+    def test_store_zip_csv_mp(self):
+        self.run_assertions(StoreZipCSV)
+
+    def test_store_zip_pickle_mp(self):
+        self.run_assertions(StoreZipPickle)
+
+    def test_store_zip_parquet_mp(self):
+        self.run_assertions(StoreZipParquet)
 
 
 if __name__ == '__main__':

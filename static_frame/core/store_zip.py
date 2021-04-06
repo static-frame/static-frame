@@ -168,7 +168,7 @@ class _StoreZip(Store):
                     max_workers=config_map.default.write_max_workers,
             )
         else:
-            label_and_bytes = (self._frame_to_bytes(x) for x in gen())
+            label_and_bytes = (self._payload_to_bytes(x) for x in gen())
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame_bytes in label_and_bytes:
@@ -204,7 +204,7 @@ class _StoreZipDelimited(_StoreZip):
         )
 
     @staticmethod
-    def _frame_to_bytes(payload: BytesConstructionPayload) -> tp.Tuple[tp.Hashable, tp.ByteString]:
+    def _payload_to_bytes(payload: BytesConstructionPayload) -> tp.Tuple[tp.Hashable, tp.ByteString]:
         c = payload.config
 
         dst = StringIO()
@@ -279,7 +279,7 @@ class StoreZipPickle(_StoreZip):
                 yield getattr(frame, exporter)()
 
     @staticmethod
-    def _frame_to_bytes(payload: BytesConstructionPayload) -> tp.Tuple[tp.Hashable, tp.ByteString]:
+    def _payload_to_bytes(payload: BytesConstructionPayload) -> tp.Tuple[tp.Hashable, tp.ByteString]:
         return payload.name, payload.exporter(payload.frame)
 
 
@@ -315,7 +315,7 @@ class StoreZipParquet(_StoreZip):
         )
 
     @staticmethod
-    def _frame_to_bytes(payload: BytesConstructionPayload) -> tp.Tuple[tp.Hashable, tp.ByteString]:
+    def _payload_to_bytes(payload: BytesConstructionPayload) -> tp.Tuple[tp.Hashable, tp.ByteString]:
         c = payload.config
 
         dst = BytesIO()
