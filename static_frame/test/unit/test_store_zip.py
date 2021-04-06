@@ -1,4 +1,5 @@
 import unittest
+import typing as tp
 # from io import StringIO
 
 from static_frame.core.frame import Frame
@@ -314,7 +315,7 @@ class TestUnit(TestCase):
 
 class TestUnitMultiProcess(TestCase):
 
-    def run_assertions(self, klass):
+    def run_assertions(self, klass: tp.Type[_StoreZip]) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
                 index=('x', 'y'),
@@ -347,16 +348,16 @@ class TestUnitMultiProcess(TestCase):
                     self.assertEqual(post[1].name, 'bar')
                     self.assertEqual(post[2].name, 'foo')
 
-    def test_store_zip_tsv_mp(self):
+    def test_store_zip_tsv_mp(self) -> None:
         self.run_assertions(StoreZipTSV)
 
-    def test_store_zip_csv_mp(self):
+    def test_store_zip_csv_mp(self) -> None:
         self.run_assertions(StoreZipCSV)
 
-    def test_store_zip_pickle_mp(self):
+    def test_store_zip_pickle_mp(self) -> None:
         self.run_assertions(StoreZipPickle)
 
-    def test_store_zip_parquet_mp(self):
+    def test_store_zip_parquet_mp(self) -> None:
         self.run_assertions(StoreZipParquet)
 
 
