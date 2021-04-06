@@ -17,10 +17,11 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.container_util import container_to_exporter_attr
 
 
-class FrameExporter:#(tp.Protocol):
-    def __call__(self, frame: Frame, *args: tp.Any, **kwargs: tp.Any) -> tp.Any:
-        raise NotImplementedError
+# class FrameExporter(tp.Protocol):
+#     def __call__(self, frame: Frame, *args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+#         raise NotImplementedError
 
+FrameExporter = AnyCallable # Protocol not supported yet...
 
 FrameConstructor = tp.Callable[[tp.Any], Frame]
 
@@ -164,7 +165,7 @@ class _StoreZip(Store):
                         name=label,
                         config=config_map[label].to_store_config_he(),
                         frame=frame,
-                        exporter=self.__class__._EXPORTER, # type: ignore. TODO: Can remove when protocol is supported.
+                        exporter=self.__class__._EXPORTER,
                 )
 
         if multiprocess:
