@@ -1042,9 +1042,15 @@ def slice_to_ascending_slice(
         start = key.stop if key.stop is None else key.stop + 1
         return slice(start, stop, 1)
 
-    # if 6, 1, -2: 6, 4, 2; then
-    start = next(reversed(range(*key.indices(size))))
-    return slice(start, stop, -key.step)
+    step = abs(key.step)
+    start = size - 1 if key.start is None else min(size - 1, key.start)
+
+    if key.stop is None:
+        start = start - (step * (start // step))
+    else:
+        start = start - (step * ((start - key.stop - 1) // step))
+
+    return slice(start, stop, step)
 
 def slice_to_inclusive_slice(key: slice) -> slice:
     '''Make a stop exclusive key inclusive by adding one to the stop value.
