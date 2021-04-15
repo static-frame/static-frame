@@ -1,6 +1,17 @@
 What is New in Static Frame
 ===============================
 
+
+0.8.7
+----------
+
+Implemented support for multiprocessing Frame reading from ``StoreZip`` subclasses used by ``Bus``, ``Batch``, and ``Quilt``.
+
+Activated ``write_max_workers`` and ``write_chunksize`` in ``StoreConfig``.
+
+Added py.typed file to package.
+
+
 0.8.6
 ----------
 
