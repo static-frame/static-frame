@@ -1,1 +1,1 @@
-include requirements.txt requirements-extras.txt requirements-test.txt LICENSE.txt
+include requirements.txt requirements-extras.txt requirements-test.txt LICENSE.txt static_frame/py.typed
