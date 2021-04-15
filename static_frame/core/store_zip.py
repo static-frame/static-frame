@@ -22,31 +22,27 @@ from static_frame.core.container_util import container_to_exporter_attr
 #         raise NotImplementedError
 
 FrameExporter = AnyCallable # Protocol not supported yet...
-
 FrameConstructor = tp.Callable[[tp.Any], Frame]
+LabelAndBytes = tp.Tuple[tp.Hashable, tp.Union[str, bytes]]
 
-
-class DeferredFrameInitPayload(tp.NamedTuple):
+class PayloadBytesToFrame(tp.NamedTuple):
     '''
-    Defines the necessary objects to construct a frame. Used for multiprocessing.
+    Defines the necessary objects to construct a Frame. Used for multiprocessing.
     '''
     src: bytes
     name: tp.Hashable
     config: StoreConfigHE
     constructor: FrameConstructor
 
-
-class BytesConstructionPayload(tp.NamedTuple):
+class PayloadFrameToBytes(tp.NamedTuple):
     '''
-    Defines the necessary objects to construct writeable frame bytes. Used for multiprocessing.
+    Defines the necessary objects to construct writeable Frame bytes. Used for multiprocessing.
     '''
     name: tp.Hashable
     config: StoreConfigHE
     frame: Frame
     exporter: FrameExporter
 
-
-LabelAndBytesT = tp.Tuple[tp.Hashable, tp.Union[str, bytes]]
 
 class _StoreZip(Store):
 
@@ -58,8 +54,8 @@ class _StoreZip(Store):
     def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
         raise NotImplementedError
 
-    @classmethod
-    def _build_frame(cls,
+    @staticmethod
+    def _build_frame(
             src: bytes,
             name: tp.Hashable,
             config: tp.Union[StoreConfigHE, StoreConfig],
@@ -68,7 +64,12 @@ class _StoreZip(Store):
         raise NotImplementedError
 
     @classmethod
-    def _build_frame_from_payload(cls, payload: DeferredFrameInitPayload) -> Frame:
+    def _payload_to_frame(cls,
+            payload: PayloadBytesToFrame,
+            ) -> Frame:
+        '''
+        Single argument wrapper for _build_frame().
+        '''
         return cls._build_frame(
                 src=payload.src,
                 name=payload.name,
@@ -97,13 +98,13 @@ class _StoreZip(Store):
             *,
             config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,
-        ) -> tp.Iterator[Frame]:
+            ) -> tp.Iterator[Frame]:
 
         config_map = StoreConfigMap.from_initializer(config)
         multiprocess: bool = config_map.default.read_max_workers is not None
         constructor: FrameConstructor = self._container_type_to_constructor(container_type)
 
-        def gen() -> tp.Iterable[tp.Union[DeferredFrameInitPayload, Frame]]:
+        def gen() -> tp.Iterable[tp.Union[PayloadBytesToFrame, Frame]]:
             with zipfile.ZipFile(self._fp) as zf:
                 for label in labels:
                     c: StoreConfig = config_map[label]
@@ -112,7 +113,7 @@ class _StoreZip(Store):
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
                     if multiprocess:
-                        yield DeferredFrameInitPayload( # pylint: disable=no-value-for-parameter
+                        yield PayloadBytesToFrame( # pylint: disable=no-value-for-parameter
                                 src=src,
                                 name=label,
                                 config=c.to_store_config_he(),
@@ -130,22 +131,22 @@ class _StoreZip(Store):
             chunksize = config_map.default.read_chunksize
 
             with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
-                yield from executor.map(self._build_frame_from_payload, gen(), chunksize=chunksize)
+                yield from executor.map(self._payload_to_frame, gen(), chunksize=chunksize)
         else:
             yield from gen() # type: ignore
 
     # --------------------------------------------------------------------------
 
     @staticmethod
-    def _payload_to_bytes(payload: BytesConstructionPayload) -> LabelAndBytesT:
+    def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
         raise NotImplementedError
 
     @classmethod
     def _serialize_multiprocess_write(cls,
-            items: tp.Iterable[BytesConstructionPayload],
+            items: tp.Iterable[PayloadFrameToBytes],
             chunksize: int,
             max_workers:int,
-        ) -> tp.Iterable[LabelAndBytesT]:
+        ) -> tp.Iterable[LabelAndBytes]:
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             yield from executor.map(cls._payload_to_bytes, items, chunksize=chunksize)
 
@@ -154,33 +155,32 @@ class _StoreZip(Store):
             items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None
-        ) -> None:
+            ) -> None:
         config_map = StoreConfigMap.from_initializer(config)
         multiprocess = (config_map.default.write_max_workers is not None and
                         config_map.default.write_max_workers > 1)
 
-        def gen() -> tp.Iterable[BytesConstructionPayload]:
+        def gen() -> tp.Iterable[PayloadFrameToBytes]:
             for label, frame in items:
-                yield BytesConstructionPayload( # pylint: disable=no-value-for-parameter
+                yield PayloadFrameToBytes( # pylint: disable=no-value-for-parameter
                         name=label,
                         config=config_map[label].to_store_config_he(),
                         frame=frame,
                         exporter=self.__class__._EXPORTER,
-                )
+                        )
 
         if multiprocess:
-            label_and_bytes: tp.Iterable[LabelAndBytesT] = self._serialize_multiprocess_write(
+            label_and_bytes: tp.Iterable[LabelAndBytes] = self._serialize_multiprocess_write(
                     gen(),
                     chunksize=config_map.default.write_chunksize,
                     max_workers=tp.cast(int, config_map.default.write_max_workers),
-            )
+                    )
         else:
             label_and_bytes = (self._payload_to_bytes(x) for x in gen())
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame_bytes in label_and_bytes:
                 label_encoded = config_map.default.label_encode(label)
-
                 # this will write it without a container
                 zf.writestr(label_encoded + self._EXT_CONTAINED, frame_bytes)
 
@@ -194,13 +194,14 @@ class _StoreZipDelimited(_StoreZip):
     def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
         return getattr(container_type, cls._CONSTRUCTOR_ATTR) # type: ignore
 
-    @classmethod
-    def _build_frame(cls,
+    @staticmethod
+    def _build_frame(
             src: bytes,
             name: tp.Hashable,
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
-        ) -> Frame:
+            ) -> Frame:
+
         return constructor( # type: ignore
             StringIO(src.decode()),
             index_depth=config.index_depth,
@@ -208,10 +209,10 @@ class _StoreZipDelimited(_StoreZip):
             dtypes=config.dtypes,
             name=name,
             consolidate_blocks=config.consolidate_blocks,
-        )
+            )
 
     @staticmethod
-    def _payload_to_bytes(payload: BytesConstructionPayload) -> LabelAndBytesT:
+    def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
         c = payload.config
 
         dst = StringIO()
@@ -256,8 +257,8 @@ class StoreZipPickle(_StoreZip):
     def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
         return pickle.loads
 
-    @classmethod
-    def _build_frame(cls,
+    @staticmethod
+    def _build_frame(
             src: bytes,
             name: tp.Hashable,
             config: tp.Union[StoreConfigHE, StoreConfig],
@@ -286,7 +287,7 @@ class StoreZipPickle(_StoreZip):
                 yield getattr(frame, exporter)()
 
     @staticmethod
-    def _payload_to_bytes(payload: BytesConstructionPayload) -> LabelAndBytesT:
+    def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
         return payload.name, payload.exporter(payload.frame)
 
 
@@ -302,8 +303,8 @@ class StoreZipParquet(_StoreZip):
     def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
         return container_type.from_parquet
 
-    @classmethod
-    def _build_frame(cls,
+    @staticmethod
+    def _build_frame(
             src: bytes,
             name: tp.Hashable,
             config: tp.Union[StoreConfigHE, StoreConfig],
@@ -322,7 +323,7 @@ class StoreZipParquet(_StoreZip):
         )
 
     @staticmethod
-    def _payload_to_bytes(payload: BytesConstructionPayload) -> LabelAndBytesT:
+    def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
         c = payload.config
 
         dst = BytesIO()
