@@ -30,10 +30,10 @@ I = tp.TypeVar('I', bound='IndexBase')
 
 class IndexBase(ContainerOperand):
     '''
-    All indices are dervied from ``IndexBase``, including ``Index`` and ``IndexHierarchy``.
+    All indices are derived from ``IndexBase``, including ``Index`` and ``IndexHierarchy``.
     '''
 
-    __slots__ = () # defined in dervied classes
+    __slots__ = () # defined in derived classes
 
     #---------------------------------------------------------------------------
 

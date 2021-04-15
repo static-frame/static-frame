@@ -1598,7 +1598,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_iloc_b(self) -> None:
-        # this is example dervied from this question:
+        # this is example derived from this question:
         # https://stackoverflow.com/questions/22927181/selecting-specific-rows-and-columns-from-numpy-array
 
         a = np.arange(20).reshape((5,4))
