@@ -141,15 +141,6 @@ class _StoreZip(Store):
     def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
         raise NotImplementedError
 
-    @classmethod
-    def _serialize_multiprocess_write(cls,
-            items: tp.Iterable[PayloadFrameToBytes],
-            chunksize: int,
-            max_workers:int,
-        ) -> tp.Iterable[LabelAndBytes]:
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
-            yield from executor.map(cls._payload_to_bytes, items, chunksize=chunksize)
-
     @store_coherent_write
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
@@ -170,16 +161,16 @@ class _StoreZip(Store):
                         )
 
         if multiprocess:
-            label_and_bytes: tp.Iterable[LabelAndBytes] = self._serialize_multiprocess_write(
-                    gen(),
-                    chunksize=config_map.default.write_chunksize,
-                    max_workers=tp.cast(int, config_map.default.write_max_workers),
-                    )
+            def label_and_bytes() -> tp.Iterator[LabelAndBytes]:
+                with ProcessPoolExecutor(max_workers=config_map.default.write_max_workers) as executor:
+                    yield from executor.map(self._payload_to_bytes,
+                            gen(),
+                            chunksize=config_map.default.write_chunksize)
         else:
-            label_and_bytes = (self._payload_to_bytes(x) for x in gen())
+            label_and_bytes = lambda: (self._payload_to_bytes(x) for x in gen())
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for label, frame_bytes in label_and_bytes:
+            for label, frame_bytes in label_and_bytes():
                 label_encoded = config_map.default.label_encode(label)
                 # this will write it without a container
                 zf.writestr(label_encoded + self._EXT_CONTAINED, frame_bytes)
@@ -223,7 +214,7 @@ class _StoreZipDelimited(_StoreZip):
                 include_index_name=c.include_index_name,
                 include_columns=c.include_columns,
                 include_columns_name=c.include_columns_name
-        )
+                )
         return payload.name, dst.getvalue()
 
 
@@ -320,7 +311,7 @@ class StoreZipParquet(_StoreZip):
             dtypes=config.dtypes,
             name=name,
             consolidate_blocks=config.consolidate_blocks,
-        )
+            )
 
     @staticmethod
     def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
