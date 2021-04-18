@@ -11,6 +11,8 @@ Activated ``write_max_workers`` and ``write_chunksize`` in ``StoreConfig``.
 
 Added py.typed file to package.
 
+Improved exceptions raise when attempting to write to a file at an invalid path.
+
 
 0.8.6
 ----------
