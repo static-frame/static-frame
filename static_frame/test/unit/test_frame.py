@@ -6180,7 +6180,7 @@ class TestUnit(TestCase):
 
         with temp_file('', path=True) as fp:
             fp = os.path.join(fp, '__space__', 'test.txt')
-            with self.assertRaises(NotADirectoryError):
+            with self.assertRaises((NotADirectoryError, FileNotFoundError)):
                 f1.to_tsv(fp)
 
 
