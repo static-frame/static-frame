@@ -10,6 +10,7 @@ import string
 import typing as tp
 import unittest
 import os
+import io
 
 import numpy as np
 import frame_fixtures as ff
@@ -5566,7 +5567,7 @@ class TestUnit(TestCase):
             self.assertEqual(f1.to_pairs(0),
                     (('A', ((False, False), (True, True))), ('B', ((False, True), (True, False)))))
 
-
+    #---------------------------------------------------------------------------
     def test_frame_from_tsv_a(self) -> None:
 
         with temp_file('.txt', path=True) as fp:
@@ -5769,6 +5770,21 @@ class TestUnit(TestCase):
             self.assertEqual(f2.index.name, ('up', 'down'))
             self.assertEqual(f2.columns.name, None)
 
+    def test_frame_from_tsv_n(self) -> None:
+
+        f1 = sf.Frame(columns=['column'], index=sf.Index([], name='index'))
+        s = io.StringIO()
+        f1.to_tsv(s)
+
+        s.seek(0)
+        f2 = sf.Frame.from_tsv(s, index_depth=1, index_name_depth_level=0)
+        self.assertEqual(f2.index.name, 'index')
+        self.assertEqual(f2.to_pairs(), (('column', ()),))
+
+        s.seek(0)
+        f3 = sf.Frame.from_tsv(s, index_depth=1, columns_name_depth_level=0)
+        self.assertEqual(f3.columns.name, 'index')
+        self.assertEqual(f3.to_pairs(), (('column', ()),))
 
     #---------------------------------------------------------------------------
 

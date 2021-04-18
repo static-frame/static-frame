@@ -6,11 +6,11 @@ from itertools import chain
 from itertools import product
 from copy import deepcopy
 from operator import itemgetter
-
 import csv
 import json
 import sqlite3
 import typing as tp
+import warnings
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
@@ -1689,18 +1689,22 @@ class Frame(ContainerOperand):
 
         # genfromtxt takes missing_values, but this can only be a list, and does not work under some condition (i.e., a cell with no value). thus, this is deferred to from_sructured_array
 
-        array = np.genfromtxt(
-                row_source(),
-                delimiter=delimiter_native,
-                skip_header=0, # done in row_source
-                skip_footer=skip_footer,
-                comments=None,
-                # strange NP convention for this parameter: False is not supported, must use None to not parase headers
-                names= None,
-                dtype=None,
-                encoding=encoding,
-                invalid_raise=False,
-                )
+        with warnings.catch_warnings():
+            # silence: UserWarning: genfromtxt: Empty input file
+            warnings.simplefilter('ignore', UserWarning)
+
+            array = np.genfromtxt(
+                    row_source(),
+                    delimiter=delimiter_native,
+                    skip_header=0, # done in row_source
+                    skip_footer=skip_footer,
+                    comments=None,
+                    # strange NP convention for this parameter: False is not supported, must use None to not parase headers
+                    names= None,
+                    dtype=None,
+                    encoding=encoding,
+                    invalid_raise=False,
+                    )
         array.flags.writeable = False
 
         # construct columns prior to preparing data from structured array, as need columns to map dtypes
@@ -1763,7 +1767,8 @@ class Frame(ContainerOperand):
                     )
         else: # only column data in table
             if index_depth > 0:
-                raise ErrorInitFrame(f'no data from which to extract index_depth {index_depth}')
+                # no data is found an index depth was given; simulate empty index_arrays to create a empty index
+                index_arrays = [EMPTY_TUPLE] * index_depth
             data = FRAME_INITIALIZER_DEFAULT
 
         kwargs = dict(
