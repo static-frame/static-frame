@@ -5870,8 +5870,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=None)
-            f = open(fp)
-            lines = f.readlines()
+            with open(fp) as f:
+                lines = f.readlines()
             self.assertEqual(lines,
                     ['__index0__|r|s\n', 'w|2|None\n', 'x|3|nan\n']
                     )
@@ -5891,8 +5891,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=None)
-            f = open(fp)
-            lines = f.readlines()
+            with open(fp) as f:
+                lines = f.readlines()
             self.assertEqual(lines, [
                     '__index0__|__index1__|r|s\n',
                     '1|a|2|None\n',
@@ -5922,8 +5922,8 @@ class TestUnit(TestCase):
                 )
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf1)
-            f = open(fp)
-            lines1 = f.readlines()
+            with open(fp) as f:
+                lines1 = f.readlines()
             self.assertEqual(lines1,
                     ['__index0__|r|s|t\n',
                     'w|False|0.00000002|0.00000012\n',
@@ -5931,8 +5931,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf2)
-            f = open(fp)
-            lines2 = f.readlines()
+            with open(fp) as f:
+                lines2 = f.readlines()
             self.assertEqual(lines2,
                     ['__index0__|r|s|t\n',
                     'w|False|2.0000e-08|1.2300e-07\n',
@@ -5953,8 +5953,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp1:
             f1.to_delimited(fp1, delimiter='|', store_filter=None)
-            f = open(fp1)
-            lines = f.readlines()
+            with open(fp1) as f:
+                lines = f.readlines()
             self.assertEqual(lines, [
                     'foo|bar|r|s\n',
                     '1|a|2|None\n',
@@ -5965,8 +5965,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp2:
             f1.to_delimited(fp2, delimiter='|', store_filter=None, include_index_name=False)
-            f = open(fp2)
-            lines = f.readlines()
+            with open(fp2) as f:
+                lines = f.readlines()
             self.assertEqual(lines, [
                     '||r|s\n',
                     '1|a|2|None\n',
@@ -5989,8 +5989,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp1:
             f1.to_delimited(fp1, delimiter='|', store_filter=None, include_index_name=False)
-            f = open(fp1)
-            lines = f.readlines()
+            with open(fp1) as f:
+                lines = f.readlines()
             self.assertEqual(lines,
                     ['|1|1|2|2\n',
                     '|a|b|a|b\n',
@@ -6002,8 +6002,9 @@ class TestUnit(TestCase):
                     store_filter=None,
                     include_index_name=False,
                     include_columns_name=True)
-            f = open(fp2)
-            lines = f.readlines()
+            with open(fp2) as f:
+                lines = f.readlines()
+
 
             self.assertEqual(lines,
                     ['foo|1|1|2|2\n',
