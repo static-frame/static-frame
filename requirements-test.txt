@@ -1,5 +1,7 @@
 automap==0.4.8
+arraykit==0.1.2
 numpy==1.16.6
+
 pytest==3.8.0
 pytest-cov==2.6.0
 pyinstrument==3.1.0

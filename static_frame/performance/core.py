@@ -1035,7 +1035,7 @@ class FrameFloat_apply_axis0(PerfTest):
     @staticmethod
     def sf() -> None:
         func = lambda a: np.nanmean(a ** 2)
-        post = SampleData.get('sff_float_10k').iter_array(0).apply(func) # apply to columns
+        post = SampleData.get('sff_float_10k').iter_array(axis=0).apply(func) # apply to columns
         assert post.shape == (100,)
         assert post.sum() > 33501616.16668333
 
@@ -1053,7 +1053,7 @@ class FrameFloat_apply_axis1(PerfTest):
     @staticmethod
     def sf() -> None:
         func = lambda a: np.nanmean(a ** 2)
-        post = SampleData.get('sff_float_10k').iter_array(1).apply(func)
+        post = SampleData.get('sff_float_10k').iter_array(axis=1).apply(func)
         assert post.shape == (10000,)
         assert post.sum() > 3333328333.8349
 
