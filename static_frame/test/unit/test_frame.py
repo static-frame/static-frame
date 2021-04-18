@@ -9,6 +9,7 @@ import sqlite3
 import string
 import typing as tp
 import unittest
+import os
 
 import numpy as np
 import frame_fixtures as ff
@@ -6157,6 +6158,15 @@ class TestUnit(TestCase):
             f1.to_tsv(fp, include_index=True)
             f2 = Frame.from_tsv(fp, index_depth=2, columns_depth=2)
             self.assertEqualFrames(f1, f2)
+
+    def test_frame_to_tsv_d(self) -> None:
+        f1 = ff.parse('s(4,5)')
+
+        with temp_file('', path=True) as fp:
+            fp = os.path.join(fp, '__space__', 'test.txt')
+            with self.assertRaises(NotADirectoryError):
+                f1.to_tsv(fp)
+
 
     #---------------------------------------------------------------------------
     def test_frame_to_html_a(self) -> None:

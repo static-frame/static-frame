@@ -2441,13 +2441,13 @@ def file_like_manager(
     '''
     file_like = path_filter(file_like)
 
+    is_file = False
     try:
         if isinstance(file_like, str):
             f = open(file_like, mode=mode, encoding=encoding)
             is_file = True
         else:
             f = file_like # assume an open file-like object
-            is_file = False
         yield f
 
     finally:
