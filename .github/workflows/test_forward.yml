@@ -34,8 +34,8 @@ jobs:
         pip install Cython==0.29.13
         pip install setuptools==41.2.0
         pip install -r requirements-test.txt
-        pip install numpy==1.20.1
-        pip install pandas==1.2.1
+        pip install numpy==1.20.2
+        pip install pandas==1.2.4
 
     - name: Invoke Test
       run: inv test --cov
