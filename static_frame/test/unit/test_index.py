@@ -6,6 +6,7 @@ import typing as tp
 from io import StringIO
 
 import numpy as np
+from arraykit import mloc
 
 from static_frame import Index
 from static_frame import IndexGO
@@ -21,7 +22,6 @@ from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import LocInvalid
 from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import mloc
 
 
 class TestUnit(TestCase):

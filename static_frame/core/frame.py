@@ -14,6 +14,9 @@ import warnings
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
+from arraykit import column_1d_filter
+from arraykit import name_filter
+from arraykit import resolve_dtype
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -90,7 +93,6 @@ from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import CallableOrCallableMap
-from static_frame.core.util import column_1d_filter
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
@@ -122,7 +124,6 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import key_normalize
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import name_filter
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import Pair
@@ -132,7 +133,6 @@ from static_frame.core.util import path_filter
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
-from static_frame.core.util import resolve_dtype
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file

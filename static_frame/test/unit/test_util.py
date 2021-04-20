@@ -6,6 +6,10 @@ import typing as tp
 from enum import Enum
 
 import numpy as np
+from arraykit import resolve_dtype
+from arraykit import resolve_dtype_iter
+from arraykit import row_1d_filter
+from arraykit import column_1d_filter
 
 from static_frame.core.util import _array_to_duplicated_sortable
 from static_frame.core.util import _gen_skip_middle
@@ -25,7 +29,6 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import array_sample
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import binary_transition
-from static_frame.core.util import column_1d_filter
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_YEAR
@@ -38,12 +41,9 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import prepare_iter_for_array
 from static_frame.core.util import roll_1d
 from static_frame.core.util import roll_2d
-from static_frame.core.util import row_1d_filter
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import setdiff2d
 from static_frame.core.util import slice_to_ascending_slice

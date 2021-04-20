@@ -52,7 +52,7 @@ from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import immutable_filter
+from arraykit import immutable_filter
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import intersect1d
@@ -62,12 +62,12 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
-from static_frame.core.util import mloc
+from arraykit import mloc
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import name_filter
+from arraykit import name_filter
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import resolve_dtype
+from arraykit import resolve_dtype
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR

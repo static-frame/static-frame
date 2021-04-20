@@ -3,6 +3,7 @@
 
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
+from arraykit import mloc as mloc
 
 from static_frame.core.batch import Batch as Batch
 from static_frame.core.bus import Bus as Bus
@@ -97,7 +98,6 @@ from static_frame.core.util import GetItemKeyTypeCompound as GetItemKeyTypeCompo
 from static_frame.core.util import IndexInitializer as IndexInitializer
 from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
-from static_frame.core.util import mloc as mloc
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 
