@@ -568,7 +568,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return mloc(self._labels)
+        return mloc(self._labels) #type: ignore
 
     @property
     def dtype(self) -> np.dtype:

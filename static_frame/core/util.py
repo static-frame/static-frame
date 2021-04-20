@@ -288,7 +288,7 @@ class PairRight(Pair):
 
 #-------------------------------------------------------------------------------
 
-from arraykit import mloc
+from arraykit import mloc as mloc
 
 
 # def mloc(array: np.ndarray) -> int:
@@ -296,7 +296,7 @@ from arraykit import mloc
 #     '''
 #     return tp.cast(int, array.__array_interface__['data'][0])
 
-from arraykit import immutable_filter
+from arraykit import immutable_filter as immutable_filter
 
 # def immutable_filter(src_array: np.ndarray) -> np.ndarray:
 #     '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
@@ -307,7 +307,7 @@ from arraykit import immutable_filter
 #         return dst_array
 #     return src_array # keep it as is
 
-from arraykit import name_filter
+from arraykit import name_filter as name_filter
 
 # def name_filter(name: NameType) -> NameType:
 #     '''
@@ -319,7 +319,7 @@ from arraykit import name_filter
 #         raise TypeError('unhashable name attribute', name)
 #     return name
 
-from arraykit import shape_filter
+from arraykit import shape_filter as shape_filter
 
 # def shape_filter(array: np.ndarray) -> tp.Tuple[int, int]:
 #     '''Represent a 1D array as a 2D array with length as rows of a single-column array.
@@ -331,7 +331,7 @@ from arraykit import shape_filter
 #         return array.shape[0], 1
 #     return array.shape #type: ignore
 
-from arraykit import column_2d_filter
+from arraykit import column_2d_filter as column_2d_filter
 
 # def column_2d_filter(array: np.ndarray) -> np.ndarray:
 #     '''Reshape a flat ndim 1 array into a 2D array with one columns and rows of length. This is used (a) for getting string representations and (b) for using np.concatenate and np binary operators on 1D arrays.
@@ -341,7 +341,7 @@ from arraykit import column_2d_filter
 #         return np.reshape(array, (array.shape[0], 1))
 #     return array
 
-from arraykit import column_1d_filter
+from arraykit import column_1d_filter as column_1d_filter
 
 # def column_1d_filter(array: np.ndarray) -> np.ndarray:
 #     '''
@@ -352,7 +352,7 @@ from arraykit import column_1d_filter
 #         return np.reshape(array, array.shape[0])
 #     return array
 
-from arraykit import row_1d_filter
+from arraykit import row_1d_filter as row_1d_filter
 
 # def row_1d_filter(array: np.ndarray) -> np.ndarray:
 #     '''
@@ -420,7 +420,7 @@ def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
     return np.array(value).dtype
 
-from arraykit import resolve_dtype
+from arraykit import resolve_dtype as resolve_dtype
 
 # def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
 #     '''
@@ -473,7 +473,7 @@ from arraykit import resolve_dtype
 #     # if not a string or an object, can use result type
 #     return np.result_type(dt1, dt2)
 
-from arraykit import resolve_dtype_iter
+from arraykit import resolve_dtype_iter as resolve_dtype_iter
 
 # def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]) -> np.dtype:
 #     '''Given an iterable of one or more dtypes, do pairwise comparisons to determine compatible overall type. Once we get to object we can stop checking and return object.
