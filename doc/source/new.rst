@@ -5,7 +5,7 @@ What is New in Static Frame
 0.8.7
 ----------
 
-Implemented support for multiprocessing Frame reading from ``StoreZip`` subclasses used by ``Bus``, ``Batch``, and ``Quilt``.
+Implemented support for multiprocessing Frame writing from ``StoreZip`` subclasses used by ``Bus``, ``Batch``, and ``Quilt``.
 
 Enabled ``write_max_workers`` and ``write_chunksize`` in ``StoreConfig``.
 
