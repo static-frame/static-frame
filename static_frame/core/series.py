@@ -2079,7 +2079,7 @@ class Series(ContainerOperand):
             other = other.loc[self._index].values
 
         # by convention, we return just the corner
-        return np.cov(self.values, other, ddof=ddof)[0, -1]
+        return np.cov(self.values, other, ddof=ddof)[0, -1] #type: ignore [no-any-return]
 
     #---------------------------------------------------------------------------
 
