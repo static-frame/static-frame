@@ -5,7 +5,7 @@ What is New in Static Frame
 0.8.8
 ----------
 
-Added ``Frame.cov``.
+Added ``Frame.cov``, ``Series.cov``.
 
 
 0.8.7

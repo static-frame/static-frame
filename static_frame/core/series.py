@@ -2063,6 +2063,24 @@ class Series(ContainerOperand):
         '''
         return argmax_1d(self.values, skipna=skipna) #type: ignore
 
+
+    def cov(self,
+            other: tp.Union['Series', np.ndarray],
+            *,
+            ddof: int = 1,
+            ) -> float:
+        '''
+        Return the index-aligned covariance to the supplied :obj:`Series`.
+
+        Args:
+            ddof: Delta degrees of freedom, defaults to 1.
+        '''
+        if isinstance(other, Series):
+            other = other.loc[self._index].values
+
+        # by convention, we return just the corner
+        return np.cov(self.values, other, ddof=ddof)[0, -1]
+
     #---------------------------------------------------------------------------
 
     @doc_inject(selector='searchsorted', label_type='iloc (integer)')
