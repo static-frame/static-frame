@@ -4024,8 +4024,6 @@ class Frame(ContainerOperand):
         _, key = self._compound_loc_to_getitem_iloc(key)
         return FrameAsType(self, column_key=key)
 
-
-
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
@@ -5331,6 +5329,40 @@ class Frame(ContainerOperand):
         if axis == 0:
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
+
+    def cov(self, *,
+            axis: int = 1,
+            ddof: int = 1,
+            ) -> 'Frame':
+        '''Compute a covariance matrix.
+
+        Args:
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows.
+        '''
+        if axis == 0:
+            rowvar = True
+            labels = self._index
+            own_index = True
+            own_columns = self.STATIC
+        else:
+            rowvar = False
+            labels = self._columns
+            # can own columns if static
+            own_index = self.STATIC
+            own_columns = self.STATIC
+
+        values = np.cov(self.values, rowvar=rowvar, ddof=ddof)
+        values.flags.writeable = False
+
+        return self.__class__(values,
+                index=labels,
+                columns=labels,
+                own_index=own_index,
+                own_columns=own_columns,
+                name=self._name,
+                )
+
+
 
     #---------------------------------------------------------------------------
     # pivot family

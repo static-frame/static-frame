@@ -9468,6 +9468,38 @@ class TestUnit(TestCase):
         self.assertEqual(f1.iloc_max(axis=1).to_pairs(),
                 (('x', 0), ('y', 1), ('z', 0)))
 
+    #---------------------------------------------------------------------------
+    def test_frame_cov_a(self) -> None:
+        f1= Frame.from_dict(
+                dict(a=(3,2,1), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        f2 = f1.cov()
+        self.assertEqual(f2.to_pairs(),
+                (('a', (('a', 1.0), ('b', -1.0))), ('b', (('a', -1.0), ('b', 1.0)))))
+
+        f3 = f1.cov(axis=0)
+        self.assertEqual(f3.to_pairs(),
+                (('x', (('x', 0.5), ('y', 1.5), ('z', 2.5))), ('y', (('x', 1.5), ('y', 4.5), ('z', 7.5))), ('z', (('x', 2.5), ('y', 7.5), ('z', 12.5))))
+                )
+
+    def test_frame_cov_b(self) -> None:
+        f1= FrameGO.from_dict(
+                dict(a=(3,2,1), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f1')
+
+        f2 = f1.cov()
+        self.assertEqual(f2.to_pairs(),
+                (('a', (('a', 1.0), ('b', -1.0))), ('b', (('a', -1.0), ('b', 1.0)))))
+
+        f3 = f1.cov(axis=0)
+        self.assertEqual(f3.to_pairs(),
+                (('x', (('x', 0.5), ('y', 1.5), ('z', 2.5))), ('y', (('x', 1.5), ('y', 4.5), ('z', 7.5))), ('z', (('x', 2.5), ('y', 7.5), ('z', 12.5))))
+                )
+
+        self.assertEqual(f3.name, 'f1')
 
     #---------------------------------------------------------------------------
     def test_frame_bloc_a(self) -> None:
