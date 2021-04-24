@@ -1042,6 +1042,24 @@ class Batch(ContainerOperand, StoreClientMixin):
                 axis=axis,
                 )
 
+    def cov(self, *,
+            axis: int = 1,
+            ddof: int = 1,
+            ) -> 'Batch':
+        '''
+        Compute a covariance matrix.
+
+        Args:
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
+            ddof: Delta degrees of freedom, defaults to 1.
+        '''
+        return self._apply_attr(
+                attr='cov',
+                axis=axis,
+                ddof=ddof,
+                )
+
+
     #---------------------------------------------------------------------------
     # utility function to numpy array
 

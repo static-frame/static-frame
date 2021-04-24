@@ -5337,7 +5337,7 @@ class Frame(ContainerOperand):
         '''Compute a covariance matrix.
 
         Args:
-            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows.
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
             ddof: Delta degrees of freedom, defaults to 1.
         '''
         if axis == 0:
