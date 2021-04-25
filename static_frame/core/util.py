@@ -1052,11 +1052,17 @@ def slice_to_ascending_slice(
 
     return slice(start, stop, step)
 
-def slice_to_inclusive_slice(key: slice) -> slice:
+def slice_to_inclusive_slice(
+        key: slice,
+        offset: int = 0,
+        ) -> slice:
     '''Make a stop exclusive key inclusive by adding one to the stop value.
     '''
-    stop = None if key.stop is None else key.stop + 1
-    return slice(key.start, stop, key.step)
+    start = None if key.start is None else key.start + offset
+    stop = None if key.stop is None else key.stop + 1 + offset
+    return slice(start, stop, key.step)
+
+
 
 #-------------------------------------------------------------------------------
 # dates

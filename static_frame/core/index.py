@@ -922,35 +922,24 @@ class Index(IndexBase):
         key = key_from_container_key(self, key)
 
         if self._map is None and offset is None: # loc_is_iloc
-            if isinstance(key, np.ndarray):
+            if key.__class__ is np.ndarray:
                 if key.dtype == bool:
                     return key
                 if key.dtype != DTYPE_INT_DEFAULT:
                     # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
                     return key.astype(DTYPE_INT_DEFAULT)
-            elif isinstance(key, slice):
+            elif key.__class__ is slice:
                 key = slice_to_inclusive_slice(key)
             return key
 
         if self._map is None and offset is not None: # loc_is_iloc
-            if isinstance(key, slice):
+            if key.__class__ is slice:
                 if key == NULL_SLICE:
                     return slice(offset, self.__len__() + offset)
+                return slice_to_inclusive_slice(key, offset)
 
-                key = slice_to_inclusive_slice(key)
-
-                # NOTE: this slice transformation could be a utility function in ArrayKit
-                def slice_attrs() -> tp.Iterator[int]:
-                    for attr in SLICE_ATTRS:
-                        if attr != SLICE_STEP_ATTR:
-                            yield getattr(key, attr) + offset
-                        else:
-                            yield getattr(key, attr)
-
-                return slice(*slice_attrs())
-
-            if isinstance(key, np.ndarray):
+            if key.__class__ is np.ndarray:
                 # PERF: isolate for usage of _positions
                 if self._recache:
                     self._update_array_cache()
