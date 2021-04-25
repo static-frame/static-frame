@@ -412,7 +412,7 @@ class Series(ContainerOperand):
 
         values_constructor: tp.Optional[tp.Callable[[int], None]] = None # if deferred
 
-        if not isinstance(values, np.ndarray):
+        if not values.__class__ is np.ndarray:
             if isinstance(values, dict):
                 raise ErrorInitSeries('use Series.from_dict to create a Series from a mapping.')
             elif isinstance(values, Series):
@@ -1382,7 +1382,7 @@ class Series(ContainerOperand):
         # iterable selection should be handled by NP
         values = self.values[key]
 
-        if not isinstance(values, np.ndarray): # if we have a single element
+        if not values.__class__ is np.ndarray: # if we have a single element
             return values #type: ignore
         return self.__class__(
                 values,
@@ -1397,7 +1397,7 @@ class Series(ContainerOperand):
         iloc_key = self._index._loc_to_iloc(key)
         values = self.values[iloc_key]
 
-        if not isinstance(values, np.ndarray): # if we have a single element
+        if not values.__class__ is np.ndarray: # if we have a single element
             # NOTE: this branch is not encountered and may not be necessary
             # if isinstance(key, HLoc) and key.has_key_multiple():
             #     # must return a Series, even though we do not have an array
@@ -2097,7 +2097,7 @@ class Series(ContainerOperand):
             {side_left}
         '''
         if not isinstance(values, str) and hasattr(values, '__len__'):
-            if not isinstance(values, np.ndarray):
+            if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
         return np.searchsorted(self.values, #type: ignore [no-any-return]
                 values,

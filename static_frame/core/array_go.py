@@ -32,7 +32,7 @@ class ArrayGO:
         Args:
             own_iterable: flag iterable as ownable by this instance.
         '''
-        if isinstance(iterable, np.ndarray):
+        if iterable.__class__ is np.ndarray:
             if own_iterable:
                 self._array = iterable
                 self._array.flags.writeable = False

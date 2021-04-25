@@ -631,10 +631,10 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :obj:`static_frame.Frame`
+            :obj:`Frame`
         '''
         # if records is np; we can just pass it to constructor, as is already a consolidated type
-        if isinstance(records, np.ndarray):
+        if records.__class__ is np.ndarray:
             if dtypes is not None:
                 raise ErrorInitFrame('specifying dtypes when using NP records is not permitted')
             return cls(records,
@@ -945,7 +945,7 @@ class Frame(ContainerOperand):
                 columns.append(k) # side effect of generator!
                 column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
 
-                if isinstance(v, np.ndarray):
+                if v.__class__ is np.ndarray:
                     # NOTE: we rely on TypeBlocks constructor to check that these are same sized
                     if column_type is not None:
                         yield v.astype(column_type)
@@ -1063,7 +1063,7 @@ class Frame(ContainerOperand):
             for col_idx, v in enumerate(fields):
                 column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
 
-                if isinstance(v, np.ndarray):
+                if v.__class__ is np.ndarray:
                     if column_type is not None:
                         yield v.astype(column_type)
                     else:
@@ -2451,13 +2451,13 @@ class Frame(ContainerOperand):
 
         blocks_constructor = None
 
-        if isinstance(data, TypeBlocks):
+        if data.__class__ is TypeBlocks: # PERF: no sublcasses supported
             if own_data:
                 self._blocks = data
             else:
                 # assume we need to create a new TB instance; this will not copy underlying arrays as all blocks are immutable
                 self._blocks = TypeBlocks.from_blocks(data._blocks)
-        elif isinstance(data, np.ndarray):
+        elif data.__class__ is np.ndarray:
             if own_data:
                 data.flags.writeable = False
             # from_blocks will apply immutable filter
@@ -4152,7 +4152,7 @@ class Frame(ContainerOperand):
                         )
             else:
                 raise AxisInvalid(f'invalid axis: {axis}')
-        elif isinstance(other, np.ndarray):
+        elif other.__class__ is np.ndarray:
             name = None
         else:
             other = iterable_to_array_nd(other)
@@ -7038,7 +7038,7 @@ class FrameGO(Frame):
         elif isinstance(value, Frame):
             raise RuntimeError(
                     f'cannot use setitem with a Frame; use {self.__class__.__name__}.extend()')
-        elif isinstance(value, np.ndarray): # is numpy array
+        elif value.__class__ is np.ndarray:
             # this permits unaligned assignment as no index is used, possibly remove
             if value.ndim != 1:
                 raise RuntimeError(

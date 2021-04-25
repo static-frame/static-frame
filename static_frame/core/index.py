@@ -232,7 +232,7 @@ class LocMap:
                 key = labels.astype(key.dtype) == key
             # if not different type, keep it the same so as to do a direct, single element selection
 
-        is_array = isinstance(key, np.ndarray)
+        is_array = key.__class__ is np.ndarray
         is_list = isinstance(key, list)
 
         # can be an iterable of labels (keys) or an iterable of Booleans
@@ -335,7 +335,7 @@ class Index(IndexBase):
             labels: might be an expired Generator, but if it is an immutable ndarray, we can use it without a copy.
         '''
         # pre-fetching labels for faster get_item construction
-        if isinstance(labels, np.ndarray):
+        if labels.__class__ is np.ndarray:
             if dtype is not None and dtype != labels.dtype:
                 raise ErrorInitIndex('invalid label dtype for this Index')
             return immutable_filter(labels)
@@ -360,7 +360,7 @@ class Index(IndexBase):
             positions: tp.Optional[tp.Sequence[int]]
             ) -> np.ndarray:
         # positions is either None or an ndarray
-        if isinstance(positions, np.ndarray):
+        if positions.__class__ is np.ndarray:
             return immutable_filter(positions)
         return PositionsAllocator.get(size)
 
@@ -438,7 +438,7 @@ class Index(IndexBase):
         #-----------------------------------------------------------------------
         if is_typed:
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
-            if not isinstance(labels, np.ndarray):
+            if not labels.__class__ is np.ndarray:
                 # for now, assume that if _DTYPE is defined, we have a date
                 labels = (to_datetime64(v, dtype_extract) for v in labels)
             # coerce to target type
@@ -665,7 +665,7 @@ class Index(IndexBase):
                 # if self._DTYPE is defined, the default constructor does not take a dtype argument
                 return self.__class__(())
 
-        if isinstance(other, np.ndarray):
+        if other.__class__ is np.ndarray:
             operand = other
             assume_unique = False
         elif isinstance(other, IndexBase):
@@ -696,7 +696,7 @@ class Index(IndexBase):
             if self.STATIC: # immutable, no selection, can return self
                 return self
             labels = self._labels # already immutable
-        elif isinstance(key, np.ndarray) and key.dtype == bool:
+        elif key.__class__ is np.ndarray and key.dtype == bool:
             # can use labels, as we already recached
             # use Boolean area to select indices from positions, as np.delete does not work with arrays
             labels = np.delete(self._labels, self._positions[key], axis=0)
@@ -980,7 +980,7 @@ class Index(IndexBase):
             key: a label key.
         '''
         if self._map is None: # loc is iloc
-            is_bool_array = isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL
+            is_bool_array = key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL
 
             try:
                 result = self._positions[key]
@@ -1081,7 +1081,7 @@ class Index(IndexBase):
         if issubclass(other.__class__, Index):
             other = other.values # operate on labels to labels
             other_is_array = True
-        elif isinstance(other, np.ndarray):
+        elif other.__class__ is np.ndarray:
             other_is_array = True
 
         if operator.__name__ == 'matmul':
@@ -1482,7 +1482,7 @@ def _index_initializer_needs_init(
         return False
     if isinstance(value, IndexBase):
         return False
-    if isinstance(value, np.ndarray):
+    if value.__class__ is np.ndarray:
         return bool(len(value))
     return bool(value)
 

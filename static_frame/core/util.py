@@ -889,7 +889,7 @@ def iterable_to_array_1d(
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
-    if isinstance(values, np.ndarray):
+    if values.__class__ is np.ndarray:
         if values.ndim != 1:
             raise RuntimeError('expected 1d array')
         if dtype is not None and dtype != values.dtype:
@@ -971,7 +971,7 @@ def iterable_to_array_2d(
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
-    if isinstance(values, np.ndarray):
+    if values.__class__ is np.ndarray:
         if values.ndim != 2:
             raise RuntimeError('expected 2d array')
         return values

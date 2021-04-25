@@ -52,7 +52,7 @@ GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 def normalize_container(post: tp.Any
         ) -> FrameOrSeries:
     # post might be an element, promote to a Series to permit concatenation
-    if isinstance(post, np.ndarray):
+    if post.__class__ is np.ndarray:
         if post.ndim == 1:
             return Series(post)
         elif post.ndim == 2:

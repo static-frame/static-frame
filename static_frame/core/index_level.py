@@ -487,7 +487,7 @@ class IndexLevel:
             return slice(*LocMap.map_slice_args(self.leaf_loc_to_iloc, key))
 
         if isinstance(key, KEY_ITERABLE_TYPES): # iterables of leaf-locs
-            if isinstance(key, np.ndarray) and key.dtype == bool:
+            if key.__class__ is np.ndarray and key.dtype == bool:
                 return key # keep as Boolean
             return [self.leaf_loc_to_iloc(x) for x in key]
 
@@ -507,7 +507,7 @@ class IndexLevel:
             # NOTE: depth_key should not be Series or Index at this point; IndexHierarchy is responsible for unpacking / reindexing prior to this call
             next_offset = offset + level.offset
 
-            if isinstance(depth_key, np.ndarray) and depth_key.dtype == DTYPE_BOOL:
+            if depth_key.__class__ is np.ndarray and depth_key.dtype == DTYPE_BOOL:
                 # NOTE: use length of level, not length of index, as need to observe all leafs covered at this node.
                 depth_key = depth_key[next_offset: next_offset + len(level)]
                 if len(depth_key) > len(level.index):
