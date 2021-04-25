@@ -35,10 +35,10 @@ class ArrayGO:
         if iterable.__class__ is np.ndarray:
             if own_iterable:
                 self._array = iterable
-                self._array.flags.writeable = False
+                self._array.flags.writeable = False #type: ignore
             else:
                 self._array = immutable_filter(iterable)
-            if self._array.dtype != self._DTYPE:
+            if self._array.dtype != self._DTYPE: #type: ignore
                 raise NotImplementedError('only object arrays are supported')
             self._recache = False
             self._array_mutable = None

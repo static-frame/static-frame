@@ -29,14 +29,14 @@ class Perf:
                 yield name
 
 
-class Native: pass
-class Reference: pass
+class Native(Perf): pass
+class Reference(Perf): pass
 
 #-------------------------------------------------------------------------------
 
 class FrameILoc(Perf):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.f1 = ff.parse('s(100,100)')
         self.p1 = pd.DataFrame(self.f1.values)
 
@@ -45,25 +45,25 @@ class FrameILoc(Perf):
 
 class FrameILoc_N(FrameILoc, Native):
 
-    def element_index_auto(self):
+    def element_index_auto(self) -> None:
         self.f1.iloc[50, 50]
 
-    def element_index_str(self):
+    def element_index_str(self) -> None:
         self.f2.iloc[50, 50]
 
 class FrameILoc_R(FrameILoc, Reference):
 
-    def element_index_auto(self):
+    def element_index_auto(self) -> None:
         self.p1.iloc[50, 50]
 
-    def element_index_str(self):
+    def element_index_str(self) -> None:
         self.p2.iloc[50, 50]
 
 #-------------------------------------------------------------------------------
 
 class FrameLoc(Perf):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.f1 = ff.parse('s(100,100)')
         self.p1 = pd.DataFrame(self.f1.values)
 
@@ -72,18 +72,18 @@ class FrameLoc(Perf):
 
 class FrameLoc_N(FrameLoc, Native):
 
-    def element_index_auto(self):
+    def element_index_auto(self) -> None:
         self.f1.loc[50, 50]
 
-    def element_index_str(self):
+    def element_index_str(self) -> None:
         self.f2.loc['zGuv', 'zGuv']
 
 class FrameLoc_R(FrameLoc, Reference):
 
-    def element_index_auto(self):
+    def element_index_auto(self) -> None:
         self.p1.loc[50, 50]
 
-    def element_index_str(self):
+    def element_index_str(self) -> None:
         self.p2.loc['zGuv', 'zGuv']
 
 #
@@ -134,7 +134,7 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
 
 def yield_classes(
         pattern: str
-        ) -> tp.Dict[str, tp.Type[Perf]]:
+        ) -> tp.Iterator[tp.Dict[tp.Type[Perf], tp.Type[Perf]]]:
 
     for cls_perf in Perf.__subclasses__(): # only get one level
         if pattern and not fnmatch.fnmatch(
@@ -155,18 +155,20 @@ def profile(cls_runner: tp.Type[Perf]) -> None:
     Profile the `sf` function from the supplied class.
     '''
 
-    f = getattr(cls, function)
-    pr = cProfile.Profile()
+    runner = cls_runner()
+    for name in runner.iter_function_names():
+        f = getattr(runner, name)
+        pr = cProfile.Profile()
 
-    pr.enable()
-    for _ in range(cls.NUMBER):
-        f()
-    pr.disable()
+        pr.enable()
+        for _ in range(runner.NUMBER):
+            f()
+        pr.disable()
 
-    s = io.StringIO()
-    ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
-    ps.print_stats()
-    print(s.getvalue())
+        s = io.StringIO()
+        ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
+        ps.print_stats()
+        print(s.getvalue())
 
 def instrument(cls_runner: tp.Type[Perf]) -> None:
     '''
@@ -188,7 +190,7 @@ def instrument(cls_runner: tp.Type[Perf]) -> None:
 PerformanceRecord = tp.MutableMapping[str, tp.Union[str, float, bool]]
 
 def performance(
-        bundle,
+        bundle: tp.Dict[tp.Type[Perf], tp.Type[Perf]],
         ) -> tp.Iterator[PerformanceRecord]:
 
     cls_perf = bundle[Perf]
@@ -245,7 +247,7 @@ def performance_tables_from_records(
 def main() -> None:
 
     options = get_arg_parser().parse_args()
-    records = []
+    records: tp.List[PerformanceRecord] = []
 
     for pattern in options.patterns:
         for bundle in yield_classes(pattern):

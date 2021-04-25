@@ -432,10 +432,11 @@ class Series(ContainerOperand):
                 raise ErrorInitSeries('Use Series.from_element to create a Series from an element.')
 
         else: # is numpy array
-            if dtype is not None and dtype != values.dtype:
-                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})')
+            if dtype is not None and dtype != values.dtype: #type: ignore
+                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})') #type: ignore
 
-            if values.shape == (): # handle special case of NP element
+            if values.shape == (): #type: ignore
+                # handle special case of NP element
                 def values_constructor(count: int) -> None: #pylint: disable=E0102
                     self.values = np.repeat(values, count)
                     self.values.flags.writeable = False
@@ -1098,7 +1099,7 @@ class Series(ContainerOperand):
             # sided value is not null: nothing to do
             return array # assume immutable
 
-        if isinstance(value, np.ndarray):
+        if value.__class__ is np.ndarray:
             raise RuntimeError('cannot assign an array to fillna')
 
         assignable_dtype = resolve_dtype(
@@ -1193,7 +1194,7 @@ class Series(ContainerOperand):
                 other = other.reindex(index, own_index=True, check_equals=False).values
             else:
                 other = other.values
-        elif isinstance(other, np.ndarray):
+        elif other.__class__ is np.ndarray:
             name = None
             other_is_array = True
             if other.ndim > 1:
@@ -1426,7 +1427,7 @@ class Series(ContainerOperand):
     # utilities for alternate extraction: drop, mask and assignment
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
-        if isinstance(key, np.ndarray) and key.dtype == bool:
+        if key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
             # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
             values = np.delete(self.values, self._index.positions[key])
         else:
@@ -1713,7 +1714,7 @@ class Series(ContainerOperand):
         '''
         if key:
             cfs = key(self)
-            cfs_values = cfs if isinstance(cfs, np.ndarray) else cfs.values
+            cfs_values = cfs if cfs.__class__ is np.ndarray else cfs.values
         else:
             cfs_values = self.values
 
@@ -2458,7 +2459,7 @@ class SeriesAssign(Assign):
                     self.key,
                     fill_value=fill_value).values
 
-        if isinstance(value, np.ndarray):
+        if value.__class__ is np.ndarray:
             value_dtype = value.dtype
         elif hasattr(value, '__len__') and not isinstance(value, str):
             value, _ = iterable_to_array_1d(value)

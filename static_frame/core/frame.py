@@ -3300,7 +3300,7 @@ class Frame(ContainerOperand):
 
             target_tb = index_target._blocks
             add_blocks = target_tb._extract(column_key=depth_level)
-            if not isinstance(add_blocks, np.ndarray):
+            if not add_blocks.__class__ is np.ndarray:
                 # get iterable off arrays
                 add_blocks = add_blocks._blocks
             else:
@@ -4657,7 +4657,7 @@ class Frame(ContainerOperand):
             iloc_key = self._index._loc_to_iloc(label)
             if key:
                 cfs = key(self._extract(row_key=iloc_key))
-                cfs_is_array = isinstance(cfs, np.ndarray)
+                cfs_is_array = cfs.__class__ is np.ndarray
                 if (cfs.ndim == 1 and len(cfs) != self.shape[1]) or (cfs.ndim == 2 and cfs.shape[1] != self.shape[1]):
                     raise RuntimeError('key function returned a container of invalid length')
             else: # go straigt to array as, since this is row-wise, have to find a consolidated
@@ -4685,7 +4685,7 @@ class Frame(ContainerOperand):
             iloc_key = self._columns._loc_to_iloc(label)
             if key:
                 cfs = key(self._extract(column_key=iloc_key))
-                cfs_is_array = isinstance(cfs, np.ndarray)
+                cfs_is_array = cfs.__class__ is np.ndarray
                 if (cfs.ndim == 1 and len(cfs) != self.shape[0]) or (cfs.ndim == 2 and cfs.shape[0] != self.shape[0]):
                     raise RuntimeError('key function returned a container of invalid length')
             else: # get array from blocks
@@ -6423,7 +6423,7 @@ class Frame(ContainerOperand):
 
             elif package == 'numpy':
                 #msgpack-numpy is breaking with these data types, overriding here
-                if isinstance(obj, np.ndarray):
+                if obj.__class__ is np.ndarray:
                     if obj.dtype.type == np.object_:
                         data = list(map(element_encode, obj))
                         return {b'np': True,
@@ -7322,7 +7322,7 @@ class FrameAssignBLoc(FrameAssign):
             blocks = self.container._blocks.extract_bloc_assign_by_blocks(key, values)
 
         else: # an array or an element
-            if isinstance(value, np.ndarray) and value.shape != self.container.shape:
+            if value.__class__ is np.ndarray and value.shape != self.container.shape:
                 raise RuntimeError(f'value must match shape {self.container.shape}')
             blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
 

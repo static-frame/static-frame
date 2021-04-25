@@ -105,8 +105,8 @@ class TypeBlocks(ContainerOperand):
         row_count: tp.Optional[int]
 
         # if a single block, no need to loop
-        if isinstance(raw_blocks, np.ndarray):
-            if raw_blocks.ndim > 2:
+        if raw_blocks.__class__ is np.ndarray:
+            if raw_blocks.ndim > 2: #type: ignore
                 raise ErrorInitTypeBlocks('arrays of dimensionality greater than 2 cannot be used to create TypeBlocks')
 
             row_count, column_count = shape_filter(raw_blocks)
@@ -120,14 +120,14 @@ class TypeBlocks(ContainerOperand):
             blocks.append(immutable_filter(raw_blocks))
             for i in range(column_count):
                 index.append((block_count, i))
-                dtypes.append(raw_blocks.dtype)
+                dtypes.append(raw_blocks.dtype) #type: ignore
 
         else: # an iterable of blocks
             row_count = None
             column_count = 0
 
             for block in raw_blocks:
-                if not isinstance(block, np.ndarray):
+                if not block.__class__ is np.ndarray:
                     raise ErrorInitTypeBlocks(f'found non array block: {block}')
 
                 if block.ndim > 2:
@@ -1080,7 +1080,7 @@ class TypeBlocks(ContainerOperand):
                     if not retain_key_order:
                         key = slice_to_ascending_slice(key, self._shape[1])
                     indices: tp.Iterable[tp.Tuple[int, int]] = self._index[key]
-                elif isinstance(key, np.ndarray) and key.dtype == bool:
+                elif key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
                     # NOTE: if self._index was an array we could use Boolean selection directly
                     indices = (self._index[idx] for idx, v in enumerate(key) if v)
                 elif isinstance(key, KEY_ITERABLE_TYPES):
@@ -1347,9 +1347,9 @@ class TypeBlocks(ContainerOperand):
                     column_key,
                     retain_key_order=False))
 
-        if isinstance(row_key, np.ndarray) and row_key.dtype == bool:
+        if row_key.__class__ is np.ndarray and row_key.dtype == bool: #type: ignore
             # row_key is used with np.delete, which does not support Boolean arrays; instead, convert to an array of integers
-            row_key = np.arange(len(row_key))[row_key]
+            row_key = np.arange(len(row_key))[row_key] #type: ignore
 
         target_block_idx = target_slice = None
         targets_remain = True
@@ -1641,9 +1641,10 @@ class TypeBlocks(ContainerOperand):
                         # if block id 2D, can take up to v_width from value
                         value_piece_column_key = slice(0, v_width)
 
-                    if isinstance(value, np.ndarray) and value.ndim > 1:
-                        value_piece = value[NULL_SLICE, value_piece_column_key]
-                        value = value[NULL_SLICE, slice(v_width, None)] # restore for next iter
+                    if value.__class__ is np.ndarray and value.ndim > 1: #type: ignore
+                        value_piece = value[NULL_SLICE, value_piece_column_key] #type: ignore
+                        # restore for next iter
+                        value = value[NULL_SLICE, slice(v_width, None)] #type: ignore
                     else: # value is 1D array or tuple, assume assigning into a horizontal position
                         value_piece = value[value_piece_column_key] #type: ignore
                         value = value[slice(v_width, None)] #type: ignore
@@ -1681,10 +1682,10 @@ class TypeBlocks(ContainerOperand):
             value: Must be a single value or an array
             value_valid: same size Boolean area to be combined with targets
         '''
-        if isinstance(value, np.ndarray):
-            value_dtype = value.dtype
+        if value.__class__ is np.ndarray:
+            value_dtype = value.dtype #type: ignore
             is_element = False
-            assert value.shape == self.shape
+            # assert value.shape == self.shape
             if value_valid is not None:
                 assert value_valid.shape == self.shape
         else: # assumed to be non-string, non-iterable
@@ -1798,7 +1799,7 @@ class TypeBlocks(ContainerOperand):
         Args:
             value: can be a single element, or a single 2D array of shape equal to self.
         '''
-        if isinstance(value, np.ndarray):
+        if value.__class__ is np.ndarray:
             value_dtype = value.dtype
             is_element = False
             assert value.shape == self.shape
@@ -1980,13 +1981,13 @@ class TypeBlocks(ContainerOperand):
                 single_row = True
         elif isinstance(row_key, INT_TYPES):
             single_row = True
-        elif isinstance(row_key, slice):
+        elif row_key.__class__ is slice:
             # need to determine if there is only one index returned by range (after getting indices from the slice); do this without creating a list/tuple, or walking through the entire range; get constant time look-up of range length after uses slice.indicies
-            if len(range(*row_key.indices(self._shape[0]))) == 1:
+            if len(range(*row_key.indices(self._shape[0]))) == 1: #type: ignore
                 single_row = True
-        elif isinstance(row_key, np.ndarray) and row_key.dtype == bool:
+        elif row_key.__class__ is np.ndarray and row_key.dtype == bool: #type: ignore
             # must check this case before general iterables, below
-            if row_key.sum() == 1:
+            if row_key.sum() == 1: #type: ignore
                 single_row = True
         elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
             # an iterable of index integers is expected here
@@ -2007,7 +2008,7 @@ class TypeBlocks(ContainerOperand):
                     block_sliced = b[row_key, slc]
 
             # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
-            if isinstance(block_sliced, np.ndarray):
+            if block_sliced.__class__ is np.ndarray:
                 # if we have a single row and the thing we sliced is 1d, we need to rotate it
                 if single_row and block_sliced.ndim == 1:
                     block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
@@ -2333,11 +2334,11 @@ class TypeBlocks(ContainerOperand):
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
         else: # process other as an array
             self_operands = self._blocks
-            if not isinstance(other, np.ndarray):
+            if not other.__class__ is np.ndarray:
                 other = iterable_to_array_nd(other)
 
             # handle dimensions
-            if other.ndim == 0 or (other.ndim == 1 and len(other) == 1):
+            if other.ndim == 0 or (other.ndim == 1 and len(other) == 1): #type: ignore
                 # a scalar: reference same value for each block position
                 apply_column_2d_filter = False
                 other_operands = (other for _ in range(len(self._blocks)))
@@ -2350,11 +2351,11 @@ class TypeBlocks(ContainerOperand):
                     columnar = True
                 else:
                     raise NotImplementedError(f'cannot apply binary operators with a 1D array along axis {axis}: {self._shape}, {other.shape}.')
-            elif other.ndim == 2 and other.shape == self._shape:
+            elif other.ndim == 2 and other.shape == self._shape: #type: ignore
                 apply_column_2d_filter = True
-                other_operands = (other[NULL_SLICE, s] for s in self._block_shape_slices())
+                other_operands = (other[NULL_SLICE, s] for s in self._block_shape_slices()) #type: ignore
             else:
-                raise NotImplementedError(f'cannot apply binary operators to arrays without alignable shapes: {self._shape}, {other.shape}.')
+                raise NotImplementedError(f'cannot apply binary operators to arrays without alignable shapes: {self._shape}, {other.shape}.') #type: ignore
 
         if columnar:
             return self.from_blocks(apply_binary_operator_blocks_columnar(
@@ -2447,8 +2448,8 @@ class TypeBlocks(ContainerOperand):
         lower_is_element = not hasattr(lower, '__len__')
         upper_is_element = not hasattr(upper, '__len__')
 
-        lower_is_array = isinstance(lower, np.ndarray)
-        upper_is_array = isinstance(upper, np.ndarray)
+        lower_is_array = lower.__class__ is np.ndarray
+        upper_is_array = upper.__class__ is np.ndarray
 
         # get a mutable list in reverse order for pop/pushing
         if lower_is_element or lower_is_array:
@@ -2558,7 +2559,7 @@ class TypeBlocks(ContainerOperand):
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
 
         '''
-        if isinstance(value, np.ndarray):
+        if value.__class__ is np.ndarray:
             raise RuntimeError('cannot assign an array to fillna')
 
         sided_index = 0 if sided_leading else -1
@@ -2625,7 +2626,7 @@ class TypeBlocks(ContainerOperand):
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailing side.
 
         '''
-        if isinstance(value, np.ndarray):
+        if value.__class__ is np.ndarray:
             raise RuntimeError('cannot assign an array to fillna')
 
         sided_index = 0 if sided_leading else -1

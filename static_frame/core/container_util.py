@@ -587,7 +587,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
     from static_frame.core.series import Series
 
     if key.__class__ is slice:
-        return slice_to_ascending_slice(key, size=size)
+        return slice_to_ascending_slice(key, size=size) #type: ignore
 
     if isinstance(key, str) or not hasattr(key, '__len__'):
         return key
@@ -871,7 +871,7 @@ def key_from_container_key(
     elif expand_iloc and key.__class__ is ILoc:
         # realize as Boolean array
         array = np.full(len(index), False)
-        array[key.key] = True
+        array[key.key] = True #type: ignore
         key = array
 
     # detect and fail on Frame?

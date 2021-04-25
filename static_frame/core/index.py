@@ -336,7 +336,7 @@ class Index(IndexBase):
         '''
         # pre-fetching labels for faster get_item construction
         if labels.__class__ is np.ndarray:
-            if dtype is not None and dtype != labels.dtype:
+            if dtype is not None and dtype != labels.dtype: #type: ignore
                 raise ErrorInitIndex('invalid label dtype for this Index')
             return immutable_filter(labels)
 
@@ -442,8 +442,8 @@ class Index(IndexBase):
                 # for now, assume that if _DTYPE is defined, we have a date
                 labels = (to_datetime64(v, dtype_extract) for v in labels)
             # coerce to target type
-            elif labels.dtype != dtype_extract:
-                labels = labels.astype(dtype_extract)
+            elif labels.dtype != dtype_extract: #type: ignore
+                labels = labels.astype(dtype_extract) #type: ignore
                 labels.flags.writeable = False #type: ignore
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
@@ -696,7 +696,7 @@ class Index(IndexBase):
             if self.STATIC: # immutable, no selection, can return self
                 return self
             labels = self._labels # already immutable
-        elif key.__class__ is np.ndarray and key.dtype == bool:
+        elif key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
             # can use labels, as we already recached
             # use Boolean area to select indices from positions, as np.delete does not work with arrays
             labels = np.delete(self._labels, self._positions[key], axis=0)
@@ -917,37 +917,37 @@ class Index(IndexBase):
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
         if key.__class__ is ILoc:
-            return key.key
+            return key.key #type: ignore
 
         key = key_from_container_key(self, key)
 
         if self._map is None and offset is None: # loc_is_iloc
             if key.__class__ is np.ndarray:
-                if key.dtype == bool:
+                if key.dtype == bool: #type: ignore
                     return key
-                if key.dtype != DTYPE_INT_DEFAULT:
+                if key.dtype != DTYPE_INT_DEFAULT: #type: ignore
                     # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
-                    return key.astype(DTYPE_INT_DEFAULT)
+                    return key.astype(DTYPE_INT_DEFAULT) #type: ignore
             elif key.__class__ is slice:
-                key = slice_to_inclusive_slice(key)
+                key = slice_to_inclusive_slice(key) #type: ignore
             return key
 
         if self._map is None and offset is not None: # loc_is_iloc
             if key.__class__ is slice:
                 if key == NULL_SLICE:
                     return slice(offset, self.__len__() + offset)
-                return slice_to_inclusive_slice(key, offset)
+                return slice_to_inclusive_slice(key, offset) #type: ignore
 
             if key.__class__ is np.ndarray:
                 # PERF: isolate for usage of _positions
                 if self._recache:
                     self._update_array_cache()
 
-                if key.dtype == DTYPE_BOOL:
+                if key.dtype == DTYPE_BOOL: #type: ignore
                     return self._positions[key] + offset
-                if key.dtype != DTYPE_INT_DEFAULT:
-                    key = key.astype(DTYPE_INT_DEFAULT)
+                if key.dtype != DTYPE_INT_DEFAULT: #type: ignore
+                    key = key.astype(DTYPE_INT_DEFAULT) #type: ignore
                 return key + offset
 
             if isinstance(key, list):
@@ -980,7 +980,7 @@ class Index(IndexBase):
             key: a label key.
         '''
         if self._map is None: # loc is iloc
-            is_bool_array = key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL
+            is_bool_array = key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL #type: ignore
 
             try:
                 result = self._positions[key]
@@ -1483,6 +1483,6 @@ def _index_initializer_needs_init(
     if isinstance(value, IndexBase):
         return False
     if value.__class__ is np.ndarray:
-        return bool(len(value))
+        return bool(len(value)) #type: ignore
     return bool(value)
 
