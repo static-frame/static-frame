@@ -842,6 +842,9 @@ def key_from_container_key(
     '''
     Unpack selection values from another Index, Series, or ILoc selection.
     '''
+    # PERF: do not do comparisons if key is not a Container or SF object
+    if not hasattr(key, 'STATIC'):
+        return key
 
     from static_frame.core.index import Index
     from static_frame.core.index import ILoc
@@ -865,7 +868,7 @@ def key_from_container_key(
         else:
             # For all other Series types, we simply assume that the values are to be used as keys in the IH. This ignores the index, but it does not seem useful to require the Series, used like this, to have a matching index value, as the index and values would need to be identical to have the desired selection.
             key = key.values
-    elif expand_iloc and isinstance(key, ILoc):
+    elif expand_iloc and key.__class__ is ILoc:
         # realize as Boolean array
         array = np.full(len(index), False)
         array[key.key] = True

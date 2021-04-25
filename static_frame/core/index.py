@@ -101,6 +101,7 @@ class ILoc(metaclass=ILocMeta):
     '''A wrapper for embedding ``iloc`` specifications within a single axis argument of a ``loc`` selection.
     '''
 
+    STATIC = True
     __slots__ = (
             'key',
             )
@@ -915,12 +916,7 @@ class Index(IndexBase):
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
-        from static_frame.core.series import Series
-
-        if self._recache:
-            self._update_array_cache()
-
-        if isinstance(key, ILoc):
+        if key.__class__ is ILoc:
             return key.key
 
         key = key_from_container_key(self, key)
@@ -955,6 +951,10 @@ class Index(IndexBase):
                 return slice(*slice_attrs())
 
             if isinstance(key, np.ndarray):
+                # PERF: isolate for usage of _positions
+                if self._recache:
+                    self._update_array_cache()
+
                 if key.dtype == DTYPE_BOOL:
                     return self._positions[key] + offset
                 if key.dtype != DTYPE_INT_DEFAULT:
@@ -968,6 +968,10 @@ class Index(IndexBase):
 
         if key_transform:
             key = key_transform(key)
+
+        # PERF: isolate for usage of _positions
+        if self._recache:
+            self._update_array_cache()
 
         return LocMap.loc_to_iloc(
                 label_to_pos=self._map, #type: ignore
