@@ -2342,15 +2342,15 @@ class TypeBlocks(ContainerOperand):
                 # a scalar: reference same value for each block position
                 apply_column_2d_filter = False
                 other_operands = (other for _ in range(len(self._blocks)))
-            elif other.ndim == 1:
-                if axis == 0 and len(other) == self._shape[1]:
+            elif other.ndim == 1: #type: ignore
+                if axis == 0 and len(other) == self._shape[1]: #type: ignore
                     # 1d array applied to the rows: chop to block width
                     apply_column_2d_filter = False
-                    other_operands = (other[s] for s in self._block_shape_slices())
-                elif axis == 1 and len(other) == self._shape[0]:
+                    other_operands = (other[s] for s in self._block_shape_slices()) #type: ignore
+                elif axis == 1 and len(other) == self._shape[0]: #type: ignore
                     columnar = True
                 else:
-                    raise NotImplementedError(f'cannot apply binary operators with a 1D array along axis {axis}: {self._shape}, {other.shape}.')
+                    raise NotImplementedError(f'cannot apply binary operators with a 1D array along axis {axis}: {self._shape}, {other.shape}.') #type: ignore
             elif other.ndim == 2 and other.shape == self._shape: #type: ignore
                 apply_column_2d_filter = True
                 other_operands = (other[NULL_SLICE, s] for s in self._block_shape_slices()) #type: ignore
