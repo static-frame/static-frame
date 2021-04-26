@@ -3793,11 +3793,11 @@ class Frame(ContainerOperand):
         '''
         blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
 
-        if not isinstance(blocks, TypeBlocks):
+        if not blocks.__class__ is TypeBlocks:
             return blocks # reduced to an element
 
         own_index = True # the extracted Frame can always own this index
-        row_key_is_slice = isinstance(row_key, slice)
+        row_key_is_slice = row_key.__class__ is slice
         if row_key is None or (row_key_is_slice and row_key == NULL_SLICE):
             index = self._index
         else:
@@ -3808,7 +3808,7 @@ class Frame(ContainerOperand):
                     name_row = tuple(name_row)
 
         # can only own columns if _COLUMNS_CONSTRUCTOR is static
-        column_key_is_slice = isinstance(column_key, slice)
+        column_key_is_slice = column_key.__class__ is slice
         if column_key is None or (column_key_is_slice and column_key == NULL_SLICE):
             columns = self._columns
             own_columns = self._COLUMNS_CONSTRUCTOR.STATIC
