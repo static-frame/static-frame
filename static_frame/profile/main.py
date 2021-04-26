@@ -17,7 +17,9 @@ import static_frame as sf
 
 import frame_fixtures as ff
 
-class Perf:
+class PerfKey: pass
+
+class Perf(PerfKey):
     FUNCTIONS = ()
     NUMBER = 100_000
 
@@ -29,8 +31,8 @@ class Perf:
                 yield name
 
 
-class Native(Perf): pass
-class Reference(Perf): pass
+class Native(PerfKey): pass
+class Reference(PerfKey): pass
 
 #-------------------------------------------------------------------------------
 
@@ -86,7 +88,6 @@ class FrameLoc_R(FrameLoc, Reference):
     def element_index_str(self) -> None:
         self.p2.loc['zGuv', 'zGuv']
 
-#
 
 #-------------------------------------------------------------------------------
 
@@ -134,13 +135,13 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
 
 def yield_classes(
         pattern: str
-        ) -> tp.Iterator[tp.Dict[tp.Type[Perf], tp.Type[Perf]]]:
+        ) -> tp.Iterator[tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]]]:
 
     for cls_perf in Perf.__subclasses__(): # only get one level
         if pattern and not fnmatch.fnmatch(
                 cls_perf.__name__.lower(), pattern.lower()):
             continue
-        runners = {Perf: cls_perf}
+        runners: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]] = {Perf: cls_perf}
         for cls_runner in cls_perf.__subclasses__():
             for cls in (Native, Reference):
                 if issubclass(cls_runner, cls):
@@ -190,16 +191,19 @@ def instrument(cls_runner: tp.Type[Perf]) -> None:
 PerformanceRecord = tp.MutableMapping[str, tp.Union[str, float, bool]]
 
 def performance(
-        bundle: tp.Dict[tp.Type[Perf], tp.Type[Perf]],
+        bundle: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],
         ) -> tp.Iterator[PerformanceRecord]:
 
     cls_perf = bundle[Perf]
+    assert issubclass(cls_perf, Perf)
+
     cls_native = bundle[Native]
     cls_reference = bundle[Reference]
 
     # TODO: check native/ref have the same  iterations
     runner_n = cls_native()
     runner_r = cls_reference()
+    assert isinstance(runner_n, Perf)
 
     for func_name in runner_n.iter_function_names():
         row: PerformanceRecord = {}
@@ -254,9 +258,9 @@ def main() -> None:
             if options.performance:
                 records.extend(performance(bundle))
             if options.profile:
-                profile(bundle[Native])
+                profile(bundle[Native]) #type: ignore
             if options.instrument:
-                instrument(bundle[Native])
+                instrument(bundle[Native]) #type: ignore
 
     itemize = False # make CLI option maybe
 
