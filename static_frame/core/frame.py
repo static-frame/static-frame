@@ -3793,7 +3793,7 @@ class Frame(ContainerOperand):
         '''
         blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
 
-        if not blocks.__class__ is TypeBlocks:
+        if blocks.__class__ is not TypeBlocks:
             return blocks # reduced to an element
 
         own_index = True # the extracted Frame can always own this index
