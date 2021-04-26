@@ -7,7 +7,7 @@ What is New in Static Frame
 
 Added ``Frame.cov``, ``Series.cov``, and ``Batch.cov``.
 
-Performance enhancements to ``loc`` selections.
+Performance enhancements to ``loc`` selections by element.
 
 
 0.8.7
