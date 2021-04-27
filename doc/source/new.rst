@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.9
+----------
+
+Performance enhancements to ``Series.dropna``.
+
+
 0.8.8
 ----------
 
