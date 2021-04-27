@@ -955,10 +955,19 @@ class Series(ContainerOperand):
         Return a new :obj:`static_frame.Series` after removing values of NaN or None.
         '''
         # get positions that we want to keep
-        sel = np.logical_not(isna_array(self.values))
-        if not np.any(sel):
-            return self.__class__(())
+        isna = isna_array(self.values)
+        length = len(self.values)
+        count = isna.sum()
 
+        if count == length: # all are NaN
+            return self.__class__((), name=self.name)
+        if count == 0: # None are nan
+            return self.__class__(self.values,
+                    index=self._index,
+                    name=self._name,
+                    own_index=True)
+
+        sel = np.logical_not(isna)
         values = self.values[sel]
         values.flags.writeable = False
 

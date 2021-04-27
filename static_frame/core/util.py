@@ -63,13 +63,13 @@ DTYPE_INEXACT_KINDS = (DTYPE_FLOAT_KIND, DTYPE_COMPLEX_KIND) # kinds that suppor
 DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
 
 # all kinds that can have NaN, NaT, or None
-# DTYPE_NA_KINDS = frozenset((
-#         DTYPE_FLOAT_KIND,
-#         DTYPE_COMPLEX_KIND,
-#         DTYPE_DATETIME_KIND,
-#         DTYPE_TIMEDELTA_KIND,
-#         DTYPE_OBJECT_KIND,
-#         ))
+DTYPE_NA_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_DATETIME_KIND,
+        DTYPE_TIMEDELTA_KIND,
+        DTYPE_OBJECT_KIND,
+        ))
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)

@@ -20,11 +20,10 @@ import frame_fixtures as ff
 class PerfKey: pass
 
 class Perf(PerfKey):
-    FUNCTIONS = ()
     NUMBER = 100_000
 
     def iter_function_names(self) -> tp.Iterator[str]:
-        for name in dir(self):
+        for name in sorted(dir(self)):
             if name == 'iter_function_names':
                 continue
             if not name.startswith('_') and callable(getattr(self, name)):
@@ -34,59 +33,138 @@ class Perf(PerfKey):
 class Native(PerfKey): pass
 class Reference(PerfKey): pass
 
+
+#-------------------------------------------------------------------------------
+class SeriesIsNa(Perf):
+    NUMBER = 10_000
+
+    def __init__(self) -> None:
+        f = ff.parse('s(1000,3)|v(float,object,bool)')
+        f = f.assign.loc[(f.index % 12 == 0), 0](np.nan)
+        f = f.assign.loc[(f.index % 12 == 0), 1](None)
+
+        self.sfs_float = f.iloc[:, 0]
+        self.sfs_object = f.iloc[:, 1]
+        self.sfs_bool = f.iloc[:, 2]
+
+        self.pds_float = f.iloc[:, 0].to_pandas()
+        self.pds_object = f.iloc[:, 1].to_pandas()
+        self.pds_bool = f.iloc[:, 2].to_pandas()
+
+class SeriesIsNa_N(SeriesIsNa, Native):
+
+    def float_index_auto(self) -> None:
+        self.sfs_float.isna()
+
+    def object_index_auto(self) -> None:
+        self.sfs_object.isna()
+
+    def bool_index_auto(self) -> None:
+        self.sfs_bool.isna()
+
+class SeriesIsNa_R(SeriesIsNa, Reference):
+
+    def float_index_auto(self) -> None:
+        self.pds_float.isna()
+
+    def object_index_auto(self) -> None:
+        self.pds_object.isna()
+
+    def bool_index_auto(self) -> None:
+        self.pds_bool.isna()
+
+#-------------------------------------------------------------------------------
+class SeriesDropNa(Perf):
+    NUMBER = 10_000
+
+    def __init__(self) -> None:
+        f = ff.parse('s(1000,3)|v(float,object,bool)')
+        f = f.assign.loc[(f.index % 12 == 0), 0](np.nan)
+        f = f.assign.loc[(f.index % 12 == 0), 1](None)
+
+        self.sfs_float = f.iloc[:, 0]
+        self.sfs_object = f.iloc[:, 1]
+        self.sfs_bool = f.iloc[:, 2]
+
+        self.pds_float = f.iloc[:, 0].to_pandas()
+        self.pds_object = f.iloc[:, 1].to_pandas()
+        self.pds_bool = f.iloc[:, 2].to_pandas()
+
+class SeriesDropNa_N(SeriesDropNa, Native):
+
+    def float_index_auto(self) -> None:
+        self.sfs_float.dropna()
+
+    def object_index_auto(self) -> None:
+        self.sfs_object.dropna()
+
+    def bool_index_auto(self) -> None:
+        self.sfs_bool.dropna()
+
+class SeriesDropNa_R(SeriesDropNa, Reference):
+
+    def float_index_auto(self) -> None:
+        self.pds_float.dropna()
+
+    def object_index_auto(self) -> None:
+        self.pds_object.dropna()
+
+    def bool_index_auto(self) -> None:
+        self.pds_bool.dropna()
+
 #-------------------------------------------------------------------------------
 
 class FrameILoc(Perf):
 
     def __init__(self) -> None:
-        self.f1 = ff.parse('s(100,100)')
-        self.p1 = pd.DataFrame(self.f1.values)
+        self.sff1 = ff.parse('s(100,100)')
+        self.pdf1 = pd.DataFrame(self.sff1.values)
 
-        self.f2 = ff.parse('s(100,100)|i(I,str)|c(I,str)')
-        self.p2 = self.f2.to_pandas()
+        self.sff2 = ff.parse('s(100,100)|i(I,str)|c(I,str)')
+        self.pdf2 = self.sff2.to_pandas()
 
 class FrameILoc_N(FrameILoc, Native):
 
     def element_index_auto(self) -> None:
-        self.f1.iloc[50, 50]
+        self.sff1.iloc[50, 50]
 
     def element_index_str(self) -> None:
-        self.f2.iloc[50, 50]
+        self.sff2.iloc[50, 50]
 
 class FrameILoc_R(FrameILoc, Reference):
 
     def element_index_auto(self) -> None:
-        self.p1.iloc[50, 50]
+        self.pdf1.iloc[50, 50]
 
     def element_index_str(self) -> None:
-        self.p2.iloc[50, 50]
+        self.pdf2.iloc[50, 50]
 
 #-------------------------------------------------------------------------------
 
 class FrameLoc(Perf):
 
     def __init__(self) -> None:
-        self.f1 = ff.parse('s(100,100)')
-        self.p1 = pd.DataFrame(self.f1.values)
+        self.sff1 = ff.parse('s(100,100)')
+        self.pdf1 = pd.DataFrame(self.sff1.values)
 
-        self.f2 = ff.parse('s(100,100)|i(I,str)|c(I,str)')
-        self.p2 = self.f2.to_pandas()
+        self.sff2 = ff.parse('s(100,100)|i(I,str)|c(I,str)')
+        self.pdf2 = self.sff2.to_pandas()
 
 class FrameLoc_N(FrameLoc, Native):
 
     def element_index_auto(self) -> None:
-        self.f1.loc[50, 50]
+        self.sff1.loc[50, 50]
 
     def element_index_str(self) -> None:
-        self.f2.loc['zGuv', 'zGuv']
+        self.sff2.loc['zGuv', 'zGuv']
 
 class FrameLoc_R(FrameLoc, Reference):
 
     def element_index_auto(self) -> None:
-        self.p1.loc[50, 50]
+        self.pdf1.loc[50, 50]
 
     def element_index_str(self) -> None:
-        self.p2.loc['zGuv', 'zGuv']
+        self.pdf2.loc['zGuv', 'zGuv']
 
 
 #-------------------------------------------------------------------------------
@@ -137,11 +215,18 @@ def yield_classes(
         pattern: str
         ) -> tp.Iterator[tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]]]:
 
+    if '.' in pattern:
+        pattern_cls, pattern_func = pattern.split('.')
+    else:
+        pattern_cls, pattern_func = pattern, '*'
+
     for cls_perf in Perf.__subclasses__(): # only get one level
-        if pattern and not fnmatch.fnmatch(
+        if pattern_cls and not fnmatch.fnmatch(
                 cls_perf.__name__.lower(), pattern.lower()):
             continue
+
         runners: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]] = {Perf: cls_perf}
+
         for cls_runner in cls_perf.__subclasses__():
             for cls in (Native, Reference):
                 if issubclass(cls_runner, cls):
