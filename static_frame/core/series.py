@@ -954,6 +954,14 @@ class Series(ContainerOperand):
         '''
         Return a new :obj:`static_frame.Series` after removing values of NaN or None.
         '''
+        from static_frame.core.util import DTYPE_NA_KINDS
+        if self.values.dtype.kind not in DTYPE_NA_KINDS:
+            # return the same array in a new series
+            return self.__class__(self.values,
+                    index=self._index,
+                    name=self._name,
+                    own_index=True)
+
         # get positions that we want to keep
         isna = isna_array(self.values)
         length = len(self.values)
