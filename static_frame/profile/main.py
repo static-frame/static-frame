@@ -22,10 +22,13 @@ class PerfKey: pass
 class Perf(PerfKey):
     NUMBER = 100_000
 
-    def iter_function_names(self) -> tp.Iterator[str]:
+    def iter_function_names(self, pattern_func: str = '') -> tp.Iterator[str]:
         for name in sorted(dir(self)):
             if name == 'iter_function_names':
                 continue
+            if pattern_func and not fnmatch.fnmatch(
+                    name, pattern_func.lower()):
+               continue
             if not name.startswith('_') and callable(getattr(self, name)):
                 yield name
 
@@ -222,7 +225,7 @@ def yield_classes(
 
     for cls_perf in Perf.__subclasses__(): # only get one level
         if pattern_cls and not fnmatch.fnmatch(
-                cls_perf.__name__.lower(), pattern.lower()):
+                cls_perf.__name__.lower(), pattern_cls.lower()):
             continue
 
         runners: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]] = {Perf: cls_perf}
@@ -232,17 +235,20 @@ def yield_classes(
                 if issubclass(cls_runner, cls):
                     runners[cls] = cls_runner
                     break
-        yield runners
+        yield runners, pattern_func
 
 
 
-def profile(cls_runner: tp.Type[Perf]) -> None:
+def profile(
+        cls_runner: tp.Type[Perf],
+        pattern_func: str,
+        ) -> None:
     '''
     Profile the `sf` function from the supplied class.
     '''
 
     runner = cls_runner()
-    for name in runner.iter_function_names():
+    for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
         pr = cProfile.Profile()
 
@@ -256,12 +262,15 @@ def profile(cls_runner: tp.Type[Perf]) -> None:
         ps.print_stats()
         print(s.getvalue())
 
-def instrument(cls_runner: tp.Type[Perf]) -> None:
+def instrument(
+        cls_runner: tp.Type[Perf],
+        pattern_func: str,
+        ) -> None:
     '''
     Profile the `sf` function from the supplied class.
     '''
     runner = cls_runner()
-    for name in runner.iter_function_names():
+    for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
         profiler = Profiler()
 
@@ -277,6 +286,7 @@ PerformanceRecord = tp.MutableMapping[str, tp.Union[str, float, bool]]
 
 def performance(
         bundle: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],
+        pattern_func: str,
         ) -> tp.Iterator[PerformanceRecord]:
 
     cls_perf = bundle[Perf]
@@ -290,7 +300,7 @@ def performance(
     runner_r = cls_reference()
     assert isinstance(runner_n, Perf)
 
-    for func_name in runner_n.iter_function_names():
+    for func_name in runner_n.iter_function_names(pattern_func):
         row: PerformanceRecord = {}
         row['name'] = f'{cls_perf.__name__}.{func_name}'
         row['iterations'] = cls_perf.NUMBER
@@ -304,7 +314,7 @@ def performance(
 
 
 def performance_tables_from_records(
-        records: tp.Iterable[PerformanceRecord]
+        records: tp.Iterable[PerformanceRecord],
         ) -> tp.Tuple[sf.Frame, sf.Frame]:
 
     from static_frame.core.display_color import HexColor
@@ -339,13 +349,13 @@ def main() -> None:
     records: tp.List[PerformanceRecord] = []
 
     for pattern in options.patterns:
-        for bundle in yield_classes(pattern):
+        for bundle, pattern_func in yield_classes(pattern):
             if options.performance:
-                records.extend(performance(bundle))
+                records.extend(performance(bundle, pattern_func))
             if options.profile:
-                profile(bundle[Native]) #type: ignore
+                profile(bundle[Native], pattern_func) #type: ignore
             if options.instrument:
-                instrument(bundle[Native]) #type: ignore
+                instrument(bundle[Native], pattern_func) #type: ignore
 
     itemize = False # make CLI option maybe
 

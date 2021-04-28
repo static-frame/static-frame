@@ -336,6 +336,7 @@ class Index(IndexBase):
         '''
         # pre-fetching labels for faster get_item construction
         if labels.__class__ is np.ndarray:
+            import ipdb; ipdb.set_trace()
             if dtype is not None and dtype != labels.dtype: #type: ignore
                 raise ErrorInitIndex('invalid label dtype for this Index')
             return immutable_filter(labels)
@@ -630,14 +631,6 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
         return tp.cast(int, self._labels.nbytes)
-
-    # def __bool__(self) -> bool:
-    #     '''
-    #     True if this container has size.
-    #     '''
-    #     if self._recache:
-    #         self._update_array_cache()
-    #     return bool(self._labels.size)
 
     #---------------------------------------------------------------------------
     # set operations
@@ -1135,7 +1128,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return tp.cast(tp.Iterator[tp.Hashable], self._labels.__iter__())
+        yield from self._labels.__iter__()
 
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''
