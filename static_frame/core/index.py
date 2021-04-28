@@ -336,7 +336,6 @@ class Index(IndexBase):
         '''
         # pre-fetching labels for faster get_item construction
         if labels.__class__ is np.ndarray:
-            import ipdb; ipdb.set_trace()
             if dtype is not None and dtype != labels.dtype: #type: ignore
                 raise ErrorInitIndex('invalid label dtype for this Index')
             return immutable_filter(labels)
@@ -1010,7 +1009,7 @@ class Index(IndexBase):
 
         if key is None:
             labels = self._labels
-        elif isinstance(key, slice):
+        elif key.__class__ is slice:
             if key == NULL_SLICE:
                 labels = self._labels
             else:

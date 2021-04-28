@@ -45,8 +45,10 @@ class InterfaceGetItem(Interface[TContainer]):
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
+    _func: tp.Callable[[GetItemKeyType], TContainer]
+
     def __init__(self, func: tp.Callable[[GetItemKeyType], TContainer]) -> None:
-        self._func: tp.Callable[[GetItemKeyType], TContainer] = func
+        self._func = func
 
     def __getitem__(self, key: GetItemKeyType) -> TContainer:
         return self._func(key)
