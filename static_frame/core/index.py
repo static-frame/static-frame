@@ -1015,10 +1015,12 @@ class Index(IndexBase):
             else:
                 # if labels is an np array, this will be a view; if a list, a copy
                 labels = self._labels[key]
+                labels.flags.writeable = False
         elif isinstance(key, KEY_ITERABLE_TYPES):
             # we assume Booleans have been normalized to integers here
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
+            labels.flags.writeable = False
         else: # select a single label value
             return self._labels[key] #type: ignore
 

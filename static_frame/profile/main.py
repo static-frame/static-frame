@@ -1,4 +1,5 @@
 import io
+import os
 import argparse
 import typing as tp
 import types
@@ -78,10 +79,10 @@ class SeriesIsNa_R(SeriesIsNa, Reference):
 
 #-------------------------------------------------------------------------------
 class SeriesDropNa(Perf):
-    NUMBER = 10_000
+    NUMBER = 500
 
     def __init__(self) -> None:
-        f = ff.parse('s(1000,3)|v(float,object,bool)')
+        f = ff.parse('s(100_000,3)|v(float,object,bool)')
         f = f.assign.loc[(f.index % 12 == 0), 0](np.nan)
         f = f.assign.loc[(f.index % 12 == 0), 1](None)
 
@@ -201,6 +202,11 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
             action='store_true',
             default=False,
             )
+    p.add_argument('--graph',
+            help='Produce a call graph of cProfile output',
+            action='store_true',
+            default=False,
+            )
     p.add_argument('--instrument',
             help='Turn on instrumenting with pyinstrument',
             action='store_true',
@@ -246,7 +252,6 @@ def profile(
     '''
     Profile the `sf` function from the supplied class.
     '''
-
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
@@ -262,7 +267,7 @@ def profile(
         ps.print_stats()
         print(s.getvalue())
 
-def instrument(
+def graph(
         cls_runner: tp.Type[Perf],
         pattern_func: str,
         ) -> None:
@@ -272,14 +277,51 @@ def instrument(
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
-        profiler = Profiler()
+        pr = cProfile.Profile()
 
-        profiler.start()
+        pr.enable()
         for _ in range(runner.NUMBER):
             f()
-        profiler.stop()
+        pr.disable()
 
-        print(profiler.output_text(unicode=True, color=True))
+        ps = pstats.Stats(pr)
+        ps.dump_stats('/tmp/tmp.pstat')
+
+        import gprof2dot
+        gprof2dot.main([
+            '--format', 'pstats',
+            '--output', '/tmp/tmp.dot',
+            '--edge-thres', '0', # 0.1 default
+            '--node-thres', '0', # 0.5 default
+            '/tmp/tmp.pstat'
+        ])
+        os.system('dot /tmp/tmp.dot -Tpng -o /tmp/tmp.png; eog /tmp/tmp.png')
+
+
+def instrument(
+        cls_runner: tp.Type[Perf],
+        pattern_func: str,
+        timeline: bool = False,
+        ) -> None:
+    '''
+    Profile the `sf` function from the supplied class.
+    '''
+    runner = cls_runner()
+    for name in runner.iter_function_names(pattern_func):
+        f = getattr(runner, name)
+        profiler = Profiler(interval=0.0001) # default is 0.001, 1 ms
+
+        if timeline:
+            profiler.start()
+            f()
+            profiler.stop()
+        else:
+            profiler.start()
+            for _ in range(runner.NUMBER):
+                f()
+            profiler.stop()
+
+        print(profiler.output_text(unicode=True, color=True, timeline=timeline))
 
 
 PerformanceRecord = tp.MutableMapping[str, tp.Union[str, float, bool]]
@@ -354,6 +396,8 @@ def main() -> None:
                 records.extend(performance(bundle, pattern_func))
             if options.profile:
                 profile(bundle[Native], pattern_func) #type: ignore
+            if options.graph:
+                graph(bundle[Native], pattern_func) #type: ignore
             if options.instrument:
                 instrument(bundle[Native], pattern_func) #type: ignore
 
