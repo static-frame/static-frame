@@ -321,8 +321,20 @@ def instrument(
                 f()
             profiler.stop()
 
-        print(profiler.output_text(unicode=True, color=True, timeline=timeline))
+        print(profiler.output_text(unicode=True, color=True, timeline=timeline, show_all=True))
 
+
+def line(
+        cls_runner: tp.Type[Perf],
+        pattern_func: str,
+        ) -> None:
+    runner = cls_runner()
+    from line_profiler import main
+    for name in runner.iter_function_names(pattern_func):
+        f = getattr(runner, name)
+
+
+#-------------------------------------------------------------------------------
 
 PerformanceRecord = tp.MutableMapping[str, tp.Union[str, float, bool]]
 
