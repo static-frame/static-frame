@@ -64,13 +64,13 @@ DTYPE_INEXACT_KINDS = (DTYPE_FLOAT_KIND, DTYPE_COMPLEX_KIND) # kinds that suppor
 DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
 
 # all kinds that can have NaN, NaT, or None
-# DTYPE_NA_KINDS = frozenset((
-#         DTYPE_FLOAT_KIND,
-#         DTYPE_COMPLEX_KIND,
-#         DTYPE_DATETIME_KIND,
-#         DTYPE_TIMEDELTA_KIND,
-#         DTYPE_OBJECT_KIND,
-#         ))
+DTYPE_NA_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_DATETIME_KIND,
+        DTYPE_TIMEDELTA_KIND,
+        DTYPE_OBJECT_KIND,
+        ))
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
@@ -898,12 +898,12 @@ def iterable_to_array_1d(
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
-    if isinstance(values, np.ndarray):
-        if values.ndim != 1:
+    if values.__class__ is np.ndarray:
+        if values.ndim != 1: #type: ignore
             raise RuntimeError('expected 1d array')
-        if dtype is not None and dtype != values.dtype:
+        if dtype is not None and dtype != values.dtype: #type: ignore
             raise RuntimeError(f'Supplied dtype {dtype} not set on supplied array.')
-        return values, len(values) <= 1
+        return values, len(values) <= 1 #type: ignore
 
     if isinstance(values, range):
         # translate range to np.arange to avoid iteration
@@ -980,8 +980,8 @@ def iterable_to_array_2d(
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
-    if isinstance(values, np.ndarray):
-        if values.ndim != 2:
+    if values.__class__ is np.ndarray:
+        if values.ndim != 2: #type: ignore
             raise RuntimeError('expected 2d array')
         return values
 
@@ -1061,11 +1061,17 @@ def slice_to_ascending_slice(
 
     return slice(start, stop, step)
 
-def slice_to_inclusive_slice(key: slice) -> slice:
+def slice_to_inclusive_slice(
+        key: slice,
+        offset: int = 0,
+        ) -> slice:
     '''Make a stop exclusive key inclusive by adding one to the stop value.
     '''
-    stop = None if key.stop is None else key.stop + 1
-    return slice(key.start, stop, key.step)
+    start = None if key.start is None else key.start + offset
+    stop = None if key.stop is None else key.stop + 1 + offset
+    return slice(start, stop, key.step)
+
+
 
 #-------------------------------------------------------------------------------
 # dates
@@ -2278,7 +2284,7 @@ class PositionsAllocator:
     '''Resource for re-using a single array of contiguous ascending integers for common applications in IndexBase.
     '''
 
-    _size: int = 1024
+    _size: int = 1024 # 1048576
     _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 

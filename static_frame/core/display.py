@@ -408,7 +408,7 @@ class Display:
             else:
                 rows.append([cls.CELL_EMPTY])
 
-        if isinstance(values, np.ndarray) and values.ndim == 2:
+        if values.__class__ is np.ndarray and values.ndim == 2:
             # get rows from numpy string formatting
             np_rows = np.array_str(values).split('\n')
             last_idx = len(np_rows) - 1
@@ -439,7 +439,7 @@ class Display:
                     rows.append([cls.to_cell(v, config=config)])
 
         # add the types to the last row
-        if isinstance(values, np.ndarray) and config.type_show:
+        if values.__class__ is np.ndarray and config.type_show:
             rows.append([cls.to_cell(values.dtype, config=config, is_dtype=True)])
 
         return cls(rows,

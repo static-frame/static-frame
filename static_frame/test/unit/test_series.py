@@ -2867,6 +2867,24 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             s1.loc_max(skipna=False)
 
+    #---------------------------------------------------------------------------
+    def test_series_cov_a(self) -> None:
+
+        s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        s2 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        self.assertAlmostEqualArray(s1.cov(s2), 9312581.904761903)
+
+        s3 = Series((8234, 3, 34, 87, 145, 234, 543), index=tuple('gabcdef'))
+        self.assertAlmostEqualArray(s1.cov(s3), 9312581.904761903)
+
+    def test_series_cov_b(self) -> None:
+
+        s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        s2 = np.array([3, 34, 87, 145, 234, 543, 8234])
+        self.assertAlmostEqualArray(s1.cov(s2), 9312581.904761903)
+
+
+
 
     #---------------------------------------------------------------------------
     def test_series_iloc_searchsorted(self) -> None:

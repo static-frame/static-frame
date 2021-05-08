@@ -641,7 +641,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         # iterable selection should be handled by NP
         values = self._series.values[key]
 
-        if not isinstance(values, np.ndarray): # if we have a single element
+        if not values.__class__ is np.ndarray: # if we have a single element
             return values #type: ignore
 
         series = Series(
@@ -660,7 +660,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         values = self._series.values[iloc_key]
 
-        if not isinstance(values, np.ndarray): # if we have a single element
+        if not values.__class__ is np.ndarray: # if we have a single element
             return values #type: ignore
 
         series = Series(values,

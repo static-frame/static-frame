@@ -253,7 +253,7 @@ class IndexBase(ContainerOperand):
             {side_left}
         '''
         if not isinstance(values, str) and hasattr(values, '__len__'):
-            if not isinstance(values, np.ndarray):
+            if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
         return np.searchsorted(self.values, #type: ignore [no-any-return]
                 values,

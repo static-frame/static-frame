@@ -101,6 +101,7 @@ class ILoc(metaclass=ILocMeta):
     '''A wrapper for embedding ``iloc`` specifications within a single axis argument of a ``loc`` selection.
     '''
 
+    STATIC = True
     __slots__ = (
             'key',
             )
@@ -231,7 +232,7 @@ class LocMap:
                 key = labels.astype(key.dtype) == key
             # if not different type, keep it the same so as to do a direct, single element selection
 
-        is_array = isinstance(key, np.ndarray)
+        is_array = key.__class__ is np.ndarray
         is_list = isinstance(key, list)
 
         # can be an iterable of labels (keys) or an iterable of Booleans
@@ -334,8 +335,8 @@ class Index(IndexBase):
             labels: might be an expired Generator, but if it is an immutable ndarray, we can use it without a copy.
         '''
         # pre-fetching labels for faster get_item construction
-        if isinstance(labels, np.ndarray):
-            if dtype is not None and dtype != labels.dtype:
+        if labels.__class__ is np.ndarray:
+            if dtype is not None and dtype != labels.dtype: #type: ignore
                 raise ErrorInitIndex('invalid label dtype for this Index')
             return immutable_filter(labels)
 
@@ -359,7 +360,7 @@ class Index(IndexBase):
             positions: tp.Optional[tp.Sequence[int]]
             ) -> np.ndarray:
         # positions is either None or an ndarray
-        if isinstance(positions, np.ndarray):
+        if positions.__class__ is np.ndarray:
             return immutable_filter(positions)
         return PositionsAllocator.get(size)
 
@@ -437,12 +438,12 @@ class Index(IndexBase):
         #-----------------------------------------------------------------------
         if is_typed:
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
-            if not isinstance(labels, np.ndarray):
+            if not labels.__class__ is np.ndarray:
                 # for now, assume that if _DTYPE is defined, we have a date
                 labels = (to_datetime64(v, dtype_extract) for v in labels)
             # coerce to target type
-            elif labels.dtype != dtype_extract:
-                labels = labels.astype(dtype_extract)
+            elif labels.dtype != dtype_extract: #type: ignore
+                labels = labels.astype(dtype_extract) #type: ignore
                 labels.flags.writeable = False #type: ignore
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
@@ -630,14 +631,6 @@ class Index(IndexBase):
             self._update_array_cache()
         return tp.cast(int, self._labels.nbytes)
 
-    # def __bool__(self) -> bool:
-    #     '''
-    #     True if this container has size.
-    #     '''
-    #     if self._recache:
-    #         self._update_array_cache()
-    #     return bool(self._labels.size)
-
     #---------------------------------------------------------------------------
     # set operations
 
@@ -664,7 +657,7 @@ class Index(IndexBase):
                 # if self._DTYPE is defined, the default constructor does not take a dtype argument
                 return self.__class__(())
 
-        if isinstance(other, np.ndarray):
+        if other.__class__ is np.ndarray:
             operand = other
             assume_unique = False
         elif isinstance(other, IndexBase):
@@ -695,7 +688,7 @@ class Index(IndexBase):
             if self.STATIC: # immutable, no selection, can return self
                 return self
             labels = self._labels # already immutable
-        elif isinstance(key, np.ndarray) and key.dtype == bool:
+        elif key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
             # can use labels, as we already recached
             # use Boolean area to select indices from positions, as np.delete does not work with arrays
             labels = np.delete(self._labels, self._positions[key], axis=0)
@@ -915,50 +908,38 @@ class Index(IndexBase):
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
-        from static_frame.core.series import Series
-
-        if self._recache:
-            self._update_array_cache()
-
-        if isinstance(key, ILoc):
-            return key.key
+        if key.__class__ is ILoc:
+            return key.key #type: ignore
 
         key = key_from_container_key(self, key)
 
         if self._map is None and offset is None: # loc_is_iloc
-            if isinstance(key, np.ndarray):
-                if key.dtype == bool:
+            if key.__class__ is np.ndarray:
+                if key.dtype == bool: #type: ignore
                     return key
-                if key.dtype != DTYPE_INT_DEFAULT:
+                if key.dtype != DTYPE_INT_DEFAULT: #type: ignore
                     # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
-                    return key.astype(DTYPE_INT_DEFAULT)
-            elif isinstance(key, slice):
-                key = slice_to_inclusive_slice(key)
+                    return key.astype(DTYPE_INT_DEFAULT) #type: ignore
+            elif key.__class__ is slice:
+                key = slice_to_inclusive_slice(key) #type: ignore
             return key
 
         if self._map is None and offset is not None: # loc_is_iloc
-            if isinstance(key, slice):
+            if key.__class__ is slice:
                 if key == NULL_SLICE:
                     return slice(offset, self.__len__() + offset)
+                return slice_to_inclusive_slice(key, offset) #type: ignore
 
-                key = slice_to_inclusive_slice(key)
+            if key.__class__ is np.ndarray:
+                # PERF: isolate for usage of _positions
+                if self._recache:
+                    self._update_array_cache()
 
-                # NOTE: this slice transformation could be a utility function in ArrayKit
-                def slice_attrs() -> tp.Iterator[int]:
-                    for attr in SLICE_ATTRS:
-                        if attr != SLICE_STEP_ATTR:
-                            yield getattr(key, attr) + offset
-                        else:
-                            yield getattr(key, attr)
-
-                return slice(*slice_attrs())
-
-            if isinstance(key, np.ndarray):
-                if key.dtype == DTYPE_BOOL:
+                if key.dtype == DTYPE_BOOL: #type: ignore
                     return self._positions[key] + offset
-                if key.dtype != DTYPE_INT_DEFAULT:
-                    key = key.astype(DTYPE_INT_DEFAULT)
+                if key.dtype != DTYPE_INT_DEFAULT: #type: ignore
+                    key = key.astype(DTYPE_INT_DEFAULT) #type: ignore
                 return key + offset
 
             if isinstance(key, list):
@@ -968,6 +949,10 @@ class Index(IndexBase):
 
         if key_transform:
             key = key_transform(key)
+
+        # PERF: isolate for usage of _positions
+        if self._recache:
+            self._update_array_cache()
 
         return LocMap.loc_to_iloc(
                 label_to_pos=self._map, #type: ignore
@@ -987,7 +972,7 @@ class Index(IndexBase):
             key: a label key.
         '''
         if self._map is None: # loc is iloc
-            is_bool_array = isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL
+            is_bool_array = key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL #type: ignore
 
             try:
                 result = self._positions[key]
@@ -1024,16 +1009,18 @@ class Index(IndexBase):
 
         if key is None:
             labels = self._labels
-        elif isinstance(key, slice):
+        elif key.__class__ is slice:
             if key == NULL_SLICE:
                 labels = self._labels
             else:
                 # if labels is an np array, this will be a view; if a list, a copy
                 labels = self._labels[key]
+                labels.flags.writeable = False
         elif isinstance(key, KEY_ITERABLE_TYPES):
             # we assume Booleans have been normalized to integers here
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
+            labels.flags.writeable = False
         else: # select a single label value
             return self._labels[key] #type: ignore
 
@@ -1088,7 +1075,7 @@ class Index(IndexBase):
         if issubclass(other.__class__, Index):
             other = other.values # operate on labels to labels
             other_is_array = True
-        elif isinstance(other, np.ndarray):
+        elif other.__class__ is np.ndarray:
             other_is_array = True
 
         if operator.__name__ == 'matmul':
@@ -1142,7 +1129,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return tp.cast(tp.Iterator[tp.Hashable], self._labels.__iter__())
+        yield from self._labels.__iter__()
 
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''
@@ -1489,7 +1476,7 @@ def _index_initializer_needs_init(
         return False
     if isinstance(value, IndexBase):
         return False
-    if isinstance(value, np.ndarray):
-        return bool(len(value))
+    if value.__class__ is np.ndarray:
+        return bool(len(value)) #type: ignore
     return bool(value)
 

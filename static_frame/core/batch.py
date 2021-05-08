@@ -52,7 +52,7 @@ GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 def normalize_container(post: tp.Any
         ) -> FrameOrSeries:
     # post might be an element, promote to a Series to permit concatenation
-    if isinstance(post, np.ndarray):
+    if post.__class__ is np.ndarray:
         if post.ndim == 1:
             return Series(post)
         elif post.ndim == 2:
@@ -1041,6 +1041,24 @@ class Batch(ContainerOperand, StoreClientMixin):
                 skipna=skipna,
                 axis=axis,
                 )
+
+    def cov(self, *,
+            axis: int = 1,
+            ddof: int = 1,
+            ) -> 'Batch':
+        '''
+        Compute a covariance matrix.
+
+        Args:
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
+            ddof: Delta degrees of freedom, defaults to 1.
+        '''
+        return self._apply_attr(
+                attr='cov',
+                axis=axis,
+                ddof=ddof,
+                )
+
 
     #---------------------------------------------------------------------------
     # utility function to numpy array

@@ -21,6 +21,7 @@ class HLoc(metaclass=HLocMeta):
     Implemented as a container of hiearchical keys that defiines NULL slices for all lower dimensions that are not defined at construction.
     '''
 
+    STATIC = True
     __slots__ = (
             'key',
             )

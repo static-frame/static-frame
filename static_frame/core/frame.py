@@ -631,10 +631,10 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :obj:`static_frame.Frame`
+            :obj:`Frame`
         '''
         # if records is np; we can just pass it to constructor, as is already a consolidated type
-        if isinstance(records, np.ndarray):
+        if records.__class__ is np.ndarray:
             if dtypes is not None:
                 raise ErrorInitFrame('specifying dtypes when using NP records is not permitted')
             return cls(records,
@@ -945,7 +945,7 @@ class Frame(ContainerOperand):
                 columns.append(k) # side effect of generator!
                 column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
 
-                if isinstance(v, np.ndarray):
+                if v.__class__ is np.ndarray:
                     # NOTE: we rely on TypeBlocks constructor to check that these are same sized
                     if column_type is not None:
                         yield v.astype(column_type)
@@ -1063,7 +1063,7 @@ class Frame(ContainerOperand):
             for col_idx, v in enumerate(fields):
                 column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
 
-                if isinstance(v, np.ndarray):
+                if v.__class__ is np.ndarray:
                     if column_type is not None:
                         yield v.astype(column_type)
                     else:
@@ -2451,13 +2451,13 @@ class Frame(ContainerOperand):
 
         blocks_constructor = None
 
-        if isinstance(data, TypeBlocks):
+        if data.__class__ is TypeBlocks: # PERF: no sublcasses supported
             if own_data:
                 self._blocks = data
             else:
                 # assume we need to create a new TB instance; this will not copy underlying arrays as all blocks are immutable
                 self._blocks = TypeBlocks.from_blocks(data._blocks)
-        elif isinstance(data, np.ndarray):
+        elif data.__class__ is np.ndarray:
             if own_data:
                 data.flags.writeable = False
             # from_blocks will apply immutable filter
@@ -3300,7 +3300,7 @@ class Frame(ContainerOperand):
 
             target_tb = index_target._blocks
             add_blocks = target_tb._extract(column_key=depth_level)
-            if not isinstance(add_blocks, np.ndarray):
+            if not add_blocks.__class__ is np.ndarray:
                 # get iterable off arrays
                 add_blocks = add_blocks._blocks
             else:
@@ -3793,11 +3793,11 @@ class Frame(ContainerOperand):
         '''
         blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
 
-        if not isinstance(blocks, TypeBlocks):
+        if blocks.__class__ is not TypeBlocks:
             return blocks # reduced to an element
 
         own_index = True # the extracted Frame can always own this index
-        row_key_is_slice = isinstance(row_key, slice)
+        row_key_is_slice = row_key.__class__ is slice
         if row_key is None or (row_key_is_slice and row_key == NULL_SLICE):
             index = self._index
         else:
@@ -3808,7 +3808,7 @@ class Frame(ContainerOperand):
                     name_row = tuple(name_row)
 
         # can only own columns if _COLUMNS_CONSTRUCTOR is static
-        column_key_is_slice = isinstance(column_key, slice)
+        column_key_is_slice = column_key.__class__ is slice
         if column_key is None or (column_key_is_slice and column_key == NULL_SLICE):
             columns = self._columns
             own_columns = self._COLUMNS_CONSTRUCTOR.STATIC
@@ -4024,8 +4024,6 @@ class Frame(ContainerOperand):
         _, key = self._compound_loc_to_getitem_iloc(key)
         return FrameAsType(self, column_key=key)
 
-
-
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
@@ -4154,7 +4152,7 @@ class Frame(ContainerOperand):
                         )
             else:
                 raise AxisInvalid(f'invalid axis: {axis}')
-        elif isinstance(other, np.ndarray):
+        elif other.__class__ is np.ndarray:
             name = None
         else:
             other = iterable_to_array_nd(other)
@@ -4659,7 +4657,7 @@ class Frame(ContainerOperand):
             iloc_key = self._index._loc_to_iloc(label)
             if key:
                 cfs = key(self._extract(row_key=iloc_key))
-                cfs_is_array = isinstance(cfs, np.ndarray)
+                cfs_is_array = cfs.__class__ is np.ndarray
                 if (cfs.ndim == 1 and len(cfs) != self.shape[1]) or (cfs.ndim == 2 and cfs.shape[1] != self.shape[1]):
                     raise RuntimeError('key function returned a container of invalid length')
             else: # go straigt to array as, since this is row-wise, have to find a consolidated
@@ -4687,7 +4685,7 @@ class Frame(ContainerOperand):
             iloc_key = self._columns._loc_to_iloc(label)
             if key:
                 cfs = key(self._extract(column_key=iloc_key))
-                cfs_is_array = isinstance(cfs, np.ndarray)
+                cfs_is_array = cfs.__class__ is np.ndarray
                 if (cfs.ndim == 1 and len(cfs) != self.shape[0]) or (cfs.ndim == 2 and cfs.shape[0] != self.shape[0]):
                     raise RuntimeError('key function returned a container of invalid length')
             else: # get array from blocks
@@ -5331,6 +5329,41 @@ class Frame(ContainerOperand):
         if axis == 0:
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
+
+    def cov(self, *,
+            axis: int = 1,
+            ddof: int = 1,
+            ) -> 'Frame':
+        '''Compute a covariance matrix.
+
+        Args:
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
+            ddof: Delta degrees of freedom, defaults to 1.
+        '''
+        if axis == 0:
+            rowvar = True
+            labels = self._index
+            own_index = True
+            own_columns = self.STATIC
+        else:
+            rowvar = False
+            labels = self._columns
+            # can own columns if static
+            own_index = self.STATIC
+            own_columns = self.STATIC
+
+        values = np.cov(self.values, rowvar=rowvar, ddof=ddof)
+        values.flags.writeable = False
+
+        return self.__class__(values,
+                index=labels,
+                columns=labels,
+                own_index=own_index,
+                own_columns=own_columns,
+                name=self._name,
+                )
+
+
 
     #---------------------------------------------------------------------------
     # pivot family
@@ -6390,7 +6423,7 @@ class Frame(ContainerOperand):
 
             elif package == 'numpy':
                 #msgpack-numpy is breaking with these data types, overriding here
-                if isinstance(obj, np.ndarray):
+                if obj.__class__ is np.ndarray:
                     if obj.dtype.type == np.object_:
                         data = list(map(element_encode, obj))
                         return {b'np': True,
@@ -7005,7 +7038,7 @@ class FrameGO(Frame):
         elif isinstance(value, Frame):
             raise RuntimeError(
                     f'cannot use setitem with a Frame; use {self.__class__.__name__}.extend()')
-        elif isinstance(value, np.ndarray): # is numpy array
+        elif value.__class__ is np.ndarray:
             # this permits unaligned assignment as no index is used, possibly remove
             if value.ndim != 1:
                 raise RuntimeError(
@@ -7289,7 +7322,7 @@ class FrameAssignBLoc(FrameAssign):
             blocks = self.container._blocks.extract_bloc_assign_by_blocks(key, values)
 
         else: # an array or an element
-            if isinstance(value, np.ndarray) and value.shape != self.container.shape:
+            if value.__class__ is np.ndarray and value.shape != self.container.shape:
                 raise RuntimeError(f'value must match shape {self.container.shape}')
             blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
 

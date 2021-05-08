@@ -563,7 +563,7 @@ def bloc_key_normalize(
                 fill_value=False
                 )
         bloc_key = bloc_frame.values # shape must match post reindex
-    elif isinstance(key, np.ndarray):
+    elif key.__class__ is np.ndarray:
         bloc_key = key
         if bloc_key.shape != container.shape:
             raise RuntimeError(f'bloc {bloc_key.shape} must match shape {container.shape}')
@@ -586,13 +586,13 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
     from static_frame.core.frame import Frame
     from static_frame.core.series import Series
 
-    if isinstance(key, slice):
-        return slice_to_ascending_slice(key, size=size)
+    if key.__class__ is slice:
+        return slice_to_ascending_slice(key, size=size) #type: ignore
 
     if isinstance(key, str) or not hasattr(key, '__len__'):
         return key
 
-    if isinstance(key, np.ndarray):
+    if key.__class__ is np.ndarray:
         # array first as not truthy
         return np.sort(key, kind=DEFAULT_SORT_KIND)
 
@@ -842,6 +842,9 @@ def key_from_container_key(
     '''
     Unpack selection values from another Index, Series, or ILoc selection.
     '''
+    # PERF: do not do comparisons if key is not a Container or SF object
+    if not hasattr(key, 'STATIC'):
+        return key
 
     from static_frame.core.index import Index
     from static_frame.core.index import ILoc
@@ -865,10 +868,10 @@ def key_from_container_key(
         else:
             # For all other Series types, we simply assume that the values are to be used as keys in the IH. This ignores the index, but it does not seem useful to require the Series, used like this, to have a matching index value, as the index and values would need to be identical to have the desired selection.
             key = key.values
-    elif expand_iloc and isinstance(key, ILoc):
+    elif expand_iloc and key.__class__ is ILoc:
         # realize as Boolean array
         array = np.full(len(index), False)
-        array[key.key] = True
+        array[key.key] = True #type: ignore
         key = array
 
     # detect and fail on Frame?
@@ -1043,7 +1046,7 @@ def sort_index_for_order(
     # cfs is container_for_sort
     if key:
         cfs = key(index)
-        cfs_is_array = isinstance(cfs, np.ndarray)
+        cfs_is_array = cfs.__class__ is np.ndarray
         if cfs_is_array:
             cfs_depth = 1 if cfs.ndim == 1 else cfs.shape[1]
         else:
