@@ -13,13 +13,16 @@ import datetime
 from enum import Enum
 
 from pyinstrument import Profiler #type: ignore
-from line_profiler import LineProfiler
+from line_profiler import LineProfiler #type: ignore
+import gprof2dot #type: ignore
+
 import numpy as np
 import pandas as pd
 import frame_fixtures as ff
-
 import static_frame as sf
+
 from static_frame.core.display_color import HexColor
+from static_frame.core.util import AnyCallable
 
 
 class PerfStatus(Enum):
@@ -43,7 +46,7 @@ class PerfStatus(Enum):
     #     return HexColor.format_terminal('darkorange', str(v))
 
 class FunctionMetaData(tp.NamedTuple):
-    line_target: tp.Callable[[tp.Any], tp.Any] = None
+    line_target: tp.Optional[AnyCallable] = None
     perf_status: tp.Optional[PerfStatus] = None
 
 class PerfKey: pass
@@ -51,8 +54,8 @@ class PerfKey: pass
 class Perf(PerfKey):
     NUMBER = 100_000
 
-    def __init__(self):
-        self.meta = None
+    def __init__(self) -> None:
+        self.meta: tp.Optional[tp.Dict[str, FunctionMetaData]] = None
 
     def iter_function_names(self, pattern_func: str = '') -> tp.Iterator[str]:
         for name in sorted(dir(self)):
@@ -330,7 +333,10 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
 
 def yield_classes(
         pattern: str
-        ) -> tp.Iterator[tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]]]:
+        ) -> tp.Iterator[
+                tp.Tuple[
+                    tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],
+                    str]]:
 
     if '.' in pattern:
         pattern_cls, pattern_func = pattern.split('.')
@@ -395,7 +401,6 @@ def graph(
         ps = pstats.Stats(pr)
         ps.dump_stats('/tmp/tmp.pstat')
 
-        import gprof2dot
         gprof2dot.main([
             '--format', 'pstats',
             '--output', '/tmp/tmp.dot',
@@ -451,7 +456,8 @@ def line(
         # import ipdb; ipdb.set_trace()
 #-------------------------------------------------------------------------------
 
-PerformanceRecord = tp.MutableMapping[str, tp.Union[str, float, bool]]
+PerformanceRecord = tp.MutableMapping[str,
+        tp.Union[str, float, bool, tp.Optional[PerfStatus]]]
 
 def performance(
         bundle: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],

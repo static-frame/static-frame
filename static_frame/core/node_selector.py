@@ -48,10 +48,10 @@ class InterfaceGetItem(Interface[TContainer]):
     _func: tp.Callable[[GetItemKeyType], TContainer]
 
     def __init__(self, func: tp.Callable[[GetItemKeyType], TContainer]) -> None:
-        self._func = func
+        self._func = func #type: ignore
 
     def __getitem__(self, key: GetItemKeyType) -> TContainer:
-        return self._func(key)
+        return self._func(key) #type: ignore
 
 #-------------------------------------------------------------------------------
 
