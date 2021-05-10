@@ -980,7 +980,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
 
         return self.__class__(values,
-                index=self._index.loc[sel],
+                index=self._index._extract_iloc(sel), # PERF: use _extract_iloc as we have a Boolean array
                 name=self._name,
                 own_index=True)
 
