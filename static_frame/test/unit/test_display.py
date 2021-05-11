@@ -23,7 +23,6 @@ from static_frame import DisplayConfig
 from static_frame import DisplayConfigs
 from static_frame import DisplayFormats
 from static_frame import DisplayActive
-from static_frame.core.display_color import HexColor
 
 from static_frame.core.display_config import DisplayFormatLaTeX
 from static_frame.core.display import DisplayTypeCategoryFactory
