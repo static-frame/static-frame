@@ -3579,7 +3579,7 @@ class Frame(ContainerOperand):
         # always get the index Display (even if we are not going to use it) to dettermine how many rows we need (which may include types, as well as truncation with elipsis).
         display_index = self._index.display(config=config)
 
-        # header depth useod for HTML and other foramtting; needs to be adjusted if removing types and/or columns and types, When showing types on a Frame, we need 2: one for the Frame type, the other for the index type.
+        # header depth used for HTML and other foramtting; needs to be adjusted if removing types and/or columns and types, When showing types on a Frame, we need 2: one for the Frame type, the other for the index type.
         header_depth = (self._columns.depth * config.include_columns) + (2 * config.type_show)
 
         # create an empty display based on index display

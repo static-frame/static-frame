@@ -6,6 +6,7 @@ import hashlib
 import json
 
 import numpy as np
+import frame_fixtures as ff
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -22,6 +23,7 @@ from static_frame import DisplayConfig
 from static_frame import DisplayConfigs
 from static_frame import DisplayFormats
 from static_frame import DisplayActive
+from static_frame.core.display_color import HexColor
 
 from static_frame.core.display_config import DisplayFormatLaTeX
 from static_frame.core.display import DisplayTypeCategoryFactory
@@ -250,7 +252,6 @@ class TestUnit(TestCase):
                 pos = pos + size
 
         s = Series(chunks(20, 3), index=('a', 'b', 'c'))
-
 
         self.assertEqual(s.display(config=config_width_12).to_rows(),
                 [
@@ -822,6 +823,12 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
+    def test_display_value_color_a(self) -> None:
+
+        f1 = ff.parse('s(10,3)|i(I,str)')
+        s2 = s1.iter_element().apply(lambda e: HexColor.format_terminal('green', str(e)))
+        post = s2.display()
 
 
     #---------------------------------------------------------------------------

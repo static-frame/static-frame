@@ -11,6 +11,7 @@ from static_frame.core.display import DisplayActive as DisplayActive
 from static_frame.core.display_config import DisplayConfig as DisplayConfig
 from static_frame.core.display_config import DisplayConfigs as DisplayConfigs
 from static_frame.core.display_config import DisplayFormats as DisplayFormats
+from static_frame.core.display_color import HexColor as HexColor
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInit
 from static_frame.core.exception import ErrorInitBus
