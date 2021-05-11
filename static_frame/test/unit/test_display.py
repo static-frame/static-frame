@@ -827,7 +827,7 @@ class TestUnit(TestCase):
     def test_display_value_color_a(self) -> None:
 
         f1 = ff.parse('s(10,3)|i(I,str)')
-        s2 = s1.iter_element().apply(lambda e: HexColor.format_terminal('green', str(e)))
+        s2 = f1.assign[1].apply(lambda s: s.iter_element().apply(lambda e: sf.HexColor.format_terminal('green' if e > 0 else 'blue', str(e))))
         post = s2.display()
 
 
