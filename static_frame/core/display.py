@@ -296,13 +296,13 @@ class Display:
         if isinstance(type_input, np.dtype):
             type_str = str(type_input)
             type_ref = type_input
+        elif isinstance(type_input, DisplayHeader):
+            type_str = repr(type_input)
+            type_ref = type_input.cls
         elif inspect.isclass(type_input):
             # assert isinstance(type_input, type)
             type_str = type_input.__name__
             type_ref = type_input
-        elif isinstance(type_input, DisplayHeader):
-            type_str = repr(type_input)
-            type_ref = type_input.cls
         else:
             raise NotImplementedError('no handling for this input', type_input)
 
