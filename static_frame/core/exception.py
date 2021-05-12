@@ -55,6 +55,10 @@ class LocInvalid(RuntimeError):
 class AxisInvalid(RuntimeError):
     pass
 
+class RelabelInvalid(RuntimeError):
+    def __init__(self) -> None:
+        super().__init__('Relabelling with an unordered iterable is not permitted.')
+
 #-------------------------------------------------------------------------------
 
 class StoreFileMutation(RuntimeError):
@@ -69,7 +73,7 @@ class StoreParameterConflict(RuntimeError):
 
 class NotImplementedAxis(NotImplementedError):
     def __init__(self) -> None:
-        super().__init__('iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
+        super().__init__('Iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
 
 
 
