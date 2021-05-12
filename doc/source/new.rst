@@ -4,13 +4,15 @@ What is New in Static Frame
 0.8.9
 ----------
 
-Performance enhancements to ``Series.dropna``.
+Performance enhancements to ``Series.dropna()``.
+
+``Series.relabel()`` and ``Frame.relabel()`` now raise if given a ``set`` or ``frozenset``.
 
 
 0.8.8
 ----------
 
-Added ``Frame.cov``, ``Series.cov``, and ``Batch.cov``.
+Added ``Frame.cov()``, ``Series.cov()``, and ``Batch.cov()``.
 
 Performance enhancements to ``loc`` selections by element.
 

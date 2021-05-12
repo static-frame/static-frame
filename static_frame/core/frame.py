@@ -6,6 +6,7 @@ from itertools import chain
 from itertools import product
 from copy import deepcopy
 from operator import itemgetter
+from collections.abc import Set
 import csv
 import json
 import sqlite3
@@ -45,6 +46,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndexNonUnique
+from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index import Index
@@ -3090,6 +3092,8 @@ class Frame(ContainerOperand):
             own_index = True
         elif index is None:
             index = self._index
+        elif isinstance(index, Set):
+            raise RelabelInvalid()
 
         own_columns = False
         if columns is IndexAutoFactory:
@@ -3099,6 +3103,8 @@ class Frame(ContainerOperand):
             own_columns = True
         elif columns is None:
             columns = self._columns
+        elif isinstance(columns, Set):
+            raise RelabelInvalid()
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays

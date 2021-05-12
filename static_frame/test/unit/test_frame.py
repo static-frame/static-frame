@@ -4885,6 +4885,15 @@ class TestUnit(TestCase):
                 (('c', ((0, 1), (1, 2))), ('b', ((0, 1), (1, 2))))
                 )
 
+    def test_frame_relabel_h(self) -> None:
+
+        f1 = ff.parse('s(2,2)')
+        with self.assertRaises(RuntimeError):
+            f1.relabel(columns={'a', 'c'})
+
+        with self.assertRaises(RuntimeError):
+            f1.relabel(index={'a', 'c'})
+
     #---------------------------------------------------------------------------
     def test_frame_rehierarch_a(self) -> None:
         records = (
