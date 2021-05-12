@@ -1852,7 +1852,7 @@ class TestUnit(TestCase):
         self.assertEqual(id(s1.index), id(s2.index))
 
 
-    def test_series_relabel_f(self) -> None:
+    def test_series_relabel_g(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
         # reuse the same instance
         with self.assertRaises(RuntimeError):
