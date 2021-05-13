@@ -8,7 +8,7 @@ Performance enhancements to ``Series.dropna()``.
 
 ``Series.relabel()`` and ``Frame.relabel()`` now raise if given a ``set`` or ``frozenset``.
 
-Fixed issue in ``Frame.asssign.loc[]`` when using a Boolean array as a column selector.
+Fixed issue in ``Frame.assign.loc[]`` when using a Boolean array as a column selector.
 
 
 0.8.8
