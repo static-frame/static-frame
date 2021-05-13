@@ -7218,10 +7218,12 @@ class FrameAssignILoc(FrameAssign):
             # NOTE: the iloc key's order is not relevant in assignment, and block assignment requires that column keys are ascending
             key = (self.key[0], #type: ignore [index]
                     key_to_ascending_key(
-                    self.key[1],
-                    self.container.shape[1])) #type: ignore [index]
+                            self.key[1],
+                            self.container.shape[1] #type: ignore [index]
+                    ))
         else:
             key = (self.key, None)
+
 
         if is_series:
             assigned = self.container._reindex_other_like_iloc(value,
