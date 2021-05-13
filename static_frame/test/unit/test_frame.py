@@ -2709,7 +2709,6 @@ class TestUnit(TestCase):
         self.assertEqual(f1.loc[:, f1.columns % 2 == 0].columns.values.tolist(),
                 [0, 2, 4, 6, 8]
 )
-
     #---------------------------------------------------------------------------
 
     def test_frame_assign_iloc_a(self) -> None:

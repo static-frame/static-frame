@@ -552,9 +552,9 @@ def performance(
                     globals=locals(),
                     number=cls_perf.NUMBER)
 
-        row['n/r'] = row[Native.__name__] / row[Reference.__name__]
-        row['r/n'] = row[Reference.__name__] / row[Native.__name__]
-        row['win'] = row['r/n'] > .99
+        row['n/r'] = row[Native.__name__] / row[Reference.__name__] #type: ignore
+        row['r/n'] = row[Reference.__name__] / row[Native.__name__] #type: ignore
+        row['win'] = row['r/n'] > .99 #type: ignore
 
         if runner_n.meta is not None:
             row['status'] = runner_n.meta[func_name].perf_status
