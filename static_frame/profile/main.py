@@ -31,19 +31,19 @@ class PerfStatus(Enum):
     UNEXPLAINED_WIN = (False, True)
     UNEXPLAINED_LOSS = (False, False)
 
-    def __str__(self) -> str:
-        if self.value[0]:
-            return 'x' # make a check mark
-        return '?'
-
     # def __str__(self) -> str:
     #     if self.value[0]:
-    #         v = 'x' # make a check mark
-    #     else:
-    #         v = '?'
-    #     if self.value[1]:
-    #         return HexColor.format_terminal('darkgreen', str(v))
-    #     return HexColor.format_terminal('darkorange', str(v))
+    #         return 'x' # make a check mark
+    #     return '?'
+
+    def __str__(self) -> str:
+        if self.value[0]:
+            v = '✓' # make a check mark
+        else:
+            v = '?'
+        if self.value[1]:
+            return HexColor.format_terminal('darkgreen', str(v))
+        return HexColor.format_terminal('darkorange', str(v))
 
 class FunctionMetaData(tp.NamedTuple):
     line_target: tp.Optional[AnyCallable] = None
@@ -91,6 +91,18 @@ class SeriesIsNa(Perf):
         self.pds_object = f.iloc[:, 1].to_pandas()
         self.pds_bool = f.iloc[:, 2].to_pandas()
 
+        self.meta = {
+            'float_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'object_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'bool_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
+                ),
+            }
+
 class SeriesIsNa_N(SeriesIsNa, Native):
 
     def float_index_auto(self) -> None:
@@ -115,7 +127,7 @@ class SeriesIsNa_R(SeriesIsNa, Reference):
 
 #-------------------------------------------------------------------------------
 class SeriesDropNa(Perf):
-    NUMBER = 500
+    NUMBER = 200
 
     def __init__(self) -> None:
         super().__init__()
@@ -148,11 +160,11 @@ class SeriesDropNa(Perf):
         self.meta = {
             'float_index_auto': FunctionMetaData(
                 line_target=sf.Index.__init__,
-                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'object_index_auto': FunctionMetaData(
                 line_target=sf.Series.dropna,
-                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'bool_index_auto': FunctionMetaData(
                 line_target=sf.Series.dropna,
@@ -161,15 +173,15 @@ class SeriesDropNa(Perf):
 
             'float_index_str': FunctionMetaData(
                 line_target=sf.Index.__init__,
-                perf_status=None,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'object_index_str': FunctionMetaData(
                 line_target=sf.Series.dropna,
-                perf_status=None,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'bool_index_str': FunctionMetaData(
                 line_target=sf.Series.dropna,
-                perf_status=None,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 )
             }
 
@@ -219,6 +231,41 @@ class SeriesDropNa_R(SeriesDropNa, Reference):
 
 
 #-------------------------------------------------------------------------------
+class FrameDropNa(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        f1 = ff.parse('s(100,100)|v(float)')
+        f1 = f1.assign.loc[(f1.index % 12 == 0),:](np.nan)
+        self.sff_float_auto_row = f1
+        self.pdf_float_auto_row = f1.to_pandas()
+
+        f2 = ff.parse('s(100,100)|v(float)')
+        f2 = f2.assign.loc[:, (f2.columns % 12 == 0)](np.nan)
+        self.sff_float_auto_column = f2
+        self.pdf_float_auto_column = f2.to_pandas()
+
+class FrameDropNa_N(FrameDropNa, Native):
+
+    def float_index_auto_row(self) -> None:
+        self.sff_float_auto_row.dropna()
+
+    def float_index_auto_column(self) -> None:
+        self.sff_float_auto_column.dropna(axis=1)
+
+
+class FrameDropNa_R(FrameDropNa, Reference):
+
+    def float_index_auto_row(self) -> None:
+        self.pdf_float_auto_row.dropna()
+
+    def float_index_auto_column(self) -> None:
+        self.pdf_float_auto_column.dropna(axis=1)
+
+
+#-------------------------------------------------------------------------------
 
 class FrameILoc(Perf):
 
@@ -230,6 +277,15 @@ class FrameILoc(Perf):
 
         self.sff2 = ff.parse('s(100,100)|i(I,str)|c(I,str)')
         self.pdf2 = self.sff2.to_pandas()
+
+        self.meta = {
+            'element_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'element_index_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            }
 
 class FrameILoc_N(FrameILoc, Native):
 
@@ -260,6 +316,15 @@ class FrameLoc(Perf):
         self.sff2 = ff.parse('s(100,100)|i(I,str)|c(I,str)')
         self.pdf2 = self.sff2.to_pandas()
 
+        self.meta = {
+            'element_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'element_index_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            }
+
 class FrameLoc_N(FrameLoc, Native):
 
     def element_index_auto(self) -> None:
@@ -277,6 +342,7 @@ class FrameLoc_R(FrameLoc, Reference):
         self.pdf2.loc['zGuv', 'zGuv']
 
 
+#-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 def get_arg_parser() -> argparse.ArgumentParser:
@@ -486,10 +552,15 @@ def performance(
                     globals=locals(),
                     number=cls_perf.NUMBER)
 
+        row['n/r'] = row[Native.__name__] / row[Reference.__name__]
+        row['r/n'] = row[Reference.__name__] / row[Native.__name__]
+        row['win'] = row['r/n'] > .99
+
         if runner_n.meta is not None:
-            row['status'] =  runner_n.meta[func_name].perf_status
+            row['status'] = runner_n.meta[func_name].perf_status
         else:
-            row['status'] = None
+            row['status'] = (PerfStatus.UNEXPLAINED_WIN if row['win']
+                    else PerfStatus.UNEXPLAINED_LOSS)
         yield row
 
 
@@ -499,12 +570,8 @@ def performance_tables_from_records(
 
 
     frame = sf.FrameGO.from_dict_records(records)
-    # frame = frame.set_index('name', drop=True)
 
-    # if PerfTest.SF_NAME in frame.columns and PerfTest.PD_NAME in frame.columns:
-    frame['n/r'] = frame[Native.__name__] / frame[Reference.__name__]
-    frame['r/n'] = frame[Reference.__name__] / frame[Native.__name__]
-    frame['win'] = frame['r/n'] > .99
+    # import ipdb; ipdb.set_trace()
 
     def format(v: object) -> str:
         if isinstance(v, float):
