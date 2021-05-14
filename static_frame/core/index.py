@@ -470,10 +470,10 @@ class Index(IndexBase):
                             f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})'
                             )
                 size = len(self._map)
-            else: # must assume labels are unique
+            else: # if loc_is_iloc, labels must be positions
                 # labels must not be a generator, but we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels) #type: ignore
-                if positions is None:
+                if size and positions is None:
                     positions = PositionsAllocator.get(size)
         else: # map shared from another Index
             size = len(self._map)
