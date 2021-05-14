@@ -243,6 +243,69 @@ class SeriesDropNa_R(SeriesDropNa, Reference):
 
 
 #-------------------------------------------------------------------------------
+class SeriesIterElementApply(Perf):
+    NUMBER = 500
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        f = ff.parse('s(1000,3)|v(float,object,bool)|i(I,str)|c(I,str)')
+
+        self.sfs_float = f.iloc[:, 0]
+        self.sfs_object = f.iloc[:, 1]
+        self.sfs_bool = f.iloc[:, 2]
+
+        self.pds_float = f.iloc[:, 0].to_pandas()
+        self.pds_object = f.iloc[:, 1].to_pandas()
+        self.pds_bool = f.iloc[:, 2].to_pandas()
+
+
+        from static_frame.core.util import prepare_iter_for_array
+
+        self.meta = {
+            'float_index_str': FunctionMetaData(
+                line_target=prepare_iter_for_array,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                ),
+            'object_index_str': FunctionMetaData(
+                line_target=prepare_iter_for_array,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                ),
+            'bool_index_str': FunctionMetaData(
+                line_target=prepare_iter_for_array,
+                perf_status=PerfStatus.EXPLAINED_LOSS, # not copying anything
+
+                ),
+            }
+
+class SeriesIterElementApply_N(SeriesIterElementApply, Native):
+
+    def float_index_str(self) -> None:
+        self.sfs_float.iter_element().apply(lambda x: str(x))
+
+    def object_index_str(self) -> None:
+        self.sfs_object.iter_element().apply(lambda x: str(x))
+
+    def bool_index_str(self) -> None:
+        self.sfs_bool.iter_element().apply(lambda x: str(x))
+
+class SeriesIterElementApply_R(SeriesIterElementApply, Reference):
+
+    def float_index_str(self) -> None:
+        self.pds_float.apply(lambda x: str(x))
+
+    def object_index_str(self) -> None:
+        self.pds_object.apply(lambda x: str(x))
+
+    def bool_index_str(self) -> None:
+        self.pds_bool.apply(lambda x: str(x))
+
+
+
+
+
+
+#-------------------------------------------------------------------------------
 class FrameDropNa(Perf):
     NUMBER = 100
 
@@ -259,6 +322,19 @@ class FrameDropNa(Perf):
         self.sff_float_auto_column = f2
         self.pdf_float_auto_column = f2.to_pandas()
 
+
+        f3 = ff.parse('s(100,100)|v(float)|i(I,str)|c(I,str)')
+        f3 = f3.assign.loc[(np.arange(len(f3.index)) % 12 == 0),:](np.nan)
+        self.sff_float_str_row = f3
+        self.pdf_float_str_row = f3.to_pandas()
+
+        f4 = ff.parse('s(100,100)|v(float)|i(I,str)|c(I,str)')
+        f4 = f4.assign.loc[:, (np.arange(len(f4.columns)) % 12 == 0)](np.nan)
+        self.sff_float_str_column = f4
+        self.pdf_float_str_column = f4.to_pandas()
+
+        import ipdb; ipdb.set_trace()
+
 class FrameDropNa_N(FrameDropNa, Native):
 
     def float_index_auto_row(self) -> None:
@@ -268,6 +344,13 @@ class FrameDropNa_N(FrameDropNa, Native):
         self.sff_float_auto_column.dropna(axis=1)
 
 
+    def float_index_str_row(self) -> None:
+        self.sff_float_str_row.dropna()
+
+    def float_index_str_column(self) -> None:
+        self.sff_float_str_column.dropna(axis=1)
+
+
 class FrameDropNa_R(FrameDropNa, Reference):
 
     def float_index_auto_row(self) -> None:
@@ -275,6 +358,14 @@ class FrameDropNa_R(FrameDropNa, Reference):
 
     def float_index_auto_column(self) -> None:
         self.pdf_float_auto_column.dropna(axis=1)
+
+
+    def float_index_str_row(self) -> None:
+        self.pdf_float_str_row.dropna()
+
+    def float_index_str_column(self) -> None:
+        self.pdf_float_str_column.dropna(axis=1)
+
 
 
 #-------------------------------------------------------------------------------

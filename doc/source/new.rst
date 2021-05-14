@@ -1,6 +1,14 @@
 What is New in Static Frame
 ===============================
 
+0.8.10
+----------
+
+Performance enhancements to ``Index`` initialization.
+
+
+
+
 0.8.9
 ----------
 

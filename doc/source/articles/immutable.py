@@ -36,7 +36,6 @@ import typing as tp
 import numpy as np
 import static_frame as sf
 import pandas as pd
-
 # 'data'[2] = 20
 frozenset
 

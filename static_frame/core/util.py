@@ -809,6 +809,9 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
             copy_values |= is_iifa
     return is_gen, copy_values
 
+
+
+
 def prepare_iter_for_array(
         values: tp.Iterable[tp.Any],
         restrict_copy: bool = False
@@ -831,56 +834,60 @@ def prepare_iter_for_array(
     if restrict_copy:
         copy_values = False
 
-    v_iter = iter(values)
+    if not is_gen:
+        v_iter = iter(values)
+    else:
+        v_iter = values
 
     if copy_values:
         values_post = []
 
     resolved = None # None is valid specifier if the type is not ambiguous
+
     has_tuple = False
     has_str = False
-    has_enum = False
     has_non_str = False
     has_inexact = False
     has_big_int = False
 
+    # extend = False
+
     for v in v_iter:
         if copy_values:
             # if a generator, have to make a copy while iterating
-            # for array construction, cannot use dictlike, so must convert to list
             values_post.append(v)
 
-        if resolved != object:
-            value_type = type(v)
+        value_type = type(v)
 
-            # need to get tuple subclasses, like NamedTuple
-            if isinstance(v, (tuple, list)) or hasattr(v, '__slots__'):
-                # identify SF types by if they have __slots__ defined; they also must be assigned after array creation, so we treat them like tuples
-                has_tuple = True
-            elif isinstance(v, Enum):
-                # must check isinstance, as Enum types are always derived from Enum
-                has_enum = True
-            elif value_type == str or value_type == np.str_:
-                # must compare to both string types
-                has_str = True
-            else:
-                has_non_str = True
-                if value_type in INEXACT_TYPES:
-                    has_inexact = True
-                elif value_type == int and abs(v) > INT_MAX_COERCIBLE_TO_FLOAT:
-                    has_big_int = True
+        if (value_type is str
+                or value_type is np.str_
+                or value_type is bytes
+                or value_type is np.bytes_):
+            # must compare to both string types
+            has_str = True
+        elif hasattr(v, '__len__'):
+            # identify SF types by if they have STATIC attr they also must be assigned after array creation, so we treat them like tuples
+            has_tuple = True
+            resolved = object
+            break
+        elif isinstance(v, Enum):
+            # must check isinstance, as Enum types are always derived from Enum
+            resolved = object
+            break
+        else:
+            has_non_str = True
+            if value_type in INEXACT_TYPES:
+                has_inexact = True
+            elif value_type is int and abs(v) > INT_MAX_COERCIBLE_TO_FLOAT:
+                has_big_int = True
 
-            if has_tuple or has_enum or (has_str and has_non_str):
-                resolved = object
-            elif has_big_int and has_inexact:
-                resolved = object
-        else: # resolved is object, can exit
-            if copy_values:
-                values_post.extend(v_iter)
+        if (has_str and has_non_str) or (has_big_int and has_inexact):
+            resolved = object
             break
 
-    # NOTE: we break before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
     if copy_values:
+        # v_iter is an iter, we need to finish it
+        values_post.extend(v_iter)
         return resolved, has_tuple, values_post
     return resolved, has_tuple, values #type: ignore
 
