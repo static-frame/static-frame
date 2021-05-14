@@ -454,7 +454,7 @@ class Index(IndexBase):
         if self._map is None: # if _map not shared from another Index
             # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
             if (not is_typed and labels.__class__ is np.ndarray
-                    and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS):
+                    and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS): #type: ignore [attr-defined]
                 labels_for_automap = labels.tolist() #type: ignore [attr-defined]
             else:
                 labels_for_automap = labels
@@ -470,11 +470,12 @@ class Index(IndexBase):
                             f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})'
                             )
                 size = len(self._map)
-            else: # if loc_is_iloc, labels must be positions
-                # labels must not be a generator, but we assume that internal clients that provided loc_is_iloc will not give a generator
+            else:
+                # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels) #type: ignore
-                if size and positions is None:
-                    positions = PositionsAllocator.get(size)
+                if positions is None:
+                    positions = labels
+                    # positions = PositionsAllocator.get(size)
         else: # map shared from another Index
             size = len(self._map)
 
