@@ -6,7 +6,8 @@ Immutable Data & Immutable Data Frames
 
 Benefits of immutable data
 
-    Protection against unintended side effects and performance benefits from avoiding copying data and over-allocation
+    Protection against unintended side effects
+    Performance benefits from avoiding copying data and over-allocation
 
     Functions mistakenly mutating their arguments
     Functions that make defensive copies of data
