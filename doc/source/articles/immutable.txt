@@ -1,0 +1,92 @@
+
+
+Immutable Data & Immutable Data Frames
+
+
+
+Benefits of immutable data
+
+    Protection against unintended side effects and performance benefits from avoiding copying data and over-allocation
+
+    Functions mistakenly mutating their arguments
+    Functions that make defensive copies of data
+    Interfaces that hand out references to internally stored data
+
+    All growable interfaces over-allocate for growth
+
+
+Native immutable data structures
+
+    String, tuple, namedtuple, frozen dataclass, frozen set
+
+
+Making NumPy arrays immutable
+
+    NumPy arrays are not growable but are mutable
+
+    flags.writeable = False
+
+
+Immutable DataFrames
+
+    Cannot be done with Pandas
+
+    Initializing a DataFrame with 2D array is perfect example of the dangers
+
+    StaticFrame was motivated by this need
+
+
+Advantages of Immutable Data in StaticFrame
+
+    Initialization from immutable arrays is no-copy
+
+    Extending and concatenating on aligned indicies is no-copy
+
+    Interfaces can store hand hand out references without fear of mutation
+
+
+
+
+
+
+
+
+
+Examples of defensive copies
+
+import typing as tp
+import pandas as pd
+
+def processor(
+        functions: tp.Iterable[tp.Callable[[tp.Mapping[str, pd.Series]], pd.Series]],
+        init: pd.Series
+        ):
+    results = {'init': init}
+
+    for func in functions:
+        results[func.__name__] = func(results.copy())
+
+    return results
+
+
+
+class DataInterface:
+
+    def __init__(self, size: int):
+        self._square = pd.Series(np.arange(size) ** 2)
+        self._invert = -self._square
+
+    @property
+    def square(self) -> pd.Series:
+        return self._square.copy()
+
+    @property
+    def invert(self) -> pd.Series:
+        return self._invert.copy()
+
+
+
+
+
+
+
