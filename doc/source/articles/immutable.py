@@ -30,17 +30,22 @@ Native immutable data structures
         PEP 603 -- Adding a frozenmap type to collections | Python.org
 
 '''
+from dataclasses import dataclass
+
+import typing as tp
+import numpy as np
+import static_frame as sf
+import pandas as pd
 
 # 'data'[2] = 20
 frozenset
-import typing as tp
 
-class Data(tp.NamedTuple):
+class Data1(tp.NamedTuple):
     square: float
     invert: float
 
 @dataclass(frozen=True)
-class Data:
+class Data2:
     square: float
     invert: float
 
@@ -89,7 +94,7 @@ Advantages of Immutable Data in StaticFrame
 def processor(
         functions: tp.Iterable[tp.Callable[[tp.Mapping[str, pd.Series]], pd.Series]],
         init: pd.Series
-        ):
+        ) -> tp.Dict[str, pd.Series]:
     results = {'init': init}
 
     for func in functions:
@@ -123,24 +128,24 @@ Assignment like Moves
     With a Frame, we only mutate what needs to be mutated
 '''
 
-s = sf.Series(range(6), index=tuple('abcdef'))
-s.assign['c'](300)
-s.assign['c':](300)
-s.assign[['a', 'd', 'f']]((-1, -2, -3))
-s.assign[['a', 'd', 'f']](sf.Series.from_dict(dict(f=-3, d=-2, a=-1)))
-s.assign[s.index.isin(('c', 'f'))](100)
+# s = sf.Series(range(6), index=tuple('abcdef'))
+# s.assign['c'](300)
+# s.assign['c':](300)
+# s.assign[['a', 'd', 'f']]((-1, -2, -3))
+# s.assign[['a', 'd', 'f']](sf.Series.from_dict(dict(f=-3, d=-2, a=-1)))
+# s.assign[s.index.isin(('c', 'f'))](100)
 
 
-# Examples of defensive copies
+# # Examples of defensive copies
 
-a1 = np.arange(20).reshape(4,5)
-f = sf.Frame(a1, index=tuple('abcd'), columns=tuple('ABCDE'))
+# a1 = np.arange(20).reshape(4,5)
+# f = sf.Frame(a1, index=tuple('abcd'), columns=tuple('ABCDE'))
 
-f.assign['C'](False)
-f.assign.loc['c', 'B'](-20)
-f.assign.loc['c', 'B':](-20)
-f.assign.loc['c':, 'B':](False)
-f.assign.loc['c':, 'B':].apply(lambda f: f*1000)
+# f.assign['C'](False)
+# f.assign.loc['c', 'B'](-20)
+# f.assign.loc['c', 'B':](-20)
+# f.assign.loc['c':, 'B':](False)
+# f.assign.loc['c':, 'B':].apply(lambda f: f*1000)
 
 
 

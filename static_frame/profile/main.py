@@ -188,45 +188,57 @@ class SeriesDropNa(Perf):
 class SeriesDropNa_N(SeriesDropNa, Native):
 
     def float_index_auto(self) -> None:
-        self.sfs_float_auto.dropna()
+        s = self.sfs_float_auto.dropna()
+        assert 99999 in s
 
     def object_index_auto(self) -> None:
-        self.sfs_object_auto.dropna()
+        s = self.sfs_object_auto.dropna()
+        assert 99999 in s
 
     def bool_index_auto(self) -> None:
-        self.sfs_bool_auto.dropna()
+        s = self.sfs_bool_auto.dropna()
+        assert 99999 in s
 
 
     def float_index_str(self) -> None:
-        self.sfs_float_str.dropna()
+        s = self.sfs_float_str.dropna()
+        assert 'zDa2' in s
 
     def object_index_str(self) -> None:
-        self.sfs_object_str.dropna()
+        s = self.sfs_object_str.dropna()
+        assert 'zDa2' in s
 
     def bool_index_str(self) -> None:
-        self.sfs_bool_str.dropna()
+        s = self.sfs_bool_str.dropna()
+        assert 'zDa2' in s
 
 
 class SeriesDropNa_R(SeriesDropNa, Reference):
 
     def float_index_auto(self) -> None:
-        self.pds_float_auto.dropna()
+        s = self.pds_float_auto.dropna()
+        assert 99999 in s
 
     def object_index_auto(self) -> None:
-        self.pds_object_auto.dropna()
+        s = self.pds_object_auto.dropna()
+        assert 99999 in s
 
     def bool_index_auto(self) -> None:
-        self.pds_bool_auto.dropna()
+        s = self.pds_bool_auto.dropna()
+        assert 99999 in s
 
 
     def float_index_str(self) -> None:
-        self.pds_float_str.dropna()
+        s = self.pds_float_str.dropna()
+        assert 'zDa2' in s
 
     def object_index_str(self) -> None:
-        self.pds_object_str.dropna()
+        s = self.pds_object_str.dropna()
+        assert 'zDa2' in s
 
     def bool_index_str(self) -> None:
-        self.pds_bool_str.dropna()
+        s = self.pds_bool_str.dropna()
+        assert 'zDa2' in s
 
 
 

@@ -71,6 +71,14 @@ DTYPE_NA_KINDS = frozenset((
         DTYPE_OBJECT_KIND,
         ))
 
+# all kinds that can use tolist() to go to a compatible Python type
+DTYPE_OBJECTABLE_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_OBJECT_KIND,
+        DTYPE_BOOL_KIND,
+        ))
+
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
 DTYPE_STR = np.dtype(str)
