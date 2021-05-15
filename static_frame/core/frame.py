@@ -2803,7 +2803,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_series,
                 function_items=self._axis_series_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     #---------------------------------------------------------------------------

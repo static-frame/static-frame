@@ -465,7 +465,6 @@ class FrameDropNa(Perf):
                 ),
             }
 
-
 class FrameDropNa_N(FrameDropNa, Native):
 
     def float_index_auto_row(self) -> None:
@@ -496,8 +495,6 @@ class FrameDropNa_R(FrameDropNa, Reference):
 
     def float_index_str_column(self) -> None:
         self.pdf_float_str_column.dropna(axis=1)
-
-
 
 #-------------------------------------------------------------------------------
 
@@ -574,6 +571,72 @@ class FrameLoc_R(FrameLoc, Reference):
 
     def element_index_str(self) -> None:
         self.pdf2.loc['zGuv', 'zGuv']
+
+
+#-------------------------------------------------------------------------------
+
+class FrameIterSeriesApply(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+
+        self.sff_float = ff.parse('s(100,100)|i(I,str)|c(I,int)')
+        self.pdf_float = self.sff_float.to_pandas()
+
+        self.sff_mixed = ff.parse('s(100,100)|v(int,float,bool,str)|i(I,str)|c(I,int)')
+        self.pdf_mixed = self.sff_mixed.to_pandas()
+
+        # self.meta = {
+        #     'element_index_auto': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_WIN,
+        #         ),
+        #     'element_index_str': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_WIN,
+        #         ),
+        #     }
+
+class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
+
+    def float_index_str_row(self) -> None:
+        s = self.sff_float.iter_series(axis=1).apply(lambda s: s.mean())
+        assert 'zwVN' in s.index
+
+    def float_index_str_column(self) -> None:
+        s = self.sff_float.iter_series(axis=0).apply(lambda s: s.mean())
+        assert -149082 in s.index
+
+
+    def mixed_index_str_row(self) -> None:
+        s = self.sff_mixed.iter_series(axis=1).apply(lambda s: s.iloc[-1])
+        assert 'zwVN' in s.index
+
+    def mixed_index_str_column(self) -> None:
+        s = self.sff_mixed.iter_series(axis=0).apply(lambda s: s.iloc[-1])
+        assert -149082 in s.index
+
+
+class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
+
+    def float_index_str_row(self) -> None:
+        s = self.pdf_float.apply(lambda s: s.mean(), axis=1)
+        assert 'zwVN' in s.index
+
+    def float_index_str_column(self) -> None:
+        s = self.pdf_float.apply(lambda s: s.mean(), axis=0)
+        assert -149082 in s.index
+
+
+    def mixed_index_str_row(self) -> None:
+        s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=1)
+        assert 'zwVN' in s.index
+
+    def mixed_index_str_column(self) -> None:
+        s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=0)
+        assert -149082 in s.index
+
+
 
 
 #-------------------------------------------------------------------------------
