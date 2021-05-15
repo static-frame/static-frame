@@ -6,7 +6,7 @@ What is New in Static Frame
 
 Performance enhancements to ``Index`` initialization.
 
-Performance enhancements to ``Series.iter_element().apply``.
+Performance enhancements to ``Series.iter_element().apply``, ``Series.iter_element().map_any``, ``Series.iter_element().map_all``, and ``Series.iter_element().map_fill``.
 
 
 0.8.9
