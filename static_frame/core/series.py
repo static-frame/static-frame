@@ -730,6 +730,7 @@ class Series(ContainerOperand):
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
                 yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
                 )
 
     #---------------------------------------------------------------------------
