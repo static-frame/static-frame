@@ -334,6 +334,8 @@ class TestUnit(TestCase):
 
         post = f1['A'].iter_element().map_any(f2['B'])
 
+        # same index is given to returned Series
+        self.assertEqual(id(f1.index), id(post.index))
         # if we do not match the mapping, we keep the value.
         self.assertEqual(post.to_pairs(),
                 ((0, 67), (1, 28), (2, 'III')))
