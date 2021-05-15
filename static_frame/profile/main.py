@@ -2,14 +2,13 @@ import io
 import os
 import argparse
 import typing as tp
-import types
 import fnmatch
-import collections
 import timeit
 import cProfile
 import pstats
 import sys
 import datetime
+import tempfile
 from enum import Enum
 
 from pyinstrument import Profiler #type: ignore
@@ -558,6 +557,11 @@ def graph(
     '''
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
+        _, fp = tempfile.mkstemp(suffix='', text=True)
+        fp_pstat = fp + '.pstat'
+        fp_dot = fp + '.dot'
+        fp_png = fp + '.png'
+
         f = getattr(runner, name)
         pr = cProfile.Profile()
 
@@ -567,17 +571,16 @@ def graph(
         pr.disable()
 
         ps = pstats.Stats(pr)
-        ps.dump_stats('/tmp/tmp.pstat')
+        ps.dump_stats(fp_pstat)
 
         gprof2dot.main([
             '--format', 'pstats',
-            '--output', '/tmp/tmp.dot',
+            '--output', fp_dot,
             '--edge-thres', '0', # 0.1 default
             '--node-thres', '0', # 0.5 default
-            '/tmp/tmp.pstat'
+            fp_pstat
         ])
-        os.system('dot /tmp/tmp.dot -Tpng -Gdpi=300 -o /tmp/tmp.png; eog /tmp/tmp.png &')
-
+        os.system(f'dot {fp_dot} -Tpng -Gdpi=300 -o {fp_png}; eog {fp_png} &')
 
 def instrument(
         cls_runner: tp.Type[Perf],
