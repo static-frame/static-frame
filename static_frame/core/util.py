@@ -859,7 +859,7 @@ def prepare_iter_for_array(
             # must compare to both string types
             has_str = True
         elif hasattr(v, '__len__'):
-            # identify SF types by if they have STATIC attr they also must be assigned after array creation, so we treat them like tuples
+            # identify SF types, lists, or tuples
             has_tuple = True
             resolved = object
             break
