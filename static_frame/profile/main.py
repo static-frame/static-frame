@@ -396,6 +396,21 @@ class FrameDropNa(Perf):
         self.sff_float_str_column = f4
         self.pdf_float_str_column = f4.to_pandas()
 
+        self.meta = {
+            'float_index_auto_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'float_index_auto_column': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'float_index_str_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
+                ),
+            'float_index_str_column': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
+                ),
+            }
+
 
 class FrameDropNa_N(FrameDropNa, Native):
 
@@ -740,8 +755,6 @@ def performance_tables_from_records(
 
     frame = sf.FrameGO.from_dict_records(records)
 
-    # import ipdb; ipdb.set_trace()
-
     def format(v: object) -> str:
         if isinstance(v, float):
             if np.isnan(v):
@@ -797,7 +810,8 @@ def main() -> None:
                 cell_max_width_leftmost=np.inf,
                 cell_max_width=np.inf,
                 type_show=False,
-                display_rows=200
+                display_rows=200,
+                include_index=False,
                 )
         print(display.display(config))
 
