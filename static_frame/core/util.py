@@ -834,10 +834,7 @@ def prepare_iter_for_array(
     if restrict_copy:
         copy_values = False
 
-    if not is_gen:
-        v_iter = iter(values)
-    else:
-        v_iter = values
+    v_iter = values if is_gen else iter(values)
 
     if copy_values:
         values_post = []
