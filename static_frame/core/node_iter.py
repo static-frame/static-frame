@@ -418,7 +418,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
         self._apply_type = apply_type
 
     def get_delegate(self,
-            *args: object,
+            # *args: object,
             **kwargs: object
             ) -> IterNodeDelegate[FrameOrSeries]:
         '''
@@ -427,7 +427,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
         from static_frame.core.series import Series
         from static_frame.core.frame import Frame
 
-        assert not args # force all kwarg
+        # assert not args # force all kwarg
 
         func_values = partial(self._func_values, **kwargs)
         func_items = partial(self._func_items, **kwargs)
