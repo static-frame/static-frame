@@ -5,6 +5,7 @@ Tools for iterators in Series and Frame. These components are imported by both s
 import typing as tp
 from enum import Enum
 from functools import partial
+from functools import partialmethod
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
@@ -34,6 +35,7 @@ FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt')
 
 
 class IterNodeApplyType(Enum):
+    SERIES_VALUES = 0
     SERIES_ITEMS = 1
     SERIES_ITEMS_FLAT = 2 # do not use index class on container
     FRAME_ELEMENTS = 3
@@ -54,7 +56,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             '_func_values',
             '_func_items',
             '_yield_type',
-            '_apply_constructor'
+            '_apply_constructor',
+            '_apply_type',
             )
 
     INTERFACE = (
@@ -77,7 +80,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             func_values: tp.Callable[..., tp.Iterable[tp.Any]],
             func_items: tp.Callable[..., tp.Iterable[tp.Tuple[tp.Any, tp.Any]]],
             yield_type: IterNodeType,
-            apply_constructor: tp.Callable[..., FrameOrSeries]
+            apply_constructor: tp.Callable[..., FrameOrSeries],
+            apply_type: IterNodeApplyType,
         ) -> None:
         '''
         Args:
@@ -86,7 +90,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         self._func_values = func_values
         self._func_items = func_items
         self._yield_type = yield_type
-        self._apply_constructor: tp.Callable[..., FrameOrSeries] = apply_constructor
+        self._apply_constructor = apply_constructor
+        self._apply_type = apply_type
 
     #---------------------------------------------------------------------------
 
@@ -170,6 +175,13 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {mapping}
             {dtype}
         '''
+        if self._apply_type is IterNodeApplyType.SERIES_VALUES:
+            # the constructor takes values and has an Index
+            return self._apply_constructor(
+                    self.map_any_iter(mapping),
+                    dtype=dtype,
+                    name=name,
+                    )
         return self._apply_constructor(
                 self.map_any_iter_items(mapping),
                 dtype=dtype,
@@ -228,6 +240,13 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {fill_value}
             {dtype}
         '''
+        if self._apply_type is IterNodeApplyType.SERIES_VALUES:
+            # the constructor takes values and has an Index
+            return self._apply_constructor(
+                    self.map_fill_iter(mapping, fill_value=fill_value),
+                    dtype=dtype,
+                    name=name,
+                    )
         return self._apply_constructor(
                 self.map_fill_iter_items(mapping, fill_value=fill_value),
                 dtype=dtype,
@@ -278,6 +297,13 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {mapping}
             {dtype}
         '''
+        if self._apply_type is IterNodeApplyType.SERIES_VALUES:
+            # the constructor takes values and has an Index
+            return self._apply_constructor(
+                    self.map_all_iter(mapping),
+                    dtype=dtype,
+                    name=name,
+                    )
         return self._apply_constructor(
                 self.map_all_iter_items(mapping),
                 dtype=dtype,
@@ -288,7 +314,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
     @doc_inject(selector='apply')
     def apply_iter_items(self,
-            func: AnyCallable) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
+            func: AnyCallable,
+            ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
         {doc} A generator of resulting key, value pairs.
 
@@ -311,7 +338,13 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         Args:
             {func}
         '''
-        yield from (v for _, v in self.apply_iter_items(func=func))
+        # yield from (v for _, v in self.apply_iter_items(func=func))
+        if self._yield_type is IterNodeType.VALUES:
+            yield from (func(v) for v in self._func_values())
+        else:
+            yield from (func(k, v) for k, v in self._func_items())
+
+
 
     @doc_inject(selector='apply')
     def apply(self,
@@ -330,6 +363,14 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         if not callable(func):
             raise RuntimeError('use map_fill(), map_any(), or map_all() for applying a mapping type')
 
+        if self._apply_type is IterNodeApplyType.SERIES_VALUES:
+            # the constructor takes values and has an Index
+            return self._apply_constructor(
+                    self.apply_iter(func),
+                    dtype=dtype,
+                    name=name,
+                    )
+        # need pairs of values to dynamically create an Index
         return self._apply_constructor(
                 self.apply_iter_items(func),
                 dtype=dtype,
@@ -434,7 +475,23 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
         apply_constructor: tp.Callable[..., tp.Union[Frame, Series]]
 
-        if self._apply_type is IterNodeApplyType.SERIES_ITEMS:
+        if self._apply_type is IterNodeApplyType.SERIES_VALUES:
+            # Creating a Series that will have the same index as source container
+            if isinstance(self._container, Frame) and kwargs['axis'] == 0:
+                index = self._container._columns
+                own_index = False
+            else:
+                index = self._container._index
+                own_index = True
+            # always return a Series
+            apply_constructor = partial(
+                    Series,
+                    index=index,
+                    own_index=own_index,
+                    )
+
+        elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
+            # Only use this path if the Index is different than the source container
             if isinstance(self._container, Frame) and kwargs['axis'] == 0:
                 index_constructor = self._container._columns.from_labels
             else:
@@ -444,6 +501,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     Series.from_items,
                     index_constructor=index_constructor
                     )
+
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_FLAT:
             # use default index constructor
             apply_constructor = Series.from_items
@@ -479,7 +537,8 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 func_values=func_values,
                 func_items=func_items,
                 yield_type=self._yield_type,
-                apply_constructor=tp.cast(tp.Callable[..., FrameOrSeries], apply_constructor)
+                apply_constructor=tp.cast(tp.Callable[..., FrameOrSeries], apply_constructor),
+                apply_type=self._apply_type,
                 )
 
 

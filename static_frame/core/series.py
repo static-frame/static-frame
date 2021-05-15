@@ -716,7 +716,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
                 )
 
     @property
@@ -728,7 +729,7 @@ class Series(ContainerOperand):
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
                 )
 
     #---------------------------------------------------------------------------
