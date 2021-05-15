@@ -810,8 +810,6 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
     return is_gen, copy_values
 
 
-
-
 def prepare_iter_for_array(
         values: tp.Iterable[tp.Any],
         restrict_copy: bool = False
@@ -885,8 +883,6 @@ def prepare_iter_for_array(
         values_post.extend(v_iter)
         return resolved, has_tuple, values_post
     return resolved, has_tuple, values #type: ignore
-
-
 
 
 def iterable_to_array_1d(
