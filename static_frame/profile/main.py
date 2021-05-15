@@ -333,7 +333,6 @@ class FrameDropNa(Perf):
         self.sff_float_str_column = f4
         self.pdf_float_str_column = f4.to_pandas()
 
-        import ipdb; ipdb.set_trace()
 
 class FrameDropNa_N(FrameDropNa, Native):
 

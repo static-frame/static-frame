@@ -850,8 +850,6 @@ def prepare_iter_for_array(
     has_inexact = False
     has_big_int = False
 
-    # extend = False
-
     for v in v_iter:
         if copy_values:
             # if a generator, have to make a copy while iterating
