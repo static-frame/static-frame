@@ -77,6 +77,8 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
         DTYPE_COMPLEX_KIND,
         DTYPE_OBJECT_KIND,
         DTYPE_BOOL_KIND,
+        'U', 'S', # str kinds
+        'i', 'u' # int kinds
         ))
 
 DTYPE_OBJECT = np.dtype(object)
@@ -1474,7 +1476,8 @@ def array_to_duplicated(
         array: np.ndarray,
         axis: int = 0,
         exclude_first: bool = False,
-        exclude_last: bool = False) -> np.ndarray:
+        exclude_last: bool = False,
+        ) -> np.ndarray:
     '''Given a numpy array (1D or 2D), return a Boolean array along the specified axis that shows which values are duplicated. By default, all duplicates are indicated. For 2d arrays, axis 0 compares rows and returns a row-length Boolean array; axis 1 compares columns and returns a column-length Boolean array.
 
     Args:

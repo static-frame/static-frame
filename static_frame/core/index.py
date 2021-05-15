@@ -458,7 +458,6 @@ class Index(IndexBase):
                 labels_for_automap = labels.tolist() #type: ignore [attr-defined]
             else:
                 labels_for_automap = labels
-
             if not loc_is_iloc:
                 try:
                     self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)

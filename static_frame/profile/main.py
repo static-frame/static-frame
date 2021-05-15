@@ -242,6 +242,70 @@ class SeriesDropNa_R(SeriesDropNa, Reference):
 
 
 #-------------------------------------------------------------------------------
+class SeriesDropDuplicated(Perf):
+    NUMBER = 500
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        f = ff.parse('s(1000,3)|v(float,object,bool)|i(I,str)|c(I,str)')
+
+        self.sfs_float = f.iloc[:, 0]
+        self.sfs_float = self.sfs_float.assign.iloc[np.arange(len(self.sfs_float)) % 12 == 0](1.0)
+        self.sfs_object = f.iloc[:, 1]
+        self.sfs_object = self.sfs_object.assign.iloc[np.arange(len(self.sfs_object)) % 12 == 0](None)
+        self.sfs_bool = f.iloc[:, 2]
+
+        self.pds_float = self.sfs_float.to_pandas()
+        self.pds_object = self.sfs_object.to_pandas()
+        self.pds_bool = self.sfs_bool.to_pandas()
+
+
+        self.meta = {
+            'float_index_str': FunctionMetaData(
+                line_target=sf.Index.__init__,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'object_index_str': FunctionMetaData(
+                line_target=sf.Series.drop_duplicated,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'bool_index_str': FunctionMetaData(
+                line_target=sf.Series.drop_duplicated,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            }
+
+class SeriesDropDuplicated_N(SeriesDropDuplicated, Native):
+
+    def float_index_str(self) -> None:
+        s = self.sfs_float.drop_duplicated()
+        assert 'zDr0' in s
+
+    def object_index_str(self) -> None:
+        s = self.sfs_object.drop_duplicated()
+        assert 'zDr0' in s
+
+    def bool_index_str(self) -> None:
+        self.sfs_bool.drop_duplicated()
+
+class SeriesDropDuplicated_R(SeriesDropDuplicated, Reference):
+
+    def float_index_str(self) -> None:
+        s = self.pds_float.drop_duplicates(keep=False)
+        assert 'zDr0' in s
+
+    def object_index_str(self) -> None:
+        s = self.pds_object.drop_duplicates(keep=False)
+        assert 'zDr0' in s
+
+    def bool_index_str(self) -> None:
+        self.pds_bool.drop_duplicates(keep=False)
+
+
+
+
+#-------------------------------------------------------------------------------
 class SeriesIterElementApply(Perf):
     NUMBER = 500
 
