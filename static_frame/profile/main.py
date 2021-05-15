@@ -588,12 +588,21 @@ class FrameIterSeriesApply(Perf):
         self.sff_mixed = ff.parse('s(100,100)|v(int,float,bool,str)|i(I,str)|c(I,int)')
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
+        from static_frame.core.type_blocks import TypeBlocks
+
         self.meta = {
-            'element_index_auto': FunctionMetaData(
+            'float_index_str_row': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
-            'element_index_str': FunctionMetaData(
+            'float_index_str_column': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'mixed_index_str_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                line_target=TypeBlocks.axis_values
+                ),
+            'mixed_index_str_column': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             }
 
@@ -899,8 +908,7 @@ def performance_tables_from_records(
                     name_root_count += 1
                 if name_root_count % 2:
                     return HexColor.format_terminal('lavender', v)
-                else:
-                    return HexColor.format_terminal('lightslategrey', v)
+                return HexColor.format_terminal('lightslategrey', v)
         return str(v)
 
     display = frame.iter_element_items().apply(format)

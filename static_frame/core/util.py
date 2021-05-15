@@ -502,7 +502,7 @@ def concat_resolved(
     arrays_iter = iter(arrays)
     first = next(arrays_iter)
 
-    ndim = first.ndim
+    # ndim = first.ndim
     dt_resolve = first.dtype
     shape = list(first.shape)
 
