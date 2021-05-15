@@ -89,7 +89,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         self._func_values = func_values
         self._func_items = func_items
         self._yield_type = yield_type
-        self._apply_constructor = apply_constructor
+        self._apply_constructor: tp.Callable[..., FrameOrSeries] = apply_constructor
         self._apply_type = apply_type
 
     #---------------------------------------------------------------------------
@@ -102,7 +102,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
 
         pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
-        yt_is_values = self._yield_type is IterNodeType.VALUES
 
         if not callable(func): # NOTE: when is func not a callable?
             func = getattr(func, '__getitem__')
@@ -111,7 +110,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         func_keys = []
         arg_gen: PoolArgGen
 
-        if yt_is_values:
+        if self._yield_type is IterNodeType.VALUES:
             def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
                 for k, v in self._func_items():
                     func_keys.append(k)
@@ -135,25 +134,13 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             ) -> tp.Iterator[tp.Any]:
 
         pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
-        yt_is_values = self._yield_type is IterNodeType.VALUES
 
         if not callable(func): # NOTE: when is func not a callable?
             func = getattr(func, '__getitem__')
 
         # use side effect list population to create keys when iterating over values
-        func_keys = []
-        arg_gen: PoolArgGen
-
-        if yt_is_values:
-            def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
-                for k, v in self._func_items():
-                    func_keys.append(k)
-                    yield v
-        else:
-            def arg_gen() -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]: #pylint: disable=E0102
-                for k, v in self._func_items():
-                    func_keys.append(k)
-                    yield k, v
+        arg_gen = (self._func_values if self._yield_type is IterNodeType.VALUES
+                else self._func_items)
 
         with pool_executor(max_workers=max_workers) as executor:
             yield from executor.map(func, arg_gen(), chunksize=chunksize)

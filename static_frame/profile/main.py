@@ -21,7 +21,7 @@ import frame_fixtures as ff
 import static_frame as sf
 
 from static_frame.core.display_color import HexColor
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import AnyCallable, isin
 
 
 class PerfStatus(Enum):
@@ -877,7 +877,7 @@ def performance_tables_from_records(
     name_root_last = None
     name_root_count = 0
 
-    def format(key, v: object) -> str:
+    def format(key: tp.Tuple[tp.Any, str], v: object) -> str:
         nonlocal name_root_last
         nonlocal name_root_count
 
@@ -889,17 +889,18 @@ def performance_tables_from_records(
             if v:
                 return HexColor.format_terminal('green', str(v))
             return HexColor.format_terminal('orange', str(v))
-        if key[1] == 'explanation':
-            return HexColor.format_terminal('gray', v)
-        if key[1] == 'name':
-            name_root = v.split('.')[0]
-            if name_root != name_root_last:
-                name_root_last = name_root
-                name_root_count += 1
-            if name_root_count % 2:
-                return HexColor.format_terminal('lavender', v)
-            else:
-                return HexColor.format_terminal('lightslategrey', v)
+        if isinstance(v, str):
+            if key[1] == 'explanation':
+                return HexColor.format_terminal('gray', v)
+            if key[1] == 'name':
+                name_root = v.split('.')[0]
+                if name_root != name_root_last:
+                    name_root_last = name_root
+                    name_root_count += 1
+                if name_root_count % 2:
+                    return HexColor.format_terminal('lavender', v)
+                else:
+                    return HexColor.format_terminal('lightslategrey', v)
         return str(v)
 
     display = frame.iter_element_items().apply(format)
