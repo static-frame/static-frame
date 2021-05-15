@@ -159,7 +159,11 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         Args:
             {mapping}
         '''
-        yield from (v for _, v in self.map_any_iter_items(mapping))
+        get = getattr(mapping, 'get')
+        if self._yield_type is IterNodeType.VALUES:
+            yield from (get(v, v) for v in self._func_values())
+        else:
+            yield from (get((k,  v), v) for k, v in self._func_items())
 
     @doc_inject(selector='map_any')
     def map_any(self,
@@ -222,7 +226,12 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {mapping}
             {fill_value}
         '''
-        yield from (v for _, v in self.map_fill_iter_items(mapping, fill_value=fill_value))
+        get = getattr(mapping, 'get')
+        if self._yield_type is IterNodeType.VALUES:
+            yield from (get(v, fill_value) for v in self._func_values())
+        else:
+            yield from (get((k,  v), fill_value) for k, v in self._func_items())
+
 
     @doc_inject(selector='map_fill')
     def map_fill(self,
@@ -281,7 +290,11 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         Args:
             {mapping}
         '''
-        yield from (v for _, v in self.map_all_iter_items(mapping=mapping))
+        func = getattr(mapping, '__getitem__')
+        if self._yield_type is IterNodeType.VALUES:
+            yield from (func(v) for v in self._func_values())
+        else:
+            yield from (func((k,  v)) for k, v in self._func_items())
 
     @doc_inject(selector='map_all')
     def map_all(self,
@@ -310,7 +323,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
                 name=name,
                 )
 
-
     #---------------------------------------------------------------------------
     @doc_inject(selector='apply')
     def apply_iter_items(self,
@@ -338,13 +350,10 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         Args:
             {func}
         '''
-        # yield from (v for _, v in self.apply_iter_items(func=func))
         if self._yield_type is IterNodeType.VALUES:
             yield from (func(v) for v in self._func_values())
         else:
             yield from (func(k, v) for k, v in self._func_items())
-
-
 
     @doc_inject(selector='apply')
     def apply(self,
