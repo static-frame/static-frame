@@ -576,7 +576,7 @@ class FrameLoc_R(FrameLoc, Reference):
 #-------------------------------------------------------------------------------
 
 class FrameIterSeriesApply(Perf):
-    NUMBER = 100
+    NUMBER = 200
 
     def __init__(self) -> None:
         super().__init__()
@@ -588,14 +588,14 @@ class FrameIterSeriesApply(Perf):
         self.sff_mixed = ff.parse('s(100,100)|v(int,float,bool,str)|i(I,str)|c(I,int)')
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
-        # self.meta = {
-        #     'element_index_auto': FunctionMetaData(
-        #         perf_status=PerfStatus.EXPLAINED_WIN,
-        #         ),
-        #     'element_index_str': FunctionMetaData(
-        #         perf_status=PerfStatus.EXPLAINED_WIN,
-        #         ),
-        #     }
+        self.meta = {
+            'element_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'element_index_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            }
 
 class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
 

@@ -2743,7 +2743,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_array,
                 function_items=self._axis_array_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     @property
@@ -2755,7 +2756,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_array,
                 function_items=self._axis_array_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     @property
@@ -2767,7 +2769,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_tuple,
                 function_items=self._axis_tuple_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     @property
@@ -2779,7 +2782,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_tuple,
                 function_items=self._axis_tuple_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     @property
@@ -2791,7 +2795,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_series,
                 function_items=self._axis_series_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     @property

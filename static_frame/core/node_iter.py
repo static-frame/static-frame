@@ -31,6 +31,7 @@ if tp.TYPE_CHECKING:
 
 
 FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt')
+PoolArgGen = tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]]
 # FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')
 
 
@@ -41,11 +42,9 @@ class IterNodeApplyType(Enum):
     FRAME_ELEMENTS = 3
     INDEX_LABELS = 4
 
-
 class IterNodeType(Enum):
     VALUES = 1
     ITEMS = 2
-
 
 class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     '''
@@ -103,16 +102,14 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
 
         pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
-
         yt_is_values = self._yield_type is IterNodeType.VALUES
 
-        if not callable(func):
+        if not callable(func): # NOTE: when is func not a callable?
             func = getattr(func, '__getitem__')
 
         # use side effect list population to create keys when iterating over values
         func_keys = []
-
-        arg_gen: tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]]
+        arg_gen: PoolArgGen
 
         if yt_is_values:
             def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
@@ -129,6 +126,37 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             yield from zip(func_keys,
                     executor.map(func, arg_gen(), chunksize=chunksize)
                     )
+
+    def _apply_iter_parallel(self,
+            func: AnyCallable,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> tp.Iterator[tp.Any]:
+
+        pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
+        yt_is_values = self._yield_type is IterNodeType.VALUES
+
+        if not callable(func): # NOTE: when is func not a callable?
+            func = getattr(func, '__getitem__')
+
+        # use side effect list population to create keys when iterating over values
+        func_keys = []
+        arg_gen: PoolArgGen
+
+        if yt_is_values:
+            def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
+                for k, v in self._func_items():
+                    func_keys.append(k)
+                    yield v
+        else:
+            def arg_gen() -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]: #pylint: disable=E0102
+                for k, v in self._func_items():
+                    func_keys.append(k)
+                    yield k, v
+
+        with pool_executor(max_workers=max_workers) as executor:
+            yield from executor.map(func, arg_gen(), chunksize=chunksize)
 
     #---------------------------------------------------------------------------
     # public interface
@@ -408,6 +436,17 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {chunksize}
             {use_threads}
         '''
+        if self._apply_type is IterNodeApplyType.SERIES_VALUES:
+            return self._apply_constructor(
+                    self._apply_iter_parallel(
+                            func=func,
+                            max_workers=max_workers,
+                            chunksize=chunksize,
+                            use_threads=use_threads),
+                    dtype=dtype,
+                    name=name,
+                    )
+
         return self._apply_constructor(
                 self._apply_iter_items_parallel(
                         func=func,
@@ -492,6 +531,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             else:
                 index = self._container._index
                 own_index = True
+
             # always return a Series
             apply_constructor = partial(
                     Series,
