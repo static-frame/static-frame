@@ -30,11 +30,6 @@ class PerfStatus(Enum):
     UNEXPLAINED_WIN = (False, True)
     UNEXPLAINED_LOSS = (False, False)
 
-    # def __str__(self) -> str:
-    #     if self.value[0]:
-    #         return 'x' # make a check mark
-    #     return '?'
-
     def __str__(self) -> str:
         if self.value[0]:
             v = '✓' # make a check mark
@@ -47,6 +42,7 @@ class PerfStatus(Enum):
 class FunctionMetaData(tp.NamedTuple):
     line_target: tp.Optional[AnyCallable] = None
     perf_status: tp.Optional[PerfStatus] = None
+    explanation: str = ''
 
 class PerfKey: pass
 
@@ -241,6 +237,62 @@ class SeriesDropNa_R(SeriesDropNa, Reference):
 
 
 
+
+#-------------------------------------------------------------------------------
+class SeriesFillNa(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        f1 = ff.parse('s(100_000,2)|v(float,object)|i(I,str)|c(I,str)')
+        f1 = f1.assign.loc[f1.index.via_str.find('u') >= 0, sf.ILoc[0]](np.nan)
+        f1 = f1.assign.loc[f1.index.via_str.find('u') >= 0, sf.ILoc[1]](None)
+
+        self.sfs_float_str = f1.iloc[:, 0]
+        self.sfs_object_str = f1.iloc[:, 1]
+
+        self.pds_float_str = f1.iloc[:, 0].to_pandas()
+        self.pds_object_str = f1.iloc[:, 1].to_pandas()
+
+        from static_frame.core.util import isna_array
+
+        self.meta = {
+            'float_index_str': FunctionMetaData(
+                line_target=isna_array,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'object_index_str': FunctionMetaData(
+                line_target=isna_array,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                explanation='isna_array does two passes on object arrays',
+                ),
+            }
+
+class SeriesFillNa_N(SeriesFillNa, Native):
+
+    def float_index_str(self) -> None:
+        s = self.sfs_float_str.fillna(0.0)
+        assert 'zDa2' in s
+
+    def object_index_str(self) -> None:
+        s = self.sfs_object_str.fillna('')
+        assert 'zDa2' in s
+
+
+class SeriesFillNa_R(SeriesFillNa, Reference):
+
+    def float_index_str(self) -> None:
+        s = self.pds_float_str.fillna(0.0)
+        assert 'zDa2' in s
+
+    def object_index_str(self) -> None:
+        s = self.pds_object_str.fillna('')
+        assert 'zDa2' in s
+
+
+
+
 #-------------------------------------------------------------------------------
 class SeriesDropDuplicated(Perf):
     NUMBER = 500
@@ -329,15 +381,17 @@ class SeriesIterElementApply(Perf):
             'float_index_str': FunctionMetaData(
                 line_target=prepare_iter_for_array,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
+                explanation='prepare_iter_for_array() appears to be the biggest cost'
                 ),
             'object_index_str': FunctionMetaData(
                 line_target=prepare_iter_for_array,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
+                explanation='prepare_iter_for_array() appears to be the biggest cost'
                 ),
             'bool_index_str': FunctionMetaData(
                 line_target=prepare_iter_for_array,
                 perf_status=PerfStatus.EXPLAINED_LOSS, # not copying anything
-
+                explanation='prepare_iter_for_array() appears to be the biggest cost'
                 ),
             }
 
@@ -742,9 +796,12 @@ def performance(
 
         if runner_n.meta is not None:
             row['status'] = runner_n.meta[func_name].perf_status
+            row['explanation'] = runner_n.meta[func_name].explanation
         else:
             row['status'] = (PerfStatus.UNEXPLAINED_WIN if row['win']
                     else PerfStatus.UNEXPLAINED_LOSS)
+            row['explanation'] = ''
+
         yield row
 
 
@@ -752,10 +809,15 @@ def performance_tables_from_records(
         records: tp.Iterable[PerformanceRecord],
         ) -> tp.Tuple[sf.Frame, sf.Frame]:
 
-
     frame = sf.FrameGO.from_dict_records(records)
 
-    def format(v: object) -> str:
+    name_root_last = None
+    name_root_count = 0
+
+    def format(key, v: object) -> str:
+        nonlocal name_root_last
+        nonlocal name_root_count
+
         if isinstance(v, float):
             if np.isnan(v):
                 return ''
@@ -764,10 +826,20 @@ def performance_tables_from_records(
             if v:
                 return HexColor.format_terminal('green', str(v))
             return HexColor.format_terminal('orange', str(v))
-
+        if key[1] == 'explanation':
+            return HexColor.format_terminal('gray', v)
+        if key[1] == 'name':
+            name_root = v.split('.')[0]
+            if name_root != name_root_last:
+                name_root_last = name_root
+                name_root_count += 1
+            if name_root_count % 2:
+                return HexColor.format_terminal('lavender', v)
+            else:
+                return HexColor.format_terminal('lightslategrey', v)
         return str(v)
 
-    display = frame.iter_element().apply(format)
+    display = frame.iter_element_items().apply(format)
     # display = display[display.columns.drop.loc['status'].values.tolist() + ['status']]
     # display = display[[c for c in display.columns if '/' not in c]]
     return frame, display

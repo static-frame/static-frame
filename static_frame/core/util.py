@@ -852,7 +852,7 @@ def prepare_iter_for_array(
             # if a generator, have to make a copy while iterating
             values_post.append(v)
 
-        value_type = type(v)
+        value_type = v.__class__
 
         if (value_type is str
                 or value_type is np.str_
