@@ -608,7 +608,7 @@ class FrameIterSeriesApply(Perf):
                 line_target=TypeBlocks.axis_values
                 ),
             'mixed_index_str_column': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
             }
 
