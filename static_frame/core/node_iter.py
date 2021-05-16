@@ -5,7 +5,6 @@ Tools for iterators in Series and Frame. These components are imported by both s
 import typing as tp
 from enum import Enum
 from functools import partial
-from functools import partialmethod
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
@@ -25,7 +24,6 @@ from static_frame.core.util import iterable_to_array_1d
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index import Index # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.quilt import Quilt # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.bus import Bus # pylint: disable=W0611 #pragma: no cover
 
