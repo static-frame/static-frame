@@ -2278,6 +2278,27 @@ def array_from_element_method(*,
     post.flags.writeable = False
     return post
 
+
+def array_from_iterator(iterator: tp.Iterator[tp.Any],
+        count: int,
+        dtype: DtypeSpecifier,
+        ) -> np.ndarray:
+    '''Given an iterator/generaotr of known size and dtype, load it into an array.
+    '''
+    if dtype != object:
+        array = np.fromiter(iterator,
+                count=count,
+                dtype=dtype,
+                )
+    else:
+        array = np.empty(count, dtype=dtype)
+        for i, v in enumerate(iterator):
+            array[i] = v
+
+    array.flags.writeable = False
+    return array
+
+
 #-------------------------------------------------------------------------------
 
 class PositionsAllocator:

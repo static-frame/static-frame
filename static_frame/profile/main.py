@@ -594,7 +594,13 @@ class FrameIterSeriesApply(Perf):
             'float_index_str_row': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
+            'float_index_str_row_dtype': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
             'float_index_str_column': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'float_index_str_column_dtype': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
             'mixed_index_str_row': FunctionMetaData(
@@ -612,8 +618,17 @@ class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
         s = self.sff_float.iter_series(axis=1).apply(lambda s: s.mean())
         assert 'zwVN' in s.index
 
+    def float_index_str_row_dtype(self) -> None:
+        s = self.sff_float.iter_series(axis=1).apply(lambda s: s.mean(), dtype=float)
+        assert 'zwVN' in s.index
+
+
     def float_index_str_column(self) -> None:
         s = self.sff_float.iter_series(axis=0).apply(lambda s: s.mean())
+        assert -149082 in s.index
+
+    def float_index_str_column_dtype(self) -> None:
+        s = self.sff_float.iter_series(axis=0).apply(lambda s: s.mean(), dtype=float)
         assert -149082 in s.index
 
 
@@ -632,7 +647,16 @@ class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
         s = self.pdf_float.apply(lambda s: s.mean(), axis=1)
         assert 'zwVN' in s.index
 
+    def float_index_str_row_dtype(self) -> None:
+        s = self.pdf_float.apply(lambda s: s.mean(), axis=1)
+        assert 'zwVN' in s.index
+
+
     def float_index_str_column(self) -> None:
+        s = self.pdf_float.apply(lambda s: s.mean(), axis=0)
+        assert -149082 in s.index
+
+    def float_index_str_column_dtype(self) -> None:
         s = self.pdf_float.apply(lambda s: s.mean(), axis=0)
         assert -149082 in s.index
 

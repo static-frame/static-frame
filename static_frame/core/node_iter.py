@@ -19,6 +19,7 @@ from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import array_from_iterator
 
 
 if tp.TYPE_CHECKING:
@@ -55,6 +56,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             '_yield_type',
             '_apply_constructor',
             '_apply_type',
+            '_shape',
             )
 
     INTERFACE = (
@@ -79,6 +81,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             yield_type: IterNodeType,
             apply_constructor: tp.Callable[..., FrameOrSeries],
             apply_type: IterNodeApplyType,
+            shape: tp.Optional[tp.Tuple[int, ...]],
         ) -> None:
         '''
         Args:
@@ -89,6 +92,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         self._yield_type = yield_type
         self._apply_constructor: tp.Callable[..., FrameOrSeries] = apply_constructor
         self._apply_type = apply_type
+        self._shape = shape
 
     #---------------------------------------------------------------------------
 
@@ -387,6 +391,16 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         if self._apply_type is IterNodeApplyType.SERIES_VALUES:
             # the constructor takes values and has an Index
+            if dtype is not None:
+                values = array_from_iterator(
+                        self.apply_iter(func),
+                        count=self._shape[0], # must have ndim == 1
+                        dtype=dtype,
+                        )
+                return self._apply_constructor(
+                        values,
+                        name=name,
+                        )
             return self._apply_constructor(
                     self.apply_iter(func),
                     dtype=dtype,
@@ -422,6 +436,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {use_threads}
         '''
         if self._apply_type is IterNodeApplyType.SERIES_VALUES:
+            # TODO: if dtype is given, use array_from_iterator
             return self._apply_constructor(
                     self._apply_iter_parallel(
                             func=func,
@@ -492,7 +507,6 @@ class IterNode(tp.Generic[FrameOrSeries]):
         self._apply_type = apply_type
 
     def get_delegate(self,
-            # *args: object,
             **kwargs: object
             ) -> IterNodeDelegate[FrameOrSeries]:
         '''
@@ -501,10 +515,10 @@ class IterNode(tp.Generic[FrameOrSeries]):
         from static_frame.core.series import Series
         from static_frame.core.frame import Frame
 
-        # assert not args # force all kwarg
-
         func_values = partial(self._func_values, **kwargs)
         func_items = partial(self._func_items, **kwargs)
+        # only some apply_types can use
+        shape: tp.Optional[tp.Tuple[int, ...]] = None
 
         apply_constructor: tp.Callable[..., tp.Union[Frame, Series]]
 
@@ -523,6 +537,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     index=index,
                     own_index=own_index,
                     )
+            shape = index.shape
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
             # Only use this path if the Index is different than the source container
@@ -552,13 +567,15 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     index_constructor=self._container._index.from_labels,
                     columns_constructor=self._container._columns.from_labels
                     )
+            shape = self._container.shape
+
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
-            # apply_constructor = Series.from_items
             def apply_constructor(items: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]], #pylint: disable=function-redefined
                     dtype: DtypeSpecifier = None,
                     name: NameType = None,
                     ) -> np.ndarray:
                 # NOTE: cannot use name argument, here for compat
+                # TODO: use array_from_iterator as we know the size
                 array, _ = iterable_to_array_1d(
                         (v for _, v in items),
                         dtype,
@@ -573,6 +590,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 yield_type=self._yield_type,
                 apply_constructor=tp.cast(tp.Callable[..., FrameOrSeries], apply_constructor),
                 apply_type=self._apply_type,
+                shape=shape,
                 )
 
 
