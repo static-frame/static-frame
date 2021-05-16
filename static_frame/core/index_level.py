@@ -783,7 +783,6 @@ class IndexLevel:
                 depth_reference=self.depth,
                 )
 
-
     def to_type_blocks(self) -> TypeBlocks:
         '''
         Provide a correctly typed TypeBlocks representation.

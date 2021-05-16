@@ -283,7 +283,9 @@ class TypeBlocks(ContainerOperand):
             self._row_dtype = None
 
     #---------------------------------------------------------------------------
-    def __setstate__(self, state: tp.Tuple[object, tp.Mapping[str, tp.Any]]) -> None:
+    def __setstate__(self,
+            state: tp.Tuple[object, tp.Mapping[str, tp.Any]],
+            ) -> None:
         '''
         Ensure that reanimated NP arrays are set not writeable.
         '''
