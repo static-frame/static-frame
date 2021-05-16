@@ -1,16 +1,31 @@
 What is New in Static Frame
 ===============================
 
+0.8.10
+----------
+
+Performance enhancements to ``Index`` initialization.
+
+Performance enhancements to ``Series.iter_element().apply()``, ``Series.iter_element().map_any()``, ``Series.iter_element().map_all()``, and ``Series.iter_element().map_fill()``.
+
+Performance enhancements to ``Frame.iter_series().apply()``, ``Frame.iter_tuple().apply()``, ``Frame.iter_array().apply()``.
+
+
+
 0.8.9
 ----------
 
-Performance enhancements to ``Series.dropna``.
+Performance enhancements to ``Series.dropna()``.
+
+``Series.relabel()`` and ``Frame.relabel()`` now raise if given a ``set`` or ``frozenset``.
+
+Fixed issue in ``Frame.assign.loc[]`` when using a Boolean array as a column selector.
 
 
 0.8.8
 ----------
 
-Added ``Frame.cov``, ``Series.cov``, and ``Batch.cov``.
+Added ``Frame.cov()``, ``Series.cov()``, and ``Batch.cov()``.
 
 Performance enhancements to ``loc`` selections by element.
 

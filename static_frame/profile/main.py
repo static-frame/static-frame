@@ -2,26 +2,55 @@ import io
 import os
 import argparse
 import typing as tp
-import types
 import fnmatch
-import collections
 import timeit
 import cProfile
 import pstats
 import sys
 import datetime
+import tempfile
+from enum import Enum
 
 from pyinstrument import Profiler #type: ignore
+from line_profiler import LineProfiler #type: ignore
+import gprof2dot #type: ignore
+
 import numpy as np
 import pandas as pd
+import frame_fixtures as ff
 import static_frame as sf
 
-import frame_fixtures as ff
+from static_frame.core.display_color import HexColor
+from static_frame.core.util import AnyCallable, isin
+
+
+class PerfStatus(Enum):
+    EXPLAINED_WIN = (True, True)
+    EXPLAINED_LOSS = (True, False)
+    UNEXPLAINED_WIN = (False, True)
+    UNEXPLAINED_LOSS = (False, False)
+
+    def __str__(self) -> str:
+        if self.value[0]:
+            v = '✓' # make a check mark
+        else:
+            v = '?'
+        if self.value[1]:
+            return HexColor.format_terminal('darkgreen', str(v))
+        return HexColor.format_terminal('darkorange', str(v))
+
+class FunctionMetaData(tp.NamedTuple):
+    line_target: tp.Optional[AnyCallable] = None
+    perf_status: tp.Optional[PerfStatus] = None
+    explanation: str = ''
 
 class PerfKey: pass
 
 class Perf(PerfKey):
     NUMBER = 100_000
+
+    def __init__(self) -> None:
+        self.meta: tp.Optional[tp.Dict[str, FunctionMetaData]] = None
 
     def iter_function_names(self, pattern_func: str = '') -> tp.Iterator[str]:
         for name in sorted(dir(self)):
@@ -43,6 +72,8 @@ class SeriesIsNa(Perf):
     NUMBER = 10_000
 
     def __init__(self) -> None:
+        super().__init__()
+
         f = ff.parse('s(1000,3)|v(float,object,bool)')
         f = f.assign.loc[(f.index % 12 == 0), 0](np.nan)
         f = f.assign.loc[(f.index % 12 == 0), 1](None)
@@ -54,6 +85,18 @@ class SeriesIsNa(Perf):
         self.pds_float = f.iloc[:, 0].to_pandas()
         self.pds_object = f.iloc[:, 1].to_pandas()
         self.pds_bool = f.iloc[:, 2].to_pandas()
+
+        self.meta = {
+            'float_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'object_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'bool_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
+                ),
+            }
 
 class SeriesIsNa_N(SeriesIsNa, Native):
 
@@ -79,12 +122,249 @@ class SeriesIsNa_R(SeriesIsNa, Reference):
 
 #-------------------------------------------------------------------------------
 class SeriesDropNa(Perf):
+    NUMBER = 200
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        f1 = ff.parse('s(100_000,3)|v(float,object,bool)')
+        f1 = f1.assign.loc[(f1.index % 12 == 0), 0](np.nan)
+        f1 = f1.assign.loc[(f1.index % 12 == 0), 1](None)
+
+        self.sfs_float_auto = f1.iloc[:, 0]
+        self.sfs_object_auto = f1.iloc[:, 1]
+        self.sfs_bool_auto = f1.iloc[:, 2]
+
+        self.pds_float_auto = f1.iloc[:, 0].to_pandas()
+        self.pds_object_auto = f1.iloc[:, 1].to_pandas()
+        self.pds_bool_auto = f1.iloc[:, 2].to_pandas()
+
+
+        f2 = ff.parse('s(100_000,3)|v(float,object,bool)|i(I,str)|c(I,str)')
+        f2 = f2.assign.loc[f2.index.via_str.find('u') >= 0, sf.ILoc[0]](np.nan)
+        f2 = f2.assign.loc[f2.index.via_str.find('u') >= 0, sf.ILoc[1]](None)
+
+        self.sfs_float_str = f2.iloc[:, 0]
+        self.sfs_object_str = f2.iloc[:, 1]
+        self.sfs_bool_str = f2.iloc[:, 2]
+
+        self.pds_float_str = f2.iloc[:, 0].to_pandas()
+        self.pds_object_str = f2.iloc[:, 1].to_pandas()
+        self.pds_bool_str = f2.iloc[:, 2].to_pandas()
+
+        self.meta = {
+            'float_index_auto': FunctionMetaData(
+                line_target=sf.Index.__init__,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                ),
+            'object_index_auto': FunctionMetaData(
+                line_target=sf.Series.dropna,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                ),
+            'bool_index_auto': FunctionMetaData(
+                line_target=sf.Series.dropna,
+                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
+                ),
+
+            'float_index_str': FunctionMetaData(
+                line_target=sf.Index.__init__,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                ),
+            'object_index_str': FunctionMetaData(
+                line_target=sf.Series.dropna,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                ),
+            'bool_index_str': FunctionMetaData(
+                line_target=sf.Series.dropna,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                )
+            }
+
+class SeriesDropNa_N(SeriesDropNa, Native):
+
+    def float_index_auto(self) -> None:
+        s = self.sfs_float_auto.dropna()
+        assert 99999 in s
+
+    def object_index_auto(self) -> None:
+        s = self.sfs_object_auto.dropna()
+        assert 99999 in s
+
+    def bool_index_auto(self) -> None:
+        s = self.sfs_bool_auto.dropna()
+        assert 99999 in s
+
+
+    def float_index_str(self) -> None:
+        s = self.sfs_float_str.dropna()
+        assert 'zDa2' in s
+
+    def object_index_str(self) -> None:
+        s = self.sfs_object_str.dropna()
+        assert 'zDa2' in s
+
+    def bool_index_str(self) -> None:
+        s = self.sfs_bool_str.dropna()
+        assert 'zDa2' in s
+
+
+class SeriesDropNa_R(SeriesDropNa, Reference):
+
+    def float_index_auto(self) -> None:
+        s = self.pds_float_auto.dropna()
+        assert 99999 in s
+
+    def object_index_auto(self) -> None:
+        s = self.pds_object_auto.dropna()
+        assert 99999 in s
+
+    def bool_index_auto(self) -> None:
+        s = self.pds_bool_auto.dropna()
+        assert 99999 in s
+
+
+    def float_index_str(self) -> None:
+        s = self.pds_float_str.dropna()
+        assert 'zDa2' in s
+
+    def object_index_str(self) -> None:
+        s = self.pds_object_str.dropna()
+        assert 'zDa2' in s
+
+    def bool_index_str(self) -> None:
+        s = self.pds_bool_str.dropna()
+        assert 'zDa2' in s
+
+
+
+
+#-------------------------------------------------------------------------------
+class SeriesFillNa(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        f1 = ff.parse('s(100_000,2)|v(float,object)|i(I,str)|c(I,str)')
+        f1 = f1.assign.loc[f1.index.via_str.find('u') >= 0, sf.ILoc[0]](np.nan)
+        f1 = f1.assign.loc[f1.index.via_str.find('u') >= 0, sf.ILoc[1]](None)
+
+        self.sfs_float_str = f1.iloc[:, 0]
+        self.sfs_object_str = f1.iloc[:, 1]
+
+        self.pds_float_str = f1.iloc[:, 0].to_pandas()
+        self.pds_object_str = f1.iloc[:, 1].to_pandas()
+
+        from static_frame.core.util import isna_array
+
+        self.meta = {
+            'float_index_str': FunctionMetaData(
+                line_target=isna_array,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'object_index_str': FunctionMetaData(
+                line_target=isna_array,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                explanation='isna_array does two passes on object arrays',
+                ),
+            }
+
+class SeriesFillNa_N(SeriesFillNa, Native):
+
+    def float_index_str(self) -> None:
+        s = self.sfs_float_str.fillna(0.0)
+        assert 'zDa2' in s
+
+    def object_index_str(self) -> None:
+        s = self.sfs_object_str.fillna('')
+        assert 'zDa2' in s
+
+
+class SeriesFillNa_R(SeriesFillNa, Reference):
+
+    def float_index_str(self) -> None:
+        s = self.pds_float_str.fillna(0.0)
+        assert 'zDa2' in s
+
+    def object_index_str(self) -> None:
+        s = self.pds_object_str.fillna('')
+        assert 'zDa2' in s
+
+
+
+
+#-------------------------------------------------------------------------------
+class SeriesDropDuplicated(Perf):
     NUMBER = 500
 
     def __init__(self) -> None:
-        f = ff.parse('s(100_000,3)|v(float,object,bool)')
-        f = f.assign.loc[(f.index % 12 == 0), 0](np.nan)
-        f = f.assign.loc[(f.index % 12 == 0), 1](None)
+        super().__init__()
+
+        f = ff.parse('s(1000,3)|v(float,object,bool)|i(I,str)|c(I,str)')
+
+        self.sfs_float = f.iloc[:, 0]
+        self.sfs_float = self.sfs_float.assign.iloc[np.arange(len(self.sfs_float)) % 12 == 0](1.0)
+        self.sfs_object = f.iloc[:, 1]
+        self.sfs_object = self.sfs_object.assign.iloc[np.arange(len(self.sfs_object)) % 12 == 0](None)
+        self.sfs_bool = f.iloc[:, 2]
+
+        self.pds_float = self.sfs_float.to_pandas()
+        self.pds_object = self.sfs_object.to_pandas()
+        self.pds_bool = self.sfs_bool.to_pandas()
+
+
+        self.meta = {
+            'float_index_str': FunctionMetaData(
+                line_target=sf.Index.__init__,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'object_index_str': FunctionMetaData(
+                line_target=sf.Series.drop_duplicated,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'bool_index_str': FunctionMetaData(
+                line_target=sf.Series.drop_duplicated,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            }
+
+class SeriesDropDuplicated_N(SeriesDropDuplicated, Native):
+
+    def float_index_str(self) -> None:
+        s = self.sfs_float.drop_duplicated()
+        assert 'zDr0' in s
+
+    def object_index_str(self) -> None:
+        s = self.sfs_object.drop_duplicated()
+        assert 'zDr0' in s
+
+    def bool_index_str(self) -> None:
+        self.sfs_bool.drop_duplicated()
+
+class SeriesDropDuplicated_R(SeriesDropDuplicated, Reference):
+
+    def float_index_str(self) -> None:
+        s = self.pds_float.drop_duplicates(keep=False)
+        assert 'zDr0' in s
+
+    def object_index_str(self) -> None:
+        s = self.pds_object.drop_duplicates(keep=False)
+        assert 'zDr0' in s
+
+    def bool_index_str(self) -> None:
+        self.pds_bool.drop_duplicates(keep=False)
+
+
+
+
+#-------------------------------------------------------------------------------
+class SeriesIterElementApply(Perf):
+    NUMBER = 500
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        f = ff.parse('s(1000,3)|v(float,object,bool)|i(I,str)|c(I,str)')
 
         self.sfs_float = f.iloc[:, 0]
         self.sfs_object = f.iloc[:, 1]
@@ -94,38 +374,149 @@ class SeriesDropNa(Perf):
         self.pds_object = f.iloc[:, 1].to_pandas()
         self.pds_bool = f.iloc[:, 2].to_pandas()
 
-class SeriesDropNa_N(SeriesDropNa, Native):
 
-    def float_index_auto(self) -> None:
-        self.sfs_float.dropna()
+        from static_frame.core.util import prepare_iter_for_array
 
-    def object_index_auto(self) -> None:
-        self.sfs_object.dropna()
+        self.meta = {
+            'float_index_str': FunctionMetaData(
+                line_target=prepare_iter_for_array,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                explanation='prepare_iter_for_array() appears to be the biggest cost'
+                ),
+            'object_index_str': FunctionMetaData(
+                line_target=prepare_iter_for_array,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                explanation='prepare_iter_for_array() appears to be the biggest cost'
+                ),
+            'bool_index_str': FunctionMetaData(
+                line_target=prepare_iter_for_array,
+                perf_status=PerfStatus.EXPLAINED_LOSS, # not copying anything
+                explanation='prepare_iter_for_array() appears to be the biggest cost'
+                ),
+            }
 
-    def bool_index_auto(self) -> None:
-        self.sfs_bool.dropna()
+class SeriesIterElementApply_N(SeriesIterElementApply, Native):
 
-class SeriesDropNa_R(SeriesDropNa, Reference):
+    def float_index_str(self) -> None:
+        self.sfs_float.iter_element().apply(lambda x: str(x))
 
-    def float_index_auto(self) -> None:
-        self.pds_float.dropna()
+    def object_index_str(self) -> None:
+        self.sfs_object.iter_element().apply(lambda x: str(x))
 
-    def object_index_auto(self) -> None:
-        self.pds_object.dropna()
+    def bool_index_str(self) -> None:
+        self.sfs_bool.iter_element().apply(lambda x: str(x))
 
-    def bool_index_auto(self) -> None:
-        self.pds_bool.dropna()
+class SeriesIterElementApply_R(SeriesIterElementApply, Reference):
+
+    def float_index_str(self) -> None:
+        self.pds_float.apply(lambda x: str(x))
+
+    def object_index_str(self) -> None:
+        self.pds_object.apply(lambda x: str(x))
+
+    def bool_index_str(self) -> None:
+        self.pds_bool.apply(lambda x: str(x))
+
+
+
+
+
+
+#-------------------------------------------------------------------------------
+class FrameDropNa(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        f1 = ff.parse('s(100,100)|v(float)')
+        f1 = f1.assign.loc[(f1.index % 12 == 0),:](np.nan)
+        self.sff_float_auto_row = f1
+        self.pdf_float_auto_row = f1.to_pandas()
+
+        f2 = ff.parse('s(100,100)|v(float)')
+        f2 = f2.assign.loc[:, (f2.columns % 12 == 0)](np.nan)
+        self.sff_float_auto_column = f2
+        self.pdf_float_auto_column = f2.to_pandas()
+
+
+        f3 = ff.parse('s(100,100)|v(float)|i(I,str)|c(I,str)')
+        f3 = f3.assign.loc[(np.arange(len(f3.index)) % 12 == 0),:](np.nan)
+        self.sff_float_str_row = f3
+        self.pdf_float_str_row = f3.to_pandas()
+
+        f4 = ff.parse('s(100,100)|v(float)|i(I,str)|c(I,str)')
+        f4 = f4.assign.loc[:, (np.arange(len(f4.columns)) % 12 == 0)](np.nan)
+        self.sff_float_str_column = f4
+        self.pdf_float_str_column = f4.to_pandas()
+
+        self.meta = {
+            'float_index_auto_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'float_index_auto_column': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'float_index_str_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
+                ),
+            'float_index_str_column': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
+                ),
+            }
+
+class FrameDropNa_N(FrameDropNa, Native):
+
+    def float_index_auto_row(self) -> None:
+        self.sff_float_auto_row.dropna()
+
+    def float_index_auto_column(self) -> None:
+        self.sff_float_auto_column.dropna(axis=1)
+
+
+    def float_index_str_row(self) -> None:
+        self.sff_float_str_row.dropna()
+
+    def float_index_str_column(self) -> None:
+        self.sff_float_str_column.dropna(axis=1)
+
+
+class FrameDropNa_R(FrameDropNa, Reference):
+
+    def float_index_auto_row(self) -> None:
+        self.pdf_float_auto_row.dropna()
+
+    def float_index_auto_column(self) -> None:
+        self.pdf_float_auto_column.dropna(axis=1)
+
+
+    def float_index_str_row(self) -> None:
+        self.pdf_float_str_row.dropna()
+
+    def float_index_str_column(self) -> None:
+        self.pdf_float_str_column.dropna(axis=1)
 
 #-------------------------------------------------------------------------------
 
 class FrameILoc(Perf):
 
     def __init__(self) -> None:
+        super().__init__()
+
         self.sff1 = ff.parse('s(100,100)')
         self.pdf1 = pd.DataFrame(self.sff1.values)
 
         self.sff2 = ff.parse('s(100,100)|i(I,str)|c(I,str)')
         self.pdf2 = self.sff2.to_pandas()
+
+        self.meta = {
+            'element_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'element_index_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            }
 
 class FrameILoc_N(FrameILoc, Native):
 
@@ -148,11 +539,22 @@ class FrameILoc_R(FrameILoc, Reference):
 class FrameLoc(Perf):
 
     def __init__(self) -> None:
+        super().__init__()
+
         self.sff1 = ff.parse('s(100,100)')
         self.pdf1 = pd.DataFrame(self.sff1.values)
 
         self.sff2 = ff.parse('s(100,100)|i(I,str)|c(I,str)')
         self.pdf2 = self.sff2.to_pandas()
+
+        self.meta = {
+            'element_index_auto': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'element_index_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            }
 
 class FrameLoc_N(FrameLoc, Native):
 
@@ -171,6 +573,82 @@ class FrameLoc_R(FrameLoc, Reference):
         self.pdf2.loc['zGuv', 'zGuv']
 
 
+#-------------------------------------------------------------------------------
+
+class FrameIterSeriesApply(Perf):
+    NUMBER = 200
+
+    def __init__(self) -> None:
+        super().__init__()
+
+
+        self.sff_float = ff.parse('s(100,100)|i(I,str)|c(I,int)')
+        self.pdf_float = self.sff_float.to_pandas()
+
+        self.sff_mixed = ff.parse('s(100,100)|v(int,float,bool,str)|i(I,str)|c(I,int)')
+        self.pdf_mixed = self.sff_mixed.to_pandas()
+
+        from static_frame.core.type_blocks import TypeBlocks
+
+        self.meta = {
+            'float_index_str_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'float_index_str_column': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'mixed_index_str_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                line_target=TypeBlocks.axis_values
+                ),
+            'mixed_index_str_column': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                ),
+            }
+
+class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
+
+    def float_index_str_row(self) -> None:
+        s = self.sff_float.iter_series(axis=1).apply(lambda s: s.mean())
+        assert 'zwVN' in s.index
+
+    def float_index_str_column(self) -> None:
+        s = self.sff_float.iter_series(axis=0).apply(lambda s: s.mean())
+        assert -149082 in s.index
+
+
+    def mixed_index_str_row(self) -> None:
+        s = self.sff_mixed.iter_series(axis=1).apply(lambda s: s.iloc[-1])
+        assert 'zwVN' in s.index
+
+    def mixed_index_str_column(self) -> None:
+        s = self.sff_mixed.iter_series(axis=0).apply(lambda s: s.iloc[-1])
+        assert -149082 in s.index
+
+
+class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
+
+    def float_index_str_row(self) -> None:
+        s = self.pdf_float.apply(lambda s: s.mean(), axis=1)
+        assert 'zwVN' in s.index
+
+    def float_index_str_column(self) -> None:
+        s = self.pdf_float.apply(lambda s: s.mean(), axis=0)
+        assert -149082 in s.index
+
+
+    def mixed_index_str_row(self) -> None:
+        s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=1)
+        assert 'zwVN' in s.index
+
+    def mixed_index_str_column(self) -> None:
+        s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=0)
+        assert -149082 in s.index
+
+
+
+
+#-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 def get_arg_parser() -> argparse.ArgumentParser:
@@ -217,12 +695,20 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
             action='store_true',
             default=False,
             )
+    p.add_argument('--line',
+            help='Turn on line profiler',
+            action='store_true',
+            default=False,
+            )
     return p
 
 
 def yield_classes(
         pattern: str
-        ) -> tp.Iterator[tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]]]:
+        ) -> tp.Iterator[
+                tp.Tuple[
+                    tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],
+                    str]]:
 
     if '.' in pattern:
         pattern_cls, pattern_func = pattern.split('.')
@@ -276,6 +762,11 @@ def graph(
     '''
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
+        _, fp = tempfile.mkstemp(suffix='', text=True)
+        fp_pstat = fp + '.pstat'
+        fp_dot = fp + '.dot'
+        fp_png = fp + '.png'
+
         f = getattr(runner, name)
         pr = cProfile.Profile()
 
@@ -285,18 +776,16 @@ def graph(
         pr.disable()
 
         ps = pstats.Stats(pr)
-        ps.dump_stats('/tmp/tmp.pstat')
+        ps.dump_stats(fp_pstat)
 
-        import gprof2dot
         gprof2dot.main([
             '--format', 'pstats',
-            '--output', '/tmp/tmp.dot',
+            '--output', fp_dot,
             '--edge-thres', '0', # 0.1 default
             '--node-thres', '0', # 0.5 default
-            '/tmp/tmp.pstat'
+            fp_pstat
         ])
-        os.system('dot /tmp/tmp.dot -Tpng -o /tmp/tmp.png; eog /tmp/tmp.png')
-
+        os.system(f'dot {fp_dot} -Tpng -Gdpi=300 -o {fp_png}; eog {fp_png} &')
 
 def instrument(
         cls_runner: tp.Type[Perf],
@@ -328,15 +817,23 @@ def line(
         cls_runner: tp.Type[Perf],
         pattern_func: str,
         ) -> None:
+    from static_frame import Series
     runner = cls_runner()
-    from line_profiler import main
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
-
-
+        profiler = LineProfiler()
+        if not runner.meta:
+            raise NotImplementedError('must define runner.meta')
+        profiler.add_function(runner.meta[name].line_target)
+        profiler.enable()
+        f()
+        profiler.disable()
+        profiler.print_stats()
+        # import ipdb; ipdb.set_trace()
 #-------------------------------------------------------------------------------
 
-PerformanceRecord = tp.MutableMapping[str, tp.Union[str, float, bool]]
+PerformanceRecord = tp.MutableMapping[str,
+        tp.Union[str, float, bool, tp.Optional[PerfStatus]]]
 
 def performance(
         bundle: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],
@@ -364,6 +861,19 @@ def performance(
                     f'runner.{func_name}()',
                     globals=locals(),
                     number=cls_perf.NUMBER)
+
+        row['n/r'] = row[Native.__name__] / row[Reference.__name__] #type: ignore
+        row['r/n'] = row[Reference.__name__] / row[Native.__name__] #type: ignore
+        row['win'] = row['r/n'] > .99 #type: ignore
+
+        if runner_n.meta is not None:
+            row['status'] = runner_n.meta[func_name].perf_status
+            row['explanation'] = runner_n.meta[func_name].explanation
+        else:
+            row['status'] = (PerfStatus.UNEXPLAINED_WIN if row['win']
+                    else PerfStatus.UNEXPLAINED_LOSS)
+            row['explanation'] = ''
+
         yield row
 
 
@@ -371,17 +881,15 @@ def performance_tables_from_records(
         records: tp.Iterable[PerformanceRecord],
         ) -> tp.Tuple[sf.Frame, sf.Frame]:
 
-    from static_frame.core.display_color import HexColor
-
     frame = sf.FrameGO.from_dict_records(records)
-    # frame = frame.set_index('name', drop=True)
 
-    # if PerfTest.SF_NAME in frame.columns and PerfTest.PD_NAME in frame.columns:
-    frame['n/r'] = frame[Native.__name__] / frame[Reference.__name__]
-    frame['r/n'] = frame[Reference.__name__] / frame[Native.__name__]
-    frame['win'] = frame['r/n'] > .99
+    name_root_last = None
+    name_root_count = 0
 
-    def format(v: object) -> str:
+    def format(key: tp.Tuple[tp.Any, str], v: object) -> str:
+        nonlocal name_root_last
+        nonlocal name_root_count
+
         if isinstance(v, float):
             if np.isnan(v):
                 return ''
@@ -390,10 +898,21 @@ def performance_tables_from_records(
             if v:
                 return HexColor.format_terminal('green', str(v))
             return HexColor.format_terminal('orange', str(v))
-
+        if isinstance(v, str):
+            if key[1] == 'explanation':
+                return HexColor.format_terminal('gray', v)
+            if key[1] == 'name':
+                name_root = v.split('.')[0]
+                if name_root != name_root_last:
+                    name_root_last = name_root
+                    name_root_count += 1
+                if name_root_count % 2:
+                    return HexColor.format_terminal('lavender', v)
+                return HexColor.format_terminal('lightslategrey', v)
         return str(v)
 
-    display = frame.iter_element().apply(format)
+    display = frame.iter_element_items().apply(format)
+    # display = display[display.columns.drop.loc['status'].values.tolist() + ['status']]
     # display = display[[c for c in display.columns if '/' not in c]]
     return frame, display
 
@@ -412,6 +931,8 @@ def main() -> None:
                 graph(bundle[Native], pattern_func) #type: ignore
             if options.instrument:
                 instrument(bundle[Native], pattern_func) #type: ignore
+            if options.line:
+                line(bundle[Native], pattern_func) #type: ignore
 
     itemize = False # make CLI option maybe
 
@@ -433,7 +954,8 @@ def main() -> None:
                 cell_max_width_leftmost=np.inf,
                 cell_max_width=np.inf,
                 type_show=False,
-                display_rows=200
+                display_rows=200,
+                include_index=False,
                 )
         print(display.display(config))
 

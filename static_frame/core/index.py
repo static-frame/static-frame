@@ -45,6 +45,7 @@ from static_frame.core.util import dtype_from_element
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DtypeSpecifier
@@ -428,7 +429,7 @@ class Index(IndexBase):
                 labels = labels.__iter__()
         elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
-            array = labels.values # NOTE: should we take values or keys here?
+            array = labels.values
             if array.ndim == 1:
                 labels = array
             else:
@@ -445,25 +446,35 @@ class Index(IndexBase):
             elif labels.dtype != dtype_extract: #type: ignore
                 labels = labels.astype(dtype_extract) #type: ignore
                 labels.flags.writeable = False #type: ignore
+            labels_for_automap = labels
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
+
         if self._map is None: # if _map not shared from another Index
+            # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
+            if (not is_typed and labels.__class__ is np.ndarray
+                    and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS): #type: ignore [attr-defined]
+                labels_for_automap = labels.tolist() #type: ignore [attr-defined]
+            else:
+                labels_for_automap = labels
             if not loc_is_iloc:
                 try:
-                    self._map = FrozenAutoMap(labels) if self.STATIC else AutoMap(labels)
+                    self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)
                 except ValueError: # Automap will raise ValueError of non-unique values are encountered
                     pass
+
                 if self._map is None:
                     raise ErrorInitIndexNonUnique(
                             f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})'
                             )
                 size = len(self._map)
-            else: # must assume labels are unique
-                # labels must not be a generator, but we assume that internal clients that provided loc_is_iloc will not give a generator
+            else:
+                # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels) #type: ignore
                 if positions is None:
-                    positions = PositionsAllocator.get(size)
+                    positions = labels
+                    # positions = PositionsAllocator.get(size)
         else: # map shared from another Index
             size = len(self._map)
 

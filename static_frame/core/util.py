@@ -72,6 +72,16 @@ DTYPE_NA_KINDS = frozenset((
         DTYPE_OBJECT_KIND,
         ))
 
+# all kinds that can use tolist() to go to a compatible Python type
+DTYPE_OBJECTABLE_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_OBJECT_KIND,
+        DTYPE_BOOL_KIND,
+        'U', 'S', # str kinds
+        'i', 'u' # int kinds
+        ))
+
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
 DTYPE_STR = np.dtype(str)
@@ -501,7 +511,7 @@ def concat_resolved(
     arrays_iter = iter(arrays)
     first = next(arrays_iter)
 
-    ndim = first.ndim
+    # ndim = first.ndim
     dt_resolve = first.dtype
     shape = list(first.shape)
 
@@ -810,6 +820,7 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
             copy_values |= is_iifa
     return is_gen, copy_values
 
+
 def prepare_iter_for_array(
         values: tp.Iterable[tp.Any],
         restrict_copy: bool = False
@@ -832,15 +843,15 @@ def prepare_iter_for_array(
     if restrict_copy:
         copy_values = False
 
-    v_iter = iter(values)
+    v_iter = values if is_gen else iter(values)
 
     if copy_values:
         values_post = []
 
     resolved = None # None is valid specifier if the type is not ambiguous
+
     has_tuple = False
     has_str = False
-    has_enum = False
     has_non_str = False
     has_inexact = False
     has_big_int = False
@@ -848,44 +859,41 @@ def prepare_iter_for_array(
     for v in v_iter:
         if copy_values:
             # if a generator, have to make a copy while iterating
-            # for array construction, cannot use dictlike, so must convert to list
             values_post.append(v)
 
-        if resolved != object:
-            value_type = type(v)
+        value_type = v.__class__
 
-            # need to get tuple subclasses, like NamedTuple
-            if isinstance(v, (tuple, list)) or hasattr(v, '__slots__'):
-                # identify SF types by if they have __slots__ defined; they also must be assigned after array creation, so we treat them like tuples
-                has_tuple = True
-            elif isinstance(v, Enum):
-                # must check isinstance, as Enum types are always derived from Enum
-                has_enum = True
-            elif value_type == str or value_type == np.str_:
-                # must compare to both string types
-                has_str = True
-            else:
-                has_non_str = True
-                if value_type in INEXACT_TYPES:
-                    has_inexact = True
-                elif value_type == int and abs(v) > INT_MAX_COERCIBLE_TO_FLOAT:
-                    has_big_int = True
+        if (value_type is str
+                or value_type is np.str_
+                or value_type is bytes
+                or value_type is np.bytes_):
+            # must compare to both string types
+            has_str = True
+        elif hasattr(v, '__len__'):
+            # identify SF types, lists, or tuples
+            has_tuple = True
+            resolved = object
+            break
+        elif isinstance(v, Enum):
+            # must check isinstance, as Enum types are always derived from Enum
+            resolved = object
+            break
+        else:
+            has_non_str = True
+            if value_type in INEXACT_TYPES:
+                has_inexact = True
+            elif value_type is int and abs(v) > INT_MAX_COERCIBLE_TO_FLOAT:
+                has_big_int = True
 
-            if has_tuple or has_enum or (has_str and has_non_str):
-                resolved = object
-            elif has_big_int and has_inexact:
-                resolved = object
-        else: # resolved is object, can exit
-            if copy_values:
-                values_post.extend(v_iter)
+        if (has_str and has_non_str) or (has_big_int and has_inexact):
+            resolved = object
             break
 
-    # NOTE: we break before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
     if copy_values:
+        # v_iter is an iter, we need to finish it
+        values_post.extend(v_iter)
         return resolved, has_tuple, values_post
     return resolved, has_tuple, values #type: ignore
-
-
 
 
 def iterable_to_array_1d(
@@ -1477,7 +1485,8 @@ def array_to_duplicated(
         array: np.ndarray,
         axis: int = 0,
         exclude_first: bool = False,
-        exclude_last: bool = False) -> np.ndarray:
+        exclude_last: bool = False,
+        ) -> np.ndarray:
     '''Given a numpy array (1D or 2D), return a Boolean array along the specified axis that shows which values are duplicated. By default, all duplicates are indicated. For 2d arrays, axis 0 compares rows and returns a row-length Boolean array; axis 1 compares columns and returns a column-length Boolean array.
 
     Args:

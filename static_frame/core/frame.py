@@ -6,6 +6,7 @@ from itertools import chain
 from itertools import product
 from copy import deepcopy
 from operator import itemgetter
+from collections.abc import Set
 import csv
 import json
 import sqlite3
@@ -48,6 +49,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndexNonUnique
+from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index import Index
@@ -2741,7 +2743,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_array,
                 function_items=self._axis_array_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     @property
@@ -2753,7 +2756,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_array,
                 function_items=self._axis_array_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     @property
@@ -2765,7 +2769,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_tuple,
                 function_items=self._axis_tuple_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     @property
@@ -2777,7 +2782,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_tuple,
                 function_items=self._axis_tuple_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     @property
@@ -2789,7 +2795,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_series,
                 function_items=self._axis_series_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     @property
@@ -2801,7 +2808,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=self._axis_series,
                 function_items=self._axis_series_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES
                 )
 
     #---------------------------------------------------------------------------
@@ -3090,6 +3098,8 @@ class Frame(ContainerOperand):
             own_index = True
         elif index is None:
             index = self._index
+        elif isinstance(index, Set):
+            raise RelabelInvalid()
 
         own_columns = False
         if columns is IndexAutoFactory:
@@ -3099,6 +3109,8 @@ class Frame(ContainerOperand):
             own_columns = True
         elif columns is None:
             columns = self._columns
+        elif isinstance(columns, Set):
+            raise RelabelInvalid()
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
@@ -3579,7 +3591,7 @@ class Frame(ContainerOperand):
         # always get the index Display (even if we are not going to use it) to dettermine how many rows we need (which may include types, as well as truncation with elipsis).
         display_index = self._index.display(config=config)
 
-        # header depth useod for HTML and other foramtting; needs to be adjusted if removing types and/or columns and types, When showing types on a Frame, we need 2: one for the Frame type, the other for the index type.
+        # header depth used for HTML and other foramtting; needs to be adjusted if removing types and/or columns and types, When showing types on a Frame, we need 2: one for the Frame type, the other for the index type.
         header_depth = (self._columns.depth * config.include_columns) + (2 * config.type_show)
 
         # create an empty display based on index display
@@ -7212,10 +7224,12 @@ class FrameAssignILoc(FrameAssign):
             # NOTE: the iloc key's order is not relevant in assignment, and block assignment requires that column keys are ascending
             key = (self.key[0], #type: ignore [index]
                     key_to_ascending_key(
-                    self.key[1],
-                    self.container.shape[1])) #type: ignore [index]
+                            self.key[1],
+                            self.container.shape[1] #type: ignore [index]
+                    ))
         else:
             key = (self.key, None)
+
 
         if is_series:
             assigned = self.container._reindex_other_like_iloc(value,

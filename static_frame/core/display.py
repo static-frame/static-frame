@@ -4,6 +4,7 @@ import os
 import html
 import inspect
 import platform
+import re
 from functools import partial
 from collections import namedtuple
 
@@ -231,7 +232,7 @@ class DisplayActive:
 #-------------------------------------------------------------------------------
 class DisplayHeader:
     '''
-    Wraper for passing in display header that have a name attribute.
+    Wrapper for passing in display header that has a name attribute, such as a :obj:`Series` or :obj:`Frame` that displays the ``name`` attribute.
     '''
     __slots__ = ('cls', 'name')
 
@@ -257,8 +258,9 @@ class DisplayHeader:
 
 HeaderInitializer = tp.Optional[tp.Union[str, DisplayHeader]]
 
-# store formating string, raw string
+# An NT that stores a formatted strings ``format_str`` as well as a ``raw`` string
 DisplayCell = namedtuple('DisplayCell', ('format_str', 'raw'))
+
 FORMAT_EMPTY = '{}'
 
 class Display:
@@ -278,6 +280,7 @@ class Display:
     ELLIPSIS = '...' # this string is appended to truncated entries
     CELL_ELLIPSIS = DisplayCell(FORMAT_EMPTY, ELLIPSIS)
     ELLIPSIS_CENTER_SENTINEL = object()
+    ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
     #---------------------------------------------------------------------------
     # utility methods
@@ -288,18 +291,18 @@ class Display:
             config: DisplayConfig
             ) -> tp.Tuple[str, tp.Type[DisplayTypeCategory]]:
         '''
-        Apply delimters to type, for either numpy types or Python classes.
+        Return the `type_input` as a string, applying delimters to either numpy dtypes or Python classes.
         '''
         if isinstance(type_input, np.dtype):
             type_str = str(type_input)
             type_ref = type_input
-        elif inspect.isclass(type_input):
-            assert isinstance(type_input, type)
-            type_str = type_input.__name__
-            type_ref = type_input
         elif isinstance(type_input, DisplayHeader):
             type_str = repr(type_input)
             type_ref = type_input.cls
+        elif inspect.isclass(type_input):
+            # assert isinstance(type_input, type)
+            type_str = type_input.__name__
+            type_ref = type_input
         else:
             raise NotImplementedError('no handling for this input', type_input)
 
@@ -327,13 +330,10 @@ class Display:
         if config.display_format in _DISPLAY_FORMAT_HTML:
             return HexColor.format_html(color, FORMAT_EMPTY)
 
-        if config.display_format in _DISPLAY_FORMAT_TERMINAL:
-            if terminal_ansi():
-                return HexColor.format_terminal(color, FORMAT_EMPTY)
+        if config.display_format in _DISPLAY_FORMAT_TERMINAL and terminal_ansi():
+            return HexColor.format_terminal(color, FORMAT_EMPTY)
             # if not a compatible terminal, return label unaltered
-            return FORMAT_EMPTY
 
-        # RST and other text displays
         return FORMAT_EMPTY
 
     @classmethod
@@ -377,6 +377,12 @@ class Display:
                 msg = config.value_format_complex_scientific.format(value)
             else:
                 msg = config.value_format_complex_positional.format(value)
+        elif (isinstance(value, str) and
+                config.display_format in _DISPLAY_FORMAT_TERMINAL):
+            # When in a TERMINAL mode, separate ASCII color markup found in strings and provide the original string as the formatted string; this will permit correct spacing.
+            msg, count = cls.ANSI_ESCAPE.subn('', msg)
+            if count:
+                return DisplayCell(value, msg)
 
         return DisplayCell(FORMAT_EMPTY, msg)
 
@@ -409,6 +415,7 @@ class Display:
                 rows.append([cls.CELL_EMPTY])
 
         if values.__class__ is np.ndarray and values.ndim == 2:
+            # NOTE: this is generally only used by TypeBlocks
             # get rows from numpy string formatting
             np_rows = np.array_str(values).split('\n')
             last_idx = len(np_rows) - 1
@@ -751,11 +758,6 @@ class Display:
         rows.extend(new_rows)
         rows.extend(self._rows[insert_index:])
         self._rows = rows
-
-    # def drop_row(self, index: int = 0) -> None:
-    #     '''Remove a row in place.
-    #     '''
-    #     self._rows = self._rows[:index] + self._rows[index+1:]
 
 
     #---------------------------------------------------------------------------

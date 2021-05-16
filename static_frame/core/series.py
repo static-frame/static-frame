@@ -2,6 +2,7 @@ import typing as tp
 from functools import partial
 from itertools import chain
 from copy import deepcopy
+from collections.abc import Set
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
@@ -30,6 +31,7 @@ from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
@@ -714,7 +716,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
                 )
 
     @property
@@ -726,7 +729,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
                 )
 
     #---------------------------------------------------------------------------
@@ -860,6 +864,8 @@ class Series(ContainerOperand):
         elif is_callable_or_mapping(index): #type: ignore
             index_init = self._index.relabel(index)
             own_index = True
+        elif isinstance(index, Set):
+            raise RelabelInvalid()
         else:
             index_init = index #type: ignore
 
@@ -980,7 +986,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
 
         return self.__class__(values,
-                index=self._index.loc[sel],
+                index=self._index._extract_iloc(sel), # PERF: use _extract_iloc as we have a Boolean array
                 name=self._name,
                 own_index=True)
 
