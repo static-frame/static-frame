@@ -394,7 +394,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             if dtype is not None:
                 values = array_from_iterator(
                         self.apply_iter(func),
-                        count=self._shape[0], # must have ndim == 1
+                        count=self._shape[0], # type: ignore
                         dtype=dtype,
                         )
                 return self._apply_constructor(
