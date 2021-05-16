@@ -673,6 +673,38 @@ class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
 
 
 #-------------------------------------------------------------------------------
+
+class IndexIterLabelApply(Perf):
+    NUMBER = 200
+
+    def __init__(self) -> None:
+        super().__init__()
+
+
+        self.sfi_int = ff.parse('s(100,1)|i(I,int)|c(I,int)').index
+        self.pdi_int = self.sfi_int.to_pandas()
+
+class IndexIterLabelApply_N(IndexIterLabelApply, Native):
+
+    def index_int(self) -> None:
+        self.sfi_int.iter_label().apply(lambda s: s * 10)
+
+    def index_int_dtype(self) -> None:
+        self.sfi_int.iter_label().apply(lambda s: s * 10, dtype=int)
+
+class IndexIterLabelApply_R(IndexIterLabelApply, Reference):
+
+    def index_int(self) -> None:
+        # Pandas Index to not have an apply
+        pd.Series(self.pdi_int).apply(lambda s: s * 10)
+
+    def index_int_dtype(self) -> None:
+        # Pandas Index to not have an apply
+        pd.Series(self.pdi_int).apply(lambda s: s * 10)
+
+
+
+#-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 def get_arg_parser() -> argparse.ArgumentParser:
