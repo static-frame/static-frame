@@ -463,44 +463,15 @@ class TypeBlocks(ContainerOperand):
         if axis == 1: # iterate over rows
             zero_size = not bool(self._blocks)
             unified = self.unified
-            key: tp.Union[int, slice]
+            # key: tp.Union[int, slice]
             row_dtype = self._row_dtype
             row_length = self._shape[0]
+            column_length = self._shape[1]
 
-            # iterate over rows; might be faster to create entire values
             if not reverse:
                 row_idx_iter = range(row_length)
             else:
                 row_idx_iter = range(row_length - 1, -1, -1)
-
-            # for i in row_idx_iter:
-            #     if zero_size:
-            #         yield EMPTY_ARRAY
-            #     elif unified:
-            #         b = self._blocks[0]
-            #         if b.ndim == 1:
-            #             # single element slice to force array creation (not an element)
-            #             yield b[i: i+1]
-            #         else:
-            #             # if a 2d array, we can yield rows through simple indexing
-            #             yield b[i]
-            #     else:
-            #         parts = []
-            #         for b in self._blocks:
-            #             if b.ndim == 1:
-            #                 # get a slice to permit concatenation
-            #                 key = slice(i, i+1)
-            #             else:
-            #                 key = i
-            #             if b.dtype == row_dtype:
-            #                 parts.append(b[key])
-            #             else:
-            #                 parts.append(b[key].astype(row_dtype))
-
-            #         out = np.empty(shape=row_length, dtype=row_dtype)
-            #         part = np.concatenate(parts, out=out)
-            #         part.flags.writeable = False
-            #         yield part
 
             if zero_size:
                 for i in row_idx_iter:
@@ -515,13 +486,27 @@ class TypeBlocks(ContainerOperand):
                         # if a 2d array, we can yield rows through simple indexing
                         yield b[i]
             else:
-                # need to hand out all rows; therefore, we should consolidate into a single array
+                # memory optimized
+                # for i in row_idx_iter:
+                #     array = np.empty(column_length, dtype=row_dtype)
+                #     start = 0
+                #     for b in self._blocks:
+                #         if b.ndim == 1:
+                #             # import ipdb; ipdb.set_trace()
+                #             array[start] = b[i]
+                #             start += 1
+                #         else:
+                #             end = start + b.shape[1]
+                #             array[start: end] = b[i]
+                #             start = end
+                #     yield array
+
+                # performance optimized: consolidate into a single array
                 b = self._blocks_to_array(
                         blocks=self._blocks,
                         shape=self._shape,
-                        row_dtype=self._row_dtype,
+                        row_dtype=row_dtype,
                         row_multiple=True)
-                assert b.flags.writeable == False
                 for i in row_idx_iter:
                     yield b[i]
 
