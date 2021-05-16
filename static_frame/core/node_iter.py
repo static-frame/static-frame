@@ -580,7 +580,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     ) -> np.ndarray:
                 # NOTE: cannot use name argument with an array; here for compat
                 if dtype is not None:
-                    array = array_from_iterator(values, count=shape[0], dtype=dtype)
+                    array = array_from_iterator(values, count=shape[0], dtype=dtype) #type: ignore
                 else:
                     array, _ = iterable_to_array_1d(values, dtype)
                 return array
