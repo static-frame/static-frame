@@ -492,7 +492,6 @@ class TypeBlocks(ContainerOperand):
                 #     start = 0
                 #     for b in self._blocks:
                 #         if b.ndim == 1:
-                #             # import ipdb; ipdb.set_trace()
                 #             array[start] = b[i]
                 #             start += 1
                 #         else:

@@ -527,7 +527,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
             shape = index.shape
 
-            def apply_constructor(
+            def apply_constructor( #pylint: disable=E0102
                     values: tp.Iterator[tp.Any],
                     dtype: DtypeSpecifier,
                     name: NameType = None,
@@ -573,7 +573,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
             shape = self._container.shape
 
-            def apply_constructor(
+            def apply_constructor( #pylint: disable=E0102
                     values: tp.Iterator[tp.Hashable], #pylint: disable=function-redefined
                     dtype: DtypeSpecifier = None,
                     name: NameType = None,
