@@ -454,7 +454,7 @@ class TypeBlocks(ContainerOperand):
 
     def axis_values(self,
             axis: int = 0,
-            reverse: bool = False
+            reverse: bool = False,
             ) -> tp.Iterator[np.ndarray]:
         '''Generator of arrays produced along an axis. Clients can expect to get an immutable array.
 
@@ -481,14 +481,12 @@ class TypeBlocks(ContainerOperand):
             elif unified:
                 b = self._blocks[0]
                 for i in row_idx_iter:
-                    if b.ndim == 1:
-                        # single element slice to force array creation (not an element)
+                    if b.ndim == 1: # slice to force array creation (not an element)
                         yield b[i: i + 1]
-                    else:
-                        # if a 2d array, we can yield rows through simple indexing
+                    else: # 2d array
                         yield b[i]
             else:
-                # memory optimized
+                # # only create one array at a time, slower but less overhead
                 # for i in row_idx_iter:
                 #     array = np.empty(column_length, dtype=row_dtype)
                 #     start = 0
@@ -501,8 +499,8 @@ class TypeBlocks(ContainerOperand):
                 #             end = start + b.shape[1]
                 #             array[start: end] = b[i]
                 #             start = end
+                #     array.flags.writeable = False
                 #     yield array
-
                 # performance optimized: consolidate into a single array
                 b = self._blocks_to_array(
                         blocks=self._blocks,

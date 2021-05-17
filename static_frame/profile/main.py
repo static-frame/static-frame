@@ -576,16 +576,16 @@ class FrameLoc_R(FrameLoc, Reference):
 #-------------------------------------------------------------------------------
 
 class FrameIterSeriesApply(Perf):
-    NUMBER = 200
+    NUMBER = 50
 
     def __init__(self) -> None:
         super().__init__()
 
 
-        self.sff_float = ff.parse('s(100,100)|i(I,str)|c(I,int)')
+        self.sff_float = ff.parse('s(1000,1000)|i(I,str)|c(I,int)')
         self.pdf_float = self.sff_float.to_pandas()
 
-        self.sff_mixed = ff.parse('s(100,100)|v(int,float,bool,str)|i(I,str)|c(I,int)')
+        self.sff_mixed = ff.parse('s(1000,1000)|v(int,float,bool,str)|i(I,str)|c(I,int)')
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
         from static_frame.core.type_blocks import TypeBlocks
