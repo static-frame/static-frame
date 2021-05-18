@@ -5054,13 +5054,13 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        if self._columns.depth > 1:
-            raise ErrorInitFrame('cannot unset index with a columns with depth greater than 1')
-
         if names:
             columns = chain(names, self._columns.values)
         else:
             columns = chain(self._index.names, self._columns.values)
+
+        if self._columns.depth > 1:
+            columns = IndexHierarchy.from_labels(c for c in columns)
 
         return self.__class__(
                 TypeBlocks.from_blocks(block_gen()),

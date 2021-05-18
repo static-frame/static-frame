@@ -9613,7 +9613,7 @@ class TestUnit(TestCase):
                 columns=columns,
                 index=index)
 
-        with self.assertRaises(ErrorInitFrame):
+        with self.assertRaises(ErrorInitIndex):
             f1.unset_index()
 
 
@@ -9676,6 +9676,35 @@ class TestUnit(TestCase):
                 )
         f2 = f1.unset_index(names=('index',), consolidate_blocks=True)
         self.assertEqual(f2._blocks.shapes.tolist(), [(3, 3)])
+
+
+    def test_unset_index_column_hierarchy(self) -> None:
+        f = ff.parse('s(5,5)|i(I,str)|c(IH,(str,str))').rename(index='index_name', columns=('l1', 'l2'))
+        unset = f.unset_index(names=[('outer', f.index.name)])
+        assert unset.columns.values.tolist() == [
+                ['outer', 'index_name'],
+                ['zZbu', 'zOyq'],
+                ['zZbu', 'zIA5'],
+                ['ztsv', 'zGDJ'],
+                ['ztsv', 'zmhG'],
+                ['zUvW', 'zo2Q'],
+        ]
+
+        # A frame with hierarchical index and columns.
+        f = ff.parse('s(5,5)|i(IH,(str,str))|c(IH,(str,str))').rename(
+                index=('index_name1', 'index_name2'),
+                columns=('l1', 'l2')
+        )
+        unset = f.unset_index(names=[('outer', n) for n in f.index.names])
+        assert unset.columns.values.tolist() == [
+               ['outer', 'index_name1'],
+               ['outer', 'index_name2'],
+               ['zZbu', 'zOyq'],
+               ['zZbu', 'zIA5'],
+               ['ztsv', 'zGDJ'],
+               ['ztsv', 'zmhG'],
+               ['zUvW', 'zo2Q']
+        ]
 
 
     #---------------------------------------------------------------------------
