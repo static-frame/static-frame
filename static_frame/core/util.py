@@ -62,6 +62,7 @@ DTYPE_INT_KINDS = ('i', 'u') # signed and unsigned
 DTYPE_INEXACT_KINDS = (DTYPE_FLOAT_KIND, DTYPE_COMPLEX_KIND) # kinds that support NaN values
 DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
 
+
 # all kinds that can have NaN, NaT, or None
 DTYPE_NA_KINDS = frozenset((
         DTYPE_FLOAT_KIND,
@@ -2283,14 +2284,19 @@ def array_from_iterator(iterator: tp.Iterator[tp.Any],
         count: int,
         dtype: DtypeSpecifier,
         ) -> np.ndarray:
-    '''Given an iterator/generaotr of known size and dtype, load it into an array.
+    '''Given an iterator/generator of known size and dtype, load it into an array.
     '''
-    if dtype != object:
+    dtype = np.dtype(dtype)
+    if dtype.kind in DTYPE_STR_KINDS:
+        # unless we know the size of the max size of the string, we have to go through the default construictor.
+        array, _ = iterable_to_array_1d(iterator, dtype)
+        return array
+    elif dtype.kind != DTYPE_OBJECT_KIND:
         array = np.fromiter(iterator,
                 count=count,
                 dtype=dtype,
                 )
-    else:
+    else: # object types
         array = np.empty(count, dtype=dtype)
         for i, v in enumerate(iterator):
             array[i] = v

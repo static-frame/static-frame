@@ -46,7 +46,6 @@ from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import mloc
-from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import row_1d_filter
@@ -57,6 +56,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import isin_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
@@ -410,8 +410,7 @@ class TypeBlocks(ContainerOperand):
         if len(blocks) == 1:
             if not row_multiple:
                 return row_1d_filter(blocks[0])
-            else:
-                return column_2d_filter(blocks[0])
+            return column_2d_filter(blocks[0])
 
         # get empty array and fill parts
         # NOTE: row_dtype may be None if an unfillable array; defaults to NP default
@@ -422,19 +421,23 @@ class TypeBlocks(ContainerOperand):
             array = np.empty(shape, dtype=row_dtype)
 
         pos = 0
+        array_ndim = array.ndim
+
         for block in blocks:
-            if block.ndim == 1:
+            block_ndim = block.ndim
+
+            if block_ndim == 1:
                 end = pos + 1
             else:
                 end = pos + block.shape[1]
 
-            if array.ndim == 1:
-                array[pos: end] = block[:] # gets a row from array
+            if array_ndim == 1:
+                array[pos: end] = block # gets a row from array
             else:
-                if block.ndim == 1:
-                    array[:, pos] = block[:] # a 1d array
+                if block_ndim == 1:
+                    array[NULL_SLICE, pos] = block # a 1d array
                 else:
-                    array[:, pos: end] = block[:] # gets a row / row slice from array
+                    array[NULL_SLICE, pos: end] = block # gets a row / row slice from array
             pos = end
 
         array.flags.writeable = False
