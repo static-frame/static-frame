@@ -890,14 +890,20 @@ def prepare_iter_for_array(
 
 def iterable_to_array_1d(
         values: tp.Iterable[tp.Any],
-        dtype: DtypeSpecifier = None
+        dtype: DtypeSpecifier = None,
+        count: tp.Optional[int] = None,
         ) -> tp.Tuple[np.ndarray, bool]:
     '''
     Convert an arbitrary Python iterable to a 1D NumPy array without any undesirable type coercion.
 
+    Args:
+        count: if provided, can be used to optimize some array creation scenarios.
+
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
+    dtype = None if dtype is None else np.dtype(dtype) # convert dtype specifier to a dtype
+
     if values.__class__ is np.ndarray:
         if values.ndim != 1: #type: ignore
             raise RuntimeError('expected 1d array')
@@ -905,7 +911,7 @@ def iterable_to_array_1d(
             raise RuntimeError(f'Supplied dtype {dtype} not set on supplied array.')
         return values, len(values) <= 1 #type: ignore
 
-    if isinstance(values, range):
+    if values.__class__ is range:
         # translate range to np.arange to avoid iteration
         array = np.arange(start=values.start,
                 stop=values.stop,
@@ -925,12 +931,27 @@ def iterable_to_array_1d(
         has_tuple = False
         values_for_construct = (values,)
     elif dtype is None:
-        # this gives as dtype only None, or object, letting array constructor do the rest
+        # this returns as dtype only None, or object, letting array constructor do the rest
         dtype, has_tuple, values_for_construct = prepare_iter_for_array(values)
         if len(values_for_construct) == 0:
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
-    else:
+    else: # dtype is provided
         is_gen, copy_values = is_gen_copy_values(values)
+
+        if is_gen and count and dtype.kind not in DTYPE_STR_KINDS:
+            if dtype.kind != DTYPE_OBJECT_KIND:
+                # if dtype is int this might raise OverflowError
+                array = np.fromiter(values,
+                        count=count,
+                        dtype=dtype,
+                        )
+            else: # object dtypes
+                array = np.empty(count, dtype=dtype)
+                for i, element in enumerate(values):
+                    array[i] = element
+            array.flags.writeable = False
+            return array, False
+
         if copy_values:
             # we have to realize into sequence for numpy creation
             values_for_construct = tuple(values)
@@ -943,7 +964,7 @@ def iterable_to_array_1d(
             v.flags.writeable = False
             return v, True
         #as we have not iterated iterable, assume that there might be tuples if the dtype is object
-        has_tuple = dtype in DTYPE_SPECIFIERS_OBJECT
+        has_tuple = dtype == DTYPE_OBJECT
 
     if len(values_for_construct) == 1 or isinstance(values, DICTLIKE_TYPES):
         # check values for dictlike, not values_for_construct
@@ -2280,29 +2301,29 @@ def array_from_element_method(*,
     return post
 
 
-def array_from_iterator(iterator: tp.Iterator[tp.Any],
-        count: int,
-        dtype: DtypeSpecifier,
-        ) -> np.ndarray:
-    '''Given an iterator/generator of known size and dtype, load it into an array.
-    '''
-    dtype = np.dtype(dtype)
-    if dtype.kind in DTYPE_STR_KINDS:
-        # unless we know the size of the max size of the string, we have to go through the default construictor.
-        array, _ = iterable_to_array_1d(iterator, dtype)
-        return array
-    elif dtype.kind != DTYPE_OBJECT_KIND:
-        array = np.fromiter(iterator,
-                count=count,
-                dtype=dtype,
-                )
-    else: # object types
-        array = np.empty(count, dtype=dtype)
-        for i, v in enumerate(iterator):
-            array[i] = v
+# def array_from_iterator(iterator: tp.Iterator[tp.Any],
+#         count: int,
+#         dtype: DtypeSpecifier,
+#         ) -> np.ndarray:
+#     '''Given an iterator/generator of known size and dtype, load it into an array.
+#     '''
+#     dtype = np.dtype(dtype)
+#     if dtype.kind in DTYPE_STR_KINDS:
+#         # unless we know the size of the max size of the string, we have to go through the default construictor.
+#         array, _ = iterable_to_array_1d(iterator, dtype)
+#         return array
+#     elif dtype.kind != DTYPE_OBJECT_KIND:
+#         array = np.fromiter(iterator,
+#                 count=count,
+#                 dtype=dtype,
+#                 )
+#     else: # object types
+#         array = np.empty(count, dtype=dtype)
+#         for i, v in enumerate(iterator):
+#             array[i] = v
 
-    array.flags.writeable = False
-    return array
+#     array.flags.writeable = False
+#     return array
 
 
 #-------------------------------------------------------------------------------

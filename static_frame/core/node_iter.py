@@ -19,7 +19,7 @@ from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import array_from_iterator
+# from static_frame.core.util import array_from_iterator
 
 
 if tp.TYPE_CHECKING:
@@ -532,12 +532,12 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     dtype: DtypeSpecifier,
                     name: NameType = None,
                     ) -> Series:
-                if dtype is not None:
-                    values = array_from_iterator(
-                            values,
-                            count=shape[0], # type: ignore
-                            dtype=dtype,
-                            )
+                # PERF: passing count here permits faster generator realization
+                values, _ = iterable_to_array_1d(
+                        values,
+                        count=shape[0], # type: ignore
+                        dtype=dtype,
+                        )
                 return Series(values, name=name, index=index, own_index=own_index)
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
@@ -578,11 +578,9 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     dtype: DtypeSpecifier = None,
                     name: NameType = None,
                     ) -> np.ndarray:
-                # NOTE: cannot use name argument with an array; here for compat
-                if dtype is not None:
-                    array = array_from_iterator(values, count=shape[0], dtype=dtype) #type: ignore
-                else:
-                    array, _ = iterable_to_array_1d(values, dtype)
+                # NOTE: name argument is for common interface
+                # PERF: passing count here permits faster generator realization
+                array, _ = iterable_to_array_1d(values, count=shape[0], dtype=dtype) #type:
                 return array
         else:
             raise NotImplementedError(self._apply_type) #pragma: no cover
