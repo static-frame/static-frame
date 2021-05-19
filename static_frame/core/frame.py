@@ -2883,7 +2883,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -2900,7 +2901,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -2917,7 +2919,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -2934,7 +2937,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     #---------------------------------------------------------------------------

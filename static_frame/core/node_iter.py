@@ -486,7 +486,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             function_values: tp.Callable[..., tp.Iterable[tp.Any]],
             function_items: tp.Callable[..., tp.Iterable[tp.Tuple[tp.Any, tp.Any]]],
             yield_type: IterNodeType,
-            apply_type: IterNodeApplyType = IterNodeApplyType.SERIES_ITEMS
+            apply_type: IterNodeApplyType,
             ) -> None:
         '''
         Args:

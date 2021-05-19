@@ -22,6 +22,7 @@ from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.series import Series
 from static_frame.core.store import Store
@@ -1077,7 +1078,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 container=self,
                 function_values=self._axis_array,
                 function_items=self._axis_array_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -1091,7 +1093,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 container=self,
                 function_values=self._axis_array,
                 function_items=self._axis_array_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -1105,7 +1108,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 container=self,
                 function_values=self._axis_tuple,
                 function_items=self._axis_tuple_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -1119,7 +1123,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 container=self,
                 function_values=self._axis_tuple,
                 function_items=self._axis_tuple_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -1133,7 +1138,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 container=self,
                 function_values=self._axis_series,
                 function_items=self._axis_series_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -1147,7 +1153,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 container=self,
                 function_values=self._axis_series,
                 function_items=self._axis_series_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
 
@@ -1169,7 +1176,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property #type: ignore
@@ -1188,7 +1196,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property #type: ignore
@@ -1207,7 +1216,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property #type: ignore
@@ -1226,7 +1236,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     #---------------------------------------------------------------------------

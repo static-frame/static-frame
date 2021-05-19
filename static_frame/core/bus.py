@@ -14,6 +14,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -410,7 +411,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -422,7 +424,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     #---------------------------------------------------------------------------
