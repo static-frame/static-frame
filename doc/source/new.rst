@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Fixed issue when supplying ``dtype`` arguments to ``apply`` methods with string dtypes.
 
+Added ``parameters`` argument to ``Frame.from_sql`` to perform SQL parameter substitution.
+
 
 0.8.10
 ----------
