@@ -401,13 +401,13 @@ Function application to a group ``Frame`` can be used to produce a ``Series`` in
 
 >>> frame.iter_group('albumId', axis=0).apply(lambda g: len(g['title'].unique()), dtype=np.int64).head()
 <Series>
-<Index>
-1        50
-2        50
-3        50
-4        50
-5        50
-<int64>  <int64>
+<Index: albumId>
+1                50
+2                50
+3                50
+4                50
+5                50
+<int64>          <int64>
 
 .. note::
 

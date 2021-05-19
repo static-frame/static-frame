@@ -19,6 +19,7 @@ from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import name_filter
 # from static_frame.core.util import array_from_iterator
 
 
@@ -56,7 +57,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             '_yield_type',
             '_apply_constructor',
             '_apply_type',
-            '_shape',
             )
 
     INTERFACE = (
@@ -81,7 +81,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             yield_type: IterNodeType,
             apply_constructor: tp.Callable[..., FrameOrSeries],
             apply_type: IterNodeApplyType,
-            shape: tp.Optional[tp.Tuple[int, ...]],
         ) -> None:
         '''
         Args:
@@ -92,7 +91,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         self._yield_type = yield_type
         self._apply_constructor: tp.Callable[..., FrameOrSeries] = apply_constructor
         self._apply_type = apply_type
-        self._shape = shape
 
     #---------------------------------------------------------------------------
 
@@ -505,9 +503,13 @@ class IterNode(tp.Generic[FrameOrSeries]):
             ) -> IterNodeDelegate[FrameOrSeries]:
         '''
         In usage as an iteator, the args passed here are expected to be argument for the core iterators, i.e., axis arguments.
+
+        Args:
+            kwargs: kwarg args to be passed to both self._func_values and self._func_items
         '''
         from static_frame.core.series import Series
         from static_frame.core.frame import Frame
+        from static_frame.core.index import Index
 
         func_values = partial(self._func_values, **kwargs)
         func_items = partial(self._func_items, **kwargs)
@@ -541,11 +543,16 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 return Series(values, name=name, index=index, own_index=own_index)
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
-            # Only use this path if the Index is different than the source container
+            # Only use this path if the Index to be returned is different than the source container
+            name_index = None # NOTE: what should this be?
             if isinstance(self._container, Frame) and kwargs['axis'] == 0:
-                index_constructor = self._container._columns.from_labels
+                index_constructor = partial(
+                        self._container._columns.from_labels,
+                        name=name_index)
             else:
-                index_constructor = self._container._index.from_labels
+                index_constructor = partial(
+                        self._container._index.from_labels,
+                        name=name_index)
             # always return a Series
             apply_constructor = partial(
                     Series.from_items,
@@ -554,7 +561,19 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_FLAT:
             # use default index constructor
-            apply_constructor = Series.from_items
+            # NOTE: when used on labels, this key is given; when used on lables (indices) depth_level is given; only take the key if it is a hashable (a string or a tuple, not a slice, list, or array)
+            try:
+                name_index = name_filter(kwargs.get('key', None))
+            except TypeError:
+                name_index = None
+
+            index_constructor = partial(
+                    Index.from_labels,
+                    name=name_index)
+            apply_constructor = partial(
+                    Series.from_items,
+                    index_constructor=index_constructor,
+                    )
 
         elif self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
             assert isinstance(self._container, Frame) # for typing
@@ -591,7 +610,6 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 yield_type=self._yield_type,
                 apply_constructor=tp.cast(tp.Callable[..., FrameOrSeries], apply_constructor),
                 apply_type=self._apply_type,
-                shape=shape, # NOTE: may not be needed
                 )
 
 
