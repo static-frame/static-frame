@@ -3,6 +3,7 @@ import typing as tp
 
 import numpy as np
 import frame_fixtures as ff
+from numpy.core.arrayprint import str_format
 
 import static_frame as sf
 # from static_frame import Index
@@ -225,6 +226,27 @@ class TestUnit(TestCase):
                 (('zZbu', -88017), ('ztsv', 162197), ('zUvW', -3648), ('zkuW', 129017), ('zmVj', 58768), ('z2Oo', 84967), ('z5l6', 146284), ('zCE3', 137759)))
 
 
+    def test_frame_iter_series_b(self) -> None:
+        f1 = ff.parse('s(10,4)|i(I,str)|c(I,str)|v(float)')
+
+        post1 = f1.iter_series(axis=1).apply(lambda s: s.sum(), dtype=float)
+        self.assertEqual(post1.dtype, float)
+        self.assertEqual(post1.shape, (10,))
+
+        post2 = f1[sf.ILoc[0]].iter_element().apply(lambda e: e == 647.9, dtype=bool)
+        self.assertEqual(post2.dtype, bool)
+        self.assertEqual(post2.shape, (10,))
+        self.assertEqual(post2.sum(), 1)
+
+        post3 = f1.iter_series(axis=1).apply(lambda s: str(s.sum()), dtype=str)
+        self.assertEqual(post3.dtype, np.dtype('<U18'))
+        self.assertEqual(post3.shape, (10,))
+
+        post4 = f1.iter_series(axis=1).apply(lambda s: int(s.sum()), dtype=int)
+        self.assertEqual(post4.dtype, np.dtype(int))
+        self.assertEqual(post4.shape, (10,))
+
+
     #---------------------------------------------------------------------------
     def test_frame_iter_tuple_items_a(self) -> None:
         records = (
@@ -273,6 +295,12 @@ class TestUnit(TestCase):
         post2 = f1.iter_element(axis=1).apply(lambda x: '_' + str(x) + '_')
 
         self.assertEqual(post2.to_pairs(0),
+                (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
+
+
+        post3 = f1.iter_element(axis=1).apply(lambda x: '_' + str(x) + '_', dtype=str)
+
+        self.assertEqual(post3.to_pairs(0),
                 (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
 
 

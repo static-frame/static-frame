@@ -589,6 +589,7 @@ class FrameIterSeriesApply(Perf):
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
         from static_frame.core.type_blocks import TypeBlocks
+        from static_frame.core.util import iterable_to_array_1d
 
         self.meta = {
             'float_index_str_row': FunctionMetaData(
@@ -605,11 +606,11 @@ class FrameIterSeriesApply(Perf):
                 ),
             'mixed_index_str_row': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                line_target=TypeBlocks.axis_values
+                line_target=iterable_to_array_1d
                 ),
             'mixed_index_str_row_dtype': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                line_target=TypeBlocks.axis_values
+                line_target=iterable_to_array_1d
                 ),
             'mixed_index_str_column': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,

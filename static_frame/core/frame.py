@@ -1457,7 +1457,7 @@ class Frame(ContainerOperand):
         cursor = None
         try:
             cursor = connection.cursor()
-            cursor.execute(query)
+            cursor.execute(query) # second argument is "parameters"
 
             if columns_select:
                 columns_select = set(columns_select)

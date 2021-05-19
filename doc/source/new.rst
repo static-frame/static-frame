@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.11
+----------
+
+Fixed issue when supplying ``dtype`` arguments to ``apply`` methods with string dtypes.
+
+
 0.8.10
 ----------
 
