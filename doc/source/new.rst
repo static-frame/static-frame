@@ -10,6 +10,8 @@ Added ``parameters`` argument to ``Frame.from_sql`` to perform SQL parameter sub
 
 In group-by operations where the group key is a hashable, the returned ``Index.name`` will be set to that key.
 
+Performance enhancements to ``Bus.iter_element().apply()`` and `Bus.iter_element_items().apply()``.
+
 
 0.8.10
 ----------
