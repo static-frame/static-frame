@@ -38,9 +38,10 @@ PoolArgGen = tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[
 class IterNodeApplyType(Enum):
     SERIES_VALUES = 0
     SERIES_ITEMS = 1
-    SERIES_ITEMS_FLAT = 2 # do not use index class on container
-    FRAME_ELEMENTS = 3
-    INDEX_LABELS = 4
+    SERIES_ITEMS_GROUP_VALUES = 2
+    SERIES_ITEMS_GROUP_LABELS = 3
+    FRAME_ELEMENTS = 4
+    INDEX_LABELS = 5
 
 class IterNodeType(Enum):
     VALUES = 1
@@ -559,13 +560,26 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     index_constructor=index_constructor
                     )
 
-        elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_FLAT:
+        elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES:
             # use default index constructor
             # NOTE: when used on labels, this key is given; when used on lables (indices) depth_level is given; only take the key if it is a hashable (a string or a tuple, not a slice, list, or array)
             try:
                 name_index = name_filter(kwargs.get('key', None))
             except TypeError:
                 name_index = None
+
+            index_constructor = partial(
+                    Index.from_labels,
+                    name=name_index)
+            apply_constructor = partial(
+                    Series.from_items,
+                    index_constructor=index_constructor,
+                    )
+
+        elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS:
+            # use default index constructor
+            # will always have `depth_level` in kwargs, and for Frame an axis; could attempt to get name from the index if it has a name
+            name_index = None
 
             index_constructor = partial(
                     Index.from_labels,
@@ -599,7 +613,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     ) -> np.ndarray:
                 # NOTE: name argument is for common interface
                 # PERF: passing count here permits faster generator realization
-                array, _ = iterable_to_array_1d(values, count=shape[0], dtype=dtype) #type:
+                array, _ = iterable_to_array_1d(values, count=shape[0], dtype=dtype) #type: ignore
                 return array
         else:
             raise NotImplementedError(self._apply_type) #pragma: no cover

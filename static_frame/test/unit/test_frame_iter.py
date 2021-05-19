@@ -387,7 +387,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 ((False, (2, 3)), (True, (2, 3)))
                 )
-
+        self.assertEqual(post.index.name, 's')
 
     def test_frame_iter_group_b(self) -> None:
         columns = tuple('pqrst')

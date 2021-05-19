@@ -8,6 +8,8 @@ Fixed issue when supplying ``dtype`` arguments to ``apply`` methods with string 
 
 Added ``parameters`` argument to ``Frame.from_sql`` to perform SQL parameter substitution.
 
+In group-by operations where the group key is a hashable, the returned ``Index.name`` will be set to that key.
+
 
 0.8.10
 ----------

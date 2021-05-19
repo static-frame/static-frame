@@ -913,9 +913,9 @@ def iterable_to_array_1d(
 
     if values.__class__ is range:
         # translate range to np.arange to avoid iteration
-        array = np.arange(start=values.start,
-                stop=values.stop,
-                step=values.step,
+        array = np.arange(start=values.start, #type: ignore
+                stop=values.stop, #type: ignore
+                step=values.step, #type: ignore
                 dtype=dtype)
         array.flags.writeable = False
         return array, True

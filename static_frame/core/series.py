@@ -693,7 +693,7 @@ class Series(ContainerOperand):
                 function_items=self._axis_group_labels_items,
                 function_values=self._axis_group_labels,
                 yield_type=IterNodeType.VALUES,
-                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES
                 )
 
     @property
@@ -703,7 +703,7 @@ class Series(ContainerOperand):
                 function_items=self._axis_group_labels_items,
                 function_values=self._axis_group_labels,
                 yield_type=IterNodeType.ITEMS,
-                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
                 )
 
     #---------------------------------------------------------------------------
