@@ -3,38 +3,19 @@ import typing as tp
 
 import numpy as np
 import frame_fixtures as ff
-from numpy.core.arrayprint import str_format
 
 import static_frame as sf
-# from static_frame import Index
 from static_frame import IndexHierarchy
-# from static_frame import IndexHierarchyGO
-# from static_frame import IndexYearMonth
-# from static_frame import IndexYearGO
-# from static_frame import IndexYear
 from static_frame import IndexDate
-# from static_frame import IndexDateGO
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import TypeBlocks
-# from static_frame import mloc
-# from static_frame import ILoc
 from static_frame import HLoc
-# from static_frame import DisplayConfig
-# from static_frame import IndexAutoFactory
-
 from static_frame.test.test_case import TestCase
-# from static_frame.test.test_case import skip_win
-# from static_frame.test.test_case import skip_linux_no_display
-# from static_frame.test.test_case import skip_pylt37
-# from static_frame.test.test_case import temp_file
-# from static_frame.core.exception import ErrorInitFrame
-# from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import AxisInvalid
 
 nan = np.nan
-
 
 
 class TestUnit(TestCase):
@@ -245,6 +226,10 @@ class TestUnit(TestCase):
         post4 = f1.iter_series(axis=1).apply(lambda s: int(s.sum()), dtype=int)
         self.assertEqual(post4.dtype, np.dtype(int))
         self.assertEqual(post4.shape, (10,))
+
+        post5 = f1.iter_series(axis=1).apply(lambda s: int(s.sum()), dtype=object)
+        self.assertEqual(post5.dtype, object)
+        self.assertEqual(post5.shape, (10,))
 
 
     #---------------------------------------------------------------------------
