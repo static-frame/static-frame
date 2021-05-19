@@ -412,7 +412,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
                 yield_type=IterNodeType.VALUES,
-                apply_type=IterNodeApplyType.SERIES_ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
                 )
 
     @property
@@ -425,7 +425,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
                 yield_type=IterNodeType.ITEMS,
-                apply_type=IterNodeApplyType.SERIES_ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
                 )
 
     #---------------------------------------------------------------------------
