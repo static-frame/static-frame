@@ -82,6 +82,15 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
         'i', 'u' # int kinds
         ))
 
+# all numeric times, plus bool
+DTYPE_NUMERICABLE_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_BOOL_KIND,
+        'i', 'u' # int kinds
+))
+
+
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
 DTYPE_STR = np.dtype(str)
@@ -134,7 +143,7 @@ TIME_DELTA_ATTR_MAP = (
         )
 
 # ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
-UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
+UFUNC_AXIS_STR_TO_OBJ = frozenset((np.min, np.max, np.sum))
 
 #-------------------------------------------------------------------------------
 # utility type groups
@@ -595,8 +604,10 @@ def ufunc_axis_skipna(
         ) -> np.ndarray:
     '''For ufunc array application, when two ufunc versions are available. Expected to always reduce dimensionality.
     '''
-
-    if array.dtype.kind == 'O':
+    kind = array.dtype.kind
+    if kind in DTYPE_NUMERICABLE_KINDS:
+        v = array
+    elif kind == 'O':
         # replace None with nan
         if skipna:
             is_not_none = np.not_equal(array, None)
@@ -616,13 +627,13 @@ def ufunc_axis_skipna(
             else:
                 v = array
 
-    elif array.dtype.kind == 'M' or array.dtype.kind == 'm':
+    elif kind == 'M' or kind == 'm':
         # dates do not support skipna functions
         return ufunc(array, axis=axis, out=out)
 
-    elif array.dtype.kind in DTYPE_STR_KINDS and ufunc in UFUNC_AXIS_STR_TO_OBJ:
+    elif kind in DTYPE_STR_KINDS and ufunc in UFUNC_AXIS_STR_TO_OBJ:
         v = array.astype(object)
-    else:
+    else: # normal string dtypes
         v = array
 
     if skipna:

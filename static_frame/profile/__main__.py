@@ -590,13 +590,16 @@ class FrameIterSeriesApply(Perf):
 
         from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.util import iterable_to_array_1d
+        from static_frame.core.util import prepare_iter_for_array
 
         self.meta = {
             'float_index_str_row': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=prepare_iter_for_array,
+                explanation='appears to all be in apply_iter gen exp'
                 ),
             'float_index_str_row_dtype': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'float_index_str_column': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
@@ -605,11 +608,12 @@ class FrameIterSeriesApply(Perf):
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
             'mixed_index_str_row': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN,
-                line_target=iterable_to_array_1d
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=TypeBlocks._blocks_to_array,
+                explanation='possible improvement with _blocks_to_array in C'
                 ),
             'mixed_index_str_row_dtype': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=iterable_to_array_1d
                 ),
             'mixed_index_str_column': FunctionMetaData(

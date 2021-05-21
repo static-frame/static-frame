@@ -604,7 +604,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return tp.cast(tp.Tuple[int, ...], self._labels.shape)
+        return self._labels.shape
 
     @property
     def ndim(self) -> int:
@@ -616,7 +616,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return tp.cast(int, self._labels.ndim)
+        return self._labels.ndim
 
     @property
     def size(self) -> int:
@@ -628,7 +628,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return tp.cast(int, self._labels.size)
+        return self._labels.size
 
     @property
     def nbytes(self) -> int:
@@ -640,7 +640,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return tp.cast(int, self._labels.nbytes)
+        return self._labels.nbytes
 
     #---------------------------------------------------------------------------
     # set operations

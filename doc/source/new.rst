@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.8.12
+----------
+
+Performance enhancements to ``Quilt.iter_series().apply()``, ``Quilt.iter_tuple().apply()``, ``Quilt.iter_array().apply()``.
+
+
 0.8.11
 ----------
 
