@@ -5071,7 +5071,7 @@ class Frame(ContainerOperand):
             columns = chain(self._index.names, self._columns.values)
 
         if self._columns.depth > 1:
-            index_constructors = tuple(self._index._levels.index_types())
+            index_constructors = tuple(self._columns._levels.index_types())
             columns = IndexHierarchy.from_labels(columns, index_constructors=index_constructors)
 
         return self.__class__(
