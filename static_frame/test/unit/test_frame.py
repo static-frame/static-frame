@@ -9884,8 +9884,19 @@ class TestUnit(TestCase):
         self.assertEqual(post.columns.name, ('b', 'values'))
         # NOTE: because we are filling na with empty strings, we get object dtypes
         self.assertEqual(post.dtypes.values.tolist(),
-                [np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'),np. dtype('O'), np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'), np.dtype('O')]
-                )
+                [
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                ],
+        )
         self.assertEqual(post.to_pairs(0),
                 (((19, 'z'), ((('left', 'down'), ''), (('left', 'up'), 'far'), (('right', 'down'), ''), (('right', 'up'), ''))), ((19, 'a'), ((('left', 'down'), ''), (('left', 'up'), 0), (('right', 'down'), ''), (('right', 'up'), ''))), ((20, 'z'), ((('left', 'down'), ''), (('left', 'up'), 'near'), (('right', 'down'), ''), (('right', 'up'), 'far'))), ((20, 'a'), ((('left', 'down'), ''), (('left', 'up'), 4), (('right', 'down'), ''), (('right', 'up'), 1))), ((21, 'z'), ((('left', 'down'), 'far'), (('left', 'up'), ''), (('right', 'down'), ''), (('right', 'up'), 'near'))), ((21, 'a'), ((('left', 'down'), 2), (('left', 'up'), ''), (('right', 'down'), ''), (('right', 'up'), 5))), ((22, 'z'), ((('left', 'down'), 'near'), (('left', 'up'), ''), (('right', 'down'), 'far'), (('right', 'up'), ''))), ((22, 'a'), ((('left', 'down'), 6), (('left', 'up'), ''), (('right', 'down'), 3), (('right', 'up'), ''))), ((23, 'z'), ((('left', 'down'), ''), (('left', 'up'), ''), (('right', 'down'), 'near'), (('right', 'up'), ''))), ((23, 'a'), ((('left', 'down'), ''), (('left', 'up'), ''), (('right', 'down'), 7), (('right', 'up'), ''))))
                 )
