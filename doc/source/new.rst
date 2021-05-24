@@ -1,6 +1,25 @@
 What is New in Static Frame
 ===============================
 
+
+0.8.12
+----------
+
+Performance enhancements to ``Quilt.iter_series().apply()``, ``Quilt.iter_tuple().apply()``, ``Quilt.iter_array().apply()``.
+
+
+0.8.11
+----------
+
+Fixed issue when supplying ``dtype`` arguments to ``apply`` methods with string dtypes.
+
+Added ``parameters`` argument to ``Frame.from_sql`` to perform SQL parameter substitution.
+
+In group-by operations where the group key is a hashable, the returned ``Index.name`` will be set to that key.
+
+Performance enhancements to ``Bus.iter_element().apply()`` and `Bus.iter_element_items().apply()``.
+
+
 0.8.10
 ----------
 

@@ -67,6 +67,39 @@ class Native(PerfKey): pass
 class Reference(PerfKey): pass
 
 
+
+#-------------------------------------------------------------------------------
+
+class IndexIterLabelApply(Perf):
+    NUMBER = 200
+
+    def __init__(self) -> None:
+        super().__init__()
+
+
+        self.sfi_int = ff.parse('s(100,1)|i(I,int)|c(I,int)').index
+        self.pdi_int = self.sfi_int.to_pandas()
+
+class IndexIterLabelApply_N(IndexIterLabelApply, Native):
+
+    def index_int(self) -> None:
+        self.sfi_int.iter_label().apply(lambda s: s * 10)
+
+    def index_int_dtype(self) -> None:
+        self.sfi_int.iter_label().apply(lambda s: s * 10, dtype=int)
+
+class IndexIterLabelApply_R(IndexIterLabelApply, Reference):
+
+    def index_int(self) -> None:
+        # Pandas Index to not have an apply
+        pd.Series(self.pdi_int).apply(lambda s: s * 10)
+
+    def index_int_dtype(self) -> None:
+        # Pandas Index to not have an apply
+        pd.Series(self.pdi_int).apply(lambda s: s * 10)
+
+
+
 #-------------------------------------------------------------------------------
 class SeriesIsNa(Perf):
     NUMBER = 10_000
@@ -589,13 +622,17 @@ class FrameIterSeriesApply(Perf):
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
         from static_frame.core.type_blocks import TypeBlocks
+        from static_frame.core.util import iterable_to_array_1d
+        from static_frame.core.util import prepare_iter_for_array
 
         self.meta = {
             'float_index_str_row': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=prepare_iter_for_array,
+                explanation='appears to all be in apply_iter gen exp'
                 ),
             'float_index_str_row_dtype': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'float_index_str_column': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
@@ -604,10 +641,18 @@ class FrameIterSeriesApply(Perf):
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
             'mixed_index_str_row': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN,
-                line_target=TypeBlocks.axis_values
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=TypeBlocks._blocks_to_array,
+                explanation='possible improvement with _blocks_to_array in C'
+                ),
+            'mixed_index_str_row_dtype': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=iterable_to_array_1d
                 ),
             'mixed_index_str_column': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                ),
+            'mixed_index_str_column_dtype': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
             }
@@ -636,9 +681,19 @@ class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
         s = self.sff_mixed.iter_series(axis=1).apply(lambda s: s.iloc[-1])
         assert 'zwVN' in s.index
 
+    def mixed_index_str_row_dtype(self) -> None:
+        s = self.sff_mixed.iter_series(axis=1).apply(lambda s: s.iloc[-1], dtype=str)
+        assert 'zwVN' in s.index
+
+
     def mixed_index_str_column(self) -> None:
         s = self.sff_mixed.iter_series(axis=0).apply(lambda s: s.iloc[-1])
         assert -149082 in s.index
+
+    def mixed_index_str_column_dtype(self) -> None:
+        s = self.sff_mixed.iter_series(axis=0).apply(lambda s: s.iloc[-1], dtype=str)
+        assert -149082 in s.index
+
 
 
 class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
@@ -665,42 +720,83 @@ class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
         s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=1)
         assert 'zwVN' in s.index
 
+    def mixed_index_str_row_dtype(self) -> None:
+        s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=1)
+        assert 'zwVN' in s.index
+
+
     def mixed_index_str_column(self) -> None:
         s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=0)
         assert -149082 in s.index
 
-
-
+    def mixed_index_str_column_dtype(self) -> None:
+        s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=0)
+        assert -149082 in s.index
 
 #-------------------------------------------------------------------------------
-
-class IndexIterLabelApply(Perf):
-    NUMBER = 200
+class FrameIterGroupApply(Perf):
+    NUMBER = 1000
 
     def __init__(self) -> None:
         super().__init__()
 
+        self.sff_int_index_str = ff.parse('s(1000,10)|v(int)|i(I,str)|c(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 10).assign[sf.ILoc[1]].apply(lambda s: s % 2)
+        self.pdf_int_index_str = self.sff_int_index_str.to_pandas()
 
-        self.sfi_int = ff.parse('s(100,1)|i(I,int)|c(I,int)').index
-        self.pdi_int = self.sfi_int.to_pandas()
 
-class IndexIterLabelApply_N(IndexIterLabelApply, Native):
+        self.sff_str_index_str = ff.parse('s(1000,10)|v(str)|i(I,str)|c(I,str)').assign[
+                sf.ILoc[0]].apply(lambda s: s.iter_element().apply(
+                        lambda e: chr(ord(e[3]) % 10 + 97))).assign[
+                sf.ILoc[1]].apply(lambda s: s.iter_element().apply(
+                        lambda e: chr(ord(e[3]) % 2 + 97)))
 
-    def index_int(self) -> None:
-        self.sfi_int.iter_label().apply(lambda s: s * 10)
+        self.pdf_str_index_str = self.sff_str_index_str.to_pandas()
 
-    def index_int_dtype(self) -> None:
-        self.sfi_int.iter_label().apply(lambda s: s * 10, dtype=int)
 
-class IndexIterLabelApply_R(IndexIterLabelApply, Reference):
+        from static_frame.core.type_blocks import TypeBlocks
+        # from static_frame.core.util import iterable_to_array_1d
+        # from static_frame.core.util import prepare_iter_for_array
 
-    def index_int(self) -> None:
-        # Pandas Index to not have an apply
-        pd.Series(self.pdi_int).apply(lambda s: s * 10)
+        self.meta = {
+            'int_index_str_double': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=TypeBlocks._all_block_slices
+                ),
+            }
 
-    def index_int_dtype(self) -> None:
-        # Pandas Index to not have an apply
-        pd.Series(self.pdi_int).apply(lambda s: s * 10)
+class FrameIterGroupApply_N(FrameIterGroupApply, Native):
+
+    def int_index_str_single(self) -> None:
+        self.sff_int_index_str.iter_group('zZbu').apply(lambda f: len(f))
+
+    def int_index_str_double(self) -> None:
+        self.sff_int_index_str.iter_group(['zZbu', 'ztsv']).apply(lambda f: len(f))
+
+
+    def str_index_str_single(self) -> None:
+        self.sff_str_index_str.iter_group('zZbu').apply(lambda f: len(f))
+
+    def str_index_str_double(self) -> None:
+        self.sff_str_index_str.iter_group(['zZbu', 'ztsv']).apply(lambda f: len(f))
+
+
+class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
+
+    def int_index_str_single(self) -> None:
+        self.pdf_int_index_str.groupby('zZbu').apply(lambda f: len(f))
+
+    def int_index_str_double(self) -> None:
+        # NOTE: this produces a hierarchical index
+        self.pdf_int_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f))
+
+
+    def str_index_str_single(self) -> None:
+        self.pdf_str_index_str.groupby('zZbu').apply(lambda f: len(f))
+
+    def str_index_str_double(self) -> None:
+        # NOTE: this produces a hierarchical index
+        self.pdf_str_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f))
+
 
 
 
@@ -786,7 +882,6 @@ def yield_classes(
         yield runners, pattern_func
 
 
-
 def profile(
         cls_runner: tp.Type[Perf],
         pattern_func: str,
@@ -812,6 +907,8 @@ def profile(
 def graph(
         cls_runner: tp.Type[Perf],
         pattern_func: str,
+        threshold_edge: float = 0.1,
+        threshold_node: float = 0.5,
         ) -> None:
     '''
     Profile the `sf` function from the supplied class.
@@ -837,8 +934,8 @@ def graph(
         gprof2dot.main([
             '--format', 'pstats',
             '--output', fp_dot,
-            '--edge-thres', '0', # 0.1 default
-            '--node-thres', '0', # 0.5 default
+            '--edge-thres', threshold_edge, # 0.1 default
+            '--node-thres', threshold_node, # 0.5 default
             fp_pstat
         ])
         os.system(f'dot {fp_dot} -Tpng -Gdpi=300 -o {fp_png}; eog {fp_png} &')
@@ -868,7 +965,6 @@ def instrument(
 
         print(profiler.output_text(unicode=True, color=True, timeline=timeline, show_all=True))
 
-
 def line(
         cls_runner: tp.Type[Perf],
         pattern_func: str,
@@ -885,7 +981,7 @@ def line(
         f()
         profiler.disable()
         profiler.print_stats()
-        # import ipdb; ipdb.set_trace()
+
 #-------------------------------------------------------------------------------
 
 PerformanceRecord = tp.MutableMapping[str,
@@ -922,7 +1018,7 @@ def performance(
         row['r/n'] = row[Reference.__name__] / row[Native.__name__] #type: ignore
         row['win'] = row['r/n'] > .99 #type: ignore
 
-        if runner_n.meta is not None:
+        if runner_n.meta is not None and func_name in runner_n.meta:
             row['status'] = runner_n.meta[func_name].perf_status
             row['explanation'] = runner_n.meta[func_name].explanation
         else:

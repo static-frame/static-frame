@@ -46,7 +46,6 @@ from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import mloc
-from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import row_1d_filter
@@ -57,6 +56,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import isin_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
@@ -155,7 +155,7 @@ class TypeBlocks(ContainerOperand):
                 column_count += c
                 block_count += 1
 
-        # blocks cam be empty
+        # blocks can be empty
         if row_count is None:
             if shape_reference is not None:
                 # if columns have gone to zero, and this was created from a TB that had rows, continue to represent those rows
@@ -263,10 +263,10 @@ class TypeBlocks(ContainerOperand):
             shape: tp.Tuple[int, int]
             ) -> None:
         '''
-        Default constructor. We own all lists passed in to this constructor.
+        Default constructor. We own all lists passed in to this constructor. This instance takes ownership of all lists passed to it.
 
         Args:
-            blocks: A list of one or two-dimensional NumPy arrays
+            blocks: A list of one or two-dimensional NumPy arrays.
             dtypes: list of dtypes per external column
             index: list of pairs, where the first element is the block index, the second elemetns is the intra-block column
             shape: two-element tuple defining row and column count. A (0, 0) shape is permitted for empty TypeBlocks.
@@ -410,8 +410,7 @@ class TypeBlocks(ContainerOperand):
         if len(blocks) == 1:
             if not row_multiple:
                 return row_1d_filter(blocks[0])
-            else:
-                return column_2d_filter(blocks[0])
+            return column_2d_filter(blocks[0])
 
         # get empty array and fill parts
         # NOTE: row_dtype may be None if an unfillable array; defaults to NP default
@@ -422,19 +421,23 @@ class TypeBlocks(ContainerOperand):
             array = np.empty(shape, dtype=row_dtype)
 
         pos = 0
+        array_ndim = array.ndim
+
         for block in blocks:
-            if block.ndim == 1:
+            block_ndim = block.ndim
+
+            if block_ndim == 1:
                 end = pos + 1
             else:
                 end = pos + block.shape[1]
 
-            if array.ndim == 1:
-                array[pos: end] = block[:] # gets a row from array
+            if array_ndim == 1:
+                array[pos: end] = block # gets a row from array
             else:
-                if block.ndim == 1:
-                    array[:, pos] = block[:] # a 1d array
+                if block_ndim == 1:
+                    array[NULL_SLICE, pos] = block # a 1d array
                 else:
-                    array[:, pos: end] = block[:] # gets a row / row slice from array
+                    array[NULL_SLICE, pos: end] = block # gets a row / row slice from array
             pos = end
 
         array.flags.writeable = False
@@ -1079,7 +1082,7 @@ class TypeBlocks(ContainerOperand):
         Returns:
             A generator iterable of pairs, where values are block index, slice or column index
         '''
-        if key is None or (isinstance(key, slice) and key == NULL_SLICE):
+        if key is None or (key.__class__ is slice and key == NULL_SLICE):
             yield from self._all_block_slices() # slow from line profiler, 80% of this function call
         else:
             if isinstance(key, INT_TYPES):
@@ -2005,13 +2008,13 @@ class TypeBlocks(ContainerOperand):
             single_row = True
 
         # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
-        for block_idx, slc in self._key_to_block_slices(column_key): # slow from line profiler
+        for block_idx, slc in self._key_to_block_slices(column_key): # PREF: slow from line profiler
             b = self._blocks[block_idx]
             if b.ndim == 1: # given 1D array, our row key is all we need
                 if row_key_null:
                     block_sliced = b
                 else:
-                    block_sliced = b[row_key] # slow from line profiler
+                    block_sliced = b[row_key] # PERF: slow from line profiler
             else: # given 2D, use row key and column slice
                 if row_key_null:
                     block_sliced = b[NULL_SLICE, slc]
@@ -2101,9 +2104,8 @@ class TypeBlocks(ContainerOperand):
         if isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key]
             b = self._blocks[block_idx]
-            row_key_null = (row_key is None or
-                    (isinstance(row_key, slice)
-                    and row_key == NULL_SLICE))
+            row_key_null = row_key is None or (row_key.__class__ is slice
+                    and row_key == NULL_SLICE)
             if b.ndim == 1:
                 if row_key_null: # return a column
                     return TypeBlocks.from_blocks(b)

@@ -19,7 +19,8 @@ from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import array_from_iterator
+from static_frame.core.util import name_filter
+# from static_frame.core.util import array_from_iterator
 
 
 if tp.TYPE_CHECKING:
@@ -37,9 +38,10 @@ PoolArgGen = tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[
 class IterNodeApplyType(Enum):
     SERIES_VALUES = 0
     SERIES_ITEMS = 1
-    SERIES_ITEMS_FLAT = 2 # do not use index class on container
-    FRAME_ELEMENTS = 3
-    INDEX_LABELS = 4
+    SERIES_ITEMS_GROUP_VALUES = 2
+    SERIES_ITEMS_GROUP_LABELS = 3
+    FRAME_ELEMENTS = 4
+    INDEX_LABELS = 5
 
 class IterNodeType(Enum):
     VALUES = 1
@@ -56,7 +58,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             '_yield_type',
             '_apply_constructor',
             '_apply_type',
-            '_shape',
             )
 
     INTERFACE = (
@@ -81,7 +82,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             yield_type: IterNodeType,
             apply_constructor: tp.Callable[..., FrameOrSeries],
             apply_type: IterNodeApplyType,
-            shape: tp.Optional[tp.Tuple[int, ...]],
         ) -> None:
         '''
         Args:
@@ -92,7 +92,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         self._yield_type = yield_type
         self._apply_constructor: tp.Callable[..., FrameOrSeries] = apply_constructor
         self._apply_type = apply_type
-        self._shape = shape
 
     #---------------------------------------------------------------------------
 
@@ -487,7 +486,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             function_values: tp.Callable[..., tp.Iterable[tp.Any]],
             function_items: tp.Callable[..., tp.Iterable[tp.Tuple[tp.Any, tp.Any]]],
             yield_type: IterNodeType,
-            apply_type: IterNodeApplyType = IterNodeApplyType.SERIES_ITEMS
+            apply_type: IterNodeApplyType,
             ) -> None:
         '''
         Args:
@@ -505,9 +504,13 @@ class IterNode(tp.Generic[FrameOrSeries]):
             ) -> IterNodeDelegate[FrameOrSeries]:
         '''
         In usage as an iteator, the args passed here are expected to be argument for the core iterators, i.e., axis arguments.
+
+        Args:
+            kwargs: kwarg args to be passed to both self._func_values and self._func_items
         '''
         from static_frame.core.series import Series
         from static_frame.core.frame import Frame
+        from static_frame.core.index import Index
 
         func_values = partial(self._func_values, **kwargs)
         func_items = partial(self._func_items, **kwargs)
@@ -532,29 +535,59 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     dtype: DtypeSpecifier,
                     name: NameType = None,
                     ) -> Series:
-                if dtype is not None:
-                    values = array_from_iterator(
-                            values,
-                            count=shape[0], # type: ignore
-                            dtype=dtype,
-                            )
+                # PERF: passing count here permits faster generator realization
+                values, _ = iterable_to_array_1d(
+                        values,
+                        count=shape[0], # type: ignore
+                        dtype=dtype,
+                        )
                 return Series(values, name=name, index=index, own_index=own_index)
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
-            # Only use this path if the Index is different than the source container
+            # Only use this path if the Index to be returned is different than the source container
+            name_index = None # NOTE: what should this be?
             if isinstance(self._container, Frame) and kwargs['axis'] == 0:
-                index_constructor = self._container._columns.from_labels
+                index_constructor = partial(
+                        self._container._columns.from_labels,
+                        name=name_index)
             else:
-                index_constructor = self._container._index.from_labels
+                index_constructor = partial(
+                        self._container._index.from_labels,
+                        name=name_index)
             # always return a Series
             apply_constructor = partial(
                     Series.from_items,
                     index_constructor=index_constructor
                     )
 
-        elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_FLAT:
+        elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES:
             # use default index constructor
-            apply_constructor = Series.from_items
+            # NOTE: when used on labels, this key is given; when used on lables (indices) depth_level is given; only take the key if it is a hashable (a string or a tuple, not a slice, list, or array)
+            try:
+                name_index = name_filter(kwargs.get('key', None))
+            except TypeError:
+                name_index = None
+
+            index_constructor = partial(
+                    Index.from_labels,
+                    name=name_index)
+            apply_constructor = partial(
+                    Series.from_items,
+                    index_constructor=index_constructor,
+                    )
+
+        elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS:
+            # use default index constructor
+            # will always have `depth_level` in kwargs, and for Frame an axis; could attempt to get name from the index if it has a name
+            name_index = None
+
+            index_constructor = partial(
+                    Index.from_labels,
+                    name=name_index)
+            apply_constructor = partial(
+                    Series.from_items,
+                    index_constructor=index_constructor,
+                    )
 
         elif self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
             assert isinstance(self._container, Frame) # for typing
@@ -578,11 +611,9 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     dtype: DtypeSpecifier = None,
                     name: NameType = None,
                     ) -> np.ndarray:
-                # NOTE: cannot use name argument with an array; here for compat
-                if dtype is not None:
-                    array = array_from_iterator(values, count=shape[0], dtype=dtype) #type: ignore
-                else:
-                    array, _ = iterable_to_array_1d(values, dtype)
+                # NOTE: name argument is for common interface
+                # PERF: passing count here permits faster generator realization
+                array, _ = iterable_to_array_1d(values, count=shape[0], dtype=dtype) #type: ignore
                 return array
         else:
             raise NotImplementedError(self._apply_type) #pragma: no cover
@@ -593,7 +624,6 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 yield_type=self._yield_type,
                 apply_constructor=tp.cast(tp.Callable[..., FrameOrSeries], apply_constructor),
                 apply_type=self._apply_type,
-                shape=shape, # NOTE: may not be needed
                 )
 
 

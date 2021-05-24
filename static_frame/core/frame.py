@@ -1438,6 +1438,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
+            parameters: tp.Iterable[tp.Any] = (),
             ) -> 'Frame':
         '''
         Frame constructor from an SQL query and a database connection object.
@@ -1449,6 +1450,7 @@ class Frame(ContainerOperand):
             columns_select: An optional iterable of field names to extract from the results of the query.
             {name}
             {consolidate_blocks}
+            parameters: Provide a list of values for an SQL query expecting parameter substitution.
         '''
         columns = None
         own_columns = False
@@ -1457,7 +1459,7 @@ class Frame(ContainerOperand):
         cursor = None
         try:
             cursor = connection.cursor()
-            cursor.execute(query)
+            cursor.execute(query, parameters)
 
             if columns_select:
                 columns_select = set(columns_select)
@@ -2823,7 +2825,7 @@ class Frame(ContainerOperand):
                 function_values=self._axis_group_loc,
                 function_items=self._axis_group_loc_items,
                 yield_type=IterNodeType.VALUES,
-                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
 
     @property
@@ -2836,7 +2838,7 @@ class Frame(ContainerOperand):
                 function_values=self._axis_group_loc,
                 function_items=self._axis_group_loc_items,
                 yield_type=IterNodeType.ITEMS,
-                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
 
     @property
@@ -2849,7 +2851,7 @@ class Frame(ContainerOperand):
                 function_values=self._axis_group_labels,
                 function_items=self._axis_group_labels_items,
                 yield_type=IterNodeType.VALUES,
-                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS,
                 )
 
     @property
@@ -2862,7 +2864,7 @@ class Frame(ContainerOperand):
                 function_values=self._axis_group_labels,
                 function_items=self._axis_group_labels_items,
                 yield_type=IterNodeType.ITEMS,
-                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS,
                 )
 
     #---------------------------------------------------------------------------
@@ -2881,7 +2883,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -2898,7 +2901,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -2915,7 +2919,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -2932,7 +2937,8 @@ class Frame(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     #---------------------------------------------------------------------------
