@@ -5051,7 +5051,12 @@ class Frame(ContainerOperand):
         '''
 
         def blocks() -> tp.Iterator[np.ndarray]:
-            yield self.index.values # 2D immutable array
+            if self._index.ndim == 1:
+                yield self._index.values
+            else:
+                if self._index._recache:
+                    self._index._update_array_cache()
+                yield from self._index._blocks._blocks
             for b in self._blocks._blocks:
                 yield b
 
