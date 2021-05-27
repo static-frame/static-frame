@@ -9,6 +9,7 @@ from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
+from arraykit import name_filter
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import AnyCallable
@@ -19,7 +20,6 @@ from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import name_filter
 # from static_frame.core.util import array_from_iterator
 
 
