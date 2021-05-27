@@ -63,6 +63,7 @@ DTYPE_INT_KINDS = ('i', 'u') # signed and unsigned
 DTYPE_INEXACT_KINDS = (DTYPE_FLOAT_KIND, DTYPE_COMPLEX_KIND) # kinds that support NaN values
 DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
 
+
 # all kinds that can have NaN, NaT, or None
 DTYPE_NA_KINDS = frozenset((
         DTYPE_FLOAT_KIND,
@@ -81,6 +82,15 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
         'U', 'S', # str kinds
         'i', 'u' # int kinds
         ))
+
+# all numeric times, plus bool
+DTYPE_NUMERICABLE_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_BOOL_KIND,
+        'i', 'u' # int kinds
+))
+
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
@@ -134,7 +144,7 @@ TIME_DELTA_ATTR_MAP = (
         )
 
 # ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
-UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
+UFUNC_AXIS_STR_TO_OBJ = frozenset((np.min, np.max, np.sum))
 
 #-------------------------------------------------------------------------------
 # utility type groups
@@ -603,8 +613,10 @@ def ufunc_axis_skipna(
         ) -> np.ndarray:
     '''For ufunc array application, when two ufunc versions are available. Expected to always reduce dimensionality.
     '''
-
-    if array.dtype.kind == 'O':
+    kind = array.dtype.kind
+    if kind in DTYPE_NUMERICABLE_KINDS:
+        v = array
+    elif kind == 'O':
         # replace None with nan
         if skipna:
             is_not_none = np.not_equal(array, None)
@@ -624,13 +636,13 @@ def ufunc_axis_skipna(
             else:
                 v = array
 
-    elif array.dtype.kind == 'M' or array.dtype.kind == 'm':
+    elif kind == 'M' or kind == 'm':
         # dates do not support skipna functions
         return ufunc(array, axis=axis, out=out)
 
-    elif array.dtype.kind in DTYPE_STR_KINDS and ufunc in UFUNC_AXIS_STR_TO_OBJ:
+    elif kind in DTYPE_STR_KINDS and ufunc in UFUNC_AXIS_STR_TO_OBJ:
         v = array.astype(object)
-    else:
+    else: # normal string dtypes
         v = array
 
     if skipna:
@@ -898,14 +910,20 @@ def prepare_iter_for_array(
 
 def iterable_to_array_1d(
         values: tp.Iterable[tp.Any],
-        dtype: DtypeSpecifier = None
+        dtype: DtypeSpecifier = None,
+        count: tp.Optional[int] = None,
         ) -> tp.Tuple[np.ndarray, bool]:
     '''
     Convert an arbitrary Python iterable to a 1D NumPy array without any undesirable type coercion.
 
+    Args:
+        count: if provided, can be used to optimize some array creation scenarios.
+
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
+    dtype = None if dtype is None else np.dtype(dtype) # convert dtype specifier to a dtype
+
     if values.__class__ is np.ndarray:
         if values.ndim != 1: #type: ignore
             raise RuntimeError('expected 1d array')
@@ -913,11 +931,11 @@ def iterable_to_array_1d(
             raise RuntimeError(f'Supplied dtype {dtype} not set on supplied array.')
         return values, len(values) <= 1 #type: ignore
 
-    if isinstance(values, range):
+    if values.__class__ is range:
         # translate range to np.arange to avoid iteration
-        array = np.arange(start=values.start,
-                stop=values.stop,
-                step=values.step,
+        array = np.arange(start=values.start, #type: ignore
+                stop=values.stop, #type: ignore
+                step=values.step, #type: ignore
                 dtype=dtype)
         array.flags.writeable = False
         return array, True
@@ -933,12 +951,27 @@ def iterable_to_array_1d(
         has_tuple = False
         values_for_construct = (values,)
     elif dtype is None:
-        # this gives as dtype only None, or object, letting array constructor do the rest
+        # this returns as dtype only None, or object, letting array constructor do the rest
         dtype, has_tuple, values_for_construct = prepare_iter_for_array(values)
         if len(values_for_construct) == 0:
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
-    else:
+    else: # dtype is provided
         is_gen, copy_values = is_gen_copy_values(values)
+
+        if is_gen and count and dtype.kind not in DTYPE_STR_KINDS:
+            if dtype.kind != DTYPE_OBJECT_KIND:
+                # if dtype is int this might raise OverflowError
+                array = np.fromiter(values,
+                        count=count,
+                        dtype=dtype,
+                        )
+            else: # object dtypes
+                array = np.empty(count, dtype=dtype)
+                for i, element in enumerate(values):
+                    array[i] = element
+            array.flags.writeable = False
+            return array, False
+
         if copy_values:
             # we have to realize into sequence for numpy creation
             values_for_construct = tuple(values)
@@ -951,7 +984,7 @@ def iterable_to_array_1d(
             v.flags.writeable = False
             return v, True
         #as we have not iterated iterable, assume that there might be tuples if the dtype is object
-        has_tuple = dtype in DTYPE_SPECIFIERS_OBJECT
+        has_tuple = dtype == DTYPE_OBJECT
 
     if len(values_for_construct) == 1 or isinstance(values, DICTLIKE_TYPES):
         # check values for dictlike, not values_for_construct
@@ -2288,24 +2321,29 @@ def array_from_element_method(*,
     return post
 
 
-def array_from_iterator(iterator: tp.Iterator[tp.Any],
-        count: int,
-        dtype: DtypeSpecifier,
-        ) -> np.ndarray:
-    '''Given an iterator/generaotr of known size and dtype, load it into an array.
-    '''
-    if dtype != object:
-        array = np.fromiter(iterator,
-                count=count,
-                dtype=dtype,
-                )
-    else:
-        array = np.empty(count, dtype=dtype)
-        for i, v in enumerate(iterator):
-            array[i] = v
+# def array_from_iterator(iterator: tp.Iterator[tp.Any],
+#         count: int,
+#         dtype: DtypeSpecifier,
+#         ) -> np.ndarray:
+#     '''Given an iterator/generator of known size and dtype, load it into an array.
+#     '''
+#     dtype = np.dtype(dtype)
+#     if dtype.kind in DTYPE_STR_KINDS:
+#         # unless we know the size of the max size of the string, we have to go through the default construictor.
+#         array, _ = iterable_to_array_1d(iterator, dtype)
+#         return array
+#     elif dtype.kind != DTYPE_OBJECT_KIND:
+#         array = np.fromiter(iterator,
+#                 count=count,
+#                 dtype=dtype,
+#                 )
+#     else: # object types
+#         array = np.empty(count, dtype=dtype)
+#         for i, v in enumerate(iterator):
+#             array[i] = v
 
-    array.flags.writeable = False
-    return array
+#     array.flags.writeable = False
+#     return array
 
 
 #-------------------------------------------------------------------------------

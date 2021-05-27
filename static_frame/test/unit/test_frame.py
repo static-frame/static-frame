@@ -9129,6 +9129,19 @@ class TestUnit(TestCase):
                 (('date', ((20.0, np.datetime64('2006-01-01')), (21.0, np.datetime64('2006-01-01')), (22.0, np.datetime64('2006-01-02')), (23.0, np.datetime64('2006-01-02')))), ('identifier', ((20.0, 'a1'), (21.0, 'b2'), (22.0, 'a1'), (23.0, 'b2'))), ('value', ((20.0, 12.5), (21.0, 12.5), (22.0, 12.5), (23.0, 12.5))))
                 )
 
+    def test_frame_from_sql_c(self) -> None:
+        conn: sqlite3.Connection = self.get_test_db_e()
+
+        f1 = sf.Frame.from_sql('select * from events where identifier=?',
+                connection=conn,
+                dtypes={'date': 'datetime64[D]'},
+                parameters=('a1',)
+                )
+        self.assertEqual([dt.kind for dt in f1.dtypes.values],
+                ['M', 'U', 'f', 'i'])
+        self.assertEqual(f1.to_pairs(),
+                (('date', ((0, np.datetime64('2006-01-01')), (1, np.datetime64('2006-01-02')))), ('identifier', ((0, 'a1'), (1, 'a1'))), ('value', ((0, 12.5), (1, 12.5))), ('count', ((0, 20), (1, 22)))))
+
     def test_frame_from_sql_no_args(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_a()
 
