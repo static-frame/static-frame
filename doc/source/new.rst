@@ -1,6 +1,11 @@
 What is New in Static Frame
 ===============================
 
+0.8.13
+----------
+
+Added ``via_fill_value()`` interface to ``Series`` and ``Frame``.
+
 
 0.8.12
 ----------

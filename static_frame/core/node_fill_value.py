@@ -28,7 +28,7 @@ class InterfaceFillValue(Interface[TContainer]):
             '__add__',
             '__sub__',
             '__mul__',
-            # '__matmul__',
+            '__matmul__',
             '__truediv__',
             '__floordiv__',
             '__mod__',
@@ -47,7 +47,7 @@ class InterfaceFillValue(Interface[TContainer]):
             '__radd__',
             '__rsub__',
             '__rmul__',
-            # '__rmatmul__',
+            '__rmatmul__',
             '__rtruediv__',
             '__rfloordiv__',
             )
@@ -86,12 +86,13 @@ class InterfaceFillValue(Interface[TContainer]):
                 fill_value=self._fill_value,
                 )
 
-    # def __matmul__(self, other: tp.Any) -> tp.Any:
-    #     return self._container._ufunc_binary_operator(
-    #             operator=operator_mod.__matmul__,
-    #             other=other,
-    #             axis=1,
-    #             )
+    def __matmul__(self, other: tp.Any) -> tp.Any:
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__matmul__,
+                other=other,
+                axis=1,
+                fill_value=self._fill_value,
+                )
 
     def __truediv__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
@@ -244,14 +245,15 @@ class InterfaceFillValue(Interface[TContainer]):
                 fill_value=self._fill_value,
                 )
 
-    # def __rmatmul__(self, other: tp.Any) -> tp.Any:
-    #     operator = lambda rhs, lhs: operator_mod.__matmul__(lhs, rhs)
-    #     operator.__name__ = 'r' + operator_mod.__matmul__.__name__
-    #     return self._container._ufunc_binary_operator(
-    #             operator=operator,
-    #             other=other,
-    #             axis=1,
-    #             )
+    def __rmatmul__(self, other: tp.Any) -> tp.Any:
+        operator = lambda rhs, lhs: operator_mod.__matmul__(lhs, rhs)
+        operator.__name__ = 'r' + operator_mod.__matmul__.__name__
+        return self._container._ufunc_binary_operator(
+                operator=operator,
+                other=other,
+                axis=1,
+                fill_value=self._fill_value,
+                )
 
     def __rtruediv__(self, other: tp.Any) -> tp.Any:
         operator = lambda rhs, lhs: operator_mod.__truediv__(lhs, rhs)
