@@ -126,6 +126,7 @@ class ContainerOperand(ContainerBase):
     def _ufunc_binary_operator(self: T, *,
             operator: UFunc,
             other: tp.Any,
+            fill_value: object = np.nan,
             ) -> T:
         raise NotImplementedError() #pragma: no cover
 

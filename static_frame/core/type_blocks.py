@@ -7,6 +7,14 @@ from functools import partial
 from copy import deepcopy
 
 import numpy as np
+from arraykit import column_1d_filter
+from arraykit import column_2d_filter
+from arraykit import immutable_filter
+from arraykit import mloc
+from arraykit import resolve_dtype
+from arraykit import resolve_dtype_iter
+from arraykit import row_1d_filter
+from arraykit import shape_filter
 
 
 from static_frame.core.container import ContainerOperand
@@ -26,8 +34,6 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import binary_transition
-from static_frame.core.util import column_1d_filter
-from static_frame.core.util import column_2d_filter
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
@@ -39,17 +45,11 @@ from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
-from static_frame.core.util import immutable_filter
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import mloc
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import row_1d_filter
-from static_frame.core.util import shape_filter
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
@@ -115,7 +115,7 @@ class TypeBlocks(ContainerOperand):
                 return cls(blocks=blocks,
                         dtypes=dtypes,
                         index=index,
-                        shape=(row_count, column_count)
+                        shape=(row_count, column_count) #type: ignore
                         )
             blocks.append(immutable_filter(raw_blocks))
             for i in range(column_count):
@@ -2316,6 +2316,7 @@ class TypeBlocks(ContainerOperand):
             operator: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
             other: tp.Iterable[tp.Any],
             axis: int = 0,
+            fill_value: object = np.nan, # for interface compat
             ) -> 'TypeBlocks':
         '''Axis is only relevant in the application of a 1D array to a 2D TypeBlocks, where axis 0 (the default) will apply the array per row, while axis 1 will apply the array per column.
         '''

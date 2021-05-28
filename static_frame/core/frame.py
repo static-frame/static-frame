@@ -72,6 +72,7 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
@@ -2733,6 +2734,19 @@ class Frame(ContainerOperand):
                 container=self,
                 )
 
+
+    def via_fill_value(self,
+            fill_value: object = np.nan,
+            ) -> InterfaceFillValue['Frame']:
+        '''
+        Interface for using binary operators and methods with a pre-defined fill value.
+        '''
+        return InterfaceFillValue(
+                container=self,
+                fill_value=fill_value,
+                )
+
+
     #---------------------------------------------------------------------------
     # iterators
 
@@ -4099,6 +4113,7 @@ class Frame(ContainerOperand):
             operator: UFunc,
             other: tp.Any,
             axis: int = 0,
+            fill_value: object = np.nan,
             ) -> 'Frame':
 
         if operator.__name__ == 'matmul':
@@ -4118,14 +4133,18 @@ class Frame(ContainerOperand):
                     columns=columns,
                     index=index,
                     own_index=True,
-                    own_columns=True)._blocks
+                    own_columns=True,
+                    fill_value=fill_value,
+                    )._blocks
             # NOTE: we create columns from self._columns, and thus other can only own it if STATIC matches
             own_columns = other.STATIC == self.STATIC
             other_tb = other.reindex(
                     columns=columns,
                     index=index,
                     own_index=True,
-                    own_columns=own_columns)._blocks
+                    own_columns=own_columns,
+                    fill_value=fill_value,
+                    )._blocks
             return self.__class__(self_tb._ufunc_binary_operator(
                             operator=operator,
                             other=other_tb),
@@ -4139,8 +4158,16 @@ class Frame(ContainerOperand):
             if axis == 0:
                 # when operating on a Series, we treat axis 0 as a row-wise operation, and thus take the union of the Series.index and Frame.columns
                 columns = self._columns.union(other._index)
-                self_tb = self.reindex(columns=columns, own_columns=True)._blocks
-                other_array = other.reindex(columns, own_index=True).values
+                self_tb = self.reindex(
+                        columns=columns,
+                        own_columns=True,
+                        fill_value=fill_value,
+                        )._blocks
+                other_array = other.reindex(
+                        columns,
+                        own_index=True,
+                        fill_value=fill_value,
+                        ).values
                 blocks = self_tb._ufunc_binary_operator(
                         operator=operator,
                         other=other_array,
@@ -4155,8 +4182,16 @@ class Frame(ContainerOperand):
             elif axis == 1:
                 # column-wise operation, take union of Series.index and Frame.index
                 index = self._index.union(other._index)
-                self_tb = self.reindex(index=index, own_index=True)._blocks
-                other_array = other.reindex(index, own_index=True).values
+                self_tb = self.reindex(
+                        index=index,
+                        own_index=True,
+                        fill_value=fill_value,
+                        )._blocks
+                other_array = other.reindex(
+                        index,
+                        own_index=True,
+                        fill_value=fill_value,
+                        ).values
                 blocks = self_tb._ufunc_binary_operator(
                         operator=operator,
                         other=other_array,

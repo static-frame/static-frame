@@ -46,6 +46,7 @@ from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
@@ -663,6 +664,19 @@ class Series(ContainerOperand):
                 blocks_to_container=blocks_to_container,
                 )
 
+    def via_fill_value(self,
+            fill_value: object = np.nan,
+            ) -> InterfaceFillValue['Series']:
+        '''
+        Interface for using binary operators and methods with a pre-defined fill value.
+        '''
+        return InterfaceFillValue(
+                container=self,
+                fill_value=fill_value,
+                )
+
+
+
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroup['Series']:
@@ -1198,6 +1212,8 @@ class Series(ContainerOperand):
     def _ufunc_binary_operator(self, *,
             operator: UFunc,
             other: tp.Any,
+            axis: int = 0,
+            fill_value: object = np.nan,
             ) -> 'Series':
         '''
         For binary operations, the `name` attribute does not propagate unless other is a scalar.
@@ -1219,8 +1235,16 @@ class Series(ContainerOperand):
                 # if not equal, create a new Index by forming the union
                 index = self._index.union(other._index)
                 # now need to reindex the Series
-                values = self.reindex(index, own_index=True, check_equals=False).values
-                other = other.reindex(index, own_index=True, check_equals=False).values
+                values = self.reindex(index,
+                        own_index=True,
+                        check_equals=False,
+                        fill_value=fill_value,
+                        ).values
+                other = other.reindex(index,
+                        own_index=True,
+                        check_equals=False,
+                        fill_value=fill_value,
+                        ).values
             else:
                 other = other.values
         elif other.__class__ is np.ndarray:
@@ -1228,6 +1252,8 @@ class Series(ContainerOperand):
             other_is_array = True
             if other.ndim > 1:
                 raise NotImplementedError('Operator application to greater dimensionalities will result in an array with more than 1 dimension.')
+        elif other.__class__ is InterfaceFillValue:
+            raise NotImplementedError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
         else:
             name = self._name
 

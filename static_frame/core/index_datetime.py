@@ -78,7 +78,9 @@ class IndexDatetime(Index):
 
     def _ufunc_binary_operator(self, *,
             operator: tp.Callable[..., tp.Any],
-            other: object) -> np.ndarray:
+            other: object,
+            fill_value: object = np.nan,
+            ) -> np.ndarray:
 
         if self._recache:
             self._update_array_cache()
