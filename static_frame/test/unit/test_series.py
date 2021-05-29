@@ -4069,6 +4069,40 @@ class TestUnit(TestCase):
         self.assertEqual(round(s1.var(), 2), 2.0)
         self.assertEqual(round(s1.var(ddof=1), 2), 2.5)
 
+    #---------------------------------------------------------------------------
+    def test_series_via_fill_value(self) -> None:
+
+        s1 = Series(range(3), index=tuple('abc'))
+        s2 = Series(range(5), index=tuple('abcde'))
+
+        self.assetEqual(
+                (s1.via_fill_value(0) + s2).to_pairs(),
+                (('a', 0), ('b', 2), ('c', 4), ('d', 3), ('e', 4))
+                )
+
+        self.assetEqual(
+                (s1.via_fill_value(0) - s2).to_pairs(),
+                (('a', 0), ('b', 0), ('c', 0), ('d', -3), ('e', -4))
+                )
+
+        self.assetEqual(
+                (s1.via_fill_value(0) * s2).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 4), ('d', 0), ('e', 0))
+                )
+
+        self.assetEqual(
+                round(s1.via_fill_value(1) / (s2 + 1), 1).to_pairs(),
+                (('a', 0.0), ('b', 0.5), ('c', 0.7), ('d', 0.2), ('e', 0.2))
+                )
+
+        self.assetEqual(
+                ((s1 * 2).via_fill_value(0) // s2).to_pairs(),
+                (('a', 0), ('b', 2), ('c', 2), ('d', 0), ('e', 0))
+                )
+
+
+        # import ipdb; ipdb.set_trace()
+
 
 if __name__ == '__main__':
     unittest.main()
