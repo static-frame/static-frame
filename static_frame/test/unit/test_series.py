@@ -4075,27 +4075,27 @@ class TestUnit(TestCase):
         s1 = Series(range(3), index=tuple('abc'))
         s2 = Series(range(5), index=tuple('abcde'))
 
-        self.assetEqual(
+        self.assertEqual(
                 (s1.via_fill_value(0) + s2).to_pairs(),
                 (('a', 0), ('b', 2), ('c', 4), ('d', 3), ('e', 4))
                 )
 
-        self.assetEqual(
+        self.assertEqual(
                 (s1.via_fill_value(0) - s2).to_pairs(),
                 (('a', 0), ('b', 0), ('c', 0), ('d', -3), ('e', -4))
                 )
 
-        self.assetEqual(
+        self.assertEqual(
                 (s1.via_fill_value(0) * s2).to_pairs(),
                 (('a', 0), ('b', 1), ('c', 4), ('d', 0), ('e', 0))
                 )
 
-        self.assetEqual(
+        self.assertEqual(
                 round(s1.via_fill_value(1) / (s2 + 1), 1).to_pairs(),
                 (('a', 0.0), ('b', 0.5), ('c', 0.7), ('d', 0.2), ('e', 0.2))
                 )
 
-        self.assetEqual(
+        self.assertEqual(
                 ((s1 * 2).via_fill_value(0) // s2).to_pairs(),
                 (('a', 0), ('b', 2), ('c', 2), ('d', 0), ('e', 0))
                 )
