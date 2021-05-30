@@ -287,6 +287,45 @@ FILL_VALUE_DEFAULT = object()
 NAME_DEFAULT = object()
 STORE_LABEL_DEFAULT = object()
 
+#-------------------------------------------------------------------------------
+# operator mod does not have r methods; create complete method reference
+OPERATORS = {
+    '__pos__': operator.__pos__,
+    '__neg__': operator.__neg__,
+    '__abs__': operator.__abs__,
+    '__invert__': operator.__invert__,
+
+    '__add__': operator.__add__,
+    '__sub__': operator.__sub__,
+    '__mul__': operator.__mul__,
+    '__matmul__': operator.__matmul__,
+    '__truediv__': operator.__truediv__,
+    '__floordiv__': operator.__floordiv__,
+    '__mod__': operator.__mod__,
+
+    '__pow__': operator.__pow__,
+    '__lshift__': operator.__lshift__,
+    '__rshift__': operator.__rshift__,
+    '__and__': operator.__and__,
+    '__xor__': operator.__xor__,
+    '__or__': operator.__or__,
+    '__lt__': operator.__lt__,
+    '__le__': operator.__le__,
+    '__eq__': operator.__eq__,
+    '__ne__': operator.__ne__,
+    '__gt__': operator.__gt__,
+    '__ge__': operator.__ge__,
+}
+
+# extend r methods
+for attr in ('__add__', '__sub__', '__mul__', '__matmul__', '__truediv__', '__floordiv__'):
+    func = getattr(operator, attr)
+    # bind func from closure
+    rfunc = lambda rhs, lhs, func=func: func(lhs, rhs)
+    rfunc.__name__ = 'r' + func.__name__
+    rattr = '__r' + attr[2:]
+    OPERATORS[rattr] = rfunc
+
 
 #-------------------------------------------------------------------------------
 # join utils

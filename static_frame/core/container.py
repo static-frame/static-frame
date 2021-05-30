@@ -1,5 +1,4 @@
 import typing as tp
-import operator as operator_mod
 from functools import partial
 
 import numpy as np
@@ -19,6 +18,7 @@ from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
+from static_frame.core.util import OPERATORS
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
@@ -132,107 +132,95 @@ class ContainerOperand(ContainerBase):
 
     #---------------------------------------------------------------------------
     def __pos__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(operator_mod.__pos__)
+        return self._ufunc_unary_operator(OPERATORS['__pos__'])
 
     def __neg__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(operator_mod.__neg__)
+        return self._ufunc_unary_operator(OPERATORS['__neg__'])
 
     def __abs__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(operator_mod.__abs__)
+        return self._ufunc_unary_operator(OPERATORS['__abs__'])
 
     def __invert__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(operator_mod.__invert__)
+        return self._ufunc_unary_operator(OPERATORS['__invert__'])
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__add__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__add__'], other=other)
 
     def __sub__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__sub__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__sub__'], other=other)
 
     def __mul__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__mul__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__mul__'], other=other)
 
     def __matmul__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__matmul__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__matmul__'], other=other)
 
     def __truediv__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__truediv__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__truediv__'], other=other)
 
     def __floordiv__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__floordiv__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__floordiv__'], other=other)
 
     def __mod__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__mod__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__mod__'], other=other)
 
     # def __divmod__:
 
     def __pow__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__pow__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__pow__'], other=other)
 
     def __lshift__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__lshift__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__lshift__'], other=other)
 
     def __rshift__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__rshift__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__rshift__'], other=other)
 
     def __and__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__and__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__and__'], other=other)
 
     def __xor__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__xor__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__xor__'], other=other)
 
     def __or__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__or__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__or__'], other=other)
 
     def __lt__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__lt__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__lt__'], other=other)
 
     def __le__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__le__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__le__'], other=other)
 
     def __eq__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__eq__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__eq__'], other=other)
 
     def __ne__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__ne__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__ne__'], other=other)
 
     def __gt__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__gt__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__gt__'], other=other)
 
     def __ge__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__ge__, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__ge__'], other=other)
 
     #---------------------------------------------------------------------------
     def __radd__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__add__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__add__.__name__
-        return self._ufunc_binary_operator(operator=operator, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__radd__'], other=other)
 
     def __rsub__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__sub__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__sub__.__name__
-        return self._ufunc_binary_operator(operator=operator, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__rsub__'], other=other)
 
     def __rmul__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__mul__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__mul__.__name__
-        return self._ufunc_binary_operator(operator=operator, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__rmul__'], other=other)
 
     def __rmatmul__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__matmul__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__matmul__.__name__
-        return self._ufunc_binary_operator(operator=operator, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__rmatmul__'], other=other)
 
     def __rtruediv__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__truediv__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__truediv__.__name__
-        return self._ufunc_binary_operator(operator=operator, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__rtruediv__'], other=other)
 
     def __rfloordiv__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__floordiv__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__floordiv__.__name__
-        return self._ufunc_binary_operator(operator=operator, other=other)
+        return self._ufunc_binary_operator(operator=OPERATORS['__rfloordiv__'], other=other)
 
     # --------------------------------------------------------------------------
     # ufunc axis skipna methods: applied along an axis, reducing dimensionality.
