@@ -4111,6 +4111,91 @@ class TestUnit(TestCase):
                 )
 
 
+        self.assertEqual(
+                (s1.via_fill_value(-1) < s2).to_pairs(),
+                (('a', False), ('b', False), ('c', False), ('d', True), ('e', True))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(0) <= s2).to_pairs(),
+                (('a', True), ('b', True), ('c', True), ('d', True), ('e', True))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(4) == s2).to_pairs(),
+                (('a', True), ('b', True), ('c', True), ('d', False), ('e', True))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(4) != s2).to_pairs(),
+                (('a', False), ('b', False), ('c', False), ('d', True), ('e', False))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(10) > s2).to_pairs(),
+                (('a', False), ('b', False), ('c', False), ('d', True), ('e', True))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(3) >= s2).to_pairs(),
+                (('a', True), ('b', True), ('c', True), ('d', True), ('e', False))
+                )
+
+
+    def test_series_via_fill_value_b(self) -> None:
+
+        s1 = Series((False, True, True), index=tuple('abc'))
+        s2 = Series((True, True, False, True, False), index=tuple('abcde'))
+
+        self.assertEqual(
+                (s1.via_fill_value(False) >> s2).to_pairs(),
+                (('a', 0), ('b', 0), ('c', 1), ('d', 0), ('e', 0))
+                )
+
+        self.assertEqual(
+                (s1.via_fill_value(False) << s2).to_pairs(),
+                (('a', 0), ('b', 2), ('c', 1), ('d', 0), ('e', 0))
+                )
+
+
+        self.assertEqual(
+                (s1.via_fill_value(False) & s2).to_pairs(),
+                (('a', False), ('b', True), ('c', False), ('d', False), ('e', False))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(False) | s2).to_pairs(),
+               (('a', True), ('b', True), ('c', True), ('d', True), ('e', False))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(False) ^ s2).to_pairs(),
+               (('a', True), ('b', False), ('c', True), ('d', True), ('e', False))
+                )
+
+    def test_series_via_fill_value_c(self) -> None:
+
+        s1 = Series(range(3), index=tuple('abc'))
+
+        self.assertEqual(
+                (3 + s1.via_fill_value(0)).to_pairs(),
+                (('a', 3), ('b', 4), ('c', 5))
+                )
+
+        self.assertEqual(
+                (3 - s1.via_fill_value(0)).to_pairs(),
+                (('a', 3), ('b', 2), ('c', 1))
+                )
+
+        self.assertEqual(
+                (2 * s1.via_fill_value(0)).to_pairs(),
+                (('a', 0), ('b', 2), ('c', 4))
+                )
+
+        self.assertEqual(
+                round(10 / (s1.via_fill_value(1) + 1), 1).to_pairs(),
+                (('a', 10.0), ('b', 5.0), ('c', 3.3))
+                )
+
+        self.assertEqual(
+                (10 // (s1.via_fill_value(0) + 1)).to_pairs(),
+                (('a', 10), ('b', 5), ('c', 3))
+                )
+
+
 
 if __name__ == '__main__':
     unittest.main()
