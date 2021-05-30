@@ -1647,9 +1647,9 @@ def _ufunc_set_1d(
     Args:
         assume_unique: if arguments are assumed unique, can implement optional identity filtering, which retains order (un sorted) for opperands that are equal. This is important in numerous operations on the matching Indices where order should not be perterbed.
     '''
-    is_union = func == np.union1d
-    is_intersection = func == np.intersect1d
-    is_difference = func == np.setdiff1d
+    is_union = func is np.union1d
+    is_intersection = func is np.intersect1d
+    is_difference = func is np.setdiff1d
 
     if not (is_union or is_intersection or is_difference):
         raise NotImplementedError('unexpected func', func)
