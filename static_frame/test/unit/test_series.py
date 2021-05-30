@@ -4070,7 +4070,7 @@ class TestUnit(TestCase):
         self.assertEqual(round(s1.var(ddof=1), 2), 2.5)
 
     #---------------------------------------------------------------------------
-    def test_series_via_fill_value(self) -> None:
+    def test_series_via_fill_value_a(self) -> None:
 
         s1 = Series(range(3), index=tuple('abc'))
         s2 = Series(range(5), index=tuple('abcde'))
@@ -4100,8 +4100,16 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 2), ('c', 2), ('d', 0), ('e', 0))
                 )
 
+        self.assertEqual(
+                (s1.via_fill_value(10) % s2).to_pairs(),
+                (('a', 0), ('b', 0), ('c', 0), ('d', 1), ('e', 2))
+                )
 
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(
+                (s1.via_fill_value(2) ** s2).to_pairs(),
+                (('a', 1), ('b', 1), ('c', 4), ('d', 8), ('e', 16))
+                )
+
 
 
 if __name__ == '__main__':

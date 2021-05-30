@@ -1681,15 +1681,9 @@ def _ufunc_set_1d(
                 return array
 
         if len(array) == len(other):
-            arrays_are_equal = False
             compare = array == other
-            # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it should always be False
-            if isinstance(compare, BOOL_TYPES) and compare:
-                arrays_are_equal = True #pragma: no cover
-            elif isinstance(compare, np.ndarray) and compare.all(axis=None):
-                arrays_are_equal = True
-
-            if arrays_are_equal:
+            # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it will always be False
+            if compare.__class__ is np.ndarray and compare.all(axis=None):
                 if is_difference:
                     post = np.array(EMPTY_TUPLE, dtype=dtype)
                     post.flags.writeable = False
