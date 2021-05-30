@@ -1,9 +1,8 @@
-import operator as operator_mod
 
 import typing as tp
-# import numpy as np
 
 from static_frame.core.node_selector import Interface
+from static_frame.core.util import OPERATORS
 
 
 if tp.TYPE_CHECKING:
@@ -61,188 +60,176 @@ class InterfaceTranspose(Interface[TContainer]):
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__add__,
+                operator=OPERATORS['__add__'],
                 other=other,
                 axis=1,
                 )
 
     def __sub__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__sub__,
+                operator=OPERATORS['__sub__'],
                 other=other,
                 axis=1,
                 )
 
     def __mul__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__mul__,
+                operator=OPERATORS['__mul__'],
                 other=other,
                 axis=1,
                 )
 
     # def __matmul__(self, other: tp.Any) -> tp.Any:
     #     return self._container._ufunc_binary_operator(
-    #             operator=operator_mod.__matmul__,
+    #             operator=OPERATORS['__matmul__'],
     #             other=other,
     #             axis=1,
     #             )
 
     def __truediv__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__truediv__,
+                operator=OPERATORS['__truediv__'],
                 other=other,
                 axis=1,
                 )
 
     def __floordiv__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__floordiv__,
+                operator=OPERATORS['__floordiv__'],
                 other=other,
                 axis=1,
                 )
 
     def __mod__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__mod__,
+                operator=OPERATORS['__mod__'],
                 other=other,
                 axis=1,
                 )
 
     def __pow__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__pow__,
+                operator=OPERATORS['__pow__'],
                 other=other,
                 axis=1,
                 )
 
     def __lshift__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__lshift__,
+                operator=OPERATORS['__lshift__'],
                 other=other,
                 axis=1,
                 )
 
     def __rshift__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__rshift__,
+                operator=OPERATORS['__rshift__'],
                 other=other,
                 axis=1,
                 )
 
     def __and__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__and__,
+                operator=OPERATORS['__and__'],
                 other=other,
                 axis=1,
                 )
 
     def __xor__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__xor__,
+                operator=OPERATORS['__xor__'],
                 other=other,
                 axis=1,
                 )
 
     def __or__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__or__,
+                operator=OPERATORS['__or__'],
                 other=other,
                 axis=1,
                 )
 
     def __lt__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__lt__,
+                operator=OPERATORS['__lt__'],
                 other=other,
                 axis=1,
                 )
 
     def __le__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__le__,
+                operator=OPERATORS['__le__'],
                 other=other,
                 axis=1,
                 )
 
     def __eq__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__eq__,
+                operator=OPERATORS['__eq__'],
                 other=other,
                 axis=1,
                 )
 
     def __ne__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__ne__,
+                operator=OPERATORS['__ne__'],
                 other=other,
                 axis=1,
                 )
 
     def __gt__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__gt__,
+                operator=OPERATORS['__gt__'],
                 other=other,
                 axis=1,
                 )
 
     def __ge__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
-                operator=operator_mod.__ge__,
+                operator=OPERATORS['__ge__'],
                 other=other,
                 axis=1,
                 )
 
     #---------------------------------------------------------------------------
     def __radd__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__add__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__add__.__name__
         return self._container._ufunc_binary_operator(
-                operator=operator,
+                operator=OPERATORS['__radd__'],
                 other=other,
                 axis=1,
                 )
 
     def __rsub__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__sub__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__sub__.__name__
         return self._container._ufunc_binary_operator(
-                operator=operator,
+                operator=OPERATORS['__rsub__'],
                 other=other,
                 axis=1,
                 )
 
     def __rmul__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__mul__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__mul__.__name__
         return self._container._ufunc_binary_operator(
-                operator=operator,
+                operator=OPERATORS['__rmul__'],
                 other=other,
                 axis=1,
                 )
 
     # def __rmatmul__(self, other: tp.Any) -> tp.Any:
-    #     operator = lambda rhs, lhs: operator_mod.__matmul__(lhs, rhs)
-    #     operator.__name__ = 'r' + operator_mod.__matmul__.__name__
     #     return self._container._ufunc_binary_operator(
-    #             operator=operator,
+    #             operator=OPERATORS['__rmatmul__'],
     #             other=other,
     #             axis=1,
     #             )
 
     def __rtruediv__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__truediv__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__truediv__.__name__
         return self._container._ufunc_binary_operator(
-                operator=operator,
+                operator=OPERATORS['__rtruediv__'],
                 other=other,
                 axis=1,
                 )
 
     def __rfloordiv__(self, other: tp.Any) -> tp.Any:
-        operator = lambda rhs, lhs: operator_mod.__floordiv__(lhs, rhs)
-        operator.__name__ = 'r' + operator_mod.__floordiv__.__name__
         return self._container._ufunc_binary_operator(
-                operator=operator,
+                operator=OPERATORS['__rfloordiv__'],
                 other=other,
                 axis=1,
                 )
