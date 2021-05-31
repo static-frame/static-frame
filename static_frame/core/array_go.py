@@ -3,7 +3,7 @@ import typing as tp
 
 import numpy as np
 
-from static_frame.core.util import immutable_filter
+from arraykit import immutable_filter
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import array_deepcopy
 

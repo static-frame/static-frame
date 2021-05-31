@@ -6,6 +6,10 @@ from collections.abc import Set
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
+from arraykit import immutable_filter
+from arraykit import mloc
+from arraykit import name_filter
+from arraykit import resolve_dtype
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -68,7 +72,6 @@ from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import immutable_filter
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
@@ -77,13 +80,10 @@ from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import mloc
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import name_filter
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import resolve_dtype
 from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc

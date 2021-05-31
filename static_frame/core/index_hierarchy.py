@@ -4,6 +4,7 @@ from ast import literal_eval
 from copy import deepcopy
 
 import numpy as np
+from arraykit import name_filter
 
 
 from static_frame.core.array_go import ArrayGO
@@ -59,7 +60,6 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import intersect2d
 from static_frame.core.util import isin
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import name_filter
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import setdiff2d

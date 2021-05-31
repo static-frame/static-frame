@@ -1,6 +1,7 @@
 import typing as tp
 
 import numpy as np
+from arraykit import resolve_dtype
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
@@ -16,7 +17,6 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import resolve_dtype
 from static_frame.core.util import dtype_from_element
 
 

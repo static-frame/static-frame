@@ -8,6 +8,12 @@ import numpy as np
 from hypothesis import strategies as st
 from hypothesis import given
 
+from arraykit import mloc
+from arraykit import shape_filter
+from arraykit import resolve_dtype
+from arraykit import resolve_dtype_iter
+
+
 # from static_frame.test.property.strategies import get_arrays_2d_aligned
 # from static_frame.test.property.strategies import get_blocks
 # from static_frame.test.property.strategies import get_label
@@ -34,24 +40,23 @@ class TestUnit(TestCase):
     @given(get_array_1d2d())
     def test_mloc(self, array: np.ndarray) -> None:
 
-        x = util.mloc(array)
+        x = mloc(array)
         self.assertTrue(isinstance(x, int))
-
 
     @given(get_array_1d2d())
     def test_shape_filter(self, shape: np.ndarray) -> None:
-        self.assertTrue(len(util.shape_filter(shape)), 2)
+        self.assertTrue(len(shape_filter(shape)), 2)
 
     @given(get_dtype_pairs())
     def test_resolve_dtype(self, dtype_pair: tp.Tuple[np.dtype, np.dtype]) -> None:
 
-        x = util.resolve_dtype(*dtype_pair)
+        x = resolve_dtype(*dtype_pair)
         self.assertTrue(isinstance(x, np.dtype))
 
     @given(get_dtypes(min_size=1))
     def test_resolve_dtype_iter(self, dtypes: tp.Iterable[np.dtype]) -> None:
 
-        x = util.resolve_dtype_iter(dtypes)
+        x = resolve_dtype_iter(dtypes)
         self.assertTrue(isinstance(x, np.dtype))
 
     @given(get_labels(min_size=1))
@@ -79,13 +84,13 @@ class TestUnit(TestCase):
     def test_concat_resolved_axis_0(self, arrays: tp.List[np.ndarray]) -> None:
         array = util.concat_resolved(arrays, axis=0)
         self.assertEqual(array.ndim, 2)
-        self.assertEqual(array.dtype, util.resolve_dtype_iter((x.dtype for x in arrays)))
+        self.assertEqual(array.dtype, resolve_dtype_iter((x.dtype for x in arrays)))
 
     @given(get_arrays_2d_aligned_rows())
     def test_concat_resolved_axis_1(self, arrays: tp.List[np.ndarray]) -> None:
         array = util.concat_resolved(arrays, axis=1)
         self.assertEqual(array.ndim, 2)
-        self.assertEqual(array.dtype, util.resolve_dtype_iter((x.dtype for x in arrays)))
+        self.assertEqual(array.dtype, resolve_dtype_iter((x.dtype for x in arrays)))
 
     @given(get_dtype(), get_shape_1d2d(), get_value())
     def test_full_or_fill(self,

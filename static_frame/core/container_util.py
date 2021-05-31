@@ -11,11 +11,11 @@ import typing as tp
 
 import numpy as np
 from numpy import char as npc
+from arraykit import column_2d_filter
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
-from static_frame.core.util import column_2d_filter
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
