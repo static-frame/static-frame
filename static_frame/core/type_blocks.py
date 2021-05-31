@@ -7,15 +7,24 @@ from functools import partial
 from copy import deepcopy
 
 import numpy as np
-from arraykit import column_1d_filter
-from arraykit import column_2d_filter
-from arraykit import immutable_filter
-from arraykit import mloc
-from arraykit import resolve_dtype
-from arraykit import resolve_dtype_iter
-from arraykit import row_1d_filter
-from arraykit import shape_filter
 
+# from arraykit import column_1d_filter
+# from arraykit import column_2d_filter
+# from arraykit import immutable_filter
+# from arraykit import mloc
+# from arraykit import resolve_dtype
+# from arraykit import resolve_dtype_iter
+# from arraykit import row_1d_filter
+# from arraykit import shape_filter
+
+from static_frame.core.util import column_1d_filter
+from static_frame.core.util import column_2d_filter
+from static_frame.core.util import immutable_filter
+from static_frame.core.util import mloc
+from static_frame.core.util import resolve_dtype
+from static_frame.core.util import resolve_dtype_iter
+from static_frame.core.util import row_1d_filter
+from static_frame.core.util import shape_filter
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
