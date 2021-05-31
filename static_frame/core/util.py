@@ -289,7 +289,7 @@ STORE_LABEL_DEFAULT = object()
 
 #-------------------------------------------------------------------------------
 # operator mod does not have r methods; create complete method reference
-OPERATORS = {
+OPERATORS: tp.Dict[str, UFunc] = {
     '__pos__': operator.__pos__,
     '__neg__': operator.__neg__,
     '__abs__': operator.__abs__,

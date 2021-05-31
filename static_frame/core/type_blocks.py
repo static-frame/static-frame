@@ -124,7 +124,7 @@ class TypeBlocks(ContainerOperand):
                 return cls(blocks=blocks,
                         dtypes=dtypes,
                         index=index,
-                        shape=(row_count, column_count) #type: ignore
+                        shape=(row_count, column_count)
                         )
             blocks.append(immutable_filter(raw_blocks))
             for i in range(column_count):

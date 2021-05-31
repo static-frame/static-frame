@@ -1,6 +1,5 @@
 import typing as tp
 from collections.abc import KeysView
-import operator as operator_mod
 from itertools import zip_longest
 from functools import reduce
 from copy import deepcopy
@@ -81,6 +80,7 @@ from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import union1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
+from static_frame.core.util import OPERATORS
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -242,7 +242,7 @@ class LocMap:
                 if labels.dtype != key.dtype:
                     labels_ref = labels.astype(key.dtype)
                     # let Boolean key advance to next branch
-                    key = reduce(operator_mod.or_, (labels_ref == k for k in key))
+                    key = reduce(OPERATORS['__or__'], (labels_ref == k for k in key))
 
             if is_array and key.dtype == DTYPE_BOOL:
                 if offset_apply:
