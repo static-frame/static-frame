@@ -16,6 +16,23 @@ from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
 from arraykit import shape_filter
 
+# from arraykit import column_1d_filter
+# from arraykit import column_2d_filter
+# from arraykit import immutable_filter
+# from arraykit import mloc
+# from arraykit import resolve_dtype
+# from arraykit import resolve_dtype_iter
+# from arraykit import row_1d_filter
+# from arraykit import shape_filter
+
+from static_frame.core.util import column_1d_filter
+from static_frame.core.util import column_2d_filter
+from static_frame.core.util import immutable_filter
+from static_frame.core.util import mloc
+from static_frame.core.util import resolve_dtype
+from static_frame.core.util import resolve_dtype_iter
+from static_frame.core.util import row_1d_filter
+from static_frame.core.util import shape_filter
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
@@ -2316,6 +2333,7 @@ class TypeBlocks(ContainerOperand):
             operator: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
             other: tp.Iterable[tp.Any],
             axis: int = 0,
+            fill_value: object = np.nan, # for interface compat
             ) -> 'TypeBlocks':
         '''Axis is only relevant in the application of a 1D array to a 2D TypeBlocks, where axis 0 (the default) will apply the array per row, while axis 1 will apply the array per column.
         '''

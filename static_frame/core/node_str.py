@@ -1,6 +1,5 @@
 import typing as tp
 from functools import reduce
-import operator
 
 import numpy as np
 from numpy import char as npc
@@ -12,6 +11,7 @@ from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import UFunc
+from static_frame.core.util import OPERATORS
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -195,8 +195,9 @@ class InterfaceString(Interface[TContainer]):
             blocks_per_sub = (
                     self._process_blocks(self._blocks, npc.endswith, (sub, start, end))
                     for sub in suffix)
+            func = OPERATORS['__or__']
             for block_layers in zip(*blocks_per_sub):
-                array = reduce(operator.or_, block_layers)
+                array = reduce(func, block_layers)
                 array.flags.writeable = False
                 yield array
 
@@ -452,8 +453,9 @@ class InterfaceString(Interface[TContainer]):
             blocks_per_sub = (
                     self._process_blocks(self._blocks, npc.startswith, (sub, start, end))
                     for sub in prefix)
+            func = OPERATORS['__or__']
             for block_layers in zip(*blocks_per_sub):
-                array = reduce(operator.or_, block_layers)
+                array = reduce(func, block_layers)
                 array.flags.writeable = False
                 yield array
 

@@ -288,6 +288,45 @@ FILL_VALUE_DEFAULT = object()
 NAME_DEFAULT = object()
 STORE_LABEL_DEFAULT = object()
 
+#-------------------------------------------------------------------------------
+# operator mod does not have r methods; create complete method reference
+OPERATORS: tp.Dict[str, UFunc] = {
+    '__pos__': operator.__pos__,
+    '__neg__': operator.__neg__,
+    '__abs__': operator.__abs__,
+    '__invert__': operator.__invert__,
+
+    '__add__': operator.__add__,
+    '__sub__': operator.__sub__,
+    '__mul__': operator.__mul__,
+    '__matmul__': operator.__matmul__,
+    '__truediv__': operator.__truediv__,
+    '__floordiv__': operator.__floordiv__,
+    '__mod__': operator.__mod__,
+
+    '__pow__': operator.__pow__,
+    '__lshift__': operator.__lshift__,
+    '__rshift__': operator.__rshift__,
+    '__and__': operator.__and__,
+    '__xor__': operator.__xor__,
+    '__or__': operator.__or__,
+    '__lt__': operator.__lt__,
+    '__le__': operator.__le__,
+    '__eq__': operator.__eq__,
+    '__ne__': operator.__ne__,
+    '__gt__': operator.__gt__,
+    '__ge__': operator.__ge__,
+}
+
+# extend r methods
+for attr in ('__add__', '__sub__', '__mul__', '__matmul__', '__truediv__', '__floordiv__'):
+    func = getattr(operator, attr)
+    # bind func from closure
+    rfunc = lambda rhs, lhs, func=func: func(lhs, rhs)
+    rfunc.__name__ = 'r' + func.__name__
+    rattr = '__r' + attr[2:]
+    OPERATORS[rattr] = rfunc
+
 
 #-------------------------------------------------------------------------------
 # join utils
@@ -1656,9 +1695,9 @@ def _ufunc_set_1d(
     Args:
         assume_unique: if arguments are assumed unique, can implement optional identity filtering, which retains order (un sorted) for opperands that are equal. This is important in numerous operations on the matching Indices where order should not be perterbed.
     '''
-    is_union = func == np.union1d
-    is_intersection = func == np.intersect1d
-    is_difference = func == np.setdiff1d
+    is_union = func is np.union1d
+    is_intersection = func is np.intersect1d
+    is_difference = func is np.setdiff1d
 
     if not (is_union or is_intersection or is_difference):
         raise NotImplementedError('unexpected func', func)
@@ -1690,15 +1729,9 @@ def _ufunc_set_1d(
                 return array
 
         if len(array) == len(other):
-            arrays_are_equal = False
             compare = array == other
-            # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it should always be False
-            if isinstance(compare, BOOL_TYPES) and compare:
-                arrays_are_equal = True #pragma: no cover
-            elif isinstance(compare, np.ndarray) and compare.all(axis=None):
-                arrays_are_equal = True
-
-            if arrays_are_equal:
+            # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it will always be False
+            if compare.__class__ is np.ndarray and compare.all(axis=None):
                 if is_difference:
                     post = np.array(EMPTY_TUPLE, dtype=dtype)
                     post.flags.writeable = False

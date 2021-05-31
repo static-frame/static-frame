@@ -676,6 +676,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def _ufunc_binary_operator(self, *,
             operator: UFunc,
             other: tp.Any,
+            fill_value: object = np.nan,
             ) -> 'Batch':
         return self._apply_attr(
                 attr='_ufunc_binary_operator',
