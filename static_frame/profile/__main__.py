@@ -1062,11 +1062,12 @@ def performance_tables_from_records(
                     return HexColor.format_terminal('lavender', v)
                 return HexColor.format_terminal('lightslategrey', v)
         return str(v)
-
+    fields = ['Native', 'Reference', 'n/r', 'r/n']
     stats = sf.Frame.from_concat((
-            frame[['n/r', 'r/n']].min().rename('min'),
-            frame[['n/r', 'r/n']].max().rename('max'),
-            frame[['n/r', 'r/n']].std(ddof=1).rename('std')
+            frame[fields].min().rename('min'),
+            frame[fields].max().rename('max'),
+            frame[fields].mean().rename('mean'),
+            frame[fields].std(ddof=1).rename('std')
             )).rename(index='name').unset_index()
     # import ipdb; ipdb.set_trace()
     composit = sf.Frame.from_concat((frame, stats), columns=frame.columns, index=sf.IndexAutoFactory)
