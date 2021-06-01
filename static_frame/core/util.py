@@ -576,7 +576,7 @@ def concat_resolved(
 
 
 def full_for_fill(
-        dtype: tp.Optional[np.dtype],
+        dtype: tp.Optional[np.dtype[tp.Any]],
         shape: tp.Union[int, tp.Tuple[int, ...]],
         fill_value: object,
         ) -> np.ndarray:
