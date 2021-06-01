@@ -72,6 +72,7 @@ class InterfaceFillValue(Interface[TContainer]):
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
         from static_frame.core.node_transpose import InterfaceTranspose
+        from static_frame.core.frame import Frame
         assert isinstance(self._container, Frame)
         return InterfaceTranspose(
                 container=self._container,

@@ -33,6 +33,7 @@ from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
@@ -286,9 +287,11 @@ class InterfaceGroup:
     AccessorDatetime = 'Accessor Datetime'
     AccessorString = 'Accessor String'
     AccessorTranspose = 'Accessor Transpose'
+    AccessorFillValue = 'Accessor Fill Value'
 
 # NOTE: order from definition retained
-INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items() if not k.startswith('_'))
+INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items()
+        if not k.startswith('_'))
 
 class InterfaceRecord(tp.NamedTuple):
 
@@ -532,6 +535,8 @@ class InterfaceRecord(tp.NamedTuple):
             group = InterfaceGroup.AccessorDatetime
         elif cls_interface is InterfaceTranspose:
             group = InterfaceGroup.AccessorTranspose
+        elif cls_interface is InterfaceFillValue:
+            group = InterfaceGroup.AccessorFillValue
         else:
             raise NotImplementedError()
 
@@ -814,7 +819,7 @@ class InterfaceSummary(Features):
                 # getting interface off of the class will recurse
                 yield name_attr, None, ContainerBase.__class__.interface #type: ignore
 
-        # force tehse to be ordered at the bottom
+        # force these to be ordered at the bottom
         selectors = ('__getitem__', 'iloc', 'loc')
         selectors_found = set()
 
@@ -881,29 +886,28 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs)
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
                 yield from InterfaceRecord.from_getitem(**kwargs)
-            elif isinstance(obj, InterfaceString):
+
+            elif obj.__class__ in (InterfaceString, InterfaceDatetime, InterfaceTranspose):
                 yield from InterfaceRecord.gen_from_accessor(
-                            cls_interface=InterfaceString,
-                            **kwargs,
-                            )
-            elif isinstance(obj, InterfaceDatetime):
-                yield from InterfaceRecord.gen_from_accessor(
-                            cls_interface=InterfaceDatetime,
-                            **kwargs,
-                            )
-            elif isinstance(obj, InterfaceTranspose):
-                yield from InterfaceRecord.gen_from_accessor(
-                            cls_interface=InterfaceTranspose,
-                            **kwargs,
-                            )
+                        cls_interface=obj.__class__,
+                        **kwargs,
+                        )
             elif obj.__class__ in (InterfaceSelectDuo, InterfaceSelectTrio):
                 yield from InterfaceRecord.gen_from_selection(
                         cls_interface=obj.__class__,
-                        **kwargs)
+                        **kwargs,
+                        )
             elif obj.__class__ in (InterfaceAssignTrio, InterfaceAssignQuartet):
                 yield from InterfaceRecord.gen_from_assignment(
                         cls_interface=obj.__class__,
-                        **kwargs)
+                        **kwargs,
+                        )
+            elif name == 'via_fill_value':
+                # unlike other via interfaves, InterfaceFillValue is a method, not a property
+                yield from InterfaceRecord.gen_from_accessor(
+                        cls_interface=InterfaceFillValue,
+                        **kwargs,
+                        )
             elif callable(obj): # general methods
                 yield from InterfaceRecord.gen_from_method(**kwargs)
             else: # attributes

@@ -74,6 +74,7 @@ class InterfaceTranspose(Interface[TContainer]):
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
         from static_frame.core.node_fill_value import InterfaceFillValue
+        from static_frame.core.frame import Frame
         assert isinstance(self._container, Frame)
         return InterfaceFillValue(
                 container=self._container,
