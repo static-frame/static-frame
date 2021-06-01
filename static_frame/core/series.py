@@ -1253,7 +1253,7 @@ class Series(ContainerOperand):
             if other.ndim > 1:
                 raise NotImplementedError('Operator application to greater dimensionalities will result in an array with more than 1 dimension.')
         elif other.__class__ is InterfaceFillValue:
-            raise NotImplementedError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+            raise RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
         else:
             name = self._name
 

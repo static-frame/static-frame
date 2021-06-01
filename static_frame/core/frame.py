@@ -4207,6 +4207,8 @@ class Frame(ContainerOperand):
                 raise AxisInvalid(f'invalid axis: {axis}')
         elif other.__class__ is np.ndarray:
             name = None
+        elif other.__class__ is InterfaceFillValue:
+            raise RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
         else:
             other = iterable_to_array_nd(other)
             if other.ndim == 0:# only for elements should we keep name

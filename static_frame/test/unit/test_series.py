@@ -4196,6 +4196,27 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_series_via_fill_value_d(self) -> None:
+
+        s1 = sf.Series(range(2), index=tuple('ab'))
+        s2 = sf.Series(np.arange(1,4)*4, index=tuple('bcd'))
+        s3 = sf.Series(np.arange(2,5)*100, index=tuple('cde'))
+
+
+        s4 = (s1.via_fill_value(1) * s2).via_fill_value(0) + s3
+
+        self.assertEqual(s4.to_pairs(),
+                (('a', 0), ('b', 4), ('c', 208), ('d', 312), ('e', 400)))
+
+
+    def test_series_via_fill_value_e(self) -> None:
+
+        s1 = sf.Series(range(2), index=tuple('ab'))
+        s2 = sf.Series(np.arange(1,4)*4, index=tuple('bcd'))
+
+        with self.assertRaises(RuntimeError):
+            s1.via_fill_value(0) + s2.via_fill_value(1)
+
 
 if __name__ == '__main__':
     unittest.main()
