@@ -545,7 +545,17 @@ class InterfaceRecord(tp.NamedTuple):
             delegate_reference = f'{cls_interface.__name__}.{field}'
             doc = Features.scrub_doc(delegate_obj.__doc__)
 
-            terminus_name = f'{name}.{field}'
+            if cls_interface is InterfaceFillValue:
+                # NOTE: dropping the no arg version; not sure how to use it
+                terminus_signature, _ = _get_signatures(
+                        name,
+                        obj, #type: ignore
+                        is_getitem=False,
+                        max_args=max_args,
+                        )
+                terminus_name = f'{terminus_signature}.{field}'
+            else:
+                terminus_name = f'{name}.{field}'
 
             if isinstance(delegate_obj, property):
                 # some date tools are properties
