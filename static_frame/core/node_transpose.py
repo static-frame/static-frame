@@ -4,7 +4,7 @@ import typing as tp
 import numpy as np
 
 from static_frame.core.node_selector import Interface
-from static_frame.core.util import OPERATORS
+from static_frame.core.util import OPERATORS, isin
 
 
 if tp.TYPE_CHECKING:
@@ -28,6 +28,7 @@ class InterfaceTranspose(Interface[TContainer]):
             '_fill_value',
             )
     INTERFACE = (
+            'via_fill_value',
             '__add__',
             '__sub__',
             '__mul__',
@@ -68,11 +69,12 @@ class InterfaceTranspose(Interface[TContainer]):
     #---------------------------------------------------------------------------
     def via_fill_value(self,
             fill_value: object,
-            ) -> "InterfaceFillValue['Frame']":
+            ) -> "InterfaceFillValue[Frame]":
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
         from static_frame.core.node_fill_value import InterfaceFillValue
+        assert isinstance(self._container, Frame)
         return InterfaceFillValue(
                 container=self._container,
                 fill_value=fill_value,

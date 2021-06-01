@@ -26,6 +26,7 @@ class InterfaceFillValue(Interface[TContainer]):
             '_axis',
             )
     INTERFACE = (
+            'via_T',
             '__add__',
             '__sub__',
             '__mul__',
@@ -66,11 +67,12 @@ class InterfaceFillValue(Interface[TContainer]):
 
     #---------------------------------------------------------------------------
     @property
-    def via_T(self) -> "InterfaceTranspose['Frame']":
+    def via_T(self) -> "InterfaceTranspose[Frame]":
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
         from static_frame.core.node_transpose import InterfaceTranspose
+        assert isinstance(self._container, Frame)
         return InterfaceTranspose(
                 container=self._container,
                 fill_value=self._fill_value,
