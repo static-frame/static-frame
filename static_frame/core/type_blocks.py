@@ -7,7 +7,14 @@ from functools import partial
 from copy import deepcopy
 
 import numpy as np
-
+from arraykit import column_1d_filter
+from arraykit import column_2d_filter
+from arraykit import immutable_filter
+from arraykit import mloc
+from arraykit import resolve_dtype
+from arraykit import resolve_dtype_iter
+from arraykit import row_1d_filter
+from arraykit import shape_filter
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
@@ -26,8 +33,6 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import binary_transition
-from static_frame.core.util import column_1d_filter
-from static_frame.core.util import column_2d_filter
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
@@ -39,24 +44,18 @@ from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
-from static_frame.core.util import immutable_filter
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import mloc
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import row_1d_filter
-from static_frame.core.util import shape_filter
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import isin_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
@@ -105,8 +104,8 @@ class TypeBlocks(ContainerOperand):
         row_count: tp.Optional[int]
 
         # if a single block, no need to loop
-        if isinstance(raw_blocks, np.ndarray):
-            if raw_blocks.ndim > 2:
+        if raw_blocks.__class__ is np.ndarray:
+            if raw_blocks.ndim > 2: #type: ignore
                 raise ErrorInitTypeBlocks('arrays of dimensionality greater than 2 cannot be used to create TypeBlocks')
 
             row_count, column_count = shape_filter(raw_blocks)
@@ -115,19 +114,19 @@ class TypeBlocks(ContainerOperand):
                 return cls(blocks=blocks,
                         dtypes=dtypes,
                         index=index,
-                        shape=(row_count, column_count)
+                        shape=(row_count, column_count) #type: ignore
                         )
             blocks.append(immutable_filter(raw_blocks))
             for i in range(column_count):
                 index.append((block_count, i))
-                dtypes.append(raw_blocks.dtype)
+                dtypes.append(raw_blocks.dtype) #type: ignore
 
         else: # an iterable of blocks
             row_count = None
             column_count = 0
 
             for block in raw_blocks:
-                if not isinstance(block, np.ndarray):
+                if not block.__class__ is np.ndarray:
                     raise ErrorInitTypeBlocks(f'found non array block: {block}')
 
                 if block.ndim > 2:
@@ -155,7 +154,7 @@ class TypeBlocks(ContainerOperand):
                 column_count += c
                 block_count += 1
 
-        # blocks cam be empty
+        # blocks can be empty
         if row_count is None:
             if shape_reference is not None:
                 # if columns have gone to zero, and this was created from a TB that had rows, continue to represent those rows
@@ -263,10 +262,10 @@ class TypeBlocks(ContainerOperand):
             shape: tp.Tuple[int, int]
             ) -> None:
         '''
-        Default constructor. We own all lists passed in to this constructor.
+        Default constructor. We own all lists passed in to this constructor. This instance takes ownership of all lists passed to it.
 
         Args:
-            blocks: A list of one or two-dimensional NumPy arrays
+            blocks: A list of one or two-dimensional NumPy arrays.
             dtypes: list of dtypes per external column
             index: list of pairs, where the first element is the block index, the second elemetns is the intra-block column
             shape: two-element tuple defining row and column count. A (0, 0) shape is permitted for empty TypeBlocks.
@@ -283,7 +282,9 @@ class TypeBlocks(ContainerOperand):
             self._row_dtype = None
 
     #---------------------------------------------------------------------------
-    def __setstate__(self, state: tp.Tuple[object, tp.Mapping[str, tp.Any]]) -> None:
+    def __setstate__(self,
+            state: tp.Tuple[object, tp.Mapping[str, tp.Any]],
+            ) -> None:
         '''
         Ensure that reanimated NP arrays are set not writeable.
         '''
@@ -408,8 +409,7 @@ class TypeBlocks(ContainerOperand):
         if len(blocks) == 1:
             if not row_multiple:
                 return row_1d_filter(blocks[0])
-            else:
-                return column_2d_filter(blocks[0])
+            return column_2d_filter(blocks[0])
 
         # get empty array and fill parts
         # NOTE: row_dtype may be None if an unfillable array; defaults to NP default
@@ -420,19 +420,23 @@ class TypeBlocks(ContainerOperand):
             array = np.empty(shape, dtype=row_dtype)
 
         pos = 0
+        array_ndim = array.ndim
+
         for block in blocks:
-            if block.ndim == 1:
+            block_ndim = block.ndim
+
+            if block_ndim == 1:
                 end = pos + 1
             else:
                 end = pos + block.shape[1]
 
-            if array.ndim == 1:
-                array[pos: end] = block[:] # gets a row from array
+            if array_ndim == 1:
+                array[pos: end] = block # gets a row from array
             else:
-                if block.ndim == 1:
-                    array[:, pos] = block[:] # a 1d array
+                if block_ndim == 1:
+                    array[NULL_SLICE, pos] = block # a 1d array
                 else:
-                    array[:, pos: end] = block[:] # gets a row / row slice from array
+                    array[NULL_SLICE, pos: end] = block # gets a row / row slice from array
             pos = end
 
         array.flags.writeable = False
@@ -452,7 +456,7 @@ class TypeBlocks(ContainerOperand):
 
     def axis_values(self,
             axis: int = 0,
-            reverse: bool = False
+            reverse: bool = False,
             ) -> tp.Iterator[np.ndarray]:
         '''Generator of arrays produced along an axis. Clients can expect to get an immutable array.
 
@@ -463,40 +467,49 @@ class TypeBlocks(ContainerOperand):
         if axis == 1: # iterate over rows
             zero_size = not bool(self._blocks)
             unified = self.unified
-            # iterate over rows; might be faster to create entire values
-            if not reverse:
-                row_idx_iter = range(self._shape[0])
-            else:
-                row_idx_iter = range(self._shape[0] - 1, -1, -1)
+            # key: tp.Union[int, slice]
+            row_dtype = self._row_dtype
+            row_length = self._shape[0]
+            column_length = self._shape[1]
 
-            for i in row_idx_iter:
-                if zero_size:
+            if not reverse:
+                row_idx_iter = range(row_length)
+            else:
+                row_idx_iter = range(row_length - 1, -1, -1)
+
+            if zero_size:
+                for i in row_idx_iter:
                     yield EMPTY_ARRAY
-                elif unified:
-                    b = self._blocks[0]
-                    if b.ndim == 1:
-                        # single element slice to force array creation (not an element)
-                        yield b[i: i+1]
-                    else:
-                        # if a 2d array, we can yield rows through simple indexing
+            elif unified:
+                b = self._blocks[0]
+                for i in row_idx_iter:
+                    if b.ndim == 1: # slice to force array creation (not an element)
+                        yield b[i: i + 1]
+                    else: # 2d array
                         yield b[i]
-                else:
-                    # cannot use a generator w/ np concat
-                    # use == for type comparisons
-                    parts = []
-                    for b in self._blocks:
-                        if b.ndim == 1:
-                            # get a slice to permit concatenation
-                            key: tp.Union[int, slice] = slice(i, i+1)
-                        else:
-                            key = i
-                        if b.dtype == self._row_dtype:
-                            parts.append(b[key])
-                        else:
-                            parts.append(b[key].astype(self._row_dtype))
-                    part = np.concatenate(parts)
-                    part.flags.writeable = False
-                    yield part
+            else:
+                # # only create one array at a time, slower but less overhead
+                # for i in row_idx_iter:
+                #     array = np.empty(column_length, dtype=row_dtype)
+                #     start = 0
+                #     for b in self._blocks:
+                #         if b.ndim == 1:
+                #             array[start] = b[i]
+                #             start += 1
+                #         else:
+                #             end = start + b.shape[1]
+                #             array[start: end] = b[i]
+                #             start = end
+                #     array.flags.writeable = False
+                #     yield array
+                # performance optimized: consolidate into a single array
+                b = self._blocks_to_array(
+                        blocks=self._blocks,
+                        shape=self._shape,
+                        row_dtype=row_dtype,
+                        row_multiple=True)
+                for i in row_idx_iter:
+                    yield b[i]
 
         elif axis == 0: # iterate over columns
             if not reverse:
@@ -1068,7 +1081,7 @@ class TypeBlocks(ContainerOperand):
         Returns:
             A generator iterable of pairs, where values are block index, slice or column index
         '''
-        if key is None or (isinstance(key, slice) and key == NULL_SLICE):
+        if key is None or (key.__class__ is slice and key == NULL_SLICE):
             yield from self._all_block_slices() # slow from line profiler, 80% of this function call
         else:
             if isinstance(key, INT_TYPES):
@@ -1080,7 +1093,7 @@ class TypeBlocks(ContainerOperand):
                     if not retain_key_order:
                         key = slice_to_ascending_slice(key, self._shape[1])
                     indices: tp.Iterable[tp.Tuple[int, int]] = self._index[key]
-                elif isinstance(key, np.ndarray) and key.dtype == bool:
+                elif key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
                     # NOTE: if self._index was an array we could use Boolean selection directly
                     indices = (self._index[idx] for idx, v in enumerate(key) if v)
                 elif isinstance(key, KEY_ITERABLE_TYPES):
@@ -1347,9 +1360,9 @@ class TypeBlocks(ContainerOperand):
                     column_key,
                     retain_key_order=False))
 
-        if isinstance(row_key, np.ndarray) and row_key.dtype == bool:
+        if row_key.__class__ is np.ndarray and row_key.dtype == bool: #type: ignore
             # row_key is used with np.delete, which does not support Boolean arrays; instead, convert to an array of integers
-            row_key = np.arange(len(row_key))[row_key]
+            row_key = np.arange(len(row_key))[row_key] #type: ignore
 
         target_block_idx = target_slice = None
         targets_remain = True
@@ -1641,9 +1654,10 @@ class TypeBlocks(ContainerOperand):
                         # if block id 2D, can take up to v_width from value
                         value_piece_column_key = slice(0, v_width)
 
-                    if isinstance(value, np.ndarray) and value.ndim > 1:
-                        value_piece = value[NULL_SLICE, value_piece_column_key]
-                        value = value[NULL_SLICE, slice(v_width, None)] # restore for next iter
+                    if value.__class__ is np.ndarray and value.ndim > 1: #type: ignore
+                        value_piece = value[NULL_SLICE, value_piece_column_key] #type: ignore
+                        # restore for next iter
+                        value = value[NULL_SLICE, slice(v_width, None)] #type: ignore
                     else: # value is 1D array or tuple, assume assigning into a horizontal position
                         value_piece = value[value_piece_column_key] #type: ignore
                         value = value[slice(v_width, None)] #type: ignore
@@ -1681,10 +1695,10 @@ class TypeBlocks(ContainerOperand):
             value: Must be a single value or an array
             value_valid: same size Boolean area to be combined with targets
         '''
-        if isinstance(value, np.ndarray):
-            value_dtype = value.dtype
+        if value.__class__ is np.ndarray:
+            value_dtype = value.dtype #type: ignore
             is_element = False
-            assert value.shape == self.shape
+            # assert value.shape == self.shape
             if value_valid is not None:
                 assert value_valid.shape == self.shape
         else: # assumed to be non-string, non-iterable
@@ -1798,7 +1812,7 @@ class TypeBlocks(ContainerOperand):
         Args:
             value: can be a single element, or a single 2D array of shape equal to self.
         '''
-        if isinstance(value, np.ndarray):
+        if value.__class__ is np.ndarray:
             value_dtype = value.dtype
             is_element = False
             assert value.shape == self.shape
@@ -1980,26 +1994,26 @@ class TypeBlocks(ContainerOperand):
                 single_row = True
         elif isinstance(row_key, INT_TYPES):
             single_row = True
-        elif isinstance(row_key, slice):
+        elif row_key.__class__ is slice:
             # need to determine if there is only one index returned by range (after getting indices from the slice); do this without creating a list/tuple, or walking through the entire range; get constant time look-up of range length after uses slice.indicies
-            if len(range(*row_key.indices(self._shape[0]))) == 1:
+            if len(range(*row_key.indices(self._shape[0]))) == 1: #type: ignore
                 single_row = True
-        elif isinstance(row_key, np.ndarray) and row_key.dtype == bool:
+        elif row_key.__class__ is np.ndarray and row_key.dtype == bool: #type: ignore
             # must check this case before general iterables, below
-            if row_key.sum() == 1:
+            if row_key.sum() == 1: #type: ignore
                 single_row = True
         elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
             # an iterable of index integers is expected here
             single_row = True
 
         # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
-        for block_idx, slc in self._key_to_block_slices(column_key): # slow from line profiler
+        for block_idx, slc in self._key_to_block_slices(column_key): # PREF: slow from line profiler
             b = self._blocks[block_idx]
             if b.ndim == 1: # given 1D array, our row key is all we need
                 if row_key_null:
                     block_sliced = b
                 else:
-                    block_sliced = b[row_key] # slow from line profiler
+                    block_sliced = b[row_key] # PERF: slow from line profiler
             else: # given 2D, use row key and column slice
                 if row_key_null:
                     block_sliced = b[NULL_SLICE, slc]
@@ -2007,7 +2021,7 @@ class TypeBlocks(ContainerOperand):
                     block_sliced = b[row_key, slc]
 
             # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
-            if isinstance(block_sliced, np.ndarray):
+            if block_sliced.__class__ is np.ndarray:
                 # if we have a single row and the thing we sliced is 1d, we need to rotate it
                 if single_row and block_sliced.ndim == 1:
                     block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
@@ -2089,9 +2103,8 @@ class TypeBlocks(ContainerOperand):
         if isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key]
             b = self._blocks[block_idx]
-            row_key_null = (row_key is None or
-                    (isinstance(row_key, slice)
-                    and row_key == NULL_SLICE))
+            row_key_null = row_key is None or (row_key.__class__ is slice
+                    and row_key == NULL_SLICE)
             if b.ndim == 1:
                 if row_key_null: # return a column
                     return TypeBlocks.from_blocks(b)
@@ -2302,6 +2315,7 @@ class TypeBlocks(ContainerOperand):
             operator: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
             other: tp.Iterable[tp.Any],
             axis: int = 0,
+            fill_value: object = np.nan, # for interface compat
             ) -> 'TypeBlocks':
         '''Axis is only relevant in the application of a 1D array to a 2D TypeBlocks, where axis 0 (the default) will apply the array per row, while axis 1 will apply the array per column.
         '''
@@ -2333,28 +2347,28 @@ class TypeBlocks(ContainerOperand):
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
         else: # process other as an array
             self_operands = self._blocks
-            if not isinstance(other, np.ndarray):
+            if not other.__class__ is np.ndarray:
                 other = iterable_to_array_nd(other)
 
             # handle dimensions
-            if other.ndim == 0 or (other.ndim == 1 and len(other) == 1):
+            if other.ndim == 0 or (other.ndim == 1 and len(other) == 1): #type: ignore
                 # a scalar: reference same value for each block position
                 apply_column_2d_filter = False
                 other_operands = (other for _ in range(len(self._blocks)))
-            elif other.ndim == 1:
-                if axis == 0 and len(other) == self._shape[1]:
+            elif other.ndim == 1: #type: ignore
+                if axis == 0 and len(other) == self._shape[1]: #type: ignore
                     # 1d array applied to the rows: chop to block width
                     apply_column_2d_filter = False
-                    other_operands = (other[s] for s in self._block_shape_slices())
-                elif axis == 1 and len(other) == self._shape[0]:
+                    other_operands = (other[s] for s in self._block_shape_slices()) #type: ignore
+                elif axis == 1 and len(other) == self._shape[0]: #type: ignore
                     columnar = True
                 else:
-                    raise NotImplementedError(f'cannot apply binary operators with a 1D array along axis {axis}: {self._shape}, {other.shape}.')
-            elif other.ndim == 2 and other.shape == self._shape:
+                    raise NotImplementedError(f'cannot apply binary operators with a 1D array along axis {axis}: {self._shape}, {other.shape}.') #type: ignore
+            elif other.ndim == 2 and other.shape == self._shape: #type: ignore
                 apply_column_2d_filter = True
-                other_operands = (other[NULL_SLICE, s] for s in self._block_shape_slices())
+                other_operands = (other[NULL_SLICE, s] for s in self._block_shape_slices()) #type: ignore
             else:
-                raise NotImplementedError(f'cannot apply binary operators to arrays without alignable shapes: {self._shape}, {other.shape}.')
+                raise NotImplementedError(f'cannot apply binary operators to arrays without alignable shapes: {self._shape}, {other.shape}.') #type: ignore
 
         if columnar:
             return self.from_blocks(apply_binary_operator_blocks_columnar(
@@ -2447,8 +2461,8 @@ class TypeBlocks(ContainerOperand):
         lower_is_element = not hasattr(lower, '__len__')
         upper_is_element = not hasattr(upper, '__len__')
 
-        lower_is_array = isinstance(lower, np.ndarray)
-        upper_is_array = isinstance(upper, np.ndarray)
+        lower_is_array = lower.__class__ is np.ndarray
+        upper_is_array = upper.__class__ is np.ndarray
 
         # get a mutable list in reverse order for pop/pushing
         if lower_is_element or lower_is_array:
@@ -2558,7 +2572,7 @@ class TypeBlocks(ContainerOperand):
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
 
         '''
-        if isinstance(value, np.ndarray):
+        if value.__class__ is np.ndarray:
             raise RuntimeError('cannot assign an array to fillna')
 
         sided_index = 0 if sided_leading else -1
@@ -2625,7 +2639,7 @@ class TypeBlocks(ContainerOperand):
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailing side.
 
         '''
-        if isinstance(value, np.ndarray):
+        if value.__class__ is np.ndarray:
             raise RuntimeError('cannot assign an array to fillna')
 
         sided_index = 0 if sided_leading else -1

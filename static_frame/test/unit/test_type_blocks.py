@@ -4,13 +4,13 @@ from itertools import zip_longest
 import copy
 
 import numpy as np
+from arraykit import immutable_filter
 
 from static_frame import mloc
 from static_frame import TypeBlocks
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.util import immutable_filter
 from static_frame.core.util import NULL_SLICE
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase

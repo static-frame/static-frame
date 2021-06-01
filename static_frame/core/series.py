@@ -2,9 +2,14 @@ import typing as tp
 from functools import partial
 from itertools import chain
 from copy import deepcopy
+from collections.abc import Set
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
+from arraykit import immutable_filter
+from arraykit import mloc
+from arraykit import name_filter
+from arraykit import resolve_dtype
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -26,6 +31,7 @@ from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
@@ -44,6 +50,7 @@ from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
@@ -65,7 +72,6 @@ from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import immutable_filter
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
@@ -74,19 +80,17 @@ from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import mloc
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import name_filter
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import resolve_dtype
 from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import DTYPE_NA_KINDS
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
@@ -412,7 +416,7 @@ class Series(ContainerOperand):
 
         values_constructor: tp.Optional[tp.Callable[[int], None]] = None # if deferred
 
-        if not isinstance(values, np.ndarray):
+        if not values.__class__ is np.ndarray:
             if isinstance(values, dict):
                 raise ErrorInitSeries('use Series.from_dict to create a Series from a mapping.')
             elif isinstance(values, Series):
@@ -432,10 +436,11 @@ class Series(ContainerOperand):
                 raise ErrorInitSeries('Use Series.from_element to create a Series from an element.')
 
         else: # is numpy array
-            if dtype is not None and dtype != values.dtype:
-                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})')
+            if dtype is not None and dtype != values.dtype: #type: ignore
+                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})') #type: ignore
 
-            if values.shape == (): # handle special case of NP element
+            if values.shape == (): #type: ignore
+                # handle special case of NP element
                 def values_constructor(count: int) -> None: #pylint: disable=E0102
                     self.values = np.repeat(values, count)
                     self.values.flags.writeable = False
@@ -659,6 +664,19 @@ class Series(ContainerOperand):
                 blocks_to_container=blocks_to_container,
                 )
 
+    def via_fill_value(self,
+            fill_value: object = np.nan,
+            ) -> InterfaceFillValue['Series']:
+        '''
+        Interface for using binary operators and methods with a pre-defined fill value.
+        '''
+        return InterfaceFillValue(
+                container=self,
+                fill_value=fill_value,
+                )
+
+
+
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroup['Series']:
@@ -669,7 +687,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_items=self._axis_group_items,
                 function_values=self._axis_group,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
 
     @property
@@ -678,7 +697,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_items=self._axis_group_items,
                 function_values=self._axis_group,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
 
     #---------------------------------------------------------------------------
@@ -689,7 +709,7 @@ class Series(ContainerOperand):
                 function_items=self._axis_group_labels_items,
                 function_values=self._axis_group_labels,
                 yield_type=IterNodeType.VALUES,
-                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
                 )
 
     @property
@@ -699,7 +719,7 @@ class Series(ContainerOperand):
                 function_items=self._axis_group_labels_items,
                 function_values=self._axis_group_labels,
                 yield_type=IterNodeType.ITEMS,
-                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
                 )
 
     #---------------------------------------------------------------------------
@@ -712,7 +732,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
                 )
 
     @property
@@ -724,7 +745,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
                 )
 
     #---------------------------------------------------------------------------
@@ -736,7 +758,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -747,7 +770,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
 
@@ -759,7 +783,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
     @property
@@ -770,7 +795,8 @@ class Series(ContainerOperand):
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
     #---------------------------------------------------------------------------
     # index manipulation
@@ -858,6 +884,8 @@ class Series(ContainerOperand):
         elif is_callable_or_mapping(index): #type: ignore
             index_init = self._index.relabel(index)
             own_index = True
+        elif isinstance(index, Set):
+            raise RelabelInvalid()
         else:
             index_init = index #type: ignore
 
@@ -953,16 +981,32 @@ class Series(ContainerOperand):
         '''
         Return a new :obj:`static_frame.Series` after removing values of NaN or None.
         '''
-        # get positions that we want to keep
-        sel = np.logical_not(isna_array(self.values))
-        if not np.any(sel):
-            return self.__class__(())
+        if self.values.dtype.kind not in DTYPE_NA_KINDS:
+            # return the same array in a new series
+            return self.__class__(self.values,
+                    index=self._index,
+                    name=self._name,
+                    own_index=True)
 
+        # get positions that we want to keep
+        isna = isna_array(self.values)
+        length = len(self.values)
+        count = isna.sum()
+
+        if count == length: # all are NaN
+            return self.__class__((), name=self.name)
+        if count == 0: # None are nan
+            return self.__class__(self.values,
+                    index=self._index,
+                    name=self._name,
+                    own_index=True)
+
+        sel = np.logical_not(isna)
         values = self.values[sel]
         values.flags.writeable = False
 
         return self.__class__(values,
-                index=self._index.loc[sel],
+                index=self._index._extract_iloc(sel), # PERF: use _extract_iloc as we have a Boolean array
                 name=self._name,
                 own_index=True)
 
@@ -1098,7 +1142,7 @@ class Series(ContainerOperand):
             # sided value is not null: nothing to do
             return array # assume immutable
 
-        if isinstance(value, np.ndarray):
+        if value.__class__ is np.ndarray:
             raise RuntimeError('cannot assign an array to fillna')
 
         assignable_dtype = resolve_dtype(
@@ -1168,6 +1212,8 @@ class Series(ContainerOperand):
     def _ufunc_binary_operator(self, *,
             operator: UFunc,
             other: tp.Any,
+            axis: int = 0,
+            fill_value: object = np.nan,
             ) -> 'Series':
         '''
         For binary operations, the `name` attribute does not propagate unless other is a scalar.
@@ -1189,15 +1235,25 @@ class Series(ContainerOperand):
                 # if not equal, create a new Index by forming the union
                 index = self._index.union(other._index)
                 # now need to reindex the Series
-                values = self.reindex(index, own_index=True, check_equals=False).values
-                other = other.reindex(index, own_index=True, check_equals=False).values
+                values = self.reindex(index,
+                        own_index=True,
+                        check_equals=False,
+                        fill_value=fill_value,
+                        ).values
+                other = other.reindex(index,
+                        own_index=True,
+                        check_equals=False,
+                        fill_value=fill_value,
+                        ).values
             else:
                 other = other.values
-        elif isinstance(other, np.ndarray):
+        elif other.__class__ is np.ndarray:
             name = None
             other_is_array = True
             if other.ndim > 1:
                 raise NotImplementedError('Operator application to greater dimensionalities will result in an array with more than 1 dimension.')
+        elif other.__class__ is InterfaceFillValue:
+            raise RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
         else:
             name = self._name
 
@@ -1382,7 +1438,7 @@ class Series(ContainerOperand):
         # iterable selection should be handled by NP
         values = self.values[key]
 
-        if not isinstance(values, np.ndarray): # if we have a single element
+        if not values.__class__ is np.ndarray: # if we have a single element
             return values #type: ignore
         return self.__class__(
                 values,
@@ -1397,7 +1453,7 @@ class Series(ContainerOperand):
         iloc_key = self._index._loc_to_iloc(key)
         values = self.values[iloc_key]
 
-        if not isinstance(values, np.ndarray): # if we have a single element
+        if not values.__class__ is np.ndarray: # if we have a single element
             # NOTE: this branch is not encountered and may not be necessary
             # if isinstance(key, HLoc) and key.has_key_multiple():
             #     # must return a Series, even though we do not have an array
@@ -1426,7 +1482,7 @@ class Series(ContainerOperand):
     # utilities for alternate extraction: drop, mask and assignment
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
-        if isinstance(key, np.ndarray) and key.dtype == bool:
+        if key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
             # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
             values = np.delete(self.values, self._index.positions[key])
         else:
@@ -1713,7 +1769,7 @@ class Series(ContainerOperand):
         '''
         if key:
             cfs = key(self)
-            cfs_values = cfs if isinstance(cfs, np.ndarray) else cfs.values
+            cfs_values = cfs if cfs.__class__ is np.ndarray else cfs.values
         else:
             cfs_values = self.values
 
@@ -2063,6 +2119,24 @@ class Series(ContainerOperand):
         '''
         return argmax_1d(self.values, skipna=skipna) #type: ignore
 
+
+    def cov(self,
+            other: tp.Union['Series', np.ndarray],
+            *,
+            ddof: int = 1,
+            ) -> float:
+        '''
+        Return the index-aligned covariance to the supplied :obj:`Series`.
+
+        Args:
+            ddof: Delta degrees of freedom, defaults to 1.
+        '''
+        if isinstance(other, Series):
+            other = other.loc[self._index].values
+
+        # by convention, we return just the corner
+        return np.cov(self.values, other, ddof=ddof)[0, -1] #type: ignore [no-any-return]
+
     #---------------------------------------------------------------------------
 
     @doc_inject(selector='searchsorted', label_type='iloc (integer)')
@@ -2079,7 +2153,7 @@ class Series(ContainerOperand):
             {side_left}
         '''
         if not isinstance(values, str) and hasattr(values, '__len__'):
-            if not isinstance(values, np.ndarray):
+            if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
         return np.searchsorted(self.values, #type: ignore [no-any-return]
                 values,
@@ -2440,7 +2514,7 @@ class SeriesAssign(Assign):
                     self.key,
                     fill_value=fill_value).values
 
-        if isinstance(value, np.ndarray):
+        if value.__class__ is np.ndarray:
             value_dtype = value.dtype
         elif hasattr(value, '__len__') and not isinstance(value, str):
             value, _ = iterable_to_array_1d(value)

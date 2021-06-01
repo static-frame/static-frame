@@ -1,6 +1,74 @@
 What is New in Static Frame
 ===============================
 
+0.8.13
+----------
+
+Integration with ``arraykit``; replacement of numerous utility methods with ``arraykit`` implementations.
+
+Added ``via_fill_value()`` interface to ``Series`` and ``Frame``.
+
+
+0.8.12
+----------
+
+Performance enhancements to ``Quilt.iter_series().apply()``, ``Quilt.iter_tuple().apply()``, ``Quilt.iter_array().apply()``.
+
+
+0.8.11
+----------
+
+Fixed issue when supplying ``dtype`` arguments to ``apply`` methods with string dtypes.
+
+Added ``parameters`` argument to ``Frame.from_sql`` to perform SQL parameter substitution.
+
+In group-by operations where the group key is a hashable, the returned ``Index.name`` will be set to that key.
+
+Performance enhancements to ``Bus.iter_element().apply()`` and `Bus.iter_element_items().apply()``.
+
+
+0.8.10
+----------
+
+Performance enhancements to ``Index`` initialization.
+
+Performance enhancements to ``Series.iter_element().apply()``, ``Series.iter_element().map_any()``, ``Series.iter_element().map_all()``, and ``Series.iter_element().map_fill()``.
+
+Performance enhancements to ``Frame.iter_series().apply()``, ``Frame.iter_tuple().apply()``, ``Frame.iter_array().apply()``.
+
+
+0.8.9
+----------
+
+Performance enhancements to ``Series.dropna()``.
+
+``Series.relabel()`` and ``Frame.relabel()`` now raise if given a ``set`` or ``frozenset``.
+
+Fixed issue in ``Frame.assign.loc[]`` when using a Boolean array as a column selector.
+
+
+0.8.8
+----------
+
+Added ``Frame.cov()``, ``Series.cov()``, and ``Batch.cov()``.
+
+Performance enhancements to ``loc`` selections by element.
+
+
+0.8.7
+----------
+
+Implemented support for multiprocessing Frame writing from ``StoreZip`` subclasses used by ``Bus``, ``Batch``, and ``Quilt``.
+
+Enabled ``write_max_workers`` and ``write_chunksize`` in ``StoreConfig``.
+
+Added py.typed file to package.
+
+Improved exceptions raised when attempting to write to a file at an invalid path.
+
+Improved handling of reading files with columns but no data with ``Frame.from_delimited``.
+
+
 0.8.6
 ----------
 

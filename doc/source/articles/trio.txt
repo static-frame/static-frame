@@ -7,7 +7,7 @@ It is common in DataFrame processing routines to work with collections of tables
 
 While hierarchical indices can be used to bring multiple tables into a single DataFrame, this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
 
-This presentation introduces three abstractions for working with large collections of DataFrames. The first, the Bus (named after buses used in circuits), provides a dictionary-like interface for lazily loading (and forgetting) tables in a collection; collections can stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, pickle, or delimited files. The second, the Batch (named after batch processing), is a deferred  processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The third, the Quilt (named after a textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operating on partitioned data as if it was unified in a single table.
+This presentation introduces three abstractions for working with large collections of DataFrames. The first, the Bus (named after buses used in circuits), provides a dictionary-like interface for lazily loading (and forgetting) tables in a collection; collections can stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, pickle, or delimited files. The second, the Batch (named after batch processing), is a deferred  processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The third, the Quilt (named after textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operations on partitioned data as if it was a unified, single table.
 
 All three containers provide identical interfaces for reading from, and writing to, multi-table storage formats such as XLSX, SQLite, HDF5, or zipped containers of pickle, Parquet, or delimited-text files. This uniformity permits sharing the same data store for different usage contexts.
 
@@ -20,11 +20,13 @@ While these containers are implemented in the Python StaticFrame package (a Pand
 
 
 
+
+
 Initialization & Relation to Other Containers
 _______________________________________________________
 
 
-Any iterable of pairs of label and Frame can be used to construct these containers. Any ``items()`` method, such as the one found on a Python dictionary of Frames, provides such an iterable. Additionally, the Bus serves as a convenient resource for creating a Batch and Quilt. ``Bus.items()`` can be used to initialize a Batch, and a Quilt is given a Bus on initialization..
+Any iterable of pairs of label and Frame can be used to construct a Bus, Batch, or Quilt. The ``items()`` method on a Python dictionary of Frames provides such an iterable. Additionally, a Bus serves as a convenient resource for creating a Batch or a Quilt. The ``Bus.items()`` method, for example, can be used to initialize a Batch, and a Quilt is given a Bus on initialization.
 
 
 Bus
@@ -389,7 +391,7 @@ _____________________________________________
 In the previous examples, the Bus was shown lazily load in data as it was accessed. While this permits only loading what is needed, for large collections of data this will
 
 
-Going Further
+Going Further & Faster
 _______________________
 
 Optimizations using multiprocessing and multi-threading in Batch processing.

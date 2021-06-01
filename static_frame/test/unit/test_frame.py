@@ -9,6 +9,8 @@ import sqlite3
 import string
 import typing as tp
 import unittest
+import os
+import io
 
 import numpy as np
 import frame_fixtures as ff
@@ -2696,6 +2698,17 @@ class TestUnit(TestCase):
                 ((0, ((0, '1'), (1, '1'), (2, '1'), (3, '1'))), (1, ((0, 1), (1, 1), (2, 1), (3, 1))), (2, ((0, True), (1, True), (2, True), (3, True))), (3, ((0, '1'), (1, '1'), (2, '1'), (3, '1'))), (4, ((0, '1'), (1, '1'), (2, '1'), (3, '1'))))
                 )
 
+    def test_frame_assign_getitem_i(self) -> None:
+
+        f1 = ff.parse('s(2,10)|v(int)')
+        f2 = f1.assign.loc[:, f1.columns % 2 == 0](0)
+
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, 0), (1, 0))), (1, ((0, 162197), (1, -41157))), (2, ((0, 0), (1, 0))), (3, ((0, 129017), (1, 35021))), (4, ((0, 0), (1, 0))), (5, ((0, 84967), (1, 13448))), (6, ((0, 0), (1, 0))), (7, ((0, 137759), (1, -62964))), (8, ((0, 0), (1, 0))), (9, ((0, 126025), (1, 59728)))))
+
+        self.assertEqual(f1.loc[:, f1.columns % 2 == 0].columns.values.tolist(),
+                [0, 2, 4, 6, 8]
+)
     #---------------------------------------------------------------------------
 
     def test_frame_assign_iloc_a(self) -> None:
@@ -4883,6 +4896,15 @@ class TestUnit(TestCase):
                 (('c', ((0, 1), (1, 2))), ('b', ((0, 1), (1, 2))))
                 )
 
+    def test_frame_relabel_h(self) -> None:
+
+        f1 = ff.parse('s(2,2)')
+        with self.assertRaises(RuntimeError):
+            f1.relabel(columns={'a', 'c'})
+
+        with self.assertRaises(RuntimeError):
+            f1.relabel(index={'a', 'c'})
+
     #---------------------------------------------------------------------------
     def test_frame_rehierarch_a(self) -> None:
         records = (
@@ -5565,7 +5587,7 @@ class TestUnit(TestCase):
             self.assertEqual(f1.to_pairs(0),
                     (('A', ((False, False), (True, True))), ('B', ((False, True), (True, False)))))
 
-
+    #---------------------------------------------------------------------------
     def test_frame_from_tsv_a(self) -> None:
 
         with temp_file('.txt', path=True) as fp:
@@ -5768,6 +5790,21 @@ class TestUnit(TestCase):
             self.assertEqual(f2.index.name, ('up', 'down'))
             self.assertEqual(f2.columns.name, None)
 
+    def test_frame_from_tsv_n(self) -> None:
+
+        f1 = sf.Frame(columns=['column'], index=sf.Index([], name='index'))
+        s = io.StringIO()
+        f1.to_tsv(s)
+
+        s.seek(0)
+        f2 = sf.Frame.from_tsv(s, index_depth=1, index_name_depth_level=0)
+        self.assertEqual(f2.index.name, 'index')
+        self.assertEqual(f2.to_pairs(), (('column', ()),))
+
+        s.seek(0)
+        f3 = sf.Frame.from_tsv(s, index_depth=1, columns_name_depth_level=0)
+        self.assertEqual(f3.columns.name, 'index')
+        self.assertEqual(f3.to_pairs(), (('column', ()),))
 
     #---------------------------------------------------------------------------
 
@@ -5853,8 +5890,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=None)
-            f = open(fp)
-            lines = f.readlines()
+            with open(fp) as f:
+                lines = f.readlines()
             self.assertEqual(lines,
                     ['__index0__|r|s\n', 'w|2|None\n', 'x|3|nan\n']
                     )
@@ -5874,8 +5911,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=None)
-            f = open(fp)
-            lines = f.readlines()
+            with open(fp) as f:
+                lines = f.readlines()
             self.assertEqual(lines, [
                     '__index0__|__index1__|r|s\n',
                     '1|a|2|None\n',
@@ -5905,8 +5942,8 @@ class TestUnit(TestCase):
                 )
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf1)
-            f = open(fp)
-            lines1 = f.readlines()
+            with open(fp) as f:
+                lines1 = f.readlines()
             self.assertEqual(lines1,
                     ['__index0__|r|s|t\n',
                     'w|False|0.00000002|0.00000012\n',
@@ -5914,8 +5951,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf2)
-            f = open(fp)
-            lines2 = f.readlines()
+            with open(fp) as f:
+                lines2 = f.readlines()
             self.assertEqual(lines2,
                     ['__index0__|r|s|t\n',
                     'w|False|2.0000e-08|1.2300e-07\n',
@@ -5936,8 +5973,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp1:
             f1.to_delimited(fp1, delimiter='|', store_filter=None)
-            f = open(fp1)
-            lines = f.readlines()
+            with open(fp1) as f:
+                lines = f.readlines()
             self.assertEqual(lines, [
                     'foo|bar|r|s\n',
                     '1|a|2|None\n',
@@ -5948,8 +5985,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp2:
             f1.to_delimited(fp2, delimiter='|', store_filter=None, include_index_name=False)
-            f = open(fp2)
-            lines = f.readlines()
+            with open(fp2) as f:
+                lines = f.readlines()
             self.assertEqual(lines, [
                     '||r|s\n',
                     '1|a|2|None\n',
@@ -5972,8 +6009,8 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp1:
             f1.to_delimited(fp1, delimiter='|', store_filter=None, include_index_name=False)
-            f = open(fp1)
-            lines = f.readlines()
+            with open(fp1) as f:
+                lines = f.readlines()
             self.assertEqual(lines,
                     ['|1|1|2|2\n',
                     '|a|b|a|b\n',
@@ -5985,8 +6022,9 @@ class TestUnit(TestCase):
                     store_filter=None,
                     include_index_name=False,
                     include_columns_name=True)
-            f = open(fp2)
-            lines = f.readlines()
+            with open(fp2) as f:
+                lines = f.readlines()
+
 
             self.assertEqual(lines,
                     ['foo|1|1|2|2\n',
@@ -6157,6 +6195,15 @@ class TestUnit(TestCase):
             f1.to_tsv(fp, include_index=True)
             f2 = Frame.from_tsv(fp, index_depth=2, columns_depth=2)
             self.assertEqualFrames(f1, f2)
+
+    def test_frame_to_tsv_d(self) -> None:
+        f1 = ff.parse('s(4,5)')
+
+        with temp_file('', path=True) as fp:
+            fp = os.path.join(fp, '__space__', 'test.txt')
+            with self.assertRaises((NotADirectoryError, FileNotFoundError)):
+                f1.to_tsv(fp)
+
 
     #---------------------------------------------------------------------------
     def test_frame_to_html_a(self) -> None:
@@ -9082,6 +9129,19 @@ class TestUnit(TestCase):
                 (('date', ((20.0, np.datetime64('2006-01-01')), (21.0, np.datetime64('2006-01-01')), (22.0, np.datetime64('2006-01-02')), (23.0, np.datetime64('2006-01-02')))), ('identifier', ((20.0, 'a1'), (21.0, 'b2'), (22.0, 'a1'), (23.0, 'b2'))), ('value', ((20.0, 12.5), (21.0, 12.5), (22.0, 12.5), (23.0, 12.5))))
                 )
 
+    def test_frame_from_sql_c(self) -> None:
+        conn: sqlite3.Connection = self.get_test_db_e()
+
+        f1 = sf.Frame.from_sql('select * from events where identifier=?',
+                connection=conn,
+                dtypes={'date': 'datetime64[D]'},
+                parameters=('a1',)
+                )
+        self.assertEqual([dt.kind for dt in f1.dtypes.values],
+                ['M', 'U', 'f', 'i'])
+        self.assertEqual(f1.to_pairs(),
+                (('date', ((0, np.datetime64('2006-01-01')), (1, np.datetime64('2006-01-02')))), ('identifier', ((0, 'a1'), (1, 'a1'))), ('value', ((0, 12.5), (1, 12.5))), ('count', ((0, 20), (1, 22)))))
+
     def test_frame_from_sql_no_args(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_a()
 
@@ -9441,6 +9501,38 @@ class TestUnit(TestCase):
         self.assertEqual(f1.iloc_max(axis=1).to_pairs(),
                 (('x', 0), ('y', 1), ('z', 0)))
 
+    #---------------------------------------------------------------------------
+    def test_frame_cov_a(self) -> None:
+        f1= Frame.from_dict(
+                dict(a=(3,2,1), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        f2 = f1.cov()
+        self.assertEqual(f2.to_pairs(),
+                (('a', (('a', 1.0), ('b', -1.0))), ('b', (('a', -1.0), ('b', 1.0)))))
+
+        f3 = f1.cov(axis=0)
+        self.assertEqual(f3.to_pairs(),
+                (('x', (('x', 0.5), ('y', 1.5), ('z', 2.5))), ('y', (('x', 1.5), ('y', 4.5), ('z', 7.5))), ('z', (('x', 2.5), ('y', 7.5), ('z', 12.5))))
+                )
+
+    def test_frame_cov_b(self) -> None:
+        f1= FrameGO.from_dict(
+                dict(a=(3,2,1), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f1')
+
+        f2 = f1.cov()
+        self.assertEqual(f2.to_pairs(),
+                (('a', (('a', 1.0), ('b', -1.0))), ('b', (('a', -1.0), ('b', 1.0)))))
+
+        f3 = f1.cov(axis=0)
+        self.assertEqual(f3.to_pairs(),
+                (('x', (('x', 0.5), ('y', 1.5), ('z', 2.5))), ('y', (('x', 1.5), ('y', 4.5), ('z', 7.5))), ('z', (('x', 2.5), ('y', 7.5), ('z', 12.5))))
+                )
+
+        self.assertEqual(f3.name, 'f1')
 
     #---------------------------------------------------------------------------
     def test_frame_bloc_a(self) -> None:

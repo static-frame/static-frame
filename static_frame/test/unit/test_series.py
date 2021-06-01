@@ -1852,6 +1852,14 @@ class TestUnit(TestCase):
         self.assertEqual(id(s1.index), id(s2.index))
 
 
+    def test_series_relabel_g(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        # reuse the same instance
+        with self.assertRaises(RuntimeError):
+            s1.relabel({'d', 'c', 'b', 'a'})
+
+
+
     #---------------------------------------------------------------------------
 
     def test_series_relabel_flat_a(self) -> None:
@@ -2866,6 +2874,24 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             s1.loc_max(skipna=False)
+
+    #---------------------------------------------------------------------------
+    def test_series_cov_a(self) -> None:
+
+        s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        s2 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        self.assertAlmostEqualArray(s1.cov(s2), 9312581.904761903)
+
+        s3 = Series((8234, 3, 34, 87, 145, 234, 543), index=tuple('gabcdef'))
+        self.assertAlmostEqualArray(s1.cov(s3), 9312581.904761903)
+
+    def test_series_cov_b(self) -> None:
+
+        s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        s2 = np.array([3, 34, 87, 145, 234, 543, 8234])
+        self.assertAlmostEqualArray(s1.cov(s2), 9312581.904761903)
+
+
 
 
     #---------------------------------------------------------------------------
@@ -4042,6 +4068,154 @@ class TestUnit(TestCase):
         s1 = Series(range(1, 6))
         self.assertEqual(round(s1.var(), 2), 2.0)
         self.assertEqual(round(s1.var(ddof=1), 2), 2.5)
+
+    #---------------------------------------------------------------------------
+    def test_series_via_fill_value_a(self) -> None:
+
+        s1 = Series(range(3), index=tuple('abc'))
+        s2 = Series(range(5), index=tuple('abcde'))
+
+        self.assertEqual(
+                (s1.via_fill_value(0) + s2).to_pairs(),
+                (('a', 0), ('b', 2), ('c', 4), ('d', 3), ('e', 4))
+                )
+
+        self.assertEqual(
+                (s1.via_fill_value(0) - s2).to_pairs(),
+                (('a', 0), ('b', 0), ('c', 0), ('d', -3), ('e', -4))
+                )
+
+        self.assertEqual(
+                (s1.via_fill_value(0) * s2).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 4), ('d', 0), ('e', 0))
+                )
+
+        self.assertEqual(
+                round(s1.via_fill_value(1) / (s2 + 1), 1).to_pairs(),
+                (('a', 0.0), ('b', 0.5), ('c', 0.7), ('d', 0.2), ('e', 0.2))
+                )
+
+        self.assertEqual(
+                ((s1 * 2).via_fill_value(0) // s2).to_pairs(),
+                (('a', 0), ('b', 2), ('c', 2), ('d', 0), ('e', 0))
+                )
+
+        self.assertEqual(
+                (s1.via_fill_value(10) % s2).to_pairs(),
+                (('a', 0), ('b', 0), ('c', 0), ('d', 1), ('e', 2))
+                )
+
+        self.assertEqual(
+                (s1.via_fill_value(2) ** s2).to_pairs(),
+                (('a', 1), ('b', 1), ('c', 4), ('d', 8), ('e', 16))
+                )
+
+
+        self.assertEqual(
+                (s1.via_fill_value(-1) < s2).to_pairs(),
+                (('a', False), ('b', False), ('c', False), ('d', True), ('e', True))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(0) <= s2).to_pairs(),
+                (('a', True), ('b', True), ('c', True), ('d', True), ('e', True))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(4) == s2).to_pairs(),
+                (('a', True), ('b', True), ('c', True), ('d', False), ('e', True))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(4) != s2).to_pairs(),
+                (('a', False), ('b', False), ('c', False), ('d', True), ('e', False))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(10) > s2).to_pairs(),
+                (('a', False), ('b', False), ('c', False), ('d', True), ('e', True))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(3) >= s2).to_pairs(),
+                (('a', True), ('b', True), ('c', True), ('d', True), ('e', False))
+                )
+
+
+    def test_series_via_fill_value_b(self) -> None:
+
+        s1 = Series((False, True, True), index=tuple('abc'))
+        s2 = Series((True, True, False, True, False), index=tuple('abcde'))
+
+        self.assertEqual(
+                (s1.via_fill_value(False) >> s2).to_pairs(),
+                (('a', 0), ('b', 0), ('c', 1), ('d', 0), ('e', 0))
+                )
+
+        self.assertEqual(
+                (s1.via_fill_value(False) << s2).to_pairs(),
+                (('a', 0), ('b', 2), ('c', 1), ('d', 0), ('e', 0))
+                )
+
+
+        self.assertEqual(
+                (s1.via_fill_value(False) & s2).to_pairs(),
+                (('a', False), ('b', True), ('c', False), ('d', False), ('e', False))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(False) | s2).to_pairs(),
+               (('a', True), ('b', True), ('c', True), ('d', True), ('e', False))
+                )
+        self.assertEqual(
+                (s1.via_fill_value(False) ^ s2).to_pairs(),
+               (('a', True), ('b', False), ('c', True), ('d', True), ('e', False))
+                )
+
+    def test_series_via_fill_value_c(self) -> None:
+
+        s1 = Series(range(3), index=tuple('abc'))
+
+        self.assertEqual(
+                (3 + s1.via_fill_value(0)).to_pairs(),
+                (('a', 3), ('b', 4), ('c', 5))
+                )
+
+        self.assertEqual(
+                (3 - s1.via_fill_value(0)).to_pairs(),
+                (('a', 3), ('b', 2), ('c', 1))
+                )
+
+        self.assertEqual(
+                (2 * s1.via_fill_value(0)).to_pairs(),
+                (('a', 0), ('b', 2), ('c', 4))
+                )
+
+        self.assertEqual(
+                round(10 / (s1.via_fill_value(1) + 1), 1).to_pairs(),
+                (('a', 10.0), ('b', 5.0), ('c', 3.3))
+                )
+
+        self.assertEqual(
+                (10 // (s1.via_fill_value(0) + 1)).to_pairs(),
+                (('a', 10), ('b', 5), ('c', 3))
+                )
+
+
+    def test_series_via_fill_value_d(self) -> None:
+
+        s1 = sf.Series(range(2), index=tuple('ab'))
+        s2 = sf.Series(np.arange(1,4)*4, index=tuple('bcd'))
+        s3 = sf.Series(np.arange(2,5)*100, index=tuple('cde'))
+
+
+        s4 = (s1.via_fill_value(1) * s2).via_fill_value(0) + s3
+
+        self.assertEqual(s4.to_pairs(),
+                (('a', 0), ('b', 4), ('c', 208), ('d', 312), ('e', 400)))
+
+
+    def test_series_via_fill_value_e(self) -> None:
+
+        s1 = sf.Series(range(2), index=tuple('ab'))
+        s2 = sf.Series(np.arange(1,4)*4, index=tuple('bcd'))
+
+        with self.assertRaises(RuntimeError):
+            s1.via_fill_value(0) + s2.via_fill_value(1)
 
 
 if __name__ == '__main__':

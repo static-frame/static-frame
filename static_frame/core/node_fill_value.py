@@ -1,4 +1,3 @@
-
 import typing as tp
 
 import numpy as np
@@ -6,29 +5,28 @@ import numpy as np
 from static_frame.core.node_selector import Interface
 from static_frame.core.util import OPERATORS
 
-
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.node_fill_value import InterfaceFillValue #pylint: disable = W0611 #pragma: no cov
+    from static_frame.core.node_transpose import InterfaceTranspose #pylint: disable = W0611 #pragma: no cov
 
 TContainer = tp.TypeVar('TContainer',
         'Frame',
-        'IndexHierarchy',
+        'Series',
         )
 
-class InterfaceTranspose(Interface[TContainer]):
-
+class InterfaceFillValue(Interface[TContainer]):
 
     __slots__ = (
             '_container',
             '_fill_value',
+            '_axis',
             )
     INTERFACE = (
-            'via_fill_value',
+            'via_T',
             '__add__',
             '__sub__',
             '__mul__',
@@ -61,25 +59,24 @@ class InterfaceTranspose(Interface[TContainer]):
             container: TContainer,
             *,
             fill_value: object = np.nan,
+            axis: int = 0,
             ) -> None:
         self._container: TContainer = container
         self._fill_value = fill_value
-
+        self._axis = axis
 
     #---------------------------------------------------------------------------
-    def via_fill_value(self,
-            fill_value: object,
-            ) -> "InterfaceFillValue[Frame]":
+    @property
+    def via_T(self) -> "InterfaceTranspose[Frame]":
         '''
-        Interface for using binary operators and methods with a pre-defined fill value.
+        Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
-        from static_frame.core.node_fill_value import InterfaceFillValue
+        from static_frame.core.node_transpose import InterfaceTranspose
         from static_frame.core.frame import Frame
         assert isinstance(self._container, Frame)
-        return InterfaceFillValue(
+        return InterfaceTranspose(
                 container=self._container,
-                fill_value=fill_value,
-                axis=1,
+                fill_value=self._fill_value,
                 )
 
     #---------------------------------------------------------------------------
@@ -87,7 +84,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__add__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -95,7 +92,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__sub__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -103,7 +100,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__mul__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -111,14 +108,15 @@ class InterfaceTranspose(Interface[TContainer]):
     #     return self._container._ufunc_binary_operator(
     #             operator=OPERATORS['__matmul__'],
     #             other=other,
-    #             axis=1,
+    #             axis=self._axis,
+    #             fill_value=self._fill_value,
     #             )
 
     def __truediv__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__truediv__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -126,7 +124,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__floordiv__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -134,7 +132,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__mod__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -142,7 +140,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__pow__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -150,7 +148,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__lshift__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -158,7 +156,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__rshift__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -166,7 +164,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__and__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -174,7 +172,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__xor__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -182,7 +180,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__or__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -190,7 +188,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__lt__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -198,7 +196,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__le__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -206,7 +204,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__eq__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -214,7 +212,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__ne__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -222,7 +220,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__gt__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -230,7 +228,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__ge__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -239,7 +237,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__radd__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -247,7 +245,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__rsub__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -255,7 +253,7 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__rmul__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -263,14 +261,15 @@ class InterfaceTranspose(Interface[TContainer]):
     #     return self._container._ufunc_binary_operator(
     #             operator=OPERATORS['__rmatmul__'],
     #             other=other,
-    #             axis=1,
+    #             axis=self._axis,
+    #             fill_value=self._fill_value,
     #             )
 
     def __rtruediv__(self, other: tp.Any) -> tp.Any:
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__rtruediv__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
 
@@ -278,7 +277,6 @@ class InterfaceTranspose(Interface[TContainer]):
         return self._container._ufunc_binary_operator(
                 operator=OPERATORS['__rfloordiv__'],
                 other=other,
-                axis=1,
+                axis=self._axis,
                 fill_value=self._fill_value,
                 )
-

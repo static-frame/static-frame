@@ -4,6 +4,7 @@ from ast import literal_eval
 from copy import deepcopy
 
 import numpy as np
+from arraykit import name_filter
 
 
 from static_frame.core.array_go import ArrayGO
@@ -59,7 +60,6 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import intersect2d
 from static_frame.core.util import isin
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import name_filter
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import setdiff2d
@@ -1153,6 +1153,7 @@ class IndexHierarchy(IndexBase):
             operator: UFunc,
             other: tp.Any,
             axis: int = 0,
+            fill_value: object = np.nan,
             ) -> np.ndarray:
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).

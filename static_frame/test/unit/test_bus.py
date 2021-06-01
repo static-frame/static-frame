@@ -1476,11 +1476,35 @@ class TestUnit(TestCase):
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
             b2 = Bus.from_zip_pickle(fp)
-            b3 = b2.sort_values(key=lambda b: b.iter_element().apply(lambda f: f.sum().sum()))
 
+
+            b3 = b2.sort_values(key=lambda b: b.iter_element().apply(lambda f: f.sum().sum()))
             self.assertEqual(b3.index.values.tolist(),
                 ['f3', 'f2', 'f1']
                 )
+
+    #---------------------------------------------------------------------------
+    def test_bus_iter_element_apply_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(30000,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(1,2), b=(5,6)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        b2 = b1.iter_element().apply(lambda f: f.sum().sum())
+
+        self.assertEqual(b2.to_pairs(),
+                (('f3', 14), ('f2', 21), ('f1', 30007)))
+
+        self.assertEqual(id(b1.index), id(b2.index))
 
     #---------------------------------------------------------------------------
     def test_bus_drop_a(self) -> None:
