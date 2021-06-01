@@ -9720,6 +9720,43 @@ class TestUnit(TestCase):
         ]
 
 
+    def test_unset_index_column_hierarchy_w_dates(self) -> None:
+        f = ff.parse('s(3,3)|i(I,str)|c(IH,(str,dtY,tdD))').rename(
+                index='index_name',
+                columns=('l1', 'l2'),
+        )
+        unset = f.unset_index(names=[('outer', 'middle', f.index.name)])
+        assert unset.columns.values.tolist() == [
+                ['outer', 'middle', 'index_name'],
+                ['zZbu', 105269, datetime.timedelta(days=58768)],
+                ['zZbu', 105269, datetime.timedelta(days=146284)],
+                ['zZbu', 119909, datetime.timedelta(days=170440)],
+        ]
+        assert unset.columns.dtypes.values.tolist() == [
+                np.dtype('<U5'),
+                np.dtype('O'),
+                np.dtype('O'),
+        ]
+
+        # dtypes should be preserved when possible.
+        dt = f.columns.values_at_depth(1)[1]
+        td = f.columns.values_at_depth(2)[1]
+        unset2 = f.unset_index(names=[(f.index.name, dt, td)])
+
+        assert unset2.columns.values.tolist() == [
+                ['index_name', 105269, datetime.timedelta(days=146284)],
+                ['zZbu', 105269, datetime.timedelta(days=58768)],
+                ['zZbu', 105269, datetime.timedelta(days=146284)],
+                ['zZbu', 119909, datetime.timedelta(days=170440)]
+        ]
+
+        # TODO, can we preserve dtypes?
+        assert unset2.columns.dtypes.values.tolist() == [
+                np.dtype('<U10'),
+                np.dtype('O'),
+                np.dtype('O'),
+        ]
+
     #---------------------------------------------------------------------------
     @skip_win #type: ignore
     def test_frame_pivot_a(self) -> None:
