@@ -457,7 +457,7 @@ def _gen_skip_middle(
     yield from reversed(values)
 
 
-def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
+def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype[tp.Any]:
     '''Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object.
     '''
     if value is np.nan:
