@@ -1067,6 +1067,7 @@ def performance_tables_from_records(
             frame[fields].min().rename('min'),
             frame[fields].max().rename('max'),
             frame[fields].mean().rename('mean'),
+            frame[fields].median().rename('median'),
             frame[fields].std(ddof=1).rename('std')
             )).rename(index='name').unset_index()
     # import ipdb; ipdb.set_trace()
