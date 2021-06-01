@@ -7,7 +7,6 @@ import numpy as np
 
 from static_frame import Frame
 from static_frame import Series
-from static_frame.core.index import ILoc
 from static_frame.test.test_case import TestCase
 
 

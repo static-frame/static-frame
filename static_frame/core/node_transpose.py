@@ -4,7 +4,7 @@ import typing as tp
 import numpy as np
 
 from static_frame.core.node_selector import Interface
-from static_frame.core.util import OPERATORS, isin
+from static_frame.core.util import OPERATORS
 
 
 if tp.TYPE_CHECKING:
