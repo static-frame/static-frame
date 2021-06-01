@@ -549,7 +549,7 @@ class InterfaceRecord(tp.NamedTuple):
                 # NOTE: dropping the no arg version; not sure how to use it
                 terminus_signature, _ = _get_signatures(
                         name,
-                        obj, #type: ignore
+                        obj,
                         is_getitem=False,
                         max_args=max_args,
                         )
