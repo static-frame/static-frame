@@ -781,7 +781,7 @@ dtype('int64')
 <Index: signature>
 sort_index(*, ascending, kind, key)  Series   Method Return a new Seri...
 sort_values(*, ascending, kind, key) Series   Method Return a new Seri...
-<<U94>                               <<U6>    <<U17> <<U83>
+<<U94>                               <<U6>    <<U19> <<U83>
 
 #end_Series-interface
 
@@ -1292,7 +1292,7 @@ d'Arrest 6.51           1.346
 sort_columns(*, ascending, kind, ... Frame    Method Return a new Fram...
 sort_index(*, ascending, kind, key)  Frame    Method Return a new Fram...
 sort_values(label, *, ascending, ... Frame    Method Return a new Fram...
-<<U94>                               <<U5>    <<U18> <<U83>
+<<U94>                               <<U5>    <<U19> <<U83>
 
 
 #end_Frame-interface
@@ -2406,7 +2406,7 @@ dropna(axis, condition)              FrameGO  Method   Return a new Fram...
 drop[key]                            FrameGO  Selector Label-based selec...
 drop.iloc[key]                       FrameGO  Selector
 drop.loc[key]                        FrameGO  Selector
-<<U94>                               <<U7>    <<U18>   <<U83>
+<<U94>                               <<U7>    <<U19>   <<U83>
 
 #end_FrameGO-interface
 
