@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.14
+----------
+
+Integration with ``arraykit`` 0.1.8.
+
+
 0.8.13
 ----------
 
