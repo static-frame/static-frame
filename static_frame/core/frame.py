@@ -5541,7 +5541,6 @@ class Frame(ContainerOperand):
             sub_frames = []
             sub_columns_collected = []
 
-            # import ipdb; ipdb.set_trace()
             # avoid doing a multi-column-style selection if not needed
             if len(columns_fields) == 1:
                 columns_group = columns_fields[0]
@@ -7262,6 +7261,8 @@ class FrameAssignILoc(FrameAssign):
             ) -> 'Frame':
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
+        # only a list is treated as element; might expand a generator?
+        is_iterable = isinstance(value, list)
 
         if isinstance(self.key, tuple):
             # NOTE: the iloc key's order is not relevant in assignment, and block assignment requires that column keys are ascending
@@ -7290,13 +7291,18 @@ class FrameAssignILoc(FrameAssign):
                     key,
                     assigned,
                     )
+        elif is_iterable:
+            assigned, _ = iterable_to_array_1d(value)
+            blocks = self.container._blocks.extract_iloc_assign_by_unit(
+                    key,
+                    assigned,
+                    )
         else: # could be array or single element
             assigned = value
             blocks = self.container._blocks.extract_iloc_assign_by_unit(
                     key,
                     assigned,
                     )
-
         return self.container.__class__(
                 data=blocks,
                 columns=self.container._columns,

@@ -12,6 +12,7 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
+from arraykit import dtype_from_element
 
 
 from static_frame.core.container import ContainerOperand
@@ -44,7 +45,6 @@ from static_frame.core.util import array_sample
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import CallableOrMapping
-from static_frame.core.util import dtype_from_element
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_DATETIME_KIND

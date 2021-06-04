@@ -15,6 +15,7 @@ from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
 from arraykit import shape_filter
+from arraykit import dtype_from_element
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
@@ -39,7 +40,6 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
-from static_frame.core.util import dtype_from_element
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import GetItemKeyType
@@ -1582,7 +1582,6 @@ class TypeBlocks(ContainerOperand):
             column_key: must be sorted in ascending order.
         '''
         value_dtype = dtype_from_element(value)
-
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = self._key_to_block_slices(
                 column_key,

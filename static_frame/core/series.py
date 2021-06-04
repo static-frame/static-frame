@@ -10,6 +10,7 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
+from arraykit import dtype_from_element
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -63,7 +64,6 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import dtype_to_fill_value
