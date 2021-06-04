@@ -1299,18 +1299,18 @@ def array_to_groups_and_locations(
     return groups, locations
 
 
-def isna_element(value: tp.Any) -> bool:
-    '''Return Boolean if value is an NA. This does not yet handle pd.NA
-    '''
-    try:
-        return np.isnan(value) #type: ignore
-    except TypeError:
-        pass
-    try:
-        return np.isnat(value) #type: ignore
-    except TypeError:
-        pass
-    return value is None
+# def isna_element(value: tp.Any) -> bool:
+#     '''Return Boolean if value is an NA. This does not yet handle pd.NA
+#     '''
+#     try:
+#         return np.isnan(value) #type: ignore
+#     except TypeError:
+#         pass
+#     try:
+#         return np.isnat(value) #type: ignore
+#     except TypeError:
+#         pass
+#     return value is None
 
 
 def isna_array(array: np.ndarray,
