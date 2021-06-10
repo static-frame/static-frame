@@ -5104,7 +5104,8 @@ class Frame(ContainerOperand):
             block_gen = blocks
 
         # self._columns._blocks may be None until array cache is updated.
-        self._columns._update_array_cache()
+        if self._columns._recache:
+            self._columns._update_array_cache()
         column_blocks = self._columns._blocks._blocks
 
         if names:
