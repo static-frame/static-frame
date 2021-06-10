@@ -5103,7 +5103,10 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        column_blocks = self._columns._levels.to_type_blocks()._blocks
+        # self._columns._blocks may be None until array cache is updated.
+        self._columns._update_array_cache()
+        column_blocks = self._columns._blocks._blocks
+
         if names:
             columns = chain(np.array(tuple(names)), column_blocks)
         else:
