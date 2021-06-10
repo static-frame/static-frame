@@ -15,6 +15,9 @@ import warnings
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
+from arraykit import column_1d_filter
+from arraykit import name_filter
+from arraykit import resolve_dtype
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -72,6 +75,7 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
@@ -92,7 +96,6 @@ from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import CallableOrCallableMap
-from static_frame.core.util import column_1d_filter
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
@@ -124,7 +127,6 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import key_normalize
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import name_filter
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import Pair
@@ -134,7 +136,6 @@ from static_frame.core.util import path_filter
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
-from static_frame.core.util import resolve_dtype
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
@@ -2733,6 +2734,19 @@ class Frame(ContainerOperand):
                 container=self,
                 )
 
+
+    def via_fill_value(self,
+            fill_value: object = np.nan,
+            ) -> InterfaceFillValue['Frame']:
+        '''
+        Interface for using binary operators and methods with a pre-defined fill value.
+        '''
+        return InterfaceFillValue(
+                container=self,
+                fill_value=fill_value,
+                )
+
+
     #---------------------------------------------------------------------------
     # iterators
 
@@ -4099,6 +4113,7 @@ class Frame(ContainerOperand):
             operator: UFunc,
             other: tp.Any,
             axis: int = 0,
+            fill_value: object = np.nan,
             ) -> 'Frame':
 
         if operator.__name__ == 'matmul':
@@ -4118,14 +4133,18 @@ class Frame(ContainerOperand):
                     columns=columns,
                     index=index,
                     own_index=True,
-                    own_columns=True)._blocks
+                    own_columns=True,
+                    fill_value=fill_value,
+                    )._blocks
             # NOTE: we create columns from self._columns, and thus other can only own it if STATIC matches
             own_columns = other.STATIC == self.STATIC
             other_tb = other.reindex(
                     columns=columns,
                     index=index,
                     own_index=True,
-                    own_columns=own_columns)._blocks
+                    own_columns=own_columns,
+                    fill_value=fill_value,
+                    )._blocks
             return self.__class__(self_tb._ufunc_binary_operator(
                             operator=operator,
                             other=other_tb),
@@ -4139,8 +4158,16 @@ class Frame(ContainerOperand):
             if axis == 0:
                 # when operating on a Series, we treat axis 0 as a row-wise operation, and thus take the union of the Series.index and Frame.columns
                 columns = self._columns.union(other._index)
-                self_tb = self.reindex(columns=columns, own_columns=True)._blocks
-                other_array = other.reindex(columns, own_index=True).values
+                self_tb = self.reindex(
+                        columns=columns,
+                        own_columns=True,
+                        fill_value=fill_value,
+                        )._blocks
+                other_array = other.reindex(
+                        columns,
+                        own_index=True,
+                        fill_value=fill_value,
+                        ).values
                 blocks = self_tb._ufunc_binary_operator(
                         operator=operator,
                         other=other_array,
@@ -4155,8 +4182,16 @@ class Frame(ContainerOperand):
             elif axis == 1:
                 # column-wise operation, take union of Series.index and Frame.index
                 index = self._index.union(other._index)
-                self_tb = self.reindex(index=index, own_index=True)._blocks
-                other_array = other.reindex(index, own_index=True).values
+                self_tb = self.reindex(
+                        index=index,
+                        own_index=True,
+                        fill_value=fill_value,
+                        )._blocks
+                other_array = other.reindex(
+                        index,
+                        own_index=True,
+                        fill_value=fill_value,
+                        ).values
                 blocks = self_tb._ufunc_binary_operator(
                         operator=operator,
                         other=other_array,
@@ -4172,6 +4207,8 @@ class Frame(ContainerOperand):
                 raise AxisInvalid(f'invalid axis: {axis}')
         elif other.__class__ is np.ndarray:
             name = None
+        elif other.__class__ is InterfaceFillValue:
+            raise RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
         else:
             other = iterable_to_array_nd(other)
             if other.ndim == 0:# only for elements should we keep name

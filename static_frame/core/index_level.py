@@ -7,6 +7,7 @@ from itertools import repeat
 from copy import deepcopy
 
 import numpy as np
+from arraykit import resolve_dtype_iter
 
 
 from static_frame.core.array_go import ArrayGO
@@ -30,7 +31,6 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import EMPTY_TUPLE
 # from static_frame.core.exception import LocInvalid
 

@@ -5,14 +5,13 @@ from itertools import repeat
 from itertools import product
 
 import numpy as np
+from arraykit import resolve_dtype
+from arraykit import resolve_dtype_iter
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
-
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
 

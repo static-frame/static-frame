@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+0.8.13
+----------
+
+Integration with ``arraykit``; replacement of numerous utility methods with ``arraykit`` implementations.
+
+Added ``via_fill_value()`` interface to ``Series`` and ``Frame``.
+
 
 0.8.12
 ----------

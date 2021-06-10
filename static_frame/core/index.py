@@ -1,6 +1,5 @@
 import typing as tp
 from collections.abc import KeysView
-import operator as operator_mod
 from itertools import zip_longest
 from functools import reduce
 from copy import deepcopy
@@ -9,6 +8,10 @@ import numpy as np
 
 from automap import AutoMap
 from automap import FrozenAutoMap
+from arraykit import immutable_filter
+from arraykit import mloc
+from arraykit import name_filter
+from arraykit import resolve_dtype
 
 
 from static_frame.core.container import ContainerOperand
@@ -53,7 +56,6 @@ from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import immutable_filter
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import intersect1d
@@ -63,12 +65,9 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
-from static_frame.core.util import mloc
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import name_filter
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import resolve_dtype
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
@@ -81,6 +80,7 @@ from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import union1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
+from static_frame.core.util import OPERATORS
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -242,7 +242,7 @@ class LocMap:
                 if labels.dtype != key.dtype:
                     labels_ref = labels.astype(key.dtype)
                     # let Boolean key advance to next branch
-                    key = reduce(operator_mod.or_, (labels_ref == k for k in key))
+                    key = reduce(OPERATORS['__or__'], (labels_ref == k for k in key))
 
             if is_array and key.dtype == DTYPE_BOOL:
                 if offset_apply:
@@ -1066,7 +1066,8 @@ class Index(IndexBase):
 
     def _ufunc_binary_operator(self, *,
             operator: UFunc,
-            other: tp.Any
+            other: tp.Any,
+            fill_value: object = np.nan,
             ) -> np.ndarray:
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).

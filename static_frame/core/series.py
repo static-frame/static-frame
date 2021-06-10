@@ -6,6 +6,10 @@ from collections.abc import Set
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
+from arraykit import immutable_filter
+from arraykit import mloc
+from arraykit import name_filter
+from arraykit import resolve_dtype
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -46,6 +50,7 @@ from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
@@ -67,7 +72,6 @@ from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import immutable_filter
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
@@ -76,13 +80,10 @@ from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import mloc
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import name_filter
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import resolve_dtype
 from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
@@ -663,6 +664,19 @@ class Series(ContainerOperand):
                 blocks_to_container=blocks_to_container,
                 )
 
+    def via_fill_value(self,
+            fill_value: object = np.nan,
+            ) -> InterfaceFillValue['Series']:
+        '''
+        Interface for using binary operators and methods with a pre-defined fill value.
+        '''
+        return InterfaceFillValue(
+                container=self,
+                fill_value=fill_value,
+                )
+
+
+
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroup['Series']:
@@ -1198,6 +1212,8 @@ class Series(ContainerOperand):
     def _ufunc_binary_operator(self, *,
             operator: UFunc,
             other: tp.Any,
+            axis: int = 0,
+            fill_value: object = np.nan,
             ) -> 'Series':
         '''
         For binary operations, the `name` attribute does not propagate unless other is a scalar.
@@ -1219,8 +1235,16 @@ class Series(ContainerOperand):
                 # if not equal, create a new Index by forming the union
                 index = self._index.union(other._index)
                 # now need to reindex the Series
-                values = self.reindex(index, own_index=True, check_equals=False).values
-                other = other.reindex(index, own_index=True, check_equals=False).values
+                values = self.reindex(index,
+                        own_index=True,
+                        check_equals=False,
+                        fill_value=fill_value,
+                        ).values
+                other = other.reindex(index,
+                        own_index=True,
+                        check_equals=False,
+                        fill_value=fill_value,
+                        ).values
             else:
                 other = other.values
         elif other.__class__ is np.ndarray:
@@ -1228,6 +1252,8 @@ class Series(ContainerOperand):
             other_is_array = True
             if other.ndim > 1:
                 raise NotImplementedError('Operator application to greater dimensionalities will result in an array with more than 1 dimension.')
+        elif other.__class__ is InterfaceFillValue:
+            raise RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
         else:
             name = self._name
 
