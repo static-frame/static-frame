@@ -5086,6 +5086,7 @@ class Frame(ContainerOperand):
         Args:
             names: An iterable of hashables to be used to name the unset index. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
         '''
+        from static_frame.core.index_level import IndexLevel
 
         def blocks() -> tp.Iterator[np.ndarray]:
             if self._index.ndim == 1:
@@ -5102,13 +5103,15 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
+        column_blocks = self._columns._levels.to_type_blocks()._blocks
         if names:
-            columns = chain(names, self._columns.values)
+            columns = chain(np.array(tuple(names)), column_blocks)
         else:
-            columns = chain(self._index.names, self._columns.values)
+            columns = chain(self._index.names, column_blocks)
 
         if self._columns.depth > 1:
             index_constructors = tuple(self._columns._levels.index_types())
+            columns = tuple(columns) # Temporary for debugging
             columns = IndexHierarchy.from_labels(columns, index_constructors=index_constructors)
 
         return self.__class__(
