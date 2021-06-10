@@ -4217,6 +4217,14 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             s1.via_fill_value(0) + s2.via_fill_value(1)
 
+    #---------------------------------------------------------------------------
+    def test_series_via_re_search_a(self) -> None:
+        s1 = sf.Series(('aaa', 'aab', 'cab'))
+
+        s2 = s1.via_re('ab').search()
+        self.assertEqual(s2.to_pairs(),
+                ((0, False), (1, True), (2, True)))
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

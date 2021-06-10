@@ -51,6 +51,7 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
@@ -649,8 +650,6 @@ class Series(ContainerOperand):
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
-        blocks = (self.values,)
-
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Series':
             return self.__class__(
                 next(blocks), # assume only one
@@ -658,6 +657,8 @@ class Series(ContainerOperand):
                 name=self._name,
                 own_index=True,
                 )
+
+        blocks = (self.values,)
 
         return InterfaceDatetime(
                 blocks=blocks,
@@ -675,6 +676,29 @@ class Series(ContainerOperand):
                 fill_value=fill_value,
                 )
 
+    def via_re(self,
+            pattern: str,
+            flags: int = 0,
+            ) -> None:
+        '''
+        Interface for applying regular expressions to elements in this container.
+        '''
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Series':
+            return self.__class__(
+                next(blocks), # assume only one
+                index=self._index,
+                name=self._name,
+                own_index=True,
+                )
+
+        blocks = (self.values,)
+
+        return InterfaceRe(
+                blocks=blocks,
+                blocks_to_container=blocks_to_container,
+                pattern=pattern,
+                flags=flags,
+                )
 
 
     #---------------------------------------------------------------------------
