@@ -679,7 +679,7 @@ class Series(ContainerOperand):
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> None:
+            ) -> InterfaceRe['Series']:
         '''
         Interface for applying regular expressions to elements in this container.
         '''

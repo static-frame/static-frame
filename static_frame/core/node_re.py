@@ -74,7 +74,8 @@ class InterfaceRe(Interface[TContainer]):
             yield array
 
     #---------------------------------------------------------------------------
-    def search(self, pos: int = 0, endpos: tp.Optional[int] = None):
+    def search(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+        args: tp.Tuple[int, ...]
         if endpos is not None:
             args = (pos, endpos)
         else:
@@ -89,7 +90,8 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
-    def match(self, pos: int = 0, endpos: tp.Optional[int] = None):
+    def match(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+        args: tp.Tuple[int, ...]
         if endpos is not None:
             args = (pos, endpos)
         else:
@@ -104,7 +106,8 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
-    def fullmatch(self, pos: int = 0, endpos: tp.Optional[int] = None):
+    def fullmatch(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+        args: tp.Tuple[int, ...]
         if endpos is not None:
             args = (pos, endpos)
         else:
@@ -123,7 +126,8 @@ class InterfaceRe(Interface[TContainer]):
 
     # split
 
-    def findall(self, pos: int = 0, endpos: tp.Optional[int] = None):
+    def findall(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+        args: tp.Tuple[int, ...]
         if endpos is not None:
             args = (pos, endpos)
         else:
