@@ -5,35 +5,17 @@ import numpy as np
 import frame_fixtures as ff
 
 import static_frame as sf
-# from static_frame import Index
 from static_frame import IndexHierarchy
-# from static_frame import IndexHierarchyGO
-# from static_frame import IndexYearMonth
-# from static_frame import IndexYearGO
-# from static_frame import IndexYear
 from static_frame import IndexDate
-# from static_frame import IndexDateGO
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import TypeBlocks
-# from static_frame import mloc
-# from static_frame import ILoc
 from static_frame import HLoc
-# from static_frame import DisplayConfig
-# from static_frame import IndexAutoFactory
-
 from static_frame.test.test_case import TestCase
-# from static_frame.test.test_case import skip_win
-# from static_frame.test.test_case import skip_linux_no_display
-# from static_frame.test.test_case import skip_pylt37
-# from static_frame.test.test_case import temp_file
-# from static_frame.core.exception import ErrorInitFrame
-# from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import AxisInvalid
 
 nan = np.nan
-
 
 
 class TestUnit(TestCase):
@@ -225,6 +207,31 @@ class TestUnit(TestCase):
                 (('zZbu', -88017), ('ztsv', 162197), ('zUvW', -3648), ('zkuW', 129017), ('zmVj', 58768), ('z2Oo', 84967), ('z5l6', 146284), ('zCE3', 137759)))
 
 
+    def test_frame_iter_series_b(self) -> None:
+        f1 = ff.parse('s(10,4)|i(I,str)|c(I,str)|v(float)')
+
+        post1 = f1.iter_series(axis=1).apply(lambda s: s.sum(), dtype=float)
+        self.assertEqual(post1.dtype, float)
+        self.assertEqual(post1.shape, (10,))
+
+        post2 = f1[sf.ILoc[0]].iter_element().apply(lambda e: e == 647.9, dtype=bool)
+        self.assertEqual(post2.dtype, bool)
+        self.assertEqual(post2.shape, (10,))
+        self.assertEqual(post2.sum(), 1)
+
+        post3 = f1.iter_series(axis=1).apply(lambda s: str(s.sum()), dtype=str)
+        self.assertEqual(post3.dtype, np.dtype('<U18'))
+        self.assertEqual(post3.shape, (10,))
+
+        post4 = f1.iter_series(axis=1).apply(lambda s: int(s.sum()), dtype=int)
+        self.assertEqual(post4.dtype, np.dtype(int))
+        self.assertEqual(post4.shape, (10,))
+
+        post5 = f1.iter_series(axis=1).apply(lambda s: int(s.sum()), dtype=object)
+        self.assertEqual(post5.dtype, object)
+        self.assertEqual(post5.shape, (10,))
+
+
     #---------------------------------------------------------------------------
     def test_frame_iter_tuple_items_a(self) -> None:
         records = (
@@ -273,6 +280,12 @@ class TestUnit(TestCase):
         post2 = f1.iter_element(axis=1).apply(lambda x: '_' + str(x) + '_')
 
         self.assertEqual(post2.to_pairs(0),
+                (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
+
+
+        post3 = f1.iter_element(axis=1).apply(lambda x: '_' + str(x) + '_', dtype=str)
+
+        self.assertEqual(post3.to_pairs(0),
                 (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
 
 
@@ -334,6 +347,8 @@ class TestUnit(TestCase):
 
         post = f1['A'].iter_element().map_any(f2['B'])
 
+        # same index is given to returned Series
+        self.assertEqual(id(f1.index), id(post.index))
         # if we do not match the mapping, we keep the value.
         self.assertEqual(post.to_pairs(),
                 ((0, 67), (1, 28), (2, 'III')))
@@ -372,7 +387,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 ((False, (2, 3)), (True, (2, 3)))
                 )
-
+        self.assertEqual(post.index.name, 's')
 
     def test_frame_iter_group_b(self) -> None:
         columns = tuple('pqrst')

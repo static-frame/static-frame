@@ -11,11 +11,11 @@ import typing as tp
 
 import numpy as np
 from numpy import char as npc
+from arraykit import column_2d_filter
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
-from static_frame.core.util import column_2d_filter
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
@@ -91,7 +91,6 @@ def get_col_dtype_factory(
         if not hasattr(dtypes, '__len__') or not hasattr(dtypes, '__getitem__'):
             dtypes = tuple(dtypes) #type: ignore
         return dtypes[col_idx] #type: ignore
-
 
     return get_col_dtype
 
@@ -511,6 +510,42 @@ def axis_window_items( *,
         if count > count_window_max or idx_left > idx_left_max or size < 0:
             break
 
+def get_block_match(
+        width: int,
+        values_source: tp.List[np.ndarray],
+        ) -> tp.Iterator[np.ndarray]:
+    '''Utility method for assignment. Draw from values to provide as many columns as specified by width. Use `values_source` as a stack to draw and replace values.
+    '''
+    # see clip().get_block_match() for one example of drawing values from another sequence of blocks, where we take blocks and slices from blocks using a list as a stack
+
+    if width == 1: # no loop necessary
+        v = values_source.pop()
+        if v.ndim == 1:
+            yield v
+        else: # ndim == 2
+            if v.shape[1] > 1: # more than one column
+                # restore remained to values source
+                values_source.append(v[NULL_SLICE, 1:])
+            yield v[NULL_SLICE, 0]
+    else:
+        width_found = 0
+        while width_found < width:
+            v = values_source.pop()
+            if v.ndim == 1:
+                yield v
+                width_found += 1
+                continue
+            # ndim == 2
+            width_v = v.shape[1]
+            width_needed = width - width_found
+            if width_v <= width_needed:
+                yield v
+                width_found += width_v
+                continue
+            # width_v > width_needed
+            values_source.append(v[NULL_SLICE, width_needed:])
+            yield v[NULL_SLICE, :width_needed]
+            break
 
 def bloc_key_normalize(
         key: Bloc2DKeyType,
@@ -528,7 +563,7 @@ def bloc_key_normalize(
                 fill_value=False
                 )
         bloc_key = bloc_frame.values # shape must match post reindex
-    elif isinstance(key, np.ndarray):
+    elif key.__class__ is np.ndarray:
         bloc_key = key
         if bloc_key.shape != container.shape:
             raise RuntimeError(f'bloc {bloc_key.shape} must match shape {container.shape}')
@@ -536,7 +571,7 @@ def bloc_key_normalize(
         raise RuntimeError(f'invalid bloc_key, must be Frame or array, not {key}')
 
     if not bloc_key.dtype == bool:
-        raise RuntimeError('cannot use non-Bolean dtype as bloc key')
+        raise RuntimeError('cannot use non-Boolean dtype as bloc key')
 
     return bloc_key
 
@@ -551,14 +586,16 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
     from static_frame.core.frame import Frame
     from static_frame.core.series import Series
 
-    if isinstance(key, slice):
-        return slice_to_ascending_slice(key, size=size)
+    if key.__class__ is slice:
+        return slice_to_ascending_slice(key, size=size) #type: ignore
 
     if isinstance(key, str) or not hasattr(key, '__len__'):
         return key
 
-    if isinstance(key, np.ndarray):
+    if key.__class__ is np.ndarray:
         # array first as not truthy
+        if key.dtype == bool: #type: ignore
+            return key
         return np.sort(key, kind=DEFAULT_SORT_KIND)
 
     if not len(key): #type: ignore
@@ -795,7 +832,7 @@ def arrays_from_index_frame(
         # NOTE: if a multi-column selection, might be better to yield one depth at a time
         yield container.index.values_at_depth(depth_level)
     if columns is not None:
-        column_key = container.columns.loc_to_iloc(columns)
+        column_key = container.columns._loc_to_iloc(columns)
         yield from container._blocks._slice_blocks(column_key=column_key)
 
 
@@ -807,6 +844,9 @@ def key_from_container_key(
     '''
     Unpack selection values from another Index, Series, or ILoc selection.
     '''
+    # PERF: do not do comparisons if key is not a Container or SF object
+    if not hasattr(key, 'STATIC'):
+        return key
 
     from static_frame.core.index import Index
     from static_frame.core.index import ILoc
@@ -830,10 +870,10 @@ def key_from_container_key(
         else:
             # For all other Series types, we simply assume that the values are to be used as keys in the IH. This ignores the index, but it does not seem useful to require the Series, used like this, to have a matching index value, as the index and values would need to be identical to have the desired selection.
             key = key.values
-    elif expand_iloc and isinstance(key, ILoc):
+    elif expand_iloc and key.__class__ is ILoc:
         # realize as Boolean array
         array = np.full(len(index), False)
-        array[key.key] = True
+        array[key.key] = True #type: ignore
         key = array
 
     # detect and fail on Frame?
@@ -1008,7 +1048,7 @@ def sort_index_for_order(
     # cfs is container_for_sort
     if key:
         cfs = key(index)
-        cfs_is_array = isinstance(cfs, np.ndarray)
+        cfs_is_array = cfs.__class__ is np.ndarray
         if cfs_is_array:
             cfs_depth = 1 if cfs.ndim == 1 else cfs.shape[1]
         else:

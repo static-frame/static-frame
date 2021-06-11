@@ -1,6 +1,128 @@
 What is New in Static Frame
 ===============================
 
+0.8.14
+----------
+
+Updated ``arraykit`` to 0.1.8
+
+
+0.8.13
+----------
+
+Integration with ``arraykit``; replacement of numerous utility methods with ``arraykit`` implementations.
+
+Added ``via_fill_value()`` interface to ``Series`` and ``Frame``.
+
+
+0.8.12
+----------
+
+Performance enhancements to ``Quilt.iter_series().apply()``, ``Quilt.iter_tuple().apply()``, ``Quilt.iter_array().apply()``.
+
+
+0.8.11
+----------
+
+Fixed issue when supplying ``dtype`` arguments to ``apply`` methods with string dtypes.
+
+Added ``parameters`` argument to ``Frame.from_sql`` to perform SQL parameter substitution.
+
+In group-by operations where the group key is a hashable, the returned ``Index.name`` will be set to that key.
+
+Performance enhancements to ``Bus.iter_element().apply()`` and `Bus.iter_element_items().apply()``.
+
+
+0.8.10
+----------
+
+Performance enhancements to ``Index`` initialization.
+
+Performance enhancements to ``Series.iter_element().apply()``, ``Series.iter_element().map_any()``, ``Series.iter_element().map_all()``, and ``Series.iter_element().map_fill()``.
+
+Performance enhancements to ``Frame.iter_series().apply()``, ``Frame.iter_tuple().apply()``, ``Frame.iter_array().apply()``.
+
+
+0.8.9
+----------
+
+Performance enhancements to ``Series.dropna()``.
+
+``Series.relabel()`` and ``Frame.relabel()`` now raise if given a ``set`` or ``frozenset``.
+
+Fixed issue in ``Frame.assign.loc[]`` when using a Boolean array as a column selector.
+
+
+0.8.8
+----------
+
+Added ``Frame.cov()``, ``Series.cov()``, and ``Batch.cov()``.
+
+Performance enhancements to ``loc`` selections by element.
+
+
+0.8.7
+----------
+
+Implemented support for multiprocessing Frame writing from ``StoreZip`` subclasses used by ``Bus``, ``Batch``, and ``Quilt``.
+
+Enabled ``write_max_workers`` and ``write_chunksize`` in ``StoreConfig``.
+
+Added py.typed file to package.
+
+Improved exceptions raised when attempting to write to a file at an invalid path.
+
+Improved handling of reading files with columns but no data with ``Frame.from_delimited``.
+
+
+0.8.6
+----------
+
+``Frame.rename`` now accepts optional arguments for ``index`` and ``columns`` renaming.
+
+``Series.rename`` now accepts an optional argument for ``index`` renaming.
+
+Added ``Frame.relabel_shift_in()`` and ``Frame.relabel_shift_out()``.
+
+Fixed issue where ``Frame.dropna()`` fails on single-columns ``Frame``.
+
+Extended ``IndexHierarchy.level_drop`` to perform corresponding drops on ``name`` when ``name`` is an appropriately sized tuple.
+
+Extended ``Frame.set_index`` to support creating a 1D index of tuples when more than one column is selected.
+
+
+0.8.5
+----------
+
+``Frame.from_sql`` now properly applies ``dtypes`` to columns used by ``index_depth`` selections.
+
+Added ``Index.unique`` and ``IndexHierarchy.unique``, both taking a ``depth_level`` specifier for selecting one or more depths.
+
+Fixed issue with ``Frame.bloc`` selections that result in a zero-sized ``Series``.
+
+
+0.8.4
+----------
+
+Refined ``Frame.bloc`` selections to reduce type coercion.
+
+Improved ``Frame.assign.bloc`` when assigning with ``Series`` and ``Frame``.
+
+
+0.8.3
+----------
+
+Added ``iloc_searchsorted()`` and ``loc_searchsorted()`` to ``Index``, ``IndexDatetime``, and ``IndexHierarchy``.
+
+Added ``ddof`` parameter to all containers that expose ``std`` and ``var``.
+
+Fixed issue with ``Frame.assign`` where there was a dependency on the order of column labels given in selection.
+
+Improved handling for NumPy Boolean types stored in SQLite DBs via ``StoreSQLite`` interfaces.
+
+Improved `loc_to_iloc()` methods to raise for missing keys in `Index` created where `loc_is_iloc`.
+
+
 0.8.2
 ----------
 

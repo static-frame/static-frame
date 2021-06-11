@@ -74,6 +74,7 @@ setup(
     url='https://github.com/InvestmentSystems/static-frame',
     author='Christopher Ariza',
     license='MIT',
+    package_data={'static_frame': ['py.typed']},
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[

@@ -56,7 +56,7 @@ class TestUnit(TestCase):
         def property_loc_to_iloc_element(cls: tp.Type[Index], values: tp.Iterable[tp.Hashable]) -> None:
             index = cls(values)
             for i, v in enumerate(values):
-                self.assertEqual(index.loc_to_iloc(v), i)
+                self.assertEqual(index._loc_to_iloc(v), i)
 
         property_loc_to_iloc_element(Index, values)
         property_loc_to_iloc_element(IndexGO, values)
@@ -70,9 +70,9 @@ class TestUnit(TestCase):
             for i, v in enumerate(values):
                 # insure that we get teh same slice going through loc that we would get by direct iloc
                 if v is None:
-                    self.assertEqual(index.loc_to_iloc(slice(v, None)), slice(None)) #type: ignore [unreachable]
+                    self.assertEqual(index._loc_to_iloc(slice(v, None)), slice(None)) #type: ignore [unreachable]
                 else:
-                    self.assertEqual(index.loc_to_iloc(slice(v, None)), slice(i, None))
+                    self.assertEqual(index._loc_to_iloc(slice(v, None)), slice(i, None))
 
         property_loc_to_iloc_slice(Index, values)
         property_loc_to_iloc_slice(IndexGO, values)

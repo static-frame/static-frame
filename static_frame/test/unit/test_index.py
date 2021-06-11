@@ -6,6 +6,7 @@ import typing as tp
 from io import StringIO
 
 import numpy as np
+from arraykit import mloc
 
 from static_frame import Index
 from static_frame import IndexGO
@@ -19,8 +20,8 @@ from static_frame import ILoc
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import LocInvalid
 from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import mloc
 
 
 class TestUnit(TestCase):
@@ -121,26 +122,72 @@ class TestUnit(TestCase):
         idx = Index(('a', 'b', 'c', 'd'))
 
         self.assertEqual(
-                tp.cast(np.ndarray, idx.loc_to_iloc(np.array([True, False, True, False]))).tolist(),
+                tp.cast(np.ndarray, idx._loc_to_iloc(np.array([True, False, True, False]))).tolist(),
                 [0, 2])
 
-        self.assertEqual(idx.loc_to_iloc(slice('c',)), slice(None, 3, None))
-        self.assertEqual(idx.loc_to_iloc(slice('b','d')), slice(1, 4, None))
-        self.assertEqual(idx.loc_to_iloc('d'), 3)
+        self.assertEqual(idx._loc_to_iloc(slice('c',)), slice(None, 3, None))
+        self.assertEqual(idx._loc_to_iloc(slice('b','d')), slice(1, 4, None))
+        self.assertEqual(idx._loc_to_iloc('d'), 3)
 
 
     def test_index_loc_to_iloc_b(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
-        post = idx.loc_to_iloc(Series(['b', 'c']))
+        post = idx._loc_to_iloc(Series(['b', 'c']))
         self.assertEqual(post, [1, 2])
 
     def test_index_loc_to_iloc_c(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
         with self.assertRaises(KeyError):
-            _ = idx.loc_to_iloc(['c', 'd', 'e'])
+            _ = idx._loc_to_iloc(['c', 'd', 'e'])
 
-        post = idx.loc_to_iloc(['c', 'd', 'e'], partial_selection=True)
+        post = idx._loc_to_iloc(['c', 'd', 'e'], partial_selection=True)
         self.assertEqual(post, [2, 3])
+
+
+    def test_index_loc_to_iloc_d(self) -> None:
+        # testing the public interface
+        idx1 = Index(('a', 'b', 'c', 'd'))
+
+        self.assertEqual(idx1.loc_to_iloc('b'), 1)
+        with self.assertRaises(KeyError):
+            _ = idx1.loc_to_iloc('g')
+
+        self.assertEqual(idx1.loc_to_iloc(slice('b', 'd')), slice(1, 4, None))
+        with self.assertRaises(LocInvalid):
+            _ = idx1.loc_to_iloc(slice('x', 'y'))
+
+        self.assertEqual(idx1.loc_to_iloc(['d', 'a']), [3, 0])
+        with self.assertRaises(KeyError):
+            _ = idx1.loc_to_iloc(['d', 'x'])
+
+        self.assertEqual(idx1.loc_to_iloc(np.array([False, True, True, False])).tolist(), [1, 2]) #type: ignore [union-attr]
+        with self.assertRaises(IndexError):
+            _ = idx1.loc_to_iloc(np.array([False, True, False]))
+
+    def test_index_loc_to_iloc_e(self) -> None:
+
+        idx2 = Index(range(4), loc_is_iloc=True)
+
+        self.assertEqual(idx2.loc_to_iloc(1), 1)
+        with self.assertRaises(KeyError):
+            _ = idx2.loc_to_iloc(5)
+
+        self.assertEqual(idx2.loc_to_iloc(slice(1, 3)), slice(1, 4))
+        with self.assertRaises(LocInvalid):
+            _ = idx2.loc_to_iloc(slice('x', 'y'))
+        with self.assertRaises(LocInvalid):
+            # loc slices are always interpreted as inclusive, so going beyond the inclusive boundary is an error
+            _ = idx2.loc_to_iloc(slice(0, 4))
+
+        self.assertEqual(idx2.loc_to_iloc([3, 0]), [3, 0])
+        with self.assertRaises(KeyError):
+            _ = idx2.loc_to_iloc([3, 20])
+
+        self.assertEqual(idx2.loc_to_iloc(np.array([False, True, True, False])).tolist(), [1, 2]) #type: ignore [union-attr]
+        with self.assertRaises(IndexError):
+            _ = idx2.loc_to_iloc(np.array([False, True, False]))
+
+
 
     #---------------------------------------------------------------------------
     def test_index_mloc_a(self) -> None:
@@ -244,7 +291,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.loc['b':'d'].values.tolist(), ['b', 'c', 'd'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
 
-        self.assertEqual(idx.loc_to_iloc(['b', 'b', 'c']), [1, 1, 2])
+        self.assertEqual(idx._loc_to_iloc(['b', 'b', 'c']), [1, 1, 2])
 
         self.assertEqual(idx.loc['c'], 'c')
 
@@ -260,8 +307,8 @@ class TestUnit(TestCase):
 
     def test_index_creation_b(self) -> None:
         idx = Index((x for x in ('a', 'b', 'c', 'd') if x in {'b', 'd'}))
-        self.assertEqual(idx.loc_to_iloc('b'), 0)
-        self.assertEqual(idx.loc_to_iloc('d'), 1)
+        self.assertEqual(idx._loc_to_iloc('b'), 0)
+        self.assertEqual(idx._loc_to_iloc('d'), 1)
 
     #---------------------------------------------------------------------------
 
@@ -406,11 +453,11 @@ class TestUnit(TestCase):
 
         index = IndexGO(('a', 'b', 'c'))
         index.append('d')
-        self.assertEqual(index.loc_to_iloc('d'), 3)
+        self.assertEqual(index._loc_to_iloc('d'), 3)
 
         index.extend(('e', 'f'))
-        self.assertEqual(index.loc_to_iloc('e'), 4)
-        self.assertEqual(index.loc_to_iloc('f'), 5)
+        self.assertEqual(index._loc_to_iloc('e'), 4)
+        self.assertEqual(index._loc_to_iloc('f'), 5)
 
         # creating an index form an Index go takes the np arrays, but not the mutable bits
         index2 = Index(index)
@@ -486,10 +533,10 @@ class TestUnit(TestCase):
 
         index = Index(('a', 'c', 'd', 'e', 'b'))
         self.assertEqual(
-                [index.sort().loc_to_iloc(x) for x in sorted(index.values)],
+                [index.sort()._loc_to_iloc(x) for x in sorted(index.values)],
                 [0, 1, 2, 3, 4])
         self.assertEqual(
-                [index.sort(ascending=False).loc_to_iloc(x) for x in sorted(index.values)],
+                [index.sort(ascending=False)._loc_to_iloc(x) for x in sorted(index.values)],
                 [4, 3, 2, 1, 0])
 
 
@@ -586,8 +633,8 @@ class TestUnit(TestCase):
 
         idx = Index(('a', 'b', 'c', 'd'))
 
-        self.assertEqual(idx.loc_to_iloc(ILoc[1]), 1)
-        self.assertEqual(idx.loc_to_iloc(ILoc[[0, 2]]), [0, 2])
+        self.assertEqual(idx._loc_to_iloc(ILoc[1]), 1)
+        self.assertEqual(idx._loc_to_iloc(ILoc[[0, 2]]), [0, 2])
 
     def test_index_extract_iloc_a(self) -> None:
 
@@ -624,13 +671,13 @@ class TestUnit(TestCase):
 
         # unlike Pandas, both of these presently fail
         with self.assertRaises(KeyError):
-            idx.loc_to_iloc([False, True])
+            idx._loc_to_iloc([False, True])
 
         with self.assertRaises(KeyError):
-            idx.loc_to_iloc([False, True, False, True])
+            idx._loc_to_iloc([False, True, False, True])
 
         # but a Boolean array works
-        post = idx.loc_to_iloc(np.array([False, True, False, True]))
+        post = idx._loc_to_iloc(np.array([False, True, False, True]))
         assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1, 3])
 
@@ -640,15 +687,15 @@ class TestUnit(TestCase):
         idx = Index(('a', 'b', 'c', 'd'))
 
         # returns nothing as index does not match anything
-        post = idx.loc_to_iloc(Series([False, True, False, True]))
+        post = idx._loc_to_iloc(Series([False, True, False, True]))
         self.assertTrue(len(tp.cast(tp.Sized, post)) == 0)
 
-        post = idx.loc_to_iloc(Series([False, True, False, True],
+        post = idx._loc_to_iloc(Series([False, True, False, True],
                 index=('b', 'c', 'd', 'a')))
         assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [0, 2])
 
-        post = idx.loc_to_iloc(Series([False, True, False, True],
+        post = idx._loc_to_iloc(Series([False, True, False, True],
                 index=list('abcd')))
         assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1,3])
@@ -1329,6 +1376,26 @@ class TestUnit(TestCase):
         self.assertEqual(idx2.values.tolist(), [0, 1, 2, 3, 4])
         self.assertTrue(id(idx1._labels) != id(idx2._labels))
         self.assertTrue(idx2._map is None)
+
+    #---------------------------------------------------------------------------
+    def test_index_iloc_searchsorted_a(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd'))
+        self.assertEqual(idx1.iloc_searchsorted('c'), 2)
+        self.assertEqual(idx1.iloc_searchsorted('c', side_left=False), 3)
+        self.assertEqual(idx1.iloc_searchsorted(('a', 'c'), side_left=False).tolist(), [1, 3])
+
+    def test_index_loc_searchsorted_b(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+        self.assertEqual(idx1.loc_searchsorted('c'), 'c')
+        self.assertEqual(idx1.loc_searchsorted('c', side_left=False), 'd')
+        self.assertEqual(idx1.loc_searchsorted(('a', 'c'), side_left=False).tolist(), ['b', 'd'])
+
+        self.assertEqual(idx1.loc_searchsorted(
+                ('a', 'e'), side_left=False, fill_value=None).tolist(),
+                ['b', None])
+
 
 if __name__ == '__main__':
     unittest.main()

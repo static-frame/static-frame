@@ -520,7 +520,7 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1, f2))
         b2 = b1.bloc[f2 >= 2]
         post = list(s.values.tolist() for s in b2.values)
-        self.assertEqual(post, [[30, 40, 50], [4, 2, 5, 3, 6]])
+        self.assertEqual(post, [[30, 40, 50], [2, 3, 4, 5, 6]])
 
 
     #---------------------------------------------------------------------------
@@ -886,6 +886,25 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
             (('b', (('f1', 0), ('f2', 1))), ('a', (('f1', 2), ('f2', 1))))
             )
+
+    #---------------------------------------------------------------------------
+    def test_batch_iloc_cov_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(1,2,3), a=(4,5,6)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,10,100), a=(1,2,3)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).cov().to_frame()
+        self.assertEqual(f3.to_pairs(),
+                (('b', ((('f1', 'b'), 1.0), (('f1', 'a'), 1.0), (('f2', 'b'), 2997.0), (('f2', 'a'), 49.5))), ('a', ((('f1', 'b'), 1.0), (('f1', 'a'), 1.0), (('f2', 'b'), 49.5), (('f2', 'a'), 1.0)))))
+
+        f4 = Batch.from_frames((f1, f2)).cov(axis=0).to_frame()
+        self.assertEqual( f4.to_pairs(),
+                (('x', ((('f1', 'z'), 4.5), (('f1', 'y'), 4.5), (('f1', 'x'), 4.5), (('f2', 'y'), 0.0), (('f2', 'z'), 388.0), (('f2', 'x'), 4704.5))), ('y', ((('f1', 'z'), 4.5), (('f1', 'y'), 4.5), (('f1', 'x'), 4.5), (('f2', 'y'), 0.0), (('f2', 'z'), 0.0), (('f2', 'x'), 0.0))), ('z', ((('f1', 'z'), 4.5), (('f1', 'y'), 4.5), (('f1', 'x'), 4.5), (('f2', 'y'), 0.0), (('f2', 'z'), 32.0), (('f2', 'x'), 388.0)))))
 
     #---------------------------------------------------------------------------
     def test_batch_count_a(self) -> None:

@@ -18,6 +18,7 @@ import os
 import tempfile
 import typing as tp
 
+from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
 import numpy as np
 
@@ -62,14 +63,34 @@ DTYPE_INT_KINDS = ('i', 'u') # signed and unsigned
 DTYPE_INEXACT_KINDS = (DTYPE_FLOAT_KIND, DTYPE_COMPLEX_KIND) # kinds that support NaN values
 DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
 
+
 # all kinds that can have NaN, NaT, or None
-# DTYPE_NA_KINDS = frozenset((
-#         DTYPE_FLOAT_KIND,
-#         DTYPE_COMPLEX_KIND,
-#         DTYPE_DATETIME_KIND,
-#         DTYPE_TIMEDELTA_KIND,
-#         DTYPE_OBJECT_KIND,
-#         ))
+DTYPE_NA_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_DATETIME_KIND,
+        DTYPE_TIMEDELTA_KIND,
+        DTYPE_OBJECT_KIND,
+        ))
+
+# all kinds that can use tolist() to go to a compatible Python type
+DTYPE_OBJECTABLE_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_OBJECT_KIND,
+        DTYPE_BOOL_KIND,
+        'U', 'S', # str kinds
+        'i', 'u' # int kinds
+        ))
+
+# all numeric times, plus bool
+DTYPE_NUMERICABLE_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_BOOL_KIND,
+        'i', 'u' # int kinds
+))
+
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
@@ -123,7 +144,7 @@ TIME_DELTA_ATTR_MAP = (
         )
 
 # ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
-UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
+UFUNC_AXIS_STR_TO_OBJ = frozenset((np.min, np.max, np.sum))
 
 #-------------------------------------------------------------------------------
 # utility type groups
@@ -267,6 +288,45 @@ FILL_VALUE_DEFAULT = object()
 NAME_DEFAULT = object()
 STORE_LABEL_DEFAULT = object()
 
+#-------------------------------------------------------------------------------
+# operator mod does not have r methods; create complete method reference
+OPERATORS: tp.Dict[str, UFunc] = {
+    '__pos__': operator.__pos__,
+    '__neg__': operator.__neg__,
+    '__abs__': operator.__abs__,
+    '__invert__': operator.__invert__,
+
+    '__add__': operator.__add__,
+    '__sub__': operator.__sub__,
+    '__mul__': operator.__mul__,
+    '__matmul__': operator.__matmul__,
+    '__truediv__': operator.__truediv__,
+    '__floordiv__': operator.__floordiv__,
+    '__mod__': operator.__mod__,
+
+    '__pow__': operator.__pow__,
+    '__lshift__': operator.__lshift__,
+    '__rshift__': operator.__rshift__,
+    '__and__': operator.__and__,
+    '__xor__': operator.__xor__,
+    '__or__': operator.__or__,
+    '__lt__': operator.__lt__,
+    '__le__': operator.__le__,
+    '__eq__': operator.__eq__,
+    '__ne__': operator.__ne__,
+    '__gt__': operator.__gt__,
+    '__ge__': operator.__ge__,
+}
+
+# extend r methods
+for attr in ('__add__', '__sub__', '__mul__', '__matmul__', '__truediv__', '__floordiv__'):
+    func = getattr(operator, attr)
+    # bind func from closure
+    rfunc = lambda rhs, lhs, func=func: func(lhs, rhs)
+    rfunc.__name__ = 'r' + func.__name__
+    rattr = '__r' + attr[2:]
+    OPERATORS[rattr] = rfunc
+
 
 #-------------------------------------------------------------------------------
 # join utils
@@ -288,87 +348,72 @@ class PairRight(Pair):
 
 #-------------------------------------------------------------------------------
 
-def is_hashable(value: tp.Any) -> bool:
-    '''
-    Determine if a value is hashable without raising an exception.
-    '''
-    try:
-        hash(value)
-        return True
-    except TypeError:
-        pass
-    return False
 
-def reversed_iter(value: tp.Iterator[tp.Any]) -> tp.Iterator[tp.Any]:
-    '''Wrapper around built-in reversed() that handles generators by realizing them and then reversing.
-    '''
-    try:
-        yield from reversed(value) #type: ignore
-    except TypeError:
-        pass
-    yield from reversed(tuple(value))
+# def mloc(array: np.ndarray) -> int:
+#     '''Return the memory location of an array.
+#     '''
+#     return tp.cast(int, array.__array_interface__['data'][0])
 
 
-def mloc(array: np.ndarray) -> int:
-    '''Return the memory location of an array.
-    '''
-    return tp.cast(int, array.__array_interface__['data'][0])
+# def immutable_filter(src_array: np.ndarray) -> np.ndarray:
+#     '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
+#     '''
+#     if src_array.flags.writeable:
+#         dst_array = src_array.copy()
+#         dst_array.flags.writeable = False
+#         return dst_array
+#     return src_array # keep it as is
 
 
-def immutable_filter(src_array: np.ndarray) -> np.ndarray:
-    '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
-    '''
-    if src_array.flags.writeable:
-        dst_array = src_array.copy()
-        dst_array.flags.writeable = False
-        return dst_array
-    return src_array # keep it as is
+# def name_filter(name: NameType) -> NameType:
+#     '''
+#     For name attributes on containers, only permit recursively hashable objects.
+#     '''
+#     try:
+#         hash(name)
+#     except TypeError:
+#         raise TypeError('unhashable name attribute', name)
+#     return name
 
-def name_filter(name: NameType) -> NameType:
-    '''
-    For name attributes on containers, only permit recursively hashable objects.
-    '''
-    try:
-        hash(name)
-    except TypeError:
-        raise TypeError('unhashable name attribute', name)
-    return name
 
-def shape_filter(array: np.ndarray) -> tp.Tuple[int, int]:
-    '''Represent a 1D array as a 2D array with length as rows of a single-column array.
+# def shape_filter(array: np.ndarray) -> tp.Tuple[int, int]:
+#     '''Represent a 1D array as a 2D array with length as rows of a single-column array.
 
-    Return:
-        row, column count for a block of ndim 1 or ndim 2.
-    '''
-    if array.ndim == 1:
-        return array.shape[0], 1
-    return array.shape #type: ignore
+#     Return:
+#         row, column count for a block of ndim 1 or ndim 2.
+#     '''
+#     if array.ndim == 1:
+#         return array.shape[0], 1
+#     return array.shape #type: ignore
 
-def column_2d_filter(array: np.ndarray) -> np.ndarray:
-    '''Reshape a flat ndim 1 array into a 2D array with one columns and rows of length. This is used (a) for getting string representations and (b) for using np.concatenate and np binary operators on 1D arrays.
-    '''
-    # it is not clear when reshape is a copy or a view
-    if array.ndim == 1:
-        return np.reshape(array, (array.shape[0], 1))
-    return array
 
-def column_1d_filter(array: np.ndarray) -> np.ndarray:
-    '''
-    Ensure that a column that might be 2D or 1D is returned as a 1D array.
-    '''
-    if array.ndim == 2:
-        # could assert that array.shape[1] == 1, but this will raise if does not fit
-        return np.reshape(array, array.shape[0])
-    return array
+# def column_2d_filter(array: np.ndarray) -> np.ndarray:
+#     '''Reshape a flat ndim 1 array into a 2D array with one columns and rows of length. This is used (a) for getting string representations and (b) for using np.concatenate and np binary operators on 1D arrays.
+#     '''
+#     # it is not clear when reshape is a copy or a view
+#     if array.ndim == 1:
+#         return np.reshape(array, (array.shape[0], 1))
+#     return array
 
-def row_1d_filter(array: np.ndarray) -> np.ndarray:
-    '''
-    Ensure that a row that might be 2D or 1D is returned as a 1D array.
-    '''
-    if array.ndim == 2:
-        # could assert that array.shape[0] == 1, but this will raise if does not fit
-        return np.reshape(array, array.shape[1])
-    return array
+
+# def column_1d_filter(array: np.ndarray) -> np.ndarray:
+#     '''
+#     Ensure that a column that might be 2D or 1D is returned as a 1D array.
+#     '''
+#     if array.ndim == 2:
+#         # could assert that array.shape[1] == 1, but this will raise if does not fit
+#         return np.reshape(array, array.shape[0])
+#     return array
+
+
+# def row_1d_filter(array: np.ndarray) -> np.ndarray:
+#     '''
+#     Ensure that a row that might be 2D or 1D is returned as a 1D array.
+#     '''
+#     if array.ndim == 2:
+#         # could assert that array.shape[0] == 1, but this will raise if does not fit
+#         return np.reshape(array, array.shape[1])
+#     return array
 
 def duplicate_filter(values: tp.Iterable[tp.Any]) -> tp.Iterator[tp.Any]:
     '''
@@ -427,71 +472,73 @@ def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
     return np.array(value).dtype
 
-def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
-    '''
-    Given two dtypes, return a compatible dtype that can hold both contents without truncation.
-    '''
-    # NOTE: this is not taking into account endianness; it is not clear if this is important
-    # NOTE: np.dtype(object) == np.object_, so we can return np.object_
 
-    # if the same, return that dtype
-    if dt1 == dt2:
-        return dt1
+# def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
+#     '''
+#     Given two dtypes, return a compatible dtype that can hold both contents without truncation.
+#     '''
+#     # NOTE: this is not taking into account endianness; it is not clear if this is important
+#     # NOTE: np.dtype(object) == np.object_, so we can return np.object_
 
-    # if either is object, we go to object
-    if dt1.kind == 'O' or dt2.kind == 'O':
-        return DTYPE_OBJECT
+#     # if the same, return that dtype
+#     if dt1 == dt2:
+#         return dt1
 
-    dt1_is_str = dt1.kind in DTYPE_STR_KINDS
-    dt2_is_str = dt2.kind in DTYPE_STR_KINDS
-    if dt1_is_str and dt2_is_str:
-        # if both are string or string-like, we can use result type to get the longest string
-        return np.result_type(dt1, dt2)
+#     # if either is object, we go to object
+#     if dt1.kind == 'O' or dt2.kind == 'O':
+#         return DTYPE_OBJECT
 
-    dt1_is_dt = dt1.kind == DTYPE_DATETIME_KIND
-    dt2_is_dt = dt2.kind == DTYPE_DATETIME_KIND
-    if dt1_is_dt and dt2_is_dt:
-        # if both are datetime, result type will work
-        return np.result_type(dt1, dt2)
+#     dt1_is_str = dt1.kind in DTYPE_STR_KINDS
+#     dt2_is_str = dt2.kind in DTYPE_STR_KINDS
+#     if dt1_is_str and dt2_is_str:
+#         # if both are string or string-like, we can use result type to get the longest string
+#         return np.result_type(dt1, dt2)
 
-    dt1_is_tdelta = dt1.kind == DTYPE_TIMEDELTA_KIND
-    dt2_is_tdelta = dt2.kind == DTYPE_TIMEDELTA_KIND
-    if dt1_is_tdelta and dt2_is_tdelta:
-        # this may or may not work
-        # TypeError: Cannot get a common metadata divisor for NumPy datetime metadata [D] and [Y] because they have incompatible nonlinear base time units
-        try:
-            return np.result_type(dt1, dt2)
-        except TypeError:
-            return DTYPE_OBJECT
+#     dt1_is_dt = dt1.kind == DTYPE_DATETIME_KIND
+#     dt2_is_dt = dt2.kind == DTYPE_DATETIME_KIND
+#     if dt1_is_dt and dt2_is_dt:
+#         # if both are datetime, result type will work
+#         return np.result_type(dt1, dt2)
 
-    dt1_is_bool = dt1.type is np.bool_
-    dt2_is_bool = dt2.type is np.bool_
+#     dt1_is_tdelta = dt1.kind == DTYPE_TIMEDELTA_KIND
+#     dt2_is_tdelta = dt2.kind == DTYPE_TIMEDELTA_KIND
+#     if dt1_is_tdelta and dt2_is_tdelta:
+#         # this may or may not work
+#         # TypeError: Cannot get a common metadata divisor for NumPy datetime metadata [D] and [Y] because they have incompatible nonlinear base time units
+#         try:
+#             return np.result_type(dt1, dt2)
+#         except TypeError:
+#             return DTYPE_OBJECT
 
-    # if any one is a string or a bool, we have to go to object; we handle both cases being the same above; result_type gives a string in mixed cases
-    if (dt1_is_str or dt2_is_str
-            or dt1_is_bool or dt2_is_bool
-            or dt1_is_dt or dt2_is_dt
-            or dt1_is_tdelta or dt2_is_tdelta
-            ):
-        return DTYPE_OBJECT
+#     dt1_is_bool = dt1.type is np.bool_
+#     dt2_is_bool = dt2.type is np.bool_
 
-    # if not a string or an object, can use result type
-    return np.result_type(dt1, dt2)
+#     # if any one is a string or a bool, we have to go to object; we handle both cases being the same above; result_type gives a string in mixed cases
+#     if (dt1_is_str or dt2_is_str
+#             or dt1_is_bool or dt2_is_bool
+#             or dt1_is_dt or dt2_is_dt
+#             or dt1_is_tdelta or dt2_is_tdelta
+#             ):
+#         return DTYPE_OBJECT
 
-def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]) -> np.dtype:
-    '''Given an iterable of one or more dtypes, do pairwise comparisons to determine compatible overall type. Once we get to object we can stop checking and return object.
+#     # if not a string or an object, can use result type
+#     return np.result_type(dt1, dt2)
 
-    Args:
-        dtypes: iterable of one or more dtypes.
-    '''
-    dtypes = iter(dtypes)
-    dt_resolve = next(dtypes)
 
-    for dt in dtypes:
-        dt_resolve = resolve_dtype(dt_resolve, dt)
-        if dt_resolve == DTYPE_OBJECT:
-            return dt_resolve
-    return dt_resolve
+# def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]) -> np.dtype:
+#     '''Given an iterable of one or more dtypes, do pairwise comparisons to determine compatible overall type. Once we get to object we can stop checking and return object.
+
+#     Args:
+#         dtypes: iterable of one or more dtypes.
+#     '''
+#     dtypes = iter(dtypes)
+#     dt_resolve = next(dtypes)
+
+#     for dt in dtypes:
+#         dt_resolve = resolve_dtype(dt_resolve, dt)
+#         if dt_resolve == DTYPE_OBJECT:
+#             return dt_resolve
+#     return dt_resolve
 
 
 
@@ -513,7 +560,7 @@ def concat_resolved(
     arrays_iter = iter(arrays)
     first = next(arrays_iter)
 
-    ndim = first.ndim
+    # ndim = first.ndim
     dt_resolve = first.dtype
     shape = list(first.shape)
 
@@ -605,8 +652,10 @@ def ufunc_axis_skipna(
         ) -> np.ndarray:
     '''For ufunc array application, when two ufunc versions are available. Expected to always reduce dimensionality.
     '''
-
-    if array.dtype.kind == 'O':
+    kind = array.dtype.kind
+    if kind in DTYPE_NUMERICABLE_KINDS:
+        v = array
+    elif kind == 'O':
         # replace None with nan
         if skipna:
             is_not_none = np.not_equal(array, None)
@@ -626,13 +675,13 @@ def ufunc_axis_skipna(
             else:
                 v = array
 
-    elif array.dtype.kind == 'M' or array.dtype.kind == 'm':
+    elif kind == 'M' or kind == 'm':
         # dates do not support skipna functions
         return ufunc(array, axis=axis, out=out)
 
-    elif array.dtype.kind in DTYPE_STR_KINDS and ufunc in UFUNC_AXIS_STR_TO_OBJ:
+    elif kind in DTYPE_STR_KINDS and ufunc in UFUNC_AXIS_STR_TO_OBJ:
         v = array.astype(object)
-    else:
+    else: # normal string dtypes
         v = array
 
     if skipna:
@@ -822,6 +871,7 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
             copy_values |= is_iifa
     return is_gen, copy_values
 
+
 def prepare_iter_for_array(
         values: tp.Iterable[tp.Any],
         restrict_copy: bool = False
@@ -844,15 +894,15 @@ def prepare_iter_for_array(
     if restrict_copy:
         copy_values = False
 
-    v_iter = iter(values)
+    v_iter = values if is_gen else iter(values)
 
     if copy_values:
         values_post = []
 
     resolved = None # None is valid specifier if the type is not ambiguous
+
     has_tuple = False
     has_str = False
-    has_enum = False
     has_non_str = False
     has_inexact = False
     has_big_int = False
@@ -860,68 +910,71 @@ def prepare_iter_for_array(
     for v in v_iter:
         if copy_values:
             # if a generator, have to make a copy while iterating
-            # for array construction, cannot use dictlike, so must convert to list
             values_post.append(v)
 
-        if resolved != object:
-            value_type = type(v)
+        value_type = v.__class__
 
-            # need to get tuple subclasses, like NamedTuple
-            if isinstance(v, (tuple, list)) or hasattr(v, '__slots__'):
-                # identify SF types by if they have __slots__ defined; they also must be assigned after array creation, so we treat them like tuples
-                has_tuple = True
-            elif isinstance(v, Enum):
-                # must check isinstance, as Enum types are always derived from Enum
-                has_enum = True
-            elif value_type == str or value_type == np.str_:
-                # must compare to both string types
-                has_str = True
-            else:
-                has_non_str = True
-                if value_type in INEXACT_TYPES:
-                    has_inexact = True
-                elif value_type == int and abs(v) > INT_MAX_COERCIBLE_TO_FLOAT:
-                    has_big_int = True
+        if (value_type is str
+                or value_type is np.str_
+                or value_type is bytes
+                or value_type is np.bytes_):
+            # must compare to both string types
+            has_str = True
+        elif hasattr(v, '__len__'):
+            # identify SF types, lists, or tuples
+            has_tuple = True
+            resolved = object
+            break
+        elif isinstance(v, Enum):
+            # must check isinstance, as Enum types are always derived from Enum
+            resolved = object
+            break
+        else:
+            has_non_str = True
+            if value_type in INEXACT_TYPES:
+                has_inexact = True
+            elif value_type is int and abs(v) > INT_MAX_COERCIBLE_TO_FLOAT:
+                has_big_int = True
 
-            if has_tuple or has_enum or (has_str and has_non_str):
-                resolved = object
-            elif has_big_int and has_inexact:
-                resolved = object
-        else: # resolved is object, can exit
-            if copy_values:
-                values_post.extend(v_iter)
+        if (has_str and has_non_str) or (has_big_int and has_inexact):
+            resolved = object
             break
 
-    # NOTE: we break before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
     if copy_values:
+        # v_iter is an iter, we need to finish it
+        values_post.extend(v_iter)
         return resolved, has_tuple, values_post
     return resolved, has_tuple, values #type: ignore
 
 
-
-
 def iterable_to_array_1d(
         values: tp.Iterable[tp.Any],
-        dtype: DtypeSpecifier = None
+        dtype: DtypeSpecifier = None,
+        count: tp.Optional[int] = None,
         ) -> tp.Tuple[np.ndarray, bool]:
     '''
     Convert an arbitrary Python iterable to a 1D NumPy array without any undesirable type coercion.
 
+    Args:
+        count: if provided, can be used to optimize some array creation scenarios.
+
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
-    if isinstance(values, np.ndarray):
-        if values.ndim != 1:
-            raise RuntimeError('expected 1d array')
-        if dtype is not None and dtype != values.dtype:
-            raise RuntimeError(f'Supplied dtype {dtype} not set on supplied array.')
-        return values, len(values) <= 1
+    dtype = None if dtype is None else np.dtype(dtype) # convert dtype specifier to a dtype
 
-    if isinstance(values, range):
+    if values.__class__ is np.ndarray:
+        if values.ndim != 1: #type: ignore
+            raise RuntimeError('expected 1d array')
+        if dtype is not None and dtype != values.dtype: #type: ignore
+            raise RuntimeError(f'Supplied dtype {dtype} not set on supplied array.')
+        return values, len(values) <= 1 #type: ignore
+
+    if values.__class__ is range:
         # translate range to np.arange to avoid iteration
-        array = np.arange(start=values.start,
-                stop=values.stop,
-                step=values.step,
+        array = np.arange(start=values.start, #type: ignore
+                stop=values.stop, #type: ignore
+                step=values.step, #type: ignore
                 dtype=dtype)
         array.flags.writeable = False
         return array, True
@@ -937,12 +990,27 @@ def iterable_to_array_1d(
         has_tuple = False
         values_for_construct = (values,)
     elif dtype is None:
-        # this gives as dtype only None, or object, letting array constructor do the rest
+        # this returns as dtype only None, or object, letting array constructor do the rest
         dtype, has_tuple, values_for_construct = prepare_iter_for_array(values)
         if len(values_for_construct) == 0:
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
-    else:
+    else: # dtype is provided
         is_gen, copy_values = is_gen_copy_values(values)
+
+        if is_gen and count and dtype.kind not in DTYPE_STR_KINDS:
+            if dtype.kind != DTYPE_OBJECT_KIND:
+                # if dtype is int this might raise OverflowError
+                array = np.fromiter(values,
+                        count=count,
+                        dtype=dtype,
+                        )
+            else: # object dtypes
+                array = np.empty(count, dtype=dtype)
+                for i, element in enumerate(values):
+                    array[i] = element
+            array.flags.writeable = False
+            return array, False
+
         if copy_values:
             # we have to realize into sequence for numpy creation
             values_for_construct = tuple(values)
@@ -955,7 +1023,7 @@ def iterable_to_array_1d(
             v.flags.writeable = False
             return v, True
         #as we have not iterated iterable, assume that there might be tuples if the dtype is object
-        has_tuple = dtype in DTYPE_SPECIFIERS_OBJECT
+        has_tuple = dtype == DTYPE_OBJECT
 
     if len(values_for_construct) == 1 or isinstance(values, DICTLIKE_TYPES):
         # check values for dictlike, not values_for_construct
@@ -992,8 +1060,8 @@ def iterable_to_array_2d(
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
-    if isinstance(values, np.ndarray):
-        if values.ndim != 2:
+    if values.__class__ is np.ndarray:
+        if values.ndim != 2: #type: ignore
             raise RuntimeError('expected 2d array')
         return values
 
@@ -1063,15 +1131,27 @@ def slice_to_ascending_slice(
         start = key.stop if key.stop is None else key.stop + 1
         return slice(start, stop, 1)
 
-    # if 6, 1, -2: 6, 4, 2; then
-    start = next(reversed(range(*key.indices(size))))
-    return slice(start, stop, -key.step)
+    step = abs(key.step)
+    start = size - 1 if key.start is None else min(size - 1, key.start)
 
-def slice_to_inclusive_slice(key: slice) -> slice:
+    if key.stop is None:
+        start = start - (step * (start // step))
+    else:
+        start = start - (step * ((start - key.stop - 1) // step))
+
+    return slice(start, stop, step)
+
+def slice_to_inclusive_slice(
+        key: slice,
+        offset: int = 0,
+        ) -> slice:
     '''Make a stop exclusive key inclusive by adding one to the stop value.
     '''
-    stop = None if key.stop is None else key.stop + 1
-    return slice(key.start, stop, key.step)
+    start = None if key.start is None else key.start + offset
+    stop = None if key.stop is None else key.stop + 1 + offset
+    return slice(start, stop, key.step)
+
+
 
 #-------------------------------------------------------------------------------
 # dates
@@ -1477,7 +1557,8 @@ def array_to_duplicated(
         array: np.ndarray,
         axis: int = 0,
         exclude_first: bool = False,
-        exclude_last: bool = False) -> np.ndarray:
+        exclude_last: bool = False,
+        ) -> np.ndarray:
     '''Given a numpy array (1D or 2D), return a Boolean array along the specified axis that shows which values are duplicated. By default, all duplicates are indicated. For 2d arrays, axis 0 compares rows and returns a row-length Boolean array; axis 1 compares columns and returns a column-length Boolean array.
 
     Args:
@@ -1552,6 +1633,12 @@ def array_shift(*,
 def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
     yield from map(tuple, array)
 
+def array2d_to_array1d(array: np.ndarray) -> np.ndarray:
+    post = np.empty(array.shape[0], dtype=object)
+    for i, row in enumerate(array):
+        post[i] = tuple(row)
+    post.flags.writeable = False
+    return post
 
 def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     '''
@@ -1563,24 +1650,25 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     if array[-1] == False: #pylint: disable=C0121
         # if last values is False, no contiguous region
         return length
-    if not array.any(): # if not any are true, no regions found
+    count = array.sum()
+    if count == 0: # if not any are true, no regions found
         return length
-    if array.all(): # if all are true
+    if count == length: # if all are true
         return 0
 
     transitions = np.empty(length, dtype=bool)
     transitions[0] = False # first value not a transition
     # compare current to previous; do not compare first
     np.not_equal(array[:-1], array[1:], out=transitions[1:])
-
+    # transition_idx must always contain at least one index from here
     transition_idx: tp.Sequence[int] = np.nonzero(transitions)[0]
-    if not len(transition_idx): # this may not ever happen
-        return length
-    # if last segment is all True
-    last_idx = transition_idx[-1]
-    if array[last_idx:].all():
-        return last_idx
-    return length
+    # last element must be True, so there will always be one transition, and the last transition will mark the boundary of a contiguous region
+    return transition_idx[-1]
+
+    # NOTE: last checks are not necessary
+    # if array[last_idx:].all():
+    #     return last_idx
+    # return length
 
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
@@ -1607,9 +1695,9 @@ def _ufunc_set_1d(
     Args:
         assume_unique: if arguments are assumed unique, can implement optional identity filtering, which retains order (un sorted) for opperands that are equal. This is important in numerous operations on the matching Indices where order should not be perterbed.
     '''
-    is_union = func == np.union1d
-    is_intersection = func == np.intersect1d
-    is_difference = func == np.setdiff1d
+    is_union = func is np.union1d
+    is_intersection = func is np.intersect1d
+    is_difference = func is np.setdiff1d
 
     if not (is_union or is_intersection or is_difference):
         raise NotImplementedError('unexpected func', func)
@@ -1641,15 +1729,9 @@ def _ufunc_set_1d(
                 return array
 
         if len(array) == len(other):
-            arrays_are_equal = False
             compare = array == other
-            # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it should always be False
-            if isinstance(compare, BOOL_TYPES) and compare:
-                arrays_are_equal = True #pragma: no cover
-            elif isinstance(compare, np.ndarray) and compare.all(axis=None):
-                arrays_are_equal = True
-
-            if arrays_are_equal:
+            # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it will always be False
+            if compare.__class__ is np.ndarray and compare.all(axis=None):
                 if is_difference:
                     post = np.array(EMPTY_TUPLE, dtype=dtype)
                     post.flags.writeable = False
@@ -2198,7 +2280,7 @@ def array_from_element_apply(*,
     '''
     Handle element-wise function application.
     '''
-    if array.ndim == 1 and dtype != DTYPE_OBJECT:
+    if array.ndim == 1 and dtype != DTYPE_OBJECT and dtype.kind not in DTYPE_STR_KINDS:
         post = np.fromiter(
                 (func(d) for d in array),
                 count=len(array),
@@ -2271,13 +2353,39 @@ def array_from_element_method(*,
     post.flags.writeable = False
     return post
 
+
+# def array_from_iterator(iterator: tp.Iterator[tp.Any],
+#         count: int,
+#         dtype: DtypeSpecifier,
+#         ) -> np.ndarray:
+#     '''Given an iterator/generator of known size and dtype, load it into an array.
+#     '''
+#     dtype = np.dtype(dtype)
+#     if dtype.kind in DTYPE_STR_KINDS:
+#         # unless we know the size of the max size of the string, we have to go through the default construictor.
+#         array, _ = iterable_to_array_1d(iterator, dtype)
+#         return array
+#     elif dtype.kind != DTYPE_OBJECT_KIND:
+#         array = np.fromiter(iterator,
+#                 count=count,
+#                 dtype=dtype,
+#                 )
+#     else: # object types
+#         array = np.empty(count, dtype=dtype)
+#         for i, v in enumerate(iterator):
+#             array[i] = v
+
+#     array.flags.writeable = False
+#     return array
+
+
 #-------------------------------------------------------------------------------
 
 class PositionsAllocator:
     '''Resource for re-using a single array of contiguous ascending integers for common applications in IndexBase.
     '''
 
-    _size: int = 1024
+    _size: int = 1024 # 1048576
     _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 
@@ -2449,13 +2557,13 @@ def file_like_manager(
     '''
     file_like = path_filter(file_like)
 
+    is_file = False
     try:
         if isinstance(file_like, str):
             f = open(file_like, mode=mode, encoding=encoding)
             is_file = True
         else:
             f = file_like # assume an open file-like object
-            is_file = False
         yield f
 
     finally:

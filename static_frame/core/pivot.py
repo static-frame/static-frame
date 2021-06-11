@@ -5,14 +5,13 @@ from itertools import repeat
 from itertools import product
 
 import numpy as np
+from arraykit import resolve_dtype
+from arraykit import resolve_dtype_iter
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
-
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
 
@@ -94,7 +93,7 @@ def pivot_records_items(
     for group_index, part in frame.iter_group_items(group_fields):
         label = group_index if take_group_index else group_index[0]
         record = []
-        part_columns_loc_to_iloc = part.columns.loc_to_iloc
+        part_columns_loc_to_iloc = part.columns._loc_to_iloc
         for field in data_fields:
             values = part._blocks._extract_array(
                     row_key=None,
@@ -129,7 +128,7 @@ def pivot_items(
         label = group if take_group else group[0]
         values = sub._blocks._extract_array(
                 row_key=None,
-                column_key=sub.columns.loc_to_iloc(data_fields[0]),
+                column_key=sub.columns._loc_to_iloc(data_fields[0]),
                 )
         if len(values) == 1:
             yield label, values[0]

@@ -6,6 +6,10 @@ import typing as tp
 from enum import Enum
 
 import numpy as np
+from arraykit import resolve_dtype
+from arraykit import resolve_dtype_iter
+from arraykit import row_1d_filter
+from arraykit import column_1d_filter
 
 from static_frame.core.util import _array_to_duplicated_sortable
 from static_frame.core.util import _gen_skip_middle
@@ -25,7 +29,6 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import array_sample
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import binary_transition
-from static_frame.core.util import column_1d_filter
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_YEAR
@@ -38,12 +41,9 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import prepare_iter_for_array
 from static_frame.core.util import roll_1d
 from static_frame.core.util import roll_2d
-from static_frame.core.util import row_1d_filter
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import setdiff2d
 from static_frame.core.util import slice_to_ascending_slice
@@ -61,6 +61,8 @@ from static_frame.core.util import union1d
 from static_frame.core.util import union2d
 from static_frame.core.util import duplicate_filter
 from static_frame.core.util import array_deepcopy
+from static_frame.core.util import array_from_element_apply
+from static_frame.core.util import get_tuple_constructor
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -1793,6 +1795,10 @@ class TestUnit(TestCase):
         self.assertTrue(a1[1] == FxISO.CDF)
         # NOTE: in check does not work here
 
+    def test_iterable_to_array_k(self) -> None:
+        with self.assertRaises(RuntimeError):
+            _, _ = iterable_to_array_1d(np.array([[3,],[4,]]))
+
     #---------------------------------------------------------------------------
 
     def test_iterable_to_array_2d_a(self) -> None:
@@ -1821,6 +1827,10 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             # looks like a 2d array enough to get past type sampling
             post = iterable_to_array_2d(['asd', 'wer'])
+
+    def test_iterable_to_array_2d_d(self) -> None:
+        with self.assertRaises(RuntimeError):
+            post = iterable_to_array_2d(np.array(['asd', 'wer']))
 
 
     #---------------------------------------------------------------------------
@@ -2319,6 +2329,14 @@ class TestUnit(TestCase):
         a9 = np.array([False])
         self.assertEqual(array1d_to_last_contiguous_to_edge(a9), 1)
 
+    def test_array1d_to_last_contiguous_to_edge_b(self) -> None:
+
+        a1 = np.array([False, False, False, False])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a1), 4)
+
+        a2 = np.array([False, False, True, True, False, True, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a2), 5)
+
     #---------------------------------------------------------------------------
     def test_array_sample_a(self) -> None:
         a1 = np.arange(10)
@@ -2332,10 +2350,15 @@ class TestUnit(TestCase):
         self.assertEqual(array_sample(a1, 4, seed=1).tolist(), [3, 2, 0, 1])
         self.assertEqual(array_sample(a1, 4, seed=1, sort=True).tolist(), [0, 1, 2, 3])
 
+    def test_array_sample_c(self) -> None:
+        a1 = np.arange(4)
 
         with self.assertRaises(ValueError):
             # raises if count is greater than size of array
             self.assertEqual(array_sample(a1, 6, seed=1).tolist(), [3, 2, 0, 1])
+
+        with self.assertRaises(NotImplementedError):
+            _ = array_sample(a1.reshape(2, 2), 2)
 
 
     #---------------------------------------------------------------------------
@@ -2376,6 +2399,20 @@ class TestUnit(TestCase):
         self.assertTrue(id(obj) in memo)
         self.assertFalse(a2.flags.writeable)
         self.assertEqual(a2.tolist()[:3], [3, None, 20])
+
+    #---------------------------------------------------------------------------
+    def test_array_from_element_apply_a(self) -> None:
+        a1 = np.array([1, 2, 3])
+        post = array_from_element_apply(array=a1, func=lambda e: e + 1, dtype=a1.dtype)
+        self.assertEqual(post.tolist(), [2, 3, 4])
+
+    #---------------------------------------------------------------------------
+    def test_get_tuple_constructor_a(self) -> None:
+        cls1 = get_tuple_constructor(('a', 'b'))
+        self.assertTrue(callable(cls1))
+
+        with self.assertRaises(ValueError):
+            cls2 = get_tuple_constructor(('a ', '3*'))
 
 
 if __name__ == '__main__':

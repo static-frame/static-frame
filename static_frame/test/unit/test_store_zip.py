@@ -1,4 +1,5 @@
 import unittest
+import typing as tp
 # from io import StringIO
 
 from static_frame.core.frame import Frame
@@ -25,7 +26,6 @@ from static_frame.core.exception import ErrorInitStore
 
 
 class TestUnit(TestCase):
-
     #---------------------------------------------------------------------------
 
     def test_store_init_a(self) -> None:
@@ -311,6 +311,54 @@ class TestUnit(TestCase):
                 self.assertEqual(post[0].name, 'baz')
                 self.assertEqual(post[1].name, 'bar')
                 self.assertEqual(post[2].name, 'foo')
+
+
+class TestUnitMultiProcess(TestCase):
+
+    def run_assertions(self, klass: tp.Type[_StoreZip]) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='baz')
+
+        with temp_file('.zip') as fp:
+            for max_workers in range(1, 6):
+                for chunksize in (1, 2, 3):
+                    config = StoreConfig(
+                            index_depth=1,
+                            include_index=True,
+                            columns_depth=1,
+                            write_max_workers=max_workers,
+                            write_chunksize=chunksize,
+                    )
+                    st = klass(fp)
+                    st.write(((f.name, f) for f in (f1, f2, f3)), config=config)
+
+                    post = tuple(st.read_many(('baz', 'bar', 'foo'), config=config))
+                    self.assertEqual(len(post), 3)
+                    self.assertEqual(post[0].name, 'baz')
+                    self.assertEqual(post[1].name, 'bar')
+                    self.assertEqual(post[2].name, 'foo')
+
+    def test_store_zip_tsv_mp(self) -> None:
+        self.run_assertions(StoreZipTSV)
+
+    def test_store_zip_csv_mp(self) -> None:
+        self.run_assertions(StoreZipCSV)
+
+    def test_store_zip_pickle_mp(self) -> None:
+        self.run_assertions(StoreZipPickle)
+
+    def test_store_zip_parquet_mp(self) -> None:
+        self.run_assertions(StoreZipParquet)
 
 
 if __name__ == '__main__':

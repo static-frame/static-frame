@@ -7,6 +7,7 @@ from itertools import repeat
 from copy import deepcopy
 
 import numpy as np
+from arraykit import resolve_dtype_iter
 
 
 from static_frame.core.array_go import ArrayGO
@@ -30,7 +31,6 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import EMPTY_TUPLE
 # from static_frame.core.exception import LocInvalid
 
@@ -298,7 +298,7 @@ class IndexLevel:
             depth_level: int = 0
             ) -> tp.Iterator[tp.Hashable]:
         '''
-        Generator all labels found at a specified level, realized at full length.
+        Generator of all labels found at a specified level, realized at full length.
         '''
         def get_labels(index: Index,
                 targets: tp.Optional[ArrayGO]
@@ -335,7 +335,7 @@ class IndexLevel:
             depth_level: int = 0
             ) -> tp.Iterator[np.ndarray]:
         '''
-        Generator of arrays found at a depth level. Used in values_at_depth. This does not provide full-width representation.
+        Generator of arrays found at a depth level. This does not provide full-width representation.
         '''
         levels = deque(((self, 0),))
         while levels:
@@ -435,10 +435,10 @@ class IndexLevel:
                 return False
 
             if node.targets is not None:
-                node = node.targets[node.index.loc_to_iloc(k)]
+                node = node.targets[node.index._loc_to_iloc(k)]
                 continue
 
-            node.index.loc_to_iloc(k)
+            node.index._loc_to_iloc(k)
             return True # if above does not raise
 
         return False
@@ -462,11 +462,11 @@ class IndexLevel:
             if isinstance(k, KEY_MULTIPLE_TYPES):
                 raise RuntimeError(f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].')
             if node.targets is not None:
-                node = node.targets[node.index.loc_to_iloc(k)]
+                node = node.targets[node.index._loc_to_iloc(k)]
                 pos += node.offset
             else: # targets is None, meaning we are at max depth
                 # k returns an integer
-                offset = node.index.loc_to_iloc(k)
+                offset = node.index._loc_to_iloc(k)
                 assert isinstance(offset, INT_TYPES) # enforces leaf loc
                 if key_depth == key_depth_max:
                     return pos + offset
@@ -487,7 +487,7 @@ class IndexLevel:
             return slice(*LocMap.map_slice_args(self.leaf_loc_to_iloc, key))
 
         if isinstance(key, KEY_ITERABLE_TYPES): # iterables of leaf-locs
-            if isinstance(key, np.ndarray) and key.dtype == bool:
+            if key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
                 return key # keep as Boolean
             return [self.leaf_loc_to_iloc(x) for x in key]
 
@@ -507,10 +507,10 @@ class IndexLevel:
             # NOTE: depth_key should not be Series or Index at this point; IndexHierarchy is responsible for unpacking / reindexing prior to this call
             next_offset = offset + level.offset
 
-            if isinstance(depth_key, np.ndarray) and depth_key.dtype == DTYPE_BOOL:
+            if depth_key.__class__ is np.ndarray and depth_key.dtype == DTYPE_BOOL: #type: ignore
                 # NOTE: use length of level, not length of index, as need to observe all leafs covered at this node.
-                depth_key = depth_key[next_offset: next_offset + len(level)]
-                if len(depth_key) > len(level.index):
+                depth_key = depth_key[next_offset: next_offset + len(level)] #type: ignore
+                if len(depth_key) > len(level.index): #type: ignore
                     # given leaf-Boolean, determine what upper nodes to select
                     depth_key = level.values_at_depth(0)[depth_key]
                     if len(depth_key) > 1:
@@ -521,7 +521,7 @@ class IndexLevel:
             if level.targets is None:
                 try:
                     # NOTE: as a selection list might be given within the HLoc, it will be tested accross many indices, and should support a partial matching
-                    ilocs.append(level.index.loc_to_iloc(
+                    ilocs.append(level.index._loc_to_iloc(
                             depth_key,
                             offset=next_offset,
                             partial_selection=True,
@@ -530,7 +530,7 @@ class IndexLevel:
                     pass
             else: # when not at a leaf, we are selecting level_targets to descend withing
                 try: # NOTE: no offset necessary as not a leaf selection
-                    iloc = level.index.loc_to_iloc(depth_key, partial_selection=True)
+                    iloc = level.index._loc_to_iloc(depth_key, partial_selection=True)
                 except KeyError:
                     pass
                 else:
@@ -782,7 +782,6 @@ class IndexLevel:
                 offset=offset,
                 depth_reference=self.depth,
                 )
-
 
     def to_type_blocks(self) -> TypeBlocks:
         '''
