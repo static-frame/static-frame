@@ -11,6 +11,7 @@ from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import DTYPE_OBJECT
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -49,7 +50,6 @@ class InterfaceRe(Interface[TContainer]):
             ) -> None:
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
-
         self._pattern = re.compile(pattern, flags)
 
     @staticmethod
@@ -73,15 +73,14 @@ class InterfaceRe(Interface[TContainer]):
                     )
             yield array
 
-
     #---------------------------------------------------------------------------
-    def search(self, pos=0, endpos=None):
-        if endpos:
-            func = lambda s: self._pattern.search(
-                    s, pos=pos, endpos=endpos) is not None
+    def search(self, pos: int = 0, endpos: tp.Optional[int] = None):
+        if endpos is not None:
+            args = (pos, endpos)
         else:
-            func = lambda s: self._pattern.search(
-                    s, pos=pos) is not None
+            args = (pos,)
+
+        func = lambda s: self._pattern.search(s, *args) is not None
 
         block_gen = self._process_blocks(
                 blocks=self._blocks,
@@ -89,3 +88,53 @@ class InterfaceRe(Interface[TContainer]):
                 dtype=DTYPE_BOOL,
                 )
         return self._blocks_to_container(block_gen)
+
+    def match(self, pos: int = 0, endpos: tp.Optional[int] = None):
+        if endpos is not None:
+            args = (pos, endpos)
+        else:
+            args = (pos,)
+
+        func = lambda s: self._pattern.match(s, *args) is not None
+
+        block_gen = self._process_blocks(
+                blocks=self._blocks,
+                func=func,
+                dtype=DTYPE_BOOL,
+                )
+        return self._blocks_to_container(block_gen)
+
+    def fullmatch(self, pos: int = 0, endpos: tp.Optional[int] = None):
+        if endpos is not None:
+            args = (pos, endpos)
+        else:
+            args = (pos,)
+
+        func = lambda s: self._pattern.fullmatch(s, *args) is not None
+
+        block_gen = self._process_blocks(
+                blocks=self._blocks,
+                func=func,
+                dtype=DTYPE_BOOL,
+                )
+        return self._blocks_to_container(block_gen)
+
+
+
+    # split
+
+    def findall(self, pos: int = 0, endpos: tp.Optional[int] = None):
+        if endpos is not None:
+            args = (pos, endpos)
+        else:
+            args = (pos,)
+
+        func = lambda s: tuple(self._pattern.findall(s, *args))
+
+        block_gen = self._process_blocks(
+                blocks=self._blocks,
+                func=func,
+                dtype=DTYPE_OBJECT,
+                )
+        return self._blocks_to_container(block_gen)
+
