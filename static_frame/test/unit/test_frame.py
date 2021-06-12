@@ -9750,11 +9750,10 @@ class TestUnit(TestCase):
                 ['zZbu', 119909, datetime.timedelta(days=170440)]
         ]
 
-        # TODO, can we preserve dtypes?
         assert unset2.columns.dtypes.values.tolist() == [
                 np.dtype('<U10'),
-                np.dtype('O'),
-                np.dtype('O'),
+                np.dtype('<M8[Y]'),
+                np.dtype('<m8[D]'),
         ]
 
     #---------------------------------------------------------------------------
