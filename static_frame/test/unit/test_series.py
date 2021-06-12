@@ -8,6 +8,8 @@ import datetime
 import typing as tp
 from enum import Enum
 import copy
+import re
+
 
 import numpy as np
 
@@ -4216,6 +4218,35 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             s1.via_fill_value(0) + s2.via_fill_value(1)
+
+    #---------------------------------------------------------------------------
+    def test_series_via_re_search_a(self) -> None:
+
+        s1 = sf.Series(('aaa', 'aab', 'cab'))
+
+        s2 = s1.via_re('ab').search()
+        self.assertEqual(s2.to_pairs(),
+                ((0, False), (1, True), (2, True)))
+
+
+        s3 = s1.via_re('AB', re.I).search()
+        self.assertEqual(s3.to_pairs(),
+                ((0, False), (1, True), (2, True)))
+
+
+        s4 = s1.via_re('AB', re.I).search(0, 2)
+        self.assertEqual(s4.to_pairs(),
+                ((0, False), (1, False), (2, False)))
+
+
+    def test_series_via_re_findall_a(self) -> None:
+        s1 = sf.Series(('aaaaa', 'aabab', 'cabbaaaab'))
+
+        s2 = s1.via_re('AB', re.I).findall()
+        self.assertEqual(s2.to_pairs(),
+                ((0, ()), (1, ('ab', 'ab')), (2, ('ab', 'ab')))
+                )
+
 
 
 if __name__ == '__main__':
