@@ -928,7 +928,7 @@ class TestUnit(TestCase):
             ih1 = IndexHierarchy.from_labels(labels)
 
 
-    def test_hierarchy_from_labels_f(self) -> None:
+    def test_hierarchy_from_labels_j(self) -> None:
 
         labels1 = ((None, None, 1),
                 ('I', 'A', 2),
