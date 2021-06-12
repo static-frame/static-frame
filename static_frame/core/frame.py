@@ -4,6 +4,7 @@ from io import StringIO
 from io import BytesIO
 from itertools import chain
 from itertools import product
+from itertools import zip_longest
 from copy import deepcopy
 from operator import itemgetter
 from collections.abc import Set
@@ -147,6 +148,9 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import file_like_manager
 from static_frame.core.util import array2d_to_array1d
+from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
+
+
 
 
 if tp.TYPE_CHECKING:
@@ -1614,8 +1618,10 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1747,9 +1753,17 @@ class Frame(ContainerOperand):
                 columns = columns_constructor(columns_arrays[0], name=columns_name)
             else:
                 columns_constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels
+                if columns_continuation_token:
+                    labels = zip_longest(
+                            *(store_filter.to_type_filter_iterable(x) for x in columns_arrays),
+                            fillvalue=columns_continuation_token,
+                            )
+                else:
+                    labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
                 columns = columns_constructor(
-                        zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays)),
+                        labels,
                         name=columns_name,
+                        continuation_token=columns_continuation_token,
                         )
             own_columns = True
 
@@ -1800,7 +1814,10 @@ class Frame(ContainerOperand):
                 index_constructor=index_constructor,
                 **kwargs)
 
-        index_constructor = partial(IndexHierarchy.from_labels, name=index_name)
+        index_constructor = partial(IndexHierarchy.from_labels,
+                name=index_name,
+                continuation_token=index_continuation_token,
+                )
         return cls(
                 index=zip(*index_arrays),
                 index_constructor=index_constructor,
@@ -1814,8 +1831,10 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1836,8 +1855,10 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 quote_char=quote_char,
@@ -1855,8 +1876,10 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1877,8 +1900,10 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 quote_char=quote_char,
@@ -1896,8 +1921,10 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1927,8 +1954,10 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 quote_char=quote_char,

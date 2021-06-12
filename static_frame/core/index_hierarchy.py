@@ -71,6 +71,7 @@ from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import array_sample
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import concat_resolved
+from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 
 
 if tp.TYPE_CHECKING:
@@ -81,7 +82,6 @@ if tp.TYPE_CHECKING:
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
 
-CONTINUATION_TOKEN_INACTIVE = object()
 
 #-------------------------------------------------------------------------------
 class IndexHierarchy(IndexBase):
@@ -266,8 +266,8 @@ class IndexHierarchy(IndexBase):
             # each label is an iterable
             for d, v in enumerate(label):
                 if continuation_token is not CONTINUATION_TOKEN_INACTIVE:
-                    if v == continuation_token:
-                        # might check that observed_last[d] != token
+                    if v == continuation_token and observed_last[d] is not token:
+                        # only set v to observed_last if it is not the token; if we have not had a previous value that is not a token, the only thing to do is keep v unchanged
                         v = observed_last[d]
 
                 # shared implementation with from_labels -----------------------
