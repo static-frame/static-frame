@@ -2779,7 +2779,7 @@ class Frame(ContainerOperand):
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe['Series']:
+            ) -> InterfaceRe['Frame']:
         '''
         Interface for applying regular expressions to elements in this container.
         '''
