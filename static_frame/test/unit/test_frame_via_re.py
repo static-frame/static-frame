@@ -63,6 +63,26 @@ class TestUnit(TestCase):
             f1.via_re('[a0z]').findall(endpos=1).to_pairs(),
             (('zZbu', (('zZbu', ()), ('ztsv', ()))), ('ztsv', (('zZbu', ()), ('ztsv', ()))), ('zUvW', (('zZbu', ()), ('ztsv', ()))), ('zkuW', (('zZbu', ()), ('ztsv', ()))), ('zmVj', (('zZbu', ('z',)), ('ztsv', ('z',)))))
             )
+
+    def test_frame_via_re_sub_a(self) -> None:
+        f1 = ff.parse('s(2,5)|c(I,str)|i(I,str)|v(int,bool,bool,float,str)')
+
+        self.assertEqual(
+            f1.via_re('[za0.2]').sub('--').to_pairs(),
+            (('zZbu', (('zZbu', '-88--17'), ('ztsv', '9--867'))), ('ztsv', (('zZbu', 'F--lse'), ('ztsv', 'F--lse'))), ('zUvW', (('zZbu', 'True'), ('ztsv', 'F--lse'))), ('zkuW', (('zZbu', '1--8----4'), ('ztsv', '--58----34'))), ('zmVj', (('zZbu', '--DVQ'), ('ztsv', '--5hI'))))
+            )
+
+        self.assertEqual(f1.via_re('[za0.2]').sub('--', count=1).to_pairs(),
+            (('zZbu', (('zZbu', '-88--17'), ('ztsv', '9--867'))), ('ztsv', (('zZbu', 'F--lse'), ('ztsv', 'F--lse'))), ('zUvW', (('zZbu', 'True'), ('ztsv', 'F--lse'))), ('zkuW', (('zZbu', '1--80.4'), ('ztsv', '--580.34'))), ('zmVj', (('zZbu', '--DVQ'), ('ztsv', '--5hI'))))
+            )
+
+    def test_frame_via_re_subn_a(self) -> None:
+        f1 = ff.parse('s(2,5)|c(I,str)|i(I,str)|v(int,bool,bool,float,str)')
+
+        self.assertEqual(
+            f1.via_re('[e8]').subn('*').to_pairs(),
+            (('zZbu', (('zZbu', ('-**017', 2)), ('ztsv', ('92*67', 1)))), ('ztsv', (('zZbu', ('Fals*', 1)), ('ztsv', ('Fals*', 1)))), ('zUvW', (('zZbu', ('Tru*', 1)), ('ztsv', ('Fals*', 1)))), ('zkuW', (('zZbu', ('10*0.4', 1)), ('ztsv', ('25*0.34', 1)))), ('zmVj', (('zZbu', ('zDVQ', 0)), ('ztsv', ('z5hI', 0)))))
+            )
         # import ipdb; ipdb.set_trace()
 
 
