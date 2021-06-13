@@ -1,6 +1,6 @@
 import typing as tp
 import re
-from functools import partial
+#from functools import partial
 
 import numpy as np
 
