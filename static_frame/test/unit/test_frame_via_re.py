@@ -1,6 +1,5 @@
-
-
 import unittest
+import re
 
 import frame_fixtures as ff
 # import numpy as np
@@ -33,8 +32,6 @@ class TestUnit(TestCase):
                 (('zZbu', (('zZbu', True), ('ztsv', False))), ('ztsv', (('zZbu', True), ('ztsv', True))), ('zUvW', (('zZbu', False), ('ztsv', True))), ('zkuW', (('zZbu', True), ('ztsv', True))), ('zmVj', (('zZbu', False), ('ztsv', False))))
             )
 
-        import re
-
         self.assertEqual(
             f1.via_re('f', re.I).match(endpos=2).to_pairs(),
             (('zZbu', (('zZbu', False), ('ztsv', False))), ('ztsv', (('zZbu', True), ('ztsv', True))), ('zUvW', (('zZbu', False), ('ztsv', True))), ('zkuW', (('zZbu', False), ('ztsv', False))), ('zmVj', (('zZbu', False), ('ztsv', False))))
@@ -64,6 +61,13 @@ class TestUnit(TestCase):
             (('zZbu', (('zZbu', ()), ('ztsv', ()))), ('ztsv', (('zZbu', ()), ('ztsv', ()))), ('zUvW', (('zZbu', ()), ('ztsv', ()))), ('zkuW', (('zZbu', ()), ('ztsv', ()))), ('zmVj', (('zZbu', ('z',)), ('ztsv', ('z',)))))
             )
 
+    def test_frame_via_re_e(self) -> None:
+        f1 = ff.parse('s(2,5)|c(I,str)|i(I,str)|v(int,bool,bool,float,str)')
+
+        self.assertEqual(f1[f1.columns.via_re('[uU][vW]').search()].to_pairs(),
+            (('zUvW', (('zZbu', True), ('ztsv', False))), ('zkuW', (('zZbu', 1080.4), ('ztsv', 2580.34))))
+            )
+
     def test_frame_via_re_sub_a(self) -> None:
         f1 = ff.parse('s(2,5)|c(I,str)|i(I,str)|v(int,bool,bool,float,str)')
 
@@ -83,7 +87,6 @@ class TestUnit(TestCase):
             f1.via_re('[e8]').subn('*').to_pairs(),
             (('zZbu', (('zZbu', ('-**017', 2)), ('ztsv', ('92*67', 1)))), ('ztsv', (('zZbu', ('Fals*', 1)), ('ztsv', ('Fals*', 1)))), ('zUvW', (('zZbu', ('Tru*', 1)), ('ztsv', ('Fals*', 1)))), ('zkuW', (('zZbu', ('10*0.4', 1)), ('ztsv', ('25*0.34', 1)))), ('zmVj', (('zZbu', ('zDVQ', 0)), ('ztsv', ('z5hI', 0)))))
             )
-        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':

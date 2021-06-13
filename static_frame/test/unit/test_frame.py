@@ -1235,7 +1235,6 @@ class TestUnit(TestCase):
                         columns_select=('d', 'foo'),
                         columns_depth=1)
 
-
     def test_frame_from_parquet_c(self) -> None:
         f = sf.FrameGO.from_element('a',
                 index=range(3),
