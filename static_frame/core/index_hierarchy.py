@@ -43,7 +43,7 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
-
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.type_blocks import TypeBlocks
 
 from static_frame.core.util import DEFAULT_SORT_KIND
@@ -677,7 +677,6 @@ class IndexHierarchy(IndexBase):
                 blocks_to_container=blocks_to_container,
                 )
 
-
     @property
     def via_T(self) -> InterfaceTranspose['IndexHierarchy']:
         '''
@@ -686,6 +685,27 @@ class IndexHierarchy(IndexBase):
         return InterfaceTranspose(
                 container=self,
                 )
+
+    def via_re(self,
+            pattern: str,
+            flags: int = 0,
+            ) -> InterfaceRe[np.ndarray]:
+        '''
+        Interface for applying regular expressions to elements in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+            return TypeBlocks.from_blocks(blocks).values
+
+        return InterfaceRe(
+                blocks=self._blocks._blocks,
+                blocks_to_container=blocks_to_container,
+                pattern=pattern,
+                flags=flags,
+                )
+
 
     #---------------------------------------------------------------------------
 

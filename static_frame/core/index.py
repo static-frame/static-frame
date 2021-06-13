@@ -752,13 +752,11 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        blocks = (self._labels,)
-
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
             return next(blocks)
 
         return InterfaceString(
-                blocks=blocks,
+                blocks=(self._labels,),
                 blocks_to_container=blocks_to_container,
                 )
 
@@ -770,33 +768,29 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        blocks = (self.values,)
-
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
             return next(blocks)
 
         return InterfaceDatetime(
-                blocks=blocks,
+                blocks=(self.values,),
                 blocks_to_container=blocks_to_container,
                 )
 
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe['Index']:
+            ) -> InterfaceRe[np.ndarray]:
         '''
         Interface for applying regular expressions to elements in this container.
         '''
         if self._recache:
             self._update_array_cache()
 
-        blocks = (self._labels,)
-
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
             return next(blocks)
 
         return InterfaceRe(
-                blocks=blocks,
+                blocks=(self._labels,),
                 blocks_to_container=blocks_to_container,
                 pattern=pattern,
                 flags=flags,

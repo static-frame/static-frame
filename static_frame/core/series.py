@@ -638,10 +638,8 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
 
-        blocks = (self.values,)
-
         return InterfaceString(
-                blocks=blocks,
+                blocks=(self.values,),
                 blocks_to_container=blocks_to_container,
                 )
 
@@ -658,10 +656,8 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
 
-        blocks = (self.values,)
-
         return InterfaceDatetime(
-                blocks=blocks,
+                blocks=(self.values,),
                 blocks_to_container=blocks_to_container,
                 )
 
@@ -691,10 +687,8 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
 
-        blocks = (self.values,)
-
         return InterfaceRe(
-                blocks=blocks,
+                blocks=(self.values,),
                 blocks_to_container=blocks_to_container,
                 pattern=pattern,
                 flags=flags,
