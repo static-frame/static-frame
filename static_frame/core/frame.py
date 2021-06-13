@@ -10,6 +10,7 @@ from operator import itemgetter
 from collections.abc import Set
 import csv
 import json
+import re
 import sqlite3
 import typing as tp
 import warnings
@@ -77,6 +78,7 @@ from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
@@ -2776,6 +2778,30 @@ class Frame(ContainerOperand):
         return InterfaceFillValue(
                 container=self,
                 fill_value=fill_value,
+                )
+
+    def via_re(self,
+            pattern: str,
+            flags: int = 0,
+            ) -> InterfaceRe['Series']:
+        '''
+        Interface for applying regular expressions to elements in this container.
+        '''
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
+            tb = TypeBlocks.from_blocks(blocks)
+            return self.__class__(
+                    tb,
+                    index=self._index,
+                    columns=self._columns,
+                    name=self._name,
+                    own_index=True,
+                    own_data=True,
+                    )
+        return InterfaceRe(
+                blocks=self._blocks._blocks,
+                blocks_to_container=blocks_to_container,
+                pattern=pattern,
+                flags=flags,
                 )
 
 

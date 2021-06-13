@@ -75,6 +75,13 @@ class InterfaceRe(Interface[TContainer]):
 
     #---------------------------------------------------------------------------
     def search(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+        '''
+        Scan through string looking for the first location where this regular expression produces a match, and return a corresponding match object. Return None if no position in the string matches the pattern; note that this is different from finding a zero-length match at some point in the string.
+
+        The optional second parameter pos gives an index in the string where the search is to start; it defaults to 0. 
+    
+        The optional parameter endpos limits how far the string will be searched; it will be as if the string is endpos characters long, so only the characters from pos to endpos - 1 will be searched for a match.
+        '''
         args: tp.Tuple[int, ...]
         if endpos is not None:
             args = (pos, endpos)
@@ -91,6 +98,9 @@ class InterfaceRe(Interface[TContainer]):
         return self._blocks_to_container(block_gen)
 
     def match(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+        '''
+        If zero or more characters at the beginning of string match this regular expression, return a corresponding match object. Return None if the string does not match the pattern; note that this is different from a zero-length match.
+        '''
         args: tp.Tuple[int, ...]
         if endpos is not None:
             args = (pos, endpos)
@@ -107,6 +117,9 @@ class InterfaceRe(Interface[TContainer]):
         return self._blocks_to_container(block_gen)
 
     def fullmatch(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+        '''
+        If the whole string matches this regular expression, return a corresponding match object. Return None if the string does not match the pattern; note that this is different from a zero-length match.
+        '''
         args: tp.Tuple[int, ...]
         if endpos is not None:
             args = (pos, endpos)
@@ -122,11 +135,23 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
+    def split(self, maxsplit: int = 0) -> TContainer:
+        '''
+        Split string by the occurrences of pattern. If capturing parentheses are used in pattern, then the text of all groups in the pattern are also returned as part of the resulting list. If maxsplit is nonzero, at most maxsplit splits occur, and the remainder of the string is returned as the final element of the list.
+        '''
+        func = lambda s: tuple(self._pattern.split(s, maxsplit=maxsplit))
 
-
-    # split
+        block_gen = self._process_blocks(
+                blocks=self._blocks,
+                func=func,
+                dtype=DTYPE_OBJECT,
+                )
+        return self._blocks_to_container(block_gen)
 
     def findall(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+        '''
+        Return all non-overlapping matches of pattern in string, as a list of strings. The string is scanned left-to-right, and matches are returned in the order found. If one or more groups are present in the pattern, return a list of groups; this will be a list of tuples if the pattern has more than one group. Empty matches are included in the result.
+        '''
         args: tp.Tuple[int, ...]
         if endpos is not None:
             args = (pos, endpos)
@@ -142,3 +167,16 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
+
+    def sub(self, repl: str, count: int = 0) -> TContainer:
+        '''
+        Return the string obtained by replacing the leftmost non-overlapping occurrences of pattern in string by the replacement repl. If the pattern isn’t found, string is returned unchanged. repl can be a string or a function; if it is a string, any backslash escapes in it are processed. 
+        '''  
+        func = lambda s: self._pattern.sub(repl, s, count=count)
+
+        block_gen = self._process_blocks(
+                blocks=self._blocks,
+                func=func,
+                dtype=DTYPE_STR,
+                )
+        return self._blocks_to_container(block_gen)

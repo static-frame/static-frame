@@ -2287,10 +2287,12 @@ def array_from_element_apply(*,
                 count=len(array),
                 dtype=dtype,
                 )
-    else:
+    elif dtype.kind not in DTYPE_STR_KINDS:
         post = np.empty(shape=array.shape, dtype=dtype)
         for iloc, e in np.ndenumerate(array):
             post[iloc] = func(e)
+    else: # a string kind that is unsized
+        post = np.array([func(e) for e in np.ravel(array)], dtype=dtype).reshape(array.shape)
 
     post.flags.writeable = False
     return post
