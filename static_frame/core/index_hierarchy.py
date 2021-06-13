@@ -706,7 +706,6 @@ class IndexHierarchy(IndexBase):
                 flags=flags,
                 )
 
-
     #---------------------------------------------------------------------------
 
     def _update_array_cache(self) -> None:

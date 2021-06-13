@@ -2722,7 +2722,6 @@ class TestUnit(TestCase):
                 [[1, 1], [1, 2], [2, 1], [2, 2]]
                 )
 
-
     def test_index_hierarchy_via_dt_b(self) -> None:
         index_constructors = (IndexDate, IndexDate)
 
@@ -2753,6 +2752,29 @@ class TestUnit(TestCase):
             ih3.tolist(),
             [['20|01|03', '19|01|01'], ['20|01|03', '19|02|01'], ['19|02|05', '19|01|01'], ['19|02|05', '19|02|01']]
             )
+
+    #---------------------------------------------------------------------------
+
+    def test_index_hierarchy_via_re_a(self) -> None:
+        index_constructors = (IndexYearMonth, IndexDate)
+
+        labels = (
+            ('2020-01', '2019-01-01'),
+            ('2020-01', '2019-02-01'),
+            ('2019-02', '2019-01-01'),
+            ('2019-02', '2019-02-01'),
+        )
+        ih1 = IndexHierarchy.from_labels(labels, index_constructors=index_constructors)
+
+        a1 = ih1.via_re('19').search()
+        self.assertEqual(a1.tolist(),
+                [[False, True], [False, True], [True, True], [True, True]]
+                )
+
+        a2 = ih1.via_re('-').sub('*')
+        self.assertEqual(a2.tolist(),
+                [['2020*01', '2019*01*01'], ['2020*01', '2019*02*01'], ['2019*02', '2019*01*01'], ['2019*02', '2019*02*01']]
+                )
 
     #---------------------------------------------------------------------------
 
