@@ -4259,7 +4259,7 @@ class TestUnit(TestCase):
         s1 = sf.Series(('a.,aa.,aa', 'aa.,bab', 'cab.,baaa.,ab'))
         s2 = s1.via_re('.,').sub('===')
 
-        self.assertEqual(s2.to_pairs(),                                                                                                                          
+        self.assertEqual(s2.to_pairs(),
                 ((0, 'a===aa===aa'), (1, 'aa===bab'), (2, 'cab===baaa===ab'))
                 )
         self.assertEqual(s2.dtype, np.dtype('<U15'))

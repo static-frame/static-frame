@@ -78,8 +78,8 @@ class InterfaceRe(Interface[TContainer]):
         '''
         Scan through string looking for the first location where this regular expression produces a match, and return a corresponding match object. Return None if no position in the string matches the pattern; note that this is different from finding a zero-length match at some point in the string.
 
-        The optional second parameter pos gives an index in the string where the search is to start; it defaults to 0. 
-    
+        The optional second parameter pos gives an index in the string where the search is to start; it defaults to 0.
+
         The optional parameter endpos limits how far the string will be searched; it will be as if the string is endpos characters long, so only the characters from pos to endpos - 1 will be searched for a match.
         '''
         args: tp.Tuple[int, ...]
@@ -170,8 +170,8 @@ class InterfaceRe(Interface[TContainer]):
 
     def sub(self, repl: str, count: int = 0) -> TContainer:
         '''
-        Return the string obtained by replacing the leftmost non-overlapping occurrences of pattern in string by the replacement repl. If the pattern isn’t found, string is returned unchanged. repl can be a string or a function; if it is a string, any backslash escapes in it are processed. 
-        '''  
+        Return the string obtained by replacing the leftmost non-overlapping occurrences of pattern in string by the replacement repl. If the pattern isn’t found, string is returned unchanged. repl can be a string or a function; if it is a string, any backslash escapes in it are processed.
+        '''
         func = lambda s: self._pattern.sub(repl, s, count=count)
 
         block_gen = self._process_blocks(

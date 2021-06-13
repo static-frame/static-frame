@@ -10,7 +10,6 @@ from operator import itemgetter
 from collections.abc import Set
 import csv
 import json
-import re
 import sqlite3
 import typing as tp
 import warnings
