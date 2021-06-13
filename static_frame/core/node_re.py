@@ -6,7 +6,7 @@ import numpy as np
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import TContainer
-from static_frame.core.util import array_from_element_apply
+from static_frame.core.util import DTYPE_INT_DEFAULT, array_from_element_apply
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import AnyCallable
@@ -38,9 +38,7 @@ class InterfaceRe(Interface[TContainer]):
             'findall',
             'sub',
             'subn',
-            'groups', # property
             )
-
 
     def __init__(self,
             blocks: BlocksType,
@@ -167,7 +165,6 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
-
     def sub(self, repl: str, count: int = 0) -> TContainer:
         '''
         Return the string obtained by replacing the leftmost non-overlapping occurrences of pattern in string by the replacement repl. If the pattern isn’t found, string is returned unchanged. repl can be a string or a function; if it is a string, any backslash escapes in it are processed.
@@ -180,3 +177,17 @@ class InterfaceRe(Interface[TContainer]):
                 dtype=DTYPE_STR,
                 )
         return self._blocks_to_container(block_gen)
+
+    def subn(self, repl: str, count: int = 0) -> TContainer:
+        '''
+        Perform the same operation as sub(), but return a tuple (new_string, number_of_subs_made).
+        '''
+        func = lambda s: self._pattern.subn(repl, s, count=count)
+
+        block_gen = self._process_blocks(
+                blocks=self._blocks,
+                func=func,
+                dtype=DTYPE_OBJECT, # returns tuples
+                )
+        return self._blocks_to_container(block_gen)
+

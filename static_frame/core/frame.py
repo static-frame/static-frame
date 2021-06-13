@@ -152,13 +152,10 @@ from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 
 
-
-
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from xarray import Dataset #pylint: disable=W0611 #pragma: no cover #type: ignore [attr-defined]
     import pyarrow #pylint: disable=W0611 #pragma: no cover
-
 
 
 class Frame(ContainerOperand):
