@@ -552,7 +552,7 @@ class TestUnit(TestCase):
 
             f2.to_xlsx(fp)
 
-            with self.assertRaises(StoreFileMutation):
+            with self.assertRaises((StoreFileMutation, KeyError)):
                 tuple(b2.items())
 
 

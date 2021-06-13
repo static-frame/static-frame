@@ -2355,6 +2355,9 @@ class Frame(ContainerOperand):
 
         fp = path_filter(fp)
 
+        if columns_select is not None and not isinstance(columns_select, list):
+            columns_select = list(columns_select)
+
         # NOTE: the order of columns_select will determine their order
         table = pq.read_table(fp,
                 columns=columns_select,
