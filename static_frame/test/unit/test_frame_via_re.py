@@ -50,6 +50,19 @@ class TestUnit(TestCase):
         self.assertEqual(f1.via_re('[a.r]').split().to_pairs(),
             (('zZbu', (('zZbu', ('-88017',)), ('ztsv', ('92867',)))), ('ztsv', (('zZbu', ('F', 'lse')), ('ztsv', ('F', 'lse')))), ('zUvW', (('zZbu', ('T', 'ue')), ('ztsv', ('F', 'lse')))), ('zkuW', (('zZbu', ('1080', '4')), ('ztsv', ('2580', '34')))), ('zmVj', (('zZbu', ('zDVQ',)), ('ztsv', ('z5hI',)))))
             )
+
+    def test_frame_via_re_d(self) -> None:
+        f1 = ff.parse('s(2,5)|c(I,str)|i(I,str)|v(int,bool,bool,float,str)')
+
+        self.assertEqual(
+            f1.via_re('[a0z]').findall().to_pairs(),
+            (('zZbu', (('zZbu', ('0',)), ('ztsv', ()))), ('ztsv', (('zZbu', ('a',)), ('ztsv', ('a',)))), ('zUvW', (('zZbu', ()), ('ztsv', ('a',)))), ('zkuW', (('zZbu', ('0', '0')), ('ztsv', ('0',)))), ('zmVj', (('zZbu', ('z',)), ('ztsv', ('z',)))))
+            )
+
+        self.assertEqual(
+            f1.via_re('[a0z]').findall(endpos=1).to_pairs(),
+            (('zZbu', (('zZbu', ()), ('ztsv', ()))), ('ztsv', (('zZbu', ()), ('ztsv', ()))), ('zUvW', (('zZbu', ()), ('ztsv', ()))), ('zkuW', (('zZbu', ()), ('ztsv', ()))), ('zmVj', (('zZbu', ('z',)), ('ztsv', ('z',)))))
+            )
         # import ipdb; ipdb.set_trace()
 
 

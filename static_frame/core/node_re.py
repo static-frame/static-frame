@@ -148,7 +148,7 @@ class InterfaceRe(Interface[TContainer]):
 
     def findall(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
         '''
-        Return all non-overlapping matches of pattern in string, as a list of strings. The string is scanned left-to-right, and matches are returned in the order found. If one or more groups are present in the pattern, return a list of groups; this will be a list of tuples if the pattern has more than one group. Empty matches are included in the result.
+        Return all non-overlapping matches of pattern in string, as a tuple of strings. The string is scanned left-to-right, and matches are returned in the order found. If one or more groups are present in the pattern, return a tuple of groups; this will be a list of tuples if the pattern has more than one group. Empty matches are included in the result.
         '''
         args: tp.Tuple[int, ...]
         if endpos is not None:
