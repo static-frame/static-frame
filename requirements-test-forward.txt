@@ -27,3 +27,4 @@ pyarrow==3.0.0
 msgpack==1.0.0
 msgpack-numpy==0.4.7
 frame-fixtures==0.2.0
+
