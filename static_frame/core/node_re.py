@@ -1,12 +1,11 @@
 import typing as tp
 import re
-#from functools import partial
 
 import numpy as np
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import TContainer
-from static_frame.core.util import DTYPE_INT_DEFAULT, array_from_element_apply
+from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import AnyCallable
@@ -74,11 +73,11 @@ class InterfaceRe(Interface[TContainer]):
     #---------------------------------------------------------------------------
     def search(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
         '''
-        Scan through string looking for the first location where this regular expression produces a match, and return a corresponding match object. Return None if no position in the string matches the pattern; note that this is different from finding a zero-length match at some point in the string.
+        Scan through string looking for the first location where this regular expression produces a match and return True, else False. Note that this is different from finding a zero-length match at some point in the string.
 
-        The optional second parameter pos gives an index in the string where the search is to start; it defaults to 0.
-
-        The optional parameter endpos limits how far the string will be searched; it will be as if the string is endpos characters long, so only the characters from pos to endpos - 1 will be searched for a match.
+        Args:
+            pos: Gives an index in the string where the search is to start; it defaults to 0.
+            endpos: Limits how far the string will be searched; it will be as if the string is endpos characters long.
         '''
         args: tp.Tuple[int, ...]
         if endpos is not None:
@@ -97,7 +96,11 @@ class InterfaceRe(Interface[TContainer]):
 
     def match(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
         '''
-        If zero or more characters at the beginning of string match this regular expression, return a corresponding match object. Return None if the string does not match the pattern; note that this is different from a zero-length match.
+        If zero or more characters at the beginning of string match this regular expression return True, else False. Note that this is different from a zero-length match.
+
+        Args:
+            pos: Gives an index in the string where the search is to start; it defaults to 0.
+            endpos: Limits how far the string will be searched; it will be as if the string is endpos characters long.
         '''
         args: tp.Tuple[int, ...]
         if endpos is not None:
@@ -116,7 +119,11 @@ class InterfaceRe(Interface[TContainer]):
 
     def fullmatch(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
         '''
-        If the whole string matches this regular expression, return a corresponding match object. Return None if the string does not match the pattern; note that this is different from a zero-length match.
+        If the whole string matches this regular expression, return True, else False. Note that this is different from a zero-length match.
+
+        Args:
+            pos: Gives an index in the string where the search is to start; it defaults to 0.
+            endpos: Limits how far the string will be searched; it will be as if the string is endpos characters long.
         '''
         args: tp.Tuple[int, ...]
         if endpos is not None:
@@ -135,7 +142,10 @@ class InterfaceRe(Interface[TContainer]):
 
     def split(self, maxsplit: int = 0) -> TContainer:
         '''
-        Split string by the occurrences of pattern. If capturing parentheses are used in pattern, then the text of all groups in the pattern are also returned as part of the resulting list. If maxsplit is nonzero, at most maxsplit splits occur, and the remainder of the string is returned as the final element of the list.
+        Split string by the occurrences of pattern. If capturing parentheses are used in pattern, then the text of all groups in the pattern are also returned as part of the resulting tuple.
+
+        Args:
+            maxsplit: If nonzero, at most maxsplit splits occur, and the remainder of the string is returned as the final element of the tuple.
         '''
         func = lambda s: tuple(self._pattern.split(s, maxsplit=maxsplit))
 
@@ -148,7 +158,11 @@ class InterfaceRe(Interface[TContainer]):
 
     def findall(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
         '''
-        Return all non-overlapping matches of pattern in string, as a tuple of strings. The string is scanned left-to-right, and matches are returned in the order found. If one or more groups are present in the pattern, return a tuple of groups; this will be a list of tuples if the pattern has more than one group. Empty matches are included in the result.
+        Return all non-overlapping matches of pattern in string, as a tuple of strings. The string is scanned left-to-right, and matches are returned in the order found. If one or more groups are present in the pattern, return a tuple of groups; this will be a tuple of tuples if the pattern has more than one group. Empty matches are included in the result.
+
+        Args:
+            pos: Gives an index in the string where the search is to start; it defaults to 0.
+            endpos: Limits how far the string will be searched; it will be as if the string is endpos characters long.
         '''
         args: tp.Tuple[int, ...]
         if endpos is not None:
@@ -167,7 +181,11 @@ class InterfaceRe(Interface[TContainer]):
 
     def sub(self, repl: str, count: int = 0) -> TContainer:
         '''
-        Return the string obtained by replacing the leftmost non-overlapping occurrences of pattern in string by the replacement repl. If the pattern isn’t found, string is returned unchanged. repl can be a string or a function; if it is a string, any backslash escapes in it are processed.
+        Return the string obtained by replacing the leftmost non-overlapping occurrences of pattern in string by the replacement ``repl``. If the pattern is not found, the string is returned unchanged.
+
+        Args:
+            repl: A string or a function; if it is a string, any backslash escapes in it are processed.
+            count: The optional argument count is the maximum number of pattern occurrences to be replaced; count must be a non-negative integer. If omitted or zero, all occurrences will be replaced.
         '''
         func = lambda s: self._pattern.sub(repl, s, count=count)
 
@@ -181,6 +199,10 @@ class InterfaceRe(Interface[TContainer]):
     def subn(self, repl: str, count: int = 0) -> TContainer:
         '''
         Perform the same operation as sub(), but return a tuple (new_string, number_of_subs_made).
+
+        Args:
+            repl: A string or a function; if it is a string, any backslash escapes in it are processed.
+            count: The optional argument count is the maximum number of pattern occurrences to be replaced; count must be a non-negative integer. If omitted or zero, all occurrences will be replaced.
         '''
         func = lambda s: self._pattern.subn(repl, s, count=count)
 
