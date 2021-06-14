@@ -1597,13 +1597,15 @@ def array_shift(*,
     '''
 
     # works for all shapes
-    if shift > 0:
+    if shift == 0 or array.shape[axis] == 0:
+        shift_mod = 0
+    elif shift > 0:
         shift_mod = shift % array.shape[axis]
     elif shift < 0:
         # do negative modulo to force negative value
         shift_mod = shift % -array.shape[axis]
     else:
-        shift_mod = 0
+        raise NotImplementedError(f'no handling for this configuraiton')
 
     if (not wrap and shift == 0) or (wrap and shift_mod == 0):
         # must copy so as not let caller mutate arguement

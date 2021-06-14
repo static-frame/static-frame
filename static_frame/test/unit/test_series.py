@@ -2527,6 +2527,11 @@ class TestUnit(TestCase):
                 (('a', None), ('b', None), ('c', None), ('d', None), ('e', None), ('f', None))
                 )
 
+    def test_series_shift_b(self) -> None:
+        s1 = sf.Series([]).shift(1)
+        self.assertEqual(len(s1), 0)
+
+
     #---------------------------------------------------------------------------
     def test_series_isin_a(self) -> None:
 
