@@ -1,15 +1,15 @@
 
 
-How to Efficiently Work with 7,163 (or More) DataFrames
+Efficiently Working with 7,163 (or More) DataFrames
 ============================================================================================
 
 It is common in DataFrame processing routines to work with collections of tables. Examples include a multi-year dataset with a single table per year, historical stock data with a table per stock, or data from multiple sheets in an XLSX file. This presentation introduces three novel containers for working with such collections of DataFrames: the Bus, Batch, and Quilt.
 
-While hierarchical indices can be used to bring multiple tables into a single DataFrame, this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
+While hierarchical indices can be used to manage multiple tables in a single DataFrame, this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
 
-This presentation introduces three abstractions for working with large collections of DataFrames. The first, the Bus (named after buses used in circuits), provides a dictionary-like interface for lazily loading (and forgetting) tables in a collection; collections can stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, pickle, or delimited files. The second, the Batch (named after batch processing), is a deferred  processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The third, the Quilt (named after textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operations on partitioned data as if it was a unified, single table.
+This article introduces three abstractions for working with large collections of DataFrames. The first, the Bus (named after buses used in circuits), provides a dictionary-like interface for lazily loading (and forgetting) tables in a collection; collections can be stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, pickle, or delimited files. The second, the Batch (named after batch processing), is a deferred  processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The third, the Quilt (named after textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operations on partitioned data as if it was a unified, single table.
 
-All three containers provide identical interfaces for reading from, and writing to, multi-table storage formats such as XLSX, SQLite, HDF5, or zipped containers of pickle, Parquet, or delimited-text files. This uniformity permits sharing the same data store for different usage contexts.
+All three containers provide identical interfaces for reading from, and writing to, multi-table storage formats such as XLSX, SQLite, HDF5, or zipped containers of pickle, Parquet, or delimited-text files. This uniformity permits reusing the same data store for different usage contexts.
 
 These tools evolved from the context of my work: processing financial data and modelling investment systems. There, data sets are naturally partitioned by date or characteristic. For historical simulations, the data needed can be large. The Bus, Batch, and Quilt have provided convenient and efficient tools for this domain. Out-of-core solutions like Vaex and Dask offer related approaches to dealing with large collections of data, though with different tradeoffs.
 
@@ -18,21 +18,18 @@ These tools evolved from the context of my work: processing financial data and m
 While these containers are implemented in the Python StaticFrame package (a Pandas alternative that offers immutable DataFrames), the abstractions are useful for application in any DataFrame or table processing library. StaticFrame calls DataFrames simply "Frames," and that convention will be used here.
 
 
-
-
-
-
 Initialization & Relation to Other Containers
 _______________________________________________________
 
 
-Any iterable of pairs of label and Frame can be used to construct a Bus, Batch, or Quilt. The ``items()`` method on a Python dictionary of Frames provides such an iterable. Additionally, a Bus serves as a convenient resource for creating a Batch or a Quilt. The ``Bus.items()`` method, for example, can be used to initialize a Batch, and a Quilt is given a Bus on initialization.
+Any iterable of pairs of label and Frame can be used to construct a Bus, Batch, or Quilt. The ``items()`` method on a Python dictionary of Frames provides such an iterable. Additionally, a Bus serves as a convenient resource for creating a Batch or a Quilt.
 
+# a Batch can be initialized from the ``Bus.items()`` method, and a Quilt takes a Bus on initialization.
 
 Bus
 ------
 
-Two simple Frames can be created to demonstrate initializing a Bus.
+Two simple, named Frames can be created to demonstrate initializing a Bus.
 
 >>> f1 = sf.Frame.from_element(0.5, index=('w', 'x'), columns=('a', 'b'), name='f1')
 >>> f2 = sf.Frame.from_element(2, index=('y', 'z'), columns=('a', 'b'), name='f2')
@@ -46,9 +43,9 @@ f2      Frame
 
 # selecting by loc, iloc
 
-The Bus can be thought of as a Series (or an ordered dictionary) of Frames, permitting random access by label. When reading from a file store, Frames are loaded lazily: only when a Frame is accessed is it loaded into memory, and the Bus can be configured to only hold strong references to a limited number of Frames defined by the ``max_persist`` argument. This permits limiting the total memory loaded by the Bus.
+The Bus can be thought of as a Series (or an ordered dictionary) of Frames, permitting random access by label. When reading from a file store, Frames are loaded lazily: only when accessed is a Frame loaded into memory, and (with the ``max_persist`` argument) the Bus can be configured to only hold strong references to a limited number of Frames. This permits examing all frames while limiting the total memory loaded by the Bus.
 
-As the Bus supports reading from and writing to XLSX and HDF5 (as well as other formats), it provides the functionality of the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but with a more general and consistent interface. To write out these two Frames to an XLSX workbook, where each Frame is a sheet, takes only one line:
+As the Bus supports reading from and writing to XLSX and HDF5 (as well as many other formats), it provides the functionality of the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but with a more general and consistent interface. Using the Bus to write out these two Frames to an XLSX workbook (where each Frame is a sheet) takes only one line:
 
 >>> bus.to_xlsx('frames.xlsx')
 >>> # SCREENSHOT
