@@ -41,20 +41,29 @@ f1      Frame
 f2      Frame
 <<U2>   <object>
 
-# selecting by loc, iloc
+The Bus can be thought of as a Series (or an ordered dictionary) of Frames, permitting random access by label.
 
-The Bus can be thought of as a Series (or an ordered dictionary) of Frames, permitting random access by label. When reading from a file store, Frames are loaded lazily: only when accessed is a Frame loaded into memory, and (with the ``max_persist`` argument) the Bus can be configured to only hold strong references to a limited number of Frames. This permits examing all frames while limiting the total memory loaded by the Bus.
+>>> bus.loc['f2']
+<Frame: f2>
+<Index>     a       b       <<U1>
+<Index>
+y           2       2
+z           2       2
+<<U1>       <int64> <int64>
 
-As the Bus supports reading from and writing to XLSX and HDF5 (as well as many other formats), it provides the functionality of the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but with a more general and consistent interface. Using the Bus to write out these two Frames to an XLSX workbook (where each Frame is a sheet) takes only one line:
+A key feature of the Bus is that, when reading from a file store, Frames are loaded lazily: a Frame is loaded into memory only when accessed, and (with the ``max_persist`` argument) the Bus can be configured to only hold strong references to a limited number of Frames. This permits examining all frames while limiting the total memory loaded by the Bus.
+
+As the Bus supports reading from and writing to XLSX and HDF5 (as well as many other formats), it provides the functionality of the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but with a more general and consistent interface. Using the appropriate method, the same Bus can be used to write an XLSX workbook (where each Frame is a sheet) or an HDF5 datastore.
 
 >>> bus.to_xlsx('frames.xlsx')
 >>> # SCREENSHOT
-
+>>> bus.to_hdf5('frames.h5')
+>>> # SCREENSHOT
 
 Batch
 --------
 
-The Batch can be thought of as an iterator of pairs of label and Frame. Beyond just an iterator, the Batch is a tool for composing deferred operations on each contained Frame. Operations are executed, and pairs are iterated, only when creating a composite Frame with the ``to_frame()`` method, or using dictionary-like methods such as ``keys()``, ``items()``, or ``values``. The Batch exposes nearly the entire Frame interface; method calls (and even operator applications) are composed and deferred in a newly returned Batch, composing operations upon the stored iterator.
+The Batch can be thought of as an iterator of pairs of label and Frame. Beyond just an iterator, the Batch is a tool for composing deferred operations on each contained Frame. Operations are executed, and pairs are iterated, only when creating a composite Frame with the ``to_frame()`` method, or using dictionary-like methods such as ``keys()``, ``items()``, or ``values``. The Batch exposes nearly the entire Frame interface; method calls and operator applications are composed and deferred in a newly returned Batch, composing operations upon the stored iterator.
 
 >>> sf.Batch(bus.items()).sum()
 <Batch at 0x7fabd09779a0>
@@ -67,7 +76,7 @@ f2      4.0       4.0
 <<U2>   <float64> <float64>
 
 
-In addition to Frame methods, the Batch support usage of operators as well as Frame selection methods. Here, each Frame is take to the second power, and then the 'b' column is selected:
+In addition to Frame methods, the Batch support usage of operators as well as Frame selection methods. Here, each Frame is taken to the second power, and then the 'b' column is selected:
 
 >>> (sf.Batch(bus.items()) ** 2)['b'].to_frame()
 <Frame>
@@ -78,7 +87,7 @@ f2      nan       nan       4.0       4.0
 <<U2>   <float64> <float64> <float64> <float64>
 
 
-The Batch is related to the Pandas ``DataFrameGroupBy`` and ``Rolling`` objects: interfaces that, after configuring a group-by or rolling window iterable, expose function application on those groups or windows. The Batch generalizes this functionality, supporting those cases as well as any iterator of labels and Frames.
+The Batch is related to the Pandas ``DataFrameGroupBy`` and ``Rolling`` objects: interfaces that, after configuring a group-by or rolling window iterable, expose function application on those groups or windows. The Batch generalizes this functionality, supporting those contexts as well as processing any iterator of labels and Frames.
 
 
 
