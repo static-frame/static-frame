@@ -1396,6 +1396,14 @@ class TestUnit(TestCase):
                 ('a', 'e'), side_left=False, fill_value=None).tolist(),
                 ['b', None])
 
+    #---------------------------------------------------------------------------
+    def test_index_via_re_a(self) -> None:
+
+        idx1 = IndexGO(('aabbcc', 'bbcccc', 'cc', 'ddddbb'))
+        a1 = idx1.via_re('bb').search()
+
+        self.assertEqual(a1.tolist(),
+                [True, True, False, True])
 
 if __name__ == '__main__':
     unittest.main()
