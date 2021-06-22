@@ -240,12 +240,12 @@ To make observations across the entire data set, we can pass the Bus to a Quilt.
 >>> quilt.shape
 (14887665, 6)
 
-With the Quilt we can calculate the total volume of almost seven thousand securities for a single day without explicitly concatenating Frames. The StaticFrame ``HLoc`` selector permits per-depth-level selection in a hierarchical index.
+With the Quilt we can calculate the total volume of almost seven thousand securities for a single day without explicitly concatenating all Frames. The StaticFrame ``HLoc`` selector, used below, permits per-depth-level selection within a hierarchical index. Here we selet all security records for November 10, 2017, and sum the volume.
 
 >>> quilt.loc[sf.HLoc[:, '2017-11-10'], 'Volume'].sum()
 5520175355
 
-A more expensive operation use the ``iloc_max`` method to find the ticker and date of the security with the highest volume across all securities. The ticker and date become the ``name`` attribute of the returned Series.
+Similarly, the ``iloc_max()`` method can be used to find the ticker and date of the security with the highest volume across all securities. The ticker and date become the ``name`` attribute of the Series selected by ``iloc_max()``.
 
 >>> quilt.iloc[quilt['Volume'].iloc_max()]
 <Series: ('bac', '2012-03-07')>
@@ -263,9 +263,11 @@ OpenInt                         0.0
 Cross-Container Comparisons: Same Method, Different Selections
 __________________________________________________________________________
 
-After some initial exploration, the "Huge Stock Market Dataset" Bus can next be used to illustrate the differenes between these three containers. As shown below, the ``head(2)`` method returns different results with each.
+The previous examples demonstrated loading, processing, and examining the "Huge Stock Market Dataset" with the Bus, Batch, and Qulit. Cross-container comparisons can be used to further illustrate the characteristics of these three containers. First, we can observe how three different selections are returned by applying the same method to each container. Second, we can observe how three approaches can be used with each container to return the same selection.
 
-The Bus, behaving as a one-dimensional Series, returns a new Bus consisting of the first two Frames:
+The ``head(2)`` method returns the first two rows (or elements) from any container. Understanding how the method's output differs between the Bus, Batch, and Quilt helps illustrate their nature.
+
+The ``head(2)`` method call on the Bus returns a new Bus consisting of the first two elements, i.e., the first two Frames in the "Huge Stock Market Dataset".
 
 >>> bus.head(2)
 <Bus>
@@ -275,7 +277,7 @@ bgt     Frame
 <<U9>   <object>
 
 
-As the Batch operates on each Frame in a Bus, calling ``head(2)`` and ``to_frame()`` results in a new Frame with the top two rows from each contained Frame.
+As the Batch operates on each Frame in a Bus, calling ``head(2)`` extracts the top two rows from each Frame in the "Huge Stock Market Dataset"; calling ``to_frame()`` concatenates these extractions into a new Frame.
 
 >>> sf.Batch(bus.items()).head(2).to_frame()
 <Frame>
@@ -330,16 +332,14 @@ fljh             2017-11-08 26.359    26.39     26.349    26.3875   3600    0
 <<U4>            <<U10>     <float64> <float64> <float64> <float64> <int64> <int64>
 
 
-
-
 Cross-Container Comparisons: Same Selections, Different Methods
 __________________________________________________________________________
 
-Next, we will perform the same selection on each container using different selection methods.
+Next, we will show how three approaches can be used with each container to return the same selection. Again, the diverse approaches illustrate the differences between the Bus, Batch, and Quilt.
 
-The ``head`` method is a pre-configured type of row selector. The full range of ``loc`` and ``iloc`` selection interfaces is supported in all containers, though specialized within each containers' dimensional context.
+While the ``head()`` method, used above, is a type of pre-configured selector, the full range of ``loc`` and ``iloc`` selection interfaces are supported in all containers. The following examples extract all "Open" and "Close" records from January 2, 1962.
 
-If we want to select from each Frame individually with a Bus, we can iterate through each Frame and do a selection,
+To perform this selection with a Bus, we can iterate through each Frame and select the targetted records.
 
 >>> for label, f in bus.items():
 ...     if '1962-01-02' in f.index:
