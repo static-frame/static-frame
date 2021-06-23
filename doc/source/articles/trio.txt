@@ -321,7 +321,7 @@ gsjy             2016-03-08 25.081    25.194    25.071    25.158    12457   0
 <<U9>            <<U10>     <float64> <float64> <float64> <float64> <int64> <int64>
 
 
-Finally, the Quilt represents the contained Frames as if they were a single, contiguous Frame. Calling ``head(2)`` returns the first two rows of that virtual frame, labelled with a hierarchical index whose outer label is the Frame's label.
+Finally, the Quilt represents the contained Frames as if they were a single, contiguous Frame. Calling ``head(2)`` returns the first two rows of that virtual Frame, labelled with a hierarchical index whose outer label is the Frame's label.
 
 >>> quilt.head(2)
 <Frame>
@@ -335,9 +335,7 @@ fljh             2017-11-08 26.359    26.39     26.349    26.3875   3600    0
 Cross-Container Comparisons: Same Selections, Different Methods
 __________________________________________________________________________
 
-Next, we will show how three approaches can be used with each container to return the same selection. Again, the diverse approaches illustrate the differences between the Bus, Batch, and Quilt.
-
-While the ``head()`` method, used above, is a type of pre-configured selector, the full range of ``loc`` and ``iloc`` selection interfaces are supported in all containers. The following examples extract all "Open" and "Close" records from January 2, 1962.
+Next, we will show how three approaches can be used with each container to return the same selection. While the ``head()`` method, used above, is a type of pre-configured selector, the full range of ``loc`` and ``iloc`` selection interfaces are supported in all containers. The following examples extract all "Open" and "Close" records from January 2, 1962.
 
 To perform this selection with a Bus, we can iterate through each Frame and select the targetted records.
 
@@ -357,8 +355,7 @@ Close         6.3378
 <<U7>         <float64>
 
 
-
-As already seen, the Batch is designed for operating on each Frame and concatenating the results. Additionally, the Batch offers a more compact interface than that shown above using the Bus. We can select row and column values from within each contained Frame and bring the resulted together under their individual Frame labels.
+The Batch offers a more compact interface to achieve this selection than possible with the Bus. Without writing a loop, the ``apply_except()`` Batch method can select row and column values from within each contained Frame while ignoring ``KeyError``s raised from Frames without the selected date. Calling ``to_frame()`` brings the results together with their Frame labels.
 
 >>> sf.Batch(bus.items()).apply_except(lambda f: f.loc['1962-01-02', ['Open', 'Close']], KeyError).to_frame()
 <Frame>
@@ -369,7 +366,7 @@ ibm     6.413     6.3378
 <<U3>   <float64> <float64>
 
 
-As a virtual concatenation of Frames, the Quilt permits selection as if from a single Frame. As shown below, a hierarchical selection on the inner label "1962-01-02" brings together any records for that date across all companies.
+Finally, as a virtual concatenation of Frames, the Quilt permits selection as if from a single Frame. As shown below, a hierarchical selection on the inner label "1962-01-02" brings together any records for that date across all companies.
 
 >>> quilt.loc[sf.HLoc[:, '1962-01-02'], ['Open', 'Close']]
 <Frame>
@@ -380,22 +377,22 @@ ibm              1962-01-02 6.413     6.3378
 <<U3>            <<U10>     <float64> <float64>
 
 
-These last examples demonstrate that, in some cases, the same operation can be done with the Bus, Batch, and Quilt. The difference is in the abstraction and the interface.
-
-
 Minimizing Memory Usage
 _____________________________________________
 
 In the previous examples, the Bus was shown lazily load in data as it was accessed. While this permits only loading what is needed, for large collections of data this will
 
 
-Going Further & Faster
-_______________________
+Parallel Reading, Writing, and Processing
+_______________________________________________________
 
 Optimizations using multiprocessing and multi-threading in Batch processing.
 
 Multiprocessing reading from zipped stores.
 
+
+Conclusion
+_______________________
 
 While related tools for working with collections of Frame exist, the Bus, Batch, and Quilt provide well-defined abstractions that cover common needs in working with collections of tables. Combined with lazy loading and lazy execution, as well as support for a variety of multi-table storage formats, these tools provide valuable resources for DataFrame processing.
 
