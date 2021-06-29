@@ -3,17 +3,15 @@
 Efficiently Working with 7,163 (or More) DataFrames
 ============================================================================================
 
-It is common in DataFrame processing routines to work with collections of tables. Examples include a multi-year dataset with a single table per year, historical stock data with a table per stock, or data from multiple sheets in an XLSX file. This presentation introduces three novel containers for working with such collections of DataFrames: the Bus, Batch, and Quilt.
+DataFrame processing routines commonly work with collections of tables. Examples of such collections include a multi-year dataset with a single table per year, historical stock data with a table per stock, or data from multiple sheets in an XLSX file. This presentation introduces three novel containers for working with such collections of DataFrames: the Bus, Batch, and Quilt.
 
 While hierarchical indices can be used to manage multiple tables in a single DataFrame, this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
 
-This article introduces three abstractions for working with large collections of DataFrames. The first, the Bus (named after buses used in circuits), provides a dictionary-like interface for lazily loading (and forgetting) tables in a collection; collections can be stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, pickle, or delimited files. The second, the Batch (named after batch processing), is a deferred  processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The third, the Quilt (named after textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operations on partitioned data as if it was a unified, single table.
+This article introduces three abstractions for working with large collections of DataFrames. The first, the Bus (named after buses used in circuits), provides a dictionary-like interface for lazily loading (and forgetting) tables in a collection; collections can be stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, pickle, or delimited text files. The second, the Batch (named after batch processing), is a deferred  processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The third, the Quilt (named after textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operations on partitioned data as if it was a unified, single table.
 
-All three containers provide identical interfaces for reading from, and writing to, multi-table storage formats such as XLSX, SQLite, HDF5, or zipped containers of pickle, Parquet, or delimited-text files. This uniformity permits reusing the same data store for different usage contexts.
+All three containers provide identical interfaces for reading from, and writing to, the multi-table storage formats mentioned above (SQLite, HDF5, XLSX, or zipped archives of Parquet, pickle, or delimited text files). This uniformity permits reusing the same data store for different contexts.
 
 These tools evolved from the context of my work: processing financial data and modelling investment systems. There, data sets are naturally partitioned by date or characteristic. For historical simulations, the data needed can be large. The Bus, Batch, and Quilt have provided convenient and efficient tools for this domain. Out-of-core solutions like Vaex and Dask offer related approaches to dealing with large collections of data, though with different tradeoffs.
-
-# observing my colleagues repeatedly group and un-group data with hierarchical indices.
 
 While these containers are implemented in the Python StaticFrame package (a Pandas alternative that offers immutable DataFrames), the abstractions are useful for application in any DataFrame or table-processing library. StaticFrame calls DataFrames simply "Frames," and that convention will be used here.
 
@@ -21,10 +19,7 @@ While these containers are implemented in the Python StaticFrame package (a Pand
 Initialization & Relation to Other Containers
 _______________________________________________________
 
-
 Any iterable of pairs of label and Frame can be used to construct a Bus, Batch, or Quilt. The ``items()`` method on a Python dictionary of Frames provides such an iterable. Additionally, a Bus serves as a convenient resource for creating a Batch or a Quilt.
-
-# a Batch can be initialized from the ``Bus.items()`` method, and a Quilt takes a Bus on initialization.
 
 Bus
 ------
@@ -53,7 +48,7 @@ z           2       2
 
 A key feature of the Bus is that, when reading from a file store, Frames are loaded lazily: a Frame is loaded into memory only when accessed, and (with the ``max_persist`` argument) the Bus can be configured to only hold strong references to a limited number of Frames. This permits examining all frames while limiting the total memory loaded by the Bus.
 
-As the Bus supports reading from and writing to XLSX and HDF5 (as well as many other formats), it provides the functionality of the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but with a more general and consistent interface. Using the appropriate method, the same Bus can be used to write an XLSX workbook (where each Frame is a sheet) or an HDF5 datastore.
+As the Bus supports reading from, and writing to, XLSX and HDF5 (as well as many other formats), it provides the functionality of the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but with a more general and consistent interface. Using the appropriate method, the same Bus can be used to write an XLSX workbook (where each Frame is a sheet) or an HDF5 datastore.
 
 >>> bus.to_xlsx('frames.xlsx')
 >>> # SCREENSHOT
@@ -76,7 +71,7 @@ f2      4.0       4.0
 <<U2>   <float64> <float64>
 
 
-In addition to Frame methods, the Batch supports usage of Frame selection methods and operators. Here, each Frame is taken to the second power, the 'b' column is selected from each Frame, and a Frame combing both is returned:
+In addition to Frame methods, the Batch supports usage of Frame selection methods and operators. Here, each Frame is taken to the second power, the 'b' column is selected from each Frame, and a new Frame (combing both) is returned:
 
 >>> (sf.Batch(bus.items()) ** 2)['b'].to_frame()
 <Frame>
@@ -87,13 +82,13 @@ f2      nan       nan       4.0       4.0
 <<U2>   <float64> <float64> <float64> <float64>
 
 
-The Batch is related to the Pandas ``DataFrameGroupBy`` and ``Rolling`` objects: interfaces that, after configuring a group-by or rolling window iterable, expose function application on those groups or windows. The Batch generalizes this functionality, supporting those contexts as well as processing any iterator of labels and Frames.
+The Batch is related to the Pandas ``DataFrameGroupBy`` and ``Rolling`` objects: interfaces that, after configuring a group-by or rolling window iterable, expose function application on those groups or windows. The Batch generalizes this functionality, supporting those contexts as well as offering general-purpose processing of any iterator of labels and Frames.
 
 
 Quilt
 --------------
 
-A Quilt is initialized with a Bus, and requires specification of which axis to orient on, either vertically (axis 0) or horizontally (axis 1). Additionally, a Quilt must define a Boolean value for ``retain_labels``: if True, Frame labels are retained as the outer labels in a hierarchical index along the axis of virtual concatenation. If ``retain_labels`` is False, all labels must be unique. The following examples use the previously created Bus to demonstrate the `retain_labels` parameter.
+A Quilt is initialized with a Bus, and requires specification of which axis to orient on, either vertically (axis 0) or horizontally (axis 1). Additionally, a Quilt must define a Boolean value for ``retain_labels``: if True, Frame labels are retained as the outer labels in a hierarchical index along the axis of virtual concatenation. If ``retain_labels`` is False, all labels must be unique. The following examples use the previously created Bus to demonstrate the ``retain_labels`` parameter.
 
 >>> quilt = sf.Quilt(bus, axis=0, retain_labels=False)
 >>> quilt.display()
@@ -105,7 +100,6 @@ x       0.5       0.5
 y       2.0       2.0
 z       2.0       2.0
 <<U1>   <float64> <float64>
-
 
 >>> quilt = sf.Quilt(bus, axis=0, retain_labels=True)
 >>> quilt.display()
@@ -121,7 +115,7 @@ f2               z     2.0       2.0
 
 The Quilt can be thought of as a Frame built from many smaller Frames, and aligned either vertically or horizontally. This larger frame is not eagerly concatenated; rather, Frames are accessed from a contained Bus as needed, providing a lazy, "virtual concatenation" of tables along an axis. The Bus can be configured with the ``max_persist`` argument to limit the total number of Frames held in memory. Such explicit memory management permits doing operations on a virtual Frame that might not be possible to load into memory.
 
-The Quilt permits selection, iterations, and operations on this virtually concatenated Frame using common Frame interfaces. The Quilt exposes a subset of the Frame interface.
+The Quilt permits selections, iterations, and operations on this virtually concatenated Frame using common Frame interfaces. The Quilt exposes a subset of the Frame interface.
 
 >>> quilt.iter_array(axis=1).apply(lambda a: a.sum())
 <Series>
@@ -136,9 +130,11 @@ z        4.0
 Common & Distinguishing Characteristics
 -------------------------------------------------
 
-A common characteristic shared by these containers is that all three support instantiation from an iterator of pairs of labels and Frames.
+After considering how these containers are initialized, we can look at some common and distinguishing characteristcs.
 
-The Bus, Batch, and Quilt all share the same file-based constructors, such as ``from_zip_csv()`` or ``from_xlsx()``; each constructor has a corresponding exporter, e.g., ``to_zip_csv()`` or ``to_xlsx()``, respectively, permitting round-trip reading and writing, or conversion from one format to another. The following table summarize the file-based constructors and exporters available.
+As mentioned previously, a common characteristic shared by these containers is that all three support instantiation from an iterator of pairs of labels and Frames.
+
+Further, the Bus, Batch, and Quilt all share the same file-based constructors, such as ``from_zip_csv()`` or ``from_xlsx()``; each constructor has a corresponding exporter, e.g., ``to_zip_csv()`` or ``to_xlsx()``, respectively, permitting round-trip reading and writing, or conversion from one format to another. The following table summarize the file-based constructors and exporters available on all three containers.
 
 File-Based Constructors & Exporters
 +-----------------+--------------+
@@ -160,7 +156,7 @@ File-Based Constructors & Exporters
 +-----------------+--------------+
 
 
-These containers can be further compared in terms of dimensionality, shape, and interface. The Bus and Batch are one-dimensional collections of Frames; the Quilt presents a two-dimensional Frame. While the shape of the Bus is equal to the number of Frames, the shape of the Quilt depends on its contained Frames and its axis of orientation. Like a generator, the length (or shape) of a Batch is not known until iteration. Finally, while the Bus exposes a Series-like interface, the Batch and Quilt expose a Frame-like interface, operating on individual Frames or the virtually concatenated Frame, respectively.
+These containers can be distinguished by dimensionality, shape, and interface. The Bus and Batch are one-dimensional collections of Frames; the Quilt presents a two-dimensional Frame. While the shape of the Bus is equal to the number of Frames, the shape of the Quilt depends on its contained Frames and its axis of orientation. Like a generator, the length (or shape) of a Batch is not known until iteration. Finally, while the Bus exposes a Series-like interface, the Batch and Quilt expose a Frame-like interface, operating on individual Frames or the virtually concatenated Frame, respectively.
 
 As shown the following table, these three containers populate a spectrum of dimensionality and interfaces.
 
