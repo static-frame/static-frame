@@ -178,13 +178,13 @@ ___________________________
 
 The "Huge Stock Market Dataset" dataset is a collection of seven thousand, one hundred three tables, each a time series of characteristics for a US stock. The file "archive.zip" is available at https://www.kaggle.com/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
 
-This zip archive contains subdirectories and thus cannot be directly read from a Bus. After opening the archive, we can read from the contained "Stocks" directory and use a Batch to create a zip pickle of the stock data for fast reading in subsequent examples. As some files are empty, we must also filter out files with no size.
+This zip archive contains subdirectories and thus cannot be directly read from a Bus. After opening the archive, we can read from the contained "Stocks" directory and use a Batch to create a zip pickle of the stock data for fast reading in subsequent examples. As some files are empty, we must also filter out files with no size. Depending on hardware, this initial transformation may take some time.
 
 >>> import os
 >>> d = 'archive/Stocks'
 >>> fps = ((fn, os.path.join(d, fn)) for fn in os.listdir(d))
 >>> items = ((fn.replace('.us.txt', ''), sf.Frame.from_csv(fp, index_depth=1)) for fn, fp in fps if os.path.getsize(fp))
->>> sf.Batch(items).to_zip_pickle('stocks.zip')
+>>> sf.Batch(items).to_zip_pickle('stocks.zip') # NOTE: can this be multiprocessed?
 
 
 Creating a Bus from this new zip archive loads zero Frames; fast access to a subset of the data is provided without loading anything more than what is requested. While the ``shape`` atttribute shows 7163 contained Frames in the zip archive, the ``status`` attribute shows zero loaded Frames.
@@ -376,7 +376,36 @@ ibm              1962-01-02 6.413     6.3378
 Minimizing Memory Usage
 _____________________________________________
 
-In the previous examples, the Bus was shown lazily load in data as it was accessed. While this permits only loading what is needed, for large collections of data this will
+In the previous examples, the Bus was shown to lazily load in data as it was accessed. While this permits only loading what is needed, what is loaded is retained in memoy in the Bus. For large collections of data this can result in retaining unnecessary data in memory.
+
+By using the ``max_persist`` argument on Bus initialization, we can fix the maximum number of Frames retained in the Bus.
+
+>>> bus = sf.Bus.from_zip_pickle('stocks.zip', max_persist=1)
+>>> bus['aapl'].shape
+(8364, 6)
+>>> bus.status['loaded'].sum()
+1
+>>> bus['ibm'].shape
+(14059, 6)
+>>> bus.status['loaded'].sum()
+1
+>>> bus['goog'].shape
+(916, 6)
+>>> bus.status['loaded'].sum()
+1
+
+With this configuration, a process could iterate through all 7,163 Frames, doing work on each Frame, but only incuring the memory overhead of a single Frame. This approach explicitly favors conserving memory over performance time.
+
+>>> max_close = 0
+>>> for label in bus.index:
+...     max_close = max(bus[label]['Close'].max(), max_close)
+...
+>>> max_close
+1437986240.44
+>>> bus.status['loaded'].sum()
+1
+
+# show doing the same thing with a Quilt
 
 
 Parallel Reading, Writing, and Processing
