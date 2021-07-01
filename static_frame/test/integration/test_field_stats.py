@@ -11,7 +11,7 @@ CHARACTERS_REFERENCE = dict((
         ('count', len),
         ('count<0', lambda x: len(x.loc[x < 0])),
         ('count>0', lambda x: len(x.loc[x > 0])),
-        ('count_unique', lambda x: len(x.unique())),
+        ('count_unique', lambda x: len(x.dropna().unique())),
         ('min', lambda x: x.min()),
         ('max', lambda x: x.max()),
         ('sum', lambda x: x.sum()),
@@ -129,12 +129,13 @@ class TestUnit(TestCase):
             (('x', 6.0), ('y', 6.0), ('min', 6.0), ('max', 6.0), ('sum', 12.0), ('mean', 6.0), ('median', 6.0))
             )
 
+        # import ipdb; ipdb.set_trace()
         self.assertEqual(post['x'].to_pairs(),
-            ((('category_a', 'a1', 'count'), 6.0), (('category_a', 'a1', 'count<0'), 1.0), (('category_a', 'a1', 'count>0'), 4.0), (('category_a', 'a1', 'count_unique'), 6.0), (('category_a', 'a1', 'min'), -0.05), (('category_a', 'a1', 'max'), 0.2), (('category_a', 'a1', 'sum'), 0.31), (('category_a', 'a1', 'mean'), 0.052), (('category_a', 'a1', 'median'), 0.03), (('category_a', 'a1', 'nanfill'), 0.0), (('category_a', 'a2', 'count'), 6.0), (('category_a', 'a2', 'count<0'), 2.0), (('category_a', 'a2', 'count>0'), 1.0), (('category_a', 'a2', 'count_unique'), 6.0), (('category_a', 'a2', 'min'), -0.1), (('category_a', 'a2', 'max'), 0.05), (('category_a', 'a2', 'sum'), -0.07), (('category_a', 'a2', 'mean'), -0.018), (('category_a', 'a2', 'median'), -0.01), (('category_a', 'a2', 'nanfill'), 0.333), (('category_b', 'b1', 'count'), 6.0), (('category_b', 'b1', 'count<0'), 2.0), (('category_b', 'b1', 'count>0'), 0.0), (('category_b', 'b1', 'count_unique'), 6.0), (('category_b', 'b1', 'min'), -0.1), (('category_b', 'b1', 'max'), -0.02), (('category_b', 'b1', 'sum'), -0.12), (('category_b', 'b1', 'mean'), -0.06), (('category_b', 'b1', 'median'), -0.06), (('category_b', 'b1', 'nanfill'), 0.667), (('category_b', 'b2', 'count'), 6.0), (('category_b', 'b2', 'count<0'), 1.0), (('category_b', 'b2', 'count>0'), 4.0), (('category_b', 'b2', 'count_unique'), 6.0), (('category_b', 'b2', 'min'), -0.1), (('category_b', 'b2', 'max'), 0.2), (('category_b', 'b2', 'sum'), 0.26), (('category_b', 'b2', 'mean'), 0.043), (('category_b', 'b2', 'median'), 0.03), (('category_b', 'b2', 'nanfill'), 0.0))
+            ((('category_a', 'a1', 'count'), 6.0), (('category_a', 'a1', 'count<0'), 1.0), (('category_a', 'a1', 'count>0'), 4.0), (('category_a', 'a1', 'count_unique'), 6.0), (('category_a', 'a1', 'min'), -0.05), (('category_a', 'a1', 'max'), 0.2), (('category_a', 'a1', 'sum'), 0.31), (('category_a', 'a1', 'mean'), 0.052), (('category_a', 'a1', 'median'), 0.03), (('category_a', 'a1', 'nanfill'), 0.0), (('category_a', 'a2', 'count'), 6.0), (('category_a', 'a2', 'count<0'), 2.0), (('category_a', 'a2', 'count>0'), 1.0), (('category_a', 'a2', 'count_unique'), 4.0), (('category_a', 'a2', 'min'), -0.1), (('category_a', 'a2', 'max'), 0.05), (('category_a', 'a2', 'sum'), -0.07), (('category_a', 'a2', 'mean'), -0.018), (('category_a', 'a2', 'median'), -0.01), (('category_a', 'a2', 'nanfill'), 0.333), (('category_b', 'b1', 'count'), 6.0), (('category_b', 'b1', 'count<0'), 2.0), (('category_b', 'b1', 'count>0'), 0.0), (('category_b', 'b1', 'count_unique'), 2.0), (('category_b', 'b1', 'min'), -0.1), (('category_b', 'b1', 'max'), -0.02), (('category_b', 'b1', 'sum'), -0.12), (('category_b', 'b1', 'mean'), -0.06), (('category_b', 'b1', 'median'), -0.06), (('category_b', 'b1', 'nanfill'), 0.667), (('category_b', 'b2', 'count'), 6.0), (('category_b', 'b2', 'count<0'), 1.0), (('category_b', 'b2', 'count>0'), 4.0), (('category_b', 'b2', 'count_unique'), 6.0), (('category_b', 'b2', 'min'), -0.1), (('category_b', 'b2', 'max'), 0.2), (('category_b', 'b2', 'sum'), 0.26), (('category_b', 'b2', 'mean'), 0.043), (('category_b', 'b2', 'median'), 0.03), (('category_b', 'b2', 'nanfill'), 0.0))
         )
 
         self.assertAlmostEqualValues(post.sum().values.tolist(),
-            [64.467, 67.12100000000001, 56.066999999999986, 75.52100000000004, 131.587, 65.794, 65.794])
+            [58.466999999999985, 61.121, 48.06699999999999, 71.52100000000004, 119.587, 59.794000000000004, 59.794000000000004])
 
 if __name__ == '__main__':
     unittest.main()
