@@ -4,7 +4,7 @@ What is New in Static Frame
 0.8.15
 ----------
 
-Added support for loading containers into VisiData ``Sheet`` and  ``IndexSheet`` subclasses, added ``to_visidata()`` exporter to all cotnainers.
+Added support for loading containers into specialized VisiData ``Sheet`` and  ``IndexSheet`` subclasses; added ``to_visidata()`` exporter to all containers.
 
 
 0.8.14
