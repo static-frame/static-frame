@@ -13,12 +13,37 @@ from visidata import Progress #pylint: disable=E0401
 from visidata import anytype #pylint: disable=E0401
 from visidata import undoAttrCopyFunc #pylint: disable=E0401
 
-# This module follows the conventions of the VisiData project for naming and style
+# This module follows the conventions of the VisiData project for naming and style. For the same reason this also avoids importing StaticFrame at the module level.
+
+
+def normalize_container(container):
+    import static_frame as sf
+
+    # multi-Frame containers
+    if isinstance(container, sf.Bus):
+        return container
+    elif isinstance(container, sf.Batch):
+        return container.to_bus()
+
+    # Frame-like containers
+    elif isinstance(container, sf.Quilt):
+        return container.to_frame()
+    # convertable to a Frame
+    elif isinstance(container, sf.Series):
+        return container.to_frame()
+    elif isinstance(container, sf.Index):
+        return container.to_series().to_frame()
+    elif isinstance(container, sf.IndexHierarchy):
+        return container.to_frame()
+    # Frame
+    return container
+
 
 class StaticFrameAdapter:
 
     def __init__(self, frame):
         import static_frame as sf
+        frame = normalize_container(frame)
         if not isinstance(frame, sf.Frame):
             vd.fail('%s is not a StaticFrame Frame' % type(frame).__name__)
         self.frame = frame
@@ -87,7 +112,7 @@ class StaticFrameSheet(Sheet):
     @frame.setter
     def frame(self, val):
         if isinstance(getattr(self, 'rows', None), StaticFrameAdapter):
-            # If we already have a rows attribute and it is a SFA, then we assume val us a Frame and inject it intot the SFA
+            # If we already have a rows attribute and it is a SFA, then we assume val us a Frame and inject it into the SFA
             self.rows.frame = val
         else:
             self.rows = StaticFrameAdapter(val)
@@ -113,21 +138,8 @@ class StaticFrameSheet(Sheet):
 
     def reload(self):
         import static_frame as sf
-
         if isinstance(self.source, sf.Frame):
             frame = self.source
-        # # should paths be supported?
-        # elif isinstance(self.source, Path):
-        #     filetype = getattr(self, 'filetype', self.source.ext)
-        #     if filetype == 'tsv':
-        #         readfunc = sf.Frame.from_tsv
-        #     if filetype == 'csv':
-        #         readfunc = sf.Frame.from_csv
-        #     elif filetype == 'json':
-        #         readfunc = sf.Frame.from_json
-        #     else:
-        #         vd.error('no supported import for:' + filetype)
-        #     frame = readfunc(str(self.source))
         else:
             raise NotImplementedError(f'no supprt for loading a Frame from {self.source}')
 
@@ -385,29 +397,13 @@ StaticFrameSheet.addCommand('g\\', 'unselect-cols-regex', 'selectByRegex(regex=i
 StaticFrameSheet.addCommand('"', 'dup-selected', 'vs=StaticFrameSheet(sheet.name, "selectedref", source=selectedRows.frame); vd.push(vs)', 'open duplicate sheet with only selected rows')
 
 
-
 def view_sf(container):
     import static_frame as sf
-
     name = '' if container.name is None else container.name
+    container = normalize_container(container)
 
-    # multi-Frame containers
     if isinstance(container, sf.Bus):
         run(StaticFrameIndexSheet(name, source=container))
-    elif isinstance(container, sf.Batch):
-        run(StaticFrameIndexSheet(name, source=container.to_bus()))
-
-    # Frame-like containers
-    elif isinstance(container, sf.Quilt):
-        run(StaticFrameSheet(name, source=container.to_frame()))
-    # convertable to a Frame
-    elif isinstance(container, sf.Series):
-        run(StaticFrameSheet(name, source=container.to_frame()))
-    elif isinstance(container, sf.Index):
-        run(StaticFrameSheet(name, source=container.to_series().to_frame()))
-    elif isinstance(container, sf.IndexHierarchy):
-        run(StaticFrameSheet(name, source=container.to_frame()))
-    # Frame
     run(StaticFrameSheet(name, source=container))
 
 

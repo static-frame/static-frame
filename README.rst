@@ -49,7 +49,7 @@ A library of immutable and grow-only Pandas-like DataFrames with a more explicit
 
 While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices are unique; the full range of NumPy data types is preserved, and date-time indices use discrete NumPy types; hierarchical indices are seamlessly integrated; and uniform approaches to element, row, and column iteration and function application are provided. Core StaticFrame depends only on NumPy and two C-extension packages (maintained by the StaticFrame team): Pandas is not a dependency.
 
-A wide variety of table storage and representation formats are supported, including input from and output to CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks.
+A wide variety of table storage and representation formats are supported, including input from and output to CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, VisiData, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks.
 
 StaticFrame features a family of multi-table containers: the Bus is lazily loaded container of tables, the Batch is a deferred processor of tables, and the Quilt is a virtual concatenation of tables. All permit operating on large collections of tables with minimal memory overhead, as well as writing too and reading from zipped bundles of pickles, Parquet, or delimited files, as well as XLSX workbooks, SQLite, and HDF5.
 
@@ -119,6 +119,7 @@ For extended input and output, the following packages are required:
 - xarray >= 0.13.0
 - tables >= 3.6.1
 - pyarrow >= 0.16.0
+- visidata >= 2.4
 
 
 Quick-Start Guide

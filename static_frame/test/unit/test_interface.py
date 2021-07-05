@@ -8,12 +8,7 @@ from static_frame.core.series import Series
 from static_frame.core.frame import FrameGO
 from static_frame.core.frame import Frame
 from static_frame.core.interface import _get_signatures
-
-
-
 from static_frame.test.test_case import TestCase
-
-
 
 class TestUnit(TestCase):
 
@@ -31,7 +26,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Accessor Datetime', 10), ('Accessor Fill Value', 24), ('Accessor Regular Expression', 7), ('Accessor String', 36), ('Accessor Transpose', 24), ('Assignment', 8), ('Attribute', 11), ('Constructor', 30), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 21), ('Iterator', 224), ('Method', 70), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+            (('Accessor Datetime', 10), ('Accessor Fill Value', 24), ('Accessor Regular Expression', 7), ('Accessor String', 36), ('Accessor Transpose', 24), ('Assignment', 8), ('Attribute', 11), ('Constructor', 30), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 22), ('Iterator', 224), ('Method', 70), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
         )
 
     def test_interface_summary_c(self) -> None:

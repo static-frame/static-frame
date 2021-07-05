@@ -514,3 +514,12 @@ class ContainerOperand(ContainerBase):
         # modify the active display to be for HTML
         return repr(self.display(config))
 
+    def to_visidata(self) -> None:
+        '''Open an interactive VisiData session.
+        '''
+        from static_frame.core.display_visidata import view_sf
+        view_sf(self)
+
+
+
+
