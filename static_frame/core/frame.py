@@ -5158,7 +5158,6 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-
         if not names:
             names = self._index.names
         names_t = zip(*names)
