@@ -1228,12 +1228,12 @@ class TestUnit(TestCase):
             f1.to_parquet(fp)
 
             # proove we raise if columns_select as columns not found
-            with self.assertRaises(ErrorInitFrame):
+            # might be pyarrow.lib.ArrowInvalid or ErrorInitFrame
+            with self.assertRaises(Exception):
                 f2 = Frame.from_parquet(fp,
                         index_depth=0,
                         columns_select=('d', 'foo'),
                         columns_depth=1)
-
 
     def test_frame_from_parquet_c(self) -> None:
         f = sf.FrameGO.from_element('a',
@@ -5493,6 +5493,52 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, 3),)), (3, ((0, 4),)))
                 )
+
+    def test_frame_from_csv_m(self) -> None:
+        s1 = StringIO('a,-,b,-\nx,y,x,y\n1,2,3,10\n4,5,6,20')
+
+        f2 = sf.Frame.from_csv(
+                s1,
+                index_depth=0,
+                columns_depth=2,
+                dtypes=int,
+                columns_continuation_token='-',
+                )
+        self.assertEqual(f2.to_pairs(0,),
+                ((('a', 'x'), ((0, 1), (1, 4))), (('a', 'y'), ((0, 2), (1, 5))), (('b', 'x'), ((0, 3), (1, 6))), (('b', 'y'), ((0, 10), (1, 20))))
+                )
+
+    def test_frame_from_csv_n(self) -> None:
+        s1 = StringIO(',1,a,b\nX,1,43,54\n-,2,1,3\nY,1,8,10\n-,2,6,20')
+
+        f2 = sf.Frame.from_csv(
+                s1,
+                index_depth=2,
+                columns_depth=1,
+                # dtypes=int,.
+                index_continuation_token='-',
+                )
+
+        self.assertEqual(f2.to_pairs(),
+            (('a', ((('X', 1), 43), (('X', 2), 1), (('Y', 1), 8), (('Y', 2), 6))), ('b', ((('X', 1), 54), (('X', 2), 3), (('Y', 1), 10), (('Y', 2), 20))))
+            )
+
+    def test_frame_from_csv_o(self) -> None:
+        s1 = StringIO(',1,a,b\n-,1,43,54\nX,2,1,3\nY,1,8,10\n-,2,6,20')
+
+        f2 = sf.Frame.from_csv(
+                s1,
+                index_depth=2,
+                columns_depth=1,
+                # dtypes=int,.
+                index_continuation_token='-',
+                )
+
+        self.assertEqual(f2.to_pairs(),
+            (('a', ((('-', 1), 43), (('X', 2), 1), (('Y', 1), 8), (('Y', 2), 6))), ('b', ((('-', 1), 54), (('X', 2), 3), (('Y', 1), 10), (('Y', 2), 20))))
+            )
+
+
 
     #---------------------------------------------------------------------------
 

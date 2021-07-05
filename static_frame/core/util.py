@@ -273,6 +273,7 @@ SeriesInitializer = tp.Union[
 
 # support single items, or numpy arrays, or values that can be made into a 2D array
 FRAME_INITIALIZER_DEFAULT = object()
+CONTINUATION_TOKEN_INACTIVE = object()
 
 FrameInitializer = tp.Union[
         tp.Iterable[tp.Iterable[tp.Any]],
@@ -1596,13 +1597,15 @@ def array_shift(*,
     '''
 
     # works for all shapes
-    if shift > 0:
+    if shift == 0 or array.shape[axis] == 0:
+        shift_mod = 0
+    elif shift > 0:
         shift_mod = shift % array.shape[axis]
     elif shift < 0:
         # do negative modulo to force negative value
         shift_mod = shift % -array.shape[axis]
     else:
-        shift_mod = 0
+        raise NotImplementedError(f'no handling for this configuraiton')
 
     if (not wrap and shift == 0) or (wrap and shift_mod == 0):
         # must copy so as not let caller mutate arguement
@@ -2286,10 +2289,12 @@ def array_from_element_apply(*,
                 count=len(array),
                 dtype=dtype,
                 )
-    else:
+    elif dtype.kind not in DTYPE_STR_KINDS:
         post = np.empty(shape=array.shape, dtype=dtype)
         for iloc, e in np.ndenumerate(array):
             post[iloc] = func(e)
+    else: # a string kind that is unsized
+        post = np.array([func(e) for e in np.ravel(array)], dtype=dtype).reshape(array.shape)
 
     post.flags.writeable = False
     return post

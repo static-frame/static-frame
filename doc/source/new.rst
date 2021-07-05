@@ -1,8 +1,18 @@
 What is New in Static Frame
 ===============================
 
+0.8.15
+----------
+
+Added support for loading containers into specialized VisiData ``Sheet`` and  ``IndexSheet`` subclasses; added ``to_visidata()`` exporter to all containers.
+
+
 0.8.14
 ----------
+
+Added ``index_continuation_token`` and ``columns_continuation_token`` to ``Frame.from_delimited()`` and related methods.
+
+Added ``via_re()`` interfaces to ``Index``, ``IndexHierarchy``, ``Series``, ``Frame``.
 
 Updated ``arraykit`` to 0.1.8
 

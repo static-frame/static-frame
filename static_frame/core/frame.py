@@ -4,6 +4,7 @@ from io import StringIO
 from io import BytesIO
 from itertools import chain
 from itertools import product
+from itertools import zip_longest
 from copy import deepcopy
 from operator import itemgetter
 from collections.abc import Set
@@ -76,6 +77,7 @@ from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
@@ -148,13 +150,13 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import file_like_manager
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import concat_resolved
+from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from xarray import Dataset #pylint: disable=W0611 #pragma: no cover #type: ignore [attr-defined]
     import pyarrow #pylint: disable=W0611 #pragma: no cover
-
 
 
 class Frame(ContainerOperand):
@@ -1615,8 +1617,10 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1748,9 +1752,17 @@ class Frame(ContainerOperand):
                 columns = columns_constructor(columns_arrays[0], name=columns_name)
             else:
                 columns_constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels
+                if columns_continuation_token:
+                    labels = zip_longest(
+                            *(store_filter.to_type_filter_iterable(x) for x in columns_arrays),
+                            fillvalue=columns_continuation_token,
+                            )
+                else:
+                    labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
                 columns = columns_constructor(
-                        zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays)),
+                        labels,
                         name=columns_name,
+                        continuation_token=columns_continuation_token,
                         )
             own_columns = True
 
@@ -1801,7 +1813,10 @@ class Frame(ContainerOperand):
                 index_constructor=index_constructor,
                 **kwargs)
 
-        index_constructor = partial(IndexHierarchy.from_labels, name=index_name)
+        index_constructor = partial(IndexHierarchy.from_labels,
+                name=index_name,
+                continuation_token=index_continuation_token,
+                )
         return cls(
                 index=zip(*index_arrays),
                 index_constructor=index_constructor,
@@ -1815,8 +1830,10 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1837,8 +1854,10 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 quote_char=quote_char,
@@ -1856,8 +1875,10 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1878,8 +1899,10 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 quote_char=quote_char,
@@ -1897,8 +1920,10 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1928,8 +1953,10 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 quote_char=quote_char,
@@ -2326,6 +2353,9 @@ class Frame(ContainerOperand):
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
 
         fp = path_filter(fp)
+
+        if columns_select is not None and not isinstance(columns_select, list):
+            columns_select = list(columns_select)
 
         # NOTE: the order of columns_select will determine their order
         table = pq.read_table(fp,
@@ -2745,6 +2775,30 @@ class Frame(ContainerOperand):
         return InterfaceFillValue(
                 container=self,
                 fill_value=fill_value,
+                )
+
+    def via_re(self,
+            pattern: str,
+            flags: int = 0,
+            ) -> InterfaceRe['Frame']:
+        '''
+        Interface for applying regular expressions to elements in this container.
+        '''
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
+            tb = TypeBlocks.from_blocks(blocks)
+            return self.__class__(
+                    tb,
+                    index=self._index,
+                    columns=self._columns,
+                    name=self._name,
+                    own_index=True,
+                    own_data=True,
+                    )
+        return InterfaceRe(
+                blocks=self._blocks._blocks,
+                blocks_to_container=blocks_to_container,
+                pattern=pattern,
+                flags=flags,
                 )
 
 

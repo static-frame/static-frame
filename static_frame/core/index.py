@@ -34,10 +34,11 @@ from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import Interface, InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_re import InterfaceRe
 
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_sample
@@ -751,14 +752,11 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        blocks = (self._labels,)
-        cls = Index if self.STATIC else IndexGO
-
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
             return next(blocks)
 
         return InterfaceString(
-                blocks=blocks,
+                blocks=(self._labels,),
                 blocks_to_container=blocks_to_container,
                 )
 
@@ -770,15 +768,32 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        blocks = (self.values,)
-        cls = Index if self.STATIC else IndexGO
-
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
             return next(blocks)
 
         return InterfaceDatetime(
-                blocks=blocks,
+                blocks=(self.values,),
                 blocks_to_container=blocks_to_container,
+                )
+
+    def via_re(self,
+            pattern: str,
+            flags: int = 0,
+            ) -> InterfaceRe[np.ndarray]:
+        '''
+        Interface for applying regular expressions to elements in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+            return next(blocks)
+
+        return InterfaceRe(
+                blocks=(self._labels,),
+                blocks_to_container=blocks_to_container,
+                pattern=pattern,
+                flags=flags,
                 )
 
     #---------------------------------------------------------------------------

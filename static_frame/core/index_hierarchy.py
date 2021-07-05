@@ -43,7 +43,7 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
-
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.type_blocks import TypeBlocks
 
 from static_frame.core.util import DEFAULT_SORT_KIND
@@ -71,6 +71,7 @@ from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import array_sample
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import concat_resolved
+from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 
 
 if tp.TYPE_CHECKING:
@@ -81,7 +82,6 @@ if tp.TYPE_CHECKING:
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
 
-CONTINUATION_TOKEN_INACTIVE = object()
 
 #-------------------------------------------------------------------------------
 class IndexHierarchy(IndexBase):
@@ -266,8 +266,8 @@ class IndexHierarchy(IndexBase):
             # each label is an iterable
             for d, v in enumerate(label):
                 if continuation_token is not CONTINUATION_TOKEN_INACTIVE:
-                    if v == continuation_token:
-                        # might check that observed_last[d] != token
+                    if v == continuation_token and observed_last[d] is not token:
+                        # only set v to observed_last if it is not the token; if we have not had a previous value that is not a token, the only thing to do is keep v unchanged
                         v = observed_last[d]
 
                 # shared implementation with from_labels -----------------------
@@ -677,7 +677,6 @@ class IndexHierarchy(IndexBase):
                 blocks_to_container=blocks_to_container,
                 )
 
-
     @property
     def via_T(self) -> InterfaceTranspose['IndexHierarchy']:
         '''
@@ -685,6 +684,26 @@ class IndexHierarchy(IndexBase):
         '''
         return InterfaceTranspose(
                 container=self,
+                )
+
+    def via_re(self,
+            pattern: str,
+            flags: int = 0,
+            ) -> InterfaceRe[np.ndarray]:
+        '''
+        Interface for applying regular expressions to elements in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+            return TypeBlocks.from_blocks(blocks).values
+
+        return InterfaceRe(
+                blocks=self._blocks._blocks,
+                blocks_to_container=blocks_to_container,
+                pattern=pattern,
+                flags=flags,
                 )
 
     #---------------------------------------------------------------------------
@@ -773,14 +792,6 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
         return self._blocks.nbytes
-
-    # def __bool__(self) -> bool:
-    #     '''
-    #     True if this container has size.
-    #     '''
-    #     if self._recache:
-    #         return bool(self._levels.__len__()) and bool(self._levels.depth)
-    #     return bool(self._blocks.size)
 
     #---------------------------------------------------------------------------
 

@@ -2527,6 +2527,11 @@ class TestUnit(TestCase):
                 (('a', None), ('b', None), ('c', None), ('d', None), ('e', None), ('f', None))
                 )
 
+    def test_series_shift_b(self) -> None:
+        s1 = sf.Series([]).shift(1)
+        self.assertEqual(len(s1), 0)
+
+
     #---------------------------------------------------------------------------
     def test_series_isin_a(self) -> None:
 
@@ -4238,7 +4243,6 @@ class TestUnit(TestCase):
         self.assertEqual(s4.to_pairs(),
                 ((0, False), (1, False), (2, False)))
 
-
     def test_series_via_re_findall_a(self) -> None:
         s1 = sf.Series(('aaaaa', 'aabab', 'cabbaaaab'))
 
@@ -4246,6 +4250,34 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 ((0, ()), (1, ('ab', 'ab')), (2, ('ab', 'ab')))
                 )
+
+    def test_series_via_re_split_a(self) -> None:
+        s1 = sf.Series(('a.,aa.,aa', 'aa.,bab', 'cab.,baaa.,ab'))
+
+        s2 = s1.via_re('.,').split()
+        self.assertEqual(s2.to_pairs(),
+                ((0, ('a', 'aa', 'aa')), (1, ('aa', 'bab')), (2, ('cab', 'baaa', 'ab')))
+                )
+
+    def test_series_via_re_sub_a(self) -> None:
+        s1 = sf.Series(('a.,aa.,aa', 'aa.,bab', 'cab.,baaa.,ab'))
+        s2 = s1.via_re('.,').sub('===')
+
+        self.assertEqual(s2.to_pairs(),
+                ((0, 'a===aa===aa'), (1, 'aa===bab'), (2, 'cab===baaa===ab'))
+                )
+        self.assertEqual(s2.dtype, np.dtype('<U15'))
+
+    def test_series_via_re_subn_a(self) -> None:
+        s1 = sf.Series(('a.,aa.,aa', 'aa.,bab', 'cab.,baaa.,ab'))
+        s2 = s1.via_re('.,').subn('===')
+
+        self.assertEqual(s2.to_pairs(),
+                ((0, ('a===aa===aa', 2)), (1, ('aa===bab', 1)), (2, ('cab===baaa===ab', 2)))
+                )
+
+
+
 
 
 

@@ -31,6 +31,7 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_fill_value import InterfaceFillValue
@@ -40,7 +41,6 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DT64_S
 from static_frame.core.quilt import Quilt
-
 
 
 #-------------------------------------------------------------------------------
@@ -288,6 +288,7 @@ class InterfaceGroup:
     AccessorString = 'Accessor String'
     AccessorTranspose = 'Accessor Transpose'
     AccessorFillValue = 'Accessor Fill Value'
+    AccessorRe = 'Accessor Regular Expression'
 
 # NOTE: order from definition retained
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items()
@@ -537,6 +538,8 @@ class InterfaceRecord(tp.NamedTuple):
             group = InterfaceGroup.AccessorTranspose
         elif cls_interface is InterfaceFillValue:
             group = InterfaceGroup.AccessorFillValue
+        elif cls_interface is InterfaceRe:
+            group = InterfaceGroup.AccessorRe
         else:
             raise NotImplementedError()
 
@@ -545,8 +548,8 @@ class InterfaceRecord(tp.NamedTuple):
             delegate_reference = f'{cls_interface.__name__}.{field}'
             doc = Features.scrub_doc(delegate_obj.__doc__)
 
-            if cls_interface is InterfaceFillValue:
-                # NOTE: dropping the no arg version; not sure how to use it
+            if cls_interface in (InterfaceFillValue, InterfaceRe):
+                # NOTE: dropping the returned no arg signature; not sure if it is needed
                 terminus_signature, _ = _get_signatures(
                         name,
                         obj,
@@ -912,10 +915,15 @@ class InterfaceSummary(Features):
                         cls_interface=obj.__class__,
                         **kwargs,
                         )
+            # InterfaceFillValue, InterfaceRe are methods, must match name
             elif name == 'via_fill_value':
-                # unlike other via interfaves, InterfaceFillValue is a method, not a property
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=InterfaceFillValue,
+                        **kwargs,
+                        )
+            elif name == 'via_re':
+                yield from InterfaceRecord.gen_from_accessor(
+                        cls_interface=InterfaceRe,
                         **kwargs,
                         )
             elif callable(obj): # general methods
