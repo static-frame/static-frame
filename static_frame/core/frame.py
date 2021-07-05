@@ -5161,28 +5161,26 @@ class Frame(ContainerOperand):
 
         if not names:
             names = self._index.names
+        names_t = zip(*names)
 
         # self._columns._blocks may be None until array cache is updated.
         if self._columns._recache:
             self._columns._update_array_cache()
 
-        column_blocks = self._columns._blocks._blocks
-        names_t = zip(*names)
-
-        column_blocks_new = tuple(
-                concat_resolved((np.array([name]), block[np.newaxis]), axis=1).T
-                for name, block in zip(names_t, column_blocks)
-        )
-        column_type_blocks = TypeBlocks.from_blocks(column_blocks_new)
-
         if self._columns.depth > 1:
-            #index_constructors = tuple(self._columns._levels.index_types())
-
+            column_blocks = self._columns._blocks._blocks
+            column_blocks_new = tuple(
+                    concat_resolved((np.array([name]), block[np.newaxis]), axis=1).T
+                    for name, block in zip(names_t, column_blocks)
+            )
+            column_type_blocks = TypeBlocks.from_blocks(column_blocks_new)
             columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
                     column_type_blocks,
                     #index_constructors=index_constructors,
                     own_blocks=True,
             )
+        else:
+            columns = chain(names, self._columns.values)
 
         return self.__class__(
                 TypeBlocks.from_blocks(block_gen()),
