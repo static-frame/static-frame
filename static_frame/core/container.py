@@ -110,6 +110,12 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''
         raise ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 
+    #---------------------------------------------------------------------------
+    def to_visidata(self) -> None:
+        '''Open an interactive VisiData session.
+        '''
+        from static_frame.core.display_visidata import view_sf
+        view_sf(self)
 
 
 class ContainerOperand(ContainerBase):
@@ -513,13 +519,5 @@ class ContainerOperand(ContainerBase):
                 )
         # modify the active display to be for HTML
         return repr(self.display(config))
-
-    def to_visidata(self) -> None:
-        '''Open an interactive VisiData session.
-        '''
-        from static_frame.core.display_visidata import view_sf
-        view_sf(self)
-
-
 
 
