@@ -43,13 +43,15 @@ class DisplayFormat:
     @staticmethod
     def markup_row(
             row: tp.Iterable[str],
-            header_depth: int #pylint: disable=W0613
+            header_depth: int, #pylint: disable=W0613
+            iloc_row: int,
             ) -> tp.Iterator[str]:
         '''
         Called with each row, post cell-width normalization (if enabled).
 
         Args:
-            header_depth: number of columns that should be treated as headers.
+            header_depth: number of elements to be marked as header; value can be np.inf to mark all values as header.
+            iloc_row: iloc position of rows in the table; if negative, this is a columns row.
         '''
         for msg in row:
             yield msg
@@ -89,11 +91,13 @@ class DisplayFormatHTMLTable(DisplayFormat):
     @staticmethod
     def markup_row(
             row: tp.Iterable[str],
-            header_depth: int
+            header_depth: int,
+            iloc_row: int,
             ) -> tp.Iterator[str]:
         yield '<tr>'
         for count, msg in enumerate(row):
             # header depth here refers potentially to a header that is the index
+            iloc_column = count - header_depth
             if count < header_depth:
                 yield '<th>{}</th>'.format(msg)
             else:
@@ -156,7 +160,9 @@ class DisplayFormatRST(DisplayFormat):
     @staticmethod
     def markup_row(
             row: tp.Iterable[str],
-            header_depth: int) -> tp.Iterator[str]:
+            header_depth: int,
+            iloc_row: int,
+            ) -> tp.Iterator[str]:
 
         yield f"|{'|'.join(row)}|"
 
@@ -191,7 +197,9 @@ class DisplayFormatMarkdown(DisplayFormat):
     @staticmethod
     def markup_row(
             row: tp.Iterable[str],
-            header_depth: int) -> tp.Iterator[str]:
+            header_depth: int,
+            iloc_row: int,
+            ) -> tp.Iterator[str]:
         yield f"|{'|'.join(row)}|"
 
     @classmethod
@@ -215,7 +223,9 @@ class DisplayFormatLaTeX(DisplayFormat):
     @classmethod
     def markup_row(cls,
             row: tp.Iterable[str],
-            header_depth: int) -> tp.Iterator[str]:
+            header_depth: int,
+            iloc_row: int,
+            ) -> tp.Iterator[str]:
         yield f'{cls._CELL_SEP.join(row)} \\\\' # need 2 backslashes
 
     @classmethod

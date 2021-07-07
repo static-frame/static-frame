@@ -577,7 +577,7 @@ class Display:
                         # must truncate if cell width is greater than max width
                         width_truncate = max_width - len(cls.CELL_ELLIPSIS.raw)
 
-                        # TODO: this is truncating scientific notation
+                        # NOTE: this might truncate scientific notation
                         cell_raw = cell_raw[:width_truncate] + cls.ELLIPSIS
                         if is_html:
                             cell_raw = html.escape(cell_raw)
@@ -637,14 +637,17 @@ class Display:
             header = []
             body = []
             for idx, row in enumerate(rows):
+                iloc_row = idx - self._header_depth
                 if idx < self._header_depth:
                     row = ''.join(dfc.markup_row(row,
-                            header_depth=np.inf
+                            header_depth=np.inf, # force all as header
+                            iloc_row=iloc_row,
                             )).rstrip()
                     header.append(row)
                 else:
                     row = ''.join(dfc.markup_row(row,
-                            header_depth=self._index_depth
+                            header_depth=self._index_depth,
+                            iloc_row=iloc_row,
                             )).rstrip()
                     body.append(row)
 
