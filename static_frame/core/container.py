@@ -114,8 +114,8 @@ class ContainerBase(metaclass=InterfaceMeta):
     def to_visidata(self) -> None:
         '''Open an interactive VisiData session.
         '''
-        from static_frame.core.display_visidata import view_sf
-        view_sf(self) #type: ignore [no-untyped-call]
+        from static_frame.core.display_visidata import view_sf #pragma: no cover
+        view_sf(self) #type: ignore [no-untyped-call] #pragma: no cover
 
 
 class ContainerOperand(ContainerBase):
