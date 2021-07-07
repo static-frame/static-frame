@@ -115,7 +115,7 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''Open an interactive VisiData session.
         '''
         from static_frame.core.display_visidata import view_sf
-        view_sf(self)
+        view_sf(self) #type: ignore
 
 
 class ContainerOperand(ContainerBase):
