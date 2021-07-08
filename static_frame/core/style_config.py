@@ -15,7 +15,7 @@ class StyleConfig:
     def __init__(self, container: tp.Optional['Frame'] = None):
         self.container: 'Frame' = container
 
-    def frame(self) -> tp.Any:
+    def frame(self) -> str:
         '''
         Frame- (or table-) level styling.
         '''
@@ -23,7 +23,7 @@ class StyleConfig:
 
     def values(self,
             coordinates: tp.Tuple[int, int],
-            ) -> tp.Tuple[str, tp.Any]:
+            ) -> tp.Tuple[str, str]:
         '''
         Returns:
             A pair of the value to display, and a style information appropriate to the format.
@@ -32,7 +32,7 @@ class StyleConfig:
 
     def index(self,
             label: tp.Hashable,
-            ) -> tp.Tuple[str, tp.Any]:
+            ) -> tp.Tuple[str, str]:
         '''
         Returns:
             A pair of the value to display, and a style information appropriate to the format.
@@ -41,7 +41,7 @@ class StyleConfig:
 
     def columns(self,
             label: tp.Hashable,
-            ) -> tp.Tuple[str, tp.Any]:
+            ) -> tp.Tuple[str, str]:
         '''
         Returns:
             A pair of the value to display, and a style information appropriate to the format.
@@ -52,31 +52,28 @@ class StyleConfig:
 
 class StyleConfigCSS(StyleConfig):
 
-    # frame: tp.Callable[[], CSSDict]
-    # index: tp.Callable[[tp.Hashable], CSSDict]
-    # columns: tp.Callable[[tp.Hashable], CSSDict]
-    # values: tp.Callable[[tp.Tuple[int, int], tp.Any], CSSDict]
 
     @staticmethod
-    def dict_to_style(css_dict: CSSDict) -> str:
+    def _dict_to_style(css_dict: CSSDict) -> str:
         '''
         Return a style attribute string containing all CSS in the CSSDict.
         '''
         style = ';'.join(f'{k.replace("_", "-")}:{v}' for k, v in css_dict.items())
-        return f'style="{style}"'
+        # NOTE: keep leading space to separate from tag
+        return f' style="{style}"'
 
 
-    def frame(self) -> CSSDict:
+    def frame(self) -> str:
         '''
         Frame- (or table-) level styling.
         '''
         css = dict(border='1px solid', border_collapse='collapse'
-        return css
+        return self._dict_to_style(css)
 
     def values(self,
             value: tp.Any,
             coordinates: tp.Tuple[int, int],
-            ) -> tp.Tuple[str, CSSDict]:
+            ) -> tp.Tuple[str, str]:
         row, _ = coordinates
         if row % 2:
             background = HexColor.get_html('darkslategrey')
@@ -88,17 +85,17 @@ class StyleConfigCSS(StyleConfig):
                 font_weight='normal',
                 padding='2px',
                 )
-        return str(value), css
+        return str(value), self._dict_to_style(css)
 
     def index(self,
             label: tp.Hashable,
-            ) -> tp.Tuple[str, CSSDict]:
+            ) -> tp.Tuple[str, str]:
         css = dict(font_weight='bold')
-        return str(label), css
+        return str(label), self._dict_to_style(css)
 
     def columns(self,
             label: tp.Hashable,
-            ) -> tp.Tuple[str, CSSDict]:
+            ) -> tp.Tuple[str, str]:
         css = dict(font_weight='bold')
-        return str(label), css
+        return str(label), self._dict_to_style(css)
 

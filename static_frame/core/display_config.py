@@ -98,8 +98,9 @@ class DisplayFormatHTMLTable(DisplayFormat):
             iloc_row: int,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> tp.Iterator[str]:
-        style = ''
+
         yield '<tr>'
+        style = ''
         for count, msg in enumerate(row):
             # header depth here refers potentially to a header that is the index
             iloc_column = count - header_depth
@@ -107,9 +108,9 @@ class DisplayFormatHTMLTable(DisplayFormat):
                 yield f'<th>{msg}</th>'
             else:
                 if style_config:
-                    style = style_config.dict_to_style(
-                        style_config.values((iloc_row, iloc_column)))
-                yield f'<td {style}>{msg}</td>'
+                    msg, style = style_config.values(msg, (iloc_row, iloc_column))
+                yield f'<td{style}>{msg}</td>'
+
         yield '</tr>'
 
     @staticmethod

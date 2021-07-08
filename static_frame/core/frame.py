@@ -7036,13 +7036,13 @@ class Frame(ContainerOperand):
         '''
         {}
         '''
-        from static_frame.core.display_css_inline import CSSInlineConfigDefault
+        from static_frame.core.style_config import StyleConfigCSS
         # if a config is given, try to use all settings; if using active, hide types
         config = config or DisplayActive.get(type_show=False)
         config = config.to_display_config(
                 display_format=DisplayFormats.HTML_TABLE,
                 )
-        return self.display(config).__repr__(style_config=CSSInlineConfigDefault)
+        return self.display(config).__repr__(style_config=StyleConfigCSS(self))
 
     @doc_inject(class_name='Frame')
     def to_html_datatables(self,
