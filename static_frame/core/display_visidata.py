@@ -141,7 +141,8 @@ class StaticFrameSheet(Sheet):
         if isinstance(self.source, sf.Frame):
             frame = self.source
         else:
-            raise NotImplementedError(f'no supprt for loading a Frame from {self.source}')
+            # vd.fail(f'no support for loading {self.source.__class__}')
+            raise NotImplementedError(f'no support for loading a Frame from {self.source}')
 
         # If the index is not an IndexAutoFactory, try to move it onto the Frame. If this fails it might mean we are trying to unset an auto index post selection
         if frame.index.depth > 1 or frame.index._map: # if it is not an IndexAutoFactory
@@ -366,7 +367,6 @@ class StaticFrameIndexSheet(IndexSheet):
         ColumnAttr('nCols', type=int),
     ]
 
-    nKeys = 1
     def iterload(self):
         for sheetname in self.source.keys():
             # this will combine self.name, sheetname into one name
