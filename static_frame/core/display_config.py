@@ -45,6 +45,7 @@ class DisplayFormat:
             row: tp.Iterable[str],
             header_depth: int, #pylint: disable=W0613
             iloc_row: int,
+            style_config: tp.Any = None,
             ) -> tp.Iterator[str]:
         '''
         Called with each row, post cell-width normalization (if enabled).
@@ -72,7 +73,8 @@ class DisplayFormat:
 
     @staticmethod
     def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = None #pylint: disable=W0613
+            identifier: tp.Optional[str] = None, #pylint: disable=W0613
+            style_config: tp.Any = None,
             ) -> str:
         '''
         Called with combination of header and body joined with `LINE_SEP`.
@@ -93,43 +95,51 @@ class DisplayFormatHTMLTable(DisplayFormat):
             row: tp.Iterable[str],
             header_depth: int,
             iloc_row: int,
+            style_config: tp.Any = None,
             ) -> tp.Iterator[str]:
+        style = ''
         yield '<tr>'
         for count, msg in enumerate(row):
             # header depth here refers potentially to a header that is the index
             iloc_column = count - header_depth
             if count < header_depth:
-                yield '<th>{}</th>'.format(msg)
+                yield f'<th>{msg}</th>'
             else:
-                yield '<td>{}</td>'.format(msg)
+                if style_config:
+                    style = style_config.dict_to_style(
+                        style_config.values((iloc_row, iloc_column)))
+                yield f'<td {style}>{msg}</td>'
         yield '</tr>'
 
     @staticmethod
     def markup_header(msg: str) -> str:
-        return '<thead>{}</thead>'.format(msg)
+        return f'<thead>{msg}</thead>'
 
     @staticmethod
     def markup_body(msg: str) -> str:
-        return '<tbody>{}</tbody>'.format(msg)
+        return f'<tbody>{msg}</tbody>'
 
     @staticmethod
     def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = None
+            identifier: tp.Optional[str] = None,
+            style_config: tp.Any = None,
             ) -> str:
+        style = ''
+        if style_config:
+            style = style_config.dict_to_style(style_config.frame())
         if identifier:
-            id_str = 'id="{}" '.format(identifier)
+            id_str = f'id="{identifier}" '
         else:
             id_str = ''
-        return '<table {id_str}border="1">{content}</table>'.format(
-                id_str=id_str,
-                content=msg)
+        return f'<table {id_str}{style}>{msg}</table>'
 
 
 class DisplayFormatHTMLDataTables(DisplayFormatHTMLTable):
 
     @staticmethod
     def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = 'SFTable'
+            identifier: tp.Optional[str] = 'SFTable',
+            style_config: tp.Any = None,
             ) -> str:
         # embed the table HTML in the datatables template
         html_table = DisplayFormatHTMLTable.markup_outermost(msg,
@@ -143,7 +153,8 @@ class DisplayFormatHTMLPre(DisplayFormat):
 
     @staticmethod
     def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = None
+            identifier: tp.Optional[str] = None,
+            style_config: tp.Any = None,
             ) -> str:
 
         style = 'style="white-space: pre; font-family: monospace"'
@@ -162,6 +173,7 @@ class DisplayFormatRST(DisplayFormat):
             row: tp.Iterable[str],
             header_depth: int,
             iloc_row: int,
+            style_config: tp.Any = None,
             ) -> tp.Iterator[str]:
 
         yield f"|{'|'.join(row)}|"
@@ -199,6 +211,7 @@ class DisplayFormatMarkdown(DisplayFormat):
             row: tp.Iterable[str],
             header_depth: int,
             iloc_row: int,
+            style_config: tp.Any = None,
             ) -> tp.Iterator[str]:
         yield f"|{'|'.join(row)}|"
 
@@ -225,6 +238,7 @@ class DisplayFormatLaTeX(DisplayFormat):
             row: tp.Iterable[str],
             header_depth: int,
             iloc_row: int,
+            style_config: tp.Any = None,
             ) -> tp.Iterator[str]:
         yield f'{cls._CELL_SEP.join(row)} \\\\' # need 2 backslashes
 
@@ -250,8 +264,8 @@ class DisplayFormatLaTeX(DisplayFormat):
     @classmethod
     def markup_outermost(cls,
             msg: str,
-            # caption: tp.Optional[str] = None,
-            identifier: tp.Optional[str] = None
+            identifier: tp.Optional[str] = None,
+            style_config: tp.Any = None,
             ) -> str:
 
         def lines() -> tp.Iterator[str]:

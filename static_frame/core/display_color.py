@@ -5,7 +5,7 @@ import typing as tp
 #-------------------------------------------------------------------------------
 # https://www.w3.org/TR/css-color-3/#svg-color
 
-_COLOR_NAME_X11 = {
+COLOR_NAME_X11 = {
     'aliceblue': 0xf0f8ff,
     'antiquewhite': 0xfaebd7,
     'aqua': 0xffff,
@@ -254,7 +254,7 @@ class HexColor:
         elif hex_str.startswith('0x'):
             hex_str = hex_str[2:]
         else: # will raise key error
-            return _COLOR_NAME_X11[hex_str]
+            return COLOR_NAME_X11[hex_str]
         return int(hex_str, 16)
 
     @classmethod

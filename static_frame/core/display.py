@@ -627,7 +627,7 @@ class Display:
         self._index_depth = index_depth
         self._header_depth = header_depth
 
-    def __repr__(self) -> str:
+    def __repr__(self, style_config: tp.Any = None) -> str:
         rows = self._to_rows_cells(self,
                 self._config,
                 )
@@ -642,12 +642,14 @@ class Display:
                     row = ''.join(dfc.markup_row(row,
                             header_depth=np.inf, # force all as header
                             iloc_row=iloc_row,
+                            style_config=style_config,
                             )).rstrip()
                     header.append(row)
                 else:
                     row = ''.join(dfc.markup_row(row,
                             header_depth=self._index_depth,
                             iloc_row=iloc_row,
+                            style_config=style_config,
                             )).rstrip()
                     body.append(row)
 
@@ -658,7 +660,10 @@ class Display:
 
             body_str = dfc.markup_body(dfc.LINE_SEP.join(body))
             outermost.append(body_str)
-            return dfc.markup_outermost(dfc.LINE_SEP.join(outermost))
+            return dfc.markup_outermost(
+                    dfc.LINE_SEP.join(outermost),
+                    style_config=style_config,
+                    )
 
         return dfc.LINE_SEP.join(''.join(r) for r in rows)
 
