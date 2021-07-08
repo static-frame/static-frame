@@ -627,7 +627,9 @@ class Display:
         self._index_depth = index_depth
         self._header_depth = header_depth
 
-    def __repr__(self, style_config: tp.Any = None) -> str:
+    def __repr__(self,
+            style_config: tp.Any = None,
+            ) -> str:
         rows = self._to_rows_cells(self,
                 self._config,
                 )

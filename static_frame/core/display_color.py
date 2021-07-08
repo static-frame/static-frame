@@ -5,7 +5,7 @@ import typing as tp
 #-------------------------------------------------------------------------------
 # https://www.w3.org/TR/css-color-3/#svg-color
 
-COLOR_NAME_X11 = {
+_COLOR_NAME_X11 = {
     'aliceblue': 0xf0f8ff,
     'antiquewhite': 0xfaebd7,
     'aqua': 0xffff,
@@ -254,7 +254,7 @@ class HexColor:
         elif hex_str.startswith('0x'):
             hex_str = hex_str[2:]
         else: # will raise key error
-            return COLOR_NAME_X11[hex_str]
+            return _COLOR_NAME_X11[hex_str]
         return int(hex_str, 16)
 
     @classmethod
@@ -295,18 +295,28 @@ class HexColor:
                 text=text)
 
     @classmethod
-    def format_html(cls,
+    def get_html(cls,
             hex_color: tp.Union[int, str],
-            text: str) -> str:
+            ) -> str:
         '''
-        Given a hex color and text, return a string formatted for ANSI colors
+        Given a hex color and text, return an html color string
         '''
         if isinstance(hex_color, str):
             hex_int = cls._hex_str_to_int(hex_color)
         else:
             hex_int = hex_color
+        return '#' + format(hex_int, 'x')
 
-        color = '#' + format(hex_int, 'x')
+    @classmethod
+    def format_html(cls,
+            hex_color: tp.Union[int, str],
+            text: str,
+            ) -> str:
+        '''
+        Given a hex color and text, return a string formatted for ANSI colors
+        '''
+        color = cls.get_html(hex_color)
         return '<span style="color: {color}">{text}</span>'.format(
                 color=color,
                 text=text)
+

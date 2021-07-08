@@ -1,6 +1,6 @@
 import typing as tp
 
-from static_frame.core.display_color import COLOR_NAME_X11
+from static_frame.core.display_color import HexColor
 
 CSSDict = tp.Dict[str, str]
 
@@ -19,7 +19,7 @@ class CSSInlineConfig(tp.NamedTuple):
 def values(labels) -> CSSDict:
     row, col = labels
     if row % 2:
-        background = '#d3d3d3'
+        background = HexColor.get_html('darkslategrey')
     else:
         background = '#778899'
     return dict(
