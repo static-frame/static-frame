@@ -2590,7 +2590,7 @@ class TestUnit(TestCase):
         s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
 
         post = s1.to_html(config=DisplayConfig(type_show=False, type_color=False))
-        html = '<table border="1"><tbody><tr><th>a</th><td>2</td></tr><tr><th>b</th><td>3</td></tr><tr><th>c</th><td>0</td></tr><tr><th>d</th><td>-1</td></tr><tr><th>e</th><td>8</td></tr><tr><th>f</th><td>6</td></tr></tbody></table>'
+        html = '<table><tbody><tr><th>a</th><td>2</td></tr><tr><th>b</th><td>3</td></tr><tr><th>c</th><td>0</td></tr><tr><th>d</th><td>-1</td></tr><tr><th>e</th><td>8</td></tr><tr><th>f</th><td>6</td></tr></tbody></table>'
         self.assertEqual(post.strip(), html.strip())
 
 
@@ -2600,7 +2600,7 @@ class TestUnit(TestCase):
         sio = StringIO()
         post = s1.to_html_datatables(sio, show=False)
         self.assertEqual(post, None)
-        self.assertTrue(len(sio.read()) >= 1396)
+        self.assertTrue(len(sio.read()) >= 1385)
 
 
     def test_series_to_html_datatables_b(self) -> None:

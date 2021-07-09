@@ -9,6 +9,7 @@ if tp.TYPE_CHECKING:
 
 CSSDict = tp.Dict[str, str]
 
+STYLE_CONFIG_DEFAULT = object()
 
 class StyleConfig:
     __slots__ = ('container',)

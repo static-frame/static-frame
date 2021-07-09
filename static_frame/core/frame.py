@@ -19,6 +19,7 @@ from numpy.ma import MaskedArray #type: ignore
 from arraykit import column_1d_filter
 from arraykit import name_filter
 from arraykit import resolve_dtype
+from static_frame.core import style_config
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -150,6 +151,9 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import file_like_manager
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.style_config import StyleConfigCSS
+from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 
 
 if tp.TYPE_CHECKING:
@@ -7032,17 +7036,23 @@ class Frame(ContainerOperand):
     @doc_inject(class_name='Frame')
     def to_html(self,
             config: tp.Optional[DisplayConfig] = None,
+            style_config_type: tp.Optional[tp.Type[StyleConfig]] = STYLE_CONFIG_DEFAULT,
             ) -> str:
         '''
-        {}
+        {}v
         '''
-        from static_frame.core.style_config import StyleConfigCSS
         # if a config is given, try to use all settings; if using active, hide types
         config = config or DisplayActive.get(type_show=False)
         config = config.to_display_config(
                 display_format=DisplayFormats.HTML_TABLE,
                 )
-        return self.display(config).__repr__(style_config=StyleConfigCSS(self))
+
+        # let user set style_config to None to disable styling
+        if style_config_type is STYLE_CONFIG_DEFAULT:
+            style_config_type = StyleConfigCSS
+        style_config = None if style_config_type is None else style_config_type(self)
+
+        return self.display(config).__repr__(style_config=style_config)
 
     @doc_inject(class_name='Frame')
     def to_html_datatables(self,

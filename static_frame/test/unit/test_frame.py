@@ -6,6 +6,7 @@ import datetime
 import itertools as it
 import pickle
 import sqlite3
+from static_frame.core import style_config
 import string
 import typing as tp
 import unittest
@@ -6260,9 +6261,9 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
-        post = f1.to_html()
+        post = f1.to_html(style_config_type=None)
 
-        self.assertEqual(post, '<table border="1"><thead><tr><th></th><th>r</th><th>s</th><th>t</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
+        self.assertEqual(post, '<table><thead><tr><th></th><th>r</th><th>s</th><th>t</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
         )
 
         msg = str(f1.display(sf.DisplayConfig(type_show=False, include_columns=False)))
