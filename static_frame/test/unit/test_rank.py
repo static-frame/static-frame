@@ -43,6 +43,25 @@ class TestUnit(TestCase):
                 [3, 2, 0, 1]
                 )
 
+    def test_rank_ordinal_c(self) -> None:
+        a1 = rank_1d(np.array([8, 15, 7, 2, 20, 4, 20, 7, 15, 15]), 'ordinal', start=1)
+        self.assertEqual(a1.tolist(),
+                [5, 6, 3, 1, 9, 2, 10, 4, 7, 8]
+                )
+        #scipy: [5, 6, 3, 1, 9, 2, 10, 4, 7, 8]
+
+    def test_rank_ordinal_d(self) -> None:
+        a1 = rank_1d(np.array([17, 10, 3, -4, 9, 3, -12, 18, 3, 0, 17]), 'ordinal', start=1)
+        self.assertEqual(a1.tolist(),
+                [9, 8, 4, 2, 7, 5, 1, 11, 6, 3, 10]
+                )
+        #scipy: [9, 8, 4, 2, 7, 5, 1, 11, 6, 3, 10]
+
+
+
+
+
+
 
     def test_rank_average_a(self) -> None:
 
@@ -66,8 +85,14 @@ class TestUnit(TestCase):
 
         a1 = rank_1d(np.array([0, 2, 5, 2, 2, 2]), 'average', ascending=True)
         self.assertEqual(a1.tolist(),
-                [0.0, 2.5, 2.5, 2.5, 5.0, 2.5]
+                [0.0, 2.5, 5.0, 2.5, 2.5, 2.5]
                 )
+
+        a1 = rank_1d(np.array([0, 2, 5, 2, 2, 2]), 'average', ascending=True, start=1)
+        self.assertEqual(a1.tolist(),
+                [1.0, 3.5, 6.0, 3.5, 3.5, 3.5]
+                )
+        #scipy: [1.0, 3.5, 6.0, 3.5, 3.5, 3.5]
 
         # import ipdb; ipdb.set_trace()
         a2 = rank_1d(np.array([0, 2, 3, 2]), 'average', start=1)
@@ -79,6 +104,25 @@ class TestUnit(TestCase):
         self.assertEqual(a3.tolist(),
                 [4.0, 2.5, 1.0, 2.5]
                 )
+
+    def test_rank_average_c(self) -> None:
+        a1 = rank_1d(np.array([8, 15, 7, 2, 20, 4, 20, 7, 15, 15]), 'average', start=1)
+        self.assertEqual(a1.tolist(),
+                [5.0, 7.0, 3.5, 1.0, 9.5, 2.0, 9.5, 3.5, 7.0, 7.0]
+                )
+        #scipy: [5.0, 7.0, 3.5, 1.0, 9.5, 2.0, 9.5, 3.5, 7.0, 7.0]
+
+    def test_rank_average_d(self) -> None:
+        a1 = rank_1d(np.array([17, 10, 3, -4, 9, 3, -12, 18, 3, 0, 17]), 'average', start=1)
+        self.assertEqual(a1.tolist(),
+                [9.5, 8.0, 5.0, 2.0, 7.0, 5.0, 1.0, 11.0, 5.0, 3.0, 9.5]
+                )
+        #scipy: [9.5, 8.0, 5.0, 2.0, 7.0, 5.0, 1.0, 11.0, 5.0, 3.0, 9.5
+
+
+
+
+
 
     def test_rank_min_a(self) -> None:
 
@@ -95,6 +139,25 @@ class TestUnit(TestCase):
         self.assertEqual(a3.tolist(),
                 [3, 1, 0, 1]
                 )
+
+    def test_rank_min_b(self) -> None:
+        a1 = rank_1d(np.array([8, 15, 7, 2, 20, 4, 20, 7, 15, 15]), 'min', start=1)
+        self.assertEqual(a1.tolist(),
+                [5, 6, 3, 1, 9, 2, 9, 3, 6, 6]
+                )
+        #scipy: [5, 6, 3, 1, 9, 2, 9, 3, 6, 6]
+
+    def test_rank_min_c(self) -> None:
+        a1 = rank_1d(np.array([17, 10, 3, -4, 9, 3, -12, 18, 3, 0, 17]), 'min', start=1)
+        self.assertEqual(a1.tolist(),
+                [9, 8, 4, 2, 7, 4, 1, 11, 4, 3, 9]
+                )
+
+        #scipy: [9, 8, 4, 2, 7, 4, 1, 11, 4, 3, 9]
+
+
+
+
 
 
     def test_rank_max_a(self) -> None:
@@ -115,6 +178,21 @@ class TestUnit(TestCase):
                 [3, 2, 0, 2]
                 )
 
+    def test_rank_max_b(self) -> None:
+        a1 = rank_1d(np.array([8, 15, 7, 2, 20, 4, 20, 7, 15, 15]), 'max', start=1)
+        self.assertEqual(a1.tolist(),
+                [5, 8, 4, 1, 10, 2, 10, 4, 8, 8]
+                )
+        #scipy: [5, 8, 4, 1, 10, 2, 10, 4, 8, 8]
+
+    def test_rank_max_c(self) -> None:
+        a1 = rank_1d(np.array([17, 10, 3, -4, 9, 3, -12, 18, 3, 0, 17]), 'max', start=1)
+        self.assertEqual(a1.tolist(),
+                [10, 8, 6, 2, 7, 6, 1, 11, 6, 3, 10]
+                )
+        #scipy: [10, 8, 6, 2, 7, 6, 1, 11, 6, 3, 10]
+
+
 
 
     def test_rank_dense_a(self) -> None:
@@ -133,6 +211,23 @@ class TestUnit(TestCase):
         self.assertEqual(a3.tolist(),
                 [2, 1, 0, 1]
                 )
+
+    def test_rank_dense_b(self) -> None:
+        a1 = rank_1d(np.array([8, 15, 7, 2, 20, 4, 20, 7, 15, 15]), 'dense', start=1)
+        self.assertEqual(a1.tolist(),
+                [4, 5, 3, 1, 6, 2, 6, 3, 5, 5]
+                )
+        #scipy: [4, 5, 3, 1, 6, 2, 6, 3, 5, 5]
+
+    def test_rank_dense_c(self) -> None:
+        a1 = rank_1d(np.array([17, 10, 3, -4, 9, 3, -12, 18, 3, 0, 17]), 'dense', start=1)
+        self.assertEqual(a1.tolist(),
+                [7, 6, 4, 2, 5, 4, 1, 8, 4, 3, 7]
+                )
+        #scipy: [7, 6, 4, 2, 5, 4, 1, 8, 4, 3, 7]
+
+
+
 
 
 

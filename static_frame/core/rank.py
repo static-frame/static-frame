@@ -4,7 +4,7 @@ from enum import Enum
 import numpy as np
 
 from static_frame.core.util import DEFAULT_STABLE_SORT_KIND
-# from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_BOOL
 
 class RankMethod(str, Enum):
@@ -42,16 +42,21 @@ def rank_1d(
     ranks0_max = size - 1
 
     index_sorted = np.argsort(array, kind=DEFAULT_STABLE_SORT_KIND)
+
+    ordinal = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
+    ordinal[index_sorted] = np.arange(array.size, dtype=DTYPE_INT_DEFAULT)
+
     if method == RankMethod.ORDINAL:
-        ranks0 = index_sorted
+        ranks0 = ordinal
     else:
         array_sorted = array[index_sorted] # order array
         # createa a Boolean array showing unique values, first value is always True
         is_unique = np.full(size, True, dtype=DTYPE_BOOL)
         is_unique[1:] = array_sorted[1:] != array_sorted[:-1]
-        # cumsum used on is_unique to only increment when unique; then re-order; this always has 1 as the lowest value
-        dense = is_unique.cumsum()[index_sorted]
 
+        # is_unique = np.r_[True, array_sorted[1:] != array_sorted[:-1]]
+        # cumsum used on is_unique to only increment when unique; then re-order; this always has 1 as the lowest value
+        dense = is_unique.cumsum()[ordinal]
         if method == RankMethod.DENSE:
             ranks0 = dense - 1
             ranks0_max = ranks0.max()
@@ -70,6 +75,7 @@ def rank_1d(
                     or (method == RankMethod.MAX and not ascending)):
                 ranks0 = count[dense - 1]
             elif method == RankMethod.AVERAGE:
+                # take the average of min and max selections
                 ranks0 = (.5 * (count[dense] + count[dense - 1] + 1)) - 1
             else:
                 raise NotImplementedError(f'no handling for {method}')
