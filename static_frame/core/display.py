@@ -20,6 +20,8 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
 from static_frame.core.display_config import _DISPLAY_FORMAT_MAP
 from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
+from static_frame.core.style_config import StyleConfig
+
 
 _module = sys.modules[__name__]
 
@@ -628,31 +630,25 @@ class Display:
         self._header_depth = header_depth
 
     def __repr__(self,
-            style_config: tp.Any = None,
+            style_config: StyleConfig = None,
             ) -> str:
         rows = self._to_rows_cells(self,
                 self._config,
                 )
-
         if self._outermost:
             dfc = _DISPLAY_FORMAT_MAP[self._config.display_format]
             header = []
             body = []
             for idx, row in enumerate(rows):
                 iloc_row = idx - self._header_depth
+                row = ''.join(dfc.markup_row(row,
+                        index_depth=self._index_depth,
+                        iloc_row=iloc_row,
+                        style_config=style_config,
+                        )).rstrip()
                 if idx < self._header_depth:
-                    row = ''.join(dfc.markup_row(row,
-                            header_depth=np.inf, # force all as header
-                            iloc_row=iloc_row,
-                            style_config=style_config,
-                            )).rstrip()
                     header.append(row)
                 else:
-                    row = ''.join(dfc.markup_row(row,
-                            header_depth=self._index_depth,
-                            iloc_row=iloc_row,
-                            style_config=style_config,
-                            )).rstrip()
                     body.append(row)
 
             outermost = []
