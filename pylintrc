@@ -1,7 +1,8 @@
 [MASTER]
 persistent=no
-jobs=8
+jobs=0
 unsafe-load-any-extension=no
+ignore-patterns=display_visidata.py
 
 [MESSAGES CONTROL]
 

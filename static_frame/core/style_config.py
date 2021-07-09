@@ -1,4 +1,3 @@
-from re import X
 import typing as tp
 
 from static_frame.core.display_color import HexColor
@@ -21,7 +20,6 @@ class StyleConfig:
         '''
         Frame- (or table-) level styling.
         '''
-        pass
 
     def apex(self,
             value: tp.Any,
@@ -117,7 +115,6 @@ class StyleConfigCSS(StyleConfig):
                 border_width='0px',
                 )
         return str(value), self._dict_to_style(css)
-
 
     def values(self,
             value: tp.Any,

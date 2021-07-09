@@ -1605,7 +1605,7 @@ def array_shift(*,
         # do negative modulo to force negative value
         shift_mod = shift % -array.shape[axis]
     else:
-        raise NotImplementedError(f'no handling for this configuraiton')
+        raise NotImplementedError('no handling for this configuration')
 
     if (not wrap and shift == 0) or (wrap and shift_mod == 0):
         # must copy so as not let caller mutate arguement

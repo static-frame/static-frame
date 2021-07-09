@@ -19,7 +19,6 @@ from numpy.ma import MaskedArray #type: ignore
 from arraykit import column_1d_filter
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from static_frame.core import style_config
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand

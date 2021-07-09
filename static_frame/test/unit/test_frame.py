@@ -6,7 +6,6 @@ import datetime
 import itertools as it
 import pickle
 import sqlite3
-from static_frame.core import style_config
 import string
 import typing as tp
 import unittest

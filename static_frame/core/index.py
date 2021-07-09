@@ -969,7 +969,7 @@ class Index(IndexBase):
                 return key + offset
 
             if isinstance(key, list):
-               return [k + offset for k in key]
+                return [k + offset for k in key]
             # a single element
             return key + offset # type: ignore
 
@@ -1369,7 +1369,8 @@ _INDEX_GO_SLOTS = (
 class _IndexGOMixin:
 
     STATIC = False
-    __slots__ = () # define in derived class
+    # NOTE: must define in derived class or get TypeError: multiple bases have instance lay-out conflict
+    __slots__ = ()
 
     _map: tp.Optional[AutoMap]
     _labels: np.ndarray
