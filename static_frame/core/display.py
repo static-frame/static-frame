@@ -630,7 +630,7 @@ class Display:
         self._header_depth = header_depth
 
     def __repr__(self,
-            style_config: StyleConfig = None,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> str:
         rows = self._to_rows_cells(self,
                 self._config,

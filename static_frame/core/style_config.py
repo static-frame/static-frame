@@ -15,7 +15,7 @@ class StyleConfig:
     __slots__ = ('container',)
 
     def __init__(self, container: tp.Optional['Frame'] = None):
-        self.container: 'Frame' = container
+        self.container: tp.Optional['Frame'] = container
 
     def frame(self) -> str:
         '''
@@ -24,6 +24,7 @@ class StyleConfig:
         pass
 
     def apex(self,
+            value: tp.Any,
             coordinates: tp.Tuple[int, int],
             ) -> tp.Tuple[str, str]:
         '''
@@ -35,6 +36,7 @@ class StyleConfig:
         raise NotImplementedError()
 
     def values(self,
+            value: tp.Any,
             coordinates: tp.Tuple[int, int],
             ) -> tp.Tuple[str, str]:
         '''
@@ -123,7 +125,7 @@ class StyleConfigCSS(StyleConfig):
             ) -> tp.Tuple[str, str]:
         row, _ = coordinates
 
-        def get_bg(row):
+        def get_bg(row: int) -> str:
             if (row % 2) == 1:
                 return self.COLOR_OFF_WHITE
             return self.COLOR_WHITE
