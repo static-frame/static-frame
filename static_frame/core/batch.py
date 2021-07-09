@@ -39,7 +39,7 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
-from static_frame.core.style_config import StyleConfig, style_config_css_factory
+from static_frame.core.style_config import StyleConfig
 
 
 FrameOrSeries = tp.Union[Frame, Series]

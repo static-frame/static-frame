@@ -6,7 +6,7 @@ What is New in Static Frame
 
 Added support for loading containers into specialized VisiData ``Sheet`` and  ``IndexSheet`` subclasses; added ``to_visidata()`` exporter to all containers.
 
-Added `StyleConfig` class for configuring display characteristics. Added default StyleConfigCSS for improved default HTML presentation.
+Added ``StyleConfig`` class for configuring display characteristics. Added default ``StyleConfigCSS`` for improved default HTML presentation.
 
 
 0.8.14
