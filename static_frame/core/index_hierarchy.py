@@ -841,7 +841,9 @@ class IndexHierarchy(IndexBase):
                         config=config,
                         outermost=True,
                         index_depth=0,
-                        header_depth=header_depth)
+                        header_depth=header_depth,
+                        style_config=style_config,
+                        )
             else:
                 sub_display.extend_iterable(col, header=header_sub)
 

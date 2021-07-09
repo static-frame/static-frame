@@ -551,7 +551,10 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self.to_frame().display(config) #type: ignore
+        return self.to_frame().display( #type: ignore
+                config,
+                style_config=style_config,
+                )
 
     #---------------------------------------------------------------------------
     # accessors

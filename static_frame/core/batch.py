@@ -39,7 +39,7 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
-from static_frame.core.style_config import StyleConfig
+from static_frame.core.style_config import StyleConfig, style_config_css_factory
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -393,7 +393,10 @@ class Batch(ContainerOperand, StoreClientMixin):
         display_cls = Display.from_values((),
                 header=DisplayHeader(self.__class__, self._name),
                 config=config)
-        return series._display(config, display_cls)
+        return series._display(config,
+                display_cls=display_cls,
+                style_config=style_config,
+                )
 
     def __repr__(self) -> str:
         '''Provide a display of the :obj:`Batch` that does not exhaust the generator.

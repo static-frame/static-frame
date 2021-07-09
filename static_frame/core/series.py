@@ -1340,7 +1340,9 @@ class Series(ContainerOperand):
 
     def _display(self,
             config: DisplayConfig,
+            *,
             display_cls: Display,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''
         Private display interface to be shared by Bus and Series.
@@ -1356,7 +1358,8 @@ class Series(ContainerOperand):
                 config=config,
                 outermost=True,
                 index_depth=index_depth,
-                header_depth=header_depth
+                header_depth=header_depth,
+                style_config=style_config,
                 )
 
         if config.include_index:
@@ -1390,7 +1393,10 @@ class Series(ContainerOperand):
         display_cls = Display.from_values((),
                 header=DisplayHeader(self.__class__, self._name),
                 config=config)
-        return self._display(config, display_cls)
+        return self._display(config,
+                display_cls=display_cls,
+                style_config=style_config,
+                )
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array

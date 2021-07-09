@@ -764,7 +764,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         display_cls = Display.from_values((),
                 header=DisplayHeader(self.__class__, self._series._name),
                 config=config)
-        return self._series._display(config, display_cls)
+        return self._series._display(config,
+                display_cls=display_cls,
+                style_config=style_config,
+                )
 
     #---------------------------------------------------------------------------
     # extended discriptors; in general, these do not force loading Frame
