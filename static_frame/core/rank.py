@@ -1,10 +1,10 @@
 import typing as tp
 
-from enum import Enum, unique
+from enum import Enum
 import numpy as np
 
-from static_frame.core.util import DEFAULT_STABLE_SORT_KIND, union1d
-from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DEFAULT_STABLE_SORT_KIND
+# from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_BOOL
 
 class RankMethod(str, Enum):
