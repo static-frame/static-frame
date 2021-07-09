@@ -19,6 +19,7 @@ class StyleConfig:
         '''
         Frame- (or table-) level styling.
         '''
+        return ''
 
     def apex(self,
             value: tp.Any,
@@ -30,7 +31,7 @@ class StyleConfig:
         Returns:
             A pair of the value to display, and a style information appropriate to the format.
         '''
-        raise NotImplementedError()
+        return str(value), ''
 
     def values(self,
             value: tp.Any,
@@ -40,7 +41,7 @@ class StyleConfig:
         Returns:
             A pair of the value to display, and a style information appropriate to the format.
         '''
-        raise NotImplementedError()
+        return str(value), ''
 
     def index(self,
             label: tp.Hashable,
@@ -49,7 +50,7 @@ class StyleConfig:
         Returns:
             A pair of the value to display, and a style information appropriate to the format.
         '''
-        raise NotImplementedError()
+        return str(label), ''
 
     def columns(self,
             label: tp.Hashable,
@@ -58,7 +59,7 @@ class StyleConfig:
         Returns:
             A pair of the value to display, and a style information appropriate to the format.
         '''
-        raise NotImplementedError()
+        return str(label), ''
 
 
 # Create an empyt instance serve as default sentinal
