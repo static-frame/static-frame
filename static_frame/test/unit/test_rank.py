@@ -5,6 +5,8 @@ import numpy as np
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.rank import rank_1d
+from static_frame.core.rank import rank_2d
+
 from static_frame.core.rank import RankMethod
 
 class TestUnit(TestCase):
@@ -227,6 +229,64 @@ class TestUnit(TestCase):
         #scipy: [7, 6, 4, 2, 5, 4, 1, 8, 4, 3, 7]
 
 
+
+
+
+    def test_rank_2d_a(self) -> None:
+        a1 = np.array([10, 3, -4, 9, 3, -12, 18, 3, 0, 17]).reshape(5,2)
+        self.assertEqual(
+            rank_2d(a1, axis=0, method='ordinal', start=1).tolist(),
+            [[4, 2], [1, 4], [3, 1], [5, 3], [2, 5]]
+        )
+        self.assertEqual(
+            rank_2d(a1, axis=1, method='ordinal', start=1).tolist(),
+            [[2, 1], [1, 2], [2, 1], [2, 1], [1, 2]]
+        )
+
+    def test_rank_2d_b(self) -> None:
+        a1 = np.array([10, 3, -4, 9, 3, -12, 18, 3, 0, 17]).reshape(5,2)
+        self.assertEqual(
+            rank_2d(a1, axis=0, method='average', start=1).tolist(),
+            [[4.0, 2.5], [1.0, 4.0], [3.0, 1.0], [5.0, 2.5], [2.0, 5.0]]
+        )
+        self.assertEqual(
+            rank_2d(a1, axis=1, method='average', start=1).tolist(),
+            [[2.0, 1.0], [1.0, 2.0], [2.0, 1.0], [2.0, 1.0], [1.0, 2.0]]
+        )
+
+    def test_rank_2d_c(self) -> None:
+        a1 = np.array([10, 3, -4, 9, 3, -12, 18, 3, 0, 17]).reshape(5,2)
+        self.assertEqual(
+            rank_2d(a1, axis=0, method='min', start=1).tolist(),
+            [[4, 2], [1, 4], [3, 1], [5, 2], [2, 5]]
+        )
+        self.assertEqual(
+            rank_2d(a1, axis=1, method='min', start=1).tolist(),
+            [[2, 1], [1, 2], [2, 1], [2, 1], [1, 2]]
+        )
+
+    def test_rank_2d_d(self) -> None:
+        a1 = np.array([10, 3, -4, 9, 3, -12, 18, 3, 0, 17]).reshape(5,2)
+        self.assertEqual(
+            rank_2d(a1, axis=0, method='max', start=1).tolist(),
+            [[4, 3], [1, 4], [3, 1], [5, 3], [2, 5]]
+        )
+        self.assertEqual(
+            rank_2d(a1, axis=1, method='max', start=1).tolist(),
+            [[2, 1], [1, 2], [2, 1], [2, 1], [1, 2]]
+        )
+
+
+    def test_rank_2d_e(self) -> None:
+        a1 = np.array([10, 3, -4, 9, 3, -12, 18, 3, 0, 17]).reshape(5,2)
+        self.assertEqual(
+            rank_2d(a1, axis=0, method='dense', start=1).tolist(),
+            [[4, 2], [1, 3], [3, 1], [5, 2], [2, 4]]
+        )
+        self.assertEqual(
+            rank_2d(a1, axis=1, method='dense', start=1).tolist(),
+            [[2, 1], [1, 2], [2, 1], [2, 1], [1, 2]]
+        )
 
 
 
