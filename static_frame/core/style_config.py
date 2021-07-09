@@ -168,4 +168,4 @@ def style_config_css_factory(
         return StyleConfigCSS(container)
     if style_config_type is None:
         return None
-    return value(container)
+    return style_config_type(container)

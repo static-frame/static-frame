@@ -44,7 +44,10 @@ class TestUnit(TestCase):
 
     def test_display_config_a(self) -> None:
         config = DisplayConfig.from_default(type_color=False)
-        d = Display.from_values(np.array([[1, 2], [3, 4]], dtype=np.int64), 'header', config=config)
+        d = Display.from_values(
+                np.array([[1, 2], [3, 4]], dtype=np.int64),
+                header='header',
+                config=config)
         self.assertEqual(d.to_rows(),
                 ['header', '1 2', '3 4', '<int64>'])
 
@@ -529,11 +532,17 @@ class TestUnit(TestCase):
     def test_display_flatten_a(self) -> None:
         config = DisplayConfig.from_default(type_color=False)
 
-        d1 = Display.from_values(np.array([1, 2, 3, 4], dtype=np.int64), 'header', config=config)
+        d1 = Display.from_values(
+                np.array([1, 2, 3, 4], dtype=np.int64),
+                header='header',
+                config=config)
         self.assertEqual(d1.flatten().to_rows(), ['header 1 2 3 4 <int64>'])
 
 
-        d2 = Display.from_values(np.array([5, 6, 7, 8], dtype=np.int64), 'header', config=config)
+        d2 = Display.from_values(
+                np.array([5, 6, 7, 8], dtype=np.int64),
+                header='header',
+                config=config)
 
         # mutates in place
         d1.extend_display(d2)

@@ -219,7 +219,11 @@ class IndexBase(ContainerOperand):
     def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
         raise NotImplementedError() #pragma: no cover
 
-    def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:
+    def display(self,
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
+            ) -> Display:
         raise NotImplementedError()
 
     #---------------------------------------------------------------------------
@@ -460,7 +464,7 @@ class IndexBase(ContainerOperand):
                 )
 
         style_config = style_config_css_factory(style_config_type, self)
-        return self.display(config).__repr__(style_config=style_config)
+        return repr(self.display(config, style_config=style_config))
 
     @doc_inject(class_name='Index')
     def to_html_datatables(self,

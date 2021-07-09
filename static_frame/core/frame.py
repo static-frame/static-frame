@@ -3654,7 +3654,9 @@ class Frame(ContainerOperand):
 
     @doc_inject()
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''{doc}
 
@@ -3675,7 +3677,9 @@ class Frame(ContainerOperand):
                 config=config,
                 outermost=True,
                 index_depth=index_depth,
-                header_depth=header_depth)
+                header_depth=header_depth,
+                style_config=style_config,
+                )
 
 
         if config.include_index:
@@ -7046,8 +7050,7 @@ class Frame(ContainerOperand):
                 )
 
         style_config = style_config_css_factory(style_config_type, self)
-
-        return self.display(config).__repr__(style_config=style_config)
+        return repr(self.display(config, style_config=style_config))
 
     @doc_inject(class_name='Frame')
     def to_html_datatables(self,

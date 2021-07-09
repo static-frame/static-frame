@@ -46,6 +46,7 @@ from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
+from static_frame.core.style_config import StyleConfig
 
 
 def get_extractor(
@@ -542,7 +543,9 @@ class Quilt(ContainerBase, StoreClientMixin):
         return f'<{header} at {hex(id(self))}>'
 
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''Provide a :obj:`Frame`-style display of the :obj:`Quilt`.
         '''

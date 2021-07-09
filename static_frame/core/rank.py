@@ -16,10 +16,10 @@ class RankMethod(str, Enum):
 
 def rank_1d(
         array: np.ndarray,
-        method: RankMethod,
+        method: tp.Union[str, RankMethod],
         ascending: bool = True,
         start: int = 0,
-        ):
+        ) -> np.ndarray:
     '''
     Rank 1D array. Basedon the the scipy implementation:
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rankdata.html

@@ -275,6 +275,7 @@ class Display:
         '_outermost',
         '_index_depth',
         '_header_depth',
+        '_style_config',
         )
 
     CHAR_MARGIN = 1
@@ -394,11 +395,13 @@ class Display:
     @classmethod
     def from_values(cls,
             values: np.ndarray,
+            *,
             header: object,
             config: tp.Optional[DisplayConfig] = None,
             outermost: bool = False,
             index_depth: int = 0,
-            header_depth: int = 0
+            header_depth: int = 0,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> 'Display':
         '''
         Given a 1 or 2D ndarray, return a Display instance. Generally 2D arrays are passed here only from TypeBlocks.
@@ -455,7 +458,9 @@ class Display:
                 config=config,
                 outermost=outermost,
                 index_depth=index_depth,
-                header_depth=header_depth)
+                header_depth=header_depth,
+                style_config=style_config,
+                )
 
 
     #---------------------------------------------------------------------------
@@ -615,6 +620,8 @@ class Display:
             outermost: bool = False,
             index_depth: int = 0,
             header_depth: int = 0,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> None:
         '''Define rows as a list of lists, for each row; the contained DisplayCell instances may be of different size, but they are expected to be aligned vertically in final presentation.
 
@@ -628,10 +635,9 @@ class Display:
         self._outermost = outermost
         self._index_depth = index_depth
         self._header_depth = header_depth
+        self._style_config = style_config
 
-    def __repr__(self,
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> str:
+    def __repr__(self) -> str:
         rows = self._to_rows_cells(self,
                 self._config,
                 )
@@ -644,7 +650,7 @@ class Display:
                 row = ''.join(dfc.markup_row(row,
                         index_depth=self._index_depth,
                         iloc_row=iloc_row,
-                        style_config=style_config,
+                        style_config=self._style_config,
                         )).rstrip()
                 if idx < self._header_depth:
                     header.append(row)
@@ -660,7 +666,7 @@ class Display:
             outermost.append(body_str)
             return dfc.markup_outermost(
                     dfc.LINE_SEP.join(outermost),
-                    style_config=style_config,
+                    style_config=self._style_config,
                     )
 
         return dfc.LINE_SEP.join(''.join(r) for r in rows)

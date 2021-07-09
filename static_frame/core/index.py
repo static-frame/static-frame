@@ -82,6 +82,8 @@ from static_frame.core.util import union1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import OPERATORS
+from static_frame.core.style_config import StyleConfig
+
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -812,6 +814,8 @@ class Index(IndexBase):
     @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''{doc}
 
@@ -838,6 +842,7 @@ class Index(IndexBase):
                 outermost=True,
                 index_depth=0,
                 header_depth=header_depth,
+                style_config=style_config,
                 )
 
     #---------------------------------------------------------------------------

@@ -72,6 +72,7 @@ from static_frame.core.util import array_sample
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
+from static_frame.core.style_config import StyleConfig
 
 
 if tp.TYPE_CHECKING:
@@ -803,7 +804,9 @@ class IndexHierarchy(IndexBase):
 
     @doc_inject()
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''{doc}
 

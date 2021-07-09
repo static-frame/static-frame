@@ -39,6 +39,7 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
+from static_frame.core.style_config import StyleConfig
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -378,7 +379,9 @@ class Batch(ContainerOperand, StoreClientMixin):
 
 
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''Provide a :obj:`Series`-style display of the :obj:`Batch`. Note that if the held iterator is a generator, this display will exhaust the generator.
         '''
