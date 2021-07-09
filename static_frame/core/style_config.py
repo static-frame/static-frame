@@ -62,7 +62,7 @@ class StyleConfig:
         return str(label), ''
 
 
-# Create an empyt instance serve as default sentinal
+# Create an empty instance serve as default sentinal
 STYLE_CONFIG_DEFAULT = StyleConfig()
 
 
