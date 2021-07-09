@@ -7038,7 +7038,7 @@ class Frame(ContainerOperand):
             style_config_type: tp.Optional[tp.Type[StyleConfig]] = STYLE_CONFIG_DEFAULT,
             ) -> str:
         '''
-        {}v
+        {}
         '''
         # if a config is given, try to use all settings; if using active, hide types
         config = config or DisplayActive.get(type_show=False)
