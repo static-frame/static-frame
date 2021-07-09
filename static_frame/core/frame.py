@@ -151,6 +151,7 @@ from static_frame.core.util import file_like_manager
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.style_config import StyleConfig
+from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import style_config_css_factory
 
 
@@ -7038,7 +7039,7 @@ class Frame(ContainerOperand):
     @doc_inject(class_name='Frame')
     def to_html(self,
             config: tp.Optional[DisplayConfig] = None,
-            style_config_type: tp.Optional[tp.Type[StyleConfig]] = StyleConfig,
+            style_config: tp.Optional[StyleConfig] = STYLE_CONFIG_DEFAULT,
             ) -> str:
         '''
         {}
@@ -7049,7 +7050,7 @@ class Frame(ContainerOperand):
                 display_format=DisplayFormats.HTML_TABLE,
                 )
 
-        style_config = style_config_css_factory(style_config_type, self)
+        style_config = style_config_css_factory(style_config, self)
         return repr(self.display(config, style_config=style_config))
 
     @doc_inject(class_name='Frame')

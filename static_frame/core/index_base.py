@@ -20,6 +20,7 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import dtype_from_element
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
+from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 
 
 if tp.TYPE_CHECKING:
@@ -453,7 +454,7 @@ class IndexBase(ContainerOperand):
     @doc_inject(class_name='Index')
     def to_html(self,
             config: tp.Optional[DisplayConfig] = None,
-            style_config_type: tp.Optional[tp.Type[StyleConfig]] = StyleConfig,
+            style_config: tp.Optional[StyleConfig] = STYLE_CONFIG_DEFAULT,
             ) -> str:
         '''
         {}
@@ -463,7 +464,7 @@ class IndexBase(ContainerOperand):
                 display_format=DisplayFormats.HTML_TABLE,
                 )
 
-        style_config = style_config_css_factory(style_config_type, self)
+        style_config = style_config_css_factory(style_config, self)
         return repr(self.display(config, style_config=style_config))
 
     @doc_inject(class_name='Index')

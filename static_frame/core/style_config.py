@@ -61,6 +61,10 @@ class StyleConfig:
         raise NotImplementedError()
 
 
+# Create an empyt instance serve as default sentinal
+STYLE_CONFIG_DEFAULT = StyleConfig()
+
+
 class StyleConfigCSS(StyleConfig):
 
     COLOR_LIGHT_GREY = HexColor.get_html(0xe0e0e0)
@@ -159,15 +163,15 @@ class StyleConfigCSS(StyleConfig):
 
 
 def style_config_css_factory(
-        style_config_type: tp.Optional[tp.Type[StyleConfig]],
+        style_config: tp.Optional[StyleConfig],
         container: 'ContainerOperand',
         ) -> tp.Optional[StyleConfig]:
     # let user set style_config to None to disable styling
-    if style_config_type is StyleConfig:
+    if style_config is STYLE_CONFIG_DEFAULT:
         # if given the base class, get the derived CSS class
         return StyleConfigCSS(container)
-    if style_config_type is None:
+    if style_config is None:
         return None
-    return style_config_type(container)
+    return style_config
 
 

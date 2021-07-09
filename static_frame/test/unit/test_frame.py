@@ -6260,7 +6260,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
-        post = f1.to_html(style_config_type=None)
+        post = f1.to_html(style_config=None)
 
         self.assertEqual(post, '<table><thead><tr><th></th><th>r</th><th>s</th><th>t</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
         )

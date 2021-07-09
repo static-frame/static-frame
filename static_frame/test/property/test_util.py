@@ -357,6 +357,10 @@ class TestUnit(TestCase):
     def test_union2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.union2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
+
+        if post.dtype.kind in ('f', 'c') and np.isnan(post).any():
+            return
+
         self.assertTrue(len(post) == len(
                 set(util.array2d_to_tuples(arrays[0]))
                 | set(util.array2d_to_tuples(arrays[1])))

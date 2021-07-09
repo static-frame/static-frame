@@ -1113,7 +1113,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.to_html(),
                 '<table style="border-collapse:collapse;border-width:1px;border-color:#898b8e;border-style:solid"><tbody><tr><td style="background-color:#ffffff;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">a</td></tr><tr><td style="background-color:#f2f2f2;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">b</td></tr><tr><td style="background-color:#ffffff;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">c</td></tr></tbody></table>'
                 )
-        self.assertEqual(idx1.to_html(style_config_type=None),
+        self.assertEqual(idx1.to_html(style_config=None),
                 '<table><tbody><tr><td>a</td></tr><tr><td>b</td></tr><tr><td>c</td></tr></tbody></table>')
 
     def test_index_to_html_datatables_a(self) -> None:
