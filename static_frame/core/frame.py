@@ -151,8 +151,7 @@ from static_frame.core.util import file_like_manager
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.style_config import StyleConfig
-from static_frame.core.style_config import StyleConfigCSS
-from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
+from static_frame.core.style_config import style_config_css_factory
 
 
 if tp.TYPE_CHECKING:
@@ -7035,7 +7034,7 @@ class Frame(ContainerOperand):
     @doc_inject(class_name='Frame')
     def to_html(self,
             config: tp.Optional[DisplayConfig] = None,
-            style_config_type: tp.Optional[tp.Type[StyleConfig]] = STYLE_CONFIG_DEFAULT,
+            style_config_type: tp.Optional[tp.Type[StyleConfig]] = StyleConfig,
             ) -> str:
         '''
         {}
@@ -7046,10 +7045,7 @@ class Frame(ContainerOperand):
                 display_format=DisplayFormats.HTML_TABLE,
                 )
 
-        # let user set style_config to None to disable styling
-        if style_config_type is STYLE_CONFIG_DEFAULT:
-            style_config_type = StyleConfigCSS
-        style_config = None if style_config_type is None else style_config_type(self)
+        style_config = style_config_css_factory(style_config_type, self)
 
         return self.display(config).__repr__(style_config=style_config)
 

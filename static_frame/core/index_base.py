@@ -18,6 +18,8 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import dtype_from_element
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.style_config import style_config_css_factory
 
 
 if tp.TYPE_CHECKING:
@@ -446,7 +448,8 @@ class IndexBase(ContainerOperand):
 
     @doc_inject(class_name='Index')
     def to_html(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            style_config_type: tp.Optional[tp.Type[StyleConfig]] = StyleConfig,
             ) -> str:
         '''
         {}
@@ -455,7 +458,9 @@ class IndexBase(ContainerOperand):
         config = config.to_display_config(
                 display_format=DisplayFormats.HTML_TABLE,
                 )
-        return repr(self.display(config))
+
+        style_config = style_config_css_factory(style_config_type, self)
+        return self.display(config).__repr__(style_config=style_config)
 
     @doc_inject(class_name='Index')
     def to_html_datatables(self,

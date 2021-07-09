@@ -4,17 +4,16 @@ from static_frame.core.display_color import HexColor
 
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.container import ContainerOperand #pylint: disable=W0611 #pragma: no cover
 
 CSSDict = tp.Dict[str, str]
 
-STYLE_CONFIG_DEFAULT = object()
 
 class StyleConfig:
     __slots__ = ('container',)
 
-    def __init__(self, container: tp.Optional['Frame'] = None):
-        self.container: tp.Optional['Frame'] = container
+    def __init__(self, container: tp.Optional['ContainerOperand'] = None):
+        self.container: tp.Optional['ContainerOperand'] = container
 
     def frame(self) -> str:
         '''
@@ -156,3 +155,17 @@ class StyleConfigCSS(StyleConfig):
                 )
         return str(label), self._dict_to_style(css)
 
+
+
+
+def style_config_css_factory(
+        style_config_type: tp.Optional[tp.Type[StyleConfig]],
+        container: 'ContainerOperand',
+        ) -> tp.Optional[StyleConfig]:
+    # let user set style_config to None to disable styling
+    if style_config_type is StyleConfig:
+        # if given the base class, get the derived CSS class
+        return StyleConfigCSS(container)
+    if style_config_type is None:
+        return None
+    return value(container)
