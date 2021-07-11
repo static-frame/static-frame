@@ -7,6 +7,8 @@ from static_frame.core.util import DEFAULT_STABLE_SORT_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import EMPTY_ARRAY_INT
 
 class RankMethod(str, Enum):
     AVERAGE = 'average'
@@ -41,10 +43,11 @@ def rank_1d(
     the order that the values occur in `a`.
     '''
     size = len(array)
+    if size == 0:
+        return EMPTY_ARRAY if method == RankMethod.AVERAGE else EMPTY_ARRAY_INT
+
     ranks0_max = size - 1
-
     index_sorted = np.argsort(array, kind=DEFAULT_STABLE_SORT_KIND)
-
     ordinal = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
     ordinal[index_sorted] = np.arange(array.size, dtype=DTYPE_INT_DEFAULT)
 
@@ -61,7 +64,6 @@ def rank_1d(
         dense = is_unique.cumsum()[ordinal]
         if method == RankMethod.DENSE:
             ranks0 = dense - 1
-            ranks0_max = ranks0.max()
         else:
             # indices where unique is true
             unique_pos = np.nonzero(is_unique)[0]

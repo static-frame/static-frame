@@ -6,6 +6,7 @@ pytest==3.8.0
 pytest-cov==2.6.0
 pyinstrument==3.4.1
 hypothesis==4.26.3
+scipy==1.7.0
 mypy==0.800
 codecov>=2.0.15
 pylint==2.4.4
