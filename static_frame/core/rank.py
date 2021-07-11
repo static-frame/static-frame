@@ -11,7 +11,7 @@ from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_ARRAY_INT
 
 class RankMethod(str, Enum):
-    AVERAGE = 'average'
+    MEAN = 'mean'
     MIN = 'min'
     MAX = 'max'
     DENSE = 'dense'
@@ -29,7 +29,7 @@ def rank_1d(
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rankdata.html
 
 
-    average: The average of the ranks that would have been assigned to
+    mean: The mean of the ranks that would have been assigned to
     all the tied values is assigned to each value.
     min: The minimum of the ranks that would have been assigned to all
     the tied values is assigned to each value.  (This is also
@@ -44,7 +44,7 @@ def rank_1d(
     '''
     size = len(array)
     if size == 0:
-        return EMPTY_ARRAY if method == RankMethod.AVERAGE else EMPTY_ARRAY_INT
+        return EMPTY_ARRAY if method == RankMethod.MEAN else EMPTY_ARRAY_INT
 
     ranks0_max = size - 1
     index_sorted = np.argsort(array, kind=DEFAULT_STABLE_SORT_KIND)
@@ -64,6 +64,7 @@ def rank_1d(
         dense = is_unique.cumsum()[ordinal]
         if method == RankMethod.DENSE:
             ranks0 = dense - 1
+            ranks0_max = ranks0.max()
         else:
             # indices where unique is true
             unique_pos = np.nonzero(is_unique)[0]
@@ -78,8 +79,8 @@ def rank_1d(
             elif ((method == RankMethod.MIN and ascending)
                     or (method == RankMethod.MAX and not ascending)):
                 ranks0 = count[dense - 1]
-            elif method == RankMethod.AVERAGE:
-                # take the average of min and max selections
+            elif method == RankMethod.MEAN:
+                # take the mean of min and max selections
                 ranks0 = (.5 * (count[dense] + count[dense - 1] + 1)) - 1
             else:
                 raise NotImplementedError(f'no handling for {method}')
@@ -102,7 +103,7 @@ def rank_2d(
     '''
     # scipy uses np.apply_along_axis, but that handles many more cases than needed
 
-    if method == RankMethod.AVERAGE:
+    if method == RankMethod.MEAN:
         dtype = DTYPE_FLOAT_DEFAULT
     else:
         dtype = DTYPE_INT_DEFAULT

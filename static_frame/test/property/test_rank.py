@@ -56,7 +56,7 @@ class TestUnit(TestCase):
         if np.isnan(value).any():
             return
         a1 = rankdata(value, method='average')
-        a2 = rank_1d(value, method='average', start=1)
+        a2 = rank_1d(value, method='mean', start=1)
         self.assertEqual(a1.tolist(), a2.tolist())
 
 
@@ -107,7 +107,7 @@ class TestUnit(TestCase):
             return
         for axis in (0, 1):
             a1 = rankdata(value, method='average', axis=axis)
-            a2 = rank_2d(value, method='average', start=1, axis=axis)
+            a2 = rank_2d(value, method='mean', start=1, axis=axis)
             self.assertEqual(a1.tolist(), a2.tolist())
 
 

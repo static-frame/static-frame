@@ -67,17 +67,17 @@ class TestUnit(TestCase):
 
     def test_rank_average_a(self) -> None:
 
-        a1 = rank_1d(np.array([0, 2, 3, 2]), 'average', ascending=True)
+        a1 = rank_1d(np.array([0, 2, 3, 2]), 'mean', ascending=True)
         self.assertEqual(a1.tolist(),
                 [0.0, 1.5, 3.0, 1.5]
                 )
 
-        a2 = rank_1d(np.array([0, 2, 3, 2]), 'average', start=1)
+        a2 = rank_1d(np.array([0, 2, 3, 2]), 'mean', start=1)
         self.assertEqual(a2.tolist(),
                 [1.0, 2.5, 4.0, 2.5]
                 )
 
-        a3 = rank_1d(np.array([0, 2, 3, 2]), 'average', start=1, ascending=False)
+        a3 = rank_1d(np.array([0, 2, 3, 2]), 'mean', start=1, ascending=False)
         self.assertEqual(a3.tolist(),
                 [4.0, 2.5, 1.0, 2.5]
                 )
@@ -85,37 +85,37 @@ class TestUnit(TestCase):
 
     def test_rank_average_b(self) -> None:
 
-        a1 = rank_1d(np.array([0, 2, 5, 2, 2, 2]), 'average', ascending=True)
+        a1 = rank_1d(np.array([0, 2, 5, 2, 2, 2]), 'mean', ascending=True)
         self.assertEqual(a1.tolist(),
                 [0.0, 2.5, 5.0, 2.5, 2.5, 2.5]
                 )
 
-        a1 = rank_1d(np.array([0, 2, 5, 2, 2, 2]), 'average', ascending=True, start=1)
+        a1 = rank_1d(np.array([0, 2, 5, 2, 2, 2]), 'mean', ascending=True, start=1)
         self.assertEqual(a1.tolist(),
                 [1.0, 3.5, 6.0, 3.5, 3.5, 3.5]
                 )
         #scipy: [1.0, 3.5, 6.0, 3.5, 3.5, 3.5]
 
         # import ipdb; ipdb.set_trace()
-        a2 = rank_1d(np.array([0, 2, 3, 2]), 'average', start=1)
+        a2 = rank_1d(np.array([0, 2, 3, 2]), 'mean', start=1)
         self.assertEqual(a2.tolist(),
                 [1.0, 2.5, 4.0, 2.5]
                 )
 
-        a3 = rank_1d(np.array([0, 2, 3, 2]), 'average', start=1, ascending=False)
+        a3 = rank_1d(np.array([0, 2, 3, 2]), 'mean', start=1, ascending=False)
         self.assertEqual(a3.tolist(),
                 [4.0, 2.5, 1.0, 2.5]
                 )
 
     def test_rank_average_c(self) -> None:
-        a1 = rank_1d(np.array([8, 15, 7, 2, 20, 4, 20, 7, 15, 15]), 'average', start=1)
+        a1 = rank_1d(np.array([8, 15, 7, 2, 20, 4, 20, 7, 15, 15]), 'mean', start=1)
         self.assertEqual(a1.tolist(),
                 [5.0, 7.0, 3.5, 1.0, 9.5, 2.0, 9.5, 3.5, 7.0, 7.0]
                 )
         #scipy: [5.0, 7.0, 3.5, 1.0, 9.5, 2.0, 9.5, 3.5, 7.0, 7.0]
 
     def test_rank_average_d(self) -> None:
-        a1 = rank_1d(np.array([17, 10, 3, -4, 9, 3, -12, 18, 3, 0, 17]), 'average', start=1)
+        a1 = rank_1d(np.array([17, 10, 3, -4, 9, 3, -12, 18, 3, 0, 17]), 'mean', start=1)
         self.assertEqual(a1.tolist(),
                 [9.5, 8.0, 5.0, 2.0, 7.0, 5.0, 1.0, 11.0, 5.0, 3.0, 9.5]
                 )
@@ -246,11 +246,11 @@ class TestUnit(TestCase):
     def test_rank_2d_b(self) -> None:
         a1 = np.array([10, 3, -4, 9, 3, -12, 18, 3, 0, 17]).reshape(5,2)
         self.assertEqual(
-            rank_2d(a1, axis=0, method='average', start=1).tolist(),
+            rank_2d(a1, axis=0, method='mean', start=1).tolist(),
             [[4.0, 2.5], [1.0, 4.0], [3.0, 1.0], [5.0, 2.5], [2.0, 5.0]]
         )
         self.assertEqual(
-            rank_2d(a1, axis=1, method='average', start=1).tolist(),
+            rank_2d(a1, axis=1, method='mean', start=1).tolist(),
             [[2.0, 1.0], [1.0, 2.0], [2.0, 1.0], [2.0, 1.0], [1.0, 2.0]]
         )
 
