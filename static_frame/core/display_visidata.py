@@ -1,6 +1,5 @@
-# This module follows the conventions of the VisiData project for naming and style. For the same reason this also avoids importing StaticFrame at the module level.
-
-# This module is also excluded from mypy and lint checking
+# This module follows the conventions of the VisiData project for naming and style.
+# This module is excluded from mypy and lint checking
 
 from datetime import date
 import re
