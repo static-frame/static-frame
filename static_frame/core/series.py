@@ -1,3 +1,4 @@
+from static_frame.core.rank import RankMethod
 import typing as tp
 from functools import partial
 from itertools import chain
@@ -52,7 +53,7 @@ from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import AnyCallable, DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import array_deepcopy
@@ -95,6 +96,8 @@ from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
+from static_frame.core.rank import rank_1d
+from static_frame.core.rank import RankMethod
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
@@ -2020,6 +2023,116 @@ class Series(ContainerOperand):
         return self.__class__(values,
                 index=self._index,
                 name=self._name)
+
+    #---------------------------------------------------------------------------
+    def _rank(self, *,
+            method: RankMethod,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+
+        if not skipna or self.dtype.kind not in DTYPE_NA_KINDS:
+            rankable = self
+        else:
+            # only call dropna if necessary
+            rankable = self.dropna()
+
+        # returns an immutable array
+        values = rank_1d(rankable.values,
+                method=method,
+                ascending=ascending,
+                start=start,
+                )
+
+        if rankable is self or len(values) == len(self):
+            return self.__class__(values,
+                    index=self.index,
+                    name=self._name,
+                    own_index=True,
+                    )
+
+        post = self.__class__(values,
+                index=rankable.index,
+                name=self._name,
+                own_index=True,
+                )
+        # this will preserve the name
+        return post.reindex(self.index, fill_value=fill_value)
+
+
+    def rank_ordinal(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ):
+        return self._rank(
+                method=RankMethod.ORDINAL,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    def rank_dense(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ):
+        return self._rank(
+                method=RankMethod.DENSE,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    def rank_min(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ):
+        return self._rank(
+                method=RankMethod.MIN,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    def rank_max(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ):
+        return self._rank(
+                method=RankMethod.MAX,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    def rank_mean(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ):
+        return self._rank(
+                method=RankMethod.MEAN,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+
 
 
     #---------------------------------------------------------------------------

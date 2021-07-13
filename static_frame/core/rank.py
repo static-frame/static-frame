@@ -64,7 +64,6 @@ def rank_1d(
         dense = is_unique.cumsum()[ordinal]
         if method == RankMethod.DENSE:
             ranks0 = dense - 1
-            ranks0_max = ranks0.max()
         else:
             # indices where unique is true
             unique_pos = np.nonzero(is_unique)[0]
@@ -85,9 +84,15 @@ def rank_1d(
             else:
                 raise NotImplementedError(f'no handling for {method}')
 
+        # determine max after selection and shift
+        ranks0_max = ranks0.max()
+
     if not ascending:
         ranks0 = ranks0_max - ranks0
-    return ranks0 + start
+    ranked = ranks0 + start
+
+    ranked.flags.writeable = False
+    return ranked
 
 
 def rank_2d(
@@ -115,6 +120,8 @@ def rank_2d(
     elif axis == 1: # apply by row
         for i in range(shape[0]):
             post[i] = rank_1d(array[i], method, ascending, start)
+
+    post.flags.writeable = False
     return post
 
 

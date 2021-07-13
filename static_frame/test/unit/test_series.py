@@ -4282,6 +4282,157 @@ class TestUnit(TestCase):
                 ((0, ('a===aa===aa', 2)), (1, ('aa===bab', 1)), (2, ('cab===baaa===ab', 2)))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_series_rank_ordinal_a(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], name='foo')
+        s2 = s1.rank_ordinal()
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4, 5, 2, 0, 8, 1, 9, 3, 6, 7])
+
+    def test_series_rank_ordinal_b(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
+        s2 = s1.rank_ordinal(fill_value=-1)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4, 5, 2, 0, 7, 1, 8, 3, -1, 6])
+
+    def test_series_rank_ordinal_c(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
+        s2 = s1.rank_ordinal(skipna=False)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4, 5, 2, 0, 7, 1, 8, 3, 9, 6])
+
+    def test_series_rank_ordinal_d(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], name='foo')
+        s2 = s1.rank_ordinal(ascending=False)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [5, 4, 7, 9, 1, 8, 0, 6, 3, 2])
+
+
+
+
+    def test_series_rank_dense_a(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], name='foo')
+        s2 = s1.rank_dense()
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [3, 4, 2, 0, 5, 1, 5, 2, 4, 4])
+
+    def test_series_rank_dense_b(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
+        s2 = s1.rank_dense(fill_value=-1)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [3, 4, 2, 0, 5, 1, 5, 2, -1, 4])
+
+    def test_series_rank_dense_c(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
+        s2 = s1.rank_dense(skipna=False)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [3, 4, 2, 0, 5, 1, 5, 2, 6, 4])
+
+    def test_series_rank_dense_d(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], name='foo')
+        s2 = s1.rank_dense(ascending=False)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [2, 1, 3, 5, 0, 4, 0, 3, 1, 1])
+
+
+
+
+    def test_series_rank_min_a(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], name='foo')
+        s2 = s1.rank_min()
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4, 5, 2, 0, 8, 1, 8, 2, 5, 5])
+
+    def test_series_rank_min_b(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
+        s2 = s1.rank_min(fill_value=-1)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4, 5, 2, 0, 7, 1, 7, 2, -1, 5])
+
+    def test_series_rank_min_c(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
+        s2 = s1.rank_min(skipna=False)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4, 5, 2, 0, 7, 1, 7, 2, 9, 5])
+
+    def test_series_rank_min_d(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], name='foo')
+        s2 = s1.rank_min(ascending=False)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [5, 2, 6, 9, 0, 8, 0, 6, 2, 2])
+
+
+
+
+    def test_series_rank_max_a(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], name='foo')
+        s2 = s1.rank_max()
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4, 7, 3, 0, 9, 1, 9, 3, 7, 7])
+
+    def test_series_rank_max_b(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
+        s2 = s1.rank_max(fill_value=-1)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4, 6, 3, 0, 8, 1, 8, 3, -1, 6])
+
+    def test_series_rank_max_c(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
+        s2 = s1.rank_max(skipna=False)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4, 6, 3, 0, 8, 1, 8, 3, 9, 6])
+
+    def test_series_rank_max_d(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], name='foo')
+        s2 = s1.rank_max(ascending=False)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4, 3, 6, 8, 0, 7, 0, 6, 3, 3])
+
+
+
+    def test_series_rank_mean_a(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], name='foo')
+        s2 = s1.rank_mean()
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4.0, 6.0, 2.5, 0.0, 8.5, 1.0, 8.5, 2.5, 6.0, 6.0])
+
+    def test_series_rank_mean_b(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
+        s2 = s1.rank_mean(fill_value=-1)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4.0, 5.5, 2.5, 0.0, 7.5, 1.0, 7.5, 2.5, -1.0, 5.5])
+
+    def test_series_rank_mean_c(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
+        s2 = s1.rank_mean(skipna=False)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4.0, 5.5, 2.5, 0.0, 7.5, 1.0, 7.5, 2.5, 9.0, 5.5])
+
+    def test_series_rank_mean_d(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], name='foo')
+        s2 = s1.rank_mean(ascending=False)
+        self.assertEqual(s2.name, 'foo')
+        self.assertEqual(s2.values.tolist(), [4.5, 2.5, 6.0, 8.5, 0.0, 7.5, 0.0, 6.0, 2.5, 2.5])
 
 
 

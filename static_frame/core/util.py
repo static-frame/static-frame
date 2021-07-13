@@ -83,7 +83,7 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
         'i', 'u' # int kinds
         ))
 
-# all numeric times, plus bool
+# all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
         DTYPE_FLOAT_KIND,
         DTYPE_COMPLEX_KIND,
