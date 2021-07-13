@@ -1992,7 +1992,6 @@ class Series(ContainerOperand):
                 name=self._name,
                 own_index=own_index)
 
-
     def shift(self,
             shift: int,
             *,
@@ -2024,6 +2023,8 @@ class Series(ContainerOperand):
                 name=self._name)
 
     #---------------------------------------------------------------------------
+    # ranking transformations resulting in the same dimensionality
+
     def _rank(self, *,
             method: RankMethod,
             skipna: bool = True,
@@ -2060,13 +2061,24 @@ class Series(ContainerOperand):
         # this will preserve the name
         return post.reindex(self.index, fill_value=fill_value) #type: ignore
 
-
+    @doc_inject(selector='rank')
     def rank_ordinal(self, *,
             skipna: bool = True,
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
+        '''Rank values distinctly, where ties get distinct values that maintain their ordering, and ranks are contiguous unique integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
         return self._rank(
                 method=RankMethod.ORDINAL,
                 skipna=skipna,
@@ -2075,12 +2087,24 @@ class Series(ContainerOperand):
                 fill_value=fill_value,
                 )
 
+    @doc_inject(selector='rank')
     def rank_dense(self, *,
             skipna: bool = True,
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
+        '''Rank values as compactly as possible, where ties get the same value, and ranks are contiguous (potentially non-unique) integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
         return self._rank(
                 method=RankMethod.DENSE,
                 skipna=skipna,
@@ -2089,12 +2113,24 @@ class Series(ContainerOperand):
                 fill_value=fill_value,
                 )
 
+    @doc_inject(selector='rank')
     def rank_min(self, *,
             skipna: bool = True,
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
+        '''Rank values where tied values are assigned the minimum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
         return self._rank(
                 method=RankMethod.MIN,
                 skipna=skipna,
@@ -2103,12 +2139,24 @@ class Series(ContainerOperand):
                 fill_value=fill_value,
                 )
 
+    @doc_inject(selector='rank')
     def rank_max(self, *,
             skipna: bool = True,
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
+        '''Rank values where tied values are assigned the maximum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
         return self._rank(
                 method=RankMethod.MAX,
                 skipna=skipna,
@@ -2117,12 +2165,24 @@ class Series(ContainerOperand):
                 fill_value=fill_value,
                 )
 
+    @doc_inject(selector='rank')
     def rank_mean(self, *,
             skipna: bool = True,
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
+        '''Rank values where tied values are assigned the mean of the ordinal ranks; ranks are potentially non-contiguous and non-unique floats.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
         return self._rank(
                 method=RankMethod.MEAN,
                 skipna=skipna,
@@ -2130,9 +2190,6 @@ class Series(ContainerOperand):
                 start=start,
                 fill_value=fill_value,
                 )
-
-
-
 
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality

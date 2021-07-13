@@ -25,20 +25,23 @@ def rank_1d(
         start: int = 0,
         ) -> np.ndarray:
     '''
-    Rank 1D array. Basedon the the scipy implementation:
+    Rank 1D array. Based on the the scipy implementation:
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rankdata.html
-
 
     mean: The mean of the ranks that would have been assigned to
     all the tied values is assigned to each value.
+
     min: The minimum of the ranks that would have been assigned to all
     the tied values is assigned to each value.  (This is also
     referred to as "competition" ranking.)
+
     max: The maximum of the ranks that would have been assigned to all
     the tied values is assigned to each value.
+
     dense: Like 'min', but the rank of the next highest element is
     assigned the rank immediately after those assigned to the tied
     elements.
+
     ordinal: All values are given a distinct rank, corresponding to
     the order that the values occur in `a`.
     '''
