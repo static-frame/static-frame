@@ -1,4 +1,3 @@
-from static_frame.core.rank import RankMethod
 import typing as tp
 from functools import partial
 from itertools import chain
@@ -53,7 +52,7 @@ from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.util import AnyCallable, DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import array_deepcopy
