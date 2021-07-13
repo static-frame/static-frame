@@ -2059,7 +2059,7 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
         # this will preserve the name
-        return post.reindex(self.index, fill_value=fill_value)
+        return post.reindex(self.index, fill_value=fill_value) #type: ignore
 
 
     def rank_ordinal(self, *,
@@ -2067,7 +2067,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ):
+            ) -> 'Series':
         return self._rank(
                 method=RankMethod.ORDINAL,
                 skipna=skipna,
@@ -2081,7 +2081,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ):
+            ) -> 'Series':
         return self._rank(
                 method=RankMethod.DENSE,
                 skipna=skipna,
@@ -2095,7 +2095,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ):
+            ) -> 'Series':
         return self._rank(
                 method=RankMethod.MIN,
                 skipna=skipna,
@@ -2109,7 +2109,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ):
+            ) -> 'Series':
         return self._rank(
                 method=RankMethod.MAX,
                 skipna=skipna,
@@ -2123,7 +2123,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ):
+            ) -> 'Series':
         return self._rank(
                 method=RankMethod.MEAN,
                 skipna=skipna,
