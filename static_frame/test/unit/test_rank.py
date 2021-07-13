@@ -290,6 +290,63 @@ class TestUnit(TestCase):
 
 
 
+    #---------------------------------------------------------------------------
+    def test_rank_1d_pair_a(self) -> None:
+        self.assertEqual(
+                rank_1d(np.array([0, 0]), 'mean').tolist(),
+                [0.5, 0.5]
+                )
+
+        self.assertEqual(
+                rank_1d(np.array([0, 0]), 'min').tolist(),
+                [0, 0]
+                )
+
+        self.assertEqual(
+                rank_1d(np.array([0, 0]), 'max').tolist(),
+                [1, 1]
+                )
+
+        self.assertEqual(
+                rank_1d(np.array([0, 0]), 'dense').tolist(),
+                [0, 0]
+                )
+
+        self.assertEqual(
+                rank_1d(np.array([0, 0]), 'ordinal').tolist(),
+                [0, 1]
+                )
+
+    def test_rank_1d_pair_b(self) -> None:
+        self.assertEqual(
+                rank_1d(np.array([0, 0, 1]), 'mean').tolist(),
+                [0.5, 0.5, 2]
+                )
+
+        self.assertEqual(
+                rank_1d(np.array([0, 0, 1]), 'min').tolist(),
+                [0, 0, 2]
+                )
+
+        self.assertEqual(
+                rank_1d(np.array([0, 0, 1]), 'max').tolist(),
+                [1, 1, 2]
+                )
+
+        self.assertEqual(
+                rank_1d(np.array([0, 0, 1]), 'dense').tolist(),
+                [0, 0, 1]
+                )
+
+        self.assertEqual(
+                rank_1d(np.array([0, 0, 1]), 'ordinal').tolist(),
+                [0, 1, 2]
+                )
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
