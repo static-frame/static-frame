@@ -107,7 +107,7 @@ def rank_2d(
         ) -> np.ndarray:
     '''
     Args:
-        axis: if 0, columns are sorted, if 1, rows are sorted
+        axis: if 0, columns are ranked, if 1, rows are ranked
     '''
     # scipy uses np.apply_along_axis, but that handles many more cases than needed
 

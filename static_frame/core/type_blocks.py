@@ -61,6 +61,9 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import array_deepcopy
 from static_frame.core.style_config import StyleConfig
+from static_frame.core.rank import rank_1d
+from static_frame.core.rank import RankMethod
+
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -2560,6 +2563,33 @@ class TypeBlocks(ContainerOperand):
                 start = end
 
         return self.from_blocks(blocks())
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in the same dimensionality
+    # ranking
+
+    def _rank(self, *,
+            method: RankMethod,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            axis: int = 0,
+    ) -> 'TypeBlocks':
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            if axis == 0:
+                # rank by column
+                for a in self._axis_values(axis=0):
+                    yield a
+            elif axis == 1:
+                # rank by row
+                # create array and fill?
+                for a in self.axis_values(axis=1):
+                    yield a
+
+        return self.from_blocks(blocks())
+
 
     #---------------------------------------------------------------------------
     # fillna sided
