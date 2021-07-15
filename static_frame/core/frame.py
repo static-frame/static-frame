@@ -10,6 +10,7 @@ from operator import itemgetter
 from collections.abc import Set
 import csv
 import json
+from re import A
 import sqlite3
 import typing as tp
 import warnings
@@ -19,6 +20,8 @@ from numpy.ma import MaskedArray #type: ignore
 from arraykit import column_1d_filter
 from arraykit import name_filter
 from arraykit import resolve_dtype
+from arraykit import resolve_dtype_iter
+
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -150,6 +153,8 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import file_like_manager
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
+from static_frame.core.util import DTYPE_NA_KINDS
+
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 
@@ -5282,9 +5287,9 @@ class Frame(ContainerOperand):
             axis: int = 0,
     ) -> 'Frame':
 
-        def arrays() -> tp.Iterator[np.ndarray]:
+        def array_iter() -> tp.Iterator[np.ndarray]:
             for array in self._blocks.axis_values(axis=axis):
-                if not skipna or a.dtype.kind not in DTYPE_NA_KINDS:
+                if not skipna or array.dtype.kind not in DTYPE_NA_KINDS:
                     yield rank_1d(array,
                             method=method,
                             ascending=ascending,
@@ -5302,11 +5307,18 @@ class Frame(ContainerOperand):
                             ).values
 
         if axis == 0:
-            # arrays returned are blocks
-            blocks = TypeBlocks.from_blocks(arrays())
+            # array_iter returns blocks
+            blocks = TypeBlocks.from_blocks(array_iter())
         elif axis == 1:
             # create one array of type int or float
-            blocks = np.empty(self._blocks._shape)
+            arrays = list(array_iter())
+            dtype = resolve_dtype_iter(a.dtype for a in arrays)
+            blocks = np.empty(self._blocks._shape, dtype=dtype)
+            for i, a in enumerate(arrays):
+                blocks[i] = a
+            blocks.flags.writeable = False
+        else:
+            raise AxisInvalid()
 
         return self.__class__(blocks,
                 columns=self._columns,
@@ -5314,6 +5326,7 @@ class Frame(ContainerOperand):
                 name=self._name,
                 own_data=True,
                 own_index=True,
+                own_columns=self.STATIC,
                 )
 
     #---------------------------------------------------------------------------

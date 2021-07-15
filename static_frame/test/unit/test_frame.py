@@ -11884,7 +11884,22 @@ class TestUnit(TestCase):
     def test_frame_rank_a(self) -> None:
 
         f = ff.parse('s(4,6)|v(int)|i(I,str)')
-        # import ipdb; ipdb.set_trace()
+
+        self.assertEqual(f._rank(method='ordinal', axis=0).to_pairs(),
+                ((0, (('zZbu', 0), ('ztsv', 3), ('zUvW', 2), ('zkuW', 1))), (1, (('zZbu', 3), ('ztsv', 1), ('zUvW', 2), ('zkuW', 0))), (2, (('zZbu', 0), ('ztsv', 3), ('zUvW', 1), ('zkuW', 2))), (3, (('zZbu', 2), ('ztsv', 0), ('zUvW', 3), ('zkuW', 1))), (4, (('zZbu', 1), ('ztsv', 2), ('zUvW', 3), ('zkuW', 0))), (5, (('zZbu', 2), ('ztsv', 0), ('zUvW', 3), ('zkuW', 1))))
+                )
+
+        self.assertEqual(f._rank(method='ordinal', axis=1).to_pairs(),
+                ((0, (('zZbu', 0), ('ztsv', 4), ('zUvW', 2), ('zkuW', 1))), (1, (('zZbu', 5), ('ztsv', 0), ('zUvW', 0), ('zkuW', 0))), (2, (('zZbu', 1), ('ztsv', 3), ('zUvW', 1), ('zkuW', 3))), (3, (('zZbu', 4), ('ztsv', 2), ('zUvW', 3), ('zkuW', 5))), (4, (('zZbu', 2), ('ztsv', 5), ('zUvW', 4), ('zkuW', 2))), (5, (('zZbu', 3), ('ztsv', 1), ('zUvW', 5), ('zkuW', 4))))
+                )
+
+        self.assertEqual(f._rank(method='ordinal', axis=0, ascending=False).to_pairs(),
+                ((0, (('zZbu', 3), ('ztsv', 0), ('zUvW', 1), ('zkuW', 2))), (1, (('zZbu', 0), ('ztsv', 2), ('zUvW', 1), ('zkuW', 3))), (2, (('zZbu', 3), ('ztsv', 0), ('zUvW', 2), ('zkuW', 1))), (3, (('zZbu', 1), ('ztsv', 3), ('zUvW', 0), ('zkuW', 2))), (4, (('zZbu', 2), ('ztsv', 1), ('zUvW', 0), ('zkuW', 3))), (5, (('zZbu', 1), ('ztsv', 3), ('zUvW', 0), ('zkuW', 2))))
+                )
+
+        self.assertEqual(f._rank(method='ordinal', axis=1, ascending=False).to_pairs(),
+                ((0, (('zZbu', 5), ('ztsv', 1), ('zUvW', 3), ('zkuW', 4))), (1, (('zZbu', 0), ('ztsv', 5), ('zUvW', 5), ('zkuW', 5))), (2, (('zZbu', 4), ('ztsv', 2), ('zUvW', 4), ('zkuW', 2))), (3, (('zZbu', 1), ('ztsv', 3), ('zUvW', 2), ('zkuW', 0))), (4, (('zZbu', 3), ('ztsv', 0), ('zUvW', 1), ('zkuW', 3))), (5, (('zZbu', 2), ('ztsv', 4), ('zUvW', 0), ('zkuW', 1))))
+                )
 
 
 
