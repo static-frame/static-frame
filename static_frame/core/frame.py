@@ -5305,7 +5305,6 @@ class Frame(ContainerOperand):
                             start=start,
                             fill_value=fill_value,
                             ).values
-
         if axis == 0:
             # array_iter returns blocks
             blocks = TypeBlocks.from_blocks(array_iter())
