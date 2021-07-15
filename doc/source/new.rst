@@ -8,6 +8,10 @@ Added support for loading containers into specialized VisiData ``Sheet`` and  ``
 
 Added ``StyleConfig`` class for configuring display characteristics. Added default ``StyleConfigCSS`` for improved default HTML presentation.
 
+Added ``Series.rank_ordinal``, ``Series.rank_dense``, ``Series.rank_mean``, ``Series.rank_min``, ``Series.rank_max``.
+
+Added ``Frame.rank_ordinal``, ``Frame.rank_dense``, ``Frame.rank_mean``, ``Frame.rank_min``, ``Frame.rank_max``.
+
 
 0.8.14
 ----------

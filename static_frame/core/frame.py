@@ -5280,7 +5280,7 @@ class Frame(ContainerOperand):
 
     def _rank(self, *,
             method: RankMethod,
-            axis: int = 0,
+            axis: int = 0, # 0 ranks columns, 1 ranks rows
             skipna: bool = True,
             ascending: BoolOrBools = True,
             start: int = 0,
@@ -5306,8 +5306,8 @@ class Frame(ContainerOperand):
                             start=start,
                             )
                 else:
-                    assert array.flags.writeable == False # TEMP
-                    s = Series(array, index=self._index, own_index=True)
+                    index = self._index if axis == 0 else self._columns
+                    s = Series(array, index=index, own_index=True)
                     # skipna is True
                     yield s._rank(method=method,
                             skipna=skipna,

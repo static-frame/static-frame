@@ -11924,6 +11924,19 @@ class TestUnit(TestCase):
             (('x', (('a', 1), ('b', 1), ('c', 2))), ('y', (('a', 2), ('b', 2), ('c', 0))))
         )
 
+    def test_frame_rank_c(self) -> None:
+        f1 = Frame.from_fields([[np.nan, 0, 1], [0, None, 1]], index=('a','b','c'), columns=('x','y'))
+
+        f2 = f1.rank_ordinal(axis=0)
+        self.assertEqual(f2.values.dtype, float)
+        f3 = f1.rank_ordinal(axis=1)
+        self.assertEqual(f3.values.dtype, float)
+
+        f4 = f1.rank_ordinal(axis=0, fill_value=-1)
+        self.assertEqual(f4.values.dtype, int)
+        f5 = f1.rank_ordinal(axis=1, fill_value=-1)
+        self.assertEqual(f5.values.dtype, int)
+
 
     def test_frame_rank_ordinal(self) -> None:
         f1 = sf.Frame.from_records(
