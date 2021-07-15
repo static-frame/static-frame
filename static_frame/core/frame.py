@@ -10,6 +10,7 @@ from operator import itemgetter
 from collections.abc import Set
 import csv
 import json
+from re import A
 import sqlite3
 import typing as tp
 import warnings
@@ -19,6 +20,8 @@ from numpy.ma import MaskedArray #type: ignore
 from arraykit import column_1d_filter
 from arraykit import name_filter
 from arraykit import resolve_dtype
+from arraykit import resolve_dtype_iter
+
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -151,6 +154,14 @@ from static_frame.core.util import file_like_manager
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
+from static_frame.core.util import DTYPE_NA_KINDS
+
+from static_frame.core.rank import rank_1d
+from static_frame.core.rank import RankMethod
+
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
+from static_frame.core.style_config import style_config_css_factory
 
 
 if tp.TYPE_CHECKING:
@@ -3653,7 +3664,9 @@ class Frame(ContainerOperand):
 
     @doc_inject()
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''{doc}
 
@@ -3674,7 +3687,9 @@ class Frame(ContainerOperand):
                 config=config,
                 outermost=True,
                 index_depth=index_depth,
-                header_depth=header_depth)
+                header_depth=header_depth,
+                style_config=style_config,
+                )
 
 
         if config.include_index:
@@ -5278,6 +5293,61 @@ class Frame(ContainerOperand):
                 index=self._index,
                 name=self._name,
                 own_data=True,
+                )
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in the same dimensionality
+    # ranking
+    # NOTE: this could be implemented on TypeBlocks, but handling missing values requires using indices, and is thus better handled at the Frame level
+
+    def _rank(self, *,
+            method: RankMethod,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            axis: int = 0,
+    ) -> 'Frame':
+
+        def array_iter() -> tp.Iterator[np.ndarray]:
+            for array in self._blocks.axis_values(axis=axis):
+                if not skipna or array.dtype.kind not in DTYPE_NA_KINDS:
+                    yield rank_1d(array,
+                            method=method,
+                            ascending=ascending,
+                            start=start,
+                            )
+                else:
+                    assert array.flags.writeable == False # TEMP
+                    s = Series(array, index=self._index, own_index=True)
+                    # skipna is True
+                    yield s._rank(method=method,
+                            skipna=skipna,
+                            ascending=ascending,
+                            start=start,
+                            fill_value=fill_value,
+                            ).values
+        if axis == 0:
+            # array_iter returns blocks
+            blocks = TypeBlocks.from_blocks(array_iter())
+        elif axis == 1:
+            # create one array of type int or float
+            arrays = list(array_iter())
+            dtype = resolve_dtype_iter(a.dtype for a in arrays)
+            blocks = np.empty(self._blocks._shape, dtype=dtype)
+            for i, a in enumerate(arrays):
+                blocks[i] = a
+            blocks.flags.writeable = False
+        else:
+            raise AxisInvalid()
+
+        return self.__class__(blocks,
+                columns=self._columns,
+                index=self._index,
+                name=self._name,
+                own_data=True,
+                own_index=True,
+                own_columns=self.STATIC,
                 )
 
     #---------------------------------------------------------------------------
@@ -7053,7 +7123,8 @@ class Frame(ContainerOperand):
 
     @doc_inject(class_name='Frame')
     def to_html(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            style_config: tp.Optional[StyleConfig] = STYLE_CONFIG_DEFAULT,
             ) -> str:
         '''
         {}
@@ -7063,7 +7134,9 @@ class Frame(ContainerOperand):
         config = config.to_display_config(
                 display_format=DisplayFormats.HTML_TABLE,
                 )
-        return repr(self.display(config))
+
+        style_config = style_config_css_factory(style_config, self)
+        return repr(self.display(config, style_config=style_config))
 
     @doc_inject(class_name='Frame')
     def to_html_datatables(self,

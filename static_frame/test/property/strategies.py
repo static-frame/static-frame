@@ -38,13 +38,8 @@ from static_frame import IndexMicrosecond
 from static_frame import IndexMicrosecondGO
 from static_frame import IndexNanosecond
 from static_frame import IndexNanosecondGO
-
-
-
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
-
-
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO

@@ -60,6 +60,10 @@ from static_frame.core.util import isin_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import array_deepcopy
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.rank import rank_1d
+from static_frame.core.rank import RankMethod
+
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -968,7 +972,9 @@ class TypeBlocks(ContainerOperand):
 
     @doc_inject()
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''{doc}
 
@@ -989,7 +995,7 @@ class TypeBlocks(ContainerOperand):
             h = '' if idx > 0 else self.__class__
 
             display = Display.from_values(block,
-                    h,
+                    header=h,
                     config=config,
                     outermost=outermost)
             if not d: # assign first

@@ -1,39 +1,50 @@
+# This module follows the conventions of the VisiData project for naming and style.
+# This module is excluded from mypy and lint checking
+
 from datetime import date
+import re
 
 import numpy as np
 
-from visidata import vd #pylint: disable=E0401
-from visidata import Sheet #pylint: disable=E0401
-from visidata import asyncthread #pylint: disable=E0401
-from visidata import IndexSheet #pylint: disable=E0401
-from visidata import Column #pylint: disable=E0401
-from visidata import ColumnAttr #pylint: disable=E0401
-from visidata import run #pylint: disable=E0401
-from visidata import Progress #pylint: disable=E0401
-from visidata import anytype #pylint: disable=E0401
-from visidata import undoAttrCopyFunc #pylint: disable=E0401
+from visidata import vd
+from visidata import Sheet
+from visidata import asyncthread
+from visidata import IndexSheet
+from visidata import Column
+from visidata import ColumnAttr
+from visidata import run
+from visidata import Progress
+from visidata import anytype
+from visidata import undoAttrCopyFunc
 
-# This module follows the conventions of the VisiData project for naming and style. For the same reason this also avoids importing StaticFrame at the module level.
+
+from static_frame.core.frame import Frame
+from static_frame.core.bus import Bus
+from static_frame.core.batch import Batch
+from static_frame.core.quilt import Quilt
+from static_frame.core.series import Series
+from static_frame.core.index import Index
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_auto import IndexAutoFactory
 
 
 def normalize_container(container):
-    import static_frame as sf
 
     # multi-Frame containers
-    if isinstance(container, sf.Bus):
+    if isinstance(container, Bus):
         return container
-    elif isinstance(container, sf.Batch):
+    elif isinstance(container, Batch):
         return container.to_bus()
 
     # Frame-like containers
-    elif isinstance(container, sf.Quilt):
+    elif isinstance(container, Quilt):
         return container.to_frame()
     # convertable to a Frame
-    elif isinstance(container, sf.Series):
+    elif isinstance(container, Series):
         return container.to_frame()
-    elif isinstance(container, sf.Index):
+    elif isinstance(container, Index):
         return container.to_series().to_frame()
-    elif isinstance(container, sf.IndexHierarchy):
+    elif isinstance(container, IndexHierarchy):
         return container.to_frame()
     # Frame
     return container
@@ -42,9 +53,8 @@ def normalize_container(container):
 class StaticFrameAdapter:
 
     def __init__(self, frame):
-        import static_frame as sf
         frame = normalize_container(frame)
-        if not isinstance(frame, sf.Frame):
+        if not isinstance(frame, Frame):
             vd.fail('%s is not a StaticFrame Frame' % type(frame).__name__)
         self.frame = frame
 
@@ -70,13 +80,12 @@ class StaticFrameAdapter:
         return row.values.tolist()
 
     def insert(self, k, row):
-        import static_frame as sf
-        f = sf.Frame.from_records([row], columns=self.frame.columns)
-        self.frame = sf.Frame.from_concat((
+        f = frame.from_records([row], columns=self.frame.columns)
+        self.frame = frame.from_concat((
                 self.frame.iloc[0: k],
                 f,
                 self.frame.iloc[k:],
-                ), index=sf.IndexAutoFactory)
+                ), index=IndexAutoFactory)
 
     def __bool__(self):
         # this was added to try to help with `& diff`; does not seem to help
@@ -137,11 +146,11 @@ class StaticFrameSheet(Sheet):
         self.rows = StaticFrameAdapter(f)
 
     def reload(self):
-        import static_frame as sf
-        if isinstance(self.source, sf.Frame):
+        if isinstance(self.source, Frame):
             frame = self.source
         else:
-            raise NotImplementedError(f'no supprt for loading a Frame from {self.source}')
+            # vd.fail(f'no support for loading {self.source.__class__}')
+            raise NotImplementedError(f'no support for loading a Frame from {self.source}')
 
         # If the index is not an IndexAutoFactory, try to move it onto the Frame. If this fails it might mean we are trying to unset an auto index post selection
         if frame.index.depth > 1 or frame.index._map: # if it is not an IndexAutoFactory
@@ -164,7 +173,7 @@ class StaticFrameSheet(Sheet):
             ))
 
         self.rows = StaticFrameAdapter(frame)
-        self._selectedMask = sf.Series.from_element(False, index=frame.index)
+        self._selectedMask = Series.from_element(False, index=frame.index)
 
     @asyncthread
     def sort(self):
@@ -182,12 +191,11 @@ class StaticFrameSheet(Sheet):
                 )
 
     def _checkSelectedIndex(self):
-        import static_frame as sf
         if self._selectedMask.index is not self.frame.index:
             # selection is no longer valid
-            vd.status('sf.Frame.index updated, clearing {} selected rows'
+            vd.status('frame.index updated, clearing {} selected rows'
                       .format(self._selectedMask.sum()))
-            self._selectedMask = sf.Series.from_element(False, index=self.frame.index)
+            self._selectedMask = Series.from_element(False, index=self.frame.index)
 
     def rowid(self, row):
         return getattr(row, 'name', None) or ''
@@ -216,11 +224,9 @@ class StaticFrameSheet(Sheet):
 
     @property
     def selectedRows(self):
-        import static_frame as sf
-
         self._checkSelectedIndex()
         # NOTE: we expect to have already moved a real index onto the Frame by the time this is called; this selection will create a new index that is not needed, so replace it with an IndexAutoFactory
-        f = self.frame.loc[self._selectedMask].relabel(sf.IndexAutoFactory)
+        f = self.frame.loc[self._selectedMask].relabel(IndexAutoFactory)
         return StaticFrameAdapter(f)
 
     # Vectorized implementation of multi-row selections
@@ -237,8 +243,7 @@ class StaticFrameSheet(Sheet):
             self.unselectRow(row)
 
     def clearSelected(self):
-        import static_frame as sf
-        self._selectedMask = sf.Series.from_element(False, index=self.frame.index)
+        self._selectedMask = Series.from_element(False, index=self.frame.index)
 
     def selectByIndex(self, start=None, end=None):
         self._checkSelectedIndex()
@@ -261,9 +266,6 @@ class StaticFrameSheet(Sheet):
         matching rows to the selection. If unselect is True, remove from the
         active selection instead.
         '''
-        import static_frame as sf
-        import re
-
         columns = [c.name for c in columns]
         flags = re.I if 'I' in vd.options.regex_flags else None
         masks = self.frame[columns].via_re(regex, flags).search()
@@ -285,16 +287,14 @@ class StaticFrameSheet(Sheet):
         '''
         Return n rows of empty data.
         '''
-        import static_frame as sf
         def items():
             for col, dtype in self.frame.dtypes.items():
                 array = np.empty(n, dtype=dtype)
                 array.flags.writeable = False
                 yield col, array
-        return sf.Frame.from_items(items())
+        return frame.from_items(items())
 
     def addRows(self, rows, index=None, undo=True):
-        import static_frame as sf
 
         # identify empty rows and expand them to column width with None
         rows_exp = []
@@ -308,23 +308,22 @@ class StaticFrameSheet(Sheet):
 
         if index is None:
             index = len(self.frame) # needed for undo
-            f = sf.Frame.from_records(rows_exp, columns=self.frame.columns)
-            self.frame = sf.Frame.from_concat(self.frame, f, index=sf.IndexAutoFactory)
+            f = frame.from_records(rows_exp, columns=self.frame.columns)
+            self.frame = frame.from_concat(self.frame, f, index=IndexAutoFactory)
         else:
-            f = sf.Frame.from_records(rows_exp, columns=self.frame.columns)
-            self.frame = sf.Frame.from_concat((
+            f = frame.from_records(rows_exp, columns=self.frame.columns)
+            self.frame = frame.from_concat((
                     self.frame.iloc[0: index],
                     f,
                     self.frame.iloc[index:],
-                    ), index=sf.IndexAutoFactory)
+                    ), index=IndexAutoFactory)
 
         self._checkSelectedIndex()
         if undo:
             vd.addUndo(self._deleteRows, range(index, index + len(rows)))
 
     def _deleteRows(self, which):
-        import static_frame as sf
-        self.frame = self.frame.drop.iloc[which].reindex(sf.IndexAutoFactory)
+        self.frame = self.frame.drop.iloc[which].reindex(IndexAutoFactory)
         self._checkSelectedIndex()
 
     def addRow(self, row, index=None):
@@ -332,21 +331,18 @@ class StaticFrameSheet(Sheet):
         vd.addUndo(self._deleteRows, index or self.nRows - 1)
 
     def delete_row(self, rowidx):
-        import static_frame as sf
         oldrow = self.frame.iloc[rowidx].values.tolist() # a series
-
         vd.addUndo(self.addRows, [oldrow], rowidx, False)
         self._deleteRows(rowidx)
         vd.memory.cliprows = [oldrow]
 
     def deleteBy(self, by):
         '''Delete rows for which func(row) is true.  Returns number of deleted rows.'''
-        import static_frame as sf
         # oldidx = self.cursorRowIndex # NOTE: not used
         nRows = self.nRows
         vd.addUndo(setattr, self, 'frame', self.frame)
 
-        self.frame = self.frame[~by].reindex(sf.IndexAutoFactory)
+        self.frame = self.frame[~by].reindex(IndexAutoFactory)
         ndeleted = nRows - self.nRows
 
         vd.status('deleted %s %s' % (ndeleted, self.rowtype))
@@ -366,7 +362,6 @@ class StaticFrameIndexSheet(IndexSheet):
         ColumnAttr('nCols', type=int),
     ]
 
-    nKeys = 1
     def iterload(self):
         for sheetname in self.source.keys():
             # this will combine self.name, sheetname into one name
@@ -398,11 +393,10 @@ StaticFrameSheet.addCommand('"', 'dup-selected', 'vs=StaticFrameSheet(sheet.name
 
 
 def view_sf(container):
-    import static_frame as sf
     name = '' if container.name is None else container.name
     container = normalize_container(container)
 
-    if isinstance(container, sf.Bus):
+    if isinstance(container, Bus):
         run(StaticFrameIndexSheet(name, source=container))
     run(StaticFrameSheet(name, source=container))
 

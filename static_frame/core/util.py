@@ -83,7 +83,7 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
         'i', 'u' # int kinds
         ))
 
-# all numeric times, plus bool
+# all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
         DTYPE_FLOAT_KIND,
         DTYPE_COMPLEX_KIND,
@@ -1121,24 +1121,27 @@ def slice_to_ascending_slice(
         size: the length of the container on this axis
     '''
     # NOTE: a slice can have start > stop, and None as step: should that case be handled here?
+    key_step = key.step
+    key_start = key.start
+    key_stop = key.stop
 
-    if key.step is None or key.step > 0:
+    if key_step is None or key_step > 0:
         return key
 
-    stop = key.start if key.start is None else key.start + 1
+    stop = key_start if key_start is None else key_start + 1
 
-    if key.step == -1:
+    if key_step == -1:
         # if 6, 1, -1, then
-        start = key.stop if key.stop is None else key.stop + 1
+        start = key_stop if key_stop is None else key_stop + 1
         return slice(start, stop, 1)
 
-    step = abs(key.step)
-    start = size - 1 if key.start is None else min(size - 1, key.start)
+    step = abs(key_step)
+    start = size - 1 if key_start is None else min(size - 1, key_start)
 
-    if key.stop is None:
+    if key_stop is None:
         start = start - (step * (start // step))
     else:
-        start = start - (step * ((start - key.stop - 1) // step))
+        start = start - (step * ((start - key_stop - 1) // step))
 
     return slice(start, stop, step)
 
@@ -1605,7 +1608,7 @@ def array_shift(*,
         # do negative modulo to force negative value
         shift_mod = shift % -array.shape[axis]
     else:
-        raise NotImplementedError(f'no handling for this configuraiton')
+        raise NotImplementedError('no handling for this configuration')
 
     if (not wrap and shift == 0) or (wrap and shift_mod == 0):
         # must copy so as not let caller mutate arguement

@@ -92,6 +92,11 @@ from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.style_config import style_config_css_factory
+from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
+from static_frame.core.rank import rank_1d
+from static_frame.core.rank import RankMethod
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
@@ -1339,7 +1344,9 @@ class Series(ContainerOperand):
 
     def _display(self,
             config: DisplayConfig,
+            *,
             display_cls: Display,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''
         Private display interface to be shared by Bus and Series.
@@ -1355,7 +1362,8 @@ class Series(ContainerOperand):
                 config=config,
                 outermost=True,
                 index_depth=index_depth,
-                header_depth=header_depth
+                header_depth=header_depth,
+                style_config=style_config,
                 )
 
         if config.include_index:
@@ -1376,7 +1384,9 @@ class Series(ContainerOperand):
 
     @doc_inject()
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''{doc}
 
@@ -1387,7 +1397,10 @@ class Series(ContainerOperand):
         display_cls = Display.from_values((),
                 header=DisplayHeader(self.__class__, self._name),
                 config=config)
-        return self._display(config, display_cls)
+        return self._display(config,
+                display_cls=display_cls,
+                style_config=style_config,
+                )
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
@@ -1979,7 +1992,6 @@ class Series(ContainerOperand):
                 name=self._name,
                 own_index=own_index)
 
-
     def shift(self,
             shift: int,
             *,
@@ -2010,6 +2022,177 @@ class Series(ContainerOperand):
                 index=self._index,
                 name=self._name)
 
+    #---------------------------------------------------------------------------
+    # ranking transformations resulting in the same dimensionality
+
+    def _rank(self, *,
+            method: RankMethod,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+
+        if not skipna or self.dtype.kind not in DTYPE_NA_KINDS:
+            rankable = self
+        else:
+            # only call dropna if necessary
+            rankable = self.dropna()
+
+        # returns an immutable array
+        values = rank_1d(rankable.values,
+                method=method,
+                ascending=ascending,
+                start=start,
+                )
+
+        if rankable is self or len(values) == len(self):
+            return self.__class__(values,
+                    index=self.index,
+                    name=self._name,
+                    own_index=True,
+                    )
+
+        post = self.__class__(values,
+                index=rankable.index,
+                name=self._name,
+                own_index=True,
+                )
+        # this will preserve the name
+        return post.reindex(self.index,
+                fill_value=fill_value,
+                check_equals=False, # the index will never be equal
+                ) #type: ignore
+
+    @doc_inject(selector='rank')
+    def rank_ordinal(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Rank values distinctly, where ties get distinct values that maintain their ordering, and ranks are contiguous unique integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.ORDINAL,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_dense(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Rank values as compactly as possible, where ties get the same value, and ranks are contiguous (potentially non-unique) integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.DENSE,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_min(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Rank values where tied values are assigned the minimum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.MIN,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_max(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Rank values where tied values are assigned the maximum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.MAX,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_mean(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Rank values where tied values are assigned the mean of the ordinal ranks; ranks are potentially non-contiguous and non-unique floats.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.MEAN,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
 
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
@@ -2463,7 +2646,8 @@ class Series(ContainerOperand):
 
     @doc_inject(class_name='Series')
     def to_html(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            style_config: tp.Optional[StyleConfig] = STYLE_CONFIG_DEFAULT,
             ) -> str:
         '''
         {}
@@ -2472,7 +2656,8 @@ class Series(ContainerOperand):
         config = config.to_display_config(
                 display_format=DisplayFormats.HTML_TABLE,
                 )
-        return repr(self.display(config))
+        style_config = style_config_css_factory(style_config, self)
+        return repr(self.display(config, style_config=style_config))
 
     @doc_inject(class_name='Series')
     def to_html_datatables(self,

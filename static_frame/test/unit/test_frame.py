@@ -6260,9 +6260,9 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
-        post = f1.to_html()
+        post = f1.to_html(style_config=None)
 
-        self.assertEqual(post, '<table border="1"><thead><tr><th></th><th>r</th><th>s</th><th>t</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
+        self.assertEqual(post, '<table><thead><tr><th></th><th>r</th><th>s</th><th>t</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
         )
 
         msg = str(f1.display(sf.DisplayConfig(type_show=False, include_columns=False)))
@@ -11955,7 +11955,27 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(),
                 ((0, ((('x', 'y'), 0), (0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((('x', 'y'), 1), (0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((('x', 'y'), 2), (0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), (3, ((('x', 'y'), 3), (0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
 
+    #---------------------------------------------------------------------------
 
+    def test_frame_rank_a(self) -> None:
+
+        f = ff.parse('s(4,6)|v(int)|i(I,str)')
+
+        self.assertEqual(f._rank(method='ordinal', axis=0).to_pairs(),
+                ((0, (('zZbu', 0), ('ztsv', 3), ('zUvW', 2), ('zkuW', 1))), (1, (('zZbu', 3), ('ztsv', 1), ('zUvW', 2), ('zkuW', 0))), (2, (('zZbu', 0), ('ztsv', 3), ('zUvW', 1), ('zkuW', 2))), (3, (('zZbu', 2), ('ztsv', 0), ('zUvW', 3), ('zkuW', 1))), (4, (('zZbu', 1), ('ztsv', 2), ('zUvW', 3), ('zkuW', 0))), (5, (('zZbu', 2), ('ztsv', 0), ('zUvW', 3), ('zkuW', 1))))
+                )
+
+        self.assertEqual(f._rank(method='ordinal', axis=1).to_pairs(),
+                ((0, (('zZbu', 0), ('ztsv', 4), ('zUvW', 2), ('zkuW', 1))), (1, (('zZbu', 5), ('ztsv', 0), ('zUvW', 0), ('zkuW', 0))), (2, (('zZbu', 1), ('ztsv', 3), ('zUvW', 1), ('zkuW', 3))), (3, (('zZbu', 4), ('ztsv', 2), ('zUvW', 3), ('zkuW', 5))), (4, (('zZbu', 2), ('ztsv', 5), ('zUvW', 4), ('zkuW', 2))), (5, (('zZbu', 3), ('ztsv', 1), ('zUvW', 5), ('zkuW', 4))))
+                )
+
+        self.assertEqual(f._rank(method='ordinal', axis=0, ascending=False).to_pairs(),
+                ((0, (('zZbu', 3), ('ztsv', 0), ('zUvW', 1), ('zkuW', 2))), (1, (('zZbu', 0), ('ztsv', 2), ('zUvW', 1), ('zkuW', 3))), (2, (('zZbu', 3), ('ztsv', 0), ('zUvW', 2), ('zkuW', 1))), (3, (('zZbu', 1), ('ztsv', 3), ('zUvW', 0), ('zkuW', 2))), (4, (('zZbu', 2), ('ztsv', 1), ('zUvW', 0), ('zkuW', 3))), (5, (('zZbu', 1), ('ztsv', 3), ('zUvW', 0), ('zkuW', 2))))
+                )
+
+        self.assertEqual(f._rank(method='ordinal', axis=1, ascending=False).to_pairs(),
+                ((0, (('zZbu', 5), ('ztsv', 1), ('zUvW', 3), ('zkuW', 4))), (1, (('zZbu', 0), ('ztsv', 5), ('zUvW', 5), ('zkuW', 5))), (2, (('zZbu', 4), ('ztsv', 2), ('zUvW', 4), ('zkuW', 2))), (3, (('zZbu', 1), ('ztsv', 3), ('zUvW', 2), ('zkuW', 0))), (4, (('zZbu', 3), ('ztsv', 0), ('zUvW', 1), ('zkuW', 3))), (5, (('zZbu', 2), ('ztsv', 4), ('zUvW', 0), ('zkuW', 1))))
+                )
 
 if __name__ == '__main__':
     unittest.main()
