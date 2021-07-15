@@ -91,7 +91,7 @@ from static_frame.core.pivot import extrapolate_column_fields
 from static_frame.core.pivot import pivot_records_items
 from static_frame.core.pivot import pivot_records_dtypes
 from static_frame.core.pivot import pivot_items
-from static_frame.core.util import _gen_skip_middle
+from static_frame.core.util import BOOL_TYPES, _gen_skip_middle
 from static_frame.core.util import _read_url
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_2d
@@ -154,6 +154,7 @@ from static_frame.core.util import file_like_manager
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import BoolOrBools
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -5274,25 +5275,34 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    # transformations resulting in the same dimensionality
-    # ranking
+    # ranking transformations resulting in the same dimensionality
     # NOTE: this could be implemented on TypeBlocks, but handling missing values requires using indices, and is thus better handled at the Frame level
 
     def _rank(self, *,
             method: RankMethod,
+            axis: int = 0,
             skipna: bool = True,
-            ascending: bool = True,
+            ascending: BoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            axis: int = 0,
     ) -> 'Frame':
 
+        shape = self._blocks._shape
+        asc_is_element = isinstance(ascending, BOOL_TYPES)
+
+        if not asc_is_element:
+            ascending = tuple(ascending)
+            opposite_axis = int(not axis)
+            if len(ascending) != shape[opposite_axis]:
+                raise RuntimeError(f'Multiple ascending values must match length of axis {opposite_axis}.')
+
         def array_iter() -> tp.Iterator[np.ndarray]:
-            for array in self._blocks.axis_values(axis=axis):
+            for idx, array in enumerate(self._blocks.axis_values(axis=axis)):
+                asc = ascending if asc_is_element else ascending[idx]
                 if not skipna or array.dtype.kind not in DTYPE_NA_KINDS:
                     yield rank_1d(array,
                             method=method,
-                            ascending=ascending,
+                            ascending=asc,
                             start=start,
                             )
                 else:
@@ -5301,7 +5311,7 @@ class Frame(ContainerOperand):
                     # skipna is True
                     yield s._rank(method=method,
                             skipna=skipna,
-                            ascending=ascending,
+                            ascending=asc,
                             start=start,
                             fill_value=fill_value,
                             ).values
@@ -5312,10 +5322,11 @@ class Frame(ContainerOperand):
             # create one array of type int or float
             arrays = list(array_iter())
             dtype = resolve_dtype_iter(a.dtype for a in arrays)
-            blocks = np.empty(self._blocks._shape, dtype=dtype)
+            block = np.empty(shape, dtype=dtype)
             for i, a in enumerate(arrays):
-                blocks[i] = a
-            blocks.flags.writeable = False
+                block[i] = a
+            block.flags.writeable = False
+            blocks = TypeBlocks.from_blocks(block)
         else:
             raise AxisInvalid()
 
@@ -5327,6 +5338,153 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=self.STATIC,
                 )
+
+    @doc_inject(selector='rank')
+    def rank_ordinal(self, *,
+            axis: int = 0,
+            skipna: bool = True,
+            ascending: BoolOrBools = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''Rank values distinctly, where ties get distinct values that maintain their ordering, and ranks are contiguous unique integers.
+
+        Args:
+            {axis}
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.ORDINAL,
+                axis=axis,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_dense(self, *,
+            axis: int = 0,
+            skipna: bool = True,
+            ascending: BoolOrBools = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''Rank values as compactly as possible, where ties get the same value, and ranks are contiguous (potentially non-unique) integers.
+
+        Args:
+            {axis}
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        return self._rank(
+                method=RankMethod.DENSE,
+                axis=axis,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_min(self, *,
+            axis: int = 0,
+            skipna: bool = True,
+            ascending: BoolOrBools = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''Rank values where tied values are assigned the minimum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
+
+        Args:
+            {axis}
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        return self._rank(
+                method=RankMethod.MIN,
+                axis=axis,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_max(self, *,
+            axis: int = 0,
+            skipna: bool = True,
+            ascending: BoolOrBools = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''Rank values where tied values are assigned the maximum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
+
+        Args:
+            {axis}
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        return self._rank(
+                method=RankMethod.MAX,
+                axis=axis,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_mean(self, *,
+            axis: int = 0,
+            skipna: bool = True,
+            ascending: BoolOrBools = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''Rank values where tied values are assigned the mean of the ordinal ranks; ranks are potentially non-contiguous and non-unique floats.
+
+        Args:
+            {axis}
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        return self._rank(
+                method=RankMethod.MEAN,
+                axis=axis,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+
 
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
