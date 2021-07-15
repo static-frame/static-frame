@@ -150,6 +150,9 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import file_like_manager
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
+from static_frame.core.rank import rank_1d
+from static_frame.core.rank import RankMethod
+
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import style_config_css_factory
@@ -5263,6 +5266,54 @@ class Frame(ContainerOperand):
                 index=self._index,
                 name=self._name,
                 own_data=True,
+                )
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in the same dimensionality
+    # ranking
+    # NOTE: this could be implemented on TypeBlocks, but handling missing values requires using indices, and is thus better handled at the Frame level
+
+    def _rank(self, *,
+            method: RankMethod,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            axis: int = 0,
+    ) -> 'Frame':
+
+        def arrays() -> tp.Iterator[np.ndarray]:
+            for array in self._blocks.axis_values(axis=axis):
+                if not skipna or a.dtype.kind not in DTYPE_NA_KINDS:
+                    yield rank_1d(array,
+                            method=method,
+                            ascending=ascending,
+                            start=start,
+                            )
+                else:
+                    assert array.flags.writeable == False # TEMP
+                    s = Series(array, index=self._index, own_index=True)
+                    # skipna is True
+                    yield s._rank(method=method,
+                            skipna=skipna,
+                            ascending=ascending,
+                            start=start,
+                            fill_value=fill_value,
+                            ).values
+
+        if axis == 0:
+            # arrays returned are blocks
+            blocks = TypeBlocks.from_blocks(arrays())
+        elif axis == 1:
+            # create one array of type int or float
+            blocks = np.empty(self._blocks._shape)
+
+        return self.__class__(blocks,
+                columns=self._columns,
+                index=self._index,
+                name=self._name,
+                own_data=True,
+                own_index=True,
                 )
 
     #---------------------------------------------------------------------------

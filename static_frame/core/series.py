@@ -2059,7 +2059,10 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
         # this will preserve the name
-        return post.reindex(self.index, fill_value=fill_value) #type: ignore
+        return post.reindex(self.index,
+                fill_value=fill_value,
+                check_equals=False, # the index will never be equal
+                ) #type: ignore
 
     @doc_inject(selector='rank')
     def rank_ordinal(self, *,
