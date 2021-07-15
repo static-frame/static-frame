@@ -345,6 +345,7 @@ class DOC_TEMPLATE:
     rank = dict(
             skipna='''skipna: If ``True``, exclude NA values (NaN or None) from ranking, replacing those values with ``fill_value``. ''',
             ascending='''ascending: If ``True``, the lowest ranks correspond to the lowest values. The default is ``True``.''',
+            ascendings='''ascending: Boolean, or iterable of Booleans; if ``True``, the lowest ranks correspond to the lowest values; if an iterable, apply per column or row. The default is ``True``.''',
             start='''start: The reference value for the lowest rank. Some ranking methodologies (mean, max) may not return this value given some inputs. The default is 0; for ranks that start from 1, provide a value of 1.''',
             fill_value='''fill_value: A value to be used to fill NA values ignored in ranking when ``skipna`` is ``True``. The default is ``np.nan`` but can be set to any value to force NA values to the "bottom" or "top" of a rank as needed.''',
             axis='''axis: Integer specifying axis of ranking, where 0 ranks vertically (within each column) and 1 ranks horizontally (within each row)'''

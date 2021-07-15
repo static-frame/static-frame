@@ -5352,7 +5352,7 @@ class Frame(ContainerOperand):
         Args:
             {axis}
             {skipna}
-            {ascending}
+            {ascendings}
             {start}
             {fill_value}
 
@@ -5381,7 +5381,7 @@ class Frame(ContainerOperand):
         Args:
             {axis}
             {skipna}
-            {ascending}
+            {ascendings}
             {start}
             {fill_value}
 
@@ -5410,7 +5410,7 @@ class Frame(ContainerOperand):
         Args:
             {axis}
             {skipna}
-            {ascending}
+            {ascendings}
             {start}
             {fill_value}
 
@@ -5439,7 +5439,7 @@ class Frame(ContainerOperand):
         Args:
             {axis}
             {skipna}
-            {ascending}
+            {ascendings}
             {start}
             {fill_value}
 
@@ -5468,7 +5468,7 @@ class Frame(ContainerOperand):
         Args:
             {axis}
             {skipna}
-            {ascending}
+            {ascendings}
             {start}
             {fill_value}
 
