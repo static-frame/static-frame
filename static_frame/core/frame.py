@@ -151,6 +151,7 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import file_like_manager
 from static_frame.core.util import array2d_to_array1d
+from static_frame.core.util import concat_resolved
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
@@ -5162,9 +5163,15 @@ class Frame(ContainerOperand):
         Args:
             names: An iterable of hashables to be used to name the unset index. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
         '''
+        from static_frame.core.index_level import IndexLevel
 
         def blocks() -> tp.Iterator[np.ndarray]:
-            yield self.index.values # 2D immutable array
+            if self._index.ndim == 1:
+                yield self._index.values
+            else:
+                if self._index._recache:
+                    self._index._update_array_cache()
+                yield from self._index._blocks._blocks
             for b in self._blocks._blocks:
                 yield b
 
@@ -5173,13 +5180,28 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        if self._columns.depth > 1:
-            raise ErrorInitFrame('cannot unset index with a columns with depth greater than 1')
+        if not names:
+            names = self._index.names
+        names_t = zip(*names)
 
-        if names:
-            columns = chain(names, self._columns.values)
+        # self._columns._blocks may be None until array cache is updated.
+        if self._columns._recache:
+            self._columns._update_array_cache()
+
+        if self._columns.depth > 1:
+            column_blocks = self._columns._blocks._blocks
+            column_blocks_new = tuple(
+                    concat_resolved((np.array([name]), block[np.newaxis]), axis=1).T
+                    for name, block in zip(names_t, column_blocks)
+            )
+            column_type_blocks = TypeBlocks.from_blocks(column_blocks_new)
+            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
+                    column_type_blocks,
+                    #index_constructors=index_constructors,
+                    own_blocks=True,
+            )
         else:
-            columns = chain(self._index.names, self._columns.values)
+            columns = chain(names, self._columns.values)
 
         return self.__class__(
                 TypeBlocks.from_blocks(block_gen()),

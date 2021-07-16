@@ -9687,7 +9687,7 @@ class TestUnit(TestCase):
                 columns=columns,
                 index=index)
 
-        with self.assertRaises(ErrorInitFrame):
+        with self.assertRaises(ErrorInitIndex):
             f1.unset_index()
 
 
@@ -9751,6 +9751,71 @@ class TestUnit(TestCase):
         f2 = f1.unset_index(names=('index',), consolidate_blocks=True)
         self.assertEqual(f2._blocks.shapes.tolist(), [(3, 3)])
 
+
+    def test_unset_index_column_hierarchy(self) -> None:
+        f = ff.parse('s(5,5)|i(I,str)|c(IH,(str,str))').rename(index='index_name', columns=('l1', 'l2'))
+        unset = f.unset_index(names=[('outer', f.index.name)])
+        assert unset.columns.values.tolist() == [
+                ['outer', 'index_name'],
+                ['zZbu', 'zOyq'],
+                ['zZbu', 'zIA5'],
+                ['ztsv', 'zGDJ'],
+                ['ztsv', 'zmhG'],
+                ['zUvW', 'zo2Q'],
+        ]
+
+        # A frame with hierarchical index and columns.
+        f = ff.parse('s(5,5)|i(IH,(str,str))|c(IH,(str,str))').rename(
+                index=('index_name1', 'index_name2'),
+                columns=('l1', 'l2')
+        )
+        unset = f.unset_index(names=[('outer', n) for n in f.index.names])
+        assert unset.columns.values.tolist() == [
+               ['outer', 'index_name1'],
+               ['outer', 'index_name2'],
+               ['zZbu', 'zOyq'],
+               ['zZbu', 'zIA5'],
+               ['ztsv', 'zGDJ'],
+               ['ztsv', 'zmhG'],
+               ['zUvW', 'zo2Q']
+        ]
+
+
+    def test_unset_index_column_hierarchy_w_dates(self) -> None:
+        f = ff.parse('s(3,3)|i(I,str)|c(IH,(str,dtY,tdD))').rename(
+                index='index_name',
+                columns=('l1', 'l2'),
+        )
+        unset = f.unset_index(names=[('outer', 'middle', f.index.name)])
+        assert unset.columns.values.tolist() == [
+                ['outer', 'middle', 'index_name'],
+                ['zZbu', 105269, datetime.timedelta(days=58768)],
+                ['zZbu', 105269, datetime.timedelta(days=146284)],
+                ['zZbu', 119909, datetime.timedelta(days=170440)],
+        ]
+        assert unset.columns.dtypes.values.tolist() == [
+                np.dtype('<U5'),
+                np.dtype('O'),
+                np.dtype('O'),
+        ]
+
+        # dtypes should be preserved when possible.
+        dt = f.columns.values_at_depth(1)[1]
+        td = f.columns.values_at_depth(2)[1]
+        unset2 = f.unset_index(names=[(f.index.name, dt, td)])
+
+        assert unset2.columns.values.tolist() == [
+                ['index_name', 105269, datetime.timedelta(days=146284)],
+                ['zZbu', 105269, datetime.timedelta(days=58768)],
+                ['zZbu', 105269, datetime.timedelta(days=146284)],
+                ['zZbu', 119909, datetime.timedelta(days=170440)]
+        ]
+
+        assert unset2.columns.dtypes.values.tolist() == [
+                np.dtype('<U10'),
+                np.dtype('<M8[Y]'),
+                np.dtype('<m8[D]'),
+        ]
 
     #---------------------------------------------------------------------------
     @skip_win #type: ignore
@@ -9916,8 +9981,19 @@ class TestUnit(TestCase):
         self.assertEqual(post.columns.name, ('b', 'values'))
         # NOTE: because we are filling na with empty strings, we get object dtypes
         self.assertEqual(post.dtypes.values.tolist(),
-                [np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'),np. dtype('O'), np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'), np.dtype('O')]
-                )
+                [
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                ],
+        )
         self.assertEqual(post.to_pairs(0),
                 (((19, 'z'), ((('left', 'down'), ''), (('left', 'up'), 'far'), (('right', 'down'), ''), (('right', 'up'), ''))), ((19, 'a'), ((('left', 'down'), ''), (('left', 'up'), 0), (('right', 'down'), ''), (('right', 'up'), ''))), ((20, 'z'), ((('left', 'down'), ''), (('left', 'up'), 'near'), (('right', 'down'), ''), (('right', 'up'), 'far'))), ((20, 'a'), ((('left', 'down'), ''), (('left', 'up'), 4), (('right', 'down'), ''), (('right', 'up'), 1))), ((21, 'z'), ((('left', 'down'), 'far'), (('left', 'up'), ''), (('right', 'down'), ''), (('right', 'up'), 'near'))), ((21, 'a'), ((('left', 'down'), 2), (('left', 'up'), ''), (('right', 'down'), ''), (('right', 'up'), 5))), ((22, 'z'), ((('left', 'down'), 'near'), (('left', 'up'), ''), (('right', 'down'), 'far'), (('right', 'up'), ''))), ((22, 'a'), ((('left', 'down'), 6), (('left', 'up'), ''), (('right', 'down'), 3), (('right', 'up'), ''))), ((23, 'z'), ((('left', 'down'), ''), (('left', 'up'), ''), (('right', 'down'), 'near'), (('right', 'up'), ''))), ((23, 'a'), ((('left', 'down'), ''), (('left', 'up'), ''), (('right', 'down'), 7), (('right', 'up'), ''))))
                 )
