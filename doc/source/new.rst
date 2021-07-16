@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.16
+----------
+
+Added ``Frame.to_series()``.
+
+
 0.8.15
 ----------
 

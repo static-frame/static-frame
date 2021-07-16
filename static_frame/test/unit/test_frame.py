@@ -14,6 +14,7 @@ import io
 
 import numpy as np
 import frame_fixtures as ff
+from numpy.core.getlimits import _fr1
 
 from static_frame import DisplayConfig
 from static_frame import Frame
@@ -1514,6 +1515,49 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(ds2.coords.keys()), ('__index0__',))
         self.assertEqual(ds2[3].values.tolist(),
                 [False, True, False, True])
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_series_a(self) -> None:
+        f1 = ff.parse('s(4,5)|i(I,str)|c(I,int)')
+
+        s1 = f1.to_series()
+        self.assertEqual(s1.to_pairs(),
+                ((('zZbu', 34715), 1930.4), (('zZbu', -3648), -610.8), (('zZbu', 91301), 694.3), (('zZbu', 30205), 1080.4), (('zZbu', 54020), 3511.58), (('ztsv', 34715), -1760.34), (('ztsv', -3648), 3243.94), (('ztsv', 91301), -72.96), (('ztsv', 30205), 2580.34), (('ztsv', 54020), 1175.36), (('zUvW', 34715), 1857.34), (('zUvW', -3648), -823.14), (('zUvW', 91301), 1826.02), (('zUvW', 30205), 700.42), (('zUvW', 54020), 2925.68), (('zkuW', 34715), 1699.34), (('zkuW', -3648), 114.58), (('zkuW', 91301), 604.1), (('zkuW', 30205), 3338.48), (('zkuW', 54020), 3408.8))
+                )
+
+        s2 = f1.to_series(index_constructor=IndexHierarchy.from_labels)
+        self.assertEqual(s2.to_pairs(),
+            ((('zZbu', 34715), 1930.4), (('zZbu', -3648), -610.8), (('zZbu', 91301), 694.3), (('zZbu', 30205), 1080.4), (('zZbu', 54020), 3511.58), (('ztsv', 34715), -1760.34), (('ztsv', -3648), 3243.94), (('ztsv', 91301), -72.96), (('ztsv', 30205), 2580.34), (('ztsv', 54020), 1175.36), (('zUvW', 34715), 1857.34), (('zUvW', -3648), -823.14), (('zUvW', 91301), 1826.02), (('zUvW', 30205), 700.42), (('zUvW', 54020), 2925.68), (('zkuW', 34715), 1699.34), (('zkuW', -3648), 114.58), (('zkuW', 91301), 604.1), (('zkuW', 30205), 3338.48), (('zkuW', 54020), 3408.8))
+            )
+
+    def test_frame_to_series_b(self) -> None:
+        f1 = ff.parse('s(4,5)|i(IH,(str,str))|c(I,int)')
+        s1 = f1.to_series()
+        self.assertEqual(s1.to_pairs(),
+            ((('zZbu', 'zOyq', 34715), 1930.4), (('zZbu', 'zOyq', -3648), -610.8), (('zZbu', 'zOyq', 91301), 694.3), (('zZbu', 'zOyq', 30205), 1080.4), (('zZbu', 'zOyq', 54020), 3511.58), (('zZbu', 'zIA5', 34715), -1760.34), (('zZbu', 'zIA5', -3648), 3243.94), (('zZbu', 'zIA5', 91301), -72.96), (('zZbu', 'zIA5', 30205), 2580.34), (('zZbu', 'zIA5', 54020), 1175.36), (('ztsv', 'zGDJ', 34715), 1857.34), (('ztsv', 'zGDJ', -3648), -823.14), (('ztsv', 'zGDJ', 91301), 1826.02), (('ztsv', 'zGDJ', 30205), 700.42), (('ztsv', 'zGDJ', 54020), 2925.68), (('ztsv', 'zmhG', 34715), 1699.34), (('ztsv', 'zmhG', -3648), 114.58), (('ztsv', 'zmhG', 91301), 604.1), (('ztsv', 'zmhG', 30205), 3338.48), (('ztsv', 'zmhG', 54020), 3408.8))
+            )
+
+        s2 = f1.to_series(index_constructor=IndexHierarchy.from_labels)
+        self.assertEqual(s2.to_pairs(),
+            ((('zZbu', 'zOyq', 34715), 1930.4), (('zZbu', 'zOyq', -3648), -610.8), (('zZbu', 'zOyq', 91301), 694.3), (('zZbu', 'zOyq', 30205), 1080.4), (('zZbu', 'zOyq', 54020), 3511.58), (('zZbu', 'zIA5', 34715), -1760.34), (('zZbu', 'zIA5', -3648), 3243.94), (('zZbu', 'zIA5', 91301), -72.96), (('zZbu', 'zIA5', 30205), 2580.34), (('zZbu', 'zIA5', 54020), 1175.36), (('ztsv', 'zGDJ', 34715), 1857.34), (('ztsv', 'zGDJ', -3648), -823.14), (('ztsv', 'zGDJ', 91301), 1826.02), (('ztsv', 'zGDJ', 30205), 700.42), (('ztsv', 'zGDJ', 54020), 2925.68), (('ztsv', 'zmhG', 34715), 1699.34), (('ztsv', 'zmhG', -3648), 114.58), (('ztsv', 'zmhG', 91301), 604.1), (('ztsv', 'zmhG', 30205), 3338.48), (('ztsv', 'zmhG', 54020), 3408.8))
+            )
+
+
+    def test_frame_to_series_c(self) -> None:
+        f1 = ff.parse('s(4,5)|i(IH,(str,str))|c(IH,(int,int))').rename('foo')
+        s1 = f1.to_series()
+        self.assertEqual(s1.name, f1.name)
+        self.assertEqual(s1.to_pairs(),
+            ((('zZbu', 'zOyq', 34715, 105269), 1930.4), (('zZbu', 'zOyq', 34715, 119909), -610.8), (('zZbu', 'zOyq', -3648, 194224), 694.3), (('zZbu', 'zOyq', -3648, 172133), 1080.4), (('zZbu', 'zOyq', 91301, 96520), 3511.58), (('zZbu', 'zIA5', 34715, 105269), -1760.34), (('zZbu', 'zIA5', 34715, 119909), 3243.94), (('zZbu', 'zIA5', -3648, 194224), -72.96), (('zZbu', 'zIA5', -3648, 172133), 2580.34), (('zZbu', 'zIA5', 91301, 96520), 1175.36), (('ztsv', 'zGDJ', 34715, 105269), 1857.34), (('ztsv', 'zGDJ', 34715, 119909), -823.14), (('ztsv', 'zGDJ', -3648, 194224), 1826.02), (('ztsv', 'zGDJ', -3648, 172133), 700.42), (('ztsv', 'zGDJ', 91301, 96520), 2925.68), (('ztsv', 'zmhG', 34715, 105269), 1699.34), (('ztsv', 'zmhG', 34715, 119909), 114.58), (('ztsv', 'zmhG', -3648, 194224), 604.1), (('ztsv', 'zmhG', -3648, 172133), 3338.48), (('ztsv', 'zmhG', 91301, 96520), 3408.8))
+            )
+
+
+        s2 = f1.to_series(index_constructor=IndexHierarchy.from_labels)
+        self.assertEqual(s2.index.depth, 4)
+
+        self.assertEqual(s2.to_pairs(),
+            ((('zZbu', 'zOyq', 34715, 105269), 1930.4), (('zZbu', 'zOyq', 34715, 119909), -610.8), (('zZbu', 'zOyq', -3648, 194224), 694.3), (('zZbu', 'zOyq', -3648, 172133), 1080.4), (('zZbu', 'zOyq', 91301, 96520), 3511.58), (('zZbu', 'zIA5', 34715, 105269), -1760.34), (('zZbu', 'zIA5', 34715, 119909), 3243.94), (('zZbu', 'zIA5', -3648, 194224), -72.96), (('zZbu', 'zIA5', -3648, 172133), 2580.34), (('zZbu', 'zIA5', 91301, 96520), 1175.36), (('ztsv', 'zGDJ', 34715, 105269), 1857.34), (('ztsv', 'zGDJ', 34715, 119909), -823.14), (('ztsv', 'zGDJ', -3648, 194224), 1826.02), (('ztsv', 'zGDJ', -3648, 172133), 700.42), (('ztsv', 'zGDJ', 91301, 96520), 2925.68), (('ztsv', 'zmhG', 34715, 105269), 1699.34), (('ztsv', 'zmhG', 34715, 119909), 114.58), (('ztsv', 'zmhG', -3648, 194224), 604.1), (('ztsv', 'zmhG', -3648, 172133), 3338.48), (('ztsv', 'zmhG', 91301, 96520), 3408.8))
+            )
 
 
     #---------------------------------------------------------------------------

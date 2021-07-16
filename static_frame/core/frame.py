@@ -6902,18 +6902,21 @@ class Frame(ContainerOperand):
             ) -> Series:
         '''
         Return a ``Series`` representation of this ``Frame``, where the index is extended with columns to from tuple labels for each element in the ``Frame``.
+
+        Args:
+            index_constructor: Index constructor of the tuples produced by combining index and columns into one label. Providing ``IndexHierarchy.from_labels`` will produce a hierarchical index.
         '''
         # NOTE: do not force block consolidation to avoid type coercion
 
         if self._index.ndim > 1: # force creation of a tuple of tuples
             index_tuples = tuple(self._index.__iter__())
         else:
-            index_tuples = tuple(tuple(l,) for l in self._index.values)
+            index_tuples = tuple((l,) for l in self._index.values)
 
         if self._columns.ndim > 1:
             columns_tuples = tuple(self._columns.__iter__())
         else:
-            columns_tuples = tuple(tuple(l,) for l in self._columns.values)
+            columns_tuples = tuple((l,) for l in self._columns.values)
 
         # immutability should be prserved
         array = self._blocks.values.reshape(self._blocks.size)
@@ -6924,7 +6927,7 @@ class Frame(ContainerOperand):
                 yield index_tuples[row] + columns_tuples[col]
 
         index = index_constructor(labels())
-        return Series(array, index=index, own_index=True)
+        return Series(array, index=index, own_index=True, name=self._name)
 
     #---------------------------------------------------------------------------
     def _to_str_records(self,
