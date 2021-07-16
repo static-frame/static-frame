@@ -12,7 +12,7 @@ Added ``Series.rank_ordinal``, ``Series.rank_dense``, ``Series.rank_mean``, ``Se
 
 Added ``Frame.rank_ordinal``, ``Frame.rank_dense``, ``Frame.rank_mean``, ``Frame.rank_min``, ``Frame.rank_max``.
 
-Fixed issue in ``Series.from_element()`` and ``Frame.from_element()`` that would expand some iterables instead of treat them as an element.
+Fixed issue in ``Series.from_element()`` and ``Frame.from_element()`` that would broadcast some iterables instead of treat them as an element.
 
 
 0.8.14

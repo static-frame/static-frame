@@ -61,8 +61,7 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import array_deepcopy
 from static_frame.core.style_config import StyleConfig
-from static_frame.core.rank import rank_1d
-from static_frame.core.rank import RankMethod
+
 
 
 #-------------------------------------------------------------------------------

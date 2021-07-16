@@ -1103,13 +1103,13 @@ class TestUnit(TestCase):
                 ((3, ('a', 'b')), (4, ('a', 'b')), (5, ('a', 'b')))
                 )
 
-    def test_series_from_element_c(self) -> None:
+    def test_series_from_element_d(self) -> None:
         s1 = Series.from_element(('a', 'b'), index=Index((3, 4, 5)), own_index=True)
         self.assertEqual(s1.to_pairs(),
                 ((3, ('a', 'b')), (4, ('a', 'b')), (5, ('a', 'b')))
                 )
 
-    def test_series_from_element_d(self) -> None:
+    def test_series_from_element_e(self) -> None:
         s1 = Series.from_element([0], index=Index((3, 4, 5)), own_index=True)
         self.assertEqual(s1.values.tolist(), [[0], [0], [0]])
 
