@@ -5193,13 +5193,13 @@ class Frame(ContainerOperand):
             column_blocks_new = tuple(
                     concat_resolved((np.array([name]), block[np.newaxis]), axis=1).T
                     for name, block in zip(names_t, column_blocks)
-            )
+                    )
             column_type_blocks = TypeBlocks.from_blocks(column_blocks_new)
             columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
                     column_type_blocks,
                     #index_constructors=index_constructors,
                     own_blocks=True,
-            )
+                    )
         else:
             columns = chain(names, self._columns.values)
 

@@ -14,6 +14,8 @@ Added ``Frame.rank_ordinal``, ``Frame.rank_dense``, ``Frame.rank_mean``, ``Frame
 
 Fixed issue in ``Series.from_element()`` and ``Frame.from_element()`` that would broadcast some iterables instead of treat them as an element.
 
+Extended ``Frame.unset_index()`` to support unsetting ``IndexHierarchy``.
+
 
 0.8.14
 ----------
