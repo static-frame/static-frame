@@ -249,10 +249,17 @@ class Frame(ContainerOperand):
                     explicit_constructor=index_constructor
                     )
 
-        array = np.full(
-                (len(index_final), len(columns_final)),
-                fill_value=element,
-                dtype=dtype)
+        shape = (len(index_final), len(columns_final))
+        if hasattr(element, '__len__') and not isinstance(element, str):
+            array = np.empty(shape, dtype=DTYPE_OBJECT)
+            # this is the only way to insert tuples, lists,ranges
+            for iloc in np.ndindex(shape):
+                array[iloc] = element
+        else:
+            array = np.full(
+                    shape,
+                    fill_value=element,
+                    dtype=dtype)
         array.flags.writeable = False
 
         return cls(TypeBlocks.from_blocks(array),

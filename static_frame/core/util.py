@@ -469,7 +469,7 @@ def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
         return DTYPE_FLOAT_DEFAULT
     if value is None:
         return DTYPE_OBJECT
-    if isinstance(value, tuple):
+    if isinstance(value, tuple): # should this include all iterables, i.e., has atter __len__ and is not str?
         return DTYPE_OBJECT
     if hasattr(value, 'dtype'):
         return value.dtype #type: ignore

@@ -148,7 +148,7 @@ class Series(ContainerOperand):
                     )
 
         length = len(index_final) #type: ignore
-        if isinstance(element, tuple):
+        if hasattr(element, '__len__') and not isinstance(element, str):
             array = np.empty(length, dtype=DTYPE_OBJECT)
             # this is the only way to insert tuples
             for i in range(length):

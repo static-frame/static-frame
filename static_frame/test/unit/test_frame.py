@@ -450,6 +450,21 @@ class TestUnit(TestCase):
         self.assertTrue(id(idx2) == id(f1.columns))
 
 
+    def test_frame_from_element_e(self) -> None:
+
+        f1 = Frame.from_element(range(3), index=('a', 'b'), columns=('x', 'y', 'z'))
+        self.assertEqual(f1.shape, (2, 3))
+        self.assertEqual(f1.to_pairs(0),
+                (('x', (('a', range(0, 3)), ('b', range(0, 3)))), ('y', (('a', range(0, 3)), ('b', range(0, 3)))), ('z', (('a', range(0, 3)), ('b', range(0, 3)))))
+                )
+
+        f2 = Frame.from_element([0], index=('a', 'b'), columns=('x', 'y', 'z'))
+        self.assertEqual(f2.shape, (2, 3))
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('a', [0]), ('b', [0]))), ('y', (('a', [0]), ('b', [0]))), ('z', (('a', [0]), ('b', [0]))))
+                )
+
+
     #---------------------------------------------------------------------------
     def test_frame_from_elements_a(self) -> None:
         f1 = Frame.from_elements(['a', 3, 'b'])
