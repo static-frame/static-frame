@@ -14,7 +14,6 @@ import io
 
 import numpy as np
 import frame_fixtures as ff
-from numpy.core.getlimits import _fr1
 
 from static_frame import DisplayConfig
 from static_frame import Frame
