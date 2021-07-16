@@ -11948,9 +11948,9 @@ class TestUnit(TestCase):
         self.assertEqual(f3.values.dtype, float)
 
         f4 = f1.rank_ordinal(axis=0, fill_value=-1)
-        self.assertEqual(f4.values.dtype, int)
+        self.assertEqual(f4.values.dtype.kind, 'i')
         f5 = f1.rank_ordinal(axis=1, fill_value=-1)
-        self.assertEqual(f5.values.dtype, int)
+        self.assertEqual(f5.values.dtype.kind, 'i')
 
 
     def test_frame_rank_ordinal(self) -> None:
