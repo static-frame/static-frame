@@ -6896,6 +6896,35 @@ class Frame(ContainerOperand):
         '''
         return self._to_frame(FrameGO) #type: ignore
 
+    def to_series(self,
+            *,
+            index_constructor: IndexConstructor = Index,
+            ) -> Series:
+        '''
+        Return a ``Series`` representation of this ``Frame``, where the index is extended with columns to from tuple labels for each element in the ``Frame``.
+        '''
+        # NOTE: do not force block consolidation to avoid type coercion
+
+        if self._index.ndim > 1: # force creation of a tuple of tuples
+            index_tuples = tuple(self._index.__iter__())
+        else:
+            index_tuples = tuple(tuple(l,) for l in self._index.values)
+
+        if self._columns.ndim > 1:
+            columns_tuples = tuple(self._columns.__iter__())
+        else:
+            columns_tuples = tuple(tuple(l,) for l in self._columns.values)
+
+        # immutability should be prserved
+        array = self._blocks.values.reshape(self._blocks.size)
+        assert array.flags.writeable == False
+
+        def labels() -> tp.Iterator[tp.Hashable]:
+            for row, col in np.ndindex(self._blocks._shape):
+                yield index_tuples[row] + columns_tuples[col]
+
+        index = index_constructor(labels())
+        return Series(array, index=index, own_index=True)
 
     #---------------------------------------------------------------------------
     def _to_str_records(self,
