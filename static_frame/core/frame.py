@@ -4767,7 +4767,7 @@ class Frame(ContainerOperand):
     def sort_values(self,
             label: KeyOrKeys, # elsewhere this is called 'key'
             *,
-            ascending: bool = True,
+            ascending: BoolOrBools = True,
             axis: int = 1,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[tp.Union['Frame', Series]], tp.Union[np.ndarray, 'Series', 'Frame']]] = None,
@@ -4779,6 +4779,7 @@ class Frame(ContainerOperand):
             label: A label or iterable of labels to select the columns (for axis 1) or rows (for axis 0) to sort.
             *
             ascending: {ascending}
+            axis: Axis upon which to sort; 0 orders columns based on one or more rows; 1 orders rows based on one or more columns.
             kind: {kind}
             key: {key}
         '''
@@ -4844,6 +4845,12 @@ class Frame(ContainerOperand):
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
+        asc_is_element = isinstance(ascending, BOOL_TYPES)
+
+        if not asc_is_element:
+            ascending = tuple(ascending)
+            if values_for_lex is None or len(ascending) != len(values_for_lex):
+                raise RuntimeError(f'Multiple ascending values must match number of arrays selected.')
 
         if values_for_lex is not None:
             order = np.lexsort(values_for_lex)
@@ -4853,6 +4860,9 @@ class Frame(ContainerOperand):
             raise RuntimeError('unable to resovle sort type')
 
         if not ascending:
+            # import ipdb; ipdb.set_trace()
+            assert order.ndim == 1
+            # NOTE: putting the order in reverse, not invetering the selection, produces the descending sort
             order = order[::-1]
 
         if axis == 0:
