@@ -4866,7 +4866,36 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('p', ((1, 9), (3, 6), (2, 2), (4, 1), (0, 0))), ('q', ((1, 9), (3, 8), (2, 7), (4, 0), (0, 9))), ('r', ((1, 3), (3, 1), (2, 6), (4, 5), (0, 3))))
                 )
-        # import ipdb; ipdb.set_trace()
+
+
+    def test_frame_sort_values_m(self) -> None:
+
+        records = (
+                (1, 3, 3),
+                (9, 8, 3),
+                (9, 7, 6),
+                (9, 8, 1),
+                (0, 0, 5),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                name='foo')
+
+        f2 = f1.sort_values(['p', 'q', 'r'], ascending=(True, False, True))
+        self.assertEqual(f2.to_pairs(),
+                (('p', ((4, 0), (0, 1), (3, 9), (1, 9), (2, 9))), ('q', ((4, 0), (0, 3), (3, 8), (1, 8), (2, 7))), ('r', ((4, 5), (0, 3), (3, 1), (1, 3), (2, 6))))
+                )
+
+        f3 = f1.sort_values(['p', 'q', 'r'], ascending=(False, True, False))
+        self.assertEqual(f3.to_pairs(),
+                (('p', ((2, 9), (1, 9), (3, 9), (0, 1), (4, 0))), ('q', ((2, 7), (1, 8), (3, 8), (0, 3), (4, 0))), ('r', ((2, 6), (1, 3), (3, 1), (0, 3), (4, 5)))),
+                )
+
+        f4 = f1.sort_values(['p', 'q', 'r'], ascending=(True, False, False))
+        self.assertEqual(f4.to_pairs(),
+                (('p', ((4, 0), (0, 1), (1, 9), (3, 9), (2, 9))), ('q', ((4, 0), (0, 3), (1, 8), (3, 8), (2, 7))), ('r', ((4, 5), (0, 3), (1, 3), (3, 1), (2, 6))))
+                )
+
 
 
     #---------------------------------------------------------------------------

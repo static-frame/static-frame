@@ -90,7 +90,7 @@ from static_frame.core.pivot import extrapolate_column_fields
 from static_frame.core.pivot import pivot_records_items
 from static_frame.core.pivot import pivot_records_dtypes
 from static_frame.core.pivot import pivot_items
-from static_frame.core.util import BOOL_TYPES, _gen_skip_middle
+from static_frame.core.util import BOOL_TYPES, DEFAULT_STABLE_SORT_KIND, _gen_skip_middle
 from static_frame.core.util import _read_url
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_2d
@@ -4846,22 +4846,31 @@ class Frame(ContainerOperand):
             raise AxisInvalid(f'invalid axis: {axis}')
 
         asc_is_element = isinstance(ascending, BOOL_TYPES)
-
         if not asc_is_element:
             ascending = tuple(ascending)
             if values_for_lex is None or len(ascending) != len(values_for_lex):
                 raise RuntimeError(f'Multiple ascending values must match number of arrays selected.')
 
         if values_for_lex is not None:
+            if not asc_is_element:
+                # values for lex are in reversed order; thus take ascending reversed
+                values_for_lex_post = []
+                for asc, a in zip(reversed(ascending), values_for_lex):
+                    # if not ascending, replace with an inverted dense rank
+                    if not asc:
+                        values_for_lex_post.append(
+                                rank_1d(a, method=RankMethod.DENSE, ascending=False))
+                    else:
+                        values_for_lex_post.append(a)
+                # import ipdb; ipdb.set_trace()
+                values_for_lex = values_for_lex_post
             order = np.lexsort(values_for_lex)
         elif values_for_sort is not None:
             order = np.argsort(values_for_sort, kind=kind)
         else:
             raise RuntimeError('unable to resovle sort type')
 
-        if not ascending:
-            # import ipdb; ipdb.set_trace()
-            assert order.ndim == 1
+        if asc_is_element and not ascending:
             # NOTE: putting the order in reverse, not invetering the selection, produces the descending sort
             order = order[::-1]
 
