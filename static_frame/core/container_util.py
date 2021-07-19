@@ -1051,8 +1051,8 @@ def prepare_values_for_lex(
     '''
     asc_is_element = isinstance(ascending, BOOL_TYPES)
     if not asc_is_element:
-        ascending = tuple(ascending)
-        if values_for_lex is None or len(ascending) != len(values_for_lex):
+        ascending = tuple(ascending) #type: ignore
+        if values_for_lex is None or len(ascending) != len(values_for_lex): #type: ignore
             raise RuntimeError(f'Multiple ascending values must match number of arrays selected.')
         # values for lex are in reversed order; thus take ascending reversed
         values_for_lex_post = []
@@ -1090,6 +1090,7 @@ def sort_index_for_order(
         cfs_is_array = False
         cfs_depth = cfs.depth
 
+    asc_is_element: bool
     # argsort lets us do the sort once and reuse the results
     if cfs_depth > 1:
         if cfs_is_array:
@@ -1098,7 +1099,7 @@ def sort_index_for_order(
             values_for_lex = [cfs.values_at_depth(i)
                     for i in range(cfs.depth-1, -1, -1)]
 
-        asc_is_element, values_for_lex = prepare_values_for_lex(
+        asc_is_element, values_for_lex = prepare_values_for_lex( #type: ignore
                 ascending=ascending,
                 values_for_lex=values_for_lex,
                 )
