@@ -39,6 +39,11 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
+from static_frame.core.util import BoolOrBools
+from static_frame.core.util import BOOL_TYPES
+
+from static_frame.core.rank import rank_1d
+from static_frame.core.rank import RankMethod
 
 from static_frame.core.exception import AxisInvalid
 
@@ -1037,9 +1042,34 @@ def container_to_exporter_attr(container_type: tp.Type['Frame']) -> str:
     raise NotImplementedError(f'no handling for {container_type}')
 
 
+def prepare_values_for_lex(
+        *,
+        ascending: BoolOrBools = True,
+        values_for_lex: tp.Optional[tp.Iterable[np.ndarray]],
+        ) -> tp.Tuple[bool, tp.Optional[tp.Iterable[np.ndarray]]]:
+    '''Prepare values for lexical sorting; assumes value have already been collected in reverse order. If ascending is an element and values_for_lex is None, this function is pass through.
+    '''
+    asc_is_element = isinstance(ascending, BOOL_TYPES)
+    if not asc_is_element:
+        ascending = tuple(ascending)
+        if values_for_lex is None or len(ascending) != len(values_for_lex):
+            raise RuntimeError(f'Multiple ascending values must match number of arrays selected.')
+        # values for lex are in reversed order; thus take ascending reversed
+        values_for_lex_post = []
+        for asc, a in zip(reversed(ascending), values_for_lex):
+            # if not ascending, replace with an inverted dense rank
+            if not asc:
+                values_for_lex_post.append(
+                        rank_1d(a, method=RankMethod.DENSE, ascending=False))
+            else:
+                values_for_lex_post.append(a)
+        values_for_lex = values_for_lex_post
+
+    return asc_is_element, values_for_lex
+
 def sort_index_for_order(
         index: IndexBase,
-        ascending: bool,
+        ascending: BoolOrBools,
         kind: str,
         key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]],
         ) -> np.ndarray:
@@ -1067,13 +1097,23 @@ def sort_index_for_order(
         else: # cfs is an IndexHierarchy
             values_for_lex = [cfs.values_at_depth(i)
                     for i in range(cfs.depth-1, -1, -1)]
+
+        asc_is_element, values_for_lex = prepare_values_for_lex(
+                ascending=ascending,
+                values_for_lex=values_for_lex,
+                )
         order = np.lexsort(values_for_lex)
     else:
         # depth is 1
+        asc_is_element = isinstance(ascending, BOOL_TYPES)
+        if not asc_is_element:
+            raise RuntimeError(f'Multiple ascending values not permitted.')
+
         v = cfs if cfs_is_array else cfs.values
         order = np.argsort(v, kind=kind)
 
-    if not ascending:
+    if asc_is_element and not ascending:
+        # NOTE: if asc is not an element, then ascending Booleans have already been applied to values_for_lex
         order = order[::-1]
     return order
 

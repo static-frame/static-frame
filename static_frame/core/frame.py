@@ -42,6 +42,7 @@ from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import sort_index_for_order
+from static_frame.core.container_util import prepare_values_for_lex
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -4845,25 +4846,28 @@ class Frame(ContainerOperand):
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
-        asc_is_element = isinstance(ascending, BOOL_TYPES)
-        if not asc_is_element:
-            ascending = tuple(ascending)
-            if values_for_lex is None or len(ascending) != len(values_for_lex):
-                raise RuntimeError(f'Multiple ascending values must match number of arrays selected.')
+        asc_is_element, values_for_lex = prepare_values_for_lex(
+                ascending=ascending,
+                values_for_lex=values_for_lex,
+                )
+        # asc_is_element = isinstance(ascending, BOOL_TYPES)
+        # if not asc_is_element:
+        #     ascending = tuple(ascending)
+        #     if values_for_lex is None or len(ascending) != len(values_for_lex):
+        #         raise RuntimeError(f'Multiple ascending values must match number of arrays selected.')
 
         if values_for_lex is not None:
-            if not asc_is_element:
-                # values for lex are in reversed order; thus take ascending reversed
-                values_for_lex_post = []
-                for asc, a in zip(reversed(ascending), values_for_lex):
-                    # if not ascending, replace with an inverted dense rank
-                    if not asc:
-                        values_for_lex_post.append(
-                                rank_1d(a, method=RankMethod.DENSE, ascending=False))
-                    else:
-                        values_for_lex_post.append(a)
-                # import ipdb; ipdb.set_trace()
-                values_for_lex = values_for_lex_post
+            # if not asc_is_element:
+            #     # values for lex are in reversed order; thus take ascending reversed
+            #     values_for_lex_post = []
+            #     for asc, a in zip(reversed(ascending), values_for_lex):
+            #         # if not ascending, replace with an inverted dense rank
+            #         if not asc:
+            #             values_for_lex_post.append(
+            #                     rank_1d(a, method=RankMethod.DENSE, ascending=False))
+            #         else:
+            #             values_for_lex_post.append(a)
+            #     values_for_lex = values_for_lex_post
             order = np.lexsort(values_for_lex)
         elif values_for_sort is not None:
             order = np.argsort(values_for_sort, kind=kind)
@@ -4871,6 +4875,7 @@ class Frame(ContainerOperand):
             raise RuntimeError('unable to resovle sort type')
 
         if asc_is_element and not ascending:
+            # NOTE: if asc is not an element, then ascending Booleans have already been applied to values_for_lex
             # NOTE: putting the order in reverse, not invetering the selection, produces the descending sort
             order = order[::-1]
 
