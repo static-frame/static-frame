@@ -4843,10 +4843,10 @@ class TestUnit(TestCase):
                 )
 
         with self.assertRaises(RuntimeError):
-                _ = f1.sort_values(['p', 'q'], ascending=(False, True, False))
+            _ = f1.sort_values(['p', 'q'], ascending=(False, True, False))
 
         with self.assertRaises(RuntimeError):
-                _ = f1.sort_values('q', ascending=(False, True, False))
+            _ = f1.sort_values('q', ascending=(False, True, False))
 
 
     def test_frame_sort_values_k(self) -> None:

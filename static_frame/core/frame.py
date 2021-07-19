@@ -91,7 +91,8 @@ from static_frame.core.pivot import extrapolate_column_fields
 from static_frame.core.pivot import pivot_records_items
 from static_frame.core.pivot import pivot_records_dtypes
 from static_frame.core.pivot import pivot_items
-from static_frame.core.util import BOOL_TYPES, DEFAULT_STABLE_SORT_KIND, _gen_skip_middle
+from static_frame.core.util import BOOL_TYPES
+from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _read_url
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_2d
@@ -6944,7 +6945,6 @@ class Frame(ContainerOperand):
 
         # immutability should be prserved
         array = self._blocks.values.reshape(self._blocks.size)
-        assert array.flags.writeable == False
 
         def labels() -> tp.Iterator[tp.Hashable]:
             for row, col in np.ndindex(self._blocks._shape):
