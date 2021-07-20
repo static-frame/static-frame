@@ -319,7 +319,7 @@ class TestUnit(TestCase):
         f2 = FrameGO(index=IndexAutoFactory(2))
         f2['a'] = (3, 9)
         f2['b'] = (4, 5)
-
+        self.assertEqual(f2.index._map, None)
         self.assertEqual(f2.to_pairs(),
                 (('a', ((0, 3), (1, 9))), ('b', ((0, 4), (1, 5))))
                 )
