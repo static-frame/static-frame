@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Added ``Frame.to_series()``.
 
+``Frame.sort_values()``, ``IndexHierarchy.sort()`` now accept ``ascending`` as an iterable of Booleans to specify value per column or row.
+
 
 0.8.15
 ----------

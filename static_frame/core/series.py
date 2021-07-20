@@ -92,6 +92,8 @@ from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import BoolOrBools
+
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
@@ -1750,7 +1752,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='sort')
     def sort_index(self,
             *,
-            ascending: bool = True,
+            ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
             ) -> 'Series':

@@ -72,6 +72,8 @@ from static_frame.core.util import array_sample
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
+from static_frame.core.util import BoolOrBools
+
 from static_frame.core.style_config import StyleConfig
 
 
@@ -1333,7 +1335,7 @@ class IndexHierarchy(IndexBase):
     @doc_inject(selector='sort')
     def sort(self: IH,
             *,
-            ascending: bool = True,
+            ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[['IndexHierarchy'], tp.Union[np.ndarray, 'IndexHierarchy']]] = None,
             ) -> IH:

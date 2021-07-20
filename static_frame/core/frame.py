@@ -4712,7 +4712,7 @@ class Frame(ContainerOperand):
     @doc_inject(selector='sort')
     def sort_index(self,
             *,
-            ascending: bool = True,
+            ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
             ) -> 'Frame':
@@ -4740,7 +4740,7 @@ class Frame(ContainerOperand):
     @doc_inject(selector='sort')
     def sort_columns(self,
             *,
-            ascending: bool = True,
+            ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
             ) -> 'Frame':
