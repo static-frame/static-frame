@@ -54,7 +54,6 @@ class InterfaceFillValue(Interface[TContainer]):
             '__rfloordiv__',
             )
 
-
     def __init__(self,
             container: TContainer,
             *,
@@ -280,3 +279,47 @@ class InterfaceFillValue(Interface[TContainer]):
                 axis=self._axis,
                 fill_value=self._fill_value,
                 )
+
+#---------------------------------------------------------------------------
+class InterfaceFillValueGO(InterfaceFillValue):
+
+    __slots__ = (
+            '_container',
+            '_fill_value',
+            '_axis',
+            )
+    INTERFACE = (
+            'via_T',
+            '__add__',
+            '__sub__',
+            '__mul__',
+            # '__matmul__',
+            '__truediv__',
+            '__floordiv__',
+            '__mod__',
+            '__pow__',
+            '__lshift__',
+            '__rshift__',
+            '__and__',
+            '__xor__',
+            '__or__',
+            '__lt__',
+            '__le__',
+            '__eq__',
+            '__ne__',
+            '__gt__',
+            '__ge__',
+            '__radd__',
+            '__rsub__',
+            '__rmul__',
+            # '__rmatmul__',
+            '__rtruediv__',
+            '__rfloordiv__',
+            '__setitem__',
+            )
+
+    def __setitem__(self,
+            key: tp.Hashable,
+            value: tp.Any,
+            ) -> None:
+        self._container.__setitem__(key, value, self._fill_value)

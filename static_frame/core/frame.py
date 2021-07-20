@@ -80,6 +80,7 @@ from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_fill_value import InterfaceFillValueGO
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
@@ -7532,7 +7533,18 @@ class FrameGO(Frame):
         assert len(self._columns) == self._blocks._shape[1] #pragma: no cover
 
     #---------------------------------------------------------------------------
+    def via_fill_value(self,
+            fill_value: object = np.nan,
+            ) -> InterfaceFillValueGO:
+        '''
+        Interface for using binary operators and methods with a pre-defined fill value.
+        '''
+        return InterfaceFillValueGO(
+                container=self,
+                fill_value=fill_value,
+                )
 
+    #---------------------------------------------------------------------------
     def _to_frame(self,
             constructor: tp.Type[Frame]
             ) -> Frame:

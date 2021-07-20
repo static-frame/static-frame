@@ -6,6 +6,7 @@ import frame_fixtures as ff
 import numpy as np
 
 from static_frame import Frame
+from static_frame import FrameGO
 from static_frame import Series
 from static_frame.test.test_case import TestCase
 
@@ -58,7 +59,15 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f2 = f1.via_T.via_fill_value(0) * Series((0, 2), index=tuple('bc')).via_fill_value(1)
 
+    def test_frame_via_fill_value_e(self) -> None:
 
+        f1 = FrameGO(index=range(5))
+        f1.via_fill_value(0)['a'] = Series([10,20], index=(2,4))
+        f1.via_fill_value(-1)['b'] = Series([10,20], index=(0,1))
+
+        self.assertEqual(f1.to_pairs(),
+                (('a', ((0, 0), (1, 0), (2, 10), (3, 0), (4, 20))), ('b', ((0, 10), (1, 20), (2, -1), (3, -1), (4, -1))))
+                )
 
 
 
