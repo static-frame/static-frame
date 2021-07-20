@@ -917,7 +917,7 @@ class Index(IndexBase):
                     )
 
         return self.__class__(
-                (mapper(x) for x in self._labels), #type: ignore
+                (mapper(x) for x in self._labels),
                 name=self._name
                 )
 

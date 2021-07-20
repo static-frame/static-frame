@@ -7,6 +7,7 @@ from static_frame.core.util import OPERATORS
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import FrameGO  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
@@ -281,40 +282,10 @@ class InterfaceFillValue(Interface[TContainer]):
                 )
 
 #---------------------------------------------------------------------------
-class InterfaceFillValueGO(InterfaceFillValue):
+class InterfaceFillValueGO(InterfaceFillValue[TContainer]): # only type is FrameGO
 
-    __slots__ = (
-            '_container',
-            '_fill_value',
-            '_axis',
-            )
-    INTERFACE = (
-            'via_T',
-            '__add__',
-            '__sub__',
-            '__mul__',
-            # '__matmul__',
-            '__truediv__',
-            '__floordiv__',
-            '__mod__',
-            '__pow__',
-            '__lshift__',
-            '__rshift__',
-            '__and__',
-            '__xor__',
-            '__or__',
-            '__lt__',
-            '__le__',
-            '__eq__',
-            '__ne__',
-            '__gt__',
-            '__ge__',
-            '__radd__',
-            '__rsub__',
-            '__rmul__',
-            # '__rmatmul__',
-            '__rtruediv__',
-            '__rfloordiv__',
+    __slots__ = InterfaceFillValue.__slots__
+    INTERFACE = InterfaceFillValue.INTERFACE + ( #type: ignore
             '__setitem__',
             )
 
@@ -322,4 +293,4 @@ class InterfaceFillValueGO(InterfaceFillValue):
             key: tp.Hashable,
             value: tp.Any,
             ) -> None:
-        self._container.__setitem__(key, value, self._fill_value)
+            self._container.__setitem__(key, value, self._fill_value) #type: ignore

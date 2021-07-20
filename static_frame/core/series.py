@@ -388,7 +388,7 @@ class Series(ContainerOperand):
             index = None
             own_index = False
         elif index_constructor is not None:
-            index = index_constructor(value.index) #type: ignore
+            index = index_constructor(value.index)
         else: # if None
             index = Index.from_pandas(value.index)
 

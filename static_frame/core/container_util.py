@@ -53,6 +53,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoFactory
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
 
@@ -196,7 +197,7 @@ def pandas_to_numpy(
 
 
 def index_from_optional_constructor(
-        value: IndexInitializer,
+        value: tp.Union[IndexInitializer, IndexAutoFactory],
         *,
         default_constructor: IndexConstructor,
         explicit_constructor: tp.Optional[IndexConstructor] = None,
@@ -209,7 +210,7 @@ def index_from_optional_constructor(
 
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
-                default_constructor=default_constructor,
+                default_constructor=default_constructor, #type: ignore
                 explicit_constructor=explicit_constructor,
                 )
 
