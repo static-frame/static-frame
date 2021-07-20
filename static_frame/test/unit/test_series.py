@@ -1753,6 +1753,13 @@ class TestUnit(TestCase):
 
 
 
+    def test_series_sort_index_f(self) -> None:
+
+        ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4))
+        s1 = Series(range(len(ih1)), index=ih1)
+
+        import ipdb; ipdb.set_trace()
+
 
     #---------------------------------------------------------------------------
     def test_series_sort_values_a(self) -> None:
