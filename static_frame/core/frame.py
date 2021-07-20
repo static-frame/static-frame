@@ -2585,12 +2585,19 @@ class Frame(ContainerOperand):
             self._index = IndexAutoFactory.from_optional_constructor(
                     row_count,
                     default_constructor=Index,
-                    explicit_constructor=index_constructor
+                    explicit_constructor=index_constructor,
                     )
+        elif isinstance(index, IndexAutoFactory):
+            # an index with a shape defined
+            self._index = index.to_index(
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor,
+                    )
+            row_count = len(self._index)
         else:
             self._index = index_from_optional_constructor(index,
                     default_constructor=Index,
-                    explicit_constructor=index_constructor
+                    explicit_constructor=index_constructor,
                     )
             row_count = len(self._index)
 

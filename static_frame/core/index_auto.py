@@ -18,6 +18,7 @@ IndexAutoInitializer = int
 # could create trival subclasses for these indices, but the type would would not always describe the instance; for example, an IndexAutoGO could grow inot non-contiguous integer index, as loc_is_iloc is reevaluated with each append can simply go to false.
 
 class IndexAutoFactory:
+    __slots__ = ('_size',)
 
     @classmethod
     def from_optional_constructor(cls,
@@ -40,6 +41,21 @@ class IndexAutoFactory:
                     loc_is_iloc=True,
                     dtype=DTYPE_INT_DEFAULT
                     )
+
+    def __init__(self, size: IndexAutoInitializer):
+        self._size = size
+
+    def to_index(self,
+            *,
+            default_constructor: tp.Type['IndexBase'],
+            explicit_constructor: tp.Optional[IndexConstructor] = None,
+            ) -> 'IndexBase':
+        return self.from_optional_constructor(self._size,
+                default_constructor=default_constructor,
+                explicit_constructor=explicit_constructor,
+                )
+
+
 
 
 IndexAutoFactoryType = tp.Type[IndexAutoFactory]

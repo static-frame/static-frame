@@ -310,6 +310,20 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(0), ())
 
 
+    def test_frame_init_y(self) -> None:
+        f1 = Frame(index=IndexAutoFactory(3))
+        self.assertEqual(f1.shape, (3, 0))
+        self.assertEqual(f1.to_pairs(0), ())
+
+
+        f2 = FrameGO(index=IndexAutoFactory(2))
+        f2['a'] = (3, 9)
+        f2['b'] = (4, 5)
+
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 3), (1, 9))), ('b', ((0, 4), (1, 5))))
+                )
+
 
     #---------------------------------------------------------------------------
     def test_frame_init_index_constructor_a(self) -> None:
