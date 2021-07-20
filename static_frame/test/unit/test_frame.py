@@ -4515,6 +4515,14 @@ class TestUnit(TestCase):
                 ['zmVj', 'z2Oo', 'zZbu', 'ztsv', 'zUvW', 'zkuW'])
 
 
+    def test_frame_sort_index_d(self) -> None:
+
+        ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4), ('y', 'z', 'x'))
+
+        f1 = Frame.from_field(range(len(ih1)), indexs=ih1, columsn=('a', 'b'))
+        
+
+
 
     #---------------------------------------------------------------------------
 
