@@ -551,6 +551,12 @@ class TestUnit(TestCase):
                 ['cb', 'eb', 'dg', 'bq', 'ax']
                 )
 
+
+    def test_index_sort_c(self) -> None:
+        index = Index(('a', 'c', 'd', 'e', 'b'))
+        with self.assertRaises(RuntimeError):
+            index.sort(ascending=(True, False))
+
     #---------------------------------------------------------------------------
 
     def test_index_relable(self) -> None:
@@ -1408,6 +1414,9 @@ class TestUnit(TestCase):
 
         self.assertEqual(a1.tolist(),
                 [True, True, False, True])
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
