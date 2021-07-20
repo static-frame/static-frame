@@ -273,7 +273,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.shape, (4,))
         self.assertEqual(s1.to_pairs(),
                 ((0, 0), (1, 0), (2, 0), (3, 0)))
-        self.assertTrue(s1._index._map is None)
+        self.assertTrue(s1._index._map is None) #type: ignore
 
     #---------------------------------------------------------------------------
 
