@@ -324,6 +324,10 @@ class TestUnit(TestCase):
                 (('a', ((0, 3), (1, 9))), ('b', ((0, 4), (1, 5))))
                 )
 
+        f3 = Frame(np.arange(12).reshape(3, 4), index=IndexAutoFactory(3), columns=IndexAutoFactory(4))
+        self.assertEqual(f3.to_pairs(),
+                ((0, ((0, 0), (1, 4), (2, 8))), (1, ((0, 1), (1, 5), (2, 9))), (2, ((0, 2), (1, 6), (2, 10))), (3, ((0, 3), (1, 7), (2, 11)))))
+
 
     #---------------------------------------------------------------------------
     def test_frame_init_index_constructor_a(self) -> None:

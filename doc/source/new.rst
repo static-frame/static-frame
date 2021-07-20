@@ -10,6 +10,7 @@ Added ``Frame.to_series()``.
 
 ``FrameGO.via_fill_value()`` now supports providng a fill value in ``__setitem__()`` assignment.
 
+``IndexAutoFactory`` can now be instantiated with a ``size`` parameter to pre-set the size of an auto-index, such as when used to initialize a ``FrameGO``.
 
 
 0.8.15
