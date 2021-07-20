@@ -8,6 +8,9 @@ Added ``Frame.to_series()``.
 
 ``Frame.sort_values()``, ``Frame.sort_index()``, ``Frame.sort_columns``, ``Series.sort_index()``, and ``IndexHierarchy.sort()`` now accept ``ascending`` as an iterable of Booleans to specify value per vector.
 
+``FrameGO.via_fill_value()`` now supports providng a fill value in ``__setitem__()`` assignment.
+
+
 
 0.8.15
 ----------
