@@ -93,6 +93,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
+from static_frame.core.util import BOOL_TYPES
 
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
@@ -1805,6 +1806,10 @@ class Series(ContainerOperand):
             cfs_values = cfs if cfs.__class__ is np.ndarray else cfs.values
         else:
             cfs_values = self.values
+
+        asc_is_element = isinstance(ascending, BOOL_TYPES)
+        if not asc_is_element:
+            raise RuntimeError(f'Multiple ascending values not permitted.')
 
         # argsort lets us do the sort once and reuse the results
         order = np.argsort(cfs_values, kind=kind)

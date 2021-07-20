@@ -1758,7 +1758,14 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4))
         s1 = Series(range(len(ih1)), index=ih1)
 
-        import ipdb; ipdb.set_trace()
+        self.assertEqual(s1.sort_index(ascending=(False, True)).to_pairs(),
+                ((('b', -4), 7), (('b', 1), 4), (('b', 3), 6), (('b', 5), 5), (('a', -4), 3), (('a', 1), 0), (('a', 3), 2), (('a', 5), 1))
+                )
+
+        self.assertEqual(s1.sort_index(ascending=(True, False)).to_pairs(),
+                ((('a', 5), 1), (('a', 3), 2), (('a', 1), 0), (('a', -4), 3), (('b', 5), 5), (('b', 3), 6), (('b', 1), 4), (('b', -4), 7))
+                )
+
 
 
     #---------------------------------------------------------------------------
@@ -1812,6 +1819,13 @@ class TestUnit(TestCase):
                 key=lambda s:s.via_str.find('b')).values.tolist(),
                 ['a', 'c', 'b'])
 
+
+    def test_series_sort_values_d(self) -> None:
+
+        index = IndexHierarchy.from_product((0, 1), (10, 20))
+        s = Series(list('abcd'), index=index)
+        with self.assertRaises(RuntimeError):
+            s.sort_values(ascending=(False, True))
 
     #---------------------------------------------------------------------------
     def test_series_reversed(self) -> None:
