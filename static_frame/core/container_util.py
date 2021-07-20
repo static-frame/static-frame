@@ -197,7 +197,7 @@ def pandas_to_numpy(
 
 
 def index_from_optional_constructor(
-        value: tp.Union[IndexInitializer, IndexAutoFactory],
+        value: tp.Union[IndexInitializer, 'IndexAutoFactory'],
         *,
         default_constructor: IndexConstructor,
         explicit_constructor: tp.Optional[IndexConstructor] = None,
