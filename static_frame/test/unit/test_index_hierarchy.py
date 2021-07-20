@@ -65,7 +65,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1 = IndexHierarchy.from_labels(labels)
 
-    def test_hierarchy_init_c(self) -> None:
+        def test_hierarchy_init_c(self) -> None:
 
         labels = (
                 ('I', 'A'),
