@@ -293,4 +293,5 @@ class InterfaceFillValueGO(InterfaceFillValue[TContainer]): # only type is Frame
             key: tp.Hashable,
             value: tp.Any,
             ) -> None:
-            self._container.__setitem__(key, value, self._fill_value) #type: ignore
+        self._container.__setitem__(key, value, self._fill_value) #type: ignore
+
