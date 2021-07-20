@@ -268,6 +268,13 @@ class TestUnit(TestCase):
         self.assertTrue(s[1].equals(f1))
 
 
+    def test_series_init_w(self) -> None:
+        s1 = Series.from_element(0, index=IndexAutoFactory(4))
+        self.assertEqual(s1.shape, (4,))
+        self.assertEqual(s1.to_pairs(),
+                ((0, 0), (1, 0), (2, 0), (3, 0)))
+        self.assertTrue(s1._index._map is None)
+
     #---------------------------------------------------------------------------
 
     def test_series_slice_a(self) -> None:

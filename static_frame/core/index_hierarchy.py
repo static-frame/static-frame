@@ -1342,9 +1342,9 @@ class IndexHierarchy(IndexBase):
         '''Return a new Index with the labels sorted.
 
         Args:
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascendings}
+            {kind}
+            {key}
         '''
         if self._recache:
             self._update_array_cache()

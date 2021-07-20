@@ -4721,9 +4721,9 @@ class Frame(ContainerOperand):
         Return a new :obj:`Frame` ordered by the sorted Index.
 
         Args:
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascendings}
+            {kind}
+            {key}
         '''
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
@@ -4749,9 +4749,9 @@ class Frame(ContainerOperand):
         Return a new :obj:`Frame` ordered by the sorted ``columns``.
 
         Args:
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascendings}
+            {kind}
+            {key}
         '''
         order = sort_index_for_order(self._columns, kind=kind, ascending=ascending, key=key)
 
@@ -4781,10 +4781,10 @@ class Frame(ContainerOperand):
         Args:
             label: A label or iterable of labels to select the columns (for axis 1) or rows (for axis 0) to sort.
             *
-            ascending: {ascending}
+            {ascendings}
             axis: Axis upon which to sort; 0 orders columns based on one or more rows; 1 orders rows based on one or more columns.
-            kind: {kind}
-            key: {key}
+            {kind}
+            {key}
         '''
         values_for_sort: tp.Optional[np.ndarray] = None
         values_for_lex: tp.Optional[tp.List[np.ndarray]] = None

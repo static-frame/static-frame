@@ -1055,7 +1055,7 @@ def prepare_values_for_lex(
         ascending: BoolOrBools = True,
         values_for_lex: tp.Optional[tp.Iterable[np.ndarray]],
         ) -> tp.Tuple[bool, tp.Optional[tp.Iterable[np.ndarray]]]:
-    '''Prepare values for lexical sorting; assumes value have already been collected in reverse order. If ascending is an element and values_for_lex is None, this function is pass through.
+    '''Prepare values for lexical sorting; assumes values have already been collected in reverse order. If ascending is an element and values_for_lex is None, this function is pass through.
     '''
     asc_is_element = isinstance(ascending, BOOL_TYPES)
     if not asc_is_element:

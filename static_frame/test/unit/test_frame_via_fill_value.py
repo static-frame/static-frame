@@ -69,6 +69,11 @@ class TestUnit(TestCase):
                 (('a', ((0, 0), (1, 0), (2, 10), (3, 0), (4, 20))), ('b', ((0, 10), (1, 20), (2, -1), (3, -1), (4, -1))))
                 )
 
+        f2 = Frame(index=range(5))
+        with self.assertRaises(TypeError):
+            f2.via_fill_value(0)['a'] = range(5)
+
+
 
 
 if __name__ == '__main__':

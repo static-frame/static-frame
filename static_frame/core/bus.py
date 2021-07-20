@@ -40,6 +40,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import BoolOrBools
 from static_frame.core.style_config import StyleConfig
 
 
@@ -1037,7 +1038,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @doc_inject(selector='sort')
     def sort_index(self,
             *,
-            ascending: bool = True,
+            ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
             ) -> 'Bus':
@@ -1046,9 +1047,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         Args:
             *
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascendings}
+            {kind}
+            {key}
 
         Returns:
             :obj:`Bus`
@@ -1072,9 +1073,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         Args:
             *
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascending}
+            {kind}
+            {key}
 
         Returns:
             :obj:`Bus`

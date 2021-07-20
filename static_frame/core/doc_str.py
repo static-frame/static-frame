@@ -401,9 +401,10 @@ class DOC_TEMPLATE:
             key_iloc=ILOC_SELECTOR,
             )
     sort = dict(
-            ascending='If True, sort in ascending order; if False, sort in descending order.',
-            kind='Name of the sort algorithm as passed to NumPy.',
-            key='A function that is used to pre-process the selected columns or rows and derive new values to sort by.'
+            ascending='ascending: If True, sort in ascending order; if False, sort in descending order.',
+            ascendings='''ascending: Boolean, or iterable of Booleans; if ``True``, the lowest ranks correspond to the lowest values; if an iterable, apply per column or row. The default is ``True``.''',
+            kind='kind: Name of the sort algorithm as passed to NumPy.',
+            key='key: A function that is used to pre-process the selected columns or rows and derive new values to sort by.'
             )
 
     store_client_exporter = dict(

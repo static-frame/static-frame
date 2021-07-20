@@ -1262,9 +1262,9 @@ class Index(IndexBase):
         '''Return a new Index with the labels sorted.
 
         Args:
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascending}
+            {kind}
+            {key}
         '''
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key) #type: ignore [arg-type]
 

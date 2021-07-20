@@ -1762,9 +1762,9 @@ class Series(ContainerOperand):
 
         Args:
             *
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascendings}
+            {kind}
+            {key}
 
         Returns:
             :obj:`Series`
@@ -1794,9 +1794,9 @@ class Series(ContainerOperand):
 
         Args:
             *
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascending}
+            {kind}
+            {key}
 
         Returns:
             :obj:`Series`
