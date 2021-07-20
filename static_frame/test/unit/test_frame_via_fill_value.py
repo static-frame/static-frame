@@ -71,7 +71,7 @@ class TestUnit(TestCase):
 
         f2 = Frame(index=range(5))
         with self.assertRaises(TypeError):
-            f2.via_fill_value(0)['a'] = range(5) # type: ignore
+            f2.via_fill_value(0)['a'] = range(5) # type: ignore #pylint: disable=E1137
 
 
 
