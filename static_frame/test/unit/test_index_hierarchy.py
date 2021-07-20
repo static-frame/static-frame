@@ -65,7 +65,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1 = IndexHierarchy.from_labels(labels)
 
-        def test_hierarchy_init_c(self) -> None:
+    def test_hierarchy_init_c(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -2439,6 +2439,24 @@ class TestUnit(TestCase):
                 [[30, 25], [100, 3], [1, 1000]],
                 )
 
+    def test_index_hierarchy_sort_c(self) -> None:
+
+        ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4), ('y', 'z', 'x'))
+
+        with self.assertRaises(RuntimeError):
+            ih1.sort(ascending=(True, False))
+
+        self.assertEqual(ih1.sort(ascending=(True, False, True)).values.tolist(),
+            [['a', 5, 'x'], ['a', 5, 'y'], ['a', 5, 'z'], ['a', 3, 'x'], ['a', 3, 'y'], ['a', 3, 'z'], ['a', 1, 'x'], ['a', 1, 'y'], ['a', 1, 'z'], ['a', -4, 'x'], ['a', -4, 'y'], ['a', -4, 'z'], ['b', 5, 'x'], ['b', 5, 'y'], ['b', 5, 'z'], ['b', 3, 'x'], ['b', 3, 'y'], ['b', 3, 'z'], ['b', 1, 'x'], ['b', 1, 'y'], ['b', 1, 'z'], ['b', -4, 'x'], ['b', -4, 'y'], ['b', -4, 'z']]
+            )
+
+        self.assertEqual(ih1.sort(ascending=(True, False, False)).values.tolist(),
+            [['a', 5, 'z'], ['a', 5, 'y'], ['a', 5, 'x'], ['a', 3, 'z'], ['a', 3, 'y'], ['a', 3, 'x'], ['a', 1, 'z'], ['a', 1, 'y'], ['a', 1, 'x'], ['a', -4, 'z'], ['a', -4, 'y'], ['a', -4, 'x'], ['b', 5, 'z'], ['b', 5, 'y'], ['b', 5, 'x'], ['b', 3, 'z'], ['b', 3, 'y'], ['b', 3, 'x'], ['b', 1, 'z'], ['b', 1, 'y'], ['b', 1, 'x'], ['b', -4, 'z'], ['b', -4, 'y'], ['b', -4, 'x']]
+            )
+
+        self.assertEqual(ih1.sort(ascending=(False, True, False)).values.tolist(),
+            [['b', -4, 'z'], ['b', -4, 'y'], ['b', -4, 'x'], ['b', 1, 'z'], ['b', 1, 'y'], ['b', 1, 'x'], ['b', 3, 'z'], ['b', 3, 'y'], ['b', 3, 'x'], ['b', 5, 'z'], ['b', 5, 'y'], ['b', 5, 'x'], ['a', -4, 'z'], ['a', -4, 'y'], ['a', -4, 'x'], ['a', 1, 'z'], ['a', 1, 'y'], ['a', 1, 'x'], ['a', 3, 'z'], ['a', 3, 'y'], ['a', 3, 'x'], ['a', 5, 'z'], ['a', 5, 'y'], ['a', 5, 'x']]
+            )
 
     #---------------------------------------------------------------------------
     def test_index_hierarchy_isin_a(self) -> None:
@@ -2978,24 +2996,6 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_index_hierarchy_sort_a(self) -> None:
-
-        ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4), ('y', 'z', 'x'))
-
-        with self.assertRaises(RuntimeError):
-            ih1.sort(ascending=(True, False))
-
-        self.assertEqual(ih1.sort(ascending=(True, False, True)).values.tolist(),
-            [['a', 5, 'x'], ['a', 5, 'y'], ['a', 5, 'z'], ['a', 3, 'x'], ['a', 3, 'y'], ['a', 3, 'z'], ['a', 1, 'x'], ['a', 1, 'y'], ['a', 1, 'z'], ['a', -4, 'x'], ['a', -4, 'y'], ['a', -4, 'z'], ['b', 5, 'x'], ['b', 5, 'y'], ['b', 5, 'z'], ['b', 3, 'x'], ['b', 3, 'y'], ['b', 3, 'z'], ['b', 1, 'x'], ['b', 1, 'y'], ['b', 1, 'z'], ['b', -4, 'x'], ['b', -4, 'y'], ['b', -4, 'z']]
-            )
-
-        self.assertEqual(ih1.sort(ascending=(True, False, False)).values.tolist(),
-            [['a', 5, 'z'], ['a', 5, 'y'], ['a', 5, 'x'], ['a', 3, 'z'], ['a', 3, 'y'], ['a', 3, 'x'], ['a', 1, 'z'], ['a', 1, 'y'], ['a', 1, 'x'], ['a', -4, 'z'], ['a', -4, 'y'], ['a', -4, 'x'], ['b', 5, 'z'], ['b', 5, 'y'], ['b', 5, 'x'], ['b', 3, 'z'], ['b', 3, 'y'], ['b', 3, 'x'], ['b', 1, 'z'], ['b', 1, 'y'], ['b', 1, 'x'], ['b', -4, 'z'], ['b', -4, 'y'], ['b', -4, 'x']]
-            )
-
-        self.assertEqual(ih1.sort(ascending=(False, True, False)).values.tolist(),
-            [['b', -4, 'z'], ['b', -4, 'y'], ['b', -4, 'x'], ['b', 1, 'z'], ['b', 1, 'y'], ['b', 1, 'x'], ['b', 3, 'z'], ['b', 3, 'y'], ['b', 3, 'x'], ['b', 5, 'z'], ['b', 5, 'y'], ['b', 5, 'x'], ['a', -4, 'z'], ['a', -4, 'y'], ['a', -4, 'x'], ['a', 1, 'z'], ['a', 1, 'y'], ['a', 1, 'x'], ['a', 3, 'z'], ['a', 3, 'y'], ['a', 3, 'x'], ['a', 5, 'z'], ['a', 5, 'y'], ['a', 5, 'x']]
-            )
 
 
 if __name__ == '__main__':
