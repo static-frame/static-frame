@@ -105,6 +105,6 @@ from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.util import isna_element as isna_element
 
 
-__version__ = '0.8.15' # use -dev for new version in development
+__version__ = '0.8.16' # use -dev for new version in development
 
 
