@@ -2421,6 +2421,13 @@ class TestUnit(TestCase):
                 [True, False, True],
                 )
 
+        self.assertEqual(isfalsy_array(np.array((None, '', 0))).tolist(),
+                [True, True, True],
+                )
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
 

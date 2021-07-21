@@ -2133,7 +2133,7 @@ def isin(
 
 def isfalsy_array(array: np.ndarray) -> np.ndarray:
     '''
-    Return a Boolean array indicating the presence of Falsy values.
+    Return a Boolean array indicating the presence of Falsy or NA values.
 
     Args:
         array: 1D or 2D array.
@@ -2154,11 +2154,13 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
     elif kind in DTYPE_INT_KINDS:
         return array == 0 # faster to compare to integer
     elif kind != 'O':
-        return np.full(array.shape, False, dtype=DTYPE)
+        return np.full(array.shape, False, dtype=DTYPE_BOOL)
 
-    func = _isin_1d if array.ndim == 1 else _isin_2d
+    post = np.empty(array.shape, dtype=DTYPE_BOOL)
+    for coord, v in np.ndenumerate(array):
+        post[coord] = not bool(array[coord])
     # or with NaN observations
-    return func(array, FALSY_VALUES) | np.not_equal(array, array)
+    return post | np.not_equal(array, array)
 
 
 
