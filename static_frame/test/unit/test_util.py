@@ -63,6 +63,7 @@ from static_frame.core.util import duplicate_filter
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import get_tuple_constructor
+from static_frame.core.util import isfalsy_array
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -2414,6 +2415,11 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             cls2 = get_tuple_constructor(('a ', '3*'))
 
+    #---------------------------------------------------------------------------
+    def test_isfalsy_array_a(self) -> None:
+        self.assertEqual(isfalsy_array(np.array((False, True, False))).tolist(),
+                [True, False, True],
+                )
 
 if __name__ == '__main__':
     unittest.main()

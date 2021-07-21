@@ -134,8 +134,6 @@ NAT_STR = 'NaT'
 # define missing for timedelta as an untyped 0
 EMPTY_TIMEDELTA = np.timedelta64(0)
 
-# _DICT_STABLE = sys.version_info >= (3, 6)
-
 # map from datetime.timedelta attrs to np.timedelta64 codes
 TIME_DELTA_ATTR_MAP = (
         ('days', 'D'),
@@ -145,6 +143,8 @@ TIME_DELTA_ATTR_MAP = (
 
 # ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
 UFUNC_AXIS_STR_TO_OBJ = frozenset((np.min, np.max, np.sum))
+
+FALSY_VALUES = frozenset((0, '', None, EMPTY_TUPLE))
 
 #-------------------------------------------------------------------------------
 # utility type groups
@@ -1335,13 +1335,12 @@ def isna_array(array: np.ndarray,
         return np.isnat(array)
     # match everything that is not an object; options are: biufcmMOSUV
     elif kind != 'O':
-        return np.full(array.shape, False, dtype=bool)
+        return np.full(array.shape, False, dtype=DTYPE_BOOL)
     # only check for None if we have an object type
     # NOTE: this will not work for Frames contained within a Series
     if include_none:
         return np.not_equal(array, array) | np.equal(array, None)
     return np.not_equal(array, array)
-
 
 def binary_transition(
         array: np.ndarray,
@@ -2130,6 +2129,38 @@ def isin(
             other=other,
             other_is_unique=other_is_unique,
             )
+
+
+def isfalsy_array(array: np.ndarray) -> np.ndarray:
+    '''
+    Return a Boolean array indicating the presence of Falsy values.
+
+    Args:
+        array: 1D or 2D array.
+    '''
+    # NOTE: compare to dtype_to_fill_value
+    kind = array.dtype.kind
+    # matches all floating point types
+    if kind in DTYPE_INEXACT_KINDS:
+        return np.isnan(array) | array == 0.0
+    elif kind == DTYPE_DATETIME_KIND:
+        return np.isnat(array)
+    elif kind in DTYPE_TIMEDELTA_KIND:
+        return np.isnat(array) | array == EMPTY_TIMEDELTA
+    elif kind is DTYPE_BOOL_KIND:
+        return ~array # just invert
+    elif kind in DTYPE_STR_KINDS:
+        return array == ''
+    elif kind in DTYPE_INT_KINDS:
+        return array == 0 # faster to compare to integer
+    elif kind != 'O':
+        return np.full(array.shape, False, dtype=DTYPE)
+
+    func = _isin_1d if array.ndim == 1 else _isin_2d
+    # or with NaN observations
+    return func(array, FALSY_VALUES) | np.not_equal(array, array)
+
+
 
 #-------------------------------------------------------------------------------
 def _ufunc_logical_skipna(
