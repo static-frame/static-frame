@@ -697,13 +697,12 @@ def ufunc_unique(
         array: np.ndarray,
         *,
         axis: tp.Optional[int] = None,
-        non_array_type: type = frozenset,
         ) -> np.ndarray:
     '''
     Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a hetergenous object type.
 
     Args:
-        non_array_type: for cases where unique will not work, determine type to return. This can be frozenset or a
+
     '''
     if array.dtype.kind == 'O':
         if axis is None or array.ndim < 2:

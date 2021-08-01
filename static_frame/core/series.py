@@ -2277,17 +2277,37 @@ class Series(ContainerOperand):
         return self.iloc[-count:]
 
     def count(self, *,
-            skipna: bool = True
+            skipna: bool = True,
+            skipfalsy: bool = False,
+            unique: bool = False,
             ) -> int:
         '''
-        Return the count of non-NA elements.
+        Return the count of non-NA, non-falsy, and/or unique elements.
 
         Args:
             skipna
         '''
-        if not skipna:
-            return len(self.values)
-        return len(self.values) - isna_array(self.values).sum() #type: ignore
+        if not skipna and skipfalsy:
+            raise RuntimeError('Cannot skipfalsy and not skipna.')
+
+        values = self.values
+        if not skipna and not skipfalsy and not unique:
+            return len(values)
+
+        valid: tp.Optional[np.ndarray] = None
+        if skipfalsy: # always includes skipna
+            valid = ~isfalsy_array(values)
+        elif skipna: # NOTE: elif, as skipfalsy incldues skipna
+            valid = ~isna_array(values)
+
+        if unique and valid is None:
+            return len(ufunc_unique(values))
+        elif unique and valid is not None: # valid is a Boolean array
+            return len(ufunc_unique(values[valid]))
+        elif not unique and valid is not None:
+            return valid.sum()
+        # not unique, valid is None, means no removals, handled above
+        raise NotImplementedError()
 
     @doc_inject(selector='sample')
     def sample(self,
