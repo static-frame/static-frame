@@ -1319,7 +1319,6 @@ def isna_element(value: tp.Any) -> bool:
         pass
     return value is None
 
-
 def isna_array(array: np.ndarray,
         include_none: bool = True,
         ) -> np.ndarray:
@@ -1341,6 +1340,38 @@ def isna_array(array: np.ndarray,
     if include_none:
         return np.not_equal(array, array) | np.equal(array, None)
     return np.not_equal(array, array)
+
+def isfalsy_array(array: np.ndarray) -> np.ndarray:
+    '''
+    Return a Boolean array indicating the presence of Falsy or NA values.
+
+    Args:
+        array: 1D or 2D array.
+    '''
+    # NOTE: compare to dtype_to_fill_value
+    kind = array.dtype.kind
+    # matches all floating point types
+    if kind in DTYPE_INEXACT_KINDS:
+        return np.isnan(array) | (array == 0.0)
+    elif kind == DTYPE_DATETIME_KIND:
+        return np.isnat(array)
+    elif kind == DTYPE_TIMEDELTA_KIND:
+        return np.isnat(array) | (array == EMPTY_TIMEDELTA)
+    elif kind == DTYPE_BOOL_KIND:
+        return ~array # just invert
+    elif kind in DTYPE_STR_KINDS:
+        return array == ''
+    elif kind in DTYPE_INT_KINDS:
+        return array == 0 # faster to compare to integer
+    elif kind != 'O':
+        return np.full(array.shape, False, dtype=DTYPE_BOOL)
+
+    # NOTE: an ArrayKit implementation might outperformthis
+    post = np.empty(array.shape, dtype=DTYPE_BOOL)
+    for coord, v in np.ndenumerate(array):
+        post[coord] = not bool(array[coord])
+    # or with NaN observations
+    return post | np.not_equal(array, array)
 
 def binary_transition(
         array: np.ndarray,
@@ -2129,40 +2160,6 @@ def isin(
             other=other,
             other_is_unique=other_is_unique,
             )
-
-
-def isfalsy_array(array: np.ndarray) -> np.ndarray:
-    '''
-    Return a Boolean array indicating the presence of Falsy or NA values.
-
-    Args:
-        array: 1D or 2D array.
-    '''
-    # NOTE: compare to dtype_to_fill_value
-    kind = array.dtype.kind
-    # matches all floating point types
-    if kind in DTYPE_INEXACT_KINDS:
-        return np.isnan(array) | array == 0.0
-    elif kind == DTYPE_DATETIME_KIND:
-        return np.isnat(array)
-    elif kind in DTYPE_TIMEDELTA_KIND:
-        return np.isnat(array) | array == EMPTY_TIMEDELTA
-    elif kind is DTYPE_BOOL_KIND:
-        return ~array # just invert
-    elif kind in DTYPE_STR_KINDS:
-        return array == ''
-    elif kind in DTYPE_INT_KINDS:
-        return array == 0 # faster to compare to integer
-    elif kind != 'O':
-        return np.full(array.shape, False, dtype=DTYPE_BOOL)
-
-    post = np.empty(array.shape, dtype=DTYPE_BOOL)
-    for coord, v in np.ndenumerate(array):
-        post[coord] = not bool(array[coord])
-    # or with NaN observations
-    return post | np.not_equal(array, array)
-
-
 
 #-------------------------------------------------------------------------------
 def _ufunc_logical_skipna(

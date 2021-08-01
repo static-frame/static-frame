@@ -2420,12 +2420,52 @@ class TestUnit(TestCase):
         self.assertEqual(isfalsy_array(np.array((False, True, False))).tolist(),
                 [True, False, True],
                 )
+        self.assertEqual(isfalsy_array(np.array((None, '', 0, np.nan))).tolist(),
+                [True, True, True, True],
+                )
+        self.assertEqual(isfalsy_array(np.array((3.2, 0.0, -4, np.nan))).tolist(),
+                [False, True, False, True],
+                )
 
-        self.assertEqual(isfalsy_array(np.array((None, '', 0))).tolist(),
-                [True, True, True],
+        self.assertEqual(
+            isfalsy_array(
+                np.array(('2020', '2018', np.datetime64('nat')), dtype='datetime64[Y]')).tolist(),
+            [False, False, True],
+            )
+
+        self.assertEqual(isfalsy_array(np.array(('foo', 'bar', ''))).tolist(),
+                [False, False, True],
+                )
+        self.assertEqual(isfalsy_array(np.array((3, -5, 0))).tolist(),
+                [False, False, True],
+                )
+
+    def test_isfalsy_array_b(self) -> None:
+        # get a raw data array just to hit the not object branch
+        a1 = np.array((b'x', b'y'), dtype='V')
+        self.assertEqual(isfalsy_array(a1).tolist(),
+                [False, False],
+                )
+
+    def test_isfalsy_array_c(self) -> None:
+
+        a1 = np.array(('2020', '2018', np.datetime64('nat')), dtype='datetime64[Y]')
+        a2 = np.array(('2020', '2021', '2014'), dtype='datetime64[Y]')
+        a3 = a1 - a2
+        # array([    0,    -3, 'NaT'], dtype='timedelta64[Y]')
+        self.assertEqual(isfalsy_array(a3).tolist(),
+                [True, False, True],
                 )
 
 
+    def test_isfalsy_array_d(self) -> None:
+        a1 = np.array([
+            [0, 23, 0.0, np.datetime64('nat')],
+            ['', False, 'foo', np.nan]],
+            dtype=object)
+
+        self.assertEqual(isfalsy_array(a1).tolist(),
+            [[True, False, True, True], [True, True, False, True]])
 
 
 if __name__ == '__main__':
