@@ -80,6 +80,7 @@ from static_frame.core.util import intersect1d
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NameType
@@ -988,24 +989,23 @@ class Series(ContainerOperand):
 
     def isna(self) -> 'Series':
         '''
-        Return a same-indexed, Boolean ``Series`` indicating which values are NaN or None.
+        Return a same-indexed, Boolean :obj:`Series` indicating which values are NaN or None.
         '''
-        # consider returning self if not values.any()?
         values = isna_array(self.values)
         values.flags.writeable = False
-        return self.__class__(values, index=self._index)
+        return self.__class__(values, index=self._index, own_index=True)
 
     def notna(self) -> 'Series':
         '''
-        Return a same-indexed, Boolean Series indicating which values are NaN or None.
+        Return a same-indexed, Boolean :obj:`Series` indicating which values are NaN or None.
         '''
         values = np.logical_not(isna_array(self.values))
         values.flags.writeable = False
-        return self.__class__(values, index=self._index)
+        return self.__class__(values, index=self._index, own_index=True)
 
     def dropna(self) -> 'Series':
         '''
-        Return a new :obj:`static_frame.Series` after removing values of NaN or None.
+        Return a new :obj:`Series` after removing values of NaN or None.
         '''
         if self.values.dtype.kind not in DTYPE_NA_KINDS:
             # return the same array in a new series
@@ -1020,7 +1020,7 @@ class Series(ContainerOperand):
         count = isna.sum()
 
         if count == length: # all are NaN
-            return self.__class__((), name=self.name)
+            return self.__class__(EMPTY_TUPLE, name=self.name)
         if count == 0: # None are nan
             return self.__class__(self.values,
                     index=self._index,
@@ -1035,6 +1035,54 @@ class Series(ContainerOperand):
                 index=self._index._extract_iloc(sel), # PERF: use _extract_iloc as we have a Boolean array
                 name=self._name,
                 own_index=True)
+
+    #---------------------------------------------------------------------------
+    # falsy handling
+
+    def isfalsy(self) -> 'Series':
+        '''
+        Return a same-indexed, Boolean :obj:`Series` indicating which values are falsy.
+        '''
+        values = isfalsy_array(self.values)
+        values.flags.writeable = False
+        return self.__class__(values, index=self._index, own_index=True)
+
+    def notfalsy(self) -> 'Series':
+        '''
+        Return a same-indexed, Boolean :obj:`Series` indicating which values are falsy.
+        '''
+        values = np.logical_not(isfalsy_array(self.values))
+        values.flags.writeable = False
+        return self.__class__(values, index=self._index, own_index=True)
+
+    def dropfalsy(self) -> 'Series':
+        '''
+        Return a new :obj:`Series` after removing values of falsy.
+        '''
+        # get positions that we want to keep
+        isfalsy = isfalsy_array(self.values)
+        length = len(self.values)
+        count = isfalsy.sum()
+
+        if count == length: # all are falsy
+            return self.__class__(EMPTY_TUPLE, name=self.name)
+        if count == 0: # None are falsy
+            return self.__class__(self.values,
+                    index=self._index,
+                    name=self._name,
+                    own_index=True)
+
+        sel = np.logical_not(isfalsy)
+        values = self.values[sel]
+        values.flags.writeable = False
+
+        return self.__class__(values,
+                index=self._index._extract_iloc(sel), # PERF: use _extract_iloc as we have a Boolean array
+                name=self._name,
+                own_index=True)
+
+    #---------------------------------------------------------------------------
+    # na filling
 
     @doc_inject(selector='fillna')
     def fillna(self,

@@ -686,7 +686,7 @@ class TestUnit(TestCase):
         self.assertTrue(s2.index.__class__, index.__class__)
 
     #---------------------------------------------------------------------------
-    def test_series_isnull_a(self) -> None:
+    def test_series_isna_a(self) -> None:
 
         s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
         s2 = Series((234.3, None, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
@@ -716,7 +716,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_series_isnull_b(self) -> None:
+    def test_series_isna_b(self) -> None:
 
         # NOTE: this is a problematic case as it as a string with numerics and None
         s1 = Series((234.3, 'a', None, 6.4, np.nan), index=('a', 'b', 'c', 'd', 'e'))
@@ -1088,7 +1088,6 @@ class TestUnit(TestCase):
         s3 = Series((None, 1, None, None, None, None, None, 5), index=index)
         self.assertEqual(s3.fillna_backward(4).to_pairs(),
                 (('a', 1), ('b', 1), ('c', None), ('d', 5), ('e', 5), ('f', 5), ('g', 5), ('h', 5)))
-
 
     #---------------------------------------------------------------------------
     def test_series_from_element_a(self) -> None:
@@ -4478,8 +4477,70 @@ class TestUnit(TestCase):
         self.assertEqual(s2.values.tolist(), [4.5, 2.5, 6.0, 8.5, 0.0, 7.5, 0.0, 6.0, 2.5, 2.5])
 
 
+    #---------------------------------------------------------------------------
+    def test_series_isfalsy_a(self) -> None:
 
+        s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s1.isfalsy().to_pairs(),
+            (('a', False), ('b', False), ('c', False), ('d', True))
+            )
 
+        s2 = Series(('a', 'b', '', 'c'), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s2.isfalsy().to_pairs(),
+            (('a', False), ('b', False), ('c', True), ('d', False))
+            )
+
+        s3 = Series((0, -2, 0, 2), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s3.isfalsy().to_pairs(),
+            (('a', True), ('b', False), ('c', True), ('d', False))
+            )
+
+        s4 = Series(('', False, 0, np.nan), dtype=object, index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s4.isfalsy().to_pairs(),
+            (('a', True), ('b', True), ('c', True), ('d', True))
+            )
+
+    def test_series_notfalsy_a(self) -> None:
+
+        s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s1.notfalsy().to_pairs(),
+            (('a', True), ('b', True), ('c', True), ('d', False))
+            )
+
+        s2 = Series(('a', 'b', '', 'c'), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s2.notfalsy().to_pairs(),
+            (('a', True), ('b', True), ('c', False), ('d', True))
+            )
+
+        s3 = Series((0, -2, 0, 2), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s3.notfalsy().to_pairs(),
+            (('a', False), ('b', True), ('c', False), ('d', True))
+            )
+
+        s4 = Series(('', False, 0, np.nan), dtype=object, index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s4.notfalsy().to_pairs(),
+            (('a', False), ('b', False), ('c', False), ('d', False))
+            )
+
+    def test_series_dropfalsy_a(self) -> None:
+
+        s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s1.dropfalsy().to_pairs(),
+            (('a', 234.3), ('b', 3.2), ('c', 6.4))
+            )
+
+        s2 = Series(('a', 'b', '', 'c'), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s2.dropfalsy().to_pairs(),
+            (('a', 'a'), ('b', 'b'), ('d', 'c'))
+            )
+
+        s3 = Series((0, -2, 0, 2), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s3.dropfalsy().to_pairs(),
+            (('b', -2), ('d', 2))
+            )
+
+        s4 = Series(('', False, 0, np.nan), dtype=object, index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s4.dropfalsy().to_pairs(), ())
 
 if __name__ == '__main__':
     unittest.main()
