@@ -129,6 +129,7 @@ from static_frame.core.util import is_mapping
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import Join
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import key_normalize
