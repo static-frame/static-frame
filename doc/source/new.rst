@@ -1,6 +1,11 @@
 What is New in Static Frame
 ===============================
 
+0.8.17
+----------
+
+``Series.count()`` and ``Frame.count()`` extended with ``skipfalsy`` and ``unique`` parameters.
+
 0.8.16
 ----------
 
