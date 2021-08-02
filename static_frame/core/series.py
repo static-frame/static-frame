@@ -2307,7 +2307,7 @@ class Series(ContainerOperand):
         elif unique and valid is not None: # valid is a Boolean array
             return len(ufunc_unique(values[valid]))
         elif not unique and valid is not None:
-            return valid.sum()
+            return valid.sum() #type: ignore [no-any-return]
         # not unique, valid is None, means no removals, handled above
         raise NotImplementedError()
 
