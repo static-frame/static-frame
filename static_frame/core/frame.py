@@ -5564,6 +5564,8 @@ class Frame(ContainerOperand):
 
     def count(self, *,
             skipna: bool = True,
+            skipfalsy: bool = False,
+            unique: bool = False,
             axis: int = 0,
             ) -> Series:
         '''
@@ -5572,18 +5574,35 @@ class Frame(ContainerOperand):
         Args:
             axis
         '''
+        if not skipna and skipfalsy:
+            raise RuntimeError('Cannot skipfalsy and not skipna.')
+
         labels = self._columns if axis == 0 else self._index
 
-        if skipna:
-            # NOTE: this could be more efficient if implemetned on TypeBlocks
-            array = np.empty(len(labels), dtype=DTYPE_INT_DEFAULT)
-            for i, v in enumerate(self._blocks.axis_values(axis=axis)):
-                array[i] = len(v) - isna_array(v).sum()
-        else:
+        if not skipna and not skipfalsy and not unique:
             array = np.full(len(labels),
                     self._blocks._shape[axis],
                     dtype=DTYPE_INT_DEFAULT,
                     )
+        else:
+            array = np.empty(len(labels), dtype=DTYPE_INT_DEFAULT)
+            for i, values in enumerate(self._blocks.axis_values(axis=axis)):
+                valid: tp.Optional[np.ndarray] = None
+
+                if skipfalsy: # always includes skipna
+                    valid = ~isfalsy_array(values)
+                elif skipna: # NOTE: elif, as skipfalsy incldues skipna
+                    valid = ~isna_array(values)
+
+                if unique and valid is None:
+                    array[i] = len(ufunc_unique(values))
+                elif unique and valid is not None: # valid is a Boolean array
+                    array[i] = len(ufunc_unique(values[valid]))
+                elif not unique and valid is not None:
+                    array[i] = valid.sum()
+                else: # not unique, valid is None, means no removals, handled above
+                    raise NotImplementedError()
+
         array.flags.writeable = False
         return Series(array, index=labels)
 
