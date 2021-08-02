@@ -2511,6 +2511,31 @@ class TestUnit(TestCase):
         s1 = Series((2, 3, 0, np.nan, 8, 6), index=list('abcdef'))
         self.assertEqual(s1.count(skipna=False), 6)
 
+    def test_series_count_c(self) -> None:
+        s1 = Series((2, 3, 0, np.nan, 8, 6), index=list('abcdef'))
+        self.assertEqual(s1.count(skipfalsy=True), 4)
+
+    def test_series_count_d(self) -> None:
+        s1 = Series((2, 6, 0, np.nan, 0, 6), index=list('abcdef'))
+        self.assertEqual(s1.count(skipfalsy=True, unique=True), 2)
+
+    def test_series_count_e(self) -> None:
+        s1 = Series((2, 6, 0, np.nan, 0, 6), index=list('abcdef'))
+        with self.assertRaises(RuntimeError):
+            s1.count(skipfalsy=True, skipna=False)
+
+    def test_series_count_f(self) -> None:
+        s1 = Series((2, 6, 0, np.nan, 0, 6), index=list('abcdef'))
+        self.assertEqual(s1.count(skipfalsy=True, unique=False), 3)
+
+    def test_series_count_g(self) -> None:
+        s1 = Series((2, 6, 0, np.nan, 0, 6), index=list('abcdef'))
+        self.assertEqual(s1.count(unique=True), 3)
+
+    def test_series_count_h(self) -> None:
+        s1 = Series((2, 6, 0, np.nan, 0, 6), index=list('abcdef'))
+        self.assertEqual(s1.count(skipna=True, unique=False), 5)
+
     #---------------------------------------------------------------------------
     def test_series_roll_a(self) -> None:
         s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))

@@ -2285,7 +2285,9 @@ class Series(ContainerOperand):
         Return the count of non-NA, non-falsy, and/or unique elements.
 
         Args:
-            skipna
+            skipna: skip NA (NaN, None) values.
+            skipfalsy: skip falsu values (0, '', False, None, NaN)
+            unique: Count unique items after optionally applying ``skipna`` or ``skipfalsy`` removals.
         '''
         if not skipna and skipfalsy:
             raise RuntimeError('Cannot skipfalsy and not skipna.')
