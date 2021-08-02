@@ -9588,7 +9588,42 @@ class TestUnit(TestCase):
         self.assertEqual(f1.count(axis=0, skipna=False).to_pairs(), (('a', 3), ('b', 3)))
         self.assertEqual(f1.count(axis=1, skipna=False).to_pairs(), (('x', 2), ('y', 2), ('z', 2)))
 
+    def test_frame_count_d(self) -> None:
+        records = (
+                (2, 2),
+                (np.nan, 34),
+                (2, 0),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
 
+        self.assertEqual(f1.count(axis=0, unique=True).to_pairs(),
+                (('a', 1), ('b', 3))
+                )
+        self.assertEqual(f1.count(axis=0, unique=False).to_pairs(),
+                (('a', 2), ('b', 3))
+                )
+        self.assertEqual(f1.count(axis=0, skipfalsy=True, unique=False).to_pairs(),
+                (('a', 2), ('b', 2))
+                )
+        self.assertEqual(f1.count(axis=0, skipfalsy=True, unique=True).to_pairs(),
+                (('a', 1), ('b', 2))
+                )
+
+        self.assertEqual(f1.count(axis=1, skipna=False).to_pairs(),
+                (('x', 2), ('y', 2), ('z', 2))
+                )
+        self.assertEqual(f1.count(axis=1, skipfalsy=True).to_pairs(),
+                (('x', 2), ('y', 1), ('z', 1))
+                )
+        self.assertEqual(f1.count(axis=1, skipfalsy=True, unique=True).to_pairs(),
+                (('x', 1), ('y', 1), ('z', 1))
+                )
+        self.assertEqual(f1.count(axis=1, unique=True).to_pairs(),
+                (('x', 1), ('y', 1), ('z', 2))
+                )
 
 
     #---------------------------------------------------------------------------
