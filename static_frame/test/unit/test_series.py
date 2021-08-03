@@ -4567,5 +4567,30 @@ class TestUnit(TestCase):
         s4 = Series(('', False, 0, np.nan), dtype=object, index=('a', 'b', 'c', 'd'))
         self.assertEqual(s4.dropfalsy().to_pairs(), ())
 
+    #---------------------------------------------------------------------------
+    def test_series_fillfalsy_a(self) -> None:
+
+        s1 = Series(('a', 'b', ''), index=('a', 'b', 'c'))
+        self.assertEqual(s1.fillfalsy('x').to_pairs(),
+                (('a', 'a'), ('b', 'b'), ('c', 'x')),
+                )
+
+        s2 = Series(('a', 'b', 0), index=('a', 'b', 'c'), dtype=object)
+        self.assertEqual(s2.fillfalsy('x').to_pairs(),
+                (('a', 'a'), ('b', 'b'), ('c', 'x')),
+                )
+
+        s3 = Series(('a', None, ''), index=('a', 'b', 'c'), dtype=object)
+        self.assertEqual(s3.fillfalsy('x').to_pairs(),
+                (('a', 'a'), ('b', 'x'), ('c', 'x')),
+                )
+
+    def test_series_fillfalsy_b(self) -> None:
+
+        s1 = Series(('a', None, ''), index=('a', 'b', 'c'), dtype=object)
+        self.assertEqual(s1.fillfalsy(Series.from_dict({'c':20, 'b':30})).to_pairs(),
+                (('a', 'a'), ('b', 30), ('c', 20)),
+                )
+
 if __name__ == '__main__':
     unittest.main()

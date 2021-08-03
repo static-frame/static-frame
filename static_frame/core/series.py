@@ -1084,17 +1084,16 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # na filling
 
-    @doc_inject(selector='fillna')
-    def fillna(self,
-            value: tp.Any # an element or a Series
+    def _fill_missing(self,
+            value: tp.Any, # an element or a Series
+            func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> 'Series':
-        '''Return a new :obj:`Series` after replacing null (NaN or None) with the supplied value. The value can be an element or :obj:`Series`.
-
+        '''
         Args:
-            {value}
+            func: A function that returns a same-shaped array of Booleans.
         '''
         values = self.values
-        sel = isna_array(values)
+        sel = func(values)
         if not np.any(sel):
             return self
 
@@ -1129,14 +1128,38 @@ class Series(ContainerOperand):
 
         return self.__class__(assigned,
                 index=self._index,
-                name=self._name)
+                name=self._name,
+                own_index=True,
+                )
+
+    @doc_inject(selector='fillna')
+    def fillna(self,
+            value: tp.Any # an element or a Series
+            ) -> 'Series':
+        '''Return a new :obj:`Series` after replacing NA (NaN or None) with the supplied value. The ``value`` can be an element or :obj:`Series`.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(value, isna_array)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy(self,
+            value: tp.Any # an element or a Series
+            ) -> 'Series':
+        '''Return a new :obj:`Series` after replacing falsy values with the supplied value. The ``value`` can be an element or :obj:`Series`.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(value, isfalsy_array)
 
     @staticmethod
     def _fillna_directional(
             array: np.ndarray,
             directional_forward: bool,
             limit: int = 0) -> np.ndarray:
-        '''Return a new ``Series`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
+        '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
             count: Set the limit of nan values to be filled per nan region. A value of 0 is equivalent to no limit.
@@ -1170,7 +1193,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='fillna')
     def fillna_forward(self, limit: int = 0) -> 'Series':
-        '''Return a new ``Series`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
+        '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
             {limit}
@@ -1184,7 +1207,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='fillna')
     def fillna_backward(self, limit: int = 0) -> 'Series':
-        '''Return a new ``Series`` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
+        '''Return a new :obj:`Series` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
             {limit}
@@ -1243,7 +1266,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='fillna')
     def fillna_leading(self, value: tp.Any) -> 'Series':
-        '''Return a new ``Series`` after filling leading (and only leading) null (NaN or None) with the supplied value.
+        '''Return a new :obj:`Series` after filling leading (and only leading) null (NaN or None) with the supplied value.
 
         Args:
             {value}
@@ -1257,7 +1280,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='fillna')
     def fillna_trailing(self, value: tp.Any) -> 'Series':
-        '''Return a new ``Series`` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
+        '''Return a new :obj:`Series` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
 
         Args:
             {value}
