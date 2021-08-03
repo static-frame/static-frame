@@ -3527,7 +3527,9 @@ class Frame(ContainerOperand):
         return Frame(self._blocks.isna(),
                 index=self._index,
                 columns=self._columns,
-                own_data=True)
+                own_index=True,
+                own_data=True,
+                )
 
 
     def notna(self) -> 'Frame':
@@ -3538,7 +3540,9 @@ class Frame(ContainerOperand):
         return Frame(self._blocks.notna(),
                 index=self._index,
                 columns=self._columns,
-                own_data=True)
+                own_index=True,
+                own_data=True,
+                )
 
     def dropna(self,
             axis: int = 0,
@@ -3559,6 +3563,36 @@ class Frame(ContainerOperand):
                 return self
         return self._extract(row_key, column_key)
 
+    #---------------------------------------------------------------------------
+    # falsy handling
+
+    def isfalsy(self) -> 'Frame':
+        '''
+        Return a same-indexed, Boolean Frame indicating True which values are falsy.
+        '''
+        # always return a Frame, even if this is a FrameGO
+        return Frame(self._blocks.isfalsy(),
+                index=self._index,
+                columns=self._columns,
+                own_index=True,
+                own_data=True,
+                )
+
+
+    def notfalsy(self) -> 'Frame':
+        '''
+        Return a same-indexed, Boolean Frame indicating True which values are not falsy.
+        '''
+        # always return a Frame, even if this is a FrameGO
+        return Frame(self._blocks.notfalsy(),
+                index=self._index,
+                columns=self._columns,
+                own_index=True,
+                own_data=True,
+                )
+
+
+    #---------------------------------------------------------------------------
     @doc_inject(selector='fillna')
     def fillna(self, value: tp.Any) -> 'Frame':
         '''Return a new ``Frame`` after replacing null (NaN or None) with the supplied value.

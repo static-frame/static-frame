@@ -46,6 +46,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import isna_array
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
@@ -2428,6 +2429,8 @@ class TypeBlocks(ContainerOperand):
         array.flags.writeable = False # keep this array
         return self.from_blocks(array)
 
+    #---------------------------------------------------------------------------
+    # na handling
 
     def isna(self, include_none: bool = True) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is NaN or None.
@@ -2440,7 +2443,6 @@ class TypeBlocks(ContainerOperand):
 
         return self.from_blocks(blocks())
 
-
     def notna(self, include_none: bool = True) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is not NaN or None.
         '''
@@ -2452,7 +2454,32 @@ class TypeBlocks(ContainerOperand):
 
         return self.from_blocks(blocks())
 
+    #---------------------------------------------------------------------------
+    # falsy handling
 
+    def isfalsy(self) -> 'TypeBlocks':
+        '''Return a Boolean TypeBlocks where True is falsy.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for b in self._blocks:
+                bool_block = isfalsy_array(b)
+                bool_block.flags.writeable = False
+                yield bool_block
+
+        return self.from_blocks(blocks())
+
+    def notfalsy(self) -> 'TypeBlocks':
+        '''Return a Boolean TypeBlocks where True is not falsy.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for b in self._blocks:
+                bool_block = np.logical_not(isfalsy_array(b))
+                bool_block.flags.writeable = False
+                yield bool_block
+
+        return self.from_blocks(blocks())
+
+    #---------------------------------------------------------------------------
     def clip(self,
             lower: tp.Union[None, float, tp.Iterable[np.ndarray]],
             upper: tp.Union[None, float, tp.Iterable[np.ndarray]],
