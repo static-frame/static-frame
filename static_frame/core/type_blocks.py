@@ -3103,9 +3103,11 @@ class TypeBlocks(ContainerOperand):
         return row_key, column_key
 
 
-    def fillna_by_unit(self,
+    def fill_missing_by_unit(self,
             value: object,
             value_valid: tp.Optional[np.ndarray] = None,
+            *,
+            func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> 'TypeBlocks':
         '''
         Return a new TypeBlocks instance that fills missing values with the passed value.
@@ -3116,14 +3118,16 @@ class TypeBlocks(ContainerOperand):
         '''
         return self.from_blocks(
                 self._assign_from_boolean_blocks_by_unit(
-                        targets=(isna_array(b) for b in self._blocks),
+                        targets=(func(b) for b in self._blocks),
                         value=value,
                         value_valid=value_valid
                         )
                 )
 
-    def fillna_by_values(self,
+    def fill_missing_by_values(self,
             values: tp.Sequence[np.ndarray],
+            *,
+            func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> 'TypeBlocks':
         '''
         Return a new TypeBlocks instance that fills missing values with the aligned columnar arrays.
@@ -3133,7 +3137,7 @@ class TypeBlocks(ContainerOperand):
         '''
         return self.from_blocks(
                 self._assign_from_boolean_blocks_by_blocks(
-                        targets=(isna_array(b) for b in self._blocks),
+                        targets=(func(b) for b in self._blocks),
                         values=values,
                         )
                 )

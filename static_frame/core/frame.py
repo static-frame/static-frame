@@ -614,7 +614,7 @@ class Frame(ContainerOperand):
                 values.append(array)
 
             post = cls(
-                    post._blocks.fillna_by_values(values),
+                    post._blocks.fill_missing_by_values(values, func=isna_array),
                     index=index,
                     columns=columns,
                     name=name,
@@ -3592,13 +3592,15 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> 'Frame':
-        '''Return a new ``Frame`` after replacing null (NaN or None) with the supplied value.
-
-        Args:
-            {value}
+    def _fill_missing(self,
+            value: tp.Any,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            ) -> 'Frame':
         '''
+        Args:
+            func: function to return True for missing values
+        '''
+
         if hasattr(value, '__iter__') and not isinstance(value, str):
             if not isinstance(value, Frame):
                 raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Frame')
@@ -3620,13 +3622,32 @@ class Frame(ContainerOperand):
             fill_valid = None
 
         return self.__class__(
-                self._blocks.fillna_by_unit(fill, fill_valid),
+                self._blocks.fill_missing_by_unit(fill, fill_valid, func=func),
                 index=self._index,
                 columns=self._columns,
                 name=self._name,
                 own_data=True
                 )
 
+    @doc_inject(selector='fillna')
+    def fillna(self, value: tp.Any) -> 'Frame':
+        '''Return a new ``Frame`` after replacing null (NaN or None) values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(value, func=isna_array)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy(self, value: tp.Any) -> 'Frame':
+        '''Return a new ``Frame`` after replacing null (NaN or None) values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(value, func=isfalsy_array)
+
+    #---------------------------------------------------------------------------
     @doc_inject(selector='fillna')
     def fillna_leading(self,
             value: tp.Any,

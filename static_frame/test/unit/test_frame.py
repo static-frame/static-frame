@@ -5358,6 +5358,21 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
+    def test_frame_fillfalsy_a(self) -> None:
+
+        f1 = Frame.from_records([
+                [None, 2, 3, 0],
+                [3, 30, '', False],
+                [0, np.nan, 2, 3]],
+                columns=tuple('ABCD'),
+                index=tuple('wxy'),
+                )
+
+        self.assertEqual(f1.fillfalsy(-1).to_pairs(),
+                (('A', (('w', -1), ('x', 3), ('y', -1))), ('B', (('w', 2.0), ('x', 30.0), ('y', -1.0))), ('C', (('w', 3), ('x', -1), ('y', 2))), ('D', (('w', -1), ('x', -1), ('y', 3))))
+                )
+
+    #---------------------------------------------------------------------------
 
     def test_frame_fillna_leading_a(self) -> None:
         a2 = np.array([

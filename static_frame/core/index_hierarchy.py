@@ -73,6 +73,7 @@ from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import BoolOrBools
+from static_frame.core.util import isna_array
 
 from static_frame.core.style_config import StyleConfig
 
@@ -1409,7 +1410,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        blocks = self._blocks.fillna_by_unit(value, None)
+        blocks = self._blocks.fill_missing_by_unit(value, None, func=isna_array)
         index_constructors = tuple(self._levels.index_types())
 
         return self.__class__._from_type_blocks(blocks,
