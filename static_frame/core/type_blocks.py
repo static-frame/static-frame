@@ -1762,7 +1762,8 @@ class TypeBlocks(ContainerOperand):
         This approach minimizes type coercion by reducing assigned values to columnar types.
 
         Args:
-            value: Must be a single value or an array
+            targets: arrays aligned to blocks
+            values: Sequence of 1D arrays with aggregate shape equal to targets
         '''
         start = 0
         for block, target in zip_longest(self._blocks, targets):
