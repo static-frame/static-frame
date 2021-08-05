@@ -1154,6 +1154,7 @@ class Series(ContainerOperand):
         '''
         return self._fill_missing(value, isfalsy_array)
 
+    #---------------------------------------------------------------------------
     @staticmethod
     def _fillna_directional(
             array: np.ndarray,
