@@ -3102,7 +3102,7 @@ class TypeBlocks(ContainerOperand):
         return row_key, column_key
 
 
-    def fillna(self,
+    def fillna_by_unit(self,
             value: object,
             value_valid: tp.Optional[np.ndarray] = None,
             ) -> 'TypeBlocks':

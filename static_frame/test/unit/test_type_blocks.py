@@ -1940,12 +1940,12 @@ class TestUnit(TestCase):
                 ], dtype=object)
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
-        tb2 = tb1.fillna(0)
+        tb2 = tb1.fillna_by_unit(0)
         self.assertEqual([b.dtype for b in tb2._blocks],
                 [np.dtype('float64'), np.dtype('O')])
         self.assertEqual(tb2.isna().values.any(), False)
 
-        tb3 = tb1.fillna(None)
+        tb3 = tb1.fillna_by_unit(None)
         self.assertEqual([b.dtype for b in tb3._blocks],
                 [np.dtype('O'), np.dtype('O')])
         # we ahve Nones, which are na
@@ -2158,14 +2158,14 @@ class TestUnit(TestCase):
         tb2 = tb1.fillna_forward()
 
         self.assertEqual(
-                tb2.fillna(0).values.tolist(),
+                tb2.fillna_by_unit(0).values.tolist(),
                 [[0.0, 0.0, 3.0, 4.0, 0],
                 [0.0, 0.0, 6.0, 4.0, 0],
                 [5.0, 0.0, 6.0, 4.0, 0]]
                 )
 
         tb3 = tb1.fillna_backward()
-        self.assertEqual(tb3.fillna(0).values.tolist(),
+        self.assertEqual(tb3.fillna_by_unit(0).values.tolist(),
                 [[5.0, 0.0, 3.0, 4.0, 0],
                 [5.0, 0.0, 6.0, 0.0, 0],
                 [5.0, 0.0, 0.0, 0.0, 0]]
@@ -2184,13 +2184,13 @@ class TestUnit(TestCase):
         tb2 = tb1.fillna_forward(axis=1)
 
         self.assertEqual(
-            tb2.fillna(0).values.tolist(),
+            tb2.fillna_by_unit(0).values.tolist(),
             [[0.0, 0.0, 3.0, 4.0, 4.0], [0.0, 0.0, 6.0, 6.0, 6.0], [5.0, 5.0, 5.0, 5.0, 5.0]]
         )
 
         tb3 = tb1.fillna_backward(axis=1)
         self.assertEqual(
-            tb3.fillna(0).values.tolist(),
+            tb3.fillna_by_unit(0).values.tolist(),
             [[3.0, 3.0, 3.0, 4.0, 0], [6.0, 6.0, 6.0, 0, 0], [5.0, 0, 0, 0, 0]]
             )
 

@@ -3591,7 +3591,6 @@ class Frame(ContainerOperand):
                 own_data=True,
                 )
 
-
     #---------------------------------------------------------------------------
     @doc_inject(selector='fillna')
     def fillna(self, value: tp.Any) -> 'Frame':
@@ -3616,12 +3615,16 @@ class Frame(ContainerOperand):
                     self.index.isin(value.index.values),
                     self.columns.isin(value.columns.values)
                     )).values
+
+            # alternate appoach:
+            # call pimitive Frame._reindex_blocks, then use TypeBlocks.fillna_by_values
+
         else:
             fill = value
             fill_valid = None
 
         return self.__class__(
-                self._blocks.fillna(fill, fill_valid),
+                self._blocks.fillna_by_unit(fill, fill_valid),
                 index=self._index,
                 columns=self._columns,
                 name=self._name,

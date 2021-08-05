@@ -1409,7 +1409,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        blocks = self._blocks.fillna(value, None)
+        blocks = self._blocks.fillna_by_unit(value, None)
         index_constructors = tuple(self._levels.index_types())
 
         return self.__class__._from_type_blocks(blocks,
