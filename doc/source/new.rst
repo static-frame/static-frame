@@ -6,6 +6,11 @@ What is New in Static Frame
 
 ``Series.count()`` and ``Frame.count()`` extended with ``skipfalsy`` and ``unique`` parameters.
 
+Added ``Series.isfalsy()``, ``Series.notfalsy()``, ``Series.dropfalsy()``, ``Series.fillfalsy()``.
+
+Added ``Frame.isfalsy()``, ``Frame.notfalsy()``, ``Frame.dropfalsy()``, ``Frame.fillfalsy()``.
+
+
 0.8.16
 ----------
 

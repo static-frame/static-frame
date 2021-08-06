@@ -1402,7 +1402,7 @@ class IndexHierarchy(IndexBase):
 
     @doc_inject(selector='fillna')
     def fillna(self, value: tp.Any) -> 'IndexHierarchy':
-        '''Return an :obj:`IndexHierarchy` after replacing null (NaN or None) with the supplied value.
+        '''Return an :obj:`IndexHierarchy` after replacing NA (NaN or None) with the supplied value.
 
         Args:
             {value}
