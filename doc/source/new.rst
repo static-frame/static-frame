@@ -10,7 +10,7 @@ Added ``Series.isfalsy()``, ``Series.notfalsy()``, ``Series.dropfalsy()``, ``Ser
 
 Added ``Frame.isfalsy()``, ``Frame.notfalsy()``, ``Frame.dropfalsy()``, ``Frame.fillfalsy()``.
 
-Exposed ``isna_element()`` on root namespace.
+Exposed ``isna_element()`` via ``arraykit`` on root namespace.
 
 
 0.8.16
