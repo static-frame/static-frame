@@ -41,8 +41,10 @@ from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import BoolOrBools
+from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.style_config import StyleConfig
-
+# from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_auto import IndexAutoFactoryType
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
@@ -145,6 +147,31 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 index_constructor=index_constructor,
                 )
         return cls(series, config=config)
+
+    @classmethod
+    def from_concat(cls,
+            containers: tp.Iterable['Bus'],
+            *,
+            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            name: NameType = NAME_DEFAULT,
+            ) -> 'Bus':
+        '''
+        Concatenate multiple :obj:`Bus` into a new :obj:`Bus`. All :obj:`Bus` will load all :obj:`Frame` into memory if any are deferred.
+        '''
+        def gen():
+            # NOTE: this is related to what is done in Bus.values
+            for b in containers:
+                if b._loaded_all:
+                    yield b._series
+                elif b._max_persist is None: # load all at once if possible
+                    # b._loaded_all must be False
+                    b._update_series_cache_iloc(key=NULL_SLICE)
+                    yield b._series
+                else: # must realize in to an immutable object array
+                    yield Series(b.values, index=b.index, own_index=True)
+
+        series = Series.from_concat(containers, index=index, name=name)
+        return cls(series)
 
     #---------------------------------------------------------------------------
     # constructors by data format
@@ -515,7 +542,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self._derive(series)
 
     #---------------------------------------------------------------------------
-    # na handling
+    # na / falsy handling
 
     # NOTE: not implemented, as a Bus must contain only Frame or FrameDeferred
 
@@ -730,9 +757,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def values(self) -> np.ndarray:
         '''A 1D object array of all Frame contained in the Bus.
         '''
+        if self._loaded_all:
+            return self._series.values
+
         if self._max_persist is None: # load all at once if possible
-            if not self._loaded_all:
-                self._update_series_cache_iloc(key=NULL_SLICE)
+            # b._loaded_all must be False
+            self._update_series_cache_iloc(key=NULL_SLICE)
             return self._series.values
 
         # force new iteration to account for max_persist
