@@ -1,0 +1,67 @@
+
+
+
+Avoiding Pandas Y2262 Problem & Understanding the Opportunities of NumPy datetime64 and Typed Indices in StaticFrame
+
+Avoiding a Y2262 Problem, Understanding NumPy datetime64, and the Advantages of Typed Indices in StaticFrame
+
+============================================================================================
+
+
+Differences from datetime
+
+    Not really a PyObject
+    Typed by unit of time (year, month, day, ... nanosecond)
+    Units not supported by datetime > day, < millisecond
+    Initialization by strings (by numerics is unit from epoch)
+    Supports operator application of integers for timedeltas
+
+
+
+
+
+
+
+
+
+#-------------------------------------------------------------------------------
+
+Pandas models all date or timestamp values as NumPy ``datetime64[ns]`` (nanosecond) arrays, regardless of if nanosecond-level resolution is practical or appropriate. This creates a "Y2262 problem" for Pandas: dates beyond 2262-04-11 cannot be expressed. While I can create a ``pd.DatetimeIndex`` up to 2262-04-11, one day further and Pandas raises an error.
+
+>>> pd.date_range('1980', '2262-04-11')
+DatetimeIndex(['1980-01-01', '1980-01-02', '1980-01-03', '1980-01-04',
+               '1980-01-05', '1980-01-06', '1980-01-07', '1980-01-08',
+               '1980-01-09', '1980-01-10',
+               ...
+               '2262-04-02', '2262-04-03', '2262-04-04', '2262-04-05',
+               '2262-04-06', '2262-04-07', '2262-04-08', '2262-04-09',
+               '2262-04-10', '2262-04-11'],
+              dtype='datetime64[ns]', length=103100, freq='D')
+>>> pd.date_range('1980', '2262-04-12')
+Traceback (most recent call last):
+pandas._libs.tslibs.np_datetime.OutOfBoundsDatetime: Out of bounds nanosecond timestamp: 2262-04-12 00:00:00
+
+
+As indices are often used for date-time values far less granular than nanoseconds (such as dates, months, or years), StaticFrame offers the full range of NumPy typed ``datetime64`` indices. This permits exact date-time type specification, and avoids the limits of nanosecond-based units.
+
+While not possible with Pandas, creating an index of years or dates extending to 3000 is simple with StaticFrame.
+
+
+#-------------------------------------------------------------------------------
+
+Talks
+
+Talks are 30-minute sessions including time for Q&A. A talk proposal is a short description of a talk that is aiming to convince someone to part with 30 minutes of their time, in order to learn about something. A good proposal should disclose:
+
+    The topic (the WHAT) and WHY it is interesting
+    The audience to WHOM the talk is addressed
+    The TYPE of talk (lots of maths, hands-on, etc) and possibly the tone (light-hearted, informative etc)
+    The TAKEAWAY, a.k.a. what will I learn
+
+There are two parts to a proposal:
+
+    Brief Summary – This informs attendees what the talk is about. Discloses the topic, domain and overall purpose. This is at most a few lines long, and will be printed in the conference programme.
+
+    Description – This is a self-contained statement that summarises the aspects of the talk. It should be structured and present the objective of the talk, its outline, central thesis and key takeaways. After reading the description, the audience should have an idea of the overall presentation and know what to expect. The description should also make clear what background knowledge is expected from the attendees. Both this and the summary will be included in the talk details online.
+
+While there is no strict template for this, you should make sure that the audience can understand why your talk is relevant for them.
