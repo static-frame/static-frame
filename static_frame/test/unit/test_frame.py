@@ -5236,6 +5236,34 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(0),
                 ((0, ((0, 1), (1, 2))),))
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_dropfalsy_a(self) -> None:
+        f1 = FrameGO.from_records([
+                [False, 2, None, 0],
+                [3, 4, 5, 1],
+                ['', '', '', '']],
+                columns=list('ABCD'))
+
+        self.assertEqual(f1.dropfalsy().to_pairs(),
+            (('A', ((0, False), (1, 3))), ('B', ((0, 2), (1, 4))), ('C', ((0, None), (1, 5))), ('D', ((0, 0), (1, 1))))
+            )
+
+        self.assertEqual(f1.dropfalsy(condition=np.any).to_pairs(),
+            (('A', ((1, 3),)), ('B', ((1, 4),)), ('C', ((1, 5),)), ('D', ((1, 1),)))
+            )
+
+        self.assertEqual(f1.dropfalsy(axis=1, condition=np.any).shape, (3, 0))
+
+    def test_frame_dropfalsy_b(self) -> None:
+        f1 = Frame(np.arange(4).reshape(2, 2), columns=list('ab'))
+        f2 = f1.dropfalsy()
+        self.assertEqual(id(f1), id(f2))
+
+        f3 = FrameGO(np.arange(4).reshape(2, 2), columns=list('ab'))
+        f4 = f3.dropfalsy()
+        self.assertNotEqual(id(f3), id(f4))
+
 
     #---------------------------------------------------------------------------
 
