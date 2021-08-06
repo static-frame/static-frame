@@ -3553,7 +3553,9 @@ class Frame(ContainerOperand):
         # returns Boolean areas that define axis to keep
         row_key, column_key = self._blocks.drop_missing_to_keep_locations(
                 axis=axis,
-                condition=condition)
+                condition=condition,
+                func=isna_array,
+                )
 
         # NOTE: if not values to drop and this is a Frame (not a FrameGO) we can return self as it is immutable
         if self.__class__ is Frame:

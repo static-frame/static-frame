@@ -3075,15 +3075,18 @@ class TypeBlocks(ContainerOperand):
     def drop_missing_to_keep_locations(self,
             axis: int = 0,
             condition: tp.Callable[..., bool] = np.all,
+            *,
+            func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> tp.Tuple[tp.Optional[np.ndarray], tp.Optional[np.ndarray]]:
         '''
         Return the row and column slices to extract the new TypeBlock. This is to be used by Frame, where the slices will be needed on the indices as well.
 
         Args:
             axis: Dimension to drop, where 0 will drop rows and 1 will drop columns based on the condition function applied to a Boolean array.
+            func: A function that takes an array and returns a Boolean array.
         '''
         # get a unified boolean array; as isna will always return a Boolean, we can simply take the first block out of consolidation
-        unified = next(self.consolidate_blocks(isna_array(b) for b in self._blocks))
+        unified = next(self.consolidate_blocks(func(b) for b in self._blocks))
 
         # flip axis to condition funcion
         if unified.ndim == 2:
@@ -3115,6 +3118,7 @@ class TypeBlocks(ContainerOperand):
         Args:
             value: value to fill missing with; can be an element or a same-sized array.
             value_valid: Optionally provide a same-size array mask of the value setting (useful for carrying forward information from labels).
+            func: A function that takes an array and returns a Boolean array.
         '''
         return self.from_blocks(
                 self._assign_from_boolean_blocks_by_unit(

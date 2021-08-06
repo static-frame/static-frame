@@ -1913,14 +1913,14 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
-        row_key, column_key = tb1.drop_missing_to_keep_locations(axis=1)
+        row_key, column_key = tb1.drop_missing_to_keep_locations(axis=1, func=isna_array)
         assert column_key is not None
 
         self.assertEqual(column_key.tolist(),
                 [True, False, True, True, True, False, True, True])
         self.assertEqual(row_key, None)
 
-        row_key, column_key = tb1.drop_missing_to_keep_locations(axis=0)
+        row_key, column_key = tb1.drop_missing_to_keep_locations(axis=0, func=isna_array)
         assert row_key is not None
         self.assertEqual(row_key.tolist(),
                 [True, True, False])
