@@ -103,6 +103,7 @@ from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 
 if tp.TYPE_CHECKING:
+    from static_frame import Bus # pylint: disable=W0611 #pragma: no cover
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
     from static_frame import FrameGO # pylint: disable=W0611 #pragma: no cover
     import pandas # pylint: disable=W0611 #pragma: no cover
@@ -223,7 +224,7 @@ class Series(ContainerOperand):
 
     @classmethod
     def from_concat(cls,
-            containers: tp.Iterable['Series'],
+            containers: tp.Iterable[tp.Union['Series', 'Bus']],
             *,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
             name: NameType = NAME_DEFAULT,

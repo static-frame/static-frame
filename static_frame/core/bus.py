@@ -158,18 +158,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         Concatenate multiple :obj:`Bus` into a new :obj:`Bus`. All :obj:`Bus` will load all :obj:`Frame` into memory if any are deferred.
         '''
-        def gen():
-            # NOTE: this is related to what is done in Bus.values
-            for b in containers:
-                if b._loaded_all:
-                    yield b._series
-                elif b._max_persist is None: # load all at once if possible
-                    # b._loaded_all must be False
-                    b._update_series_cache_iloc(key=NULL_SLICE)
-                    yield b._series
-                else: # must realize in to an immutable object array
-                    yield Series(b.values, index=b.index, own_index=True)
-
+        # will extract .values, .index from Bus, which will correct load from Store as needed
         series = Series.from_concat(containers, index=index, name=name)
         return cls(series)
 
