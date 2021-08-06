@@ -1,20 +1,100 @@
 
 
 
-Avoiding Pandas Y2262 Problem & Understanding the Opportunities of NumPy datetime64 and Typed Indices in StaticFrame
 
-Avoiding a Y2262 Problem, Understanding NumPy datetime64, and the Advantages of Typed Indices in StaticFrame
-
-============================================================================================
+Why Datetimes Need Units: Avoiding a Y2262 Problem & Harnessing the Power of NumPy's datetime64
 
 
-Differences from datetime
 
-    Not really a PyObject
-    Typed by unit of time (year, month, day, ... nanosecond)
-    Units not supported by datetime > day, < millisecond
-    Initialization by strings (by numerics is unit from epoch)
-    Supports operator application of integers for timedeltas
+
+
+================================================================================
+
+Talks
+
+Talks are 30-minute sessions including time for Q&A. A talk proposal is a short description of a talk that is aiming to convince someone to part with 30 minutes of their time, in order to learn about something. A good proposal should disclose:
+
+    The topic (the WHAT) and WHY it is interesting
+    The audience to WHOM the talk is addressed
+    The TYPE of talk (lots of maths, hands-on, etc) and possibly the tone (light-hearted, informative etc)
+    The TAKEAWAY, a.k.a. what will I learn
+
+There are two parts to a proposal:
+
+    Brief Summary – This informs attendees what the talk is about. Discloses the topic, domain and overall purpose. This is at most a few lines long, and will be printed in the conference programme.
+
+    Description – This is a self-contained statement that summarises the aspects of the talk. It should be structured and present the objective of the talk, its outline, central thesis and key takeaways. After reading the description, the audience should have an idea of the overall presentation and know what to expect. The description should also make clear what background knowledge is expected from the attendees. Both this and the summary will be included in the talk details online.
+
+While there is no strict template for this, you should make sure that the audience can understand why your talk is relevant for them.
+
+#-------------------------------------------------------------------------------
+
+Brief Summary
+maximum 400 characters.
+
+This talk will introduce NumPy's ``datetime64`` arrays and describe their features and performance in comparison to Python's ``date`` and ``datetime`` types. Practical examples of working with, and converting between, these formats will be provided. The usage of ``datetime64`` in Pandas and StaticFrame index objects will be compared, and StaticFrame's ``via_dt`` interface will be introduced.
+
+#-------------------------------------------------------------------------------
+
+Brief Bullet Point Outline
+Brief outline.
+
+Introduction
+
+Whe we need datetime64
+    Python's date and datetime
+    The problem with datetime PyObjects in arrays
+    The datetime64 array
+        The application of a time unit to a 64-bit signed integer
+        A wide range of time units
+        Time units permit maximizing range
+
+Comparing datetime and datetime64
+    Interface and features
+        PyObject versus an int64
+        Units
+        Initialization
+        Attributes and methods
+        Transformations, opperator overloading, and timedeltas
+        NaT
+        np.datetime_data()
+    Performance comparsions
+        Arrays of datetime64 compared to lists of datetime PyObjects
+        Slicing and selecting
+        Transforming, applying timedeltas
+
+Converting between datetime and datetime64
+    Units not supported in datetime
+    From datetime64 to datetime
+    From datetime to datetime64
+
+Examples of the benefits of unit-specification of dates and times
+    More narrow typing
+    Monthly timeseries data
+    Specifying the resolution of a measurement
+
+Labelling data with datetime64 in Pandas and StaticFrame
+    Pandas exclusive usage of nanoseconds
+    datetime64 units in StaticFrame indicies
+
+via_dt: Making datetime64 as easy to work with as datetime
+
+
+
+
+
+Description
+Detailed outline.
+
+
+NumPy supports a date and time array type called ``datetime64``. Unlike Python's standard library types (``datetime`` and ``date``), ``datetime64`` supports a extensive range of time units, from year to attosecond. This specification of unit permits more narrow typing of time information, and permits taking full advantage of time ranges that fit within the underlying representation (a 64-bit signed integer). This talk will introduce ``datetime64`` arrays and describe their features and performance in comparison to Python's ``date`` and ``datetime`` types. Practical examples of working with, and converting between, these formats will be provided. As date and time information is particularly useful for labelling data, the usage of ``datetime64`` in Pandas and StaticFrame indicies will be examined. Pandas use of only a single unit (nanosecond) will be shown to lead to a "Y2262" problem and offer other disadvantages compared to StaicFrame's full support for ``datetime64`` units. Finally, StaticFrame's ``via_dt`` interface will be shown to offer utilities that make working with ``datetime64`` as easy as Python's `datetime`` objects.
+
+
+
+
+
+================================================================================
+
 
 
 
@@ -49,19 +129,3 @@ While not possible with Pandas, creating an index of years or dates extending to
 
 #-------------------------------------------------------------------------------
 
-Talks
-
-Talks are 30-minute sessions including time for Q&A. A talk proposal is a short description of a talk that is aiming to convince someone to part with 30 minutes of their time, in order to learn about something. A good proposal should disclose:
-
-    The topic (the WHAT) and WHY it is interesting
-    The audience to WHOM the talk is addressed
-    The TYPE of talk (lots of maths, hands-on, etc) and possibly the tone (light-hearted, informative etc)
-    The TAKEAWAY, a.k.a. what will I learn
-
-There are two parts to a proposal:
-
-    Brief Summary – This informs attendees what the talk is about. Discloses the topic, domain and overall purpose. This is at most a few lines long, and will be printed in the conference programme.
-
-    Description – This is a self-contained statement that summarises the aspects of the talk. It should be structured and present the objective of the talk, its outline, central thesis and key takeaways. After reading the description, the audience should have an idea of the overall presentation and know what to expect. The description should also make clear what background knowledge is expected from the attendees. Both this and the summary will be included in the talk details online.
-
-While there is no strict template for this, you should make sure that the audience can understand why your talk is relevant for them.
