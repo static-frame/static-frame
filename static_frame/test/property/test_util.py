@@ -12,6 +12,7 @@ from arraykit import mloc
 from arraykit import shape_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
+from arraykit import isna_element
 
 
 # from static_frame.test.property.strategies import get_arrays_2d_aligned
@@ -226,7 +227,7 @@ class TestUnit(TestCase):
         self.assertTrue(post.dtype == bool)
 
         values = np.ravel(array)
-        count_na = sum(util.isna_element(x) for x in values)
+        count_na = sum(isna_element(x) for x in values)
 
         self.assertTrue(np.ravel(post).sum() == count_na)
 

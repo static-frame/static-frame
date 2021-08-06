@@ -4,11 +4,13 @@ What is New in Static Frame
 0.8.17
 ----------
 
-``Series.count()`` and ``Frame.count()`` extended with ``skipfalsy`` and ``unique`` parameters.
+Extended ``Series.count()`` and ``Frame.count()`` with ``skipfalsy`` and ``unique`` parameters.
 
 Added ``Series.isfalsy()``, ``Series.notfalsy()``, ``Series.dropfalsy()``, ``Series.fillfalsy()``.
 
 Added ``Frame.isfalsy()``, ``Frame.notfalsy()``, ``Frame.dropfalsy()``, ``Frame.fillfalsy()``.
+
+Exposed ``isna_element()`` on root namespace.
 
 
 0.8.16
