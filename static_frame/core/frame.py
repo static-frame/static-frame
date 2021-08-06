@@ -3551,7 +3551,7 @@ class Frame(ContainerOperand):
         Return a new Frame after removing rows (axis 0) or columns (axis 1) where condition is True, where condition is an NumPy ufunc that process the Boolean array returned by isna().
         '''
         # returns Boolean areas that define axis to keep
-        row_key, column_key = self._blocks.dropna_to_keep_locations(
+        row_key, column_key = self._blocks.drop_missing_to_keep_locations(
                 axis=axis,
                 condition=condition)
 

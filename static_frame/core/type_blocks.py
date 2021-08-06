@@ -3072,7 +3072,7 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def dropna_to_keep_locations(self,
+    def drop_missing_to_keep_locations(self,
             axis: int = 0,
             condition: tp.Callable[..., bool] = np.all,
             ) -> tp.Tuple[tp.Optional[np.ndarray], tp.Optional[np.ndarray]]:
