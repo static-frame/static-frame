@@ -207,6 +207,7 @@ def index_from_optional_constructor(
     '''
     # NOTE: this might return an own_index flag to show callers when a new index has been created
     from static_frame.core.index_auto import IndexAutoFactory
+    from static_frame.core.index_auto import IndexDefaultFactory
 
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
@@ -215,6 +216,9 @@ def index_from_optional_constructor(
                 )
 
     if explicit_constructor:
+        if isinstance(explicit_constructor, IndexDefaultFactory):
+            # partial the default constructor with a name argument
+            return explicit_constructor(default_constructor)(value)
         return explicit_constructor(value)
 
     # default constructor could be a function with a STATIC attribute

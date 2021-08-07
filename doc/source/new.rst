@@ -1,6 +1,7 @@
 What is New in Static Frame
 ===============================
 
+
 0.8.17
 ----------
 
@@ -17,6 +18,8 @@ Added ``Bus.from_concat()``.
 Added ``Bus.to_series()``.
 
 ``Bus.reindex()``, ``Bus.relabel()``, ``Bus.relabel_flat()``, ``Bus.relabel_level_add()``, ``Bus.relabel_level_drop()``, ``Bus.rehierarch()`` now, if necessary, load all contents from the associated ``Store`` and return a ``Bus`` without a ``Store`` association.
+
+Added ``index_constructor`` argument to ``Series.from_concat_items()``.
 
 
 0.8.16

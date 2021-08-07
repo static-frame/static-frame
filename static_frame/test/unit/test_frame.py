@@ -9573,11 +9573,14 @@ class TestUnit(TestCase):
             for i in range(3):
                 yield f'000{i}', ('a' * i, 'b' * i)
 
-        f = Frame.from_records_items(gen())
+        from static_frame import IndexDefaultFactory
+
+        f = Frame.from_records_items(gen(), index_constructor=IndexDefaultFactory('foo'))
         self.assertEqual(
                 f.to_pairs(0),
                 ((0, (('0000', ''), ('0001', 'a'), ('0002', 'aa'))), (1, (('0000', ''), ('0001', 'b'), ('0002', 'bb'))))
                 )
+        self.assertEqual(f.index.name, 'foo')
 
     #---------------------------------------------------------------------------
     def test_frame_count_a(self) -> None:

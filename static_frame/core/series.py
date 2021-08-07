@@ -3,6 +3,7 @@ from functools import partial
 from itertools import chain
 from copy import deepcopy
 from collections.abc import Set
+from itertools import product
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
@@ -36,6 +37,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import IndexDefaultFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -176,7 +178,6 @@ class Series(ContainerOperand):
             *,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
-            index_name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> 'Series':
         '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
@@ -185,7 +186,6 @@ class Series(ContainerOperand):
             pairs: Iterable of pairs of index, value.
             dtype: dtype or valid dtype specifier.
             name:
-            index_name:
             index_constructor:
 
         Returns:
@@ -285,7 +285,7 @@ class Series(ContainerOperand):
             items: tp.Iterable[tp.Tuple[tp.Hashable, 'Series']],
             *,
             name: NameType = None,
-            index_name: NameType = None,
+            index_constructor: tp.Optional[IndexConstructor] = None
             ) -> 'Series':
         '''
         Produce a :obj:`Series` with a hierarchical index from an iterable of pairs of labels, :obj:`Series`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Series`.
@@ -298,14 +298,24 @@ class Series(ContainerOperand):
         '''
         array_values = []
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
-            for label, series in items:
-                array_values.append(series.values)
-                yield label, series._index
-
+        if index_constructor is None or isinstance(index_constructor, IndexDefaultFactory):
+            # default index constructor expects delivery of Indices for greater efficiency
+            def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
+                for label, series in items:
+                    array_values.append(series.values)
+                    yield label, series._index
+        else:
+            def gen() -> tp.Iterator[tp.Hashable]:
+                for label, series in items:
+                    array_values.append(series.values)
+                    yield from product((label,), series._index)
         try:
-            # populates array_values as side effect
-            ih = IndexHierarchy.from_index_items(gen(), name=index_name) #type: ignore
+            # populates array_values as side
+            ih = index_from_optional_constructor(
+                    gen(),
+                    default_constructor=IndexHierarchy.from_index_items,
+                    explicit_constructor=index_constructor,
+                    )
             # returns immutable array
             values = concat_resolved(array_values)
             own_index = True

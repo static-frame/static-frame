@@ -31,6 +31,7 @@ from static_frame import IndexDate
 from static_frame import IndexSecond
 from static_frame import IndexYearMonth
 from static_frame import IndexAutoFactory
+from static_frame import IndexDefaultFactory
 
 from static_frame import HLoc
 
@@ -3036,7 +3037,7 @@ class TestUnit(TestCase):
         s1 = Series((2, 3, 0,), index=list('abc'))
         s2 = Series((2, np.nan, 0, -1), index=list('abcd'))
 
-        s3 = Series.from_concat_items((('x', s1), ('y', s2)), name='foo', index_name='bar')
+        s3 = Series.from_concat_items((('x', s1), ('y', s2)), name='foo')
 
         self.assertAlmostEqualItems(s3.to_pairs(),
                 ((('x', 'a'), 2.0), (('x', 'b'), 3.0), (('x', 'c'), 0.0), (('y', 'a'), 2.0), (('y', 'b'), np.nan), (('y', 'c'), 0.0), (('y', 'd'), -1.0))
@@ -3046,7 +3047,6 @@ class TestUnit(TestCase):
                 ((('x', 'b'), 3.0), (('y', 'b'), np.nan)))
 
         self.assertEqual(s3.name, 'foo')
-        self.assertEqual(s3.index.name, 'bar')
 
 
     def test_series_from_concat_items_b(self) -> None:
@@ -3054,6 +3054,27 @@ class TestUnit(TestCase):
 
         self.assertEqual((0,), s1.shape)
 
+
+    def test_series_from_concat_items_c(self) -> None:
+
+        s1 = Series((2, 3, 0,), index=list('abc'))
+        s2 = Series((2, np.nan, 0, -1), index=list('abcd'))
+
+
+        s3 = Series.from_concat_items((('x', s1), ('y', s2)),
+            name='foo',
+            index_constructor=Index,
+            )
+        self.assertEqual(s3.fillna('').to_pairs(),
+                ((('x', 'a'), 2.0), (('x', 'b'), 3.0), (('x', 'c'), 0.0), (('y', 'a'), 2.0), (('y', 'b'), ''), (('y', 'c'), 0.0), (('y', 'd'), -1.0)))
+
+    def test_series_from_concat_items_d(self) -> None:
+
+        s1 = Series((2, 3, 0,), index=list('abc'))
+        s2 = Series((2, np.nan, 0, -1), index=list('abcd'))
+
+        s3 = Series.from_concat_items((('x', s1), ('y', s2)), index_constructor=IndexDefaultFactory('bar'))
+        self.assertEqual(s3.index.name, 'bar')
 
     #---------------------------------------------------------------------------
 
