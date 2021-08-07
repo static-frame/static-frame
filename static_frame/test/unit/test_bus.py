@@ -1816,10 +1816,7 @@ class TestUnit(TestCase):
                     )
             self.assertEqual(b2.status['loaded'].sum(), 5)
 
-    #---------------------------------------------------------------------------
-
-
-    def test_bus_from_concat_b(self) -> None:
+    def test_bus_from_concat_c(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(5):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
