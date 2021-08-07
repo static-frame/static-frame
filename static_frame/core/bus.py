@@ -354,7 +354,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         # Not handling cases of max_persist being greater than the length of the Series (might floor to length)
         if max_persist is not None and max_persist < self._loaded.sum():
-            raise ErrorInitBus('max_persis cannot be less than the number of already loaded Frames')
+            raise ErrorInitBus('max_persist cannot be less than the number of already loaded Frames')
         self._max_persist = max_persist
 
         # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
@@ -364,7 +364,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def _derive(self,
             series: Series,
             ) -> 'Bus':
-        '''Utility for creating derived Bus
+        '''Utility for creating a derived Bus, propagating the associated ``Store`` and configuration. This can be used if the passed `series` is a subset or re-ordering of self._series; however, if the index has been transformed, this method should not be used, as, if there is a Store, the labels are no longer found in that Store.
         '''
         return self.__class__(series,
                 store=self._store,
@@ -472,7 +472,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 own_index=own_index,
                 check_equals=check_equals,
                 )
-        return self._derive(series)
+        return self.__class__(series)
+        # return self._derive(series)
 
     @doc_inject(selector='relabel', class_name='Bus')
     def relabel(self,
@@ -744,7 +745,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @property
     def values(self) -> np.ndarray:
-        '''A 1D object array of all Frame contained in the Bus.
+        '''A 1D object array of all :obj:`Frame` contained in the :obj:`Bus`.
         '''
         if self._loaded_all:
             return self._series.values
@@ -1137,7 +1138,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             fill_value: tp.Any,
             ) -> 'Bus':
-        '''Return a Bus with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
+        '''Return a :obj:`Bus` with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
 
         Args:
             shift: Positive or negative integer shift.
@@ -1149,3 +1150,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         series = self._series.shift(shift=shift, fill_value=fill_value)
         return self._derive(series)
 
+    #---------------------------------------------------------------------------
+    # exporter
+
+    def to_series(self) -> Series:
+        '''Return a :obj:`Series` with the :obj:`Frame` contained in this :obj:`Bus`. If the :obj:`Bus` is associated with a :obj:`Store`, all :obj:`Frame` will be loaded into memory and the returned :obj:`Bus` will no longer be associated with the :obj:`Store`.
+        '''
+        # values returns an immutable array and will fully reaize from Store
+        series = Series(self.values, index=self.index, own_index=True)
+        return self.__class__(series, config=self._config)

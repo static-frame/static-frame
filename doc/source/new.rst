@@ -12,6 +12,8 @@ Added ``Frame.isfalsy()``, ``Frame.notfalsy()``, ``Frame.dropfalsy()``, ``Frame.
 
 Exposed ``isna_element()`` via ``arraykit`` on root namespace.
 
+Added ``Bus.from_concat()``.
+
 
 0.8.16
 ----------
