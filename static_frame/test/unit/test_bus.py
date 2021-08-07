@@ -1607,12 +1607,15 @@ class TestUnit(TestCase):
             # set max_persist to size to test when fully loaded with max_persist
             b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
 
+            b3 = b2.reindex(('c', 'd', 'q'), fill_value=Frame())
+            f1 = b3['c']
+            # this would fail if the Store was still associated with the Bus
+            f2 = b3['q']
 
-            # b3 = b2.reindex(('c', 'd', 'q'), fill_value=Frame())
-            # b3['c']
-            # b3['q']
-            # import ipdb; ipdb.set_trace()
-            # pass
+            self.assertEqual(b3._max_persist, None)
+            self.assertEqual(b3._store, None)
+            self.assertEqual(b2._max_persist, 1)
+
 
     #---------------------------------------------------------------------------
     def test_bus_relabel_a(self) -> None:

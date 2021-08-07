@@ -14,6 +14,9 @@ Exposed ``isna_element()`` via ``arraykit`` on root namespace.
 
 Added ``Bus.from_concat()``.
 
+Added ``Bus.to_series()``.
+
+
 
 0.8.16
 ----------

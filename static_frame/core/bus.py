@@ -450,6 +450,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # index manipulation
 
+    # NOTE: must return a new Bus with fully-realized Frames, as cannot gaurantee usage of a Store after labels have been changed.
+
     @doc_inject(selector='reindex', class_name='Bus')
     def reindex(self,
             index: IndexInitializer,
@@ -467,13 +469,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             {fill_value}
             {own_index}
         '''
-        series = self._series.reindex(index,
+        series = self.to_series().reindex(index,
                 fill_value=fill_value,
                 own_index=own_index,
                 check_equals=check_equals,
                 )
-        return self.__class__(series)
-        # return self._derive(series)
+        return self.__class__(series, config=self._config)
 
     @doc_inject(selector='relabel', class_name='Bus')
     def relabel(self,
@@ -485,16 +486,23 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Args:
             index: {relabel_input}
         '''
-        series = self._series.relabel(index)
-        return self._derive(series)
+        # series = self._series.relabel(index)
+        # return self._derive(series)
+
+        series = self.to_series().relabel(index)
+        return self.__class__(series, config=self._config)
+
 
     @doc_inject(selector='relabel_flat', class_name='Bus')
     def relabel_flat(self) -> 'Bus':
         '''
         {doc}
         '''
-        series = self._series.relabel_flat()
-        return self._derive(series)
+        # series = self._series.relabel_flat()
+        # return self._derive(series)
+
+        series = self.to_series().relabel_flat()
+        return self.__class__(series, config=self._config)
 
     @doc_inject(selector='relabel_level_add', class_name='Bus')
     def relabel_level_add(self,
@@ -506,8 +514,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Args:
             level: {level}
         '''
-        series = self._series.relabel_level_add(level)
-        return self._derive(series)
+        # series = self._series.relabel_level_add(level)
+        # return self._derive(series)
+
+        series = self.to_series().relabel_level_add(level)
+        return self.__class__(series, config=self._config)
+
 
     @doc_inject(selector='relabel_level_drop', class_name='Bus')
     def relabel_level_drop(self,
@@ -519,8 +531,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Args:
             count: {count}
         '''
-        series = self._series.relabel_level_drop(count)
-        return self._derive(series)
+        # series = self._series.relabel_level_drop(count)
+        # return self._derive(series)
+
+        series = self.to_series().relabel_level_drop(count)
+        return self.__class__(series, config=self._config)
 
     def rehierarch(self,
             depth_map: tp.Sequence[int]
@@ -528,8 +543,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         Return a new :obj:`Bus` with new a hierarchy based on the supplied ``depth_map``.
         '''
-        series = self._series.rehierarch(depth_map)
-        return self._derive(series)
+        # series = self._series.rehierarch(depth_map)
+        # return self._derive(series)
+
+        series = self.to_series().rehierarch(depth_map)
+        return self.__class__(series, config=self._config)
+
 
     #---------------------------------------------------------------------------
     # na / falsy handling
@@ -1157,5 +1176,4 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''Return a :obj:`Series` with the :obj:`Frame` contained in this :obj:`Bus`. If the :obj:`Bus` is associated with a :obj:`Store`, all :obj:`Frame` will be loaded into memory and the returned :obj:`Bus` will no longer be associated with the :obj:`Store`.
         '''
         # values returns an immutable array and will fully reaize from Store
-        series = Series(self.values, index=self.index, own_index=True)
-        return self.__class__(series, config=self._config)
+        return Series(self.values, index=self.index, own_index=True)
