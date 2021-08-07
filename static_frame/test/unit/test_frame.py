@@ -32,6 +32,7 @@ from static_frame import IndexYearMonth
 from static_frame import mloc
 from static_frame import Series
 from static_frame import TypeBlocks
+from static_frame import IndexDefaultFactory
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
@@ -9572,8 +9573,6 @@ class TestUnit(TestCase):
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Tuple[str, str]]]:
             for i in range(3):
                 yield f'000{i}', ('a' * i, 'b' * i)
-
-        from static_frame import IndexDefaultFactory
 
         f = Frame.from_records_items(gen(), index_constructor=IndexDefaultFactory('foo'))
         self.assertEqual(

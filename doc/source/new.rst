@@ -21,6 +21,8 @@ Added ``Bus.to_series()``.
 
 Added ``index_constructor`` argument to ``Series.from_concat_items()``.
 
+Introduced ``IndexDefaultFactory`` to permit specifying index ``name`` attributes with default index constructors.
+
 
 0.8.16
 ----------
