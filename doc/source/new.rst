@@ -16,6 +16,7 @@ Added ``Bus.from_concat()``.
 
 Added ``Bus.to_series()``.
 
+All ``Bus`` routines that transform the ``Index`` now, if necessary, load all contents from the associated ``Store`` and return a ``Bus`` without a ``Store`` association.
 
 
 0.8.16

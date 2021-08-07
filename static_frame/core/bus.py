@@ -486,9 +486,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Args:
             index: {relabel_input}
         '''
-        # series = self._series.relabel(index)
-        # return self._derive(series)
-
         series = self.to_series().relabel(index)
         return self.__class__(series, config=self._config)
 
@@ -498,9 +495,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         {doc}
         '''
-        # series = self._series.relabel_flat()
-        # return self._derive(series)
-
         series = self.to_series().relabel_flat()
         return self.__class__(series, config=self._config)
 
@@ -514,9 +508,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Args:
             level: {level}
         '''
-        # series = self._series.relabel_level_add(level)
-        # return self._derive(series)
-
         series = self.to_series().relabel_level_add(level)
         return self.__class__(series, config=self._config)
 
@@ -531,9 +522,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Args:
             count: {count}
         '''
-        # series = self._series.relabel_level_drop(count)
-        # return self._derive(series)
-
         series = self.to_series().relabel_level_drop(count)
         return self.__class__(series, config=self._config)
 
@@ -543,9 +531,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         Return a new :obj:`Bus` with new a hierarchy based on the supplied ``depth_map``.
         '''
-        # series = self._series.rehierarch(depth_map)
-        # return self._derive(series)
-
         series = self.to_series().rehierarch(depth_map)
         return self.__class__(series, config=self._config)
 
