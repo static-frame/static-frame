@@ -3036,7 +3036,7 @@ class TestUnit(TestCase):
         s1 = Series((2, 3, 0,), index=list('abc'))
         s2 = Series((2, np.nan, 0, -1), index=list('abcd'))
 
-        s3 = Series.from_concat_items((('x', s1), ('y', s2)))
+        s3 = Series.from_concat_items((('x', s1), ('y', s2)), name='foo', index_name='bar')
 
         self.assertAlmostEqualItems(s3.to_pairs(),
                 ((('x', 'a'), 2.0), (('x', 'b'), 3.0), (('x', 'c'), 0.0), (('y', 'a'), 2.0), (('y', 'b'), np.nan), (('y', 'c'), 0.0), (('y', 'd'), -1.0))
@@ -3044,6 +3044,9 @@ class TestUnit(TestCase):
 
         self.assertAlmostEqualItems(s3[HLoc[:, 'b']].to_pairs(),
                 ((('x', 'b'), 3.0), (('y', 'b'), np.nan)))
+
+        self.assertEqual(s3.name, 'foo')
+        self.assertEqual(s3.index.name, 'bar')
 
 
     def test_series_from_concat_items_b(self) -> None:

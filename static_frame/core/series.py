@@ -176,6 +176,7 @@ class Series(ContainerOperand):
             *,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
+            index_name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> 'Series':
         '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
@@ -183,6 +184,9 @@ class Series(ContainerOperand):
         Args:
             pairs: Iterable of pairs of index, value.
             dtype: dtype or valid dtype specifier.
+            name:
+            index_name:
+            index_constructor:
 
         Returns:
             :obj:`static_frame.Series`
@@ -198,7 +202,8 @@ class Series(ContainerOperand):
                 index=index,
                 dtype=dtype,
                 name=name,
-                index_constructor=index_constructor)
+                index_constructor=index_constructor,
+                )
 
     @classmethod
     def from_dict(cls,
@@ -277,7 +282,10 @@ class Series(ContainerOperand):
 
     @classmethod
     def from_concat_items(cls,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, 'Series']]
+            items: tp.Iterable[tp.Tuple[tp.Hashable, 'Series']],
+            *,
+            name: NameType = None,
+            index_name: NameType = None,
             ) -> 'Series':
         '''
         Produce a :obj:`Series` with a hierarchical index from an iterable of pairs of labels, :obj:`Series`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Series`.
@@ -297,7 +305,7 @@ class Series(ContainerOperand):
 
         try:
             # populates array_values as side effect
-            ih = IndexHierarchy.from_index_items(gen()) #type: ignore
+            ih = IndexHierarchy.from_index_items(gen(), name=index_name) #type: ignore
             # returns immutable array
             values = concat_resolved(array_values)
             own_index = True
@@ -305,9 +313,9 @@ class Series(ContainerOperand):
             # Default to empty when given an empty iterable
             ih = None #type: ignore
             values = EMPTY_TUPLE
-            own_index= False
+            own_index = False
 
-        return cls(values, index=ih, own_index=own_index)
+        return cls(values, index=ih, own_index=own_index, name=name)
 
     @classmethod
     def from_overlay(cls,
@@ -416,6 +424,9 @@ class Series(ContainerOperand):
         Args:
             values: An iterable of values to be aligned with the supplied (or automatically generated) index.
             {index}
+            name:
+            dtype:
+            index_constructor:
             {own_index}
         '''
 
