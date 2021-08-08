@@ -277,6 +277,14 @@ class TestUnit(TestCase):
         self.assertTrue(s1._index._map is None) #type: ignore
 
     #---------------------------------------------------------------------------
+    def test_series_from_dict_a(self) -> None:
+
+        s1 = Series.from_dict(OrderedDict([('b', 4), ('a', 1)]), index_constructor=IndexDefaultFactory('foo'))
+        self.assertEqual(s1.to_pairs(),
+                (('b', 4), ('a', 1)))
+        self.assertEqual(s1.index.name, 'foo')
+
+    #---------------------------------------------------------------------------
 
     def test_series_slice_a(self) -> None:
         # create a series from a single value
@@ -1145,9 +1153,14 @@ class TestUnit(TestCase):
 
     def test_series_from_items_b(self) -> None:
 
-        s1 = Series.from_items(zip(list('abc'), (1,2,3)), dtype=str, name='foo')
+        s1 = Series.from_items(zip(list('abc'), (1,2,3)),
+                dtype=str,
+                name='foo',
+                index_constructor=IndexDefaultFactory('bar'),
+                )
         self.assertEqual(s1.name, 'foo')
         self.assertEqual(s1.values.tolist(), ['1', '2', '3'])
+        self.assertEqual(s1.index.name, 'bar')
 
     def test_series_from_items_c(self) -> None:
 

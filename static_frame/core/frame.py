@@ -59,6 +59,7 @@ from static_frame.core.index import immutable_index_filter
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_auto import IndexDefaultFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
@@ -499,17 +500,32 @@ class Frame(ContainerOperand):
             union: bool = True,
             name: NameType = None,
             fill_value: object = np.nan,
-            consolidate_blocks: bool = False
+            index_constructor: tp.Optional[IndexConstructor] = None,
+            columns_constructor: tp.Optional[IndexConstructor] = None,
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''
         Produce a :obj:`Frame` with a hierarchical index from an iterable of pairs of labels, :obj:`Frame`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Frame`.
 
         Args:
             items: Iterable of pairs of label, :obj:`Frame`
+            axis:
+            union:
+            name:
+            fill_value:
+            index_constructor:
+            columns_constructor:
+            consolidate_blocks:
         '''
         frames = []
 
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
+            yield_index = False
+            if axis == 0 and (index_constructor is None or isinstance(index_constructor, IndexDefaultFactory)):
+                yield_index = True
+            elif axis == 1 and (columns_constructor is None or isinstance(columns_constructor, IndexDefaultFactory)):
+                yield_index = True
+
             for label, frame in items:
                 # must normalize Series here to avoid down-stream confusion
                 if isinstance(frame, Series):
@@ -517,18 +533,38 @@ class Frame(ContainerOperand):
 
                 frames.append(frame)
                 if axis == 0:
-                    yield label, frame._index
+                    if yield_index:
+                        yield label, frame._index
+                    else:
+                        yield from product((label,), frame._index)
                 elif axis == 1:
-                    yield label, frame._columns
-                # we have already evaluated AxisInvalid
+                    if yield_index:
+                        yield label, frame._columns
+                    else:
+                        yield from product((label,), frame._columns)
 
+                # we have already evaluated AxisInvalid
 
         # populates array_values as side effect
         if axis == 0:
-            ih = IndexHierarchy.from_index_items(gen())
+            # ih = IndexHierarchy.from_index_items(gen())
+            ih = index_from_optional_constructor(
+                    gen(),
+                    default_constructor=IndexHierarchy.from_index_items,
+                    explicit_constructor=index_constructor,
+                    )
+            if columns_constructor is not None:
+                raise NotImplementedError('using columns_constructor for axis 0 not yet supported')
             kwargs = dict(index=ih)
         elif axis == 1:
-            ih = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_index_items(gen())
+            # ih = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_index_items(gen())
+            ih = index_from_optional_constructor(
+                    gen(),
+                    default_constructor=cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_index_items,
+                    explicit_constructor=columns_constructor,
+                    )
+            if index_constructor is not None:
+                raise NotImplementedError('using index_constructor for axis 1 not yet supported')
             kwargs = dict(columns=ih)
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
@@ -950,10 +986,12 @@ class Frame(ContainerOperand):
             fill_value: If pairs include Series, they will be reindexed with the provided index; reindexing will use this fill value.
             {dtypes}
             {name}
+            index_constructor:
+            columns_constructor:
             {consolidate_blocks}
 
         Returns:
-            :obj:`static_frame.Frame`
+            :obj:`Frame`
         '''
         columns = []
 
@@ -1033,8 +1071,12 @@ class Frame(ContainerOperand):
 
         Args:
             mapping: a dictionary or similar mapping interface.
+            index:
+            fill_value:
             {dtypes}
             {name}
+            index_constructor:
+            columns_constructor:
             {consolidate_blocks}
         '''
         return cls.from_items(mapping.items(),

@@ -4256,13 +4256,18 @@ class TestUnit(TestCase):
                 index=range(2),
                 columns=range(2),
                 dtype=object,
-                name='foo'
+                name='foo',
+                index_constructor=IndexDefaultFactory('bar'),
+                columns_constructor=IndexDefaultFactory('baz'),
                 )
 
         self.assertEqual(f1.to_pairs(),
                 ((0, ((0, None), (1, 'q'))), (1, ((0, 'g'), (1, None)))))
 
         self.assertEqual(f1.name, 'foo')
+        self.assertEqual(f1.index.name, 'bar')
+        self.assertEqual(f1.columns.name, 'baz')
+
 
     def test_frame_from_element_iloc_items_b(self) -> None:
 
@@ -7945,7 +7950,53 @@ class TestUnit(TestCase):
                 [[('a', 'b'), 'p'], [('a', 'b'), 'q'], [('a', 'b'), 't'], [('x', 'y'), 'r'], [('x', 'y'), 's']]
                 )
 
+    def test_frame_from_concat_items_f(self) -> None:
+        records1 = (
+                (2, 2, False),
+                (30, 34, False),
+                )
 
+        f1 = Frame.from_records(records1,
+                columns=('p', 'q', 't'),
+                index=('x', 'a'))
+
+        records2 = (
+                ('c', False),
+                ('d', True),
+                )
+
+        f2 = Frame.from_records(records2,
+                columns=('r', 's',),
+                index=('x', 'a'))
+
+        f3 = Frame.from_concat_items(dict(A=f1, B=f2).items(), axis=1, columns_constructor=Index)
+        self.assertEqual(f3.to_pairs(),
+                ((('A', 'p'), (('x', 2), ('a', 30))), (('A', 'q'), (('x', 2), ('a', 34))), (('A', 't'), (('x', False), ('a', False))), (('B', 'r'), (('x', 'c'), ('a', 'd'))), (('B', 's'), (('x', False), ('a', True)))))
+
+        f4 = Frame.from_concat_items(dict(A=f1, B=f2).items(), axis=1, columns_constructor=IndexDefaultFactory('foo'))
+        self.assertEqual(f4.columns.name, 'foo')
+
+        with self.assertRaises(NotImplementedError):
+            Frame.from_concat_items(dict(A=f1, B=f2).items(), axis=1, index_constructor=Index)
+
+    def test_frame_from_concat_items_g(self) -> None:
+
+        f1 = Frame.from_records(((2, False), (34, False)),
+                columns=('p', 'q',),
+                index=('d', 'c'))
+
+        s1 = Series((0, True), index=('p', 'q'), name='c', dtype=object)
+        s2 = Series((-2, False), index=('p', 'q'), name='d', dtype=object)
+
+        f2 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(), axis=0, index_constructor=Index)
+        self.assertEqual(f2.to_pairs(),
+                (('p', ((('A', 'd'), -2), (('B', 'd'), 2), (('B', 'c'), 34), (('C', 'c'), 0))), ('q', ((('A', 'd'), False), (('B', 'd'), False), (('B', 'c'), False), (('C', 'c'), True)))))
+
+        f3 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(), axis=0, index_constructor=IndexDefaultFactory('foo'))
+        self.assertEqual(f3.index.name, 'foo')
+
+        with self.assertRaises(NotImplementedError):
+            Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(), axis=0, columns_constructor=Index)
 
     #---------------------------------------------------------------------------
 
@@ -8291,6 +8342,7 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('a', ((0, 1), (1, 1))), ('b', ((0, 1), (1, 1))))
                 )
+
 
     #---------------------------------------------------------------------------
 
@@ -9339,8 +9391,6 @@ class TestUnit(TestCase):
             # mismatched length
             sf.Frame.from_dict(dict(a=(1,2,3,4,5), b=tuple('abcdef')))
 
-
-
     def test_frame_from_dict_b(self) -> None:
 
         f = Frame.from_dict({('a', 1): (1, 2), ('a', 2): (3, 4)}, columns_constructor=IndexHierarchy.from_labels)
@@ -9350,6 +9400,15 @@ class TestUnit(TestCase):
                 ((('a', 1), ((0, 1), (1, 2))), (('a', 2), ((0, 3), (1, 4))))
                 )
 
+    def test_frame_from_dict_c(self) -> None:
+
+        a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)),
+                index=tuple('wxyz'),
+                index_constructor=IndexDefaultFactory('foo'),
+                columns_constructor=IndexDefaultFactory('bar'),
+                )
+        self.assertEqual(a.index.name, 'foo')
+        self.assertEqual(a.columns.name, 'bar')
 
     #---------------------------------------------------------------------------
 
