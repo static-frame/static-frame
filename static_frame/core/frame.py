@@ -520,11 +520,12 @@ class Frame(ContainerOperand):
         frames = []
 
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
-            yield_index = False
+            # default index construction does not yield elements, but instead yield Index objects for more efficient IndexHierarchy construction
+            yield_elements = True
             if axis == 0 and (index_constructor is None or isinstance(index_constructor, IndexDefaultFactory)):
-                yield_index = True
+                yield_elements = False
             elif axis == 1 and (columns_constructor is None or isinstance(columns_constructor, IndexDefaultFactory)):
-                yield_index = True
+                yield_elements = False
 
             for label, frame in items:
                 # must normalize Series here to avoid down-stream confusion
@@ -533,15 +534,15 @@ class Frame(ContainerOperand):
 
                 frames.append(frame)
                 if axis == 0:
-                    if yield_index:
-                        yield label, frame._index
-                    else:
+                    if yield_elements:
                         yield from product((label,), frame._index)
-                elif axis == 1:
-                    if yield_index:
-                        yield label, frame._columns
                     else:
+                        yield label, frame._index
+                elif axis == 1:
+                    if yield_elements:
                         yield from product((label,), frame._columns)
+                    else:
+                        yield label, frame._columns
 
                 # we have already evaluated AxisInvalid
 
