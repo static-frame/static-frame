@@ -367,7 +367,6 @@ class TestUnit(TestCase):
                 | set(util.array2d_to_tuples(arrays[1])))
                 )
 
-
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_intersect2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
@@ -377,9 +376,13 @@ class TestUnit(TestCase):
                 & set(util.array2d_to_tuples(arrays[1])))
                 )
 
-
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_setdiff2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
+
+        for array in arrays:
+            if array.dtype.kind in ('f', 'c') and np.isnan(array).any():
+                return
+
         post = util.setdiff2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
