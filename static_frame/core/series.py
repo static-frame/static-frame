@@ -305,7 +305,7 @@ class Series(ContainerOperand):
                     array_values.append(series.values)
                     yield label, series._index
         else:
-            def gen() -> tp.Iterator[tp.Hashable]:
+            def gen() -> tp.Iterator[tp.Hashable]: #type: ignore
                 for label, series in items:
                     array_values.append(series.values)
                     yield from product((label,), series._index)

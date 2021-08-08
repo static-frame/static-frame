@@ -4257,8 +4257,8 @@ class TestUnit(TestCase):
                 columns=range(2),
                 dtype=object,
                 name='foo',
-                index_constructor=IndexDefaultFactory('bar'),
-                columns_constructor=IndexDefaultFactory('baz'),
+                index_constructor=IndexDefaultFactory('bar'), #type: ignore
+                columns_constructor=IndexDefaultFactory('baz'), #type: ignore
                 )
 
         self.assertEqual(f1.to_pairs(),
@@ -7973,7 +7973,10 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(),
                 ((('A', 'p'), (('x', 2), ('a', 30))), (('A', 'q'), (('x', 2), ('a', 34))), (('A', 't'), (('x', False), ('a', False))), (('B', 'r'), (('x', 'c'), ('a', 'd'))), (('B', 's'), (('x', False), ('a', True)))))
 
-        f4 = Frame.from_concat_items(dict(A=f1, B=f2).items(), axis=1, columns_constructor=IndexDefaultFactory('foo'))
+        f4 = Frame.from_concat_items(dict(A=f1, B=f2).items(),
+                axis=1,
+                columns_constructor=IndexDefaultFactory('foo'), #type: ignore
+                )
         self.assertEqual(f4.columns.name, 'foo')
 
         with self.assertRaises(NotImplementedError):
@@ -7992,7 +7995,10 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('p', ((('A', 'd'), -2), (('B', 'd'), 2), (('B', 'c'), 34), (('C', 'c'), 0))), ('q', ((('A', 'd'), False), (('B', 'd'), False), (('B', 'c'), False), (('C', 'c'), True)))))
 
-        f3 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(), axis=0, index_constructor=IndexDefaultFactory('foo'))
+        f3 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(),
+                axis=0,
+                index_constructor=IndexDefaultFactory('foo'), #type: ignore
+                )
         self.assertEqual(f3.index.name, 'foo')
 
         with self.assertRaises(NotImplementedError):

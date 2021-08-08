@@ -37,16 +37,19 @@ class IndexAutoFactory:
 
     @classmethod
     def from_optional_constructor(cls,
-            initializer: IndexAutoInitializer,
+            initializer: IndexAutoInitializer, # size
             *,
             default_constructor: tp.Type['IndexBase'],
-            explicit_constructor: tp.Optional[IndexConstructor] = None,
+            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
             ) -> 'IndexBase':
 
         # get an immutable array, shared from positions allocator
         labels = PositionsAllocator.get(initializer)
 
         if explicit_constructor:
+            if isinstance(explicit_constructor, IndexDefaultFactory):
+                # partial the default constructor with a name argument
+                return explicit_constructor(default_constructor)(labels)
             return explicit_constructor(labels)
 
         else: # get from default constructor
@@ -68,7 +71,7 @@ class IndexAutoFactory:
     def to_index(self,
             *,
             default_constructor: tp.Type['IndexBase'],
-            explicit_constructor: tp.Optional[IndexConstructor] = None,
+            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
             ) -> 'IndexBase':
         '''Called by index_from_optional_constructor.
         '''

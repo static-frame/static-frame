@@ -54,6 +54,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactory #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
 
@@ -200,7 +201,7 @@ def index_from_optional_constructor(
         value: tp.Union[IndexInitializer, 'IndexAutoFactory'],
         *,
         default_constructor: IndexConstructor,
-        explicit_constructor: tp.Optional[IndexConstructor] = None,
+        explicit_constructor: tp.Optional[tp.Union[IndexConstructor, 'IndexDefaultFactory']] = None,
         ) -> IndexBase:
     '''
     Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
