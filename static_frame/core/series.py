@@ -1,9 +1,9 @@
 import typing as tp
 from functools import partial
 from itertools import chain
+from itertools import product
 from copy import deepcopy
 from collections.abc import Set
-from itertools import product
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
