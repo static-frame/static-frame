@@ -550,6 +550,8 @@ class InterfaceRecord(tp.NamedTuple):
         else:
             raise NotImplementedError()
 
+        terminus_name_no_args: tp.Optional[str]
+
         for field in cls_interface.INTERFACE: # apply, map, etc
             delegate_obj = getattr(cls_interface, field)
             delegate_reference = f'{cls_interface.__name__}.{field}'

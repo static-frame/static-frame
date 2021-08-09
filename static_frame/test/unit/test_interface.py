@@ -76,7 +76,7 @@ class TestUnit(TestCase):
 
 
     def test_interface_via_re_signature_no_args(self) -> None:
-        inter = InterfaceSummary.to_frame(Series, #type: ignore
+        inter = InterfaceSummary.to_frame(Series,
                 minimized=False,
                 max_args=99, # +inf, but keep as int
                 )
