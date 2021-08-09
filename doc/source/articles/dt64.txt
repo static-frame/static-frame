@@ -41,7 +41,7 @@ Brief outline.
 
 Introduction
 
-Whe we need datetime64
+why we need datetime64
     Python's date and datetime
     The problem with datetime PyObjects in arrays
     The datetime64 array
@@ -54,31 +54,36 @@ Comparing datetime and datetime64
         PyObject versus an int64
         Units
         Initialization
+            string v. discrete integers
         Attributes and methods
         Transformations, opperator overloading, and timedeltas
         NaT
         np.datetime_data()
     Performance comparsions
-        Arrays of datetime64 compared to lists of datetime PyObjects
+        Arrays of datetime64 compared to arrays of datetime PyObjects
         Slicing and selecting
         Transforming, applying timedeltas
 
 Converting between datetime and datetime64
     Units not supported in datetime
+        Date objects cannot represent months or years without a date
+        Datetime objects cannot represent sub-microsecond timestamps
     From datetime64 to datetime
+        astype(object), tolist(), item()
     From datetime to datetime64
-
-Examples of the benefits of unit-specification of dates and times
+        np.array(), np.datetime64()
+Benefits of unit-specification of dates and times
     More narrow typing
     Monthly timeseries data
     Specifying the resolution of a measurement
 
 Labelling data with datetime64 in Pandas and StaticFrame
     Pandas exclusive usage of nanoseconds
-    datetime64 units in StaticFrame indicies
+    Explicit support for datetime64 units in StaticFrame indicies
 
 via_dt: Making datetime64 as easy to work with as datetime
-
+    Date-component attributes
+    Utilities for string parsing and formatting
 
 
 
