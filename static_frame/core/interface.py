@@ -173,8 +173,14 @@ def _get_signatures(
         delegate_func: tp.Optional[AnyCallable] = None,
         delegate_name: str = '',
         max_args: int = MAX_ARGS,
+        name_no_args: tp.Optional[str] = None,
         ) -> tp.Tuple[str, str]:
+    '''
+    Utility to get two versions of ``func`` and ``delegate_func`` signatures
 
+    Args:
+        name_no_args: If this signature has a ``delegate_func``, the root name might need to be provided in a version with no arguments (if the root itself is a function).
+    '''
     if delegate_func:
         delegate = _get_parameters(delegate_func, max_args=max_args)
         if delegate_name and delegate_name != '__call__':
@@ -189,10 +195,11 @@ def _get_signatures(
 
     signature = f'{name}{_get_parameters(func, is_getitem, max_args=max_args)}{delegate}'
 
+    name_no_args = name if not name_no_args else name_no_args
     if is_getitem:
-        signature_no_args = f'{name}[]{delegate_no_args}'
+        signature_no_args = f'{name_no_args}[]{delegate_no_args}'
     else:
-        signature_no_args = f'{name}(){delegate_no_args}'
+        signature_no_args = f'{name_no_args}(){delegate_no_args}'
 
     return signature, signature_no_args
 
@@ -549,16 +556,17 @@ class InterfaceRecord(tp.NamedTuple):
             doc = Features.scrub_doc(delegate_obj.__doc__)
 
             if cls_interface in (InterfaceFillValue, InterfaceRe):
-                # NOTE: dropping the returned no arg signature; not sure if it is needed
-                terminus_signature, _ = _get_signatures(
+                terminus_sig, terminus_sig_no_args = _get_signatures(
                         name,
                         obj,
                         is_getitem=False,
                         max_args=max_args,
                         )
-                terminus_name = f'{terminus_signature}.{field}'
+                terminus_name = f'{terminus_sig}.{field}'
+                terminus_name_no_args = f'{terminus_sig_no_args}.{field}'
             else:
                 terminus_name = f'{name}.{field}'
+                terminus_name_no_args = None
 
             if isinstance(delegate_obj, property):
                 # some date tools are properties
@@ -578,7 +586,10 @@ class InterfaceRecord(tp.NamedTuple):
                         terminus_name,
                         delegate_obj,
                         max_args=max_args,
+                        name_no_args=terminus_name_no_args,
                         )
+                # if group == InterfaceGroup.AccessorRe:
+                #     print(signature, signature_no_args)
                 yield cls(cls_name,
                         group,
                         signature,

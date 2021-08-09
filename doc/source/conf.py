@@ -113,9 +113,9 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
             ):
 
         inter = InterfaceSummary.to_frame(target, #type: ignore
-                        minimized=False,
-                        max_args=99, # +inf, but keep as int
-                        )
+                minimized=False,
+                max_args=99, # +inf, but keep as int
+                )
         # break into iterable of group, frame
         inter_items = []
         for g in INTERFACE_GROUP_ORDER:
