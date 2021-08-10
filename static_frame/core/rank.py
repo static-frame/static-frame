@@ -71,8 +71,9 @@ def rank_1d(
             unique_pos = np.nonzero(is_unique)[0]
             size_unique = len(unique_pos)
             # cumulative counts of each unique value, adding length as last value
-            count = np.full(size_unique + 1, size)
+            count = np.empty(size_unique + 1)
             count[:size_unique] = unique_pos
+            count[size_unique] = size
 
             if ((method == RankMethod.MAX and ascending)
                     or (method == RankMethod.MIN and not ascending)):
@@ -82,7 +83,7 @@ def rank_1d(
                 ranks0 = count[dense - 1]
             elif method == RankMethod.MEAN:
                 # take the mean of min and max selections
-                ranks0 = (.5 * (count[dense] + count[dense - 1] + 1)) - 1
+                ranks0 = 0.5 * ((count[dense] - 1) + count[dense - 1])
             else:
                 raise NotImplementedError(f'no handling for {method}')
 
