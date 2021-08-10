@@ -1,5 +1,18 @@
 
 
+Consensus seems to hold that there are five ranking methods, differentiated by how they handle ties: ordinal, dense, min, max, and mean. Interestingly, they all fall out from an elegant algorithm (at least as implemented in SciPy, my reference implementation). This Code Review will examine the five methods and the core algorithm, as well as how StaticFrame extends this implementation to support descending ranks and variable start values. Public rank interfaces on Series & Frame, which implement NaN handling and replacement, will be shown to offer important differences from Pandas. As thorough testing of a rank implementation is critical, I will share how I used Hypothesis property tests to validate against SciPy.
+
+
+SciPy implementation
+https://github.com/scipy/scipy/blob/v1.7.1/scipy/stats/stats.py#L8631-L8737
+
+
+
+
+#-------------------------------------------------------------------------------
+The Algorithm
+
+
 What is a rank?
 we replace values with their position when sorted
 
@@ -23,10 +36,6 @@ We could give the same value to ties and keep them as compact as possible
 
 >>> rank_1d(np.array([0, 1, 0]), 'mean').tolist()
 [0.5, 2.0, 0.5]
-
-
-
-
 
 
 
@@ -160,3 +169,28 @@ finally invert by max observed value if ascending, and shift for start
 
 
 
+
+
+#-------------------------------------------------------------------------------
+SF Interfaces
+
+added ascending, start values to core algorithm.
+
+NaNs can be included in core array algorithm and kinda work b/c of merge sort
+
+need labels to not include (and/or replacse) missing values
+
+
+
+Series and Frame interfaces
+
+1. Rank types as separate methods; avoiding string-based switches, easier to read code
+2. Boolean `skipna` to handle NaN skipping
+3. `fill_value` permits replacing NaNs with min value, max value, inf, or whichever
+
+
+#-------------------------------------------------------------------------------
+Testing
+
+1. Started off with tests that matched the SciPy demos, but these were too simple
+2. Used hypothesis to explicit match against my implementation: found a few good issues
