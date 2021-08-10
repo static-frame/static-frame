@@ -62,7 +62,6 @@ def rank_1d(
         is_unique = np.full(size, True, dtype=DTYPE_BOOL)
         is_unique[1:] = array_sorted[1:] != array_sorted[:-1]
 
-        # is_unique = np.r_[True, array_sorted[1:] != array_sorted[:-1]]
         # cumsum used on is_unique to only increment when unique; then re-order; this always has 1 as the lowest value
         dense = is_unique.cumsum()[ordinal]
         if method == RankMethod.DENSE:
