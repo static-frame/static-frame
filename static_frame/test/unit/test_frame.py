@@ -8773,9 +8773,18 @@ class TestUnit(TestCase):
         f3 = f2.astype[f2.dtypes == int](float)
         self.assertEqual([dt.kind for dt in f3.dtypes.values],
                 ['f', 'f', 'f', 'f', 'f'])
+
         f4 = f3.astype[2](int)
         self.assertEqual([dt.kind for dt in f4.dtypes.values],
                 ['f', 'f', 'i', 'f', 'f'])
+
+    def test_frame_astype_e(self) -> None:
+        f1 = ff.parse("s(3,5)")
+        f2 = f1.astype[[1,2,3]](int)
+        f3 = f2.astype[(f2.dtypes == int).values](float)
+        self.assertEqual([dt.kind for dt in f3.dtypes.values],
+                ['f', 'f', 'f', 'f', 'f'])
+
 
 
 
