@@ -322,161 +322,32 @@ class TestUnit(TestCase):
                 rank_1d(np.array([0, 0, 1]), 'mean').tolist(),
                 [0.5, 0.5, 2]
                 )
+        self.assertEqual(rank_1d(np.array([0, 0, 1]), 'mean').dtype.kind, 'f')
 
         self.assertEqual(
                 rank_1d(np.array([0, 0, 1]), 'min').tolist(),
                 [0, 0, 2]
                 )
+        self.assertEqual(rank_1d(np.array([0, 0, 1]), 'min').dtype.kind, 'i')
 
         self.assertEqual(
                 rank_1d(np.array([0, 0, 1]), 'max').tolist(),
                 [1, 1, 2]
                 )
+        self.assertEqual(rank_1d(np.array([0, 0, 1]), 'max').dtype.kind, 'i')
 
         self.assertEqual(
                 rank_1d(np.array([0, 0, 1]), 'dense').tolist(),
                 [0, 0, 1]
                 )
+        self.assertEqual(rank_1d(np.array([0, 0, 1]), 'dense').dtype.kind, 'i')
 
         self.assertEqual(
                 rank_1d(np.array([0, 0, 1]), 'ordinal').tolist(),
                 [0, 1, 2]
                 )
-
-
-
-
+        self.assertEqual(rank_1d(np.array([0, 0, 1]), 'ordinal').dtype.kind, 'i')
 
 
 if __name__ == '__main__':
     unittest.main()
-
-
-
-# the algo
-# [8, 15, 7, 2, 20, 4, 20, 7, 15, 15]
-# >>> a = np.array([8, 15, 7, 2, 20, 4, 20, 7, 15, 15])
-# >>> a
-# array([ 8, 15,  7,  2, 20,  4, 20,  7, 15, 15])
-
-
-# get the index needed in each position to sort this array
-
-# >>> index_sorted = np.argsort(a, kind='merge')
-# >>> index_sorted
-# array([3, 5, 2, 7, 0, 1, 8, 9, 4, 6])
-
-# get index 3, then 5. notice 1,8,9 (15) and 4,6 (20)
-
-
-
-# use those indices to select from a contiguous range
-
-# >>> np.arange(a.size)
-# array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-
-# >>> ordinal = np.empty(a.size, dtype=int)
-# >>> ordinal[index_sorted] = np.arange(a.size)
-# >>> ordinal
-# array([4, 5, 2, 0, 8, 1, 9, 3, 6, 7])
-
-# not the same as this!!
-# >>> np.arange(a.size)[index_sorted]
-
-# array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) range
-# array([3, 5, 2, 7, 0, 1, 8, 9, 4, 6]) index_sorted
-# array([4, 5, 2, 0, 8, 1, 9, 3, 6, 7]) result
-
-# use the indices in index_sorted to position the values in the range; 0 index_sorted says put 4 in the zeroth position; 1 in index_sorted says to put 5 in the second position
-
-# we basically unsort the range to correspond to the indices sorted
-
-
-
-# find duplicates by using the sorted values to sort array, and then shift compare
-
-# >>> a_sorted = a[index_sorted]
-# >>> a_sorted
-# array([ 2,  4,  7,  7,  8, 15, 15, 15, 20, 20])
-
-# >>> is_unique = np.full(size, True, dtype=bool)
-# >>> is_unique[1:] = a_sorted[1:] != a_sorted[:-1]
-
-# >>> is_unique
-# array([ True,  True,  True, False,  True,  True, False, False,  True,
-#        False])
-
-
-# get the dense rank by performing cum sum of Booleans and unsorting back to orignal values
-
-# >>> is_unique.cumsum()
-# array([1, 2, 3, 3, 4, 5, 5, 5, 6, 6])
-# >>> dense = is_unique.cumsum()[ordinal]
-# >>> dense
-# array([4, 5, 3, 1, 6, 2, 6, 3, 5, 5])
-
-# notice that this rank naturally starts at 1
-
-
-# get the index positions of unique values
-
-# >>> unique_pos = np.nonzero(is_unique)[0]
-# >>> unique_pos
-# array([0, 1, 2, 4, 5, 8])
-
-
-# get an array of the equal to unique values + 1, set last value to max possible value
-
-# >>> size_unique = len(unique_pos)
-# >>> count = np.empty(size_unique + 1)
-# >>> count[:size_unique] = unique_pos
-# >>> count[size_unique] = len(a)
-# >>> count
-# array([ 0,  1,  2,  4,  5,  8, 10])
-
-# notice that the missing indices are values that repeated in a_sorted, plus one value at the length of a
-# >>> a_sorted
-# array([ 2,  4,  7,  7,  8, 15, 15, 15, 20, 20])
-
-
-
-# get the max rank: whenever there are ties, take the max value
-
-# >>> count
-# array([ 0,  1,  2,  4,  5,  8, 10])
-# >>> dense
-# array([4, 5, 3, 1, 6, 2, 6, 3, 5, 5])
-# >>> count[dense]
-# array([ 5,  8,  4,  1, 10,  2, 10,  4,  8,  8])
-
-# position values from count by the index and order of dense; so first position is the index 4 (5), second position is index 5 (8). this gets the max rank for each tie.
-
-# as values come from count, but we select with dense, we will never select 0; we can shift by 1 to start at zero
-
-# >>> count[dense] - 1
-# array([4, 7, 3, 0, 9, 1, 9, 3, 7, 7])
-
-
-
-# get the min rank: whenever there are ties, take the min value
-
-# >>> count
-# array([ 0,  1,  2,  4,  5,  8, 10])
-# >>> dense
-# array([4, 5, 3, 1, 6, 2, 6, 3, 5, 5])
-# >>> count[dense - 1]
-# array([4, 5, 2, 0, 8, 1, 8, 2, 5, 5])
-
-# as dense starts at 1, we can shift it down; this means we select from count the value on the left side of a boundary
-
-
-# finally, to geth average rank, we simple take the mean of rank for min and max
-
-# >>> .5 * ((count[dense] - 1) + count[dense - 1])
-# array([4. , 6. , 2.5, 0. , 8.5, 1. , 8.5, 2.5, 6. , 6. ])
-
-
-# finally invert if ascending, and shift for start
-
-
-

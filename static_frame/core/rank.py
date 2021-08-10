@@ -71,7 +71,7 @@ def rank_1d(
             unique_pos = np.nonzero(is_unique)[0]
             size_unique = len(unique_pos)
             # cumulative counts of each unique value, adding length as last value
-            count = np.empty(size_unique + 1)
+            count = np.empty(size_unique + 1, dtype=DTYPE_INT_DEFAULT)
             count[:size_unique] = unique_pos
             count[size_unique] = size
 
