@@ -7801,7 +7801,6 @@ class FrameAssignILoc(FrameAssign):
         else:
             key = (self.key, None)
 
-
         if is_series:
             assigned = self.container._reindex_other_like_iloc(value,
                     key,
@@ -7948,7 +7947,7 @@ class FrameAsType:
             consolidate_blocks: bool = True,
             ) -> 'Frame':
 
-        if self.column_key == NULL_SLICE:
+        if self.column_key.__class__ is slice and self.column_key == NULL_SLICE:
             if is_mapping(dtypes):
                 # translate keys loc to iloc
                 dtypes = {self.container._columns._loc_to_iloc(k): v
@@ -7969,7 +7968,8 @@ class FrameAsType:
                 columns=self.container.columns,
                 index=self.container.index,
                 name=self.container._name,
-                own_data=True)
+                own_data=True,
+                )
 
 
 #-------------------------------------------------------------------------------

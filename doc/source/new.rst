@@ -1,6 +1,11 @@
 What is New in Static Frame
 ===============================
 
+0.8.18
+----------
+
+Fixed issue in ``Frame.astype[]`` when selecting targets with a Boolean ``Series`` or arrays.
+
 
 0.8.17
 ----------
