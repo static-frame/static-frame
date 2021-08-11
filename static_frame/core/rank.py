@@ -49,13 +49,14 @@ def rank_1d(
     if size == 0:
         return EMPTY_ARRAY if method == RankMethod.MEAN else EMPTY_ARRAY_INT
 
-    ranks0_max = size - 1
     index_sorted = np.argsort(array, kind=DEFAULT_STABLE_SORT_KIND)
     ordinal = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
     ordinal[index_sorted] = np.arange(array.size, dtype=DTYPE_INT_DEFAULT)
 
     if method == RankMethod.ORDINAL:
         ranks0 = ordinal
+        if not ascending:
+            ranks0_max = size - 1
     else:
         array_sorted = array[index_sorted] # order array
         # createa a Boolean array showing unique values, first value is always True
@@ -87,15 +88,17 @@ def rank_1d(
             else:
                 raise NotImplementedError(f'no handling for {method}')
 
-        # determine max after selection and shift
-        ranks0_max = ranks0.max()
+        if not ascending:
+            # determine max after selection and shift
+            ranks0_max = ranks0.max()
 
     if not ascending:
         ranks0 = ranks0_max - ranks0
-    ranked = ranks0 + start
+    if start != 0:
+        ranks0 = ranks0 + start
 
-    ranked.flags.writeable = False
-    return ranked
+    ranks0.flags.writeable = False
+    return ranks0
 
 
 def rank_2d(
