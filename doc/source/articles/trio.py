@@ -441,11 +441,11 @@ def main() -> None:
 
 def tables() -> None:
     name = 'For n Frame of shape (x, y)'
-    columns = ('Bus', 'Batch', 'Quilt')
+    columns = ('Bus', 'Batch', 'Yarn', 'Quilt')
     records_items = (
-    ('ndim',                  (1,        1,       2)),
-    ('shape',                 ('(n,)',   '(n,)',  '(xn, y) or (x, yn)'  )),
-    ('Approximate Interface', ('Series', 'Frame', 'Frame')),
+    ('ndim',                  (1,        1,       1,        2)),
+    ('shape',                 ('(n,)',   '(n,)',  '(nx,)',  '(xn, y) or (x, yn)'  )),
+    ('Approximate Interface', ('Series', 'Frame', 'Series', 'Frame')),
     )
 
     f = sf.Frame.from_records_items(records_items, columns=columns, name=name)
@@ -453,22 +453,22 @@ def tables() -> None:
     print(f.name)
     print(f.to_markdown())
 
-    name = 'Constructors & Exporters'
-    columns = ('Constructor', 'Exporter') #type: ignore
-    records = (
-        ('from_zip_tsv', 'to_zip_tsv',),
-        ('from_zip_csv', 'to_zip_csv',),
-        ('from_zip_pickle', 'to_zip_pickle',),
-        ('from_zip_parquet', 'to_zip_parquet',),
-        ('from_xlsx',  'to_xlsx'),
-        ('from_sqlite',  'to_sqlite'),
-        ('from_hdf5',  'to_hdf5'),
-        )
+    # name = 'Constructors & Exporters'
+    # columns = ('Constructor', 'Exporter') #type: ignore
+    # records = (
+    #     ('from_zip_tsv', 'to_zip_tsv',),
+    #     ('from_zip_csv', 'to_zip_csv',),
+    #     ('from_zip_pickle', 'to_zip_pickle',),
+    #     ('from_zip_parquet', 'to_zip_parquet',),
+    #     ('from_xlsx',  'to_xlsx'),
+    #     ('from_sqlite',  'to_sqlite'),
+    #     ('from_hdf5',  'to_hdf5'),
+    #     )
 
-    f = sf.Frame.from_records(records, columns=columns, name=name)
-    # print(f)
-    print(f.name)
-    print(f.to_markdown(sf.DisplayConfig(include_index=False, type_show=False)))
+    # f = sf.Frame.from_records(records, columns=columns, name=name)
+    # # print(f)
+    # print(f.name)
+    # print(f.to_markdown(sf.DisplayConfig(include_index=False, type_show=False)))
 
 
 

@@ -7187,6 +7187,17 @@ class TestUnit(TestCase):
                 (('p', (('c', 3),)), ('q', (('c', 3),)))
                 )
 
+    def test_frame_drop_duplicated_d(self) -> None:
+        f1 = ff.parse("s(5,5)|v(int, str, float, bool, dtD)")
+        f2 = sf.Frame.from_concat((f1, f1, f1), index=sf.IndexAutoFactory)
+        f3 = f2.drop_duplicated(exclude_first=True)
+
+        self.assertEqual(f3.shape, (5, 5))
+        self.assertEqual(
+                [dt.kind for dt in f3.dtypes.values],
+                ['i', 'U', 'f', 'b', 'M']
+                )
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_concat_a(self) -> None:

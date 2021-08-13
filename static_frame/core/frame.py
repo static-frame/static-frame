@@ -5155,11 +5155,12 @@ class Frame(ContainerOperand):
             {exclude_first}
             {exclude_last}
         '''
-        # NOTE: can avoid calling .vaalues with extensions to TypeBlocks
+        # NOTE: as duplicates are evaluated first, then used to drop/keep, the full .values array probably needs to
         duplicates = array_to_duplicated(self.values,
                 axis=axis,
                 exclude_first=exclude_first,
-                exclude_last=exclude_last)
+                exclude_last=exclude_last,
+                )
 
         if not duplicates.any():
             return self.__class__(
@@ -5168,24 +5169,27 @@ class Frame(ContainerOperand):
                     columns=self._columns,
                     own_data=True,
                     own_index=True,
-                    name=self._name)
+                    name=self._name,
+                    )
 
         keep = ~duplicates
 
         if axis == 0: # return rows with index indexed
             return self.__class__(
-                    self.values[keep],
+                    self._blocks._extract(row_key=keep),
                     index=self._index[keep],
                     columns=self._columns,
                     own_index=True,
-                    name=self._name
+                    name=self._name,
+                    own_data=True,
                     )
         return self.__class__(
-                self.values[:, keep],
+                self._blocks._extract(column_key=keep),
                 index=self._index,
                 columns=self._columns[keep],
                 own_index=True,
-                name=self._name
+                name=self._name,
+                own_data=True,
                 )
         # invalid axis will raise in array_to_duplicated
 
