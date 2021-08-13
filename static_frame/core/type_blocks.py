@@ -269,8 +269,8 @@ class TypeBlocks(ContainerOperand):
         Default constructor. We own all lists passed in to this constructor. This instance takes ownership of all lists passed to it.
 
         Args:
-            blocks: A list of one or two-dimensional NumPy arrays.
-            dtypes: list of dtypes per external column
+            blocks: A list of one or two-dimensional NumPy arrays. The list is owned by this instance.
+            dtypes: list of dtypes per external column. The list is owned by this instance.
             index: list of pairs, where the first element is the block index, the second elemetns is the intra-block column
             shape: two-element tuple defining row and column count. A (0, 0) shape is permitted for empty TypeBlocks.
         '''

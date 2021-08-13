@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Fixed issue in ``Frame.astype[]`` when selecting targets with a Boolean ``Series`` or arrays.
 
+Fixed unnecessary type coercion in the ``Frame`` returned by ``Frame.drop_duplicated()``.
+
 
 0.8.17
 ----------

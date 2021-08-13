@@ -48,79 +48,12 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
 from static_frame.core.style_config import StyleConfig
 
-
-def get_extractor(
-        deepcopy_from_bus: bool,
-        is_array: bool,
-        memo_active: bool,
-        ) -> AnyCallable:
-    '''
-    Args:
-        memo_active: enable usage of a common memoization dictionary accross all calls to extract from this extractor.
-    '''
-    if deepcopy_from_bus:
-        memo: tp.Optional[tp.Dict[int, tp.Any]] = None if not memo_active else {}
-        if is_array:
-            return partial(array_deepcopy, memo=memo)
-        return partial(deepcopy, memo=memo)
-    return lambda x: x
-
-class AxisMap:
-    '''
-    An AxisMap is a Series where index values point to string label in a Bus.
-    '''
-
-    @staticmethod
-    def get_axis_series(
-            tree: tp.Dict[tp.Hashable, IndexBase],
-            ) -> Series:
-
-        index = IndexHierarchy.from_tree(tree)
-        return Series(
-                index.values_at_depth(0), # store the labels as series values
-                index=index,
-                own_index=True,
-                )
-
-    @classmethod
-    def from_bus(cls,
-            bus: Bus,
-            axis: int,
-            deepcopy_from_bus: bool,
-            ) -> tp.Tuple[Series, IndexBase]:
-        '''
-        Given a :obj:`Bus` and an axis, derive a :obj:`Series` with an :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
-        '''
-        # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
-
-        extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
-
-        tree = {}
-        opposite: tp.Optional[IndexBase] = None
-
-        for label, f in bus.items():
-            if axis == 0:
-                tree[label] = extractor(f.index)
-                if opposite is None:
-                    opposite = extractor(f.columns)
-                else:
-                    if not opposite.equals(f.columns):
-                        raise ErrorInitQuilt('opposite axis must have equivalent indices')
-            elif axis == 1:
-                tree[label] = extractor(f.columns)
-                if opposite is None:
-                    opposite = extractor(f.index)
-                else:
-                    if not opposite.equals(f.index):
-                        raise ErrorInitQuilt('opposite axis must have equivalent indices')
-            else:
-                raise AxisInvalid(f'invalid axis {axis}')
-        return cls.get_axis_series(tree), opposite # type: ignore
-
+from static_frame.core.axis_map import AxisMap
+from static_frame.core.axis_map import get_extractor
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''
-    A :obj:`Frame`-like view of the contents of a :obj:`Bus`. With the Quilt, :obj:`Frame` contained in a :obj:`Bus` can be conceived as stacking vertically (primary axis 0) or horizontally (primary axis 1). If the labels of the primary axis are unique accross all contained :obj:`Frame, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the primary axis labels. A :obj:`Quilt` can only be created if labels of the opposite axis of all contained :obj:`Frame` are aligned.
+    A :obj:`Frame`-like view of the contents of a :obj:`Bus`. With the Quilt, :obj:`Frame` contained in a :obj:`Bus` can be conceived as stacking vertically (primary axis 0) or horizontally (primary axis 1). If the labels of the primary axis are unique accross all contained :obj:`Frame`, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the primary axis labels. A :obj:`Quilt` can only be created if labels of the opposite axis of all contained :obj:`Frame` are aligned.
     '''
 
     __slots__ = (
@@ -482,8 +415,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         # will be set with re-axis
         # self._index = None
         # self._columns = None
-        self._assign_axis = True
-
+        self._assign_axis = True # Boolean to controll deferred axis index creation
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
@@ -494,6 +426,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     self._bus,
                     axis=self._axis,
                     deepcopy_from_bus=self._deepcopy_from_bus,
+                    init_exception_cls=ErrorInitQuilt,
                     )
 
         if self._axis == 0:
@@ -521,7 +454,10 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     def rename(self, name: NameType) -> 'Quilt':
         '''
-        Return a new Quilt with an updated name attribute.
+        Return a new :obj:`Quilt` with an updated name attribute.
+
+        Args:
+            name
         '''
         return self.__class__(self._bus.rename(name),
                 axis=self._axis,
