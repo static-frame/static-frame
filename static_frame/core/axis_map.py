@@ -9,7 +9,6 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_deepcopy
-from static_frame.core.index import Index
 
 
 def get_extractor(
@@ -80,5 +79,47 @@ class AxisMap:
             else:
                 raise AxisInvalid(f'invalid axis {axis}')
         return cls.get_axis_series(tree), opposite # type: ignore
+
+
+
+class IndexMap:
+    '''
+    An IndexMap is a Series where index values point to Bus index positions as used by Yarn.
+    '''
+
+    def get_axis_series(
+            tree: tp.Dict[tp.Hashable, IndexBase],
+            ) -> Series:
+
+        index = IndexHierarchy.from_tree(tree)
+        return Series(
+                index.values_at_depth(0), # store the labels as series values
+                index=index,
+                own_index=True,
+                )
+
+    @classmethod
+    def from_buses(cls,
+            buses: tp.Iterable[Bus],
+            deepcopy_from_bus: bool,
+            init_exception_cls: tp.Type[Exception],
+            ) -> tp.Tuple[Series, IndexBase]:
+        '''
+        Given an iterable of named :obj:`Bus` derive a :obj:`Series` with an :obj:`IndexHierarchy`.
+        '''
+        # NOTE: for now, the Returned Series will have bus Names as values; this requires the Yarn to store a dict, not a list
+
+        extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
+
+        tree = {}
+        for bus in buses:
+            if bus.name in tree:
+                raise init_exception_cls(f'Bus names must be unique: {bus.name} duplicated')
+            tree[bus.name] = extractor(bus._series._index)
+
+        return cls.get_axis_series(tree) # type: ignore
+
+
+
 
 

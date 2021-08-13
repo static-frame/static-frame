@@ -360,10 +360,10 @@ class Display:
             return DisplayCell(format_str, type_str_raw)
 
         # ContainerOperand needs to import Display
-        from static_frame.core.container import ContainerOperand
+        from static_frame.core.container import ContainerBase
 
         # handling for all other values that are stringable
-        if isinstance(value, ContainerOperand):
+        if isinstance(value, ContainerBase):
             # NOTE: we do not use type delimieters as ths is an instance, not a class
             msg = value.__class__.__name__
         else:

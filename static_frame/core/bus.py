@@ -893,7 +893,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @property
     def ndim(self) -> int:
         '''
-        Return the number of dimensions, which for a `Series` is always 1.
+        Return the number of dimensions, which for a :obj:`Bus` is always 1.
 
         Returns:
             :obj:`int`
