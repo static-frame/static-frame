@@ -5155,7 +5155,7 @@ class Frame(ContainerOperand):
             {exclude_first}
             {exclude_last}
         '''
-        # NOTE: as duplicates are evaluated first, then used to drop/keep, the full .values array probably needs to
+        # NOTE: full row or column comparison is necessary, so passing .values is likely the only option.
         duplicates = array_to_duplicated(self.values,
                 axis=axis,
                 exclude_first=exclude_first,
