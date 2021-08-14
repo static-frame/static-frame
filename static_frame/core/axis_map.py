@@ -28,11 +28,8 @@ def get_extractor(
     return lambda x: x
 
 
-class AxisMap:
-    '''
-    An AxisMap is a Series where index values point to Bus label as used by Quilt.
-    '''
-
+class BaseMap:
+    @staticmethod
     def get_axis_series(
             tree: tp.Dict[tp.Hashable, IndexBase],
             ) -> Series:
@@ -43,6 +40,11 @@ class AxisMap:
                 index=index,
                 own_index=True,
                 )
+
+class AxisMap(BaseMap):
+    '''
+    An AxisMap is a Series where index values point to Bus label as used by Quilt.
+    '''
 
     @classmethod
     def from_bus(cls,
@@ -82,28 +84,16 @@ class AxisMap:
 
 
 
-class IndexMap:
+class IndexMap(BaseMap):
     '''
     An IndexMap is a Series where index values point to Bus index positions as used by Yarn.
     '''
-
-    def get_axis_series(
-            tree: tp.Dict[tp.Hashable, IndexBase],
-            ) -> Series:
-
-        index = IndexHierarchy.from_tree(tree)
-        return Series(
-                index.values_at_depth(0), # store the labels as series values
-                index=index,
-                own_index=True,
-                )
-
     @classmethod
     def from_buses(cls,
             buses: tp.Iterable[Bus],
             deepcopy_from_bus: bool,
             init_exception_cls: tp.Type[Exception],
-            ) -> tp.Tuple[Series, IndexBase]:
+            ) -> Series:
         '''
         Given an iterable of named :obj:`Bus` derive a :obj:`Series` with an :obj:`IndexHierarchy`.
         '''
@@ -117,7 +107,8 @@ class IndexMap:
                 raise init_exception_cls(f'Bus names must be unique: {bus.name} duplicated')
             tree[bus.name] = extractor(bus._series._index)
 
-        return cls.get_axis_series(tree) # type: ignore
+        return cls.get_axis_series(tree)
+
 
 
 

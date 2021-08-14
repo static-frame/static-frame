@@ -7,7 +7,7 @@ import numpy as np
 from static_frame.test.test_case import TestCase
 
 from static_frame.core.quilt import Quilt
-from static_frame.core.quilt import AxisMap
+from static_frame.core.axis_map import AxisMap
 from static_frame.core.hloc import HLoc
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.index import ILoc

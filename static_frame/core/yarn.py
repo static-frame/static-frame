@@ -80,7 +80,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             *,
             name: NameType = None,
             retain_labels: bool,
-            ):
+            ) -> 'Yarn':
         '''Return a :obj:`Yarn` from an iterable of :obj:`Bus`; labels will be drawn from :obj:`Bus.name`.
         '''
         series = Series.from_items(
@@ -157,7 +157,6 @@ class Yarn(ContainerBase, StoreClientMixin):
                 retain_labels=self._retain_labels,
                 index_map=self._index_map,
                 deepcopy_from_bus=self._deepcopy_from_bus,
-                name=name,
                 )
 
     #---------------------------------------------------------------------------
