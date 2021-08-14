@@ -6,13 +6,13 @@ import frame_fixtures as ff
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.bus import Bus
-from static_frame.core.exception import ErrorInitQuilt
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitYarn
+# from static_frame.core.exception import ErrorInitQuilt
+# from static_frame.core.exception import AxisInvalid
+# from static_frame.core.exception import ErrorInitYarn
 
-from static_frame.core.axis_map import AxisMap
-from static_frame.core.index import Index
-from static_frame.core.axis_map import IndexMap
+# from static_frame.core.axis_map import AxisMap
+# from static_frame.core.index import Index
+# from static_frame.core.axis_map import IndexMap
 
 from static_frame.core.yarn import Yarn
 
