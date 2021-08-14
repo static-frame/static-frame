@@ -1,7 +1,6 @@
 import typing as tp
 from itertools import zip_longest
 from functools import partial
-from copy import deepcopy
 
 import numpy as np
 
@@ -17,7 +16,6 @@ from static_frame.core.exception import NotImplementedAxis
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
 from static_frame.core.index_base import IndexBase
-from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeType
@@ -36,7 +34,6 @@ from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import array_deepcopy
 from static_frame.core.util import duplicate_filter
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import GetItemKeyType
