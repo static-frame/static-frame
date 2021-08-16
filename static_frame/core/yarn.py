@@ -39,7 +39,7 @@ from static_frame.core.store_client_mixin import StoreClientMixin
 # from static_frame.core.util import array_deepcopy
 # from static_frame.core.util import duplicate_filter
 # from static_frame.core.util import get_tuple_constructor
-# from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyType
 # from static_frame.core.util import GetItemKeyTypeCompound
 # from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
@@ -229,6 +229,77 @@ class Yarn(ContainerBase, StoreClientMixin):
         return self._index
 
 
+
+    #---------------------------------------------------------------------------
+    # extraction
+
+    # def _extract_iloc(self, key: GetItemKeyType) -> 'Bus':
+    #     '''
+    #     Returns:
+    #         Bus or, if an element is selected, a Frame
+    #     '''
+    #     # iterable selection should be handled by NP
+    #     values = self._series.values[key]
+
+    #     if not values.__class__ is np.ndarray: # if we have a single element
+    #         return values #type: ignore
+
+    #     series = Series(
+    #             values,
+    #             index=self._series._index.iloc[key],
+    #             name=self._series._name)
+
+
+    def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
+
+        if self._assign_index:
+            self._update_index_labels()
+
+        im = self._index_map
+
+        target_iloc = im.index._loc_to_iloc(key)
+        target_im = im._extract_iloc(target_iloc)
+        # get the outer-most index of the hierarchical index
+        target_bus_index = target_im._index._levels.index
+
+        valid = np.full(len(im), False)
+        valid[target_iloc] = True
+
+        buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
+        # must run accross all labels to get incremental slices of Boolean array, but maybe there is a way to avoid
+        pos = 0
+        for bus_label, width in im.index.label_widths_at_depth(0):
+            # this should always be a bus
+            if bus_label not in target_bus_index:
+                pos += width
+                continue
+            extract_per_bus = valid[pos: pos+width]
+            pos += width
+
+            idx = target_bus_index.loc_to_iloc(bus_label)
+            buses[idx] = self._series[bus_label]._extract_iloc(extract_per_bus)
+
+        # import ipdb; ipdb.set_trace()
+
+        # if not values.__class__ is np.ndarray: # if we have a single element
+        #     return values #type: ignore
+
+        # series = Series(values,
+        #         index=self._series._index.iloc[iloc_key],
+        #         own_index=True,
+        #         name=self._series._name)
+
+        # return self.__class__(series)
+
+
+    @doc_inject(selector='selector')
+    def __getitem__(self, key: GetItemKeyType) -> 'Bus':
+        '''Selector of values by label.
+
+        Args:
+            key: {key_loc}
+        '''
+        return self._extract_loc(key)
 
 
 

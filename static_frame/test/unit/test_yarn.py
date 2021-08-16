@@ -35,11 +35,13 @@ class TestUnit(TestCase):
         self.assertEqual(len(y1), 5)
         self.assertEqual(y1.index.shape, (5, 2))
 
+        y1[('a', 'f2'):]
+
         y2 = Yarn.from_buses((b1, b2), retain_labels=False)
         self.assertEqual(len(y2), 5)
         self.assertEqual(y2.index.shape, (5,))
 
-
+        # import ipdb; ipdb.set_trace()
 
 
 
