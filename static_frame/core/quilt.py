@@ -44,8 +44,9 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
 from static_frame.core.style_config import StyleConfig
+from static_frame.core.index_hierarchy import IndexHierarchy
 
-from static_frame.core.axis_map import AxisMap
+from static_frame.core.axis_map import bus_to_hierarchy
 from static_frame.core.axis_map import get_extractor
 
 class Quilt(ContainerBase, StoreClientMixin):
@@ -56,7 +57,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     __slots__ = (
             '_bus',
             '_axis',
-            '_axis_map',
+            '_axis_hierarchy',
             '_retain_labels',
             '_axis_opposite',
             '_assign_axis',
@@ -67,7 +68,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     _bus: Bus
     _axis: int
-    _axis_map: tp.Optional[Series]
+    _axis_hierarchy: tp.Optional[Series]
     _axis_opposite: tp.Optional[IndexBase]
     _columns: IndexBase
     _index: IndexBase
@@ -131,11 +132,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         name = name if name else frame.name
         bus = Bus.from_frames(values(), config=config, name=name)
 
-        axis_map = AxisMap.get_axis_series(axis_map_components)
+        axis_hierarchy = IndexHierarchy.from_tree(axis_map_components)
 
         return cls(bus,
                 axis=axis,
-                axis_map=axis_map,
+                axis_hierarchy=axis_hierarchy,
                 axis_opposite=opposite,
                 retain_labels=retain_labels,
                 deepcopy_from_bus=deepcopy_from_bus,
@@ -391,7 +392,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             *,
             axis: int = 0,
             retain_labels: bool,
-            axis_map: tp.Optional[Series] = None,
+            axis_hierarchy: tp.Optional[Series] = None,
             axis_opposite: tp.Optional[IndexBase] = None,
             deepcopy_from_bus: bool = False,
             ) -> None:
@@ -403,11 +404,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         self._retain_labels = retain_labels
         self._deepcopy_from_bus = deepcopy_from_bus
 
-        if (axis_map is None) ^ (axis_opposite is None):
-            raise ErrorInitQuilt('if supplying axis_map, supply axis_opposite')
+        if (axis_hierarchy is None) ^ (axis_opposite is None):
+            raise ErrorInitQuilt('if supplying axis_hierarchy, supply axis_opposite')
 
         # can creation until needed
-        self._axis_map = axis_map
+        self._axis_hierarchy = axis_hierarchy
         self._axis_opposite = axis_opposite
         # will be set with re-axis
         # self._index = None
@@ -418,8 +419,8 @@ class Quilt(ContainerBase, StoreClientMixin):
     # deferred loading of axis info
 
     def _update_axis_labels(self) -> None:
-        if self._axis_map is None or self._axis_opposite is None:
-            self._axis_map, self._axis_opposite = AxisMap.from_bus(
+        if self._axis_hierarchy is None or self._axis_opposite is None:
+            self._axis_hierarchy, self._axis_opposite = bus_to_hierarchy(
                     self._bus,
                     axis=self._axis,
                     deepcopy_from_bus=self._deepcopy_from_bus,
@@ -428,15 +429,15 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         if self._axis == 0:
             if not self._retain_labels:
-                self._index = self._axis_map.index.level_drop(1) #type: ignore
+                self._index = self._axis_hierarchy.level_drop(1) #type: ignore
             else: # get hierarchical
-                self._index = self._axis_map.index
+                self._index = self._axis_hierarchy
             self._columns = self._axis_opposite
         else:
             if not self._retain_labels:
-                self._columns = self._axis_map.index.level_drop(1) #type: ignore
+                self._columns = self._axis_hierarchy.level_drop(1) #type: ignore
             else:
-                self._columns = self._axis_map.index
+                self._columns = self._axis_hierarchy
             self._index = self._axis_opposite
         self._assign_axis = False
 
@@ -460,7 +461,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 axis=self._axis,
                 retain_labels=self._retain_labels,
                 deepcopy_from_bus=self._deepcopy_from_bus,
-                axis_map=self._axis_map,
+                axis_hierarchy=self._axis_hierarchy,
                 axis_opposite=self._axis_opposite,
                 )
 
@@ -776,7 +777,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         Extract a consolidated array based on iloc selection.
         '''
-        assert self._axis_map is not None #mypy
+        assert self._axis_hierarchy is not None #mypy
 
         extractor = get_extractor(
                 self._deepcopy_from_bus,
@@ -811,18 +812,18 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel_reduces = isinstance(sel_key, INT_TYPES)
         opposite_reduces = isinstance(opposite_key, INT_TYPES)
 
-        sel = np.full(len(self._axis_map), False)
+        sel = np.full(len(self._axis_hierarchy), False)
         sel[sel_key] = True
 
-        # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-        axis_map_sub: tp.Union[Series, tp.Hashable] = self._axis_map.iloc[sel_key]
-        if not isinstance(axis_map_sub, Series): # we have an element integer
-            bus_keys = (axis_map_sub,)
+        # get ordered unique Bus labels
+        axis_map_sub = self._axis_hierarchy.iloc[sel_key]
+        if isinstance(axis_map_sub, tuple): # we have an element integer
+            bus_keys = (axis_map_sub[0],)
         else:
-            bus_keys = duplicate_filter(axis_map_sub.values)
+            bus_keys = axis_map_sub._levels.index
 
         for key_count, key in enumerate(bus_keys):
-            sel_component = sel[self._axis_map.index._loc_to_iloc(HLoc[key])]
+            sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
                 component = self._bus.loc[key]._extract_array(sel_component, opposite_key) #type: ignore [attr-defined]
@@ -854,7 +855,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         Extract Container based on iloc selection.
         '''
-        assert self._axis_map is not None #mypy
+        assert self._axis_hierarchy is not None #mypy
 
         extractor = get_extractor(
                 self._deepcopy_from_bus,
@@ -895,18 +896,21 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         sel_reduces = isinstance(sel_key, INT_TYPES)
 
-        sel = np.full(len(self._axis_map), False)
+        sel = np.full(len(self._axis_hierarchy), False)
         sel[sel_key] = True
 
-        # get ordered unique Bus labels from AxisMap Series values; cannot use .unique as need order
-        axis_map_sub: tp.Union[Series, int] = self._axis_map.iloc[sel_key]
-        if not isinstance(axis_map_sub, Series): # we have an element integer
-            bus_keys = (axis_map_sub,)
+        # get ordered unique Bus labels
+        axis_map_sub = self._axis_hierarchy.iloc[sel_key]
+        if isinstance(axis_map_sub, tuple): # we have an element integer
+            bus_keys = (axis_map_sub[0],)
         else:
-            bus_keys = duplicate_filter(axis_map_sub.values)
+            bus_keys = axis_map_sub._levels.index
 
         for key_count, key in enumerate(bus_keys):
-            sel_component = sel[self._axis_map.index._loc_to_iloc(HLoc[key])]
+            try:
+                sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
+            except:
+                import ipdb; ipdb.set_trace()
 
             if self._axis == 0:
                 component = self._bus.loc[key].iloc[sel_component, opposite_key]

@@ -878,7 +878,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`numpy.dtype`
         '''
-        return self._series.values.dtype
+        return DTYPE_OBJECT
 
     @property
     def shape(self) -> tp.Tuple[int]:

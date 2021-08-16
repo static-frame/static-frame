@@ -28,86 +28,63 @@ def get_extractor(
     return lambda x: x
 
 
-class BaseMap:
-    @staticmethod
-    def get_axis_series(
-            tree: tp.Dict[tp.Hashable, IndexBase],
-            ) -> Series:
-
-        index = IndexHierarchy.from_tree(tree)
-        return Series(
-                index.values_at_depth(0), # store the labels as series values
-                index=index,
-                own_index=True,
-                )
-
-class AxisMap(BaseMap):
+def bus_to_hierarchy(
+        bus: Bus,
+        axis: int,
+        deepcopy_from_bus: bool,
+        init_exception_cls: tp.Type[Exception],
+        ) -> tp.Tuple[Series, IndexBase]:
     '''
-    An AxisMap is a Series where index values point to Bus label as used by Quilt.
+    Given a :obj:`Bus` and an axis, derive a :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
     '''
+    # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
 
-    @classmethod
-    def from_bus(cls,
-            bus: Bus,
-            axis: int,
-            deepcopy_from_bus: bool,
-            init_exception_cls: tp.Type[Exception],
-            ) -> tp.Tuple[Series, IndexBase]:
-        '''
-        Given a :obj:`Bus` and an axis, derive a :obj:`Series` with an :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
-        '''
-        # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
+    extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
-        extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
+    tree = {}
+    opposite: tp.Optional[IndexBase] = None
 
-        tree = {}
-        opposite: tp.Optional[IndexBase] = None
-
-        for label, f in bus.items():
-            if axis == 0:
-                tree[label] = extractor(f.index)
-                if opposite is None:
-                    opposite = extractor(f.columns)
-                else:
-                    if not opposite.equals(f.columns):
-                        raise init_exception_cls('opposite axis must have equivalent indices')
-            elif axis == 1:
-                tree[label] = extractor(f.columns)
-                if opposite is None:
-                    opposite = extractor(f.index)
-                else:
-                    if not opposite.equals(f.index):
-                        raise init_exception_cls('opposite axis must have equivalent indices')
+    for label, f in bus.items():
+        if axis == 0:
+            tree[label] = extractor(f.index)
+            if opposite is None:
+                opposite = extractor(f.columns)
             else:
-                raise AxisInvalid(f'invalid axis {axis}')
-        return cls.get_axis_series(tree), opposite # type: ignore
+                if not opposite.equals(f.columns):
+                    raise init_exception_cls('opposite axis must have equivalent indices')
+        elif axis == 1:
+            tree[label] = extractor(f.columns)
+            if opposite is None:
+                opposite = extractor(f.index)
+            else:
+                if not opposite.equals(f.index):
+                    raise init_exception_cls('opposite axis must have equivalent indices')
+        else:
+            raise AxisInvalid(f'invalid axis {axis}')
+    return IndexHierarchy.from_tree(tree), opposite # type: ignore
 
 
 
-class IndexMap(BaseMap):
+def buses_to_hierarchy(
+        buses: tp.Iterable[Bus],
+        deepcopy_from_bus: bool,
+        init_exception_cls: tp.Type[Exception],
+        ) -> IndexHierarchy:
     '''
-    An IndexMap is a Series where index values point to Bus index positions as used by Yarn.
+    Given an iterable of named :obj:`Bus` derive a :obj:`Series` with an :obj:`IndexHierarchy`.
     '''
-    @classmethod
-    def from_buses(cls,
-            buses: tp.Iterable[Bus],
-            deepcopy_from_bus: bool,
-            init_exception_cls: tp.Type[Exception],
-            ) -> Series:
-        '''
-        Given an iterable of named :obj:`Bus` derive a :obj:`Series` with an :obj:`IndexHierarchy`.
-        '''
-        # NOTE: for now, the Returned Series will have bus Names as values; this requires the Yarn to store a dict, not a list
+    # NOTE: for now, the Returned Series will have bus Names as values; this requires the Yarn to store a dict, not a list
 
-        extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
+    extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
-        tree = {}
-        for bus in buses:
-            if bus.name in tree:
-                raise init_exception_cls(f'Bus names must be unique: {bus.name} duplicated')
-            tree[bus.name] = extractor(bus._series._index)
+    tree = {}
+    for bus in buses:
+        if bus.name in tree:
+            raise init_exception_cls(f'Bus names must be unique: {bus.name} duplicated')
+        tree[bus.name] = extractor(bus._series._index)
 
-        return cls.get_axis_series(tree)
+    return IndexHierarchy.from_tree(tree)
+
 
 
 

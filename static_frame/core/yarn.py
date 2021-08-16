@@ -17,7 +17,7 @@ from static_frame.core.exception import ErrorInitYarn
 # from static_frame.core.frame import Frame
 # from static_frame.core.hloc import HLoc
 from static_frame.core.index_base import IndexBase
-# from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import IndexHierarchy
 # from static_frame.core.node_iter import IterNodeAxis
 # from static_frame.core.node_iter import IterNodeConstructorAxis
 # from static_frame.core.node_iter import IterNodeType
@@ -49,7 +49,7 @@ from static_frame.core.util import DTYPE_OBJECT
 
 # from static_frame.core.util import concat_resolved
 # from static_frame.core.style_config import StyleConfig
-from static_frame.core.axis_map import IndexMap
+from static_frame.core.axis_map import buses_to_hierarchy
 
 
 
@@ -60,7 +60,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     __slots__ = (
             '_series',
-            '_index_map',
+            '_hierarchy',
             '_retain_labels',
             '_assign_index',
             '_index',
@@ -68,7 +68,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             )
 
     _series: Series
-    _index_map: tp.Optional[Series]
+    _hierarchy: tp.Optional[Series]
     _index: IndexBase
     _assign_index: bool
 
@@ -95,7 +95,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             series: Series,
             *,
             retain_labels: bool,
-            index_map: tp.Optional[Series] = None,
+            hierarchy: tp.Optional[IndexHierarchy] = None,
             deepcopy_from_bus: bool = False,
             ) -> None:
         '''
@@ -106,10 +106,10 @@ class Yarn(ContainerBase, StoreClientMixin):
             raise ErrorInitYarn(
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
 
-        self._series = series
+        self._series = series # Bus by Bus label
 
         self._retain_labels = retain_labels
-        self._index_map = index_map # pass in delegation moves
+        self._hierarchy = hierarchy # pass in delegation moves
         #self._index assigned in _update_index_labels()
         self._deepcopy_from_bus = deepcopy_from_bus
 
@@ -119,18 +119,18 @@ class Yarn(ContainerBase, StoreClientMixin):
     # deferred loading of axis info
 
     def _update_index_labels(self) -> None:
-        # _index_map might be None while we still need to set self._index
-        if self._index_map is None:
-            self._index_map = IndexMap.from_buses(
+        # _hierarchy might be None while we still need to set self._index
+        if self._hierarchy is None:
+            self._hierarchy = buses_to_hierarchy(
                     self._series.values,
                     deepcopy_from_bus=self._deepcopy_from_bus,
                     init_exception_cls=ErrorInitYarn,
                     )
 
         if not self._retain_labels:
-            self._index = self._index_map.index.level_drop(1) #type: ignore
+            self._index = self._hierarchy.level_drop(1) #type: ignore
         else: # get hierarchical
-            self._index = self._index_map.index
+            self._index = self._hierarchy
 
         self._assign_index = False
 
@@ -155,7 +155,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         series = self._series.rename(name)
         return self.__class__(series,
                 retain_labels=self._retain_labels,
-                index_map=self._index_map,
+                hierarchy=self._hierarchy,
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 )
 
@@ -173,24 +173,24 @@ class Yarn(ContainerBase, StoreClientMixin):
     @property
     def dtype(self) -> np.dtype:
         '''
-        Return the dtype of the underlying NumPy array.
+        Return the dtype of the realized NumPy array.
 
         Returns:
             :obj:`numpy.dtype`
         '''
-        return self._series.values.dtype # always DTYPE_OBJECT
+        return DTYPE_OBJECT # always dtype object
 
     @property
     def shape(self) -> tp.Tuple[int]:
         '''
-        Return a tuple describing the shape of the underlying NumPy array.
+        Return a tuple describing the shape of the realized NumPy array.
 
         Returns:
             :obj:`Tuple[int]`
         '''
         if self._assign_index:
             self._update_index_labels()
-        return self._series.index.shape[0] #type: ignore
+        return (self._hierarchy.shape[0],) #type: ignore
 
     @property
     def ndim(self) -> int:
@@ -212,7 +212,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         if self._assign_index:
             self._update_index_labels()
-        return self._series.index.size[0] #type: ignore
+        return self._hierarchy.shape[0] #type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -229,46 +229,29 @@ class Yarn(ContainerBase, StoreClientMixin):
         return self._index
 
 
-
     #---------------------------------------------------------------------------
     # extraction
 
-    # def _extract_iloc(self, key: GetItemKeyType) -> 'Bus':
-    #     '''
-    #     Returns:
-    #         Bus or, if an element is selected, a Frame
-    #     '''
-    #     # iterable selection should be handled by NP
-    #     values = self._series.values[key]
-
-    #     if not values.__class__ is np.ndarray: # if we have a single element
-    #         return values #type: ignore
-
-    #     series = Series(
-    #             values,
-    #             index=self._series._index.iloc[key],
-    #             name=self._series._name)
-
-
-    def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
-
+    def _extract_iloc(self, key: GetItemKeyType) -> 'Yarn':
+        '''
+        Returns:
+            Yarn or, if an element is selected, a Frame
+        '''
         if self._assign_index:
             self._update_index_labels()
 
-        im = self._index_map
-
-        target_iloc = im.index._loc_to_iloc(key)
-        target_im = im._extract_iloc(target_iloc)
+        target_hierarchy = self._hierarchy._extract_iloc(key)
         # get the outer-most index of the hierarchical index
-        target_bus_index = target_im._index._levels.index
+        target_bus_index = target_hierarchy._levels.index
 
-        valid = np.full(len(im), False)
-        valid[target_iloc] = True
+        # do avoid having to do a group by or other selection on the targetted bus, we create a Boolean array equal to the entire realized lengt.
+        valid = np.full(len(self._index), False)
+        valid[key] = True
 
         buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
         # must run accross all labels to get incremental slices of Boolean array, but maybe there is a way to avoid
         pos = 0
-        for bus_label, width in im.index.label_widths_at_depth(0):
+        for bus_label, width in self._hierarchy.label_widths_at_depth(0):
             # this should always be a bus
             if bus_label not in target_bus_index:
                 pos += width
@@ -279,21 +262,33 @@ class Yarn(ContainerBase, StoreClientMixin):
             idx = target_bus_index.loc_to_iloc(bus_label)
             buses[idx] = self._series[bus_label]._extract_iloc(extract_per_bus)
 
-        # import ipdb; ipdb.set_trace()
+        buses.flags.writeable = False
+        target_series = Series(buses,
+                index=target_bus_index,
+                own_index=True,
+                name=self._series._name,
+                )
 
-        # if not values.__class__ is np.ndarray: # if we have a single element
-        #     return values #type: ignore
+        return self.__class__(target_series,
+                retain_labels=self._retain_labels,
+                hierarchy=target_hierarchy,
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                )
 
-        # series = Series(values,
-        #         index=self._series._index.iloc[iloc_key],
-        #         own_index=True,
-        #         name=self._series._name)
 
-        # return self.__class__(series)
+
+    def _extract_loc(self, key: GetItemKeyType) -> 'Yarn':
+
+        if self._assign_index:
+            self._update_index_labels()
+
+        # use the index active for this Yarn
+        key_iloc = self._index._loc_to_iloc(key)
+        return self._extract_iloc(key_iloc)
 
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> 'Bus':
+    def __getitem__(self, key: GetItemKeyType) -> 'Yarn':
         '''Selector of values by label.
 
         Args:

@@ -34,14 +34,38 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2), retain_labels=True)
         self.assertEqual(len(y1), 5)
         self.assertEqual(y1.index.shape, (5, 2))
+        self.assertEqual(y1.shape, (5,))
+        self.assertEqual(y1.size, 5)
+        self.assertEqual(y1.dtype, object)
+        self.assertEqual(y1.ndim, 1)
 
         y1[('a', 'f2'):]
 
         y2 = Yarn.from_buses((b1, b2), retain_labels=False)
         self.assertEqual(len(y2), 5)
         self.assertEqual(y2.index.shape, (5,))
+        self.assertEqual(y1.shape, (5,))
+        self.assertEqual(y1.size, 5)
+        self.assertEqual(y1.dtype, object)
+        self.assertEqual(y1.ndim, 1)
 
-        # import ipdb; ipdb.set_trace()
+
+    def test_yarn_from_buses_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        import ipdb; ipdb.set_trace()
 
 
 
