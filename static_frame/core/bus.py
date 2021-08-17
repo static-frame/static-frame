@@ -799,7 +799,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @property
     def mloc(self) -> Series:
-        '''Returns a Series of tuples of dtypes, one for each loaded Frame.
+        '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
         if not self._loaded.any():
             return Series.from_element(None, index=self._series._index)
@@ -815,7 +815,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @property
     def dtypes(self) -> Frame:
-        '''Returns a Frame of dtypes for all loaded Frames.
+        '''Returns a :obj:`Frame` of dtype per column for all loaded Frames.
         '''
         if not self._loaded.any():
             return Frame(index=self._series.index)
@@ -831,7 +831,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
 
         Returns:
-            :obj:`tp.Tuple[int]`
+            :obj:`Series`
         '''
         values = (f.shape if f is not FrameDeferred else None for f in self._series.values)
         return Series(values, index=self._series._index, dtype=object, name='shape')

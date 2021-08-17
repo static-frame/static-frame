@@ -568,6 +568,42 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extended discriptors; in general, these do not force loading Frame
 
+    @property
+    def mloc(self) -> Series:
+        '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
+        '''
+        if self._assign_index:
+            self._update_index_labels()
+
+        return Series.from_concat((b.mloc for b in self._series.values),
+                index=self._index)
+
+    @property
+    def dtypes(self) -> Frame:
+        '''Returns a Frame of dtypes for all loaded Frames.
+        '''
+        if self._assign_index:
+            self._update_index_labels()
+
+        f = Frame.from_concat(
+                frames=(f.dtypes for f in self._series.values),
+                fill_value=None,
+                ).relabel(index=self._index)
+        return tp.cast(Frame, f)
+
+
+    @property
+    def shapes(self) -> Series:
+        '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
+
+        Returns:
+            :obj:`tp.Series`
+        '''
+        if self._assign_index:
+            self._update_index_labels()
+
+        return Series.from_concat((b.shapes for b in self._series.values),
+                index=self._index)
 
     @property
     def nbytes(self) -> int:

@@ -96,15 +96,16 @@ class TestUnit(TestCase):
             self.assertEqual(y1.nbytes, 0)
             self.assertEqual(y1.status['loaded'].sum(), 0)
 
-            import ipdb; ipdb.set_trace()
             self.assertEqual(y1['f2'].shape, (4, 5))
             self.assertEqual(y1['f6'].shape, (6, 4))
             self.assertEqual(y1.nbytes, 352)
             self.assertEqual(y1.status['loaded'].sum(), 2)
 
-            import ipdb; ipdb.set_trace()
-
-            pass
+            self.assertEqual(y1.shapes.to_pairs(),
+                    (('f1', None), ('f2', (4, 5)), ('f3', None), ('f4', None), ('f5', None), ('f6', (6, 4)))
+                    )
+            self.assertEqual(y1.mloc.isna().sum(), 4)
+            self.assertEqual((y1.dtypes == float).sum().sum(), 9)
 
 
 
