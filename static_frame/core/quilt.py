@@ -34,7 +34,6 @@ from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import duplicate_filter
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound

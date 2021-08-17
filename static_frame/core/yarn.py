@@ -42,7 +42,6 @@ from static_frame.core.store_client_mixin import StoreClientMixin
 # from static_frame.core.store_zip import StoreZipTSV
 # from static_frame.core.util import AnyCallable
 # from static_frame.core.util import array_deepcopy
-# from static_frame.core.util import duplicate_filter
 # from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import GetItemKeyType
 # from static_frame.core.util import GetItemKeyTypeCompound

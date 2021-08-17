@@ -419,21 +419,22 @@ class PairRight(Pair):
 #         return np.reshape(array, array.shape[1])
 #     return array
 
-def duplicate_filter(values: tp.Iterable[tp.Any]) -> tp.Iterator[tp.Any]:
-    '''
-    Assuming ordered values, yield one of each unique value as determined by __eq__ comparison.
-    '''
-    v_iter = iter(values)
-    try:
-        v = next(v_iter)
-    except StopIteration:
-        return
-    yield v
-    last = v
-    for v in v_iter:
-        if v != last:
-            yield v
-        last = v
+# NOTE: no longer needed
+# def duplicate_filter(values: tp.Iterable[tp.Any]) -> tp.Iterator[tp.Any]:
+#     '''
+#     Assuming ordered values, yield one of each unique value as determined by __eq__ comparison.
+#     '''
+#     v_iter = iter(values)
+#     try:
+#         v = next(v_iter)
+#     except StopIteration:
+#         return
+#     yield v
+#     last = v
+#     for v in v_iter:
+#         if v != last:
+#             yield v
+#         last = v
 
 def _gen_skip_middle(
         forward_iter: CallableToIterType,

@@ -59,7 +59,6 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
-from static_frame.core.util import duplicate_filter
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import get_tuple_constructor
@@ -2360,13 +2359,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = array_sample(a1.reshape(2, 2), 2)
-
-
-    #---------------------------------------------------------------------------
-    def test_duplicate_filter_a(self) -> None:
-        self.assertEqual(list(duplicate_filter(list('aaaabcccd'))), list('abcd'))
-        self.assertEqual(list(duplicate_filter(list('d'))), list('d'))
-        self.assertEqual(list(duplicate_filter(list())), list())
 
 
     #---------------------------------------------------------------------------
