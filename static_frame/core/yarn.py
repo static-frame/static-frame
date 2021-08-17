@@ -591,7 +591,6 @@ class Yarn(ContainerBase, StoreClientMixin):
                 ).relabel(index=self._index)
         return tp.cast(Frame, f)
 
-
     @property
     def shapes(self) -> Series:
         '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
