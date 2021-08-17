@@ -375,7 +375,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''
-        Returns a reverse iterator on the series' index.
+        Returns a reverse iterator on the :obj:`Bus` index.
 
         Returns:
             :obj:`Index`

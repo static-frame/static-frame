@@ -65,7 +65,10 @@ class TestUnit(TestCase):
         f7 = ff.parse('s(4,2)|v(str)').rename('f7')
         b3 = Bus.from_frames((f6, f7), name='c')
 
-        import ipdb; ipdb.set_trace()
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=True)
+
+
+        # import ipdb; ipdb.set_trace()
 
 
 
