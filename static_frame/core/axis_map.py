@@ -33,7 +33,7 @@ def bus_to_hierarchy(
         axis: int,
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
-        ) -> tp.Tuple[Series, IndexBase]:
+        ) -> tp.Tuple[IndexHierarchy, IndexBase]:
     '''
     Given a :obj:`Bus` and an axis, derive a :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
     '''

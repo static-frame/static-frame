@@ -68,7 +68,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     _bus: Bus
     _axis: int
-    _axis_hierarchy: tp.Optional[Series]
+    _axis_hierarchy: tp.Optional[IndexHierarchy]
     _axis_opposite: tp.Optional[IndexBase]
     _columns: IndexBase
     _index: IndexBase
@@ -392,7 +392,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             *,
             axis: int = 0,
             retain_labels: bool,
-            axis_hierarchy: tp.Optional[Series] = None,
+            axis_hierarchy: tp.Optional[IndexHierarchy] = None,
             axis_opposite: tp.Optional[IndexBase] = None,
             deepcopy_from_bus: bool = False,
             ) -> None:
@@ -429,13 +429,13 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         if self._axis == 0:
             if not self._retain_labels:
-                self._index = self._axis_hierarchy.level_drop(1) #type: ignore
+                self._index = self._axis_hierarchy.level_drop(1)
             else: # get hierarchical
                 self._index = self._axis_hierarchy
             self._columns = self._axis_opposite
         else:
             if not self._retain_labels:
-                self._columns = self._axis_hierarchy.level_drop(1) #type: ignore
+                self._columns = self._axis_hierarchy.level_drop(1)
             else:
                 self._columns = self._axis_hierarchy
             self._index = self._axis_opposite
@@ -817,8 +817,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         # get ordered unique Bus labels
         axis_map_sub = self._axis_hierarchy.iloc[sel_key]
-        if isinstance(axis_map_sub, tuple): # we have an element integer
-            bus_keys = (axis_map_sub[0],)
+        if isinstance(axis_map_sub, tuple): # type: ignore
+            bus_keys = (axis_map_sub[0],) #type: ignore
         else:
             bus_keys = axis_map_sub._levels.index
 
@@ -901,16 +901,13 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         # get ordered unique Bus labels
         axis_map_sub = self._axis_hierarchy.iloc[sel_key]
-        if isinstance(axis_map_sub, tuple): # we have an element integer
-            bus_keys = (axis_map_sub[0],)
+        if isinstance(axis_map_sub, tuple): #type: ignore
+            bus_keys = (axis_map_sub[0],) #type: ignore
         else:
             bus_keys = axis_map_sub._levels.index
 
         for key_count, key in enumerate(bus_keys):
-            try:
-                sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
-            except:
-                import ipdb; ipdb.set_trace()
+            sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
                 component = self._bus.loc[key].iloc[sel_component, opposite_key]

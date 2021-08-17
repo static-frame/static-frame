@@ -41,7 +41,8 @@ class TestUnit(TestCase):
         self.assertEqual(y1.dtype, object)
         self.assertEqual(y1.ndim, 1)
 
-        y1[('a', 'f2'):]
+        y3 = y1[('a', 'f2'):] #type: ignore
+        self.assertEqual(y3.shape, (4,))
 
         y2 = Yarn.from_buses((b1, b2), retain_labels=False)
         self.assertEqual(len(y2), 5)

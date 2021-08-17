@@ -76,7 +76,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             )
 
     _series: Series
-    _hierarchy: tp.Optional[Series]
+    _hierarchy: tp.Optional[IndexHierarchy]
     _index: IndexBase
     _assign_index: bool
 
@@ -110,9 +110,9 @@ class Yarn(ContainerBase, StoreClientMixin):
             name: NameType = NAME_DEFAULT,
             retain_labels: bool,
             deepcopy_from_bus: bool = False,
-            ) -> 'Bus':
+            ) -> 'Yarn':
         '''
-        Concatenate multiple :obj:`Bus` into a new :obj:`Yarn`.
+        Concatenate multiple :obj:`Bus` into a new :obj:`Yarn`. Loaded status of :obj:`Frame` within each :obj:`Bus` will not be altered.
 
         Args:
             index: Optionally provide new labels for each Bus. This is not resultant index on the :obj:`Yarn`.
@@ -163,7 +163,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                     )
 
         if not self._retain_labels:
-            self._index = self._hierarchy.level_drop(1) #type: ignore
+            self._index = self._hierarchy.level_drop(1)
         else: # get hierarchical
             self._index = self._hierarchy
 
@@ -421,10 +421,10 @@ class Yarn(ContainerBase, StoreClientMixin):
         if self._assign_index:
             self._update_index_labels()
 
-        target_hierarchy = self._hierarchy._extract_iloc(key)
+        target_hierarchy = self._hierarchy._extract_iloc(key) #type: ignore
         if isinstance(target_hierarchy, tuple):
             # got a single element, return a Frame
-            return self._series[target_hierarchy[0]][target_hierarchy[1]]
+            return self._series[target_hierarchy[0]][target_hierarchy[1]] #type: ignore
 
         # get the outer-most index of the hierarchical index
         target_bus_index = target_hierarchy._levels.index
@@ -436,7 +436,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
         # must run accross all labels to get incremental slices of Boolean array, but maybe there is a way to avoid
         pos = 0
-        for bus_label, width in self._hierarchy.label_widths_at_depth(0):
+        for bus_label, width in self._hierarchy.label_widths_at_depth(0): #type: ignore
             # this should always be a bus
             if bus_label not in target_bus_index:
                 pos += width
@@ -621,7 +621,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         f = Frame.from_concat(
                 (b.status for b in self._series.values),
                 index=IndexAutoFactory)
-        return f.relabel(index=self._index)
+        return f.relabel(index=self._index) # type: ignore
 
 
     #---------------------------------------------------------------------------
