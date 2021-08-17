@@ -15,6 +15,8 @@ from static_frame.core.bus import Bus
 # from static_frame.core.axis_map import IndexMap
 
 from static_frame.core.yarn import Yarn
+from static_frame.test.test_case import temp_file
+
 
 class TestUnit(TestCase):
 
@@ -69,6 +71,40 @@ class TestUnit(TestCase):
 
 
         # import ipdb; ipdb.set_trace()
+
+    def test_yarn_max_persist(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
+            self.assertEqual(y1.nbytes, 0)
+            self.assertEqual(y1.status['loaded'].sum(), 0)
+
+            import ipdb; ipdb.set_trace()
+            self.assertEqual(y1['f2'].shape, (4, 5))
+            self.assertEqual(y1['f6'].shape, (6, 4))
+            self.assertEqual(y1.nbytes, 352)
+            self.assertEqual(y1.status['loaded'].sum(), 2)
+
+            import ipdb; ipdb.set_trace()
+
+            pass
 
 
 

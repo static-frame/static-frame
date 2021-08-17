@@ -57,6 +57,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.axis_map import buses_to_hierarchy
 from static_frame.core.index_auto import IndexAutoFactoryType
+from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.node_selector import InterfaceGetItem
 
 
@@ -565,11 +566,38 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
+    # extended discriptors; in general, these do not force loading Frame
+
+
+    @property
+    def nbytes(self) -> int:
+        '''Total bytes of data currently loaded in :obj:`Bus` contained in this :obj:`Yarn`.
+        '''
+        return sum(b.nbytes for b in self._series.values)
+
+    @property
+    def status(self) -> Frame:
+        '''
+        Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in :obj:`Bus` contined in this :obj:`Yarn`.
+        '''
+        if self._assign_index:
+            self._update_index_labels()
+
+        f = Frame.from_concat(
+                (b.status for b in self._series.values),
+                index=IndexAutoFactory)
+        return f.relabel(index=self._index)
+
+
+    #---------------------------------------------------------------------------
     # exporter
 
     def to_series(self) -> Series:
         '''Return a :obj:`Series` with the :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
+        if self._assign_index:
+            self._update_index_labels()
+
         # NOTE: this should load all deferred Frame
         return Series(self.values, index=self._index, own_index=True)
 
