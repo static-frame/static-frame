@@ -127,8 +127,8 @@ class Yarn(ContainerBase, StoreClientMixin):
                 raise NotImplementedError(f'cannot instantiate from {type(element)}')
 
         array = np.empty(len(bus_components), dtype=DTYPE_OBJECT)
-        for i in range(len(bus_components)):
-            array[i] = bus_components[i]
+        for i, bus in enumerate(bus_components):
+            array[i] = bus
 
         array.flags.writeable = False
         series = Series(array, index=index, name=name)
