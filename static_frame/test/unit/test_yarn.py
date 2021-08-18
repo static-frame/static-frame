@@ -109,7 +109,7 @@ class TestUnit(TestCase):
             self.assertEqual((y1.dtypes == float).sum().sum(), 9)
 
     #---------------------------------------------------------------------------
-    def test_yarn_from_concat_a(self):
+    def test_yarn_from_concat_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -152,7 +152,7 @@ class TestUnit(TestCase):
             # y2 = Yarn.from_concat((y1, y1), retain_labels=True, index=IndexAutoFactory)
 
     #---------------------------------------------------------------------------
-    def test_yarn_reversed_a(self):
+    def test_yarn_reversed_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -172,7 +172,7 @@ class TestUnit(TestCase):
         # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
-    def test_yarn_rename_a(self):
+    def test_yarn_rename_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -192,7 +192,7 @@ class TestUnit(TestCase):
         self.assertEqual(y2.name, 'bar')
 
     #---------------------------------------------------------------------------
-    def test_yarn_loc_a(self):
+    def test_yarn_loc_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -208,12 +208,12 @@ class TestUnit(TestCase):
 
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
         self.assertEqual(y1.loc['f4'].shape, (4, 4))
-        self.assertEqual(y1.loc['f4':].shape, (4,))
+        self.assertEqual(y1.loc['f4':].shape, (4,)) #type: ignore
         self.assertEqual(y1.loc[['f2', 'f7']].shape, (2,))
         self.assertEqual(y1.loc[y1.index.via_str.startswith('f3')].shape, (1,))
 
     #---------------------------------------------------------------------------
-    def test_yarn_iloc_a(self):
+    def test_yarn_iloc_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -235,7 +235,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_yarn_keys_a(self):
+    def test_yarn_keys_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -254,7 +254,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_yarn_iter_a(self):
+    def test_yarn_iter_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -273,7 +273,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_yarn_contains_a(self):
+    def test_yarn_contains_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -292,7 +292,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_yarn_get_a(self):
+    def test_yarn_get_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -315,7 +315,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_yarn_head_a(self):
+    def test_yarn_head_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -335,7 +335,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_yarn_tail_a(self):
+    def test_yarn_tail_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')

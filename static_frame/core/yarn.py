@@ -103,7 +103,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @classmethod
     def from_concat(cls,
-            containers: tp.Iterable['Bus'],
+            containers: tp.Iterable[tp.Union['Bus', 'Yarn']],
             *,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
             name: NameType = NAME_DEFAULT,

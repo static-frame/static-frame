@@ -21,7 +21,9 @@ from static_frame.core.util import dtype_from_element
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
-
+from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_str import InterfaceString
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -447,6 +449,23 @@ class IndexBase(ContainerOperand):
                 dtypes=dtypes,
                 size_one_unity=size_one_unity
                 )
+
+    #---------------------------------------------------------------------------
+    # via interfaces
+
+    @property
+    def via_str(self) -> InterfaceString[np.ndarray]:
+        raise NotImplementedError()
+
+    @property
+    def via_dt(self) -> InterfaceDatetime[np.ndarray]:
+        raise NotImplementedError()
+
+    def via_re(self,
+            pattern: str,
+            flags: int = 0,
+            ) -> InterfaceRe[np.ndarray]:
+        raise NotImplementedError()
 
     #---------------------------------------------------------------------------
     # exporters
