@@ -66,6 +66,7 @@ def bus_to_hierarchy(
 
 def buses_to_hierarchy(
         buses: tp.Iterable[Bus],
+        labels: tp.Iterable[tp.Hashable],
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
         ) -> IndexHierarchy:
@@ -77,10 +78,10 @@ def buses_to_hierarchy(
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
     tree = {}
-    for bus in buses:
-        if bus.name in tree:
-            raise init_exception_cls(f'Bus names must be unique: {bus.name} duplicated')
-        tree[bus.name] = extractor(bus._series._index)
+    for label, bus in zip(labels, buses):
+        if label in tree:
+            raise init_exception_cls(f'Bus names must be unique: {label} duplicated')
+        tree[label] = extractor(bus._series._index)
 
     return IndexHierarchy.from_tree(tree)
 

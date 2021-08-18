@@ -43,8 +43,7 @@ class TestUnit(TestCase):
         f5 = ff.parse('s(4,4)|v(str)').rename('f5')
         b2 = Bus.from_frames((f4, f5), name='b')
 
-        post = buses_to_hierarchy((b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
-
+        post = buses_to_hierarchy((b1, b2), (b1.name, b2.name), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
 
         self.assertEqual(post.values.tolist(),
                 [['a', 'f1'], ['a', 'f2'], ['a', 'f3'], ['b', 'f4'], ['b', 'f5']])

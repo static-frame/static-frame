@@ -114,10 +114,24 @@ class Yarn(ContainerBase, StoreClientMixin):
         Concatenate multiple :obj:`Bus` into a new :obj:`Yarn`. Loaded status of :obj:`Frame` within each :obj:`Bus` will not be altered.
 
         Args:
-            index: Optionally provide new labels for each Bus. This is not resultant index on the :obj:`Yarn`.
+            index: Optionally provide new labels for each Bus. This is not the resultant index on the :obj:`Yarn`.
         '''
-        # will extract .values, .index from Bus, which will correct load from Store as needed
-        series = Series.from_concat(containers, index=index, name=name)
+        bus_components = []
+        for element in containers:
+            if isinstance(element, Bus):
+                bus_components.append(element)
+            elif isinstance(element, Yarn):
+                # extend with Bus components of this Yarn
+                bus_components.extend(element._series.values)
+            else:
+                raise NotImplementedError(f'cannot instantiate from {type(element)}')
+
+        array = np.empty(len(bus_components), dtype=DTYPE_OBJECT)
+        for i in range(len(bus_components)):
+            array[i] = bus_components[i]
+
+        array.flags.writeable = False
+        series = Series(array, index=index, name=name)
         return cls(series,
                 deepcopy_from_bus=deepcopy_from_bus,
                 retain_labels=retain_labels,
@@ -157,6 +171,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         if self._hierarchy is None:
             self._hierarchy = buses_to_hierarchy(
                     self._series.values,
+                    self._series.index,
                     deepcopy_from_bus=self._deepcopy_from_bus,
                     init_exception_cls=ErrorInitYarn,
                     )

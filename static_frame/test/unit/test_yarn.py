@@ -20,7 +20,7 @@ from static_frame.test.test_case import temp_file
 
 class TestUnit(TestCase):
 
-
+    #---------------------------------------------------------------------------
     def test_yarn_from_buses_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -69,10 +69,10 @@ class TestUnit(TestCase):
         b3 = Bus.from_frames((f6, f7), name='c')
 
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=True)
+        self.assertEqual(y1.shape, (7,))
+        self.assertEqual(len(y1), 7)
 
-
-        # import ipdb; ipdb.set_trace()
-
+    #---------------------------------------------------------------------------
     def test_yarn_max_persist(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -80,7 +80,6 @@ class TestUnit(TestCase):
         f4 = ff.parse('s(2,8)').rename('f4')
         f5 = ff.parse('s(4,4)').rename('f5')
         f6 = ff.parse('s(6,4)').rename('f6')
-
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -108,7 +107,50 @@ class TestUnit(TestCase):
             self.assertEqual(y1.mloc.isna().sum(), 4)
             self.assertEqual((y1.dtypes == float).sum().sum(), 9)
 
+    #---------------------------------------------------------------------------
+    def test_yarn_from_concat_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
 
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_concat((b1, b2, b3), retain_labels=False)
+        self.assertEqual(y1.shape, (7,))
+
+    def test_yarn_from_concat_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y1 = Yarn.from_concat((bus_a, bus_b), retain_labels=False)
+            self.assertEqual(y1.shape, (6,))
+            self.assertEqual(y1.status['loaded'].sum(), 0)
+
+            # from static_frame import IndexAutoFactory
+            # y2 = Yarn.from_concat((y1, y1), retain_labels=True, index=IndexAutoFactory)
+
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()
