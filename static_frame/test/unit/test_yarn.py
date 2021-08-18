@@ -150,7 +150,208 @@ class TestUnit(TestCase):
             # from static_frame import IndexAutoFactory
             # y2 = Yarn.from_concat((y1, y1), retain_labels=True, index=IndexAutoFactory)
 
+    #---------------------------------------------------------------------------
+    def test_yarn_reversed_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
+        self.assertEqual(tuple(reversed(y1)), ('c', 'b', 'a'))
+
         # import ipdb; ipdb.set_trace()
+
+    #---------------------------------------------------------------------------
+    def test_yarn_rename_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        self.assertEqual(y1.name, 'foo')
+        y2 = y1.rename('bar')
+        self.assertEqual(y2.name, 'bar')
+
+    #---------------------------------------------------------------------------
+    def test_yarn_loc_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        self.assertEqual(y1.loc['f4'].shape, (4, 4))
+        self.assertEqual(y1.loc['f4':].shape, (4,))
+        self.assertEqual(y1.loc[['f2', 'f7']].shape, (2,))
+        self.assertEqual(y1.loc[y1.index.via_str.startswith('f3')].shape, (1,))
+
+    #---------------------------------------------------------------------------
+    def test_yarn_iloc_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        self.assertEqual(y1.iloc[3].shape, (4, 4))
+        self.assertEqual(y1.iloc[3:].shape, (4,))
+        self.assertEqual(y1.iloc[[1, 6]].shape, (2,))
+        self.assertEqual(y1.iloc[y1.index.via_str.startswith('f3')].shape, (1,))
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_keys_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        self.assertEqual(tuple(y1.keys()), ('f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7'))
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_iter_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        self.assertEqual(next(iter(y1)), 'f1')
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_contains_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        self.assertTrue('f6' in y1)
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_get_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        self.assertTrue(y1.get('f2').equals(f2))
+        self.assertEqual(y1.get('f99'), None)
+
+
+    # TODO: equals
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_head_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        self.assertEqual(y1.head(2).shape, (2,))
+        self.assertEqual(tuple(y1.head(2).keys()), ('f1', 'f2'))
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_tail_a(self):
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        self.assertEqual(y1.tail(2).shape, (2,))
+        self.assertEqual(tuple(y1.tail(2).keys()), ('f6', 'f7'))
+
 
 if __name__ == '__main__':
     unittest.main()

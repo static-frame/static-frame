@@ -328,8 +328,6 @@ class Yarn(ContainerBase, StoreClientMixin):
             self._update_index_labels()
         return self._index
 
-
-
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
@@ -340,6 +338,8 @@ class Yarn(ContainerBase, StoreClientMixin):
         Returns:
             :obj:`Iterator[Hashable]`
         '''
+        if self._assign_index:
+            self._update_index_labels()
         return self._index
 
     def __iter__(self) -> tp.Iterator[tp.Hashable]:
@@ -349,6 +349,8 @@ class Yarn(ContainerBase, StoreClientMixin):
         Returns:
             :obj:`Iterator[Hashasble]`
         '''
+        if self._assign_index:
+            self._update_index_labels()
         return self._index.__iter__()
 
     def __contains__(self, value: tp.Hashable) -> bool:
@@ -358,6 +360,8 @@ class Yarn(ContainerBase, StoreClientMixin):
         Returns:
             :obj:`bool`
         '''
+        if self._assign_index:
+            self._update_index_labels()
         return self._index.__contains__(value)
 
     def get(self, key: tp.Hashable,
@@ -369,7 +373,9 @@ class Yarn(ContainerBase, StoreClientMixin):
         Returns:
             :obj:`Any`
         '''
-        if key not in self._series._index:
+        if self._assign_index:
+            self._update_index_labels()
+        if key not in self._index:
             return default
         return self.__getitem__(key)
 
