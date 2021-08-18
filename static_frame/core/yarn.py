@@ -191,7 +191,9 @@ class Yarn(ContainerBase, StoreClientMixin):
         Returns:
             :obj:`Index`
         '''
-        return reversed(self._series._index) #type: ignore
+        if self._assign_index:
+            self._update_index_labels()
+        return reversed(self._index) #type: ignore
 
     #---------------------------------------------------------------------------
     # name interface
@@ -400,7 +402,47 @@ class Yarn(ContainerBase, StoreClientMixin):
             {compare_class}
             {skipna}
         '''
-        raise NotImplementedError()
+
+        if id(other) == id(self):
+            return True
+
+        if compare_class and self.__class__ != other.__class__:
+            return False
+        elif not isinstance(other, Yarn):
+            return False
+
+        if compare_name and self._series._name != other._series._name:
+            return False
+
+        # defer Index creationg until here
+        if self._assign_index:
+            self._update_index_labels()
+
+        # length of series in Yarn might be different but may still have the same frames, so look at realized length
+        if len(self) != len(other):
+            return False
+
+        if not self._index.equals(
+                other.index, # call property to force index creation
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                ):
+            return False
+
+        # can zip because length of Series already match
+        # using .values will force loading all Frame into memory; better to use items() to permit collection
+        for (_, frame_self), (_, frame_other) in zip(self.items(), other.items()):
+            if not frame_self.equals(frame_other,
+                    compare_name=compare_name,
+                    compare_dtype=compare_dtype,
+                    compare_class=compare_class,
+                    skipna=skipna,
+                    ):
+                return False
+
+        return True
 
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
@@ -528,9 +570,12 @@ class Yarn(ContainerBase, StoreClientMixin):
     def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
         '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
         '''
+        if self._assign_index:
+            self._update_index_labels()
+
         labels = iter(self._index)
         for bus in self._series.values:
-            # NOTE: cannot use Bus.items() as it may not have the right index; cannot use Bus.values, as that will load all Frames at once
+            # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; cannot use Bus.values, as that will load all Frames at once
             for i in range(len(bus)):
                 yield next(labels), bus._extract_iloc(i)
 

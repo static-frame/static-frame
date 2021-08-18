@@ -15,6 +15,7 @@ from static_frame.core.bus import Bus
 # from static_frame.core.axis_map import IndexMap
 
 from static_frame.core.yarn import Yarn
+from static_frame.core.frame import Frame
 from static_frame.test.test_case import temp_file
 
 
@@ -166,7 +167,7 @@ class TestUnit(TestCase):
         b3 = Bus.from_frames((f6, f7), name='c')
 
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
-        self.assertEqual(tuple(reversed(y1)), ('c', 'b', 'a'))
+        self.assertEqual(tuple(reversed(y1)), ('f7', 'f6', 'f5', 'f4', 'f3', 'f2', 'f1'))
 
         # import ipdb; ipdb.set_trace()
 
@@ -351,6 +352,37 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
         self.assertEqual(y1.tail(2).shape, (2,))
         self.assertEqual(tuple(y1.tail(2).keys()), ('f6', 'f7'))
+
+    #---------------------------------------------------------------------------
+    def test_yarn_items_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
+
+            labels = []
+            for label, frame in y1.items():
+                self.assertTrue(frame.__class__ is Frame)
+                labels.append(label)
+
+            self.assertEqual(labels, list(y1.index))
+            self.assertEqual(y1.status['loaded'].sum(), 2)
+            self.assertEqual(y1.status.loc[y1.status['loaded']].index.values.tolist(),
+                ['f3', 'f6'])
 
 
 if __name__ == '__main__':
