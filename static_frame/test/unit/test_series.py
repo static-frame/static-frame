@@ -696,6 +696,24 @@ class TestUnit(TestCase):
         s2 = s1.reindex(index) # same values, different class
         self.assertTrue(s2.index.__class__, index.__class__)
 
+    def test_series_reindex_g(self) -> None:
+
+        s1 = sf.Series((3, 0, 1), index=(datetime.date(2020,12,31), datetime.date(2021,1,15), datetime.date(2021,1,31)))
+        # we do not automatically match to datetime64 types and datetime types
+        s2 = s1.reindex([np.datetime64(d) for d in s1.index[:2]], fill_value=None)
+        self.assertEqual(s2.to_pairs(),
+                ((np.datetime64('2020-12-31'), None), (np.datetime64('2021-01-15'), None))
+                )
+
+        s3 = s1.reindex([np.datetime64(d) for d in s1.index], fill_value=None)
+        # if all values are datetime64, we should get all missing
+        s4 = s1.reindex([np.datetime64(d) for d in reversed(s1.index)], fill_value=None)
+
+
+
+        # import ipdb; ipdb.set_trace()
+
+
     #---------------------------------------------------------------------------
     def test_series_isna_a(self) -> None:
 

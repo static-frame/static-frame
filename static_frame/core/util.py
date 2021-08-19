@@ -1779,7 +1779,19 @@ def _ufunc_set_1d(
 
     array_is_str = array.dtype.kind in DTYPE_STR_KINDS
     other_is_str = other.dtype.kind in DTYPE_STR_KINDS
-    set_compare = array_is_str ^ other_is_str
+
+    # np.intersect1d will not handle different dt64 units correctly, but rather "downcast" to the lowest unit, which is not what we want; so, only use np.intersect1d if the units are the same
+    array_is_dt64 = array.dtype.kind == DTYPE_DATETIME_KIND
+    other_is_dt64 = other.dtype.kind == DTYPE_DATETIME_KIND
+
+    if array_is_dt64 and other_is_dt64:
+        # if units are the same, no need for set compare
+        if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
+            set_compare = True
+        else: # can compare directly
+            set_compare = False
+    else:
+        set_compare = array_is_str ^ other_is_str
 
     if set_compare or dtype.kind == 'O':
         if is_union:

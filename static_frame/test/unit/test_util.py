@@ -558,6 +558,19 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(),
                 [(0, 1), (0, 3)])
 
+
+    def test_intersect1d_c(self) -> None:
+        a1 = np.array([datetime.date(2020, 12, 31), datetime.date(2021, 1, 15),
+                datetime.date(2021, 1, 31)], dtype=object)
+        a2 = np.array(['2020-12-31', '2021-01-15'], dtype='datetime64[D]')
+
+        post = intersect1d(a1, a2)
+
+        # import ipdb; ipdb.set_trace()
+
+
+
+    #---------------------------------------------------------------------------
     def test_setdiff1d_a(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array(['3', '2', '1'])
