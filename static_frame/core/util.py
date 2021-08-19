@@ -83,6 +83,12 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
         'i', 'u' # int kinds
         ))
 
+# all dt64 units that tolist() to go to a compatible Python type
+DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
+        'D', 'h', 'm', 's', 'ms', 'us',
+        ))
+
+
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
         DTYPE_FLOAT_KIND,
@@ -1788,12 +1794,19 @@ def _ufunc_set_1d(
         # if units are the same, no need for set compare
         if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
             set_compare = True
-        else: # can compare directly
+        else: # can compare directly, dtype will be same
             set_compare = False
     else:
         set_compare = array_is_str ^ other_is_str
 
     if set_compare or dtype.kind == 'O':
+        # convert applicable dt64 types to objects
+        if array_is_dt64 and np.datetime_data(array.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS:
+            array = array.astype(DTYPE_OBJECT)
+        elif other_is_dt64 and np.datetime_data(other.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS:
+            # the case of both is handled above
+            other = other.astype(DTYPE_OBJECT)
+
         if is_union:
             result = frozenset(array) | frozenset(other)
         elif is_intersection:

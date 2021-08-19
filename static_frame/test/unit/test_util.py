@@ -558,15 +558,48 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(),
                 [(0, 1), (0, 3)])
 
-
     def test_intersect1d_c(self) -> None:
-        a1 = np.array([datetime.date(2020, 12, 31), datetime.date(2021, 1, 15),
-                datetime.date(2021, 1, 31)], dtype=object)
+        a1 = np.array([
+                datetime.date(2020, 12, 31),
+                datetime.date(2021, 1, 15),
+                datetime.date(2021, 1, 31),
+                ], dtype=object)
         a2 = np.array(['2020-12-31', '2021-01-15'], dtype='datetime64[D]')
 
         post = intersect1d(a1, a2)
+        self.assertEqual(post.tolist(),
+                [datetime.date(2020, 12, 31), datetime.date(2021, 1, 15)]
+                )
 
-        # import ipdb; ipdb.set_trace()
+    def test_intersect1d_d(self) -> None:
+        a1 = np.array(('2020-12', '2021-01'), dtype='datetime64[M]')
+        a2 = np.array(['2020-12-31', '2021-01-01', '2021-01-15'], dtype='datetime64[D]')
+
+        post = intersect1d(a1, a2)
+        self.assertEqual(post.tolist(), [])
+        self.assertEqual(post.dtype, np.dtype('datetime64[D]'))
+
+    def test_intersect1d_e(self) -> None:
+        a1 = np.array(('2020-12-31', '2021-01-15'), dtype='datetime64[D]')
+        a2 = np.array(['2020-12-31', '2021-01-01', '2021-01-15'], dtype='datetime64[D]')
+
+        post = intersect1d(a1, a2)
+        self.assertEqual(post.tolist(),
+                [datetime.date(2020, 12, 31), datetime.date(2021, 1, 15)])
+        self.assertEqual(post.dtype, np.dtype('datetime64[D]'))
+
+    def test_intersect1d_f(self) -> None:
+        a1 = np.array([
+                datetime.date(2020, 12, 31),
+                datetime.date(2021, 1, 1),
+                datetime.date(2021, 1, 31),
+                ], dtype=object)
+        a2 = np.array(['2020-12', '2021-01'], dtype='datetime64[M]')
+
+        post = intersect1d(a1, a2)
+        self.assertEqual(post.tolist(), [])
+        self.assertEqual(post.dtype, object)
+
 
 
 
