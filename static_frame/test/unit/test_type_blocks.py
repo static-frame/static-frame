@@ -3281,6 +3281,21 @@ class TestUnit(TestCase):
         self.assertFalse(tb1.equals(tb2))
 
 
+    def test_type_blocks_equals_e(self) -> None:
+
+        a1 = np.array([False, True, False])
+        a2 = np.array(['2020-01-01', '2020-01-01', '2021-01-01'], dtype=np.datetime64)
+        a3 = np.array(['2020', '2020', '2021'], dtype=np.datetime64)
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        tb2 = TypeBlocks.from_blocks((a1, a3))
+
+        # import ipdb; ipdb.set_trace()
+        self.assertFalse(tb1.equals(tb2))
+
+
+
+
     #---------------------------------------------------------------------------
     def test_type_blocks_ufunc_binary_operator_a(self) -> None:
         a1 = np.array([10, 20, 30])

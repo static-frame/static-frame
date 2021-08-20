@@ -61,6 +61,7 @@ from static_frame.core.util import isin_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import array_deepcopy
+from static_frame.core.util import arrays_equal
 from static_frame.core.style_config import StyleConfig
 
 
@@ -3177,34 +3178,46 @@ class TypeBlocks(ContainerOperand):
         if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
 
-        # NOTE: TypeBlocks handles array operations that return Boolean
-        # NOTE: this is not handling dt64 comparisons
-        try:
-            eq = self == other # returns a Boolean TypeBlocks instance
-        except ValueError:
-            # this can happen due to NP returning singel Booleans instaed of arrays
+        if self._shape != other._shape:
             return False
 
-        if skipna:
-            isna_self = self.isna(include_none=False) # returns type blocks
-            isna_other = other.isna(include_none=False)
-            isna_both = isna_self & isna_self
-
-        start = 0
-        end = 0
-        for block in eq._blocks:
-            # permit short circuiting on iteration
-            if skipna:
-                end = start + block.shape[1]
-                target = isna_both._extract_array(column_key=slice(start, end))
-                start = end
-                # fill-in NaN values with True
-                block.flags.writeable = True
-                block[target] = True
-
-            if not block.all():
+        for i in range(self._shape[1]):
+            if not arrays_equal(
+                    self._extract_array(column_key=i),
+                    other._extract_array(column_key=i),
+                    skipna=skipna,
+                    ):
                 return False
         return True
+
+        # # NOTE: TypeBlocks handles array operations that return Boolean
+        # # NOTE: this is not handling dt64 comparisons
+        # try:
+        #     eq = self == other # returns a Boolean TypeBlocks instance
+        # except ValueError:
+        #     # this can happen due to NP returning singel Booleans instaed of arrays
+        #     return False
+
+        # if skipna:
+        #     isna_self = self.isna(include_none=False) # returns type blocks
+        #     isna_other = other.isna(include_none=False)
+        #     isna_both = isna_self & isna_self
+
+        # start = 0
+        # end = 0
+        # for block in eq._blocks:
+        #     # permit short circuiting on iteration
+        #     if skipna:
+        #         end = start + block.shape[1]
+        #         target = isna_both._extract_array(column_key=slice(start, end))
+        #         start = end
+        #         # fill-in NaN values with True
+        #         block.flags.writeable = True
+        #         block[target] = True
+
+        #     if not block.all():
+        #         return False
+        # return True
 
     #---------------------------------------------------------------------------
     # mutate
