@@ -3,6 +3,7 @@
 import unittest
 
 import frame_fixtures as ff
+import numpy as np
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.bus import Bus
@@ -17,9 +18,17 @@ from static_frame.core.bus import Bus
 from static_frame.core.yarn import Yarn
 from static_frame.core.frame import Frame
 from static_frame.test.test_case import temp_file
+from static_frame.core.exception import ErrorInitYarn
 
 
 class TestUnit(TestCase):
+
+    #---------------------------------------------------------------------------
+    def test_yarn_init_a(self) -> None:
+
+        with self.assertRaises(ErrorInitYarn):
+            Yarn(np.array([3, 4]), retain_labels=True)
+
 
     #---------------------------------------------------------------------------
     def test_yarn_from_buses_a(self) -> None:
@@ -148,8 +157,22 @@ class TestUnit(TestCase):
             self.assertEqual(y1.shape, (6,))
             self.assertEqual(y1.status['loaded'].sum(), 0)
 
-            # from static_frame import IndexAutoFactory
-            # y2 = Yarn.from_concat((y1, y1), retain_labels=True, index=IndexAutoFactory)
+            from static_frame import IndexAutoFactory
+            y2 = Yarn.from_concat((y1, y1), retain_labels=True, index=IndexAutoFactory)
+            self.assertEqual(y2[(1, 'f4')].shape, (2, 8))
+            self.assertEqual(y2[(2, 'f1')].shape, (4, 2))
+            self.assertEqual(y2[(3, 'f6')].shape, (6, 4))
+
+            y3 = y2.iloc[4:]
+            self.assertEqual(y3.shape, (8,))
+
+
+    def test_yarn_from_concat_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+
+        with self.assertRaises(NotImplementedError):
+             Yarn.from_concat((f1, f2), retain_labels=True)
 
     #---------------------------------------------------------------------------
     def test_yarn_reversed_a(self) -> None:

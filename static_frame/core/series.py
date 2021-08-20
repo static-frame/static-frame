@@ -552,12 +552,6 @@ class Series(ContainerOperand):
     #             own_index=True,
     #             )
 
-    # def copy(self)-> 'Series':
-    #     '''
-    #     Return shallow copy of this Series.
-    #     '''
-    #     return self.__copy__() #type: ignore
-
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''

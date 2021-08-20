@@ -457,6 +457,12 @@ class Store:
             # file existed previously and we got a modification time, but now it does not exist
             raise StoreFileMutation(f'expected file {self._fp} no longer exists')
 
+    # def __copy__(self) -> 'Store':
+    #     '''
+    #     Return a new Store instance linked to the same file.
+    #     '''
+    #     return self.__class__(fp=self._fp)
+
     #---------------------------------------------------------------------------
     @staticmethod
     def get_field_names_and_dtypes(*,

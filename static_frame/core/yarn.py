@@ -137,7 +137,6 @@ class Yarn(ContainerBase, StoreClientMixin):
                 retain_labels=retain_labels,
                 )
 
-
     #---------------------------------------------------------------------------
     def __init__(self,
             series: Series,

@@ -382,6 +382,16 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         return reversed(self._series._index) #type: ignore
 
+    # def __copy__(self) -> 'Bus':
+    #     '''
+    #     Return a new Bus, holding new references to Frames as well as a link to the a new Store instance.
+    #     '''
+    #     return self.__class__(series,
+    #             store=self._store.__copy__(),
+    #             config=self._config,
+    #             max_persiste=self._max_persist,
+    #             )
+
     #---------------------------------------------------------------------------
     # name interface
 
