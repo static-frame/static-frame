@@ -1033,8 +1033,6 @@ def performance_tables_from_records(
         records: tp.Iterable[PerformanceRecord],
         ) -> tp.Tuple[sf.Frame, sf.Frame]:
 
-    frame = sf.FrameGO.from_dict_records(records)
-
     name_root_last = None
     name_root_count = 0
 
@@ -1062,6 +1060,9 @@ def performance_tables_from_records(
                     return HexColor.format_terminal('lavender', v)
                 return HexColor.format_terminal('lightslategrey', v)
         return str(v)
+
+    frame = sf.FrameGO.from_dict_records(records)
+
     fields = ['Native', 'Reference', 'n/r', 'r/n']
     stats = sf.Frame.from_concat((
             frame[fields].min().rename('min'),

@@ -172,7 +172,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(4,5)').rename('f2')
 
         with self.assertRaises(NotImplementedError):
-             Yarn.from_concat((f1, f2), retain_labels=True)
+            Yarn.from_concat((f1, f2), retain_labels=True)
 
     #---------------------------------------------------------------------------
     def test_yarn_reversed_a(self) -> None:

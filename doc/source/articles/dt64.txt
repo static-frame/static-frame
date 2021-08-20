@@ -4,37 +4,16 @@
 
 Why Datetimes Need Units: Avoiding a Y2262 Problem & Harnessing the Power of NumPy's datetime64
 
-Why Datetimes Need Units: Avoiding a Y2262 Problem & Harnessing the Power of the NumPy datetime64 datatype
 
 
 
 ================================================================================
-
-Talks
-
-Talks are 30-minute sessions including time for Q&A. A talk proposal is a short description of a talk that is aiming to convince someone to part with 30 minutes of their time, in order to learn about something. A good proposal should disclose:
-
-    The topic (the WHAT) and WHY it is interesting
-    The audience to WHOM the talk is addressed
-    The TYPE of talk (lots of maths, hands-on, etc) and possibly the tone (light-hearted, informative etc)
-    The TAKEAWAY, a.k.a. what will I learn
-
-There are two parts to a proposal:
-
-    Brief Summary – This informs attendees what the talk is about. Discloses the topic, domain and overall purpose. This is at most a few lines long, and will be printed in the conference programme.
-
-    Description – This is a self-contained statement that summarises the aspects of the talk. It should be structured and present the objective of the talk, its outline, central thesis and key takeaways. After reading the description, the audience should have an idea of the overall presentation and know what to expect. The description should also make clear what background knowledge is expected from the attendees. Both this and the summary will be included in the talk details online.
-
-While there is no strict template for this, you should make sure that the audience can understand why your talk is relevant for them.
-
-#-------------------------------------------------------------------------------
 
 Brief Summary
 maximum 400 characters.
 
 
 This talk will introduce the NumPy `datetime64` datatype, describing its features and performance in comparison to Python's `date` and `datetime` objects. Practical examples of working with, and converting between, these types will be provided. The usage of `datetime64` with time series data in Pandas and StaticFrame will be compared, and StaticFrame's `via_dt` interface will be explored.
-
 
 # useful discussion here:
 https://stackoverflow.com/questions/13703720/converting-between-datetime-timestamp-and-datetime64
@@ -113,7 +92,7 @@ NumPy supports a date and time array datatype called ``datetime64``. Unlike Pyth
 
 This talk will introduce ``datetime64`` arrays and describe their features and performance in comparison to Python's ``date`` and ``datetime`` types. Practical examples of working with, and converting between, these formats will be provided. As date and time information is particularly useful for labeled time-series data, the usage of ``datetime64`` in Pandas and StaticFrame indices will be examined. Pandas use of only a single unit (nanosecond) will be shown to lead to a "Y2262" problem and offer other disadvantages compared to StaticFrame's full support for ``datetime64`` units. Finally, StaticFrame's ``via_dt`` interface will be shown to offer utilities that make working with ``datetime64`` as easy as working with Python's ``date`` and ``datetime`` objects.
 
-The audience for this talk is anyone working with NumPy ``datetime64`` or Pandas ``DatetimeIndex`` types, or those wanting to better understand the limitations of Python's ``date`` and ``datetime`` objects, particularly when used in NumPy arrays. Basic familiarity with these types is helpful but not required. This will be an informative presentation with concise code examples and practical tips for working with these types. Audience members will come away with a firm understanding of the limits and opportunities of these types, relevant for anyone working with time series data.
+The audience for this talk is anyone working with NumPy ``datetime64`` or Pandas ``DatetimeIndex`` or ``Timestamp`` types, or those wanting to better understand the limitations of Python's ``date`` and ``datetime`` objects, particularly when used in NumPy arrays. Basic familiarity with these types is helpful but not required. This will be an informative presentation with concise code examples and practical tips for working with these types. Audience members will come away with a firm understanding of the limits and opportunities of these types, relevant for anyone working with time series data.
 
 
 
