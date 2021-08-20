@@ -88,6 +88,7 @@ from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
+from static_frame.core.yarn import Yarn as Yarn
 from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.series import SeriesHE as SeriesHE
