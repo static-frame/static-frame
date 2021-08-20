@@ -192,7 +192,34 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
         self.assertEqual(tuple(reversed(y1)), ('f7', 'f6', 'f5', 'f4', 'f3', 'f2', 'f1'))
 
-        # import ipdb; ipdb.set_trace()
+    #---------------------------------------------------------------------------
+    def test_yarn_size_a(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False, name='foo')
+        self.assertEqual(y1.size, 5)
+
+    #---------------------------------------------------------------------------
+    def test_yarn_index_a(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False, name='foo')
+        self.assertEqual(y1.index.values.tolist(), ['f1', 'f2', 'f3', 'f4', 'f5'])
+
 
     #---------------------------------------------------------------------------
     def test_yarn_rename_a(self) -> None:
