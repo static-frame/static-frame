@@ -188,6 +188,54 @@ class TestUnit(TestCase):
             _ = idx2.loc_to_iloc(np.array([False, True, False]))
 
 
+    def test_index_loc_to_iloc_f(self) -> None:
+        dt = datetime.date
+        dt64 = np.datetime64
+
+        idx1 = Index((
+                dt(2020,12,31),
+                dt(2021,1,15),
+                dt(2021,1,31),
+                ))
+
+        self.assertEqual(
+                idx1.loc_to_iloc(dt64('2021-01-15')),
+                1
+                )
+        # NOTE: this fails as we only see a list of dt64s and cannot match them in the AutoMap dictionary unless we were to directly examine and conert each element
+        with self.assertRaises(KeyError):
+            _ = idx1.loc_to_iloc([dt64(d) for d in reversed(idx1)])
+
+        post = idx1.loc_to_iloc(np.array([dt64(d) for d in reversed(idx1)]))
+        self.assertEqual(post, [2, 1, 0])
+
+
+    def test_index_loc_to_iloc_g(self) -> None:
+        dt = datetime.date
+        dt64 = np.datetime64
+
+        idx1 = IndexYear(('2021', '2018', '2001'))
+
+        with self.assertRaises(KeyError):
+            idx1.loc_to_iloc(dt64('2001-01-01'))
+
+        with self.assertRaises(KeyError):
+            idx1.loc_to_iloc(np.array((dt64('2001-01-01'), dt64('2018-01-01'))))
+
+
+    def test_index_loc_to_iloc_h(self) -> None:
+        dt = datetime.date
+        dt64 = np.datetime64
+
+        idx1 = IndexDate(('2021-01-01', '2021-01-02', '1543-08-31', '1988-05-01', '1988-05-02'))
+
+        self.assertEqual(idx1.loc_to_iloc(dt64('2021-01')).tolist(), [0, 1])
+
+        self.assertEqual(
+                idx1.loc_to_iloc(np.array((dt64('2021'), dt64('1988')))).tolist(),
+                [0, 1, 3, 4]
+                )
+
 
     #---------------------------------------------------------------------------
     def test_index_mloc_a(self) -> None:

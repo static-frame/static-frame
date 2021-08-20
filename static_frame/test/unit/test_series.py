@@ -716,16 +716,53 @@ class TestUnit(TestCase):
                 (np.datetime64('2021-01-15'), 0),
                 (np.datetime64('2021-01-31'), 1)),
                 )
-        # NOTE: not expected results
-        # if all values are datetime64, we should get all missing
-        # s4 = s1.reindex([np.datetime64(d) for d in reversed(s1.index)], fill_value=None)
 
-        # self.assertEqual(s4.to_pairs(),
-        #         ((np.datetime64('2021-01-31'), 3),
-        #         (np.datetime64('2021-01-15'), 0),
-        #         (np.datetime64('2020-12-31'), 1)))
-        # import ipdb; ipdb.set_trace()
+    def test_series_reindex_h(self) -> None:
 
+        dt = datetime.date
+        dt64 = np.datetime64
+
+        s1 = sf.Series((3, 0, 1), index=(
+                dt(2020,12,31),
+                dt(2021,1,15),
+                dt(2021,1,31),
+                ))
+
+        s2 = s1.reindex(list(reversed(s1.index)))
+        self.assertEqual(s2.to_pairs(),
+                ((dt(2021, 1, 31), 1),
+                (dt(2021, 1, 15), 0),
+                (dt(2020, 12, 31), 3)))
+
+        s3 = s1.reindex([dt64(d) for d in reversed(s1.index)])
+        self.assertEqual(s3.to_pairs(),
+                ((dt64('2021-01-31'), 1),
+                (dt64('2021-01-15'), 0),
+                (dt64('2020-12-31'), 3)))
+
+
+    def test_series_reindex_i(self) -> None:
+
+        dt = datetime.date
+        dt64 = np.datetime64
+
+        s1 = sf.Series((3, 0, 1), index=IndexDate((
+                dt(2020,12,31),
+                dt(2021,1,15),
+                dt(2021,1,31),
+                )))
+
+        s2 = s1.reindex(list(reversed(s1.index)))
+        self.assertEqual(s2.to_pairs(),
+                ((dt(2021, 1, 31), 1),
+                (dt(2021, 1, 15), 0),
+                (dt(2020, 12, 31), 3)))
+
+        s3 = s1.reindex([dt64(d) for d in reversed(s1.index)])
+        self.assertEqual(s3.to_pairs(),
+                ((dt64('2021-01-31'), 1),
+                (dt64('2021-01-15'), 0),
+                (dt64('2020-12-31'), 3)))
 
     #---------------------------------------------------------------------------
     def test_series_isna_a(self) -> None:

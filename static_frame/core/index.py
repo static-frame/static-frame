@@ -82,6 +82,8 @@ from static_frame.core.util import union1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import OPERATORS
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_OBJECTABLE_DT64_UNITS
 from static_frame.core.style_config import StyleConfig
 
 
@@ -230,9 +232,14 @@ class LocMap:
             except LocEmpty:
                 return EMPTY_SLICE
 
+        labels_is_dt64 = labels.dtype.kind == DTYPE_DATETIME_KIND
+
         if isinstance(key, np.datetime64):
-            # convert this to the target representation, do a Boolean selection
-            if labels.dtype != key.dtype:
+            # if we have a single dt64, convert this to the key's unit and do a Boolean selection if the key is a less-granular unit
+            if (labels.dtype == DTYPE_OBJECT
+                    and np.datetime_data(key.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS):
+                key = key.astype(DTYPE_OBJECT)
+            elif labels_is_dt64 and key.dtype < labels.dtype:
                 key = labels.astype(key.dtype) == key
             # if not different type, keep it the same so as to do a direct, single element selection
 
@@ -242,9 +249,19 @@ class LocMap:
         # can be an iterable of labels (keys) or an iterable of Booleans
         if is_array or is_list:
             if is_array and key.dtype.kind == DTYPE_DATETIME_KIND:
-                if labels.dtype != key.dtype:
+                if (labels.dtype == DTYPE_OBJECT
+                        and np.datetime_data(key.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS):
+                    # if key is dt64 and labels are object, then for objectable units we can convert key to object to permit matching in the AutoMap
+                    # NOTE: tolist() is expected to be faster than astype object for smaller collections
+                    key = key.tolist()
+                    is_array = False
+                    is_list = True
+                elif labels_is_dt64 and key.dtype < labels.dtype:
+                    # change the labels to the dt64 dtype, i.e., if the key is years, recast the labels as years, and do a Boolean selection of everything that matches each key
                     labels_ref = labels.astype(key.dtype)
+                    # NOTE: this is only correct if both key and labels are dt64, and key is a less granular unit, as the order in the key and will not be used
                     # let Boolean key advance to next branch
+                    # if key is a less granular unit, this is likely not correct
                     key = reduce(OPERATORS['__or__'], (labels_ref == k for k in key))
 
             if is_array and key.dtype == DTYPE_BOOL:
