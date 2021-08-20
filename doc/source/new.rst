@@ -10,6 +10,8 @@ Fixed unnecessary type coercion in the ``Frame`` returned by ``Frame.drop_duplic
 
 Improved handling of reindexing and lookups between datetime64 and date / datetime objects.
 
+``Frame.equals()``, ``Series.equals()``, ``Index.equals()``, and related methods all now distinguish by ``datetime64`` unit.
+
 
 0.8.17
 ----------
