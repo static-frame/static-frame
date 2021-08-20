@@ -261,7 +261,6 @@ class LocMap:
                     labels_ref = labels.astype(key.dtype)
                     # NOTE: this is only correct if both key and labels are dt64, and key is a less granular unit, as the order in the key and will not be used
                     # let Boolean key advance to next branch
-                    # if key is a less granular unit, this is likely not correct
                     key = reduce(OPERATORS['__or__'], (labels_ref == k for k in key))
 
             if is_array and key.dtype == DTYPE_BOOL:

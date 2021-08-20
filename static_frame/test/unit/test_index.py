@@ -229,10 +229,10 @@ class TestUnit(TestCase):
 
         idx1 = IndexDate(('2021-01-01', '2021-01-02', '1543-08-31', '1988-05-01', '1988-05-02'))
 
-        self.assertEqual(idx1.loc_to_iloc(dt64('2021-01')).tolist(), [0, 1])
+        self.assertEqual(idx1.loc_to_iloc(dt64('2021-01')).tolist(), [0, 1]) #type: ignore
 
         self.assertEqual(
-                idx1.loc_to_iloc(np.array((dt64('2021'), dt64('1988')))).tolist(),
+                idx1.loc_to_iloc(np.array((dt64('2021'), dt64('1988')))).tolist(), #type: ignore
                 [0, 1, 3, 4]
                 )
 
