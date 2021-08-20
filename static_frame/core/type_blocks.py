@@ -3178,6 +3178,7 @@ class TypeBlocks(ContainerOperand):
             return False
 
         # NOTE: TypeBlocks handles array operations that return Boolean
+        # NOTE: this is not handling dt64 comparisons
         try:
             eq = self == other # returns a Boolean TypeBlocks instance
         except ValueError:

@@ -22,6 +22,7 @@ from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import LocInvalid
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import arrays_equal
 
 
 class TestUnit(TestCase):
@@ -1405,6 +1406,17 @@ class TestUnit(TestCase):
         b = IndexGO([1, 2, 3])
         b.append(4)
         self.assertFalse(a.equals(b))
+
+    def test_index_equals_g(self) -> None:
+        dt64 = np.datetime64
+        dt = datetime.date
+
+        a = Index([dt64('2021-01-01'), dt64('1954-01-01')])
+        b = Index([dt64('2021'), dt64('1954')])
+
+        self.assertFalse(arrays_equal(a, b, skipna=True))
+
+
 
     #---------------------------------------------------------------------------
     def test_index_sample_a(self) -> None:

@@ -1253,21 +1253,23 @@ class Index(IndexBase):
             return False
         if compare_dtype and self.dtype != other.dtype:
             return False
+        from static_frame.core.util import arrays_equal
+        return arrays_equal(self.values, other.values, skipna=skipna)
 
-        eq = self.values == other.values
+        # eq = self.values == other.values
 
-        # NOTE: will only be False, or an array
-        if eq is False:
-            return eq
+        # # NOTE: will only be False, or an array
+        # if eq is False:
+        #     return eq
 
-        if skipna:
-            isna_both = (isna_array(self.values, include_none=False)
-                    & isna_array(other.values, include_none=False))
-            eq[isna_both] = True
+        # if skipna:
+        #     isna_both = (isna_array(self.values, include_none=False)
+        #             & isna_array(other.values, include_none=False))
+        #     eq[isna_both] = True
 
-        if not eq.all(): # avoid returning a NumPy Bool
-            return False
-        return True
+        # if not eq.all(): # avoid returning a NumPy Bool
+        #     return False
+        # return True
 
     @doc_inject(selector='sort')
     def sort(self,

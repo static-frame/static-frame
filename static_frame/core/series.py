@@ -97,6 +97,7 @@ from static_frame.core.util import write_optional_file
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
+from static_frame.core.util import arrays_equal
 
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
@@ -2642,19 +2643,22 @@ class Series(ContainerOperand):
         if compare_dtype and self.values.dtype != other.values.dtype:
             return False
 
-        eq = self.values == other.values
-
-        # NOTE: will only be False, or an array
-        if eq is False:
-            return eq
-
-        if skipna:
-            isna_both = (isna_array(self.values, include_none=False) &
-                    isna_array(other.values, include_none=False))
-            eq[isna_both] = True
-
-        if not eq.all():
+        if not arrays_equal(self.values, other.values, skipna=skipna):
             return False
+
+        # eq = self.values == other.values
+
+        # # NOTE: will only be False, or an array
+        # if eq is False:
+        #     return eq
+
+        # if skipna:
+        #     isna_both = (isna_array(self.values, include_none=False) &
+        #             isna_array(other.values, include_none=False))
+        #     eq[isna_both] = True
+
+        # if not eq.all():
+        #     return False
 
         return self._index.equals(other._index,
                 compare_name=compare_name,

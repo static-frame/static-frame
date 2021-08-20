@@ -1379,6 +1379,35 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
     # or with NaN observations
     return post | np.not_equal(array, array)
 
+
+def arrays_equal(array: np.ndarray,
+        other: np.ndarray,
+        *,
+        skipna: bool,
+        ) -> bool:
+    '''
+    Given two arrays, determine if they are equal; support skipping Na comparisons and handling dt64
+    '''
+    if array.dtype.kind == DTYPE_DATETIME_KIND and other.dtype.kind == DTYPE_DATETIME_KIND:
+        if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
+            # do not permit True result between 2021 and 2021-01-01
+            return False
+
+    eq = array == other
+
+    # NOTE: will only be False, or an array
+    if eq is False:
+        return eq
+
+    if skipna:
+        isna_both = (isna_array(array, include_none=False)
+                & isna_array(other, include_none=False))
+        eq[isna_both] = True
+
+    if not eq.all(): # avoid returning a NumPy Bool
+        return False
+    return True
+
 def binary_transition(
         array: np.ndarray,
         axis: int = 0

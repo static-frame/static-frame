@@ -8,6 +8,8 @@ Fixed issue in ``Frame.astype[]`` when selecting targets with a Boolean ``Series
 
 Fixed unnecessary type coercion in the ``Frame`` returned by ``Frame.drop_duplicated()``.
 
+Improved handling of reindexing and lookups between datetime64 and date / datetime objects.
+
 
 0.8.17
 ----------
