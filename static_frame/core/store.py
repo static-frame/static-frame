@@ -159,7 +159,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         if dtypes_specifier is None :
             return dtypes_specifier
         if isinstance(dtypes_specifier, dict):
-            return dtypes_specifier.items()
+            return tuple(dtypes_specifier.items())
         if isinstance(dtypes_specifier, list):
             return tuple(dtypes_specifier)
         return dtypes_specifier # type: ignore [return-value]

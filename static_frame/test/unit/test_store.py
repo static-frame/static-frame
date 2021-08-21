@@ -161,6 +161,8 @@ class TestUnit(TestCase):
             )
             self.assertNotEqual(config_he, config)
             self.assertEqual(config_he, config.to_store_config_he())
+            self.assertTrue(isinstance(hash(config_he), int))
+
 
     def test_store_config_he_b(self) -> None:
         def compare_configs(config1: StoreConfigHE, config2: StoreConfigHE) -> None:
@@ -189,6 +191,7 @@ class TestUnit(TestCase):
     def test_store_config_not_hashable(self) -> None:
         with self.assertRaises(NotImplementedError):
             hash(StoreConfig())
+
 
     #---------------------------------------------------------------------------
     def test_store_config_map_a(self) -> None:
