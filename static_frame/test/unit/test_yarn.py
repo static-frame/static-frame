@@ -641,6 +641,32 @@ class TestUnit(TestCase):
             self.assertEqual(y2.status['loaded'].sum(), 2)
 
 
+    #---------------------------------------------------------------------------
+    def test_yarn_to_zip_pickle_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2, temp_file('.zip') as fp3:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
+            y1.to_zip_pickle(fp3)
+
+            b3 = Bus.from_zip_pickle(fp3)
+            self.assertTrue(b3.index.equals(y1.index))
+
+
 
 if __name__ == '__main__':
     unittest.main()
