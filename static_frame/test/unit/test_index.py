@@ -306,7 +306,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.positions.tolist(), list(range(5)))
 
 
-    def test_index_unique(self) -> None:
+    def test_index_unique_a(self) -> None:
 
         with self.assertRaises(ErrorInitIndex):
             idx = Index(('a', 'b', 'c', 'a'))
@@ -327,10 +327,12 @@ class TestUnit(TestCase):
         idx = Index([0, '0'])
 
 
+    def test_index_unique_b(self) -> None:
+        idx = Index(('a', 'b', 'c', 'd'))
+        self.assertEqual(idx.unique().tolist(), idx.values.tolist())
+
     def test_index_creation_a(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
-
-        #idx2 = idx['b':'d']
 
         self.assertEqual(idx.values.tolist(), ['a', 'b', 'c', 'd'])
 
@@ -1470,10 +1472,11 @@ class TestUnit(TestCase):
     def test_index_via_re_a(self) -> None:
 
         idx1 = IndexGO(('aabbcc', 'bbcccc', 'cc', 'ddddbb'))
+        idx1.append('q')
         a1 = idx1.via_re('bb').search()
 
         self.assertEqual(a1.tolist(),
-                [True, True, False, True])
+                [True, True, False, True, False])
 
 
 

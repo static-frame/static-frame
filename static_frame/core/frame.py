@@ -1141,7 +1141,7 @@ class Frame(ContainerOperand):
                         yield v
                 elif isinstance(v, Series):
                     if index is None:
-                        raise ErrorInitFrame('can only consume Series in Frame.from_columns if an Index is provided.')
+                        raise ErrorInitFrame('can only consume Series in Frame.from_fields if an Index is provided.')
                     if not v.index.equals(index):
                         v = v.reindex(index,
                                 fill_value=fill_value,
@@ -1152,7 +1152,7 @@ class Frame(ContainerOperand):
                     else:
                         yield v.values
                 elif isinstance(v, Frame):
-                    raise ErrorInitFrame('Frames are not supported in from_items constructor.')
+                    raise ErrorInitFrame('Frames are not supported in from_fields constructor.')
                 else: # returned array is immutable
                     values, _ = iterable_to_array_1d(v, column_type)
                     yield values

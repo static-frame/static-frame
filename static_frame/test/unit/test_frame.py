@@ -11896,6 +11896,13 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
                 (('b', (('y', 20.0), ('z', 43.0))), ('c', (('y', False), ('z', False)))))
 
+    def test_frame_from_overlay_e(self) -> None:
+
+        f = sf.Frame.from_overlay((ff.parse(f's({n},2)') for n in range(1, 4)))
+        self.assertEqual(f.shape, (3, 2))
+        self.assertTrue(f.equals(ff.parse('s(3,2)')))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_fields_a(self) -> None:
@@ -11932,10 +11939,33 @@ class TestUnit(TestCase):
         s2 = Series((33, 54), index=('a', 'b'))
         s3 = Series((400, 300), index=('b', 'a'))
 
+        with self.assertRaises(ErrorInitFrame):
+            Frame.from_fields((s1, s2, s3))
+
         f1 = Frame.from_fields((s1, s2, s3), index=('b', 'a'))
 
         self.assertEqual(f1.to_pairs(0),
                 ((0, (('b', 4), ('a', 3))), (1, (('b', 54), ('a', 33))), (2, (('b', 400), ('a', 300)))))
+
+        f2 = Frame.from_fields((s1, s2, s3), index=('b', 'a'), dtypes=(str, bool, str))
+        self.assertEqual(f2.to_pairs(),
+                ((0, (('b', '4'), ('a', '3'))), (1, (('b', True), ('a', True))), (2, (('b', '400'), ('a', '300')))))
+
+
+    def test_frame_from_fields_c(self) -> None:
+        # test providing Series
+        s1 = (3, 5)
+        s2 = (33, 54)
+        s3 = (400, 300)
+
+        f = Frame.from_fields((s1, s2, s3), dtypes=str)
+        self.assertEqual(f.to_pairs(),
+                ((0, ((0, '3'), (1, '5'))), (1, ((0, '33'), (1, '54'))), (2, ((0, '400'), (1, '300')))))
+
+    def test_frame_from_fields_d(self) -> None:
+        with self.assertRaises(ErrorInitFrame):
+            f = Frame.from_fields((ff.parse('s(2,2)'), ff.parse('s(2,4)')))
+
 
 
     #---------------------------------------------------------------------------
