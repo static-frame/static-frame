@@ -362,9 +362,6 @@ class TestUnit(TestCase):
         self.assertEqual(y1.get('f99'), None)
 
 
-    # TODO: equals
-
-
     #---------------------------------------------------------------------------
     def test_yarn_head_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -543,6 +540,105 @@ class TestUnit(TestCase):
                 [(label, f.shape) for label, f in s1.items()],
                 [('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8)), ('f5', (4, 4)), ('f6', (6, 4))]
                 )
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_equals_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2), name='a')
+        b2 = Bus.from_frames((f3, f4), name='b')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False, name='foo')
+        y2 = Yarn.from_buses((b1, b2), retain_labels=False, name='bar')
+
+        self.assertTrue(y1.equals(y1))
+        self.assertFalse(y1.equals(f1))
+        self.assertFalse(y1.equals(f1, compare_class=True))
+
+        self.assertTrue(y1.equals(y2))
+        self.assertFalse(y1.equals(y2, compare_name=True))
+
+
+    def test_yarn_equals_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2), name='a')
+        b2 = Bus.from_frames((f3, f4), name='b')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        y2 = Yarn.from_buses((b1,), retain_labels=False)
+
+        # fails on length
+        self.assertFalse(f1.equals(y2))
+
+
+    def test_yarn_equals_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4a = ff.parse('s(2,8)').rename('f4a')
+        f4b = ff.parse('s(2,8)').rename('f4b')
+
+        b1 = Bus.from_frames((f1, f2), name='a')
+        b2a = Bus.from_frames((f3, f4a), name='b')
+        b2b = Bus.from_frames((f3, f4b), name='b')
+
+        y1 = Yarn.from_buses((b1, b2a), retain_labels=False)
+        y2 = Yarn.from_buses((b1, b2b), retain_labels=False)
+
+        # fails on index
+        self.assertFalse(y1.equals(y2))
+
+
+    def test_yarn_equals_d(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4a = ff.parse('s(2,8)').rename('f4')
+        f4b = ff.parse('s(2,8)|v(str)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2), name='a')
+        b2a = Bus.from_frames((f3, f4a), name='b')
+        b2b = Bus.from_frames((f3, f4b), name='b')
+
+        y1 = Yarn.from_buses((b1, b2a), retain_labels=False)
+        y2 = Yarn.from_buses((b1, b2b), retain_labels=False)
+
+        # fails on index
+        self.assertFalse(y1.equals(y2))
+
+    def test_yarn_equals_e(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+        b2 = Bus.from_frames((f4, f5, f6), name='b')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=True)
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y2 = Yarn.from_buses((bus_a, bus_b), retain_labels=True)
+            self.assertEqual(y2.status['loaded'].sum(), 0)
+
+            self.assertTrue(y1.equals(y2))
+            self.assertEqual(y2.status['loaded'].sum(), 2)
 
 
 
