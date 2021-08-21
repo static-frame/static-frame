@@ -5242,6 +5242,32 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(0),
                 ((0, ((0, 1), (1, 2))),))
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_isfalsy_a(self) -> None:
+        f1 = FrameGO.from_records([
+                [False, 2, None, 0],
+                [3, 4, 5, 1],
+                ['', '', '', '']],
+                columns=list('ABCD'))
+
+        f2 = f1.isfalsy()
+        self.assertEqual(f2.to_pairs(),
+                (('A', ((0, True), (1, False), (2, True))), ('B', ((0, False), (1, False), (2, True))), ('C', ((0, True), (1, False), (2, True))), ('D', ((0, True), (1, False), (2, True)))))
+
+    #---------------------------------------------------------------------------
+    def test_frame_notfalsy_a(self) -> None:
+        f1 = FrameGO.from_records([
+                [False, 2, None, 0],
+                [3, 4, 5, 1],
+                ['', '', '', '']],
+                columns=list('ABCD'))
+
+        f2 = f1.notfalsy()
+        self.assertEqual(f2.to_pairs(),
+                (('A', ((0, False), (1, True), (2, False))), ('B', ((0, True), (1, True), (2, False))), ('C', ((0, False), (1, True), (2, False))), ('D', ((0, False), (1, True), (2, False))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_dropfalsy_a(self) -> None:
@@ -9749,6 +9775,10 @@ class TestUnit(TestCase):
         self.assertEqual(f1.count(axis=0, unique=False).to_pairs(),
                 (('a', 2), ('b', 3))
                 )
+
+        with self.assertRaises(RuntimeError):
+            f1.count(axis=0, skipfalsy=True, skipna=False, unique=False)
+
         self.assertEqual(f1.count(axis=0, skipfalsy=True, unique=False).to_pairs(),
                 (('a', 2), ('b', 2))
                 )
@@ -12339,12 +12369,14 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(3,4)|v(str)').rename(
                 index=('a', 'b'), columns=('x', 'y'))
 
+        with self.assertRaises(AxisInvalid):
+            _ = f1.relabel_shift_out(0, axis=2)
+
         f2 = f1.relabel_shift_out(0, axis=0)
         self.assertEqual(f2.columns.name, ('x', 'y'))
 
         self.assertEqual(f2.to_pairs(),
                 ((('a', 'b'), ((0, 0), (1, 1), (2, 2))), (0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), (3, ((0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
-
 
         f3 = f1.relabel_shift_out(0, axis=1)
         self.assertEqual(f3.index.name, ('a', 'b'))
