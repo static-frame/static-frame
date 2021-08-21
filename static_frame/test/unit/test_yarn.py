@@ -15,6 +15,7 @@ from static_frame.core.bus import Bus
 # from static_frame.core.index import Index
 # from static_frame.core.axis_map import IndexMap
 
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.yarn import Yarn
 from static_frame.core.frame import Frame
 from static_frame.test.test_case import temp_file
@@ -437,7 +438,27 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_yarn_equals_a(self) -> None:
+    def test_yarn_values_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+        b2 = Bus.from_frames((f4, f5, f6), name='b')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        s1 = y1.values
+        self.assertEqual(len(s1), len(y1))
+        self.assertEqual([f.shape for f in y1.values],
+            [(4, 2), (4, 5), (2, 2), (2, 8), (4, 4), (6, 4)]
+            )
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_display_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -450,6 +471,63 @@ class TestUnit(TestCase):
 
         y1 = Yarn.from_buses((b1, b2), retain_labels=False)
 
+        d = y1.display(DisplayConfig(type_show=True, type_color=False))
+        self.assertEqual(d.to_rows(),
+            ['<Yarn>', '<Index>', 'f1      Frame', 'f2      Frame', 'f3      Frame', 'f4      Frame', 'f5      Frame', 'f6      Frame', '<<U2>   <object>'])
+
+    #---------------------------------------------------------------------------
+    def test_yarn_mloc_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2), name='a')
+        b2 = Bus.from_frames((f3, f4), name='b')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        self.assertEqual(y1.mloc.shape, (4,))
+
+    #---------------------------------------------------------------------------
+    def test_yarn_dtypes_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2), name='a')
+        b2 = Bus.from_frames((f3, f4), name='b')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        self.assertEqual(y1.dtypes.shape, (4, 8))
+
+    #---------------------------------------------------------------------------
+    def test_yarn_shapes_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2), name='a')
+        b2 = Bus.from_frames((f3, f4), name='b')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        self.assertEqual(y1.shapes.to_pairs(),
+                (('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8)))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_yarn_items_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
         with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
             b1.to_zip_pickle(fp1)
             b2.to_zip_pickle(fp2)
@@ -457,13 +535,14 @@ class TestUnit(TestCase):
             bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
             bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
 
-            y2 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
+            y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
 
-            self.assertTrue(y1.equals(y2))
-            self.assertEqual(y2.status['loaded'].sum(), 2)
+            s1 = y1.to_series()
 
-
-
+            self.assertEqual(
+                [(label, f.shape) for label, f in s1.items()],
+                [('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8)), ('f5', (4, 4)), ('f6', (6, 4))]
+                )
 
 
 

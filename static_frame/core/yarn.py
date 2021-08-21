@@ -584,6 +584,9 @@ class Yarn(ContainerBase, StoreClientMixin):
     def values(self) -> np.ndarray:
         '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
+        if self._assign_index:
+            self._update_index_labels()
+
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
         np.concatenate([b.values for b in self._series.values], out=array)
         array.flags.writeable = False
