@@ -12013,13 +12013,17 @@ class TestUnit(TestCase):
                 (('zmVj', (('zZbu', 3511.58), ('ztsv', 1175.36), ('zUvW', 2925.68), ('zkuW', 3408.8), ('zmVj', 647.9), ('z2Oo', 2755.18), ('z5l6', -1259.28), ('zCE3', 3442.84), ('zr4u', -3093.72), ('zYVB', 2520.5), ('zOyq', 1194.56), ('zIA5', -1957.02), ('zGDJ', 3367.24), ('zmhG', 2600.2), ('zo2Q', -3011.46), ('zjZQ', -3148.74), ('zO5l', 713.68), ('zEdH', -555.42), ('zB7E', 1459.94), ('zwIp', 3287.02))),)
                 )
 
-
     def test_frame_sample_b(self) -> None:
         f = ff.parse('s(20,10)|i(IH,(str,int))|c(IH,(str,int))')
 
         self.assertEqual(f.sample(2, 3, seed=3).to_pairs(0),
                 ((('zZbu', 119909), ((('ztsv', 194224), -823.14), (('zCE3', 137759), 3822.16))), (('zUvW', 96520), ((('ztsv', 194224), 2925.68), (('zCE3', 137759), -3011.46))), (('zUvW', -88017), ((('ztsv', 194224), 268.96), (('zCE3', 137759), -1957.02))))
                 )
+
+    def test_frame_sample_c(self) -> None:
+        f = ff.parse('s(20,10)|i(IH,(str,int))|c(IH,(str,int))')
+        post = f.sample(seed=3)
+        self.assertEqual(post.shape, (20, 10))
 
 
     #---------------------------------------------------------------------------

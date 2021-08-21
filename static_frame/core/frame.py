@@ -7529,7 +7529,6 @@ class Frame(ContainerOperand):
         fp = write_optional_file(content=content, fp=fp)
 
         if show:
-            assert fp is not None
             import webbrowser #pragma: no cover
             webbrowser.open_new_tab(fp) #pragma: no cover
         return fp
