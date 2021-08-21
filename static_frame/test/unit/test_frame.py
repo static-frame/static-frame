@@ -12114,6 +12114,23 @@ class TestUnit(TestCase):
                 ((0, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))), (1, ((0, True), (1, True), (2, False), (3, True), (4, False), (5, True))), (2, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))))
                 )
 
+
+    def test_frame_via_T_eq_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T == f1[1]
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, False), (1, False), (2, False), (3, False), (4, False), (5, False))), (1, ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True))), (2, ((0, False), (1, False), (2, False), (3, False), (4, False), (5, False))))
+                )
+
+    def test_frame_via_T_ne_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T != f1[1]
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True))), (1, ((0, False), (1, False), (2, False), (3, False), (4, False), (5, False))), (2, ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True))))
+                )
+
     def test_frame_via_T_lt_a(self) -> None:
         f1 = ff.parse('s(6,3)|v(int)')
 
