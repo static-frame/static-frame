@@ -992,7 +992,7 @@ class TestUnit(TestCase):
             # parquet brings in characters as objects, thus forcing different dtypes
             self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
 
-
+    #---------------------------------------------------------------------------
     def test_batch_to_zip_parquet_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1012,13 +1012,72 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2), config=config)
 
-        with temp_file('.xlsx') as fp:
-            b1.to_xlsx(fp)
-            b2 = (Batch.from_xlsx(fp, config=config) * 20).sum()
+        with temp_file('.zip') as fp:
+            b1.to_zip_parquet(fp)
+            b2 = Batch.from_zip_parquet(fp, config=config)
+            frames = dict(b2.items())
 
-            self.assertEqual(b2.to_frame().to_pairs(0),
-                (('a', (('f1', 60), ('f2', 120))), ('b', (('f1', 140), ('f2', 300)))))
+        for frame in (f1, f2):
+            # parquet brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
 
+    #---------------------------------------------------------------------------
+    def test_batch_to_sqlite_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2), config=config)
+
+        with temp_file('.sqlite') as fp:
+            b1.to_sqlite(fp)
+            b2 = Batch.from_sqlite(fp, config=config)
+            frames = dict(b2.items())
+
+        for frame in (f1, f2):
+            # brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
+
+    #---------------------------------------------------------------------------
+    def test_batch_to_hdf5_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2), config=config)
+
+        with temp_file('.hdf5') as fp:
+            b1.to_hdf5(fp)
+            b2 = Batch.from_hdf5(fp, config=config)
+            frames = dict(b2.items())
+
+        for frame in (f1, f2):
+            # brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
 
     #---------------------------------------------------------------------------
     def test_batch_sample_a(self) -> None:
