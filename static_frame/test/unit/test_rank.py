@@ -13,7 +13,7 @@ class TestUnit(TestCase):
 
     def test_rank_method_a(self) -> None:
         with self.assertRaises(NotImplementedError):
-            rank_1d(np.array([3, 2, 6, 20]), None)
+            rank_1d(np.array([3, 2, 6, 20]), None) #type: ignore
 
     def test_rank_ordinal_a(self) -> None:
         self.assertEqual(
