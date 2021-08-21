@@ -8277,8 +8277,6 @@ class TestUnit(TestCase):
                 ((0, ((0, 'x'), (1, 1))), (1, ((0, 't'), (1, 2))))
                 )
 
-
-
     def test_frame_from_records_p(self) -> None:
 
         records = [('x', 't')] * 10 + [(1, 2)] #type: ignore
@@ -8331,7 +8329,6 @@ class TestUnit(TestCase):
                 (('left', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('right', (('x', 3), ('y', 20), ('z', -34))))
                 )
 
-
     def test_frame_from_records_s(self) -> None:
 
         records = ((10, 20), (0, 2), (5, 399))
@@ -8359,6 +8356,12 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('a', ((0, 1), (1, 1))), ('b', ((0, 1), (1, 1))))
                 )
+
+    def test_frame_from_recrods_v(self) -> None:
+        with self.assertRaises(NotImplementedError):
+            f1 = Frame.from_records(((x for x in range(3)), (x for x in range(3))),
+                    index=[1, 2], columns=['a', 'b', 'c'],
+                    )
 
 
     #---------------------------------------------------------------------------
