@@ -576,7 +576,7 @@ class TestUnit(TestCase):
         y2 = Yarn.from_buses((b1,), retain_labels=False)
 
         # fails on length
-        self.assertFalse(f1.equals(y2))
+        self.assertFalse(y1.equals(y2))
 
 
     def test_yarn_equals_c(self) -> None:

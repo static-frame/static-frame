@@ -11,6 +11,10 @@ from static_frame.core.rank import RankMethod
 
 class TestUnit(TestCase):
 
+    def test_rank_method_a(self) -> None:
+        with self.assertRaises(NotImplementedError):
+            rank_1d(np.array([3, 2, 6, 20]), None)
+
     def test_rank_ordinal_a(self) -> None:
         self.assertEqual(
                 rank_1d(np.array([3, 2, 6, 20]), RankMethod.ORDINAL).tolist(),
