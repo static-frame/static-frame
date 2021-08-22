@@ -51,6 +51,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/frame_he
    api_overview/bus
    api_overview/batch
+   api_overview/yarn
    api_overview/quilt
    api_overview/index
    api_overview/index_go
@@ -89,6 +90,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/frame_he
    api_detail/bus
    api_detail/batch
+   api_detail/yarn
    api_detail/quilt
    api_detail/index
    api_detail/index_go

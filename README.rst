@@ -51,7 +51,7 @@ While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in
 
 A wide variety of table storage and representation formats are supported, including input from and output to CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, VisiData, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks.
 
-StaticFrame features a family of multi-table containers: the Bus is lazily loaded container of tables, the Batch is a deferred processor of tables, and the Quilt is a virtual concatenation of tables. All permit operating on large collections of tables with minimal memory overhead, as well as writing too and reading from zipped bundles of pickles, Parquet, or delimited files, as well as XLSX workbooks, SQLite, and HDF5.
+StaticFrame features a family of multi-table containers: the Bus is a lazily-loaded container of tables, the Batch is a deferred processor of tables, the Yarn is virtual concatenation of many Buses, and the Quilt is a virtual concatenation of all tables within a single Bus. All permit operating on large collections of tables with minimal memory overhead, as well as writing too and reading from zipped bundles of pickles, Parquet, or delimited files, as well as XLSX workbooks, SQLite, and HDF5.
 
 
 Code: https://github.com/InvestmentSystems/static-frame
@@ -72,17 +72,6 @@ The following example, executed in a low-memory environment (using ``prlimit``),
 
 .. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-low-memory-ops-verbose.svg
    :align: center
-
-
-Colorful Types
--------------------------------
-
-Unexpected type coercions can expose errors or degrade performance. StaticFrame's container display provides full visibility into the types in a ``Frame``, and provides a variety of ways to configure the presentation and color of those types.
-
-.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-display-config.svg
-   :align: center
-
-
 
 
 Installation
@@ -109,7 +98,7 @@ Core StaticFrame requires the following:
 - Python >= 3.6
 - NumPy >= 1.17.4
 - automap >= 0.4.8
-- arraykit >= 0.1.6
+- arraykit >= 0.1.8
 
 For extended input and output, the following packages are required:
 

@@ -30,8 +30,8 @@ def get_long_description() -> str:
                 start = i + 2 # skip this line and the next
             if i == start:
                 collect = True
-            if line.startswith('Installation'):
-                collect = False
+            # if line.startswith('Installation'):
+            #     collect = False
             if collect:
                 msg.append(line)
 
