@@ -4,13 +4,15 @@ What is New in Static Frame
 0.8.18
 ----------
 
+Implementation of ``Yarn``, a container that presents numerous ``Bus`` as a uniform, 1D interface.
+
 Fixed issue in ``Frame.astype[]`` when selecting targets with a Boolean ``Series`` or arrays.
 
 Fixed unnecessary type coercion in the ``Frame`` returned by ``Frame.drop_duplicated()``.
 
 Improved handling of reindexing and lookups between datetime64 and date / datetime objects.
 
-``Frame.equals()``, ``Series.equals()``, ``Index.equals()``, and related methods all now distinguish by ``datetime64`` unit.
+``Frame.equals()``, ``Series.equals()``, ``Index.equals()``, ``IndexHiearchy.equals()`` and all related routines now distinguish by ``datetime64`` unit in evaluating basic equality.
 
 
 0.8.17
