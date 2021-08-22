@@ -343,7 +343,7 @@ class TestUnit(TestCase):
         b3 = Bus.from_frames((f6, f7), name='c')
 
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
-        y2 = y1['f2':'f6']
+        y2 = y1['f2':'f6'] #type: ignore
         self.assertEqual(y2.shapes.to_pairs(),
                 (('f2', (4, 4)), ('f3', (4, 4)), ('f4', (4, 4)), ('f5', (4, 4)), ('f6', (2, 4))))
         self.assertEqual(y2['f5'].to_pairs(),

@@ -821,7 +821,7 @@ class InterfaceSummary(Features):
                 instance = Yarn.from_buses(
                     (Bus.from_frames((f,), name='bus'),),
                     retain_labels=False,
-                    ) #type: ignore
+                    )
             elif target is Quilt:
                 f = Frame.from_elements((0,), name='frame')
                 bus = Bus.from_frames((f,))
