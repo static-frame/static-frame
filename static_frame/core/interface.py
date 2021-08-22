@@ -41,6 +41,7 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DT64_S
 from static_frame.core.quilt import Quilt
+from static_frame.core.yarn import Yarn
 
 
 #-------------------------------------------------------------------------------
@@ -815,6 +816,12 @@ class InterfaceSummary(Features):
             elif target is Bus:
                 f = Frame.from_elements((0,), name='frame')
                 instance = target.from_frames((f,)) #type: ignore
+            elif target is Yarn:
+                f = Frame.from_elements((0,), name='frame')
+                instance = Yarn.from_buses(
+                    (Bus.from_frames((f,), name='bus'),),
+                    retain_labels=False,
+                    ) #type: ignore
             elif target is Quilt:
                 f = Frame.from_elements((0,), name='frame')
                 bus = Bus.from_frames((f,))
