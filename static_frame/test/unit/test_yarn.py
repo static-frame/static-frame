@@ -20,7 +20,9 @@ from static_frame.core.yarn import Yarn
 from static_frame.core.frame import Frame
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitYarn
-
+from static_frame.core.exception import ErrorInitIndex
+from static_frame import ILoc
+from static_frame import HLoc
 
 class TestUnit(TestCase):
 
@@ -262,6 +264,114 @@ class TestUnit(TestCase):
         self.assertEqual(y1.loc['f4':].shape, (4,)) #type: ignore
         self.assertEqual(y1.loc[['f2', 'f7']].shape, (2,))
         self.assertEqual(y1.loc[y1.index.via_str.startswith('f3')].shape, (1,))
+
+    def test_yarn_loc_b(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        y2 = y1.loc[y1.index.via_re('[26]').search()]
+        self.assertEqual(y2.index.values.tolist(), ['f2', 'f6'])
+        self.assertEqual(y2.shapes.to_pairs(),
+                (('f2', (4, 4)), ('f6', (2, 4))))
+        self.assertEqual(y2.name, 'foo')
+
+    def test_yarn_loc_c(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=True, name='foo')
+        y2 = y1.loc[[('a', 'f3'), ('b', 'f5'), ('c', 'f6')]]
+        self.assertEqual(y2.shapes.to_pairs(),
+                ((('a', 'f3'), (4, 4)), (('b', 'f5'), (4, 4)), (('c', 'f6'), (2, 4))))
+
+
+    def test_yarn_loc_d(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        y2 = y1.loc[['f7', 'f3']]
+        self.assertEqual(y2.shapes.to_pairs(),
+                (('f7', (4, 2)), ('f3', (4, 4)))
+                )
+        with self.assertRaises(ErrorInitIndex):
+            y2 = y1.loc[['f1', 'f7', 'f3']]
+
+    def test_yarn_loc_e(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        y2 = y1['f2':'f6']
+        self.assertEqual(y2.shapes.to_pairs(),
+                (('f2', (4, 4)), ('f3', (4, 4)), ('f4', (4, 4)), ('f5', (4, 4)), ('f6', (2, 4))))
+        self.assertEqual(y2['f5'].to_pairs(),
+                ((0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'), (3, 'zB7E'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'), (3, 'zuVU'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'), (3, 'zmVj'))), (3, ((0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3'), (3, 'zr4u')))))
+
+
+    def test_yarn_loc_f(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(3,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,5)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,8)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(2,3)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7), name='c')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=True, name='foo')
+        y2 = y1.loc[[ILoc[2], ('c', 'f6')]]
+        self.assertEqual(y2.shapes.to_pairs(),
+                ((('a', 'f3'), (4, 5)), (('c', 'f6'), (2, 4))))
+
+        y3 = y1.loc[HLoc[['a', 'c']]]
+        self.assertEqual(y3.shapes.to_pairs(),
+                ((('a', 'f1'), (4, 4)), (('a', 'f2'), (3, 4)), (('a', 'f3'), (4, 5)), (('c', 'f6'), (2, 4)), (('c', 'f7'), (4, 2))))
 
     #---------------------------------------------------------------------------
     def test_yarn_iloc_a(self) -> None:
