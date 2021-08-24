@@ -202,6 +202,9 @@ class InterfaceDatetime(Interface[TContainer]):
         '''
         Return the day of the week as an integer, where Monday is 0 and Sunday is 6.
         '''
+        # this is equivalent for all positive dates from 1,1,1 to 2030,1,1
+        # ((a1.astype('int') + 3) % 7)
+        # TODO: handle negative dates
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:

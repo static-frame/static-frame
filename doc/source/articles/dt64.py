@@ -3,6 +3,8 @@ import timeit
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
+import calendar
+
 import typing as tp
 from static_frame.core.display_color import HexColor
 
@@ -66,8 +68,6 @@ class ShiftDay:
     def dt64(self):
         self.array_dt64 + 1
 
-
-
 class DeriveYear:
     NUMBER = 100
 
@@ -82,8 +82,55 @@ class DeriveYear:
     def dt64(self):
         self.array_dt64.astype('datetime64[Y]')
 
+class TrueOnMonday:
+    NUMBER = 100
 
-# TODO: derive weekends
+    def __init__(self):
+        runner = ArrayCreationDirectFromString()
+        self.array_dt64 = runner.dt64()
+        self.array_dt = runner.dt()
+
+    def dt(self):
+        np.array([x.weekday() == 0 for x in self.array_dt], dtype=bool)
+
+    def dt64(self):
+        np.array(
+            ((self.array_dt64.astype(int) + 3) % 7) == 0,
+            dtype=int,
+            )
+
+class TrueOnEOM:
+    NUMBER = 100
+
+    def __init__(self):
+        runner = ArrayCreationDirectFromString()
+        self.array_dt64 = runner.dt64()
+        self.array_dt = runner.dt()
+
+    def dt(self):
+
+        np.array([d.day == calendar.monthrange(d.year, d.month)[1] for d in self.array_dt], dtype=bool)
+
+    def dt64(self):
+        np.array(
+            (self.array_dt64.astype('datetime64[M]') + 1).astype('datetime64[D]') - 1 == self.array_dt64,
+            dtype=bool,
+            )
+
+class ConvertToStr:
+    NUMBER = 100
+
+    def __init__(self):
+        runner = ArrayCreationDirectFromString()
+        self.array_dt64 = runner.dt64()
+        self.array_dt = runner.dt()
+
+    def dt(self):
+        np.array([str(d) for d in self.array_dt], dtype=object)
+
+    def dt64(self):
+        self.array_dt64.astype(str)
+
 
 
 def get_format():
@@ -117,6 +164,9 @@ def run_test():
             ArrayCreationParseFromString,
             ShiftDay,
             DeriveYear,
+            TrueOnMonday,
+            TrueOnEOM,
+            ConvertToStr,
             ):
         runner = cls()
         record = [cls.__name__, cls.NUMBER]
