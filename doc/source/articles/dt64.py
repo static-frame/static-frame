@@ -83,7 +83,7 @@ class DeriveYear:
         self.array_dt64.astype('datetime64[Y]')
 
 
-
+# TODO: derive weekends
 
 
 def get_format():
