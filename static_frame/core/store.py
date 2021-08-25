@@ -159,7 +159,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         if dtypes_specifier is None :
             return dtypes_specifier
         if isinstance(dtypes_specifier, dict):
-            return dtypes_specifier.items()
+            return tuple(dtypes_specifier.items())
         if isinstance(dtypes_specifier, list):
             return tuple(dtypes_specifier)
         return dtypes_specifier # type: ignore [return-value]
@@ -456,6 +456,12 @@ class Store:
         elif not np.isnan(self._last_modified):
             # file existed previously and we got a modification time, but now it does not exist
             raise StoreFileMutation(f'expected file {self._fp} no longer exists')
+
+    # def __copy__(self) -> 'Store':
+    #     '''
+    #     Return a new Store instance linked to the same file.
+    #     '''
+    #     return self.__class__(fp=self._fp)
 
     #---------------------------------------------------------------------------
     @staticmethod

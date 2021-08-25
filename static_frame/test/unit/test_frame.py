@@ -32,6 +32,7 @@ from static_frame import IndexYearMonth
 from static_frame import mloc
 from static_frame import Series
 from static_frame import TypeBlocks
+from static_frame import IndexDefaultFactory
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
@@ -310,6 +311,24 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(0), ())
 
 
+    def test_frame_init_y(self) -> None:
+        f1 = Frame(index=IndexAutoFactory(3))
+        self.assertEqual(f1.shape, (3, 0))
+        self.assertEqual(f1.to_pairs(0), ())
+
+
+        f2 = FrameGO(index=IndexAutoFactory(2))
+        f2['a'] = (3, 9)
+        f2['b'] = (4, 5)
+        self.assertEqual(f2.index._map, None)
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 3), (1, 9))), ('b', ((0, 4), (1, 5))))
+                )
+
+        f3 = Frame(np.arange(12).reshape(3, 4), index=IndexAutoFactory(3), columns=IndexAutoFactory(4))
+        self.assertEqual(f3.to_pairs(),
+                ((0, ((0, 0), (1, 4), (2, 8))), (1, ((0, 1), (1, 5), (2, 9))), (2, ((0, 2), (1, 6), (2, 10))), (3, ((0, 3), (1, 7), (2, 11)))))
+
 
     #---------------------------------------------------------------------------
     def test_frame_init_index_constructor_a(self) -> None:
@@ -448,6 +467,21 @@ class TestUnit(TestCase):
                 )
         self.assertTrue(id(idx1) == id(f1.index))
         self.assertTrue(id(idx2) == id(f1.columns))
+
+
+    def test_frame_from_element_e(self) -> None:
+
+        f1 = Frame.from_element(range(3), index=('a', 'b'), columns=('x', 'y', 'z'))
+        self.assertEqual(f1.shape, (2, 3))
+        self.assertEqual(f1.to_pairs(0),
+                (('x', (('a', range(0, 3)), ('b', range(0, 3)))), ('y', (('a', range(0, 3)), ('b', range(0, 3)))), ('z', (('a', range(0, 3)), ('b', range(0, 3)))))
+                )
+
+        f2 = Frame.from_element([0], index=('a', 'b'), columns=('x', 'y', 'z'))
+        self.assertEqual(f2.shape, (2, 3))
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('a', [0]), ('b', [0]))), ('y', (('a', [0]), ('b', [0]))), ('z', (('a', [0]), ('b', [0]))))
+                )
 
 
     #---------------------------------------------------------------------------
@@ -1499,6 +1533,49 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(ds2.coords.keys()), ('__index0__',))
         self.assertEqual(ds2[3].values.tolist(),
                 [False, True, False, True])
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_series_a(self) -> None:
+        f1 = ff.parse('s(4,5)|i(I,str)|c(I,int)')
+
+        s1 = f1.to_series()
+        self.assertEqual(s1.to_pairs(),
+                ((('zZbu', 34715), 1930.4), (('zZbu', -3648), -610.8), (('zZbu', 91301), 694.3), (('zZbu', 30205), 1080.4), (('zZbu', 54020), 3511.58), (('ztsv', 34715), -1760.34), (('ztsv', -3648), 3243.94), (('ztsv', 91301), -72.96), (('ztsv', 30205), 2580.34), (('ztsv', 54020), 1175.36), (('zUvW', 34715), 1857.34), (('zUvW', -3648), -823.14), (('zUvW', 91301), 1826.02), (('zUvW', 30205), 700.42), (('zUvW', 54020), 2925.68), (('zkuW', 34715), 1699.34), (('zkuW', -3648), 114.58), (('zkuW', 91301), 604.1), (('zkuW', 30205), 3338.48), (('zkuW', 54020), 3408.8))
+                )
+
+        s2 = f1.to_series(index_constructor=IndexHierarchy.from_labels)
+        self.assertEqual(s2.to_pairs(),
+            ((('zZbu', 34715), 1930.4), (('zZbu', -3648), -610.8), (('zZbu', 91301), 694.3), (('zZbu', 30205), 1080.4), (('zZbu', 54020), 3511.58), (('ztsv', 34715), -1760.34), (('ztsv', -3648), 3243.94), (('ztsv', 91301), -72.96), (('ztsv', 30205), 2580.34), (('ztsv', 54020), 1175.36), (('zUvW', 34715), 1857.34), (('zUvW', -3648), -823.14), (('zUvW', 91301), 1826.02), (('zUvW', 30205), 700.42), (('zUvW', 54020), 2925.68), (('zkuW', 34715), 1699.34), (('zkuW', -3648), 114.58), (('zkuW', 91301), 604.1), (('zkuW', 30205), 3338.48), (('zkuW', 54020), 3408.8))
+            )
+
+    def test_frame_to_series_b(self) -> None:
+        f1 = ff.parse('s(4,5)|i(IH,(str,str))|c(I,int)')
+        s1 = f1.to_series()
+        self.assertEqual(s1.to_pairs(),
+            ((('zZbu', 'zOyq', 34715), 1930.4), (('zZbu', 'zOyq', -3648), -610.8), (('zZbu', 'zOyq', 91301), 694.3), (('zZbu', 'zOyq', 30205), 1080.4), (('zZbu', 'zOyq', 54020), 3511.58), (('zZbu', 'zIA5', 34715), -1760.34), (('zZbu', 'zIA5', -3648), 3243.94), (('zZbu', 'zIA5', 91301), -72.96), (('zZbu', 'zIA5', 30205), 2580.34), (('zZbu', 'zIA5', 54020), 1175.36), (('ztsv', 'zGDJ', 34715), 1857.34), (('ztsv', 'zGDJ', -3648), -823.14), (('ztsv', 'zGDJ', 91301), 1826.02), (('ztsv', 'zGDJ', 30205), 700.42), (('ztsv', 'zGDJ', 54020), 2925.68), (('ztsv', 'zmhG', 34715), 1699.34), (('ztsv', 'zmhG', -3648), 114.58), (('ztsv', 'zmhG', 91301), 604.1), (('ztsv', 'zmhG', 30205), 3338.48), (('ztsv', 'zmhG', 54020), 3408.8))
+            )
+
+        s2 = f1.to_series(index_constructor=IndexHierarchy.from_labels)
+        self.assertEqual(s2.to_pairs(),
+            ((('zZbu', 'zOyq', 34715), 1930.4), (('zZbu', 'zOyq', -3648), -610.8), (('zZbu', 'zOyq', 91301), 694.3), (('zZbu', 'zOyq', 30205), 1080.4), (('zZbu', 'zOyq', 54020), 3511.58), (('zZbu', 'zIA5', 34715), -1760.34), (('zZbu', 'zIA5', -3648), 3243.94), (('zZbu', 'zIA5', 91301), -72.96), (('zZbu', 'zIA5', 30205), 2580.34), (('zZbu', 'zIA5', 54020), 1175.36), (('ztsv', 'zGDJ', 34715), 1857.34), (('ztsv', 'zGDJ', -3648), -823.14), (('ztsv', 'zGDJ', 91301), 1826.02), (('ztsv', 'zGDJ', 30205), 700.42), (('ztsv', 'zGDJ', 54020), 2925.68), (('ztsv', 'zmhG', 34715), 1699.34), (('ztsv', 'zmhG', -3648), 114.58), (('ztsv', 'zmhG', 91301), 604.1), (('ztsv', 'zmhG', 30205), 3338.48), (('ztsv', 'zmhG', 54020), 3408.8))
+            )
+
+
+    def test_frame_to_series_c(self) -> None:
+        f1 = ff.parse('s(4,5)|i(IH,(str,str))|c(IH,(int,int))').rename('foo')
+        s1 = f1.to_series()
+        self.assertEqual(s1.name, f1.name)
+        self.assertEqual(s1.to_pairs(),
+            ((('zZbu', 'zOyq', 34715, 105269), 1930.4), (('zZbu', 'zOyq', 34715, 119909), -610.8), (('zZbu', 'zOyq', -3648, 194224), 694.3), (('zZbu', 'zOyq', -3648, 172133), 1080.4), (('zZbu', 'zOyq', 91301, 96520), 3511.58), (('zZbu', 'zIA5', 34715, 105269), -1760.34), (('zZbu', 'zIA5', 34715, 119909), 3243.94), (('zZbu', 'zIA5', -3648, 194224), -72.96), (('zZbu', 'zIA5', -3648, 172133), 2580.34), (('zZbu', 'zIA5', 91301, 96520), 1175.36), (('ztsv', 'zGDJ', 34715, 105269), 1857.34), (('ztsv', 'zGDJ', 34715, 119909), -823.14), (('ztsv', 'zGDJ', -3648, 194224), 1826.02), (('ztsv', 'zGDJ', -3648, 172133), 700.42), (('ztsv', 'zGDJ', 91301, 96520), 2925.68), (('ztsv', 'zmhG', 34715, 105269), 1699.34), (('ztsv', 'zmhG', 34715, 119909), 114.58), (('ztsv', 'zmhG', -3648, 194224), 604.1), (('ztsv', 'zmhG', -3648, 172133), 3338.48), (('ztsv', 'zmhG', 91301, 96520), 3408.8))
+            )
+
+
+        s2 = f1.to_series(index_constructor=IndexHierarchy.from_labels)
+        self.assertEqual(s2.index.depth, 4)
+
+        self.assertEqual(s2.to_pairs(),
+            ((('zZbu', 'zOyq', 34715, 105269), 1930.4), (('zZbu', 'zOyq', 34715, 119909), -610.8), (('zZbu', 'zOyq', -3648, 194224), 694.3), (('zZbu', 'zOyq', -3648, 172133), 1080.4), (('zZbu', 'zOyq', 91301, 96520), 3511.58), (('zZbu', 'zIA5', 34715, 105269), -1760.34), (('zZbu', 'zIA5', 34715, 119909), 3243.94), (('zZbu', 'zIA5', -3648, 194224), -72.96), (('zZbu', 'zIA5', -3648, 172133), 2580.34), (('zZbu', 'zIA5', 91301, 96520), 1175.36), (('ztsv', 'zGDJ', 34715, 105269), 1857.34), (('ztsv', 'zGDJ', 34715, 119909), -823.14), (('ztsv', 'zGDJ', -3648, 194224), 1826.02), (('ztsv', 'zGDJ', -3648, 172133), 700.42), (('ztsv', 'zGDJ', 91301, 96520), 2925.68), (('ztsv', 'zmhG', 34715, 105269), 1699.34), (('ztsv', 'zmhG', 34715, 119909), 114.58), (('ztsv', 'zmhG', -3648, 194224), 604.1), (('ztsv', 'zmhG', -3648, 172133), 3338.48), (('ztsv', 'zmhG', 91301, 96520), 3408.8))
+            )
 
 
     #---------------------------------------------------------------------------
@@ -4179,13 +4256,18 @@ class TestUnit(TestCase):
                 index=range(2),
                 columns=range(2),
                 dtype=object,
-                name='foo'
+                name='foo',
+                index_constructor=IndexDefaultFactory('bar'), #type: ignore
+                columns_constructor=IndexDefaultFactory('baz'), #type: ignore
                 )
 
         self.assertEqual(f1.to_pairs(),
                 ((0, ((0, None), (1, 'q'))), (1, ((0, 'g'), (1, None)))))
 
         self.assertEqual(f1.name, 'foo')
+        self.assertEqual(f1.index.name, 'bar')
+        self.assertEqual(f1.columns.name, 'baz')
+
 
     def test_frame_from_element_iloc_items_b(self) -> None:
 
@@ -4457,6 +4539,17 @@ class TestUnit(TestCase):
                 ['zmVj', 'z2Oo', 'zZbu', 'ztsv', 'zUvW', 'zkuW'])
 
 
+    def test_frame_sort_index_d(self) -> None:
+
+        ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4), ('y', 'z', 'x'))
+
+        f1 = Frame.from_elements(range(len(ih1)), index=ih1, columns=('a', 'b'))
+
+        self.assertEqual(f1.sort_index(ascending=(False, False, True)).to_pairs(),
+                (('a', ((('b', 5, 'x'), 17), (('b', 5, 'y'), 15), (('b', 5, 'z'), 16), (('b', 3, 'x'), 20), (('b', 3, 'y'), 18), (('b', 3, 'z'), 19), (('b', 1, 'x'), 14), (('b', 1, 'y'), 12), (('b', 1, 'z'), 13), (('b', -4, 'x'), 23), (('b', -4, 'y'), 21), (('b', -4, 'z'), 22), (('a', 5, 'x'), 5), (('a', 5, 'y'), 3), (('a', 5, 'z'), 4), (('a', 3, 'x'), 8), (('a', 3, 'y'), 6), (('a', 3, 'z'), 7), (('a', 1, 'x'), 2), (('a', 1, 'y'), 0), (('a', 1, 'z'), 1), (('a', -4, 'x'), 11), (('a', -4, 'y'), 9), (('a', -4, 'z'), 10))), ('b', ((('b', 5, 'x'), 17), (('b', 5, 'y'), 15), (('b', 5, 'z'), 16), (('b', 3, 'x'), 20), (('b', 3, 'y'), 18), (('b', 3, 'z'), 19), (('b', 1, 'x'), 14), (('b', 1, 'y'), 12), (('b', 1, 'z'), 13), (('b', -4, 'x'), 23), (('b', -4, 'y'), 21), (('b', -4, 'z'), 22), (('a', 5, 'x'), 5), (('a', 5, 'y'), 3), (('a', 5, 'z'), 4), (('a', 3, 'x'), 8), (('a', 3, 'y'), 6), (('a', 3, 'z'), 7), (('a', 1, 'x'), 2), (('a', 1, 'y'), 0), (('a', 1, 'z'), 1), (('a', -4, 'x'), 11), (('a', -4, 'y'), 9), (('a', -4, 'z'), 10))))
+                )
+
+
 
     #---------------------------------------------------------------------------
 
@@ -4536,6 +4629,16 @@ class TestUnit(TestCase):
         self.assertEqual(f2.columns.values.tolist(),
                 ['zmVj', 'z2Oo', 'zZbu', 'ztsv', 'zUvW', 'zkuW'])
 
+
+    def test_frame_sort_columns_e(self) -> None:
+
+        ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4), ('y', 'z', 'x'))
+
+        f1 = Frame(np.arange(2 * len(ih1)).reshape(2,len(ih1)), columns=ih1, index=('a', 'b')).sort_columns(ascending=(False,False,True))
+
+        self.assertEqual(f1.sort_columns(ascending=(False, False, True)).to_pairs(),
+                ((('b', 5, 'x'), (('a', 17), ('b', 41))), (('b', 5, 'y'), (('a', 15), ('b', 39))), (('b', 5, 'z'), (('a', 16), ('b', 40))), (('b', 3, 'x'), (('a', 20), ('b', 44))), (('b', 3, 'y'), (('a', 18), ('b', 42))), (('b', 3, 'z'), (('a', 19), ('b', 43))), (('b', 1, 'x'), (('a', 14), ('b', 38))), (('b', 1, 'y'), (('a', 12), ('b', 36))), (('b', 1, 'z'), (('a', 13), ('b', 37))), (('b', -4, 'x'), (('a', 23), ('b', 47))), (('b', -4, 'y'), (('a', 21), ('b', 45))), (('b', -4, 'z'), (('a', 22), ('b', 46))), (('a', 5, 'x'), (('a', 5), ('b', 29))), (('a', 5, 'y'), (('a', 3), ('b', 27))), (('a', 5, 'z'), (('a', 4), ('b', 28))), (('a', 3, 'x'), (('a', 8), ('b', 32))), (('a', 3, 'y'), (('a', 6), ('b', 30))), (('a', 3, 'z'), (('a', 7), ('b', 31))), (('a', 1, 'x'), (('a', 2), ('b', 26))), (('a', 1, 'y'), (('a', 0), ('b', 24))), (('a', 1, 'z'), (('a', 1), ('b', 25))), (('a', -4, 'x'), (('a', 11), ('b', 35))), (('a', -4, 'y'), (('a', 9), ('b', 33))), (('a', -4, 'z'), (('a', 10), ('b', 34))))
+                )
 
 
     #---------------------------------------------------------------------------
@@ -4763,6 +4866,79 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.sort_values(['z', 'w'], axis=0, key=lambda f:-f.values).to_pairs(0),
                 (('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 3.5), ('x', 60.2), ('y', 1.2), ('z', 50.2))), ('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))))
+                )
+
+    def test_frame_sort_values_j(self) -> None:
+
+        records = (
+                (2, 9, 3),
+                (8, 7, 6),
+                (8, 8, 1),
+                (8, 0, 5),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
+
+        f2 = f1.sort_values(['p', 'q'], ascending=False)
+
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('y', 8), ('x', 8), ('z', 8), ('w', 2))), ('q', (('y', 8), ('x', 7), ('z', 0), ('w', 9))), ('r', (('y', 1), ('x', 6), ('z', 5), ('w', 3))))
+                )
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.sort_values(['p', 'q'], ascending=(False, True, False))
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.sort_values('q', ascending=(False, True, False))
+
+
+    def test_frame_sort_values_k(self) -> None:
+
+        records = (
+                (0, 9, 3),
+                (9, 9, 3),
+                (2, 7, 6),
+                (6, 8, 1),
+                (1, 0, 5),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                name='foo')
+
+        f2 = f1.sort_values('p', ascending=False)
+        self.assertEqual(f2.to_pairs(),
+                (('p', ((1, 9), (3, 6), (2, 2), (4, 1), (0, 0))), ('q', ((1, 9), (3, 8), (2, 7), (4, 0), (0, 9))), ('r', ((1, 3), (3, 1), (2, 6), (4, 5), (0, 3))))
+                )
+
+
+    def test_frame_sort_values_m(self) -> None:
+
+        records = (
+                (1, 3, 3),
+                (9, 8, 3),
+                (9, 7, 6),
+                (9, 8, 1),
+                (0, 0, 5),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                name='foo')
+
+        f2 = f1.sort_values(['p', 'q', 'r'], ascending=(True, False, True))
+        self.assertEqual(f2.to_pairs(),
+                (('p', ((4, 0), (0, 1), (3, 9), (1, 9), (2, 9))), ('q', ((4, 0), (0, 3), (3, 8), (1, 8), (2, 7))), ('r', ((4, 5), (0, 3), (3, 1), (1, 3), (2, 6))))
+                )
+
+        f3 = f1.sort_values(['p', 'q', 'r'], ascending=(False, True, False))
+        self.assertEqual(f3.to_pairs(),
+                (('p', ((2, 9), (1, 9), (3, 9), (0, 1), (4, 0))), ('q', ((2, 7), (1, 8), (3, 8), (0, 3), (4, 0))), ('r', ((2, 6), (1, 3), (3, 1), (0, 3), (4, 5)))),
+                )
+
+        f4 = f1.sort_values(['p', 'q', 'r'], ascending=(True, False, False))
+        self.assertEqual(f4.to_pairs(),
+                (('p', ((4, 0), (0, 1), (1, 9), (3, 9), (2, 9))), ('q', ((4, 0), (0, 3), (1, 8), (3, 8), (2, 7))), ('r', ((4, 5), (0, 3), (1, 3), (3, 1), (2, 6))))
                 )
 
 
@@ -5068,6 +5244,60 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
+    def test_frame_isfalsy_a(self) -> None:
+        f1 = FrameGO.from_records([
+                [False, 2, None, 0],
+                [3, 4, 5, 1],
+                ['', '', '', '']],
+                columns=list('ABCD'))
+
+        f2 = f1.isfalsy()
+        self.assertEqual(f2.to_pairs(),
+                (('A', ((0, True), (1, False), (2, True))), ('B', ((0, False), (1, False), (2, True))), ('C', ((0, True), (1, False), (2, True))), ('D', ((0, True), (1, False), (2, True)))))
+
+    #---------------------------------------------------------------------------
+    def test_frame_notfalsy_a(self) -> None:
+        f1 = FrameGO.from_records([
+                [False, 2, None, 0],
+                [3, 4, 5, 1],
+                ['', '', '', '']],
+                columns=list('ABCD'))
+
+        f2 = f1.notfalsy()
+        self.assertEqual(f2.to_pairs(),
+                (('A', ((0, False), (1, True), (2, False))), ('B', ((0, True), (1, True), (2, False))), ('C', ((0, False), (1, True), (2, False))), ('D', ((0, False), (1, True), (2, False))))
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_dropfalsy_a(self) -> None:
+        f1 = FrameGO.from_records([
+                [False, 2, None, 0],
+                [3, 4, 5, 1],
+                ['', '', '', '']],
+                columns=list('ABCD'))
+
+        self.assertEqual(f1.dropfalsy().to_pairs(),
+            (('A', ((0, False), (1, 3))), ('B', ((0, 2), (1, 4))), ('C', ((0, None), (1, 5))), ('D', ((0, 0), (1, 1))))
+            )
+
+        self.assertEqual(f1.dropfalsy(condition=np.any).to_pairs(),
+            (('A', ((1, 3),)), ('B', ((1, 4),)), ('C', ((1, 5),)), ('D', ((1, 1),)))
+            )
+
+        self.assertEqual(f1.dropfalsy(axis=1, condition=np.any).shape, (3, 0))
+
+    def test_frame_dropfalsy_b(self) -> None:
+        f1 = Frame(np.arange(4).reshape(2, 2), columns=list('ab'))
+        f2 = f1.dropfalsy()
+        self.assertEqual(id(f1), id(f2))
+
+        f3 = FrameGO(np.arange(4).reshape(2, 2), columns=list('ab'))
+        f4 = f3.dropfalsy()
+        self.assertNotEqual(id(f3), id(f4))
+
+
+    #---------------------------------------------------------------------------
 
     @skip_win #type: ignore
     def test_frame_fillna_a(self) -> None:
@@ -5186,6 +5416,21 @@ class TestUnit(TestCase):
             # must provde a Frame
             f.fillna(np.arange(4).reshape(2, 2))
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_fillfalsy_a(self) -> None:
+
+        f1 = Frame.from_records([
+                [None, 2, 3, 0],
+                [3, 30, '', False],
+                [0, np.nan, 2, 3]],
+                columns=tuple('ABCD'),
+                index=tuple('wxy'),
+                )
+
+        self.assertEqual(f1.fillfalsy(-1).to_pairs(),
+                (('A', (('w', -1), ('x', 3), ('y', -1))), ('B', (('w', 2.0), ('x', 30.0), ('y', -1.0))), ('C', (('w', 3), ('x', -1), ('y', 2))), ('D', (('w', -1), ('x', -1), ('y', 3))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -6260,9 +6505,9 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
-        post = f1.to_html()
+        post = f1.to_html(style_config=None)
 
-        self.assertEqual(post, '<table border="1"><thead><tr><th></th><th>r</th><th>s</th><th>t</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
+        self.assertEqual(post, '<table><thead><tr><th></th><th>r</th><th>s</th><th>t</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
         )
 
         msg = str(f1.display(sf.DisplayConfig(type_show=False, include_columns=False)))
@@ -6966,6 +7211,17 @@ class TestUnit(TestCase):
         f2 = f1.drop_duplicated(axis=0)
         self.assertEqual(f2.to_pairs(0),
                 (('p', (('c', 3),)), ('q', (('c', 3),)))
+                )
+
+    def test_frame_drop_duplicated_d(self) -> None:
+        f1 = ff.parse("s(5,5)|v(int, str, float, bool, dtD)")
+        f2 = sf.Frame.from_concat((f1, f1, f1), index=sf.IndexAutoFactory)
+        f3 = f2.drop_duplicated(exclude_first=True)
+
+        self.assertEqual(f3.shape, (5, 5))
+        self.assertEqual(
+                [dt.kind for dt in f3.dtypes.values],
+                ['i', 'U', 'f', 'b', 'M']
                 )
 
 
@@ -7731,7 +7987,59 @@ class TestUnit(TestCase):
                 [[('a', 'b'), 'p'], [('a', 'b'), 'q'], [('a', 'b'), 't'], [('x', 'y'), 'r'], [('x', 'y'), 's']]
                 )
 
+    def test_frame_from_concat_items_f(self) -> None:
+        records1 = (
+                (2, 2, False),
+                (30, 34, False),
+                )
 
+        f1 = Frame.from_records(records1,
+                columns=('p', 'q', 't'),
+                index=('x', 'a'))
+
+        records2 = (
+                ('c', False),
+                ('d', True),
+                )
+
+        f2 = Frame.from_records(records2,
+                columns=('r', 's',),
+                index=('x', 'a'))
+
+        f3 = Frame.from_concat_items(dict(A=f1, B=f2).items(), axis=1, columns_constructor=Index)
+        self.assertEqual(f3.to_pairs(),
+                ((('A', 'p'), (('x', 2), ('a', 30))), (('A', 'q'), (('x', 2), ('a', 34))), (('A', 't'), (('x', False), ('a', False))), (('B', 'r'), (('x', 'c'), ('a', 'd'))), (('B', 's'), (('x', False), ('a', True)))))
+
+        f4 = Frame.from_concat_items(dict(A=f1, B=f2).items(),
+                axis=1,
+                columns_constructor=IndexDefaultFactory('foo'), #type: ignore
+                )
+        self.assertEqual(f4.columns.name, 'foo')
+
+        with self.assertRaises(NotImplementedError):
+            Frame.from_concat_items(dict(A=f1, B=f2).items(), axis=1, index_constructor=Index)
+
+    def test_frame_from_concat_items_g(self) -> None:
+
+        f1 = Frame.from_records(((2, False), (34, False)),
+                columns=('p', 'q',),
+                index=('d', 'c'))
+
+        s1 = Series((0, True), index=('p', 'q'), name='c', dtype=object)
+        s2 = Series((-2, False), index=('p', 'q'), name='d', dtype=object)
+
+        f2 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(), axis=0, index_constructor=Index)
+        self.assertEqual(f2.to_pairs(),
+                (('p', ((('A', 'd'), -2), (('B', 'd'), 2), (('B', 'c'), 34), (('C', 'c'), 0))), ('q', ((('A', 'd'), False), (('B', 'd'), False), (('B', 'c'), False), (('C', 'c'), True)))))
+
+        f3 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(),
+                axis=0,
+                index_constructor=IndexDefaultFactory('foo'), #type: ignore
+                )
+        self.assertEqual(f3.index.name, 'foo')
+
+        with self.assertRaises(NotImplementedError):
+            Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(), axis=0, columns_constructor=Index)
 
     #---------------------------------------------------------------------------
 
@@ -7995,8 +8303,6 @@ class TestUnit(TestCase):
                 ((0, ((0, 'x'), (1, 1))), (1, ((0, 't'), (1, 2))))
                 )
 
-
-
     def test_frame_from_records_p(self) -> None:
 
         records = [('x', 't')] * 10 + [(1, 2)] #type: ignore
@@ -8049,7 +8355,6 @@ class TestUnit(TestCase):
                 (('left', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('right', (('x', 3), ('y', 20), ('z', -34))))
                 )
 
-
     def test_frame_from_records_s(self) -> None:
 
         records = ((10, 20), (0, 2), (5, 399))
@@ -8077,6 +8382,13 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('a', ((0, 1), (1, 1))), ('b', ((0, 1), (1, 1))))
                 )
+
+    def test_frame_from_recrods_v(self) -> None:
+        with self.assertRaises(NotImplementedError):
+            f1 = Frame.from_records(((x for x in range(3)), (x for x in range(3))),
+                    index=[1, 2], columns=['a', 'b', 'c'],
+                    )
+
 
     #---------------------------------------------------------------------------
 
@@ -8495,8 +8807,28 @@ class TestUnit(TestCase):
                 ['U', 'U', 'U', 'U', 'U'])
 
 
+    def test_frame_astype_d(self) -> None:
+        f1 = ff.parse("s(3,5)")
+        f2 = f1.astype[[1,2,3]](int)
+        f3 = f2.astype[f2.dtypes == int](float)
+        self.assertEqual([dt.kind for dt in f3.dtypes.values],
+                ['f', 'f', 'f', 'f', 'f'])
+
+        f4 = f3.astype[2](int)
+        self.assertEqual([dt.kind for dt in f4.dtypes.values],
+                ['f', 'f', 'i', 'f', 'f'])
+
+    def test_frame_astype_e(self) -> None:
+        f1 = ff.parse("s(3,5)")
+        f2 = f1.astype[[1,2,3]](int)
+        f3 = f2.astype[(f2.dtypes == int).values](float)
+        self.assertEqual([dt.kind for dt in f3.dtypes.values],
+                ['f', 'f', 'f', 'f', 'f'])
 
 
+
+
+    #---------------------------------------------------------------------------
     def test_frame_pickle_a(self) -> None:
 
         records = (
@@ -9125,8 +9457,6 @@ class TestUnit(TestCase):
             # mismatched length
             sf.Frame.from_dict(dict(a=(1,2,3,4,5), b=tuple('abcdef')))
 
-
-
     def test_frame_from_dict_b(self) -> None:
 
         f = Frame.from_dict({('a', 1): (1, 2), ('a', 2): (3, 4)}, columns_constructor=IndexHierarchy.from_labels)
@@ -9136,6 +9466,15 @@ class TestUnit(TestCase):
                 ((('a', 1), ((0, 1), (1, 2))), (('a', 2), ((0, 3), (1, 4))))
                 )
 
+    def test_frame_from_dict_c(self) -> None:
+
+        a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)),
+                index=tuple('wxyz'),
+                index_constructor=IndexDefaultFactory('foo'),
+                columns_constructor=IndexDefaultFactory('bar'),
+                )
+        self.assertEqual(a.index.name, 'foo')
+        self.assertEqual(a.columns.name, 'bar')
 
     #---------------------------------------------------------------------------
 
@@ -9360,11 +9699,12 @@ class TestUnit(TestCase):
             for i in range(3):
                 yield f'000{i}', ('a' * i, 'b' * i)
 
-        f = Frame.from_records_items(gen())
+        f = Frame.from_records_items(gen(), index_constructor=IndexDefaultFactory('foo'))
         self.assertEqual(
                 f.to_pairs(0),
                 ((0, (('0000', ''), ('0001', 'a'), ('0002', 'aa'))), (1, (('0000', ''), ('0001', 'b'), ('0002', 'bb'))))
                 )
+        self.assertEqual(f.index.name, 'foo')
 
     #---------------------------------------------------------------------------
     def test_frame_count_a(self) -> None:
@@ -9418,7 +9758,46 @@ class TestUnit(TestCase):
         self.assertEqual(f1.count(axis=0, skipna=False).to_pairs(), (('a', 3), ('b', 3)))
         self.assertEqual(f1.count(axis=1, skipna=False).to_pairs(), (('x', 2), ('y', 2), ('z', 2)))
 
+    def test_frame_count_d(self) -> None:
+        records = (
+                (2, 2),
+                (np.nan, 34),
+                (2, 0),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
 
+        self.assertEqual(f1.count(axis=0, unique=True).to_pairs(),
+                (('a', 1), ('b', 3))
+                )
+        self.assertEqual(f1.count(axis=0, unique=False).to_pairs(),
+                (('a', 2), ('b', 3))
+                )
+
+        with self.assertRaises(RuntimeError):
+            f1.count(axis=0, skipfalsy=True, skipna=False, unique=False)
+
+        self.assertEqual(f1.count(axis=0, skipfalsy=True, unique=False).to_pairs(),
+                (('a', 2), ('b', 2))
+                )
+        self.assertEqual(f1.count(axis=0, skipfalsy=True, unique=True).to_pairs(),
+                (('a', 1), ('b', 2))
+                )
+
+        self.assertEqual(f1.count(axis=1, skipna=False).to_pairs(),
+                (('x', 2), ('y', 2), ('z', 2))
+                )
+        self.assertEqual(f1.count(axis=1, skipfalsy=True).to_pairs(),
+                (('x', 2), ('y', 1), ('z', 1))
+                )
+        self.assertEqual(f1.count(axis=1, skipfalsy=True, unique=True).to_pairs(),
+                (('x', 1), ('y', 1), ('z', 1))
+                )
+        self.assertEqual(f1.count(axis=1, unique=True).to_pairs(),
+                (('x', 1), ('y', 1), ('z', 2))
+                )
 
 
     #---------------------------------------------------------------------------
@@ -9672,7 +10051,7 @@ class TestUnit(TestCase):
                 columns=columns,
                 index=index)
 
-        with self.assertRaises(ErrorInitFrame):
+        with self.assertRaises(ErrorInitIndex):
             f1.unset_index()
 
 
@@ -9736,6 +10115,71 @@ class TestUnit(TestCase):
         f2 = f1.unset_index(names=('index',), consolidate_blocks=True)
         self.assertEqual(f2._blocks.shapes.tolist(), [(3, 3)])
 
+
+    def test_unset_index_column_hierarchy(self) -> None:
+        f = ff.parse('s(5,5)|i(I,str)|c(IH,(str,str))').rename(index='index_name', columns=('l1', 'l2'))
+        unset = f.unset_index(names=[('outer', f.index.name)])
+        assert unset.columns.values.tolist() == [
+                ['outer', 'index_name'],
+                ['zZbu', 'zOyq'],
+                ['zZbu', 'zIA5'],
+                ['ztsv', 'zGDJ'],
+                ['ztsv', 'zmhG'],
+                ['zUvW', 'zo2Q'],
+        ]
+
+        # A frame with hierarchical index and columns.
+        f = ff.parse('s(5,5)|i(IH,(str,str))|c(IH,(str,str))').rename(
+                index=('index_name1', 'index_name2'),
+                columns=('l1', 'l2')
+        )
+        unset = f.unset_index(names=[('outer', n) for n in f.index.names])
+        assert unset.columns.values.tolist() == [
+               ['outer', 'index_name1'],
+               ['outer', 'index_name2'],
+               ['zZbu', 'zOyq'],
+               ['zZbu', 'zIA5'],
+               ['ztsv', 'zGDJ'],
+               ['ztsv', 'zmhG'],
+               ['zUvW', 'zo2Q']
+        ]
+
+
+    def test_unset_index_column_hierarchy_w_dates(self) -> None:
+        f = ff.parse('s(3,3)|i(I,str)|c(IH,(str,dtY,tdD))').rename(
+                index='index_name',
+                columns=('l1', 'l2'),
+        )
+        unset = f.unset_index(names=[('outer', 'middle', f.index.name)])
+        assert unset.columns.values.tolist() == [
+                ['outer', 'middle', 'index_name'],
+                ['zZbu', 105269, datetime.timedelta(days=58768)],
+                ['zZbu', 105269, datetime.timedelta(days=146284)],
+                ['zZbu', 119909, datetime.timedelta(days=170440)],
+        ]
+        assert unset.columns.dtypes.values.tolist() == [
+                np.dtype('<U5'),
+                np.dtype('O'),
+                np.dtype('O'),
+        ]
+
+        # dtypes should be preserved when possible.
+        dt = f.columns.values_at_depth(1)[1]
+        td = f.columns.values_at_depth(2)[1]
+        unset2 = f.unset_index(names=[(f.index.name, dt, td)])
+
+        assert unset2.columns.values.tolist() == [
+                ['index_name', 105269, datetime.timedelta(days=146284)],
+                ['zZbu', 105269, datetime.timedelta(days=58768)],
+                ['zZbu', 105269, datetime.timedelta(days=146284)],
+                ['zZbu', 119909, datetime.timedelta(days=170440)]
+        ]
+
+        assert unset2.columns.dtypes.values.tolist() == [
+                np.dtype('<U10'),
+                np.dtype('<M8[Y]'),
+                np.dtype('<m8[D]'),
+        ]
 
     #---------------------------------------------------------------------------
     @skip_win #type: ignore
@@ -9901,8 +10345,19 @@ class TestUnit(TestCase):
         self.assertEqual(post.columns.name, ('b', 'values'))
         # NOTE: because we are filling na with empty strings, we get object dtypes
         self.assertEqual(post.dtypes.values.tolist(),
-                [np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'),np. dtype('O'), np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'), np.dtype('O')]
-                )
+                [
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                        np.dtype('<U4'),
+                        np.dtype('O'),
+                ],
+        )
         self.assertEqual(post.to_pairs(0),
                 (((19, 'z'), ((('left', 'down'), ''), (('left', 'up'), 'far'), (('right', 'down'), ''), (('right', 'up'), ''))), ((19, 'a'), ((('left', 'down'), ''), (('left', 'up'), 0), (('right', 'down'), ''), (('right', 'up'), ''))), ((20, 'z'), ((('left', 'down'), ''), (('left', 'up'), 'near'), (('right', 'down'), ''), (('right', 'up'), 'far'))), ((20, 'a'), ((('left', 'down'), ''), (('left', 'up'), 4), (('right', 'down'), ''), (('right', 'up'), 1))), ((21, 'z'), ((('left', 'down'), 'far'), (('left', 'up'), ''), (('right', 'down'), ''), (('right', 'up'), 'near'))), ((21, 'a'), ((('left', 'down'), 2), (('left', 'up'), ''), (('right', 'down'), ''), (('right', 'up'), 5))), ((22, 'z'), ((('left', 'down'), 'near'), (('left', 'up'), ''), (('right', 'down'), 'far'), (('right', 'up'), ''))), ((22, 'a'), ((('left', 'down'), 6), (('left', 'up'), ''), (('right', 'down'), 3), (('right', 'up'), ''))), ((23, 'z'), ((('left', 'down'), ''), (('left', 'up'), ''), (('right', 'down'), 'near'), (('right', 'up'), ''))), ((23, 'a'), ((('left', 'down'), ''), (('left', 'up'), ''), (('right', 'down'), 7), (('right', 'up'), ''))))
                 )
@@ -11474,6 +11929,13 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
                 (('b', (('y', 20.0), ('z', 43.0))), ('c', (('y', False), ('z', False)))))
 
+    def test_frame_from_overlay_e(self) -> None:
+
+        f = sf.Frame.from_overlay((ff.parse(f's({n},2)') for n in range(1, 4)))
+        self.assertEqual(f.shape, (3, 2))
+        self.assertTrue(f.equals(ff.parse('s(3,2)')))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_fields_a(self) -> None:
@@ -11510,10 +11972,33 @@ class TestUnit(TestCase):
         s2 = Series((33, 54), index=('a', 'b'))
         s3 = Series((400, 300), index=('b', 'a'))
 
+        with self.assertRaises(ErrorInitFrame):
+            Frame.from_fields((s1, s2, s3))
+
         f1 = Frame.from_fields((s1, s2, s3), index=('b', 'a'))
 
         self.assertEqual(f1.to_pairs(0),
                 ((0, (('b', 4), ('a', 3))), (1, (('b', 54), ('a', 33))), (2, (('b', 400), ('a', 300)))))
+
+        f2 = Frame.from_fields((s1, s2, s3), index=('b', 'a'), dtypes=(str, bool, str))
+        self.assertEqual(f2.to_pairs(),
+                ((0, (('b', '4'), ('a', '3'))), (1, (('b', True), ('a', True))), (2, (('b', '400'), ('a', '300')))))
+
+
+    def test_frame_from_fields_c(self) -> None:
+        # test providing Series
+        s1 = (3, 5)
+        s2 = (33, 54)
+        s3 = (400, 300)
+
+        f = Frame.from_fields((s1, s2, s3), dtypes=str)
+        self.assertEqual(f.to_pairs(),
+                ((0, ((0, '3'), (1, '5'))), (1, ((0, '33'), (1, '54'))), (2, ((0, '400'), (1, '300')))))
+
+    def test_frame_from_fields_d(self) -> None:
+        with self.assertRaises(ErrorInitFrame):
+            f = Frame.from_fields((ff.parse('s(2,2)'), ff.parse('s(2,4)')))
+
 
 
     #---------------------------------------------------------------------------
@@ -11528,13 +12013,17 @@ class TestUnit(TestCase):
                 (('zmVj', (('zZbu', 3511.58), ('ztsv', 1175.36), ('zUvW', 2925.68), ('zkuW', 3408.8), ('zmVj', 647.9), ('z2Oo', 2755.18), ('z5l6', -1259.28), ('zCE3', 3442.84), ('zr4u', -3093.72), ('zYVB', 2520.5), ('zOyq', 1194.56), ('zIA5', -1957.02), ('zGDJ', 3367.24), ('zmhG', 2600.2), ('zo2Q', -3011.46), ('zjZQ', -3148.74), ('zO5l', 713.68), ('zEdH', -555.42), ('zB7E', 1459.94), ('zwIp', 3287.02))),)
                 )
 
-
     def test_frame_sample_b(self) -> None:
         f = ff.parse('s(20,10)|i(IH,(str,int))|c(IH,(str,int))')
 
         self.assertEqual(f.sample(2, 3, seed=3).to_pairs(0),
                 ((('zZbu', 119909), ((('ztsv', 194224), -823.14), (('zCE3', 137759), 3822.16))), (('zUvW', 96520), ((('ztsv', 194224), 2925.68), (('zCE3', 137759), -3011.46))), (('zUvW', -88017), ((('ztsv', 194224), 268.96), (('zCE3', 137759), -1957.02))))
                 )
+
+    def test_frame_sample_c(self) -> None:
+        f = ff.parse('s(20,10)|i(IH,(str,int))|c(IH,(str,int))')
+        post = f.sample(seed=3)
+        self.assertEqual(post.shape, (20, 10))
 
 
     #---------------------------------------------------------------------------
@@ -11660,6 +12149,23 @@ class TestUnit(TestCase):
 
         self.assertEqual(f2.to_pairs(0),
                 ((0, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))), (1, ((0, True), (1, True), (2, False), (3, True), (4, False), (5, True))), (2, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))))
+                )
+
+
+    def test_frame_via_T_eq_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T == f1[1]
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, False), (1, False), (2, False), (3, False), (4, False), (5, False))), (1, ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True))), (2, ((0, False), (1, False), (2, False), (3, False), (4, False), (5, False))))
+                )
+
+    def test_frame_via_T_ne_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T != f1[1]
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True))), (1, ((0, False), (1, False), (2, False), (3, False), (4, False), (5, False))), (2, ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True))))
                 )
 
     def test_frame_via_T_lt_a(self) -> None:
@@ -11867,18 +12373,149 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(3,4)|v(str)').rename(
                 index=('a', 'b'), columns=('x', 'y'))
 
+        with self.assertRaises(AxisInvalid):
+            _ = f1.relabel_shift_out(0, axis=2)
+
         f2 = f1.relabel_shift_out(0, axis=0)
         self.assertEqual(f2.columns.name, ('x', 'y'))
 
         self.assertEqual(f2.to_pairs(),
                 ((('a', 'b'), ((0, 0), (1, 1), (2, 2))), (0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), (3, ((0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
 
-
         f3 = f1.relabel_shift_out(0, axis=1)
         self.assertEqual(f3.index.name, ('a', 'b'))
         self.assertEqual(f3.to_pairs(),
                 ((0, ((('x', 'y'), 0), (0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((('x', 'y'), 1), (0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((('x', 'y'), 2), (0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), (3, ((('x', 'y'), 3), (0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_rank_a(self) -> None:
+
+        f = ff.parse('s(4,6)|v(int)|i(I,str)')
+
+        self.assertEqual(f._rank(method='ordinal', axis=0).to_pairs(),
+                ((0, (('zZbu', 0), ('ztsv', 3), ('zUvW', 2), ('zkuW', 1))), (1, (('zZbu', 3), ('ztsv', 1), ('zUvW', 2), ('zkuW', 0))), (2, (('zZbu', 0), ('ztsv', 3), ('zUvW', 1), ('zkuW', 2))), (3, (('zZbu', 2), ('ztsv', 0), ('zUvW', 3), ('zkuW', 1))), (4, (('zZbu', 1), ('ztsv', 2), ('zUvW', 3), ('zkuW', 0))), (5, (('zZbu', 2), ('ztsv', 0), ('zUvW', 3), ('zkuW', 1))))
+                )
+
+        self.assertEqual(f._rank(method='ordinal', axis=1).to_pairs(),
+                ((0, (('zZbu', 0), ('ztsv', 4), ('zUvW', 2), ('zkuW', 1))), (1, (('zZbu', 5), ('ztsv', 0), ('zUvW', 0), ('zkuW', 0))), (2, (('zZbu', 1), ('ztsv', 3), ('zUvW', 1), ('zkuW', 3))), (3, (('zZbu', 4), ('ztsv', 2), ('zUvW', 3), ('zkuW', 5))), (4, (('zZbu', 2), ('ztsv', 5), ('zUvW', 4), ('zkuW', 2))), (5, (('zZbu', 3), ('ztsv', 1), ('zUvW', 5), ('zkuW', 4))))
+                )
+
+        self.assertEqual(f._rank(method='ordinal', axis=0, ascending=False).to_pairs(),
+                ((0, (('zZbu', 3), ('ztsv', 0), ('zUvW', 1), ('zkuW', 2))), (1, (('zZbu', 0), ('ztsv', 2), ('zUvW', 1), ('zkuW', 3))), (2, (('zZbu', 3), ('ztsv', 0), ('zUvW', 2), ('zkuW', 1))), (3, (('zZbu', 1), ('ztsv', 3), ('zUvW', 0), ('zkuW', 2))), (4, (('zZbu', 2), ('ztsv', 1), ('zUvW', 0), ('zkuW', 3))), (5, (('zZbu', 1), ('ztsv', 3), ('zUvW', 0), ('zkuW', 2))))
+                )
+
+        self.assertEqual(f._rank(method='ordinal', axis=1, ascending=False).to_pairs(),
+                ((0, (('zZbu', 5), ('ztsv', 1), ('zUvW', 3), ('zkuW', 4))), (1, (('zZbu', 0), ('ztsv', 5), ('zUvW', 5), ('zkuW', 5))), (2, (('zZbu', 4), ('ztsv', 2), ('zUvW', 4), ('zkuW', 2))), (3, (('zZbu', 1), ('ztsv', 3), ('zUvW', 2), ('zkuW', 0))), (4, (('zZbu', 3), ('ztsv', 0), ('zUvW', 1), ('zkuW', 3))), (5, (('zZbu', 2), ('ztsv', 4), ('zUvW', 0), ('zkuW', 1))))
+                )
+
+    def test_frame_rank_b(self) -> None:
+        f = Frame.from_fields([[0, 0, 1], [0, 0, 1]], index=('a','b','c'), columns=('x','y'))
+        self.assertEqual(
+            f.rank_ordinal(ascending=[True, False], start=1).to_pairs(),
+            (('x', (('a', 1), ('b', 2), ('c', 3))), ('y', (('a', 3), ('b', 2), ('c', 1))))
+        )
+        self.assertEqual(
+            f.rank_dense(ascending=[True, False], start=1).to_pairs(),
+            (('x', (('a', 1), ('b', 1), ('c', 2))), ('y', (('a', 2), ('b', 2), ('c', 1))))
+        )
+        self.assertEqual(
+            f.rank_mean(ascending=[True, False], start=1).to_pairs(),
+            (('x', (('a', 1.5), ('b', 1.5), ('c', 3.0))), ('y', (('a', 2.5), ('b', 2.5), ('c', 1.0))))
+        )
+        self.assertEqual(
+            f.rank_min(ascending=[True, False], start=0).to_pairs(),
+            (('x', (('a', 0), ('b', 0), ('c', 2))), ('y', (('a', 1), ('b', 1), ('c', 0))))
+        )
+
+        self.assertEqual(f.rank_max(ascending=[True, False], start=0).to_pairs(),
+            (('x', (('a', 1), ('b', 1), ('c', 2))), ('y', (('a', 2), ('b', 2), ('c', 0))))
+        )
+
+    def test_frame_rank_c(self) -> None:
+        f1 = Frame.from_fields([[np.nan, 0, 1], [0, None, 1]], index=('a','b','c'), columns=('x','y'))
+
+        f2 = f1.rank_ordinal(axis=0)
+        self.assertEqual(f2.values.dtype, float)
+        f3 = f1.rank_ordinal(axis=1)
+        self.assertEqual(f3.values.dtype, float)
+
+        f4 = f1.rank_ordinal(axis=0, fill_value=-1)
+        self.assertEqual(f4.values.dtype.kind, 'i')
+        f5 = f1.rank_ordinal(axis=1, fill_value=-1)
+        self.assertEqual(f5.values.dtype.kind, 'i')
+
+
+    def test_frame_rank_ordinal(self) -> None:
+        f1 = sf.Frame.from_records(
+            [[8, 15, 7, 2, 20, 4, 20, 7, 15, 15],
+             [5, 6, 3, 1, 9, 2, 9, 3, 6, 6]]
+        )
+        f2 = f1.rank_ordinal()
+        self.assertEqual(f2.to_pairs(0),
+            ((0, ((0, 1), (1, 0))), (1, ((0, 1), (1, 0))), (2, ((0, 1), (1, 0))), (3, ((0, 1), (1, 0))), (4, ((0, 1), (1, 0))), (5, ((0, 1), (1, 0))), (6, ((0, 1), (1, 0))), (7, ((0, 1), (1, 0))), (8, ((0, 1), (1, 0))), (9, ((0, 1), (1, 0))))
+            )
+
+        f3 = f1.rank_ordinal(ascending=(v % 2 for v in f1.iloc[0].values))
+        self.assertEqual(f3.to_pairs(),
+            ((0, ((0, 0), (1, 1))), (1, ((0, 1), (1, 0))), (2, ((0, 1), (1, 0))), (3, ((0, 0), (1, 1))), (4, ((0, 0), (1, 1))), (5, ((0, 0), (1, 1))), (6, ((0, 0), (1, 1))), (7, ((0, 1), (1, 0))), (8, ((0, 1), (1, 0))), (9, ((0, 1), (1, 0)))))
+
+        f4 = f1.rank_ordinal(axis=1)
+        self.assertEqual(f4.to_pairs(),
+            ((0, ((0, 4), (1, 4))), (1, ((0, 5), (1, 5))), (2, ((0, 2), (1, 2))), (3, ((0, 0), (1, 0))), (4, ((0, 8), (1, 8))), (5, ((0, 1), (1, 1))), (6, ((0, 9), (1, 9))), (7, ((0, 3), (1, 3))), (8, ((0, 6), (1, 6))), (9, ((0, 7), (1, 7))))
+            )
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.rank_ordinal(axis=1, ascending=(False, True, False))
+
+
+    def test_frame_rank_mean(self) -> None:
+        f1 = sf.Frame.from_records(
+            [[8, 15, 7, 2, 20, 4, 20, 7, 15, 15],
+             [5, 6, 3, 1, 9, 2, 9, 3, 6, 6]]
+        )
+        f2 = f1.rank_mean()
+        self.assertEqual(f2.to_pairs(),
+            ((0, ((0, 1.0), (1, 0.0))), (1, ((0, 1.0), (1, 0.0))), (2, ((0, 1.0), (1, 0.0))), (3, ((0, 1.0), (1, 0.0))), (4, ((0, 1.0), (1, 0.0))), (5, ((0, 1.0), (1, 0.0))), (6, ((0, 1.0), (1, 0.0))), (7, ((0, 1.0), (1, 0.0))), (8, ((0, 1.0), (1, 0.0))), (9, ((0, 1.0), (1, 0.0))))
+        )
+        f3 = f1.rank_mean(axis=1)
+        self.assertEqual(f3.to_pairs(),
+            ((0, ((0, 4.0), (1, 4.0))), (1, ((0, 6.0), (1, 6.0))), (2, ((0, 2.5), (1, 2.5))), (3, ((0, 0.0), (1, 0.0))), (4, ((0, 8.5), (1, 8.5))), (5, ((0, 1.0), (1, 1.0))), (6, ((0, 8.5), (1, 8.5))), (7, ((0, 2.5), (1, 2.5))), (8, ((0, 6.0), (1, 6.0))), (9, ((0, 6.0), (1, 6.0))))
+        )
+
+    def test_frame_rank_min(self) -> None:
+        f1 = sf.Frame.from_records(
+            [[8, 15, 7, 2, 20, 4, 20, 7, 15, 15],
+             [5, 6, 3, 1, 9, 2, 9, 3, 6, 6]]
+        )
+        f2 = f1.rank_min(axis=1)
+        self.assertEqual(f2.to_pairs(),
+            ((0, ((0, 4), (1, 4))), (1, ((0, 5), (1, 5))), (2, ((0, 2), (1, 2))), (3, ((0, 0), (1, 0))), (4, ((0, 8), (1, 8))), (5, ((0, 1), (1, 1))), (6, ((0, 8), (1, 8))), (7, ((0, 2), (1, 2))), (8, ((0, 5), (1, 5))), (9, ((0, 5), (1, 5))))
+            )
+
+
+    def test_frame_rank_max(self) -> None:
+        f1 = sf.Frame.from_records(
+            [[8, 15, 7, 2, 20, 4, 20, 7, 15, 15],
+             [5, 6, 3, 1, 9, 2, 9, 3, 6, 6]]
+        )
+        f2 = f1.rank_max(axis=1)
+        self.assertEqual(f2.to_pairs(),
+            ((0, ((0, 4), (1, 4))), (1, ((0, 7), (1, 7))), (2, ((0, 3), (1, 3))), (3, ((0, 0), (1, 0))), (4, ((0, 9), (1, 9))), (5, ((0, 1), (1, 1))), (6, ((0, 9), (1, 9))), (7, ((0, 3), (1, 3))), (8, ((0, 7), (1, 7))), (9, ((0, 7), (1, 7))))
+            )
+
+    def test_frame_rank_dense(self) -> None:
+        f1 = sf.Frame.from_records(
+            [[8, 15, 7, 2, 20, 4, 20, 7, 15, 15],
+             [5, 6, 3, 1, 9, 2, 9, 3, 6, 6]]
+        )
+        f2 = f1.rank_dense(axis=1)
+        self.assertEqual(f2.to_pairs(),
+            ((0, ((0, 3), (1, 3))), (1, ((0, 4), (1, 4))), (2, ((0, 2), (1, 2))), (3, ((0, 0), (1, 0))), (4, ((0, 5), (1, 5))), (5, ((0, 1), (1, 1))), (6, ((0, 5), (1, 5))), (7, ((0, 2), (1, 2))), (8, ((0, 4), (1, 4))), (9, ((0, 4), (1, 4))))
+            )
+
+
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':

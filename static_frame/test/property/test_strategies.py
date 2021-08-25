@@ -14,19 +14,9 @@ from static_frame.test.test_case import TestCase
 
 from static_frame import TypeBlocks
 from static_frame import Index
-
-# from static_frame import IndexDate
-# from static_frame import IndexYear
-# from static_frame import IndexYearMonth
-# from static_frame import IndexSecond
-# from static_frame import IndexMillisecond
-
 from static_frame import IndexHierarchy
-# from static_frame import IndexHierarchyGO
-# from static_frame import IndexGO
 from static_frame import Series
 from static_frame import Frame
-# from static_frame import FrameGO
 
 
 class TestUnit(TestCase):

@@ -4,6 +4,8 @@
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
 from arraykit import mloc as mloc
+from arraykit import isna_element as isna_element
+
 
 from static_frame.core.batch import Batch as Batch
 from static_frame.core.bus import Bus as Bus
@@ -38,6 +40,7 @@ from static_frame.core.index import IndexGO as IndexGO
 from static_frame.core.index_auto import IndexAutoFactory as IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import IndexAutoInitializer as IndexAutoInitializer
+from static_frame.core.index_auto import IndexDefaultFactory as IndexDefaultFactory
 from static_frame.core.index_datetime import IndexDate as IndexDate
 from static_frame.core.index_datetime import IndexDateGO as IndexDateGO
 from static_frame.core.index_datetime import IndexHour as IndexHour
@@ -80,10 +83,12 @@ from static_frame.core.node_selector import InterfaceGetItem as InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectQuartet
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
+from static_frame.core.yarn import Yarn as Yarn
 from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.series import SeriesHE as SeriesHE
@@ -103,6 +108,4 @@ from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFil
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 
 
-__version__ = '0.8.14' # use -dev for new version in development
-
-
+__version__ = '0.8.18' # use -dev for new version in development

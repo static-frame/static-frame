@@ -40,6 +40,11 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import BoolOrBools
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.style_config import StyleConfig
+# from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_auto import IndexAutoFactoryType
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
@@ -142,6 +147,20 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 index_constructor=index_constructor,
                 )
         return cls(series, config=config)
+
+    @classmethod
+    def from_concat(cls,
+            containers: tp.Iterable['Bus'],
+            *,
+            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            name: NameType = NAME_DEFAULT,
+            ) -> 'Bus':
+        '''
+        Concatenate multiple :obj:`Bus` into a new :obj:`Bus`. All :obj:`Bus` will load all :obj:`Frame` into memory if any are deferred.
+        '''
+        # will extract .values, .index from Bus, which will correct load from Store as needed
+        series = Series.from_concat(containers, index=index, name=name)
+        return cls(series)
 
     #---------------------------------------------------------------------------
     # constructors by data format
@@ -335,7 +354,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         # Not handling cases of max_persist being greater than the length of the Series (might floor to length)
         if max_persist is not None and max_persist < self._loaded.sum():
-            raise ErrorInitBus('max_persis cannot be less than the number of already loaded Frames')
+            raise ErrorInitBus('max_persist cannot be less than the number of already loaded Frames')
         self._max_persist = max_persist
 
         # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
@@ -345,7 +364,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def _derive(self,
             series: Series,
             ) -> 'Bus':
-        '''Utility for creating derived Bus
+        '''Utility for creating a derived Bus, propagating the associated ``Store`` and configuration. This can be used if the passed `series` is a subset or re-ordering of self._series; however, if the index has been transformed, this method should not be used, as, if there is a Store, the labels are no longer found in that Store.
         '''
         return self.__class__(series,
                 store=self._store,
@@ -356,12 +375,22 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''
-        Returns a reverse iterator on the series' index.
+        Returns a reverse iterator on the :obj:`Bus` index.
 
         Returns:
             :obj:`Index`
         '''
         return reversed(self._series._index) #type: ignore
+
+    # def __copy__(self) -> 'Bus':
+    #     '''
+    #     Return a new Bus, holding new references to Frames as well as a link to the a new Store instance.
+    #     '''
+    #     return self.__class__(series,
+    #             store=self._store.__copy__(),
+    #             config=self._config,
+    #             max_persiste=self._max_persist,
+    #             )
 
     #---------------------------------------------------------------------------
     # name interface
@@ -431,6 +460,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # index manipulation
 
+    # NOTE: must return a new Bus with fully-realized Frames, as cannot gaurantee usage of a Store after labels have been changed.
+
     @doc_inject(selector='reindex', class_name='Bus')
     def reindex(self,
             index: IndexInitializer,
@@ -448,12 +479,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             {fill_value}
             {own_index}
         '''
-        series = self._series.reindex(index,
+        series = self.to_series().reindex(index,
                 fill_value=fill_value,
                 own_index=own_index,
                 check_equals=check_equals,
                 )
-        return self._derive(series)
+        return self.__class__(series, config=self._config)
 
     @doc_inject(selector='relabel', class_name='Bus')
     def relabel(self,
@@ -465,16 +496,17 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Args:
             index: {relabel_input}
         '''
-        series = self._series.relabel(index)
-        return self._derive(series)
+        series = self.to_series().relabel(index)
+        return self.__class__(series, config=self._config)
+
 
     @doc_inject(selector='relabel_flat', class_name='Bus')
     def relabel_flat(self) -> 'Bus':
         '''
         {doc}
         '''
-        series = self._series.relabel_flat()
-        return self._derive(series)
+        series = self.to_series().relabel_flat()
+        return self.__class__(series, config=self._config)
 
     @doc_inject(selector='relabel_level_add', class_name='Bus')
     def relabel_level_add(self,
@@ -486,8 +518,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Args:
             level: {level}
         '''
-        series = self._series.relabel_level_add(level)
-        return self._derive(series)
+        series = self.to_series().relabel_level_add(level)
+        return self.__class__(series, config=self._config)
+
 
     @doc_inject(selector='relabel_level_drop', class_name='Bus')
     def relabel_level_drop(self,
@@ -499,8 +532,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Args:
             count: {count}
         '''
-        series = self._series.relabel_level_drop(count)
-        return self._derive(series)
+        series = self.to_series().relabel_level_drop(count)
+        return self.__class__(series, config=self._config)
 
     def rehierarch(self,
             depth_map: tp.Sequence[int]
@@ -508,11 +541,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         Return a new :obj:`Bus` with new a hierarchy based on the supplied ``depth_map``.
         '''
-        series = self._series.rehierarch(depth_map)
-        return self._derive(series)
+        series = self.to_series().rehierarch(depth_map)
+        return self.__class__(series, config=self._config)
+
 
     #---------------------------------------------------------------------------
-    # na handling
+    # na / falsy handling
 
     # NOTE: not implemented, as a Bus must contain only Frame or FrameDeferred
 
@@ -725,11 +759,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @property
     def values(self) -> np.ndarray:
-        '''A 1D object array of all Frame contained in the Bus.
+        '''A 1D object array of all :obj:`Frame` contained in the :obj:`Bus`.
         '''
+        if self._loaded_all:
+            return self._series.values
+
         if self._max_persist is None: # load all at once if possible
-            if not self._loaded_all:
-                self._update_series_cache_iloc(key=NULL_SLICE)
+            # b._loaded_all must be False
+            self._update_series_cache_iloc(key=NULL_SLICE)
             return self._series.values
 
         # force new iteration to account for max_persist
@@ -748,7 +785,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @doc_inject()
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''{doc}
 
@@ -760,14 +799,17 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         display_cls = Display.from_values((),
                 header=DisplayHeader(self.__class__, self._series._name),
                 config=config)
-        return self._series._display(config, display_cls)
+        return self._series._display(config,
+                display_cls=display_cls,
+                style_config=style_config,
+                )
 
     #---------------------------------------------------------------------------
     # extended discriptors; in general, these do not force loading Frame
 
     @property
     def mloc(self) -> Series:
-        '''Returns a Series of tuples of dtypes, one for each loaded Frame.
+        '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
         if not self._loaded.any():
             return Series.from_element(None, index=self._series._index)
@@ -783,7 +825,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @property
     def dtypes(self) -> Frame:
-        '''Returns a Frame of dtypes for all loaded Frames.
+        '''Returns a :obj:`Frame` of dtype per column for all loaded Frames.
         '''
         if not self._loaded.any():
             return Frame(index=self._series.index)
@@ -799,7 +841,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
 
         Returns:
-            :obj:`tp.Tuple[int]`
+            :obj:`Series`
         '''
         values = (f.shape if f is not FrameDeferred else None for f in self._series.values)
         return Series(values, index=self._series._index, dtype=object, name='shape')
@@ -846,7 +888,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`numpy.dtype`
         '''
-        return self._series.values.dtype
+        return DTYPE_OBJECT
 
     @property
     def shape(self) -> tp.Tuple[int]:
@@ -861,7 +903,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @property
     def ndim(self) -> int:
         '''
-        Return the number of dimensions, which for a `Series` is always 1.
+        Return the number of dimensions, which for a :obj:`Bus` is always 1.
 
         Returns:
             :obj:`int`
@@ -1030,7 +1072,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @doc_inject(selector='sort')
     def sort_index(self,
             *,
-            ascending: bool = True,
+            ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
             ) -> 'Bus':
@@ -1039,9 +1081,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         Args:
             *
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascendings}
+            {kind}
+            {key}
 
         Returns:
             :obj:`Bus`
@@ -1065,9 +1107,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         Args:
             *
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascending}
+            {kind}
+            {key}
 
         Returns:
             :obj:`Bus`
@@ -1110,7 +1152,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             fill_value: tp.Any,
             ) -> 'Bus':
-        '''Return a Bus with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
+        '''Return a :obj:`Bus` with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
 
         Args:
             shift: Positive or negative integer shift.
@@ -1122,3 +1164,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         series = self._series.shift(shift=shift, fill_value=fill_value)
         return self._derive(series)
 
+    #---------------------------------------------------------------------------
+    # exporter
+
+    def to_series(self) -> Series:
+        '''Return a :obj:`Series` with the :obj:`Frame` contained in this :obj:`Bus`. If the :obj:`Bus` is associated with a :obj:`Store`, all :obj:`Frame` will be loaded into memory and the returned :obj:`Bus` will no longer be associated with the :obj:`Store`.
+        '''
+        # values returns an immutable array and will fully reaize from Store
+        return Series(self.values, index=self.index, own_index=True)

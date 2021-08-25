@@ -295,18 +295,28 @@ class HexColor:
                 text=text)
 
     @classmethod
-    def format_html(cls,
+    def get_html(cls,
             hex_color: tp.Union[int, str],
-            text: str) -> str:
+            ) -> str:
         '''
-        Given a hex color and text, return a string formatted for ANSI colors
+        Given a hex color and text, return an html color string
         '''
         if isinstance(hex_color, str):
             hex_int = cls._hex_str_to_int(hex_color)
         else:
             hex_int = hex_color
+        return '#' + format(hex_int, 'x')
 
-        color = '#' + format(hex_int, 'x')
+    @classmethod
+    def format_html(cls,
+            hex_color: tp.Union[int, str],
+            text: str,
+            ) -> str:
+        '''
+        Given a hex color and text, return a string formatted for ANSI colors
+        '''
+        color = cls.get_html(hex_color)
         return '<span style="color: {color}">{text}</span>'.format(
                 color=color,
                 text=text)
+

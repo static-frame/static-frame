@@ -68,9 +68,8 @@ def temp_file(suffix: tp.Optional[str] = None,
         path: bool = False
         ) -> tp.Iterator[PathSpecifier]:
     try:
-        f = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
-        tmp_name = f.name
-        f.close()
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as f:
+            tmp_name = f.name
         if path:
             yield Path(tmp_name)
         else:

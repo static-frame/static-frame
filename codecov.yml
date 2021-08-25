@@ -1,6 +1,7 @@
 ignore:
   - "static_frame/performance/.*"
   - "static_frame/test/.*"
+  - "static_frame/core/display_visidata.py"
 coverage:
   precision: 2
   round: up

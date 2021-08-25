@@ -18,7 +18,12 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import dtype_from_element
-
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.style_config import style_config_css_factory
+from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
+from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_str import InterfaceString
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -217,7 +222,11 @@ class IndexBase(ContainerOperand):
     def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
         raise NotImplementedError() #pragma: no cover
 
-    def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:
+    def display(self,
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
+            ) -> Display:
         raise NotImplementedError()
 
     #---------------------------------------------------------------------------
@@ -442,11 +451,29 @@ class IndexBase(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
+    # via interfaces
+
+    @property
+    def via_str(self) -> InterfaceString[np.ndarray]:
+        raise NotImplementedError()
+
+    @property
+    def via_dt(self) -> InterfaceDatetime[np.ndarray]:
+        raise NotImplementedError()
+
+    def via_re(self,
+            pattern: str,
+            flags: int = 0,
+            ) -> InterfaceRe[np.ndarray]:
+        raise NotImplementedError()
+
+    #---------------------------------------------------------------------------
     # exporters
 
     @doc_inject(class_name='Index')
     def to_html(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            style_config: tp.Optional[StyleConfig] = STYLE_CONFIG_DEFAULT,
             ) -> str:
         '''
         {}
@@ -455,7 +482,9 @@ class IndexBase(ContainerOperand):
         config = config.to_display_config(
                 display_format=DisplayFormats.HTML_TABLE,
                 )
-        return repr(self.display(config))
+
+        style_config = style_config_css_factory(style_config, self)
+        return repr(self.display(config, style_config=style_config))
 
     @doc_inject(class_name='Index')
     def to_html_datatables(self,

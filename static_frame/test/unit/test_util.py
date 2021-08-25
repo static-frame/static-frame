@@ -59,10 +59,10 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
-from static_frame.core.util import duplicate_filter
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import get_tuple_constructor
+from static_frame.core.util import isfalsy_array
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -558,6 +558,52 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(),
                 [(0, 1), (0, 3)])
 
+    def test_intersect1d_c(self) -> None:
+        a1 = np.array([
+                datetime.date(2020, 12, 31),
+                datetime.date(2021, 1, 15),
+                datetime.date(2021, 1, 31),
+                ], dtype=object)
+        a2 = np.array(['2020-12-31', '2021-01-15'], dtype='datetime64[D]')
+
+        post = intersect1d(a1, a2)
+        self.assertEqual(post.tolist(),
+                [datetime.date(2020, 12, 31), datetime.date(2021, 1, 15)]
+                )
+
+    def test_intersect1d_d(self) -> None:
+        a1 = np.array(('2020-12', '2021-01'), dtype='datetime64[M]')
+        a2 = np.array(['2020-12-31', '2021-01-01', '2021-01-15'], dtype='datetime64[D]')
+
+        post = intersect1d(a1, a2)
+        self.assertEqual(post.tolist(), [])
+        self.assertEqual(post.dtype, np.dtype('datetime64[D]'))
+
+    def test_intersect1d_e(self) -> None:
+        a1 = np.array(('2020-12-31', '2021-01-15'), dtype='datetime64[D]')
+        a2 = np.array(['2020-12-31', '2021-01-01', '2021-01-15'], dtype='datetime64[D]')
+
+        post = intersect1d(a1, a2)
+        self.assertEqual(post.tolist(),
+                [datetime.date(2020, 12, 31), datetime.date(2021, 1, 15)])
+        self.assertEqual(post.dtype, np.dtype('datetime64[D]'))
+
+    def test_intersect1d_f(self) -> None:
+        a1 = np.array([
+                datetime.date(2020, 12, 31),
+                datetime.date(2021, 1, 1),
+                datetime.date(2021, 1, 31),
+                ], dtype=object)
+        a2 = np.array(['2020-12', '2021-01'], dtype='datetime64[M]')
+
+        post = intersect1d(a1, a2)
+        self.assertEqual(post.tolist(), [])
+        self.assertEqual(post.dtype, object)
+
+
+
+
+    #---------------------------------------------------------------------------
     def test_setdiff1d_a(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array(['3', '2', '1'])
@@ -2362,13 +2408,6 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_duplicate_filter_a(self) -> None:
-        self.assertEqual(list(duplicate_filter(list('aaaabcccd'))), list('abcd'))
-        self.assertEqual(list(duplicate_filter(list('d'))), list('d'))
-        self.assertEqual(list(duplicate_filter(list())), list())
-
-
-    #---------------------------------------------------------------------------
     def test_array_deepcopy_a(self) -> None:
         a1 = np.array([3, 10, 20])
         a1.flags.writeable = False
@@ -2413,6 +2452,58 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ValueError):
             cls2 = get_tuple_constructor(('a ', '3*'))
+
+    #---------------------------------------------------------------------------
+    def test_isfalsy_array_a(self) -> None:
+        self.assertEqual(isfalsy_array(np.array((False, True, False))).tolist(),
+                [True, False, True],
+                )
+        self.assertEqual(isfalsy_array(np.array((None, '', 0, np.nan))).tolist(),
+                [True, True, True, True],
+                )
+        self.assertEqual(isfalsy_array(np.array((3.2, 0.0, -4, np.nan))).tolist(),
+                [False, True, False, True],
+                )
+
+        self.assertEqual(
+            isfalsy_array(
+                np.array(('2020', '2018', np.datetime64('nat')), dtype='datetime64[Y]')).tolist(),
+            [False, False, True],
+            )
+
+        self.assertEqual(isfalsy_array(np.array(('foo', 'bar', ''))).tolist(),
+                [False, False, True],
+                )
+        self.assertEqual(isfalsy_array(np.array((3, -5, 0))).tolist(),
+                [False, False, True],
+                )
+
+    def test_isfalsy_array_b(self) -> None:
+        # get a raw data array just to hit the not object branch
+        a1 = np.array((b'x', b'y'), dtype='V')
+        self.assertEqual(isfalsy_array(a1).tolist(),
+                [False, False],
+                )
+
+    def test_isfalsy_array_c(self) -> None:
+
+        a1 = np.array(('2020', '2018', np.datetime64('nat')), dtype='datetime64[Y]')
+        a2 = np.array(('2020', '2021', '2014'), dtype='datetime64[Y]')
+        a3 = a1 - a2
+        # array([    0,    -3, 'NaT'], dtype='timedelta64[Y]')
+        self.assertEqual(isfalsy_array(a3).tolist(),
+                [True, False, True],
+                )
+
+
+    def test_isfalsy_array_d(self) -> None:
+        a1 = np.array([
+            [0, 23, 0.0, np.datetime64('nat')],
+            ['', False, 'foo', np.nan]],
+            dtype=object)
+
+        self.assertEqual(isfalsy_array(a1).tolist(),
+            [[True, False, True, True], [True, True, False, True]])
 
 
 if __name__ == '__main__':

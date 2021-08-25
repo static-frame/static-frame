@@ -19,6 +19,7 @@ from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
 from static_frame.core.util import OPERATORS
+from static_frame.core.style_config import StyleConfig
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
@@ -48,7 +49,9 @@ class ContainerBase(metaclass=InterfaceMeta):
         return InterfaceSummary.to_frame(self.__class__)
 
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         raise NotImplementedError()
 
@@ -110,6 +113,12 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''
         raise ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 
+    #---------------------------------------------------------------------------
+    def to_visidata(self) -> None:
+        '''Open an interactive VisiData session.
+        '''
+        from static_frame.core.display_visidata import view_sf #pragma: no cover
+        view_sf(self) #type: ignore [no-untyped-call] #pragma: no cover
 
 
 class ContainerOperand(ContainerBase):
@@ -513,4 +522,5 @@ class ContainerOperand(ContainerBase):
                 )
         # modify the active display to be for HTML
         return repr(self.display(config))
+
 

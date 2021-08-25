@@ -12,6 +12,7 @@ from arraykit import mloc
 from arraykit import shape_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
+from arraykit import isna_element
 
 
 # from static_frame.test.property.strategies import get_arrays_2d_aligned
@@ -226,7 +227,7 @@ class TestUnit(TestCase):
         self.assertTrue(post.dtype == bool)
 
         values = np.ravel(array)
-        count_na = sum(util.isna_element(x) for x in values)
+        count_na = sum(isna_element(x) for x in values)
 
         self.assertTrue(np.ravel(post).sum() == count_na)
 
@@ -308,8 +309,9 @@ class TestUnit(TestCase):
                 assume_unique=False)
         self.assertTrue(post.ndim == 1)
 
-        # this includes cases where there are more than one NaN
-        self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
+        # the unqiueness of NaNs has changed in newer NP versions, so only compare if non-nans are found
+        if post.dtype.kind in ('c', 'f') and not np.isnan(post).any():
+            self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
         # complex results are tricky to compare after forming sets
         if (post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
                 and not np.isnan(post).any()):
@@ -356,11 +358,14 @@ class TestUnit(TestCase):
     def test_union2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.union2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
+
+        if post.dtype.kind in ('f', 'c') and np.isnan(post).any():
+            return
+
         self.assertTrue(len(post) == len(
                 set(util.array2d_to_tuples(arrays[0]))
                 | set(util.array2d_to_tuples(arrays[1])))
                 )
-
 
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_intersect2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
@@ -371,9 +376,13 @@ class TestUnit(TestCase):
                 & set(util.array2d_to_tuples(arrays[1])))
                 )
 
-
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_setdiff2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
+
+        for array in arrays:
+            if array.dtype.kind in ('f', 'c') and np.isnan(array).any():
+                return
+
         post = util.setdiff2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(

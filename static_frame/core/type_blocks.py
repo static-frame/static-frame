@@ -46,6 +46,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import isna_array
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
@@ -60,6 +61,10 @@ from static_frame.core.util import isin_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import array_deepcopy
+from static_frame.core.util import arrays_equal
+from static_frame.core.style_config import StyleConfig
+
+
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -265,8 +270,8 @@ class TypeBlocks(ContainerOperand):
         Default constructor. We own all lists passed in to this constructor. This instance takes ownership of all lists passed to it.
 
         Args:
-            blocks: A list of one or two-dimensional NumPy arrays.
-            dtypes: list of dtypes per external column
+            blocks: A list of one or two-dimensional NumPy arrays. The list is owned by this instance.
+            dtypes: list of dtypes per external column. The list is owned by this instance.
             index: list of pairs, where the first element is the block index, the second elemetns is the intra-block column
             shape: two-element tuple defining row and column count. A (0, 0) shape is permitted for empty TypeBlocks.
         '''
@@ -968,7 +973,9 @@ class TypeBlocks(ContainerOperand):
 
     @doc_inject()
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''{doc}
 
@@ -989,7 +996,7 @@ class TypeBlocks(ContainerOperand):
             h = '' if idx > 0 else self.__class__
 
             display = Display.from_values(block,
-                    h,
+                    header=h,
                     config=config,
                     outermost=outermost)
             if not d: # assign first
@@ -1756,7 +1763,8 @@ class TypeBlocks(ContainerOperand):
         This approach minimizes type coercion by reducing assigned values to columnar types.
 
         Args:
-            value: Must be a single value or an array
+            targets: arrays aligned to blocks
+            values: Sequence of 1D arrays with aggregate shape equal to targets
         '''
         start = 0
         for block, target in zip_longest(self._blocks, targets):
@@ -2423,6 +2431,8 @@ class TypeBlocks(ContainerOperand):
         array.flags.writeable = False # keep this array
         return self.from_blocks(array)
 
+    #---------------------------------------------------------------------------
+    # na handling
 
     def isna(self, include_none: bool = True) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is NaN or None.
@@ -2435,7 +2445,6 @@ class TypeBlocks(ContainerOperand):
 
         return self.from_blocks(blocks())
 
-
     def notna(self, include_none: bool = True) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is not NaN or None.
         '''
@@ -2447,7 +2456,32 @@ class TypeBlocks(ContainerOperand):
 
         return self.from_blocks(blocks())
 
+    #---------------------------------------------------------------------------
+    # falsy handling
 
+    def isfalsy(self) -> 'TypeBlocks':
+        '''Return a Boolean TypeBlocks where True is falsy.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for b in self._blocks:
+                bool_block = isfalsy_array(b)
+                bool_block.flags.writeable = False
+                yield bool_block
+
+        return self.from_blocks(blocks())
+
+    def notfalsy(self) -> 'TypeBlocks':
+        '''Return a Boolean TypeBlocks where True is not falsy.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for b in self._blocks:
+                bool_block = np.logical_not(isfalsy_array(b))
+                bool_block.flags.writeable = False
+                yield bool_block
+
+        return self.from_blocks(blocks())
+
+    #---------------------------------------------------------------------------
     def clip(self,
             lower: tp.Union[None, float, tp.Iterable[np.ndarray]],
             upper: tp.Union[None, float, tp.Iterable[np.ndarray]],
@@ -3039,18 +3073,21 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def dropna_to_keep_locations(self,
+    def drop_missing_to_keep_locations(self,
             axis: int = 0,
             condition: tp.Callable[..., bool] = np.all,
+            *,
+            func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> tp.Tuple[tp.Optional[np.ndarray], tp.Optional[np.ndarray]]:
         '''
         Return the row and column slices to extract the new TypeBlock. This is to be used by Frame, where the slices will be needed on the indices as well.
 
         Args:
             axis: Dimension to drop, where 0 will drop rows and 1 will drop columns based on the condition function applied to a Boolean array.
+            func: A function that takes an array and returns a Boolean array.
         '''
         # get a unified boolean array; as isna will always return a Boolean, we can simply take the first block out of consolidation
-        unified = next(self.consolidate_blocks(isna_array(b) for b in self._blocks))
+        unified = next(self.consolidate_blocks(func(b) for b in self._blocks))
 
         # flip axis to condition funcion
         if unified.ndim == 2:
@@ -3070,9 +3107,11 @@ class TypeBlocks(ContainerOperand):
         return row_key, column_key
 
 
-    def fillna(self,
+    def fill_missing_by_unit(self,
             value: object,
             value_valid: tp.Optional[np.ndarray] = None,
+            *,
+            func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> 'TypeBlocks':
         '''
         Return a new TypeBlocks instance that fills missing values with the passed value.
@@ -3080,17 +3119,20 @@ class TypeBlocks(ContainerOperand):
         Args:
             value: value to fill missing with; can be an element or a same-sized array.
             value_valid: Optionally provide a same-size array mask of the value setting (useful for carrying forward information from labels).
+            func: A function that takes an array and returns a Boolean array.
         '''
         return self.from_blocks(
                 self._assign_from_boolean_blocks_by_unit(
-                        targets=(isna_array(b) for b in self._blocks),
+                        targets=(func(b) for b in self._blocks),
                         value=value,
                         value_valid=value_valid
                         )
                 )
 
-    def fillna_by_values(self,
+    def fill_missing_by_values(self,
             values: tp.Sequence[np.ndarray],
+            *,
+            func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> 'TypeBlocks':
         '''
         Return a new TypeBlocks instance that fills missing values with the aligned columnar arrays.
@@ -3100,7 +3142,7 @@ class TypeBlocks(ContainerOperand):
         '''
         return self.from_blocks(
                 self._assign_from_boolean_blocks_by_blocks(
-                        targets=(isna_array(b) for b in self._blocks),
+                        targets=(func(b) for b in self._blocks),
                         values=values,
                         )
                 )
@@ -3136,33 +3178,46 @@ class TypeBlocks(ContainerOperand):
         if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
 
-        # NOTE: TypeBlocks handles array operations that return Boolean
-        try:
-            eq = self == other # returns a Boolean TypeBlocks instance
-        except ValueError:
-            # this can happen due to NP returning singel Booleans instaed of arrays
+        if self._shape != other._shape:
             return False
 
-        if skipna:
-            isna_self = self.isna(include_none=False) # returns type blocks
-            isna_other = other.isna(include_none=False)
-            isna_both = isna_self & isna_self
-
-        start = 0
-        end = 0
-        for block in eq._blocks:
-            # permit short circuiting on iteration
-            if skipna:
-                end = start + block.shape[1]
-                target = isna_both._extract_array(column_key=slice(start, end))
-                start = end
-                # fill-in NaN values with True
-                block.flags.writeable = True
-                block[target] = True
-
-            if not block.all():
+        for i in range(self._shape[1]):
+            if not arrays_equal(
+                    self._extract_array(column_key=i),
+                    other._extract_array(column_key=i),
+                    skipna=skipna,
+                    ):
                 return False
         return True
+
+        # # NOTE: TypeBlocks handles array operations that return Boolean
+        # # NOTE: this is not handling dt64 comparisons
+        # try:
+        #     eq = self == other # returns a Boolean TypeBlocks instance
+        # except ValueError:
+        #     # this can happen due to NP returning singel Booleans instaed of arrays
+        #     return False
+
+        # if skipna:
+        #     isna_self = self.isna(include_none=False) # returns type blocks
+        #     isna_other = other.isna(include_none=False)
+        #     isna_both = isna_self & isna_self
+
+        # start = 0
+        # end = 0
+        # for block in eq._blocks:
+        #     # permit short circuiting on iteration
+        #     if skipna:
+        #         end = start + block.shape[1]
+        #         target = isna_both._extract_array(column_key=slice(start, end))
+        #         start = end
+        #         # fill-in NaN values with True
+        #         block.flags.writeable = True
+        #         block[target] = True
+
+        #     if not block.all():
+        #         return False
+        # return True
 
     #---------------------------------------------------------------------------
     # mutate

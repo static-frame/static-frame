@@ -20,6 +20,8 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
 from static_frame.core.display_config import _DISPLAY_FORMAT_MAP
 from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
+from static_frame.core.style_config import StyleConfig
+
 
 _module = sys.modules[__name__]
 
@@ -273,6 +275,7 @@ class Display:
         '_outermost',
         '_index_depth',
         '_header_depth',
+        '_style_config',
         )
 
     CHAR_MARGIN = 1
@@ -357,10 +360,10 @@ class Display:
             return DisplayCell(format_str, type_str_raw)
 
         # ContainerOperand needs to import Display
-        from static_frame.core.container import ContainerOperand
+        from static_frame.core.container import ContainerBase
 
         # handling for all other values that are stringable
-        if isinstance(value, ContainerOperand):
+        if isinstance(value, ContainerBase):
             # NOTE: we do not use type delimieters as ths is an instance, not a class
             msg = value.__class__.__name__
         else:
@@ -392,11 +395,13 @@ class Display:
     @classmethod
     def from_values(cls,
             values: np.ndarray,
+            *,
             header: object,
             config: tp.Optional[DisplayConfig] = None,
             outermost: bool = False,
             index_depth: int = 0,
-            header_depth: int = 0
+            header_depth: int = 0,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> 'Display':
         '''
         Given a 1 or 2D ndarray, return a Display instance. Generally 2D arrays are passed here only from TypeBlocks.
@@ -453,7 +458,9 @@ class Display:
                 config=config,
                 outermost=outermost,
                 index_depth=index_depth,
-                header_depth=header_depth)
+                header_depth=header_depth,
+                style_config=style_config,
+                )
 
 
     #---------------------------------------------------------------------------
@@ -577,7 +584,7 @@ class Display:
                         # must truncate if cell width is greater than max width
                         width_truncate = max_width - len(cls.CELL_ELLIPSIS.raw)
 
-                        # TODO: this is truncating scientific notation
+                        # NOTE: this might truncate scientific notation
                         cell_raw = cell_raw[:width_truncate] + cls.ELLIPSIS
                         if is_html:
                             cell_raw = html.escape(cell_raw)
@@ -613,6 +620,8 @@ class Display:
             outermost: bool = False,
             index_depth: int = 0,
             header_depth: int = 0,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> None:
         '''Define rows as a list of lists, for each row; the contained DisplayCell instances may be of different size, but they are expected to be aligned vertically in final presentation.
 
@@ -626,26 +635,26 @@ class Display:
         self._outermost = outermost
         self._index_depth = index_depth
         self._header_depth = header_depth
+        self._style_config = style_config
 
     def __repr__(self) -> str:
         rows = self._to_rows_cells(self,
                 self._config,
                 )
-
         if self._outermost:
             dfc = _DISPLAY_FORMAT_MAP[self._config.display_format]
             header = []
             body = []
             for idx, row in enumerate(rows):
+                iloc_row = idx - self._header_depth
+                row = ''.join(dfc.markup_row(row,
+                        index_depth=self._index_depth,
+                        iloc_row=iloc_row,
+                        style_config=self._style_config,
+                        )).rstrip()
                 if idx < self._header_depth:
-                    row = ''.join(dfc.markup_row(row,
-                            header_depth=np.inf
-                            )).rstrip()
                     header.append(row)
                 else:
-                    row = ''.join(dfc.markup_row(row,
-                            header_depth=self._index_depth
-                            )).rstrip()
                     body.append(row)
 
             outermost = []
@@ -655,7 +664,10 @@ class Display:
 
             body_str = dfc.markup_body(dfc.LINE_SEP.join(body))
             outermost.append(body_str)
-            return dfc.markup_outermost(dfc.LINE_SEP.join(outermost))
+            return dfc.markup_outermost(
+                    dfc.LINE_SEP.join(outermost),
+                    style_config=self._style_config,
+                    )
 
         return dfc.LINE_SEP.join(''.join(r) for r in rows)
 

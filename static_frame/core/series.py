@@ -1,6 +1,7 @@
 import typing as tp
 from functools import partial
 from itertools import chain
+from itertools import product
 from copy import deepcopy
 from collections.abc import Set
 
@@ -36,6 +37,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import IndexDefaultFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -80,6 +82,7 @@ from static_frame.core.util import intersect1d
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NameType
@@ -92,8 +95,18 @@ from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import BoolOrBools
+from static_frame.core.util import BOOL_TYPES
+from static_frame.core.util import arrays_equal
+
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.style_config import style_config_css_factory
+from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
+from static_frame.core.rank import rank_1d
+from static_frame.core.rank import RankMethod
 
 if tp.TYPE_CHECKING:
+    from static_frame import Bus # pylint: disable=W0611 #pragma: no cover
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
     from static_frame import FrameGO # pylint: disable=W0611 #pragma: no cover
     import pandas # pylint: disable=W0611 #pragma: no cover
@@ -122,7 +135,7 @@ class Series(ContainerOperand):
     def from_element(cls,
             element: tp.Any,
             *,
-            index: IndexInitializer,
+            index: tp.Union[IndexInitializer, IndexAutoFactory],
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
@@ -143,7 +156,7 @@ class Series(ContainerOperand):
                     )
 
         length = len(index_final) #type: ignore
-        if isinstance(element, tuple):
+        if hasattr(element, '__len__') and not isinstance(element, str):
             array = np.empty(length, dtype=DTYPE_OBJECT)
             # this is the only way to insert tuples
             for i in range(length):
@@ -173,6 +186,8 @@ class Series(ContainerOperand):
         Args:
             pairs: Iterable of pairs of index, value.
             dtype: dtype or valid dtype specifier.
+            name:
+            index_constructor:
 
         Returns:
             :obj:`static_frame.Series`
@@ -188,7 +203,8 @@ class Series(ContainerOperand):
                 index=index,
                 dtype=dtype,
                 name=name,
-                index_constructor=index_constructor)
+                index_constructor=index_constructor,
+                )
 
     @classmethod
     def from_dict(cls,
@@ -214,7 +230,7 @@ class Series(ContainerOperand):
 
     @classmethod
     def from_concat(cls,
-            containers: tp.Iterable['Series'],
+            containers: tp.Iterable[tp.Union['Series', 'Bus']],
             *,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
             name: NameType = NAME_DEFAULT,
@@ -267,7 +283,10 @@ class Series(ContainerOperand):
 
     @classmethod
     def from_concat_items(cls,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, 'Series']]
+            items: tp.Iterable[tp.Tuple[tp.Hashable, 'Series']],
+            *,
+            name: NameType = None,
+            index_constructor: tp.Optional[IndexConstructor] = None
             ) -> 'Series':
         '''
         Produce a :obj:`Series` with a hierarchical index from an iterable of pairs of labels, :obj:`Series`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Series`.
@@ -280,14 +299,24 @@ class Series(ContainerOperand):
         '''
         array_values = []
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
-            for label, series in items:
-                array_values.append(series.values)
-                yield label, series._index
-
+        if index_constructor is None or isinstance(index_constructor, IndexDefaultFactory):
+            # default index constructor expects delivery of Indices for greater efficiency
+            def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
+                for label, series in items:
+                    array_values.append(series.values)
+                    yield label, series._index
+        else:
+            def gen() -> tp.Iterator[tp.Hashable]: #type: ignore
+                for label, series in items:
+                    array_values.append(series.values)
+                    yield from product((label,), series._index)
         try:
-            # populates array_values as side effect
-            ih = IndexHierarchy.from_index_items(gen()) #type: ignore
+            # populates array_values as side
+            ih = index_from_optional_constructor(
+                    gen(),
+                    default_constructor=IndexHierarchy.from_index_items,
+                    explicit_constructor=index_constructor,
+                    )
             # returns immutable array
             values = concat_resolved(array_values)
             own_index = True
@@ -295,9 +324,9 @@ class Series(ContainerOperand):
             # Default to empty when given an empty iterable
             ih = None #type: ignore
             values = EMPTY_TUPLE
-            own_index= False
+            own_index = False
 
-        return cls(values, index=ih, own_index=own_index)
+        return cls(values, index=ih, own_index=own_index, name=name)
 
     @classmethod
     def from_overlay(cls,
@@ -380,7 +409,7 @@ class Series(ContainerOperand):
             index = None
             own_index = False
         elif index_constructor is not None:
-            index = index_constructor(value.index) #type: ignore
+            index = index_constructor(value.index)
         else: # if None
             index = Index.from_pandas(value.index)
 
@@ -395,7 +424,7 @@ class Series(ContainerOperand):
     def __init__(self,
             values: SeriesInitializer,
             *,
-            index: tp.Union[IndexInitializer, IndexAutoFactoryType, None] = None,
+            index: tp.Union[IndexInitializer, IndexAutoFactory, IndexAutoFactoryType, None] = None,
             name: NameType = NAME_DEFAULT,
             dtype: DtypeSpecifier = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
@@ -406,6 +435,9 @@ class Series(ContainerOperand):
         Args:
             values: An iterable of values to be aligned with the supplied (or automatically generated) index.
             {index}
+            name:
+            dtype:
+            index_constructor:
             {own_index}
         '''
 
@@ -519,12 +551,6 @@ class Series(ContainerOperand):
     #             name=self._name,
     #             own_index=True,
     #             )
-
-    # def copy(self)-> 'Series':
-    #     '''
-    #     Return shallow copy of this Series.
-    #     '''
-    #     return self.__copy__() #type: ignore
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
@@ -980,24 +1006,23 @@ class Series(ContainerOperand):
 
     def isna(self) -> 'Series':
         '''
-        Return a same-indexed, Boolean ``Series`` indicating which values are NaN or None.
+        Return a same-indexed, Boolean :obj:`Series` indicating which values are NaN or None.
         '''
-        # consider returning self if not values.any()?
         values = isna_array(self.values)
         values.flags.writeable = False
-        return self.__class__(values, index=self._index)
+        return self.__class__(values, index=self._index, own_index=True)
 
     def notna(self) -> 'Series':
         '''
-        Return a same-indexed, Boolean Series indicating which values are NaN or None.
+        Return a same-indexed, Boolean :obj:`Series` indicating which values are NaN or None.
         '''
         values = np.logical_not(isna_array(self.values))
         values.flags.writeable = False
-        return self.__class__(values, index=self._index)
+        return self.__class__(values, index=self._index, own_index=True)
 
     def dropna(self) -> 'Series':
         '''
-        Return a new :obj:`static_frame.Series` after removing values of NaN or None.
+        Return a new :obj:`Series` after removing values of NaN or None.
         '''
         if self.values.dtype.kind not in DTYPE_NA_KINDS:
             # return the same array in a new series
@@ -1012,7 +1037,7 @@ class Series(ContainerOperand):
         count = isna.sum()
 
         if count == length: # all are NaN
-            return self.__class__((), name=self.name)
+            return self.__class__(EMPTY_TUPLE, name=self.name)
         if count == 0: # None are nan
             return self.__class__(self.values,
                     index=self._index,
@@ -1028,17 +1053,64 @@ class Series(ContainerOperand):
                 name=self._name,
                 own_index=True)
 
-    @doc_inject(selector='fillna')
-    def fillna(self,
-            value: tp.Any # an element or a Series
-            ) -> 'Series':
-        '''Return a new :obj:`Series` after replacing null (NaN or None) with the supplied value. The value can be an element or :obj:`Series`.
+    #---------------------------------------------------------------------------
+    # falsy handling
 
+    def isfalsy(self) -> 'Series':
+        '''
+        Return a same-indexed, Boolean :obj:`Series` indicating which values are falsy.
+        '''
+        values = isfalsy_array(self.values)
+        values.flags.writeable = False
+        return self.__class__(values, index=self._index, own_index=True)
+
+    def notfalsy(self) -> 'Series':
+        '''
+        Return a same-indexed, Boolean :obj:`Series` indicating which values are falsy.
+        '''
+        values = np.logical_not(isfalsy_array(self.values))
+        values.flags.writeable = False
+        return self.__class__(values, index=self._index, own_index=True)
+
+    def dropfalsy(self) -> 'Series':
+        '''
+        Return a new :obj:`Series` after removing values of falsy.
+        '''
+        # get positions that we want to keep
+        isfalsy = isfalsy_array(self.values)
+        length = len(self.values)
+        count = isfalsy.sum()
+
+        if count == length: # all are falsy
+            return self.__class__(EMPTY_TUPLE, name=self.name)
+        if count == 0: # None are falsy
+            return self.__class__(self.values,
+                    index=self._index,
+                    name=self._name,
+                    own_index=True)
+
+        sel = np.logical_not(isfalsy)
+        values = self.values[sel]
+        values.flags.writeable = False
+
+        return self.__class__(values,
+                index=self._index._extract_iloc(sel), # PERF: use _extract_iloc as we have a Boolean array
+                name=self._name,
+                own_index=True)
+
+    #---------------------------------------------------------------------------
+    # na filling
+
+    def _fill_missing(self,
+            value: tp.Any, # an element or a Series
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            ) -> 'Series':
+        '''
         Args:
-            {value}
+            func: A function that returns a same-shaped array of Booleans.
         '''
         values = self.values
-        sel = isna_array(values)
+        sel = func(values)
         if not np.any(sel):
             return self
 
@@ -1073,14 +1145,39 @@ class Series(ContainerOperand):
 
         return self.__class__(assigned,
                 index=self._index,
-                name=self._name)
+                name=self._name,
+                own_index=True,
+                )
 
+    @doc_inject(selector='fillna')
+    def fillna(self,
+            value: tp.Any # an element or a Series
+            ) -> 'Series':
+        '''Return a new :obj:`Series` after replacing NA (NaN or None) with the supplied value. The ``value`` can be an element or :obj:`Series`.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(value, isna_array)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy(self,
+            value: tp.Any # an element or a Series
+            ) -> 'Series':
+        '''Return a new :obj:`Series` after replacing falsy values with the supplied value. The ``value`` can be an element or :obj:`Series`.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(value, isfalsy_array)
+
+    #---------------------------------------------------------------------------
     @staticmethod
     def _fillna_directional(
             array: np.ndarray,
             directional_forward: bool,
             limit: int = 0) -> np.ndarray:
-        '''Return a new ``Series`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
+        '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
             count: Set the limit of nan values to be filled per nan region. A value of 0 is equivalent to no limit.
@@ -1114,7 +1211,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='fillna')
     def fillna_forward(self, limit: int = 0) -> 'Series':
-        '''Return a new ``Series`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
+        '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
             {limit}
@@ -1128,7 +1225,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='fillna')
     def fillna_backward(self, limit: int = 0) -> 'Series':
-        '''Return a new ``Series`` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
+        '''Return a new :obj:`Series` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
             {limit}
@@ -1187,7 +1284,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='fillna')
     def fillna_leading(self, value: tp.Any) -> 'Series':
-        '''Return a new ``Series`` after filling leading (and only leading) null (NaN or None) with the supplied value.
+        '''Return a new :obj:`Series` after filling leading (and only leading) null (NaN or None) with the supplied value.
 
         Args:
             {value}
@@ -1201,7 +1298,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='fillna')
     def fillna_trailing(self, value: tp.Any) -> 'Series':
-        '''Return a new ``Series`` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
+        '''Return a new :obj:`Series` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
 
         Args:
             {value}
@@ -1339,7 +1436,9 @@ class Series(ContainerOperand):
 
     def _display(self,
             config: DisplayConfig,
+            *,
             display_cls: Display,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''
         Private display interface to be shared by Bus and Series.
@@ -1355,7 +1454,8 @@ class Series(ContainerOperand):
                 config=config,
                 outermost=True,
                 index_depth=index_depth,
-                header_depth=header_depth
+                header_depth=header_depth,
+                style_config=style_config,
                 )
 
         if config.include_index:
@@ -1376,7 +1476,9 @@ class Series(ContainerOperand):
 
     @doc_inject()
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''{doc}
 
@@ -1387,7 +1489,10 @@ class Series(ContainerOperand):
         display_cls = Display.from_values((),
                 header=DisplayHeader(self.__class__, self._name),
                 config=config)
-        return self._display(config, display_cls)
+        return self._display(config,
+                display_cls=display_cls,
+                style_config=style_config,
+                )
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
@@ -1737,7 +1842,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='sort')
     def sort_index(self,
             *,
-            ascending: bool = True,
+            ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
             ) -> 'Series':
@@ -1746,9 +1851,9 @@ class Series(ContainerOperand):
 
         Args:
             *
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascendings}
+            {kind}
+            {key}
 
         Returns:
             :obj:`Series`
@@ -1778,9 +1883,9 @@ class Series(ContainerOperand):
 
         Args:
             *
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascending}
+            {kind}
+            {key}
 
         Returns:
             :obj:`Series`
@@ -1790,6 +1895,10 @@ class Series(ContainerOperand):
             cfs_values = cfs if cfs.__class__ is np.ndarray else cfs.values
         else:
             cfs_values = self.values
+
+        asc_is_element = isinstance(ascending, BOOL_TYPES)
+        if not asc_is_element:
+            raise RuntimeError(f'Multiple ascending values not permitted.')
 
         # argsort lets us do the sort once and reuse the results
         order = np.argsort(cfs_values, kind=kind)
@@ -1979,7 +2088,6 @@ class Series(ContainerOperand):
                 name=self._name,
                 own_index=own_index)
 
-
     def shift(self,
             shift: int,
             *,
@@ -2010,6 +2118,177 @@ class Series(ContainerOperand):
                 index=self._index,
                 name=self._name)
 
+    #---------------------------------------------------------------------------
+    # ranking transformations resulting in the same dimensionality
+
+    def _rank(self, *,
+            method: RankMethod,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+
+        if not skipna or self.dtype.kind not in DTYPE_NA_KINDS:
+            rankable = self
+        else:
+            # only call dropna if necessary
+            rankable = self.dropna()
+
+        # returns an immutable array
+        values = rank_1d(rankable.values,
+                method=method,
+                ascending=ascending,
+                start=start,
+                )
+
+        if rankable is self or len(values) == len(self):
+            return self.__class__(values,
+                    index=self.index,
+                    name=self._name,
+                    own_index=True,
+                    )
+
+        post = self.__class__(values,
+                index=rankable.index,
+                name=self._name,
+                own_index=True,
+                )
+        # this will preserve the name
+        return post.reindex(self.index, #type: ignore
+                fill_value=fill_value,
+                check_equals=False, # the index will never be equal
+                )
+
+    @doc_inject(selector='rank')
+    def rank_ordinal(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Rank values distinctly, where ties get distinct values that maintain their ordering, and ranks are contiguous unique integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.ORDINAL,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_dense(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Rank values as compactly as possible, where ties get the same value, and ranks are contiguous (potentially non-unique) integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.DENSE,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_min(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Rank values where tied values are assigned the minimum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.MIN,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_max(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Rank values where tied values are assigned the maximum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.MAX,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
+
+    @doc_inject(selector='rank')
+    def rank_mean(self, *,
+            skipna: bool = True,
+            ascending: bool = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''Rank values where tied values are assigned the mean of the ordinal ranks; ranks are potentially non-contiguous and non-unique floats.
+
+        Args:
+            {skipna}
+            {ascending}
+            {start}
+            {fill_value}
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self._rank(
+                method=RankMethod.MEAN,
+                skipna=skipna,
+                ascending=ascending,
+                start=start,
+                fill_value=fill_value,
+                )
 
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
@@ -2039,17 +2318,39 @@ class Series(ContainerOperand):
         return self.iloc[-count:]
 
     def count(self, *,
-            skipna: bool = True
+            skipna: bool = True,
+            skipfalsy: bool = False,
+            unique: bool = False,
             ) -> int:
         '''
-        Return the count of non-NA elements.
+        Return the count of non-NA, non-falsy, and/or unique elements.
 
         Args:
-            skipna
+            skipna: skip NA (NaN, None) values.
+            skipfalsy: skip falsu values (0, '', False, None, NaN)
+            unique: Count unique items after optionally applying ``skipna`` or ``skipfalsy`` removals.
         '''
-        if not skipna:
-            return len(self.values)
-        return len(self.values) - isna_array(self.values).sum() #type: ignore
+        if not skipna and skipfalsy:
+            raise RuntimeError('Cannot skipfalsy and not skipna.')
+
+        values = self.values
+        if not skipna and not skipfalsy and not unique:
+            return len(values)
+
+        valid: tp.Optional[np.ndarray] = None
+        if skipfalsy: # always includes skipna
+            valid = ~isfalsy_array(values)
+        elif skipna: # NOTE: elif, as skipfalsy incldues skipna
+            valid = ~isna_array(values)
+
+        if unique and valid is None:
+            return len(ufunc_unique(values))
+        elif unique and valid is not None: # valid is a Boolean array
+            return len(ufunc_unique(values[valid]))
+        elif not unique and valid is not None:
+            return valid.sum() #type: ignore [no-any-return]
+        # not unique, valid is None, means no removals, handled above
+        raise NotImplementedError()
 
     @doc_inject(selector='sample')
     def sample(self,
@@ -2336,19 +2637,22 @@ class Series(ContainerOperand):
         if compare_dtype and self.values.dtype != other.values.dtype:
             return False
 
-        eq = self.values == other.values
-
-        # NOTE: will only be False, or an array
-        if eq is False:
-            return eq
-
-        if skipna:
-            isna_both = (isna_array(self.values, include_none=False) &
-                    isna_array(other.values, include_none=False))
-            eq[isna_both] = True
-
-        if not eq.all():
+        if not arrays_equal(self.values, other.values, skipna=skipna):
             return False
+
+        # eq = self.values == other.values
+
+        # # NOTE: will only be False, or an array
+        # if eq is False:
+        #     return eq
+
+        # if skipna:
+        #     isna_both = (isna_array(self.values, include_none=False) &
+        #             isna_array(other.values, include_none=False))
+        #     eq[isna_both] = True
+
+        # if not eq.all():
+        #     return False
 
         return self._index.equals(other._index,
                 compare_name=compare_name,
@@ -2463,7 +2767,8 @@ class Series(ContainerOperand):
 
     @doc_inject(class_name='Series')
     def to_html(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            style_config: tp.Optional[StyleConfig] = STYLE_CONFIG_DEFAULT,
             ) -> str:
         '''
         {}
@@ -2472,7 +2777,8 @@ class Series(ContainerOperand):
         config = config.to_display_config(
                 display_format=DisplayFormats.HTML_TABLE,
                 )
-        return repr(self.display(config))
+        style_config = style_config_css_factory(style_config, self)
+        return repr(self.display(config, style_config=style_config))
 
     @doc_inject(class_name='Series')
     def to_html_datatables(self,

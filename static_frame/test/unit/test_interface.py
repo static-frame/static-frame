@@ -8,12 +8,8 @@ from static_frame.core.series import Series
 from static_frame.core.frame import FrameGO
 from static_frame.core.frame import Frame
 from static_frame.core.interface import _get_signatures
-
-
-
 from static_frame.test.test_case import TestCase
-
-
+from static_frame.core.interface import InterfaceGroup
 
 class TestUnit(TestCase):
 
@@ -31,7 +27,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Accessor Datetime', 10), ('Accessor Fill Value', 24), ('Accessor Regular Expression', 7), ('Accessor String', 36), ('Accessor Transpose', 24), ('Assignment', 8), ('Attribute', 11), ('Constructor', 30), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 21), ('Iterator', 224), ('Method', 70), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+            (('Accessor Datetime', 10), ('Accessor Fill Value', 24), ('Accessor Regular Expression', 7), ('Accessor String', 36), ('Accessor Transpose', 24), ('Assignment', 8), ('Attribute', 11), ('Constructor', 30), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 23), ('Iterator', 224), ('Method', 79), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
         )
 
     def test_interface_summary_c(self) -> None:
@@ -79,6 +75,20 @@ class TestUnit(TestCase):
                 ['assign[key](value, *, fill_value)', 'assign[key].apply(func, *, fill_value)', 'assign.iloc[key](value, *, fill_value)', 'assign.iloc[key].apply(func, *, fill_value)', 'assign.loc[key](value, *, fill_value)', 'assign.loc[key].apply(func, *, fill_value)', 'assign.bloc[key](value, *, fill_value)', 'assign.bloc[key].apply(func, *, fill_value)'])
 
 
+    def test_interface_via_re_signature_no_args(self) -> None:
+        inter = InterfaceSummary.to_frame(Series,
+                minimized=False,
+                max_args=99, # +inf, but keep as int
+                )
+
+        self.assertEqual(
+            inter.loc[inter['group']==InterfaceGroup.AccessorFillValue, 'signature_no_args'].values.tolist(),
+            ['via_fill_value(fill_value).via_T', 'via_fill_value().__add__()', 'via_fill_value().__sub__()', 'via_fill_value().__mul__()', 'via_fill_value().__truediv__()', 'via_fill_value().__floordiv__()', 'via_fill_value().__mod__()', 'via_fill_value().__pow__()', 'via_fill_value().__lshift__()', 'via_fill_value().__rshift__()', 'via_fill_value().__and__()', 'via_fill_value().__xor__()', 'via_fill_value().__or__()', 'via_fill_value().__lt__()', 'via_fill_value().__le__()', 'via_fill_value().__eq__()', 'via_fill_value().__ne__()', 'via_fill_value().__gt__()', 'via_fill_value().__ge__()', 'via_fill_value().__radd__()', 'via_fill_value().__rsub__()', 'via_fill_value().__rmul__()', 'via_fill_value().__rtruediv__()', 'via_fill_value().__rfloordiv__()']
+            )
+
+        self.assertEqual(
+            inter.loc[inter['group']==InterfaceGroup.AccessorRe, 'signature_no_args'].values.tolist(),
+            ['via_re().search()', 'via_re().match()', 'via_re().fullmatch()', 'via_re().split()', 'via_re().findall()', 'via_re().sub()', 'via_re().subn()'])
 
 
 if __name__ == '__main__':

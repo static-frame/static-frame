@@ -22,6 +22,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import skip_win
 
+from static_frame.core.index_auto import IndexAutoFactory
 
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import StoreFileMutation
@@ -1585,6 +1586,37 @@ class TestUnit(TestCase):
         self.assertTrue(b2['f4'].equals(f3))
         self.assertTrue(b2.__class__ is Bus)
 
+
+    def test_bus_reindex_b(self) -> None:
+        def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            for i in range(5):
+                yield 'abcde'[i], Frame(np.arange(i, i+10).reshape(2, 5))
+
+        s = Series.from_items(items(), dtype=object)
+        b1 = Bus(s)
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+
+            b3 = b2.reindex(('c', 'd', 'q'), fill_value=Frame())
+            f1 = b3['c']
+            # this would fail if the Store was still associated with the Bus
+            f2 = b3['q']
+
+            self.assertEqual(b3._max_persist, None)
+            self.assertEqual(b3._store, None)
+            self.assertEqual(b2._max_persist, 1)
+
+
     #---------------------------------------------------------------------------
     def test_bus_relabel_a(self) -> None:
         f1 = Frame.from_dict(
@@ -1717,7 +1749,100 @@ class TestUnit(TestCase):
         self.assertTrue(b2['f1'].equals(b1['f1']))
 
 
+    #---------------------------------------------------------------------------
+    def test_bus_from_concat_a(self) -> None:
+        def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            for i in range(5):
+                yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
+        s = Series.from_items(items(), dtype=object)
+        b1 = Bus(s)
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+
+            b3 = b1.relabel(('a', 'b', 'c', 'd', 'e'))
+
+            # fully loaded in memory
+            b4 = Bus.from_concat((b2, b3))
+
+            self.assertEqual(b4.status['loaded'].to_pairs(),
+                    (('0', True), ('1', True), ('2', True), ('3', True), ('4', True), ('a', True), ('b', True), ('c', True), ('d', True), ('e', True))
+                    )
+            self.assertEqual(b2.status['loaded'].sum(), 1)
+
+            b5 = Bus.from_concat((b2, b3), name='foo', index=IndexAutoFactory)
+
+            self.assertEqual(b5.status['loaded'].to_pairs(),
+                    ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True), (6, True), (7, True), (8, True), (9, True)))
+            self.assertEqual(b5.name, 'foo')
+
+
+    def test_bus_from_concat_b(self) -> None:
+        def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            for i in range(5):
+                yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
+
+        s = Series.from_items(items(), dtype=object)
+        b1 = Bus(s)
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=5)
+
+            b3 = b1.relabel(('a', 'b', 'c', 'd', 'e'))
+
+            # fully loaded in memory
+            b4 = Bus.from_concat((b2, b3))
+
+            self.assertEqual(b4.status['loaded'].to_pairs(),
+                    (('0', True), ('1', True), ('2', True), ('3', True), ('4', True), ('a', True), ('b', True), ('c', True), ('d', True), ('e', True))
+                    )
+            self.assertEqual(b2.status['loaded'].sum(), 5)
+
+    def test_bus_from_concat_c(self) -> None:
+        def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            for i in range(5):
+                yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
+
+        s = Series.from_items(items(), dtype=object)
+        b1 = Bus(s)
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+
+            s1 = b2.to_series()
+            self.assertEqual(b2.status['loaded'].sum(), 1)
+
+            self.assertEqual(
+                    [f.shape for f in s1.values],
+                    [(2, 5), (2, 5), (2, 5), (2, 5), (2, 5)]
+                    )
 
 
 if __name__ == '__main__':

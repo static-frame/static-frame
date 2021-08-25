@@ -7,6 +7,7 @@ from static_frame.core.util import OPERATORS
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import FrameGO  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
@@ -53,7 +54,6 @@ class InterfaceFillValue(Interface[TContainer]):
             '__rtruediv__',
             '__rfloordiv__',
             )
-
 
     def __init__(self,
             container: TContainer,
@@ -280,3 +280,18 @@ class InterfaceFillValue(Interface[TContainer]):
                 axis=self._axis,
                 fill_value=self._fill_value,
                 )
+
+#---------------------------------------------------------------------------
+class InterfaceFillValueGO(InterfaceFillValue[TContainer]): # only type is FrameGO
+
+    __slots__ = InterfaceFillValue.__slots__
+    INTERFACE = InterfaceFillValue.INTERFACE + ( #type: ignore
+            '__setitem__',
+            )
+
+    def __setitem__(self,
+            key: tp.Hashable,
+            value: tp.Any,
+            ) -> None:
+        self._container.__setitem__(key, value, self._fill_value) #type: ignore
+

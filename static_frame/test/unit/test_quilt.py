@@ -1,5 +1,4 @@
 
-import unittest
 
 import frame_fixtures as ff
 import numpy as np
@@ -7,8 +6,6 @@ import numpy as np
 from static_frame.test.test_case import TestCase
 
 from static_frame.core.quilt import Quilt
-from static_frame.core.quilt import AxisMap
-from static_frame.core.index import Index
 from static_frame.core.hloc import HLoc
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.index import ILoc
@@ -21,31 +18,9 @@ from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.axis_map import bus_to_hierarchy
 
 class TestUnit(TestCase):
-
-    def test_axis_map_a(self) -> None:
-
-        components = dict(
-                x=Index(('a', 'b', 'c')),
-                y=Index(('a', 'b', 'c')),
-                )
-
-        am = AxisMap.get_axis_series(components) #type: ignore
-        self.assertEqual(am.to_pairs(),
-                ((('x', 'a'), 'x'), (('x', 'b'), 'x'), (('x', 'c'), 'x'), (('y', 'a'), 'y'), (('y', 'b'), 'y'), (('y', 'c'), 'y')))
-
-
-    def test_axis_map_b(self) -> None:
-
-        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
-        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
-        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
-
-        b1 = Bus.from_frames((f1, f2, f3))
-
-        with self.assertRaises(AxisInvalid):
-            AxisMap.from_bus(b1, deepcopy_from_bus=False, axis=3)
 
     #---------------------------------------------------------------------------
     def test_quilt_init_a(self) -> None:
@@ -111,10 +86,10 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
 
         b1 = Bus.from_frames((f1, f2, f3))
-        axis_map = AxisMap.from_bus(b1, axis=0, deepcopy_from_bus=True)
+        axis_hierarchy = bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=True, init_exception_cls=ErrorInitQuilt)
 
         with self.assertRaises(ErrorInitQuilt):
-            _ = Quilt(b1, retain_labels=True, axis=0, axis_map=axis_map, axis_opposite=None)
+            _ = Quilt(b1, retain_labels=True, axis=0, axis_hierarchy=axis_hierarchy, axis_opposite=None)
 
 
     #---------------------------------------------------------------------------
@@ -203,7 +178,7 @@ class TestUnit(TestCase):
         self.assertEqual(q1.rename('bar').name, 'bar')
         self.assertTrue(repr(q1).startswith('<Quilt: foo'))
 
-        post, opp = AxisMap.from_bus(q1._bus, q1._axis, deepcopy_from_bus=True)
+        post, opp = bus_to_hierarchy(q1._bus, q1._axis, deepcopy_from_bus=True, init_exception_cls=ErrorInitQuilt)
         self.assertEqual(len(post), 100)
         self.assertEqual(len(opp), 4)
 
@@ -229,7 +204,7 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frame(f1, chunksize=10, axis=1, retain_labels=False)
 
-        post, opp = AxisMap.from_bus(q1._bus, q1._axis, deepcopy_from_bus=False)
+        post, opp = bus_to_hierarchy(q1._bus, q1._axis, deepcopy_from_bus=False, init_exception_cls=ErrorInitQuilt)
         self.assertEqual(len(post), 100)
         self.assertEqual(len(opp), 4)
 
@@ -1366,8 +1341,5 @@ class TestUnit(TestCase):
                 )
 
 
-
-if __name__ == '__main__':
-    unittest.main()
 
 

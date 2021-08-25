@@ -22,6 +22,7 @@ from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import LocInvalid
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import arrays_equal
 
 
 class TestUnit(TestCase):
@@ -188,6 +189,54 @@ class TestUnit(TestCase):
             _ = idx2.loc_to_iloc(np.array([False, True, False]))
 
 
+    def test_index_loc_to_iloc_f(self) -> None:
+        dt = datetime.date
+        dt64 = np.datetime64
+
+        idx1 = Index((
+                dt(2020,12,31),
+                dt(2021,1,15),
+                dt(2021,1,31),
+                ))
+
+        self.assertEqual(
+                idx1.loc_to_iloc(dt64('2021-01-15')),
+                1
+                )
+        # NOTE: this fails as we only see a list of dt64s and cannot match them in the AutoMap dictionary unless we were to directly examine and conert each element
+        with self.assertRaises(KeyError):
+            _ = idx1.loc_to_iloc([dt64(d) for d in reversed(idx1)])
+
+        post = idx1.loc_to_iloc(np.array([dt64(d) for d in reversed(idx1)]))
+        self.assertEqual(post, [2, 1, 0])
+
+
+    def test_index_loc_to_iloc_g(self) -> None:
+        dt = datetime.date
+        dt64 = np.datetime64
+
+        idx1 = IndexYear(('2021', '2018', '2001'))
+
+        with self.assertRaises(KeyError):
+            idx1.loc_to_iloc(dt64('2001-01-01'))
+
+        with self.assertRaises(KeyError):
+            idx1.loc_to_iloc(np.array((dt64('2001-01-01'), dt64('2018-01-01'))))
+
+
+    def test_index_loc_to_iloc_h(self) -> None:
+        dt = datetime.date
+        dt64 = np.datetime64
+
+        idx1 = IndexDate(('2021-01-01', '2021-01-02', '1543-08-31', '1988-05-01', '1988-05-02'))
+
+        self.assertEqual(idx1.loc_to_iloc(dt64('2021-01')).tolist(), [0, 1]) #type: ignore
+
+        self.assertEqual(
+                idx1.loc_to_iloc(np.array((dt64('2021'), dt64('1988')))).tolist(), #type: ignore
+                [0, 1, 3, 4]
+                )
+
 
     #---------------------------------------------------------------------------
     def test_index_mloc_a(self) -> None:
@@ -257,7 +306,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.positions.tolist(), list(range(5)))
 
 
-    def test_index_unique(self) -> None:
+    def test_index_unique_a(self) -> None:
 
         with self.assertRaises(ErrorInitIndex):
             idx = Index(('a', 'b', 'c', 'a'))
@@ -278,10 +327,12 @@ class TestUnit(TestCase):
         idx = Index([0, '0'])
 
 
+    def test_index_unique_b(self) -> None:
+        idx = Index(('a', 'b', 'c', 'd'))
+        self.assertEqual(idx.unique().tolist(), idx.values.tolist())
+
     def test_index_creation_a(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
-
-        #idx2 = idx['b':'d']
 
         self.assertEqual(idx.values.tolist(), ['a', 'b', 'c', 'd'])
 
@@ -550,6 +601,12 @@ class TestUnit(TestCase):
                 ).values.tolist(),
                 ['cb', 'eb', 'dg', 'bq', 'ax']
                 )
+
+
+    def test_index_sort_c(self) -> None:
+        index = Index(('a', 'c', 'd', 'e', 'b'))
+        with self.assertRaises(RuntimeError):
+            index.sort(ascending=(True, False))
 
     #---------------------------------------------------------------------------
 
@@ -1109,8 +1166,12 @@ class TestUnit(TestCase):
     def test_index_to_html_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c'))
+
         self.assertEqual(idx1.to_html(),
-                '<table border="1"><tbody><tr><td>a</td></tr><tr><td>b</td></tr><tr><td>c</td></tr></tbody></table>')
+                '<table style="border-collapse:collapse;border-width:1px;border-color:#898b8e;border-style:solid"><tbody><tr><td style="background-color:#ffffff;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">a</td></tr><tr><td style="background-color:#f2f2f2;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">b</td></tr><tr><td style="background-color:#ffffff;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">c</td></tr></tbody></table>'
+                )
+        self.assertEqual(idx1.to_html(style_config=None),
+                '<table><tbody><tr><td>a</td></tr><tr><td>b</td></tr><tr><td>c</td></tr></tbody></table>')
 
     def test_index_to_html_datatables_a(self) -> None:
 
@@ -1348,6 +1409,17 @@ class TestUnit(TestCase):
         b.append(4)
         self.assertFalse(a.equals(b))
 
+    def test_index_equals_g(self) -> None:
+        dt64 = np.datetime64
+        dt = datetime.date
+
+        a = Index([dt64('2021-01-01'), dt64('1954-01-01')])
+        b = Index([dt64('2021'), dt64('1954')])
+
+        self.assertFalse(arrays_equal(a, b, skipna=True))
+
+
+
     #---------------------------------------------------------------------------
     def test_index_sample_a(self) -> None:
         a = IndexGO([1, 2, 3])
@@ -1400,10 +1472,14 @@ class TestUnit(TestCase):
     def test_index_via_re_a(self) -> None:
 
         idx1 = IndexGO(('aabbcc', 'bbcccc', 'cc', 'ddddbb'))
+        idx1.append('q')
         a1 = idx1.via_re('bb').search()
 
         self.assertEqual(a1.tolist(),
-                [True, True, False, True])
+                [True, True, False, True, False])
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -72,6 +72,10 @@ from static_frame.core.util import array_sample
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
+from static_frame.core.util import BoolOrBools
+from static_frame.core.util import isna_array
+
+from static_frame.core.style_config import StyleConfig
 
 
 if tp.TYPE_CHECKING:
@@ -305,6 +309,7 @@ class IndexHierarchy(IndexBase):
             items: tp.Iterable[tp.Tuple[tp.Hashable, Index]],
             *,
             index_constructor: tp.Optional[IndexConstructor] = None,
+            name: NameType = None,
             ) -> IH:
         '''
         Given an iterable of pairs of label, :obj:`Index`, produce an :obj:`IndexHierarchy` where the labels are depth 0, the indices are depth 1.
@@ -338,8 +343,7 @@ class IndexHierarchy(IndexBase):
                 own_index=True,
                 depth_reference=2, # depth always 2
                 )
-        # import ipdb; ipdb.set_trace()
-        return cls(levels)
+        return cls(levels, name=name)
 
     @classmethod
     def from_labels_delimited(cls: tp.Type[IH],
@@ -803,7 +807,9 @@ class IndexHierarchy(IndexBase):
 
     @doc_inject()
     def display(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            *,
+            style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         '''{doc}
 
@@ -838,7 +844,9 @@ class IndexHierarchy(IndexBase):
                         config=config,
                         outermost=True,
                         index_depth=0,
-                        header_depth=header_depth)
+                        header_depth=header_depth,
+                        style_config=style_config,
+                        )
             else:
                 sub_display.extend_iterable(col, header=header_sub)
 
@@ -1328,16 +1336,16 @@ class IndexHierarchy(IndexBase):
     @doc_inject(selector='sort')
     def sort(self: IH,
             *,
-            ascending: bool = True,
+            ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[['IndexHierarchy'], tp.Union[np.ndarray, 'IndexHierarchy']]] = None,
             ) -> IH:
         '''Return a new Index with the labels sorted.
 
         Args:
-            ascending: {ascending}
-            kind: {kind}
-            key: {key}
+            {ascendings}
+            {kind}
+            {key}
         '''
         if self._recache:
             self._update_array_cache()
@@ -1394,7 +1402,7 @@ class IndexHierarchy(IndexBase):
 
     @doc_inject(selector='fillna')
     def fillna(self, value: tp.Any) -> 'IndexHierarchy':
-        '''Return an :obj:`IndexHierarchy` after replacing null (NaN or None) with the supplied value.
+        '''Return an :obj:`IndexHierarchy` after replacing NA (NaN or None) with the supplied value.
 
         Args:
             {value}
@@ -1402,7 +1410,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        blocks = self._blocks.fillna(value, None)
+        blocks = self._blocks.fill_missing_by_unit(value, None, func=isna_array)
         index_constructors = tuple(self._levels.index_types())
 
         return self.__class__._from_type_blocks(blocks,

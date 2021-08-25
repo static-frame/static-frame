@@ -83,7 +83,13 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
         'i', 'u' # int kinds
         ))
 
-# all numeric times, plus bool
+# all dt64 units that tolist() to go to a compatible Python type
+DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
+        'D', 'h', 'm', 's', 'ms', 'us',
+        ))
+
+
+# all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
         DTYPE_FLOAT_KIND,
         DTYPE_COMPLEX_KIND,
@@ -134,8 +140,6 @@ NAT_STR = 'NaT'
 # define missing for timedelta as an untyped 0
 EMPTY_TIMEDELTA = np.timedelta64(0)
 
-# _DICT_STABLE = sys.version_info >= (3, 6)
-
 # map from datetime.timedelta attrs to np.timedelta64 codes
 TIME_DELTA_ATTR_MAP = (
         ('days', 'D'),
@@ -145,6 +149,8 @@ TIME_DELTA_ATTR_MAP = (
 
 # ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
 UFUNC_AXIS_STR_TO_OBJ = frozenset((np.min, np.max, np.sum))
+
+FALSY_VALUES = frozenset((0, '', None, EMPTY_TUPLE))
 
 #-------------------------------------------------------------------------------
 # utility type groups
@@ -225,6 +231,9 @@ CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, AnyCallabl
 
 # for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
+BoolOrBools = tp.Union[bool, tp.Iterable[bool]]
+
+
 
 PathSpecifier = tp.Union[str, PathLike]
 PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
@@ -416,21 +425,22 @@ class PairRight(Pair):
 #         return np.reshape(array, array.shape[1])
 #     return array
 
-def duplicate_filter(values: tp.Iterable[tp.Any]) -> tp.Iterator[tp.Any]:
-    '''
-    Assuming ordered values, yield one of each unique value as determined by __eq__ comparison.
-    '''
-    v_iter = iter(values)
-    try:
-        v = next(v_iter)
-    except StopIteration:
-        return
-    yield v
-    last = v
-    for v in v_iter:
-        if v != last:
-            yield v
-        last = v
+# NOTE: no longer needed
+# def duplicate_filter(values: tp.Iterable[tp.Any]) -> tp.Iterator[tp.Any]:
+#     '''
+#     Assuming ordered values, yield one of each unique value as determined by __eq__ comparison.
+#     '''
+#     v_iter = iter(values)
+#     try:
+#         v = next(v_iter)
+#     except StopIteration:
+#         return
+#     yield v
+#     last = v
+#     for v in v_iter:
+#         if v != last:
+#             yield v
+#         last = v
 
 def _gen_skip_middle(
         forward_iter: CallableToIterType,
@@ -466,7 +476,7 @@ def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
         return DTYPE_FLOAT_DEFAULT
     if value is None:
         return DTYPE_OBJECT
-    if isinstance(value, tuple):
+    if isinstance(value, tuple): # should this include all iterables, i.e., has atter __len__ and is not str?
         return DTYPE_OBJECT
     if hasattr(value, 'dtype'):
         return value.dtype #type: ignore
@@ -694,13 +704,12 @@ def ufunc_unique(
         array: np.ndarray,
         *,
         axis: tp.Optional[int] = None,
-        non_array_type: type = frozenset,
         ) -> np.ndarray:
     '''
     Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a hetergenous object type.
 
     Args:
-        non_array_type: for cases where unique will not work, determine type to return. This can be frozenset or a
+
     '''
     if array.dtype.kind == 'O':
         if axis is None or array.ndim < 2:
@@ -1121,24 +1130,27 @@ def slice_to_ascending_slice(
         size: the length of the container on this axis
     '''
     # NOTE: a slice can have start > stop, and None as step: should that case be handled here?
+    key_step = key.step
+    key_start = key.start
+    key_stop = key.stop
 
-    if key.step is None or key.step > 0:
+    if key_step is None or key_step > 0:
         return key
 
-    stop = key.start if key.start is None else key.start + 1
+    stop = key_start if key_start is None else key_start + 1
 
-    if key.step == -1:
+    if key_step == -1:
         # if 6, 1, -1, then
-        start = key.stop if key.stop is None else key.stop + 1
+        start = key_stop if key_stop is None else key_stop + 1
         return slice(start, stop, 1)
 
-    step = abs(key.step)
-    start = size - 1 if key.start is None else min(size - 1, key.start)
+    step = abs(key_step)
+    start = size - 1 if key_start is None else min(size - 1, key_start)
 
-    if key.stop is None:
+    if key_stop is None:
         start = start - (step * (start // step))
     else:
-        start = start - (step * ((start - key.stop - 1) // step))
+        start = start - (step * ((start - key_stop - 1) // step))
 
     return slice(start, stop, step)
 
@@ -1300,19 +1312,18 @@ def array_to_groups_and_locations(
     return groups, locations
 
 
-def isna_element(value: tp.Any) -> bool:
-    '''Return Boolean if value is an NA. This does not yet handle pd.NA
-    '''
-    try:
-        return np.isnan(value) #type: ignore
-    except TypeError:
-        pass
-    try:
-        return np.isnat(value) #type: ignore
-    except TypeError:
-        pass
-    return value is None
-
+# def isna_element(value: tp.Any) -> bool:
+#     '''Return Boolean if value is an NA. This does not yet handle pd.NA
+#     '''
+#     try:
+#         return np.isnan(value) #type: ignore
+#     except TypeError:
+#         pass
+#     try:
+#         return np.isnat(value) #type: ignore
+#     except TypeError:
+#         pass
+#     return value is None
 
 def isna_array(array: np.ndarray,
         include_none: bool = True,
@@ -1329,13 +1340,73 @@ def isna_array(array: np.ndarray,
         return np.isnat(array)
     # match everything that is not an object; options are: biufcmMOSUV
     elif kind != 'O':
-        return np.full(array.shape, False, dtype=bool)
+        return np.full(array.shape, False, dtype=DTYPE_BOOL)
     # only check for None if we have an object type
     # NOTE: this will not work for Frames contained within a Series
     if include_none:
         return np.not_equal(array, array) | np.equal(array, None)
     return np.not_equal(array, array)
 
+def isfalsy_array(array: np.ndarray) -> np.ndarray:
+    '''
+    Return a Boolean array indicating the presence of Falsy or NA values.
+
+    Args:
+        array: 1D or 2D array.
+    '''
+    # NOTE: compare to dtype_to_fill_value
+    kind = array.dtype.kind
+    # matches all floating point types
+    if kind in DTYPE_INEXACT_KINDS:
+        return np.isnan(array) | (array == 0.0)
+    elif kind == DTYPE_DATETIME_KIND:
+        return np.isnat(array)
+    elif kind == DTYPE_TIMEDELTA_KIND:
+        return np.isnat(array) | (array == EMPTY_TIMEDELTA)
+    elif kind == DTYPE_BOOL_KIND:
+        return ~array # just invert
+    elif kind in DTYPE_STR_KINDS:
+        return array == ''
+    elif kind in DTYPE_INT_KINDS:
+        return array == 0 # faster to compare to integer
+    elif kind != 'O':
+        return np.full(array.shape, False, dtype=DTYPE_BOOL)
+
+    # NOTE: an ArrayKit implementation might outperformthis
+    post = np.empty(array.shape, dtype=DTYPE_BOOL)
+    for coord, v in np.ndenumerate(array):
+        post[coord] = not bool(array[coord])
+    # or with NaN observations
+    return post | np.not_equal(array, array)
+
+
+def arrays_equal(array: np.ndarray,
+        other: np.ndarray,
+        *,
+        skipna: bool,
+        ) -> bool:
+    '''
+    Given two arrays, determine if they are equal; support skipping Na comparisons and handling dt64
+    '''
+    if array.dtype.kind == DTYPE_DATETIME_KIND and other.dtype.kind == DTYPE_DATETIME_KIND:
+        if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
+            # do not permit True result between 2021 and 2021-01-01
+            return False
+
+    eq = array == other
+
+    # NOTE: will only be False, or an array
+    if eq is False:
+        return eq
+
+    if skipna:
+        isna_both = (isna_array(array, include_none=False)
+                & isna_array(other, include_none=False))
+        eq[isna_both] = True
+
+    if not eq.all(): # avoid returning a NumPy Bool
+        return False
+    return True
 
 def binary_transition(
         array: np.ndarray,
@@ -1605,7 +1676,7 @@ def array_shift(*,
         # do negative modulo to force negative value
         shift_mod = shift % -array.shape[axis]
     else:
-        raise NotImplementedError(f'no handling for this configuraiton')
+        raise NotImplementedError('no handling for this configuration')
 
     if (not wrap and shift == 0) or (wrap and shift_mod == 0):
         # must copy so as not let caller mutate arguement
@@ -1743,9 +1814,28 @@ def _ufunc_set_1d(
 
     array_is_str = array.dtype.kind in DTYPE_STR_KINDS
     other_is_str = other.dtype.kind in DTYPE_STR_KINDS
-    set_compare = array_is_str ^ other_is_str
+
+    # np.intersect1d will not handle different dt64 units correctly, but rather "downcast" to the lowest unit, which is not what we want; so, only use np.intersect1d if the units are the same
+    array_is_dt64 = array.dtype.kind == DTYPE_DATETIME_KIND
+    other_is_dt64 = other.dtype.kind == DTYPE_DATETIME_KIND
+
+    if array_is_dt64 and other_is_dt64:
+        # if units are the same, no need for set compare
+        if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
+            set_compare = True
+        else: # can compare directly, dtype will be same
+            set_compare = False
+    else:
+        set_compare = array_is_str ^ other_is_str
 
     if set_compare or dtype.kind == 'O':
+        # convert applicable dt64 types to objects
+        if array_is_dt64 and np.datetime_data(array.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS:
+            array = array.astype(DTYPE_OBJECT)
+        elif other_is_dt64 and np.datetime_data(other.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS:
+            # the case of both is handled above
+            other = other.astype(DTYPE_OBJECT)
+
         if is_union:
             result = frozenset(array) | frozenset(other)
         elif is_intersection:

@@ -1,6 +1,72 @@
 What is New in Static Frame
 ===============================
 
+0.8.18
+----------
+
+Implementation of ``Yarn``, a container that presents numerous ``Bus`` as a uniform, 1D interface.
+
+Fixed issue in ``Frame.astype[]`` when selecting targets with a Boolean ``Series`` or arrays.
+
+Fixed unnecessary type coercion in the ``Frame`` returned by ``Frame.drop_duplicated()``.
+
+Improved handling of reindexing and lookups between datetime64 and date / datetime objects.
+
+``Frame.equals()``, ``Series.equals()``, ``Index.equals()``, ``IndexHiearchy.equals()`` and all related routines now distinguish by ``datetime64`` unit in evaluating basic equality.
+
+
+0.8.17
+----------
+
+Extended ``Series.count()`` and ``Frame.count()`` with ``skipfalsy`` and ``unique`` parameters.
+
+Added ``Series.isfalsy()``, ``Series.notfalsy()``, ``Series.dropfalsy()``, ``Series.fillfalsy()``.
+
+Added ``Frame.isfalsy()``, ``Frame.notfalsy()``, ``Frame.dropfalsy()``, ``Frame.fillfalsy()``.
+
+Exposed ``isna_element()`` via ``arraykit`` on root namespace.
+
+Added ``Bus.from_concat()``.
+
+Added ``Bus.to_series()``.
+
+``Bus.reindex()``, ``Bus.relabel()``, ``Bus.relabel_flat()``, ``Bus.relabel_level_add()``, ``Bus.relabel_level_drop()``, ``Bus.rehierarch()`` now, if necessary, load all contents from the associated ``Store`` and return a ``Bus`` without a ``Store`` association.
+
+Added ``index_constructor`` argument to ``Series.from_concat_items()``.
+
+Added ``index_constructor``, ``columns_constructor`` arguments to ``Frame.from_concat_items()``.
+
+Introduced ``IndexDefaultFactory`` to permit specifying index ``name`` attributes with default index constructors.
+
+
+0.8.16
+----------
+
+Added ``Frame.to_series()``.
+
+``Frame.sort_values()``, ``Frame.sort_index()``, ``Frame.sort_columns``, ``Series.sort_index()``, and ``IndexHierarchy.sort()`` now accept ``ascending`` as an iterable of Booleans to specify value per vector.
+
+``FrameGO.via_fill_value()`` now supports providng a fill value in ``__setitem__()`` assignment.
+
+``IndexAutoFactory`` can now be instantiated with a ``size`` parameter to pre-set the size of an auto-index, such as when used to initialize a ``FrameGO``.
+
+
+0.8.15
+----------
+
+Added support for loading containers into specialized VisiData ``Sheet`` and  ``IndexSheet`` subclasses; added ``to_visidata()`` exporter to all containers.
+
+Added ``StyleConfig`` class for configuring display characteristics. Added default ``StyleConfigCSS`` for improved default HTML presentation.
+
+Added ``Series.rank_ordinal``, ``Series.rank_dense``, ``Series.rank_mean``, ``Series.rank_min``, ``Series.rank_max``.
+
+Added ``Frame.rank_ordinal``, ``Frame.rank_dense``, ``Frame.rank_mean``, ``Frame.rank_min``, ``Frame.rank_max``.
+
+Fixed issue in ``Series.from_element()`` and ``Frame.from_element()`` that would broadcast some iterables instead of treat them as an element.
+
+Extended ``Frame.unset_index()`` to support unsetting ``IndexHierarchy``.
+
+
 0.8.14
 ----------
 

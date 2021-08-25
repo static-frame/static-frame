@@ -32,9 +32,9 @@ class Platform:
                 mod = None
                 try:
                     mod = importlib.import_module(package)
-                except ModuleNotFoundError:
-                    yield package, ModuleNotFoundError
-                    continue
+                except ModuleNotFoundError: #pragma: no cover
+                    yield package, ModuleNotFoundError #pragma: no cover
+                    continue #pragma: no cover
 
                 if hasattr(mod, '__version__'):
                     yield package, mod.__version__ #type: ignore

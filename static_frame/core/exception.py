@@ -36,6 +36,10 @@ class ErrorInitQuilt(ErrorInit):
     '''Error in Quilt initialization.
     '''
 
+class ErrorInitYarn(ErrorInit):
+    '''Error in Yarn initialization.
+    '''
+
 class ErrorInitStore(ErrorInit):
     '''Error in Store initialization.
     '''

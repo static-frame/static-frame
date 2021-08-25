@@ -39,6 +39,8 @@ class IndexCorrespondence:
             dst_index: 'Index') -> 'IndexCorrespondence':
         '''
         Return an IndexCorrespondence instance from the correspondence of two Index or IndexHierarchy objects.
+
+        This is called in all reindexing operations to get the iloc postions for remapping values.
         '''
         mixed_depth = False
         if src_index.depth == dst_index.depth:
@@ -79,10 +81,8 @@ class IndexCorrespondence:
             has_common = False
 
         size = len(dst_index.values)
-
         # either a reordering or a subset
         if has_common:
-
             if len(common_labels) == len(dst_index):
                 # use new index to retain order
                 values_dst = dst_index.values
