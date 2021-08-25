@@ -20,7 +20,7 @@ def get_date_strings():
     return post.values.astype(str).tolist()
 
 
-class ArrayCreationDirectFromString:
+class DirectFromString:
     NUMBER = 500
     def __init__(self):
         self.date_str = get_date_strings()
@@ -37,8 +37,8 @@ class ArrayCreationDirectFromString:
         # return np.array(self.date_str, dtype=np.datetime64)
 
 
-class ArrayCreationParseFromString:
-    NUMBER = 10
+class ParseFromString:
+    NUMBER = 50
 
     def __init__(self):
         self.date_str = get_date_strings()
@@ -54,16 +54,16 @@ class ArrayCreationParseFromString:
         return np.array(self.date_str, dtype=np.datetime64)
 
 class ShiftDay:
-    NUMBER = 100
+    NUMBER = 500
 
     def __init__(self):
-        runner = ArrayCreationDirectFromString()
+        runner = DirectFromString()
         self.array_dt64 = runner.dt64()
         self.array_dt = runner.dt()
 
     def dt(self):
         td = timedelta(days=1)
-        np.array([d + td for d in self.array_dt])
+        np.array([d + td for d in self.array_dt], dtype=object)
 
     def dt64(self):
         self.array_dt64 + 1
@@ -72,7 +72,7 @@ class DeriveYear:
     NUMBER = 100
 
     def __init__(self):
-        runner = ArrayCreationDirectFromString()
+        runner = DirectFromString()
         self.array_dt64 = runner.dt64()
         self.array_dt = runner.dt()
 
@@ -86,7 +86,7 @@ class TrueOnMonday:
     NUMBER = 100
 
     def __init__(self):
-        runner = ArrayCreationDirectFromString()
+        runner = DirectFromString()
         self.array_dt64 = runner.dt64()
         self.array_dt = runner.dt()
 
@@ -103,7 +103,7 @@ class TrueOnEOM:
     NUMBER = 100
 
     def __init__(self):
-        runner = ArrayCreationDirectFromString()
+        runner = DirectFromString()
         self.array_dt64 = runner.dt64()
         self.array_dt = runner.dt()
 
@@ -117,11 +117,30 @@ class TrueOnEOM:
             dtype=bool,
             )
 
+
+class TrueLessThan:
+    NUMBER = 400
+
+    def __init__(self):
+        runner = DirectFromString()
+        self.array_dt64 = runner.dt64()
+        self.boundary_dt64 = np.datetime64('2005-06-18')
+        self.array_dt = runner.dt()
+        self.boundary_dt = date(2005, 6, 18)
+
+
+    def dt(self):
+        self.array_dt < self.boundary_dt
+
+    def dt64(self):
+        self.array_dt64 < self.boundary_dt64
+
+
 class ConvertToStr:
     NUMBER = 100
 
     def __init__(self):
-        runner = ArrayCreationDirectFromString()
+        runner = DirectFromString()
         self.array_dt64 = runner.dt64()
         self.array_dt = runner.dt()
 
@@ -160,12 +179,13 @@ def get_format():
 def run_test():
     records = []
     for cls in (
-            ArrayCreationDirectFromString,
-            ArrayCreationParseFromString,
+            DirectFromString,
+            ParseFromString,
             ShiftDay,
             DeriveYear,
             TrueOnMonday,
             TrueOnEOM,
+            TrueLessThan,
             ConvertToStr,
             ):
         runner = cls()

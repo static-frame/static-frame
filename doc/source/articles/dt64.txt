@@ -117,7 +117,13 @@ numpy.datetime64('1677-09-21T00:12:43.145224193')
 631152000000000000
 
 
+#-------------------------------------------------------------------------------
 
+https://en.wikipedia.org/wiki/Year_2038_problem
+
+relates to representing time in many digital systems as the number of seconds passed since 00:00:00 UTC on 1 January 1970 and storing it as a signed 32-bit integer. Such implementations cannot encode times after 03:14:07 UTC on 19 January 2038. Similar to the Y2K problem, the Year 2038 problem is caused by insufficient capacity used to represent time.
+
+https://en.wikipedia.org/wiki/Time_formatting_and_storage_bugs#Year_2262
 
 
 
