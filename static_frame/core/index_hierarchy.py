@@ -1610,9 +1610,6 @@ class IndexHierarchy(IndexBase):
     def level_add(self: IH, level: tp.Hashable) -> IH:
         '''Return an IndexHierarchy with a new root (outer) level added.
         '''
-        if self._recache:
-            self._update_array_cache()
-
         if self.STATIC: # can reuse levels
             levels_src = self._levels
         else:

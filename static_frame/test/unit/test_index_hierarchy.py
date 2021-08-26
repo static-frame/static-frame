@@ -1960,7 +1960,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
 
-
     def test_hierarchy_drop_level_b(self) -> None:
 
         labels = (
@@ -2005,7 +2004,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih.level_drop(1).values.tolist(),
                 [1, 2, 3, 4])
 
-
     def test_hierarchy_drop_level_e(self) -> None:
 
         ih = IndexHierarchy.from_product(('a',), (1,), ('x', 'y'))
@@ -2014,7 +2012,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(ih.level_drop(1).values.tolist(),
                 [[1, 'x'], [1, 'y']])
-
 
     def test_hierarchy_drop_level_f(self) -> None:
 
@@ -2027,7 +2024,6 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_product(('a',), (1,), ('x',))
         with self.assertRaises(NotImplementedError):
             _ = ih.level_drop(0)
-
 
     def test_hierarchy_drop_level_h(self) -> None:
 
@@ -2096,6 +2092,17 @@ class TestUnit(TestCase):
         ih4 = ih1.level_drop(-3)
         self.assertEqual(ih4.name, 'a')
 
+    def test_hierarchy_drop_level_k(self) -> None:
+        tree = {
+            'f1': {'i_I': ('1',), 'i_II': ('2',)},
+            'f2': {'c_I': ('A', ), 'c_II': ('B',)}
+        }
+        ih = IndexHierarchy.from_tree(tree)
+        post = ih.level_drop(1)
+
+        # This used to raise `ValueError: negative dimensions are not allowed`
+        # as the `ih` hadn't properly updated its internal cache before creation
+        post.display()
 
     #---------------------------------------------------------------------------
 
