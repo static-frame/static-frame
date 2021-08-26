@@ -24,7 +24,7 @@ from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
 from static_frame.core.style_config import StyleConfig
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index import IndexBase # type: ignore
+    from static_frame.core.index import IndexBase # pylint: disable=unused-import
 
 
 _module = sys.modules[__name__]
