@@ -1588,7 +1588,7 @@ class IndexHierarchy(IndexBase):
 
             add_labels(tree[outermost_label], inner_labels)
 
-        tree = defaultdict(lambda: get_layer_object(1))
+        tree: DDTreeNodeT = defaultdict(lambda: get_layer_object(1))
         for labels in self.iter_label():
             add_labels(tree, labels)
 
