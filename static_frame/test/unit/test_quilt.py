@@ -1,4 +1,4 @@
-
+import typing as tp
 
 import frame_fixtures as ff
 import numpy as np
@@ -9,6 +9,7 @@ from static_frame.core.quilt import Quilt
 from static_frame.core.hloc import HLoc
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.index import ILoc
+from static_frame.core.index import Index
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
 from static_frame.core.batch import Batch
@@ -16,7 +17,6 @@ from static_frame.core.store import StoreConfig
 
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitQuilt
-from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.axis_map import bus_to_hierarchy
 
@@ -75,7 +75,7 @@ class TestUnit(TestCase):
 
         # must retain labels for non-unique axis
         q3 = Quilt(b1, retain_labels=False, axis=1)
-        with self.assertRaises(ErrorInitIndexNonUnique):
+        with self.assertRaises(ErrorInitQuilt):
             self.assertEqual(q3.shape, (7, 2))
 
 
@@ -90,7 +90,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitQuilt):
             _ = Quilt(b1, retain_labels=True, axis=0, axis_hierarchy=axis_hierarchy, axis_opposite=None)
-
 
     #---------------------------------------------------------------------------
     def test_quilt_from_items_a(self) -> None:
@@ -139,19 +138,50 @@ class TestUnit(TestCase):
         self.assertEqual(q1.to_frame().to_pairs(),
                 ((('f1', 'a'), (('x', 1), ('y', 2))), (('f1', 'c'), (('x', 3), ('y', 4))), (('f2', 'a'), (('x', 2), ('y', 3))), (('f2', 'b'), (('x', 4), ('y', 6))), (('f3', 'c'), (('x', 10), ('y', 20))), (('f3', 'b'), (('x', 50), ('y', 60)))))
 
+    def test_quilt_from_frames_b(self) -> None:
+        index_a = Index(list(map(str, range(100))), name="a")
+        index_b = Index(list(map(str, range(100, 200))), name="b")
+        columns_a = Index(tuple("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), name="a")
+        columns_b = Index(tuple("abcdefghijklmnopqrstuvwxyz"), name="b")
 
+        valid_construction_args = [
+            (index_a, columns_a, index_a, columns_a, True, 0),
+            (index_a, columns_a, index_a, columns_a, True, 1),
+            (index_a, columns_a, index_a, columns_b, True, 1),
+            (index_a, columns_a, index_a, columns_b, False, 1),
+            (index_a, columns_a, index_b, columns_a, True, 0),
+            (index_a, columns_a, index_b, columns_a, False, 0),
+            (index_a, columns_b, index_a, columns_a, True, 1),
+            (index_a, columns_b, index_a, columns_a, False, 1),
+            (index_a, columns_b, index_a, columns_b, True, 0),
+            (index_a, columns_b, index_a, columns_b, True, 1),
+            (index_a, columns_b, index_b, columns_b, True, 0),
+            (index_a, columns_b, index_b, columns_b, False, 0),
+            (index_b, columns_a, index_a, columns_a, True, 0),
+            (index_b, columns_a, index_a, columns_a, False, 0),
+            (index_b, columns_a, index_b, columns_a, True, 0),
+            (index_b, columns_a, index_b, columns_a, True, 1),
+            (index_b, columns_a, index_b, columns_b, True, 1),
+            (index_b, columns_a, index_b, columns_b, False, 1),
+            (index_b, columns_b, index_a, columns_b, True, 0),
+            (index_b, columns_b, index_a, columns_b, False, 0),
+            (index_b, columns_b, index_b, columns_a, True, 1),
+            (index_b, columns_b, index_b, columns_a, False, 1),
+            (index_b, columns_b, index_b, columns_b, True, 0),
+            (index_b, columns_b, index_b, columns_b, True, 1),
+        ]
+
+        def build_quilt(args: tp.Any) -> Quilt:
+            f1_index, f1_columns, f2_index, f2_columns, retain_labels, axis = args
+            f1 = Frame.from_element("f1", index=f1_index, columns=f1_columns, name="f1")
+            f2 = Frame.from_element("f2", index=f2_index, columns=f2_columns, name="f2")
+            return Quilt.from_frames((f1, f2), retain_labels=retain_labels, axis=axis)
+
+        # This checks that the init was successful, and that the display call also is successful
+        for quilt in map(build_quilt, valid_construction_args):
+            quilt.display()
 
     #---------------------------------------------------------------------------
-    def test_quilt_display_a(self) -> None:
-
-        dc = DisplayConfig(type_show=False)
-
-        f1 = ff.parse('s(10,4)|v(int)|i(I,str)|c(I,str)').rename('foo')
-        q1 = Quilt.from_frame(f1, chunksize=2, retain_labels=False)
-        self.assertEqual(
-                q1.display(dc).to_rows(),
-                f1.display(dc).to_rows())
-
     def test_quilt_values_a(self) -> None:
         f1 = ff.parse('s(6,4)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=2, retain_labels=False)
@@ -1220,6 +1250,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_quilt_repr_a(self) -> None:
+        config = DisplayConfig.from_default(cell_align_left=True, type_color=False)
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
@@ -1230,8 +1261,14 @@ class TestUnit(TestCase):
         q1 = Quilt(b1, retain_labels=True)
         q2 = Quilt(b2, retain_labels=True)
 
-        self.assertTrue(repr(q1).startswith('<Quilt: foo'))
-        self.assertTrue(repr(q2).startswith('<Quilt at'))
+        common_rows = [
+            '<Index: Aligned Columns>     0 1 2 3',
+            '<Index: Concatenated Frames>',
+            'f1                           . . . .',
+            'f2                           . . . .']
+
+        self.assertEqual(q1.display().to_rows(), ['<Quilt: foo>', * common_rows])
+        self.assertEqual(q2.display().to_rows(), ['<Quilt>', * common_rows])
 
     #---------------------------------------------------------------------------
     def test_quilt_columns_a(self) -> None:

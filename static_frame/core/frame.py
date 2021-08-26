@@ -94,7 +94,6 @@ from static_frame.core.pivot import pivot_records_items
 from static_frame.core.pivot import pivot_records_dtypes
 from static_frame.core.pivot import pivot_items
 from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _read_url
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_2d
@@ -3811,100 +3810,16 @@ class Frame(ContainerOperand):
         Args:
             {config}
         '''
-        config = config or DisplayActive.get()
-        index_depth = self._index.depth if config.include_index else 0
-
-        # always get the index Display (even if we are not going to use it) to dettermine how many rows we need (which may include types, as well as truncation with elipsis).
-        display_index = self._index.display(config=config)
-
-        # header depth used for HTML and other foramtting; needs to be adjusted if removing types and/or columns and types, When showing types on a Frame, we need 2: one for the Frame type, the other for the index type.
-        header_depth = (self._columns.depth * config.include_columns) + (2 * config.type_show)
-
-        # create an empty display based on index display
-        d = Display([list() for _ in range(len(display_index))],
+        return Display.from_params(
+                index=self._index,
+                columns=self._columns,
+                header=DisplayHeader(self.__class__, self._name),
+                column_forward_iter=partial(self._blocks.axis_values, axis=0),
+                column_reverse_iter=partial(self._blocks.axis_values, axis=0, reverse=True),
+                column_default_iter=partial(self._blocks.axis_values, axis=0),
                 config=config,
-                outermost=True,
-                index_depth=index_depth,
-                header_depth=header_depth,
                 style_config=style_config,
                 )
-
-
-        if config.include_index:
-            # this will add more rows to accomodate the index if it is bigger due to types
-            d.extend_display(display_index)
-            header_column = '' if config.type_show else None
-        else:
-            header_column = None
-
-        if self._blocks._shape[1] > config.display_columns:
-            # columns as they will look after application of truncation and insertion of ellipsis
-            data_half_count = Display.truncate_half_count(
-                    config.display_columns)
-            column_gen = partial(_gen_skip_middle,
-                    forward_iter=partial(self._blocks.axis_values, axis=0),
-                    forward_count=data_half_count,
-                    reverse_iter=partial(self._blocks.axis_values, axis=0, reverse=True),
-                    reverse_count=data_half_count,
-                    center_sentinel=Display.ELLIPSIS_CENTER_SENTINEL
-                    )
-        else:
-            column_gen = partial(self._blocks.axis_values, axis=0)
-
-        for column in column_gen():
-            if column is Display.ELLIPSIS_CENTER_SENTINEL:
-                d.extend_ellipsis()
-            else:
-                d.extend_iterable(column, header=header_column)
-
-        #-----------------------------------------------------------------------
-        config_transpose = config.to_transpose()
-
-        #-----------------------------------------------------------------------
-        # prepare header display of container class
-        header_displays = []
-        if config.type_show:
-            display_cls = Display.from_values((),
-                    header=DisplayHeader(self.__class__, self._name),
-                    config=config_transpose)
-            header_displays.append(display_cls.flatten())
-
-        #-----------------------------------------------------------------------
-        # prepare columns display
-        if config.include_columns:
-            # need to apply the config_transpose such that it truncates it based on the the max columns, not the max rows
-            display_columns = self._columns.display(config=config_transpose)
-
-            if config.type_show:
-                index_depth_extend = self._index.depth - 1
-                spacer_insert_index = 1 # after the first, the name
-            elif not config.type_show and config.include_index:
-                index_depth_extend = self._index.depth
-                spacer_insert_index = 0
-            elif not config.include_index: # type_show must be False
-                index_depth_extend = 0
-                spacer_insert_index = 0
-
-            # add spacers to from of columns when we have a hierarchical index
-            for _ in range(index_depth_extend):
-                # will need a width equal to the column depth
-                row = [Display.to_cell('', config=config)
-                        for _ in range(self._columns.depth)]
-                spacer = Display([row])
-                display_columns.insert_displays(spacer,
-                        insert_index=spacer_insert_index)
-
-            if self._columns.depth > 1:
-                display_columns_horizontal = display_columns.transform()
-            else: # can just flatten a single column into one row
-                display_columns_horizontal = display_columns.flatten()
-
-            header_displays.append(display_columns_horizontal)
-
-        if header_displays:
-            d.insert_displays(*header_displays)
-
-        return d
 
     #---------------------------------------------------------------------------
     # accessors

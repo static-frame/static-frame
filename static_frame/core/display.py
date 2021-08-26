@@ -12,6 +12,7 @@ import numpy as np
 
 from static_frame.core.display_color import HexColor
 from static_frame.core.util import _gen_skip_middle
+from static_frame.core.util import CallableToIterType
 from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
@@ -21,6 +22,9 @@ from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
 from static_frame.core.display_config import _DISPLAY_FORMAT_MAP
 from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
 from static_frame.core.style_config import StyleConfig
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.index import IndexBase
 
 
 _module = sys.modules[__name__]
@@ -128,6 +132,26 @@ class DisplayTypeFrame(DisplayTypeCategory):
             return False
         return issubclass(t, Frame)
 
+class DisplayTypeBus(DisplayTypeCategory):
+    CONFIG_ATTR = 'type_color_bus'
+
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+        from static_frame import Bus
+        if not inspect.isclass(t):
+            return False
+        return issubclass(t, Bus)
+
+class DisplayTypeQuilt(DisplayTypeCategory):
+    CONFIG_ATTR = 'type_color_quilt'
+
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+        from static_frame import Quilt
+        if not inspect.isclass(t):
+            return False
+        return issubclass(t, Quilt)
+
 
 class DisplayTypeCategoryFactory:
 
@@ -142,7 +166,9 @@ class DisplayTypeCategoryFactory:
             DisplayTypeTimeDelta,
             DisplayTypeIndex,
             DisplayTypeSeries,
-            DisplayTypeFrame
+            DisplayTypeFrame,
+            DisplayTypeBus,
+            DisplayTypeQuilt,
             )
 
     _TYPE_TO_CATEGORY_CACHE: tp.Dict[tp.Union[type, np.dtype], tp.Type[DisplayTypeCategory]] = {}
@@ -462,13 +488,118 @@ class Display:
                 style_config=style_config,
                 )
 
+    @classmethod
+    def from_params(cls,
+            *,
+            index: "IndexBase",
+            columns: "IndexBase",
+            header: DisplayHeader,
+            column_forward_iter: CallableToIterType,
+            column_reverse_iter: CallableToIterType,
+            column_default_iter: CallableToIterType,
+            config: tp.Optional[DisplayConfig] = None,
+            style_config: tp.Optional[StyleConfig] = None,
+            ) -> 'Display':
+        '''
+        Args:
+            {config}
+        '''
+        config = config or DisplayActive.get()
+        index_depth = index.depth if config.include_index else 0
+
+        # always get the index Display (even if we are not going to use it) to determine how many rows we need (which may include types, as well as truncation with ellipsis).
+        display_index = index.display(config=config)
+
+        # header depth used for HTML and other foramtting; needs to be adjusted if removing types and/or columns and types, When showing types on a Frame, we need 2: one for the Frame type, the other for the index type.
+        header_depth = (columns.depth * config.include_columns) + (2 * config.type_show)
+
+        # create an empty display based on index display
+        d = cls([list() for _ in range(len(display_index))],
+                config=config,
+                outermost=True,
+                index_depth=index_depth,
+                header_depth=header_depth,
+                style_config=style_config,
+                )
+
+        if config.include_index:
+            # this will add more rows to accomodate the index if it is bigger due to types
+            d.extend_display(display_index)
+            header_column = '' if config.type_show else None
+        else:
+            header_column = None
+
+        if len(columns) > config.display_columns:
+            # columns as they will look after application of truncation and insertion of ellipsis
+            data_half_count = cls.truncate_half_count(config.display_columns)
+
+            column_gen = partial(_gen_skip_middle,
+                    forward_iter=column_forward_iter,
+                    forward_count=data_half_count,
+                    reverse_iter=column_reverse_iter,
+                    reverse_count=data_half_count,
+                    center_sentinel=cls.ELLIPSIS_CENTER_SENTINEL
+                    )
+        else:
+            column_gen = column_default_iter
+
+        for column in column_gen():
+            if column is cls.ELLIPSIS_CENTER_SENTINEL:
+                d.extend_ellipsis()
+            else:
+                d.extend_iterable(column, header=header_column)
+
+        #-----------------------------------------------------------------------
+        config_transpose = config.to_transpose()
+
+        #-----------------------------------------------------------------------
+        # prepare header display of container class
+        header_displays = []
+        if config.type_show:
+            display_cls = cls.from_values((), header=header, config=config_transpose)
+            header_displays.append(display_cls.flatten())
+
+        #-----------------------------------------------------------------------
+        # prepare columns display
+        if config.include_columns:
+            # need to apply the config_transpose such that it truncates it based on the the max columns, not the max rows
+            display_columns = columns.display(config=config_transpose)
+
+            if config.type_show:
+                index_depth_extend = index.depth - 1
+                spacer_insert_index = 1 # after the first, the name
+            elif not config.type_show and config.include_index:
+                index_depth_extend = index.depth
+                spacer_insert_index = 0
+            elif not config.include_index: # type_show must be False
+                index_depth_extend = 0
+                spacer_insert_index = 0
+
+            # add spacers to from of columns when we have a hierarchical index
+            for _ in range(index_depth_extend):
+                # will need a width equal to the column depth
+                row = [cls.to_cell('', config=config) for _ in range(columns.depth)]
+                spacer = cls([row])
+                display_columns.insert_displays(spacer, insert_index=spacer_insert_index)
+
+            if columns.depth > 1:
+                display_columns_horizontal = display_columns.transform()
+            else: # can just flatten a single column into one row
+                display_columns_horizontal = display_columns.flatten()
+
+            header_displays.append(display_columns_horizontal)
+
+        if header_displays:
+            d.insert_displays(*header_displays)
+
+        return d
 
     #---------------------------------------------------------------------------
     # core cell-to-rwo expansion routines
 
     @staticmethod
     def truncate_half_count(count_target: int) -> int:
-        '''Given a target number of rows or columns, return the count of half as found in presentation where one column is used for the elipsis. The number returned will always be odd. For example, given a target of 5 we allocate 2 per half (plus 1 reserved for middle).
+        '''Given a target number of rows or columns, return the count of half as found in presentation where one column is used for the ellipsis. The number returned will always be odd. For example, given a target of 5 we allocate 2 per half (plus 1 reserved for middle).
         '''
         if count_target <= 4:
             return 1 # practical floor for all values of 4 or less
@@ -638,11 +769,10 @@ class Display:
         self._style_config = style_config
 
     def __repr__(self) -> str:
-        rows = self._to_rows_cells(self,
-                self._config,
-                )
+        rows = self._to_rows_cells(self, self._config)
+        dfc = _DISPLAY_FORMAT_MAP[self._config.display_format]
+
         if self._outermost:
-            dfc = _DISPLAY_FORMAT_MAP[self._config.display_format]
             header = []
             body = []
             for idx, row in enumerate(rows):
@@ -798,5 +928,3 @@ class Display:
             for idx, cell in enumerate(r):
                 rows[idx].append(cell)
         return self.__class__(rows, config=self._config)
-
-

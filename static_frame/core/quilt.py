@@ -1,4 +1,5 @@
 import typing as tp
+from itertools import repeat
 from itertools import zip_longest
 from functools import partial
 
@@ -8,10 +9,12 @@ from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitQuilt
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import NotImplementedAxis
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
@@ -412,7 +415,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         # will be set with re-axis
         # self._index = None
         # self._columns = None
-        self._assign_axis = True # Boolean to controll deferred axis index creation
+        self._assign_axis = True # Boolean to control deferred axis index creation
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
@@ -426,15 +429,25 @@ class Quilt(ContainerBase, StoreClientMixin):
                     init_exception_cls=ErrorInitQuilt,
                     )
 
+        axis_label = 'index' if self._axis == 0 else 'column'
+        axis_labels = 'indices' if self._axis == 0 else 'columns'
+        err_msg = f"Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy"
+
         if self._axis == 0:
             if not self._retain_labels:
-                self._index = self._axis_hierarchy.level_drop(1)
+                try:
+                    self._index = self._axis_hierarchy.level_drop(1)
+                except ErrorInitIndexNonUnique:
+                    raise ErrorInitQuilt(err_msg) from None
             else: # get hierarchical
                 self._index = self._axis_hierarchy
             self._columns = self._axis_opposite
         else:
             if not self._retain_labels:
-                self._columns = self._axis_hierarchy.level_drop(1)
+                try:
+                    self._columns = self._axis_hierarchy.level_drop(1)
+                except ErrorInitIndexNonUnique:
+                    raise ErrorInitQuilt(err_msg) from None
             else:
                 self._columns = self._axis_hierarchy
             self._index = self._axis_opposite
@@ -466,28 +479,52 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
 
-    def __repr__(self) -> str:
-        '''Provide a display of the :obj:`Quilt` that does not realize the entire :obj:`Frame`.
-        '''
-        if self.name:
-            header = f'{self.__class__.__name__}: {self.name}'
-        else:
-            header = self.__class__.__name__
-        return f'<{header} at {hex(id(self))}>'
-
+    @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
-        '''Provide a :obj:`Frame`-style display of the :obj:`Quilt`.
+        '''{doc}
+
+        Args:
+            {config}
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self.to_frame().display( #type: ignore
-                config,
+
+        if self._axis == 0:
+            if not self._retain_labels:
+                index = self.index.rename("Concatenated Indices")
+            else:
+                index = self._bus.index.rename("Concatenated Frames")
+            columns = self.columns.rename("Aligned Columns")
+        else:
+            index = self.index.rename("Aligned Indices")
+            if not self._retain_labels:
+                columns = self.columns.rename("Concatenated Indices")
+            else:
+                columns = self._bus.index.rename("Concatenated Frames")
+
+        def ellipsis_gen():
+            yield from repeat(tuple(repeat(".", times=len(index))), times=len(columns))
+
+        d = Display.from_params(
+                index=index,
+                columns=columns,
+                header=DisplayHeader(self.__class__, self.name),
+                column_forward_iter=ellipsis_gen,
+                column_reverse_iter=ellipsis_gen,
+                column_default_iter=ellipsis_gen,
+                config=config,
                 style_config=style_config,
                 )
+
+        # Strip out the dtype information!
+        if config is None or config.type_show:
+            d._rows.pop()
+            d._rows[1].pop()
+        return d
 
     #---------------------------------------------------------------------------
     # accessors
@@ -692,7 +729,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         assert constructor is not None
 
         for axis_values in self._axis_array(axis):
-            yield constructor(axis_values)
+            yield constructor(axis_values) # type: ignore
 
     def _axis_tuple_items(self, *,
             axis: int,

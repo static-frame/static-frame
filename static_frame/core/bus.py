@@ -10,6 +10,7 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
@@ -97,11 +98,15 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             ) -> 'Bus':
         '''Return a :obj:`Bus` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
         '''
-        series = Series.from_items(
-                    ((f.name, f) for f in frames),
-                    dtype=DTYPE_OBJECT,
-                    name=name,
-                    )
+        try:
+            series = Series.from_items(
+                        ((f.name, f) for f in frames),
+                        dtype=DTYPE_OBJECT,
+                        name=name,
+                        )
+        except ErrorInitIndexNonUnique:
+            raise ErrorInitIndexNonUnique("Frames do not have unique names") from None
+
         return cls(series, config=config)
 
     @classmethod
