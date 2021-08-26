@@ -502,11 +502,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             index = self.index.rename("Aligned Indices")
             if not self._retain_labels:
-                columns = self.columns.rename("Concatenated Indices")
+                columns = self.columns.rename("Concatenated Columns")
             else:
                 columns = self._bus.index.rename("Concatenated Frames")
 
-        def ellipsis_gen():
+        def ellipsis_gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
             yield from repeat(tuple(repeat(".", times=len(index))), times=len(columns))
 
         d = Display.from_params(
@@ -729,7 +729,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         assert constructor is not None
 
         for axis_values in self._axis_array(axis):
-            yield constructor(axis_values) # type: ignore
+            yield constructor(axis_values)
 
     def _axis_tuple_items(self, *,
             axis: int,

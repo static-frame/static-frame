@@ -24,7 +24,7 @@ from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
 from static_frame.core.style_config import StyleConfig
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index import IndexBase
+    from static_frame.core.index import IndexBase # type: ignore
 
 
 _module = sys.modules[__name__]
@@ -541,7 +541,7 @@ class Display:
                     center_sentinel=cls.ELLIPSIS_CENTER_SENTINEL
                     )
         else:
-            column_gen = column_default_iter
+            column_gen = column_default_iter # type: ignore
 
         for column in column_gen():
             if column is cls.ELLIPSIS_CENTER_SENTINEL:
