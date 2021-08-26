@@ -1,4 +1,5 @@
 import typing as tp
+from collections import defaultdict
 from itertools import chain
 from ast import literal_eval
 from copy import deepcopy
@@ -31,6 +32,7 @@ from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import IndexLevel
 from static_frame.core.index_level import IndexLevelGO
+from static_frame.core.index_level import TreeNodeT
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_datetime import IndexDatetime
 
@@ -86,6 +88,7 @@ if tp.TYPE_CHECKING:
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
 
+DDTreeNodeT = tp.DefaultDict[tp.Any, tp.Union[tp.List[tp.Any], "DDTreeNodeT"]]
 
 #-------------------------------------------------------------------------------
 class IndexHierarchy(IndexBase):
@@ -173,7 +176,7 @@ class IndexHierarchy(IndexBase):
 
     @classmethod
     def from_tree(cls: tp.Type[IH],
-            tree: tp.Any,
+            tree: TreeNodeT,
             *,
             name: NameType = None
             ) -> IH:
@@ -1565,6 +1568,40 @@ class IndexHierarchy(IndexBase):
         mi.names = self.names
         return mi
 
+    def to_tree(self) -> TreeNodeT:
+        '''Returns the tree representation of an IndexHierarchy
+        '''
+        num_layers = self.shape[1]
+
+        def get_layer_object(depth: int) -> tp.Union[tp.List[tp.Any], DDTreeNodeT]:
+            # At each layer, our current tree will have nodes of more trees, or lists
+            if depth == num_layers - 1:
+                return []
+            return defaultdict(lambda: get_layer_object(depth + 1))
+
+        def add_labels(tree: DDTreeNodeT, labels: tp.Sequence[tp.Any]) -> None:
+            # For a set of labels, add them into a tree
+            outermost_label, *inner_labels = labels
+            if len(inner_labels) == 1:
+                tree[outermost_label].append(inner_labels[0])
+                return
+
+            add_labels(tree[outermost_label], inner_labels)
+
+        tree = defaultdict(lambda: get_layer_object(1))
+        for labels in self.iter_label():
+            add_labels(tree, labels)
+
+        def clean(d: DDTreeNodeT) -> TreeNodeT:
+            for k in tuple(d.keys()):
+                if isinstance(d[k], list):
+                    d[k] = tuple(d[k])
+                else:
+                    d[k] = clean(d[k])
+            return dict(d)
+
+        return clean(tree)
+
     def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.
         '''
@@ -1573,6 +1610,9 @@ class IndexHierarchy(IndexBase):
     def level_add(self: IH, level: tp.Hashable) -> IH:
         '''Return an IndexHierarchy with a new root (outer) level added.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         if self.STATIC: # can reuse levels
             levels_src = self._levels
         else:
@@ -1604,8 +1644,10 @@ class IndexHierarchy(IndexBase):
         Args:
             count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative value is the number of depths to remove from the leaf (inner) side of the hierarchy.
         '''
-        # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
+        if self._recache:
+            self._update_array_cache()
 
+        # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
         if self._name_is_names():
             if count < 0:
                 name = self._name[:count] #type: ignore
@@ -1638,7 +1680,7 @@ class IndexHierarchy(IndexBase):
                 blocks = self._blocks.iloc[NULL_SLICE, :count]
                 return self.__class__(levels,
                         blocks=blocks,
-                        own_blocks=True,
+                        own_blocks=True, # Should this be false?
                         name=name,
                         )
             return self.__class__(levels, name=name)
@@ -1665,7 +1707,7 @@ class IndexHierarchy(IndexBase):
                 return self.__class__(levels,
                         name=name,
                         blocks=blocks,
-                        own_blocks=True
+                        own_blocks=True, # Should this be false?
                         )
             return self.__class__(levels, name=name)
 

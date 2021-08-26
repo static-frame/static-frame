@@ -412,9 +412,6 @@ class Quilt(ContainerBase, StoreClientMixin):
         # can creation until needed
         self._axis_hierarchy = axis_hierarchy
         self._axis_opposite = axis_opposite
-        # will be set with re-axis
-        # self._index = None
-        # self._columns = None
         self._assign_axis = True # Boolean to control deferred axis index creation
 
     #---------------------------------------------------------------------------
@@ -508,6 +505,10 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         def ellipsis_gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
             yield from repeat(tuple(repeat(".", times=len(index))), times=len(columns))
+
+        if config is None:
+            # We want to ensure the index/column labels are fully visible
+            config = DisplayConfig(cell_max_width_leftmost=np.inf)
 
         d = Display.from_params(
                 index=index,

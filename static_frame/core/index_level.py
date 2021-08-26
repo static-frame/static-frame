@@ -43,6 +43,9 @@ INDEX_LEVEL_SLOTS = (
             '_length',
             )
 
+TreeNodeT = tp.Dict[tp.Any, tp.Union[tp.List[tp.Any], "TreeNodeT"]]
+
+
 class IndexLevel:
     '''
     A nestable representation of an Index, where labels in that index optionally point to other Index objects.
@@ -97,7 +100,7 @@ class IndexLevel:
 
     @classmethod
     def from_tree(cls,
-            tree: tp.Any, # recursively defined
+            tree: TreeNodeT,
             index_constructors: tp.Optional[IndexConstructors] = None,
             depth_reference: tp.Optional[int] = None,
             ) -> 'IndexLevel':
