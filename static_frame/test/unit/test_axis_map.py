@@ -1,3 +1,4 @@
+import typing as tp
 import unittest
 
 import numpy as np
@@ -55,15 +56,17 @@ class TestUnit(TestCase):
         indices = (0, 1, 2, 3)
         columns = ("zZbu", "ztsv", "zUvW", "zkuW")
 
-        for f in b1.iter_element():
-            self.assertSequenceEqual(indices, f.index.values.tolist())
-            self.assertSequenceEqual(columns, f.columns.values.tolist())
+        for _, frame in b1.items():
+            self.assertSequenceEqual(indices, frame.index.values.tolist())
+            self.assertSequenceEqual(columns, frame.columns.values.tolist())
 
         def test_assertions(axis: int, flag: bool) -> None:
             hierarchy, opposite = bus_to_hierarchy(b1, axis=axis, deepcopy_from_bus=flag, init_exception_cls=ErrorInitBus)
 
             if axis == 0:
-                expected_tree = {'f1': indices, 'f2': indices, 'f3': indices}
+                expected_tree: tp.Dict[str, tp.Sequence[tp.Any]] = {
+                    'f1': indices, 'f2': indices, 'f3': indices
+                }
                 expected_index = Index(columns)
             else:
                 expected_index = Index(indices)
