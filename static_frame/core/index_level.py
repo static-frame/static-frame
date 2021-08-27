@@ -43,7 +43,7 @@ INDEX_LEVEL_SLOTS = (
             '_length',
             )
 
-TreeNodeT = tp.Dict[tp.Any, tp.Union[tp.List[tp.Any], "TreeNodeT"]]
+TreeNodeT = tp.Dict[tp.Any, tp.Union[tp.Union[Index, tp.Sequence[tp.Any]], "TreeNodeT"]]
 
 
 class IndexLevel:
@@ -107,8 +107,6 @@ class IndexLevel:
         '''
         Convert a tree structure to an IndexLevel instance. As a tree structure is a dictionary of keys to either a sequence of hashables or a dict of other keys, there is no way to represent a zero length, non-zero depth structure.
         '''
-        # tree: tp.Dict[tp.Hashable, tp.Union[Sequence[tp.Hashable], tp.Dict]]
-
         def get_index(labels: IndexInitializer, depth: int) -> Index:
             explicit_constructor: tp.Optional[IndexConstructor]
 

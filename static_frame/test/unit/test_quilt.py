@@ -1262,13 +1262,15 @@ class TestUnit(TestCase):
         q2 = Quilt(b2, retain_labels=True)
 
         common_rows = [
-            '<Index: Aligned Columns>     0 1 2 3',
-            '<Index: Concatenated Frames>',
-            'f1                           . . . .',
-            'f2                           . . . .']
+            '<Index: Aligned> 0 1 2 3 <int64>',
+            '<Index: Frames>',
+            'f1               . . . .',
+            'f2               . . . .',
+            '<<U2>']
 
-        self.assertEqual(q1.display().to_rows(), ['<Quilt: foo>', * common_rows])
-        self.assertEqual(q2.display().to_rows(), ['<Quilt>', * common_rows])
+
+        self.assertEqual(q1.display(config=config).to_rows(), ['<Quilt: foo>', * common_rows])
+        self.assertEqual(q2.display(config=config).to_rows(), ['<Quilt>', * common_rows])
 
     #---------------------------------------------------------------------------
     def test_quilt_columns_a(self) -> None:

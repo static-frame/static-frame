@@ -490,41 +490,50 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._assign_axis:
             self._update_axis_labels()
 
+        bus_columns = False # Flag to strip off column dtype info
+
         if self._axis == 0:
             if not self._retain_labels:
-                index = self.index.rename("Concatenated Indices")
+                index = self.index.rename("Concatenated")
             else:
-                index = self._bus.index.rename("Concatenated Frames")
-            columns = self.columns.rename("Aligned Columns")
+                index = self._bus.index.rename("Frames")
+            columns = self.columns.rename("Aligned")
         else:
-            index = self.index.rename("Aligned Indices")
+            index = self.index.rename("Aligned")
             if not self._retain_labels:
-                columns = self.columns.rename("Concatenated Columns")
+                columns = self.columns.rename("Concatenated")
             else:
-                columns = self._bus.index.rename("Concatenated Frames")
+                columns = self._bus.index.rename("Frames")
+                bus_columns = True
 
-        def ellipsis_gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
-            yield from repeat(tuple(repeat(".", times=len(index))), times=len(columns))
+        config = config or DisplayConfig()
 
-        if config is None:
-            # We want to ensure the index/column labels are fully visible
-            config = DisplayConfig(cell_max_width_leftmost=np.inf)
+        def placeholder_gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
+            yield from repeat(tuple(repeat(config.cell_placeholder, times=len(index))), times=len(columns))
 
         d = Display.from_params(
                 index=index,
                 columns=columns,
                 header=DisplayHeader(self.__class__, self.name),
-                column_forward_iter=ellipsis_gen,
-                column_reverse_iter=ellipsis_gen,
-                column_default_iter=ellipsis_gen,
+                column_forward_iter=placeholder_gen,
+                column_reverse_iter=placeholder_gen,
+                column_default_iter=placeholder_gen,
                 config=config,
                 style_config=style_config,
                 )
 
         # Strip out the dtype information!
-        if config is None or config.type_show:
-            d._rows.pop()
-            d._rows[1].pop()
+        if config.type_show:
+            if bus_columns:
+                # First Column Row -> last element is the dtype of the column
+                # Guaranteed to not be index hierarchy as buses cannot have index hierarchies
+                d._rows[1].pop()
+
+            # Since placeholder_gen is not a ndarray, there is no dtype to append in the final row
+            # However, in the case of a center ellipsis being added, an ellipsis will be
+            # awkwardly placed direclty adjacent to the index dtype information.
+            if d._rows[-1][-1] is Display.CELL_ELLIPSIS:
+                d._rows[-1].pop()
         return d
 
     #---------------------------------------------------------------------------

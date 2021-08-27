@@ -338,6 +338,8 @@ class DisplayConfig(metaclass=InterfaceMeta):
             'value_format_complex_positional',
             'value_format_complex_scientific',
 
+            'cell_placeholder',
+
             'display_format',
             'display_columns',
             'display_rows',
@@ -399,6 +401,8 @@ class DisplayConfig(metaclass=InterfaceMeta):
             value_format_complex_positional: str = '{}',
             value_format_complex_scientific: str = '{:.2e}',
 
+            cell_placeholder: str = '.',
+
             display_format: str = DisplayFormats.TERMINAL,
             display_columns: int = 12,
             display_rows: int = 36,
@@ -437,6 +441,8 @@ class DisplayConfig(metaclass=InterfaceMeta):
         self.value_format_float_scientific = value_format_float_scientific
         self.value_format_complex_positional = value_format_complex_positional
         self.value_format_complex_scientific = value_format_complex_scientific
+
+        self.cell_placeholder = cell_placeholder
 
         self.display_format = display_format
         self.display_columns = display_columns
