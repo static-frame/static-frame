@@ -506,7 +506,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 columns = self._bus.index.rename("Frames")
                 bus_columns = True
 
-        config = config or DisplayConfig()
+        config = config if config is not None else DisplayConfig()
 
         def placeholder_gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
             yield from repeat(tuple(repeat(config.cell_placeholder, times=len(index))), times=len(columns))
