@@ -1,5 +1,3 @@
-
-
 import unittest
 
 import numpy as np
@@ -49,21 +47,34 @@ class TestUnit(TestCase):
                 [['a', 'f1'], ['a', 'f2'], ['a', 'f3'], ['b', 'f4'], ['b', 'f5']])
 
     def test_bus_to_hierarchy_a(self) -> None:
-        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
-        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
-        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I, str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I, str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)|c(I, str)').rename('f3')
         b1 = Bus.from_frames((f1, f2, f3), name='a')
 
-        def test_assertions(hierarchy: IndexHierarchy, opposite: Index) -> None:
-            expected_tree = {'f1': (0, 1, 2, 3), 'f2': (0, 1, 2, 3), 'f3': (0, 1, 2, 3)}
-            expected_index = Index([0, 1, 2, 3])
+        indices = (0, 1, 2, 3)
+        columns = ("zZbu", "ztsv", "zUvW", "zkuW")
+
+        for f in b1.iter_element():
+            self.assertSequenceEqual(indices, f.index.values.tolist())
+            self.assertSequenceEqual(columns, f.columns.values.tolist())
+
+        def test_assertions(axis: int, flag: bool) -> None:
+            hierarchy, opposite = bus_to_hierarchy(b1, axis=axis, deepcopy_from_bus=flag, init_exception_cls=ErrorInitBus)
+
+            if axis == 0:
+                expected_tree = {'f1': indices, 'f2': indices, 'f3': indices}
+                expected_index = Index(columns)
+            else:
+                expected_index = Index(indices)
+                expected_tree = {'f1': columns, 'f2': columns, 'f3': columns}
+
             self.assertDictEqual(hierarchy.to_tree(), expected_tree)
             self.assertTrue(expected_index.equals(opposite))
 
-        test_assertions(*bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=False, init_exception_cls=ErrorInitBus))
-        test_assertions(*bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=False, init_exception_cls=ErrorInitBus))
-        test_assertions(*bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=True, init_exception_cls=ErrorInitBus))
-        test_assertions(*bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=True, init_exception_cls=ErrorInitBus))
+        for axis in (0, 1):
+            for flag in (True, False):
+                test_assertions(axis, flag)
 
     def test_bus_to_hierarchy_b(self) -> None:
 
@@ -78,6 +89,7 @@ class TestUnit(TestCase):
         index3 = IndexHierarchy.from_tree(tree3)
         values = np.arange(36).reshape(6,6)
 
+        # Align all the frames on columns!
         f1 = Frame(values, index=index1, columns=index1, name="f1")
         f2 = Frame(values, index=index2, columns=index1, name="f2")
         f3 = Frame(values, index=index3, columns=index1, name="f3")
@@ -91,12 +103,14 @@ class TestUnit(TestCase):
         test_assertions(*bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=False, init_exception_cls=CustomError))
         test_assertions(*bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=True, init_exception_cls=CustomError))
 
+        # Cannot do this since the frames do not share the same index
         with self.assertRaises(CustomError):
             bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=False, init_exception_cls=CustomError)
 
         with self.assertRaises(CustomError):
             bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=True, init_exception_cls=CustomError)
 
+        # Align all the frames on index!
         f1 = Frame(values, index=index1, columns=index1, name="f1")
         f2 = Frame(values, index=index1, columns=index2, name="f2")
         f3 = Frame(values, index=index1, columns=index3, name="f3")
@@ -105,6 +119,7 @@ class TestUnit(TestCase):
         test_assertions(*bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=False, init_exception_cls=CustomError))
         test_assertions(*bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=True, init_exception_cls=CustomError))
 
+        # Cannot do this since the frames do not share the same columns
         with self.assertRaises(CustomError):
             bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=False, init_exception_cls=CustomError)
 
