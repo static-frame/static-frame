@@ -553,16 +553,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # cache management
 
-    def _iloc_to_labels(self,
-            key: GetItemKeyType
-            ) -> np.ndarray:
-        '''
-        Given a get-item key, translate to an iterator of loc positions.
-        '''
-        if isinstance(key, int):
-            return [self.index.values[key],] # needs to be a list for usage in loc assignment
-        return self.index.values[key]
-
     @staticmethod
     def _store_reader(
             store: Store,

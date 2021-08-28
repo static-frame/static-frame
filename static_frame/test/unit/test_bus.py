@@ -4,6 +4,7 @@ from datetime import datetime
 # from io import StringIO
 import typing as tp
 import numpy as np
+import frame_fixtures as ff
 
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
@@ -1567,6 +1568,24 @@ class TestUnit(TestCase):
             )
 
     #---------------------------------------------------------------------------
+    def test_bus_iter_element_items_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Bus.from_dict(dict(a=f1, b=f2))
+        post = tuple(b1.iter_element_items())
+        self.assertEqual(len(post), 2)
+        self.assertEqual([pair[0] for pair in post], ['a', 'b'])
+        self.assertTrue(post[0][1].equals(f1))
+        self.assertTrue(post[1][1].equals(f2))
+
+    #---------------------------------------------------------------------------
     def test_bus_reindex_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1843,6 +1862,50 @@ class TestUnit(TestCase):
                     [f.shape for f in s1.values],
                     [(2, 5), (2, 5), (2, 5), (2, 5), (2, 5)]
                     )
+
+    #---------------------------------------------------------------------------
+    def test_bus_contains_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+
+        self.assertTrue('f1' in b1)
+        self.assertFalse('f3' in b1)
+
+    #---------------------------------------------------------------------------
+    def test_bus_get_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+
+        self.assertTrue(b1.get('f1').equals(f1))
+        self.assertEqual(b1.get('f3'), None)
+
+    #---------------------------------------------------------------------------
+    def test_bus_head_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        self.assertEqual(b1.head().index.values.tolist(), ['f1', 'f2', 'f3', 'f4', 'f5'])
+
+    #---------------------------------------------------------------------------
+    def test_bus_tail_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        self.assertEqual(b1.tail().index.values.tolist(), ['f2', 'f3', 'f4', 'f5', 'f6'])
 
 
 if __name__ == '__main__':
