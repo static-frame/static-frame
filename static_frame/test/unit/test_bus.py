@@ -1366,8 +1366,6 @@ class TestUnit(TestCase):
             self.assertEqual(list(b2._last_accessed.keys()),
                     ['3', '0', '1', '2'])
 
-
-
     def test_bus_max_persist_f(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(5):
@@ -1395,7 +1393,6 @@ class TestUnit(TestCase):
             self.assertEqual(b2._loaded.tolist(),
                     [False, False, False, False, True])
 
-
     def test_bus_max_persist_g(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(5):
@@ -1422,7 +1419,14 @@ class TestUnit(TestCase):
             self.assertEqual(b2._loaded.tolist(),
                     [False, False, False, False, True])
 
-
+    def test_bus_max_persist_h(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        s1 = Series((f1, f2, f3), index=('a', 'b', 'c'))
+        with self.assertRaises(ErrorInitBus):
+            # max_persist cannot be less than the number of already loaded Frames
+            Bus(s1, max_persist=2)
 
     #---------------------------------------------------------------------------
     def test_bus_sort_index_a(self) -> None:
