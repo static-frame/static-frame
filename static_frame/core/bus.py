@@ -570,6 +570,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             coll = []
             for label in labels:
                 coll.append(label)
+               # try to collect max_persist-sized bundles in coll, then use read_many to get all at once, then clear if we have more to iter
                 if len(coll) == max_persist:
                     for frame in store.read_many(coll, config=config):
                         yield frame
@@ -731,18 +732,28 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         yield from self._series.values
 
     #---------------------------------------------------------------------------
-    # dictionary-like interface; these will force loadings contained Frame
+    # dictionary-like interface; these will force loading contained Frame
 
     def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
+        labels = self._series._index.values
         if self._max_persist is None: # load all at once if possible
             if not self._loaded_all:
                 self._update_series_cache_iloc(key=NULL_SLICE)
             yield from self._series.items()
-
-        else: # force new iteration to account for max_persist
-            for i, label in enumerate(self._series._index):
+        elif self._max_persist > 1:
+            i = 0
+            i_max = len(labels)
+            while i < i_max:
+                key = slice(i, min(i + self._max_persist, i_max))
+                labels_select = labels[key] # may over select
+                # draw values to force usage of read_many in _store_reader
+                self._update_series_cache_iloc(key=key)
+                yield from zip(labels_select, self._series.values[key])
+                i += self._max_persist
+        else: # max_persist is 1
+            for i, label in enumerate(labels):
                 yield label, self._extract_iloc(i) #type: ignore
 
     _items_store = items

@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.19
+----------
+
+Optimization of ``Bus.items()`` when ``max_persist`` is greater than one.
+
+
 0.8.18
 ----------
 

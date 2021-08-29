@@ -1428,6 +1428,34 @@ class TestUnit(TestCase):
             # max_persist cannot be less than the number of already loaded Frames
             Bus(s1, max_persist=2)
 
+
+    def test_bus_max_persist_i(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2)
+            # NOTE: this type of selection forces _store_reader to use read_many at size of max_persist
+            b3 = b2[['f1', 'f2', 'f3', 'f4', 'f5']]
+            self.assertEqual(b3.status.loc[b3.status['loaded'], 'shape'].to_pairs(),
+                (('f4', (2, 8)), ('f5', (4, 4))),
+                )
+
+
     #---------------------------------------------------------------------------
     def test_bus_sort_index_a(self) -> None:
         f1 = Frame.from_dict(
