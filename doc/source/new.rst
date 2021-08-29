@@ -4,7 +4,7 @@ What is New in Static Frame
 0.8.19
 ----------
 
-Optimization of ``Bus.items()`` when ``max_persist`` is greater than one.
+Optimization of ``Bus.items()``, ``Bus.values``,  ``Bus.iter_element()``, and ``Bus.iter_element_items()`` when ``max_persist`` is greater than one.
 
 
 0.8.18

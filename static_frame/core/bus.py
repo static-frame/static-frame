@@ -722,14 +722,33 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # axis functions
 
     def _axis_element_items(self,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
-        yield from zip(self._series._index, self._series.values)
+        yield from self.items()
 
     def _axis_element(self,
             ) -> tp.Iterator[tp.Any]:
-        yield from self._series.values
+        if self._loaded_all:
+            yield from self._series.values
+        elif self._max_persist is None: # load all at once if possible
+            if not self._loaded_all:
+                self._update_series_cache_iloc(key=NULL_SLICE)
+            yield from self._series.values
+        elif self._max_persist > 1:
+            i = 0
+            i_max = len(self._series._index.values)
+            while i < i_max:
+                key = slice(i, min(i + self._max_persist, i_max))
+                # draw values to force usage of read_many in _store_reader
+                self._update_series_cache_iloc(key=key)
+                for j in range(key.start, key.stop):
+                    yield from self._series.values[j]
+                i += self._max_persist
+        else: # max_persist is 1
+            for i in range(self.__len__()):
+                self._update_series_cache_iloc(key=i)
+                yield self._series.values[i]
 
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loading contained Frame
@@ -737,12 +756,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
-        labels = self._series._index.values
-        if self._max_persist is None: # load all at once if possible
+        if self._loaded_all:
+            yield from self._series.items()
+        elif self._max_persist is None: # load all at once if possible
             if not self._loaded_all:
                 self._update_series_cache_iloc(key=NULL_SLICE)
             yield from self._series.items()
         elif self._max_persist > 1:
+            labels = self._series._index.values
             i = 0
             i_max = len(labels)
             while i < i_max:
@@ -753,8 +774,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 yield from zip(labels_select, self._series.values[key])
                 i += self._max_persist
         else: # max_persist is 1
-            for i, label in enumerate(labels):
-                yield label, self._extract_iloc(i) #type: ignore
+            for i, label in enumerate(self._series._index.values):
+                self._update_series_cache_iloc(key=i)
+                yield label, self._series.values[i] #type: ignore
 
     _items_store = items
 
@@ -770,12 +792,24 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             self._update_series_cache_iloc(key=NULL_SLICE)
             return self._series.values
 
-        # force new iteration to account for max_persist
+        # return a new array; force new iteration to account for max_persist
         post = np.empty(self.__len__(), dtype=object)
-        for i, _ in enumerate(self._series._index):
-            post[i] = self._extract_iloc(i)
-        post.flags.writeable = False
 
+        if self._max_persist > 1:
+            i = 0
+            i_max = len(self._series._index.values)
+            while i < i_max:
+                key = slice(i, min(i + self._max_persist, i_max))
+                # draw values to force usage of read_many in _store_reader
+                self._update_series_cache_iloc(key=key)
+                post[key] = self._series.values[key]
+                i += self._max_persist
+        else: # max_persist is 1
+            for i in range(self.__len__()):
+                self._update_series_cache_iloc(key=i)
+                post[i] = self._series.values[i]
+
+        post.flags.writeable = False
         return post
 
     #---------------------------------------------------------------------------
