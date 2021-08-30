@@ -520,21 +520,23 @@ class IterNode(tp.Generic[FrameOrSeries]):
         apply_constructor: tp.Callable[..., tp.Union[Frame, Series]]
 
         if self._apply_type is IterNodeApplyType.SERIES_VALUES:
-            # Creating a Series that will have the same index as source container
-            if isinstance(self._container, Frame) and kwargs['axis'] == 0:
-                index = self._container._columns
-                own_index = False
-            else:
-                index = self._container._index
-                own_index = True
-
-            shape = index.shape
 
             def apply_constructor( #pylint: disable=E0102
                     values: tp.Iterator[tp.Any],
                     dtype: DtypeSpecifier,
                     name: NameType = None,
                     ) -> Series:
+
+                # Creating a Series that will have the same index as source container
+                if isinstance(self._container, Frame) and kwargs['axis'] == 0:
+                    index = self._container._columns
+                    own_index = False
+                else:
+                    index = self._container._index
+                    own_index = True
+
+                shape = index.shape
+
                 # PERF: passing count here permits faster generator realization
                 values, _ = iterable_to_array_1d(
                         values,

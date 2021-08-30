@@ -777,6 +777,54 @@ class TestUnit(TestCase):
             self.assertTrue(b3.index.equals(y1.index))
 
 
+    #---------------------------------------------------------------------------
+    def test_yarn_iter_element_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='b1')
+        b2 = Bus.from_frames((f4, f5, f6), name='b2')
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        s1 = y1.iter_element().apply(lambda f: f.shape)
+        self.assertEqual(s1.to_pairs(),
+                (('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8)), ('f5', (4, 4)), ('f6', (6, 4))))
+
+        self.assertEqual([f.name for f in y1.iter_element() if f.shape[0] > 2],
+                ['f1', 'f2', 'f5', 'f6'],
+                )
+
+    #---------------------------------------------------------------------------
+    def test_yarn_iter_element_items_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='b1')
+        b2 = Bus.from_frames((f4, f5, f6), name='b2')
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        s1 = y1.iter_element_items().apply(lambda label, f: (label, f.shape[0], f.shape[1]))
+
+        self.assertEqual(s1.to_pairs(),
+                (('f1', ('f1', 4, 2)), ('f2', ('f2', 4, 5)), ('f3', ('f3', 2, 2)), ('f4', ('f4', 2, 8)), ('f5', ('f5', 4, 4)), ('f6', ('f6', 6, 4)))
+                )
+
+        self.assertEqual([label for label, f in y1.iter_element_items() if f.shape[0] > 2],
+                ['f1', 'f2', 'f5', 'f6'],
+                )
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

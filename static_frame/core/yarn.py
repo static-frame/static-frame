@@ -15,9 +15,9 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 # from static_frame.core.node_iter import IterNodeAxis
 # from static_frame.core.node_iter import IterNodeConstructorAxis
-# from static_frame.core.node_iter import IterNodeType
-# from static_frame.core.node_iter import IterNodeWindow
-# from static_frame.core.node_iter import IterNodeApplyType
+from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_iter import IterNodeApplyType
 # from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.util import IndexInitializer
 
@@ -217,31 +217,37 @@ class Yarn(ContainerBase, StoreClientMixin):
     #             )
 
     #---------------------------------------------------------------------------
-    # @property
-    # def iter_element(self) -> IterNodeNoArg['Bus']:
-    #     '''
-    #     Iterator of elements.
-    #     '''
-    #     return IterNodeNoArg(
-    #             container=self,
-    #             function_items=self._axis_element_items,
-    #             function_values=self._axis_element,
-    #             yield_type=IterNodeType.VALUES,
-    #             apply_type=IterNodeApplyType.SERIES_VALUES,
-    #             )
+    @property
+    def iter_element(self) -> IterNodeNoArg['Bus']:
+        '''
+        Iterator of elements.
+        '''
+        if self._assign_index:
+            self._update_index_labels()
 
-    # @property
-    # def iter_element_items(self) -> IterNodeNoArg['Bus']:
-    #     '''
-    #     Iterator of label, element pairs.
-    #     '''
-    #     return IterNodeNoArg(
-    #             container=self,
-    #             function_items=self._axis_element_items,
-    #             function_values=self._axis_element,
-    #             yield_type=IterNodeType.ITEMS,
-    #             apply_type=IterNodeApplyType.SERIES_VALUES,
-    #             )
+        return IterNodeNoArg(
+                container=self,
+                function_items=self._axis_element_items,
+                function_values=self._axis_element,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
+                )
+
+    @property
+    def iter_element_items(self) -> IterNodeNoArg['Bus']:
+        '''
+        Iterator of label, element pairs.
+        '''
+        if self._assign_index:
+            self._update_index_labels()
+
+        return IterNodeNoArg(
+                container=self,
+                function_items=self._axis_element_items,
+                function_values=self._axis_element,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
+                )
 
 
     #---------------------------------------------------------------------------
@@ -339,6 +345,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         if self._assign_index:
             self._update_index_labels()
+
         return self._index.__contains__(value)
 
     def get(self, key: tp.Hashable,
@@ -352,6 +359,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         if self._assign_index:
             self._update_index_labels()
+
         if key not in self._index:
             return default
         return self.__getitem__(key)
@@ -529,15 +537,17 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # axis functions
 
-    # def _axis_element_items(self,
-    #         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
-    #     '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
-    #     '''
-    #     yield from zip(self._series._index, self._series.values)
+    def _axis_element_items(self,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+        '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
+        '''
+        yield from self.items()
 
-    # def _axis_element(self,
-    #         ) -> tp.Iterator[tp.Any]:
-    #     yield from self._series.values
+    def _axis_element(self,
+            ) -> tp.Iterator[tp.Any]:
+
+        for bus in self._series.values:
+            yield from bus._axis_element()
 
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loadings contained Frame
@@ -550,9 +560,9 @@ class Yarn(ContainerBase, StoreClientMixin):
 
         labels = iter(self._index)
         for bus in self._series.values:
-            # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; cannot use Bus.values, as that will load all Frames at once
-            for i in range(len(bus)):
-                yield next(labels), bus._extract_iloc(i)
+            # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; Bus._axis_element is optimized for handling max_persist > 1 loading
+            for f in bus._axis_element():
+                yield next(labels), f
 
     _items_store = items
 
