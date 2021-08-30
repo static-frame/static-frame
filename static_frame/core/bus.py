@@ -776,7 +776,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         else: # max_persist is 1
             for i, label in enumerate(self._series._index.values):
                 self._update_series_cache_iloc(key=i)
-                yield label, self._series.values[i] #type: ignore
+                yield label, self._series.values[i]
 
     _items_store = items
 
