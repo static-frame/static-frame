@@ -1,5 +1,4 @@
 import typing as tp
-from collections import defaultdict
 from itertools import chain
 from ast import literal_eval
 from copy import deepcopy
@@ -1571,36 +1570,24 @@ class IndexHierarchy(IndexBase):
     def to_tree(self) -> TreeNodeT:
         '''Returns the tree representation of an IndexHierarchy
         '''
-        num_layers = self.shape[1]
-
-        def get_layer_object(depth: int) -> tp.Union[tp.List[tp.Any], DDTreeNodeT]:
-            # At each layer, our current tree will have nodes of more trees, or lists
-            if depth == num_layers - 1:
-                return []
-            return defaultdict(lambda: get_layer_object(depth + 1))
-
         def add_labels(tree: DDTreeNodeT, labels: tp.Sequence[tp.Any]) -> None:
             # For a set of labels, add them into a tree
             outermost_label, *inner_labels = labels
             if len(inner_labels) == 1:
+                if outermost_label not in tree:
+                    tree[outermost_label] = []
                 tree[outermost_label].append(inner_labels[0])
                 return
 
+            if outermost_label not in tree:
+                tree[outermost_label] = {}
             add_labels(tree[outermost_label], inner_labels)
 
-        tree: DDTreeNodeT = defaultdict(lambda: get_layer_object(1))
+        tree: DDTreeNodeT = {}
         for labels in self.iter_label():
             add_labels(tree, labels)
 
-        def clean(d: DDTreeNodeT) -> TreeNodeT:
-            for k in tuple(d.keys()):
-                if isinstance(d[k], list):
-                    d[k] = tuple(d[k])
-                else:
-                    d[k] = clean(d[k])
-            return dict(d)
-
-        return clean(tree)
+        return tree
 
     def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.
