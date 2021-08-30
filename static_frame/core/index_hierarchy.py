@@ -87,8 +87,6 @@ if tp.TYPE_CHECKING:
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
 
-DDTreeNodeT = tp.DefaultDict[tp.Any, tp.Union[tp.List[tp.Any], "DDTreeNodeT"]]
-
 #-------------------------------------------------------------------------------
 class IndexHierarchy(IndexBase):
     '''A hierarchy of :obj:`Index` objects, defined as a strict tree of uniform depth across all branches.'''
@@ -1570,7 +1568,7 @@ class IndexHierarchy(IndexBase):
     def to_tree(self) -> TreeNodeT:
         '''Returns the tree representation of an IndexHierarchy
         '''
-        def add_labels(tree: DDTreeNodeT, labels: tp.Sequence[tp.Any]) -> None:
+        def add_labels(tree: TreeNodeT, labels: tp.Sequence[tp.Any]) -> None:
             # For a set of labels, add them into a tree
             outermost_label, *inner_labels = labels
             if len(inner_labels) == 1:
@@ -1583,7 +1581,7 @@ class IndexHierarchy(IndexBase):
                 tree[outermost_label] = {}
             add_labels(tree[outermost_label], inner_labels)
 
-        tree: DDTreeNodeT = {}
+        tree: TreeNodeT = {}
         for labels in self.iter_label():
             add_labels(tree, labels)
 
