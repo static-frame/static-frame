@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Optimization of ``Bus.items()``, ``Bus.values``,  ``Bus.iter_element()``, and ``Bus.iter_element_items()`` when ``max_persist`` is greater than one.
 
+Added ``Yarn.iter_element()``, ``Yarn.iter_element_items()``.
+
 
 0.8.18
 ----------

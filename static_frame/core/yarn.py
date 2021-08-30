@@ -18,7 +18,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeApplyType
-# from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.util import IndexInitializer
 
 from static_frame.core.series import Series
@@ -205,20 +205,20 @@ class Yarn(ContainerBase, StoreClientMixin):
     def iloc(self) -> InterfaceGetItem['Yarn']:
         return InterfaceGetItem(self._extract_iloc)
 
-    # @property
-    # def drop(self) -> InterfaceSelectTrio['Yarn']:
-    #     '''
-    #     Interface for dropping elements from :obj:`Yarn`.
-    #     '''
-    #     return InterfaceSelectTrio( #type: ignore
-    #             func_iloc=self._drop_iloc,
-    #             func_loc=self._drop_loc,
-    #             func_getitem=self._drop_loc
-    #             )
+    @property
+    def drop(self) -> InterfaceSelectTrio['Yarn']:
+        '''
+        Interface for dropping elements from :obj:`Yarn`.
+        '''
+        return InterfaceSelectTrio( #type: ignore
+                func_iloc=self._drop_iloc,
+                func_loc=self._drop_loc,
+                func_getitem=self._drop_loc
+                )
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Bus']:
+    def iter_element(self) -> IterNodeNoArg['Yarn']:
         '''
         Iterator of elements.
         '''
@@ -234,7 +234,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Bus']:
+    def iter_element_items(self) -> IterNodeNoArg['Yarn']:
         '''
         Iterator of label, element pairs.
         '''
@@ -474,7 +474,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         # get the outer-most index of the hierarchical index
         target_bus_index = target_hierarchy._levels.index
 
-        # do avoid having to do a group by or other selection on the targetted bus, we create a Boolean array equal to the entire realized lengt.
+        # do avoid having to do a group by or other selection on the targetted bus, we create a Boolean array equal to the entire realized length
         valid = np.full(len(self._index), False)
         valid[key] = True
 
@@ -527,12 +527,20 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
 
-    # def _drop_iloc(self, key: GetItemKeyType) -> 'Bus':
-    #     series = self._series._drop_iloc(key)
-    #     return self._derive(series)
+    def _drop_iloc(self, key: GetItemKeyType) -> 'Yarn':
+        if self._assign_index:
+            self._update_index_labels()
 
-    # def _drop_loc(self, key: GetItemKeyType) -> 'Bus':
-    #     return self._drop_iloc(self._series._index._loc_to_iloc(key))
+        invalid = np.full(len(self._index), True)
+        invalid[key] = False
+
+        return self._extract_iloc(invalid)
+
+    def _drop_loc(self, key: GetItemKeyType) -> 'Yarn':
+        if self._assign_index:
+            self._update_index_labels()
+
+        return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
     # axis functions

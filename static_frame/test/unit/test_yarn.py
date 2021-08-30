@@ -821,8 +821,79 @@ class TestUnit(TestCase):
                 ['f1', 'f2', 'f5', 'f6'],
                 )
 
+    #---------------------------------------------------------------------------
+    def test_yarn_drop_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='b1')
+        b2 = Bus.from_frames((f4,), name='b2')
+        b3 = Bus.from_frames((f5, f6), name='b3')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
+
+        y2 = y1.drop['f3':'f5']
+        self.assertEqual(len(y2._series), 2) # 2 buses remain
+        self.assertEqual([(f.name, f.shape) for f in y2.values],
+                [('f1', (4, 2)), ('f2', (4, 5)), ('f6', (6, 4))]
+                )
+
+        y3 = y1.drop[y1.index.isin(('f1', 'f6'))]
+        self.assertEqual([(f.name, f.shape) for f in y3.values],
+                [('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8)), ('f5', (4, 4))]
+                )
+
+        y4 = y1.drop['f4']
+        self.assertEqual([(f.name, f.shape) for f in y4.values],
+                [('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f5', (4, 4)), ('f6', (6, 4))]
+                )
+
+        y5 = y1.drop[['f4', 'f5', 'f6']]
+        self.assertEqual([(f.name, f.shape) for f in y5.values],
+                [('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2))]
+                )
+
+    def test_yarn_drop_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='b1')
+        b2 = Bus.from_frames((f4,), name='b2')
+        b3 = Bus.from_frames((f5, f6), name='b3')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
+
+        y2 = y1.drop.iloc[2: 5]
+        self.assertEqual(len(y2._series), 2) # 2 buses remain
+        self.assertEqual([(f.name, f.shape) for f in y2.values],
+                [('f1', (4, 2)), ('f2', (4, 5)), ('f6', (6, 4))]
+                )
+
+        y3 = y1.drop.iloc[np.array([True, False, False, False, False, True])]
+        self.assertEqual([(f.name, f.shape) for f in y3.values],
+                [('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8)), ('f5', (4, 4))]
+                )
+
+        y4 = y1.drop.iloc[3]
+        self.assertEqual([(f.name, f.shape) for f in y4.values],
+                [('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f5', (4, 4)), ('f6', (6, 4))]
+                )
+
+        y5 = y1.drop.iloc[[3, 4, 5]]
+        self.assertEqual([(f.name, f.shape) for f in y5.values],
+                [('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2))]
+                )
 
 
+        # import ipdb; ipdb.set_trace()
 
 
 
