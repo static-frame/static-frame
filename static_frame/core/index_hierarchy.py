@@ -87,6 +87,9 @@ if tp.TYPE_CHECKING:
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
 
+TreeNodeGrowableT = tp.Dict[tp.Any, tp.Union[tp.List[tp.Any], "TreeNodeGrowableT"]]
+
+
 #-------------------------------------------------------------------------------
 class IndexHierarchy(IndexBase):
     '''A hierarchy of :obj:`Index` objects, defined as a strict tree of uniform depth across all branches.'''
@@ -1568,7 +1571,7 @@ class IndexHierarchy(IndexBase):
     def to_tree(self) -> TreeNodeT:
         '''Returns the tree representation of an IndexHierarchy
         '''
-        def add_labels(tree: TreeNodeT, labels: tp.Sequence[tp.Any]) -> None:
+        def add_labels(tree: TreeNodeGrowableT, labels: tp.Sequence[tp.Any]) -> None:
             # For a set of labels, add them into a tree
             outermost_label, *inner_labels = labels
             if len(inner_labels) == 1:
@@ -1581,10 +1584,19 @@ class IndexHierarchy(IndexBase):
                 tree[outermost_label] = {}
             add_labels(tree[outermost_label], inner_labels)
 
-        tree: TreeNodeT = {}
+        tree: TreeNodeGrowableT = {}
         for labels in self.iter_label():
             add_labels(tree, labels)
 
+        def clean(tree: TreeNodeGrowableT) -> TreeNodeT:
+            # Make the leafs immutable!
+            for k in tuple(tree.keys()):
+                if isinstance(tree[k], list):
+                    tree[k] = tuple(tree[k])
+                else:
+                    clean(tree[k])
+
+        clean(tree)
         return tree
 
     def flat(self) -> IndexBase:

@@ -43,7 +43,7 @@ INDEX_LEVEL_SLOTS = (
             '_length',
             )
 
-TreeNodeT = tp.Dict[tp.Any, tp.Union[tp.Union[Index, tp.Sequence[tp.Any]], "TreeNodeT"]]
+TreeNodeT = tp.Dict[tp.Any, tp.Union[tp.Union[Index, tp.Tuple[tp.Any]], "TreeNodeT"]]
 
 
 class IndexLevel:
