@@ -743,7 +743,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 # draw values to force usage of read_many in _store_reader
                 self._update_series_cache_iloc(key=key)
                 for j in range(key.start, key.stop):
-                    yield from self._series.values[j]
+                    yield self._series.values[j]
                 i += self._max_persist
         else: # max_persist is 1
             for i in range(self.__len__()):

@@ -1624,6 +1624,59 @@ class TestUnit(TestCase):
             (('c', (('x', 1), ('y', 2), ('z', 3))), ('b', (('x', 4), ('y', 5), ('z', 6))))
             )
 
+    def test_bus_iter_element_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2)
+
+            frames = list(b2.iter_element())
+            self.assertTrue(all(x.__class__ is Frame for x in frames))
+            self.assertEqual(len(frames), 6)
+
+            self.assertEqual( b2.status['loaded'].sum(), 2)
+
+    def test_bus_iter_element_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+
+            frames = list(b2.iter_element())
+            self.assertTrue(all(x.__class__ is Frame for x in frames))
+            self.assertEqual(len(frames), 6)
+
+            self.assertEqual( b2.status['loaded'].sum(), 1)
+
+
     #---------------------------------------------------------------------------
     def test_bus_iter_element_items_a(self) -> None:
         f1 = Frame.from_dict(
