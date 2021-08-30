@@ -1588,7 +1588,7 @@ class IndexHierarchy(IndexBase):
         for labels in self.iter_label():
             add_labels(tree, labels)
 
-        def clean(tree: TreeNodeGrowableT) -> TreeNodeT:
+        def clean(tree: TreeNodeGrowableT) -> None:
             # Make the leafs immutable!
             for k in tuple(tree.keys()):
                 if isinstance(tree[k], list):
