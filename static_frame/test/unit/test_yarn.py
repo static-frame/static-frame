@@ -794,7 +794,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.to_pairs(),
                 (('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8)), ('f5', (4, 4)), ('f6', (6, 4))))
 
-        self.assertEqual([f.name for f in y1.iter_element() if f.shape[0] > 2],
+        self.assertEqual([f.name for f in y1.iter_element() if f.shape[0] > 2], #type: ignore
                 ['f1', 'f2', 'f5', 'f6'],
                 )
 
@@ -836,7 +836,7 @@ class TestUnit(TestCase):
 
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
 
-        y2 = y1.drop['f3':'f5']
+        y2 = y1.drop['f3':'f5'] #type: ignore
         self.assertEqual(len(y2._series), 2) # 2 buses remain
         self.assertEqual([(f.name, f.shape) for f in y2.values],
                 [('f1', (4, 2)), ('f2', (4, 5)), ('f6', (6, 4))]

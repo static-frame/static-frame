@@ -8,6 +8,8 @@ Optimization of ``Bus.items()``, ``Bus.values``,  ``Bus.iter_element()``, and ``
 
 Added ``Yarn.iter_element()``, ``Yarn.iter_element_items()``.
 
+Added ``Yarn.drop[]``
+
 
 0.8.18
 ----------

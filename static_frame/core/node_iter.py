@@ -28,9 +28,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.quilt import Quilt # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.bus import Bus # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.yarn import Yarn # pylint: disable=W0611 #pragma: no cover
 
 
-FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt')
+FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt', 'Yarn')
 PoolArgGen = tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]]
 # FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')
 
@@ -528,19 +529,17 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     ) -> Series:
 
                 # Creating a Series that will have the same index as source container
-                if isinstance(self._container, Frame) and kwargs['axis'] == 0:
-                    index = self._container._columns
+                if self._container._NDIM == 2 and kwargs['axis'] == 0:
+                    index = self._container._columns #type: ignore
                     own_index = False
                 else:
                     index = self._container._index
                     own_index = True
 
-                shape = index.shape
-
                 # PERF: passing count here permits faster generator realization
                 values, _ = iterable_to_array_1d(
                         values,
-                        count=shape[0], # type: ignore
+                        count=index.shape[0],
                         dtype=dtype,
                         )
                 return Series(values, name=name, index=index, own_index=own_index)
@@ -548,9 +547,9 @@ class IterNode(tp.Generic[FrameOrSeries]):
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
             # Only use this path if the Index to be returned is different than the source container
             name_index = None # NOTE: what should this be?
-            if isinstance(self._container, Frame) and kwargs['axis'] == 0:
+            if self._container._NDIM == 2 and kwargs['axis'] == 0:
                 index_constructor = partial(
-                        self._container._columns.from_labels,
+                        self._container._columns.from_labels, #type: ignore
                         name=name_index)
             else:
                 index_constructor = partial(
