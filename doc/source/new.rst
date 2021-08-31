@@ -10,6 +10,8 @@ Added ``Yarn.iter_element()``, ``Yarn.iter_element_items()``.
 
 Added ``Yarn.drop[]``
 
+Fixed issue when using ``iter_window_*`` methods on two-dimensional containers where the opposite axis is not a default index constructor.
+
 
 0.8.18
 ----------
