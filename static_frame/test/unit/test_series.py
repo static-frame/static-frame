@@ -3816,7 +3816,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             s1.via_dt.isoformat()
 
-    def test_series_via_dt_weekday_a(self) -> None:
+    def test_series_via_dt_weekday_b(self) -> None:
         index = IndexDate.from_date_range('0001-01-01', '1000-01-01')
         s1 = Series(range(len(index)), index=index)
         wd1 = s1.index.via_dt.weekday()
