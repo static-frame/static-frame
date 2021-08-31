@@ -12,6 +12,8 @@ Added ``Yarn.drop[]``
 
 Fixed issue when using ``iter_window_*`` methods on two-dimensional containers where the opposite axis is not a default index constructor.
 
+Fixed issue when selecting rows from ``Frame`` with 0-length columns.
+
 
 0.8.18
 ----------

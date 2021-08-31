@@ -12515,7 +12515,19 @@ class TestUnit(TestCase):
             )
 
 
-        # import ipdb; ipdb.set_trace()
+    #---------------------------------------------------------------------------
+    def test_frame_zero_size_a(self) -> None:
+        f1 = Frame.from_element(0, index=range(3), columns=[0])
+        f2 = f1.drop[0]
+        self.assertEqual(f2.shape, (3, 0))
+        self.assertEqual(f2.index.values.tolist(), [0, 1, 2])
+
+        # slicing by rows should return a Frame of shape (2, 0)
+        f3 = f2.loc[1:]
+        self.assertEqual(f3.shape, (2, 0))
+        self.assertEqual(f3.index.values.tolist(), [1, 2])
+
+        self.assertEqual(f2.loc[[0, 2]].index.values.tolist(), [0, 2])
 
 
 if __name__ == '__main__':
