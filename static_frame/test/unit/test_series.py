@@ -32,9 +32,8 @@ from static_frame import IndexSecond
 from static_frame import IndexYearMonth
 from static_frame import IndexAutoFactory
 from static_frame import IndexDefaultFactory
-
+from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame import HLoc
-
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 
@@ -3803,6 +3802,7 @@ class TestUnit(TestCase):
                 (('x', '2014-01-02*05:02:00'), ('y', '2013-02-05*16:55:00'))
                 )
 
+    #---------------------------------------------------------------------------
     def test_series_via_dt_weekday_a(self) -> None:
 
         s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55'),
@@ -3816,7 +3816,21 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             s1.via_dt.isoformat()
 
+    def test_series_via_dt_weekday_a(self) -> None:
+        index = IndexDate.from_date_range('0001-01-01', '1000-01-01')
+        s1 = Series(range(len(index)), index=index)
+        wd1 = s1.index.via_dt.weekday()
 
+        s2 = Series(s1.index.values.astype(object))
+        wd2 = s2.via_dt.weekday()
+
+        wd3 = np.array([dt.weekday() for dt in s2.values], dtype=DTYPE_INT_DEFAULT)
+
+        self.assertTrue((wd1 == wd3).all())
+        self.assertTrue((wd2 == wd3).all())
+
+
+    #---------------------------------------------------------------------------
     def test_series_via_dt_fromisoformat_a(self) -> None:
         s1 = Series(('2014-02-12', '2013-11-28'), index=('x', 'y'))
         post = s1.via_dt.fromisoformat()
