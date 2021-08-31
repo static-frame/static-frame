@@ -11,6 +11,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.index import ILoc
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
+from static_frame.core.yarn import Yarn
 from static_frame.core.batch import Batch
 from static_frame.core.store import StoreConfig
 
@@ -91,6 +92,26 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitQuilt):
             _ = Quilt(b1, retain_labels=True, axis=0, axis_hierarchy=axis_hierarchy, axis_opposite=None)
 
+
+    def test_quilt_init_d(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,2)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,2)').rename('f4')
+        f5 = ff.parse('s(4,2)').rename('f5')
+        f6 = ff.parse('s(6,2)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='b1')
+        b2 = Bus.from_frames((f4,), name='b2')
+        b3 = Bus.from_frames((f5, f6), name='b3')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
+
+        q1 = Quilt(y1, retain_labels=True)
+        self.assertEqual(q1.shape, (22, 2))
+        self.assertEqual(q1.loc[[('f6', 3)]].to_pairs(),
+                ((0, ((('f6', 3), 1699.34),)), (1, ((('f6', 3), 114.58),)))
+                )
 
     #---------------------------------------------------------------------------
     def test_quilt_from_items_a(self) -> None:
@@ -1214,9 +1235,16 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2))
         q1 = Quilt(b1, retain_labels=True, axis=1)
 
+        # axis 0 will produce windows labelled by the Index
         s1 = q1.iter_window_array_items(size=2, step=1).apply(lambda _, a: a.sum())
         self.assertEqual(round(s1, 2).to_pairs(),
                 ((1, 98797.88), (2, 305042.56), (3, 185974.34)))
+
+        s2 = q1.iter_window_array_items(size=2, step=1, axis=1).apply(lambda _, a: a.sum())
+        self.assertEqual(round(s2, 2).to_pairs(),
+                ((('f1', 1), 105189.58), (('f1', 2), 173802.58), (('f1', 3), 179577.64), (('f2', 0), 7700.64), (('f2', 1), 1.0), (('f2', 2), 2.0), (('f2', 3), 4.0))
+                )
+
 
     #---------------------------------------------------------------------------
     def test_quilt_repr_a(self) -> None:

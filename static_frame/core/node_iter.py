@@ -38,7 +38,7 @@ PoolArgGen = tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[
 
 class IterNodeApplyType(Enum):
     SERIES_VALUES = 0
-    SERIES_ITEMS = 1
+    SERIES_ITEMS = 1 # only used for iter_window_*
     SERIES_ITEMS_GROUP_VALUES = 2
     SERIES_ITEMS_GROUP_LABELS = 3
     FRAME_ELEMENTS = 4
@@ -209,7 +209,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
                 dtype=dtype,
                 name=name,
                 )
-
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='map_fill')
@@ -535,7 +534,6 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 else:
                     index = self._container._index
                     own_index = True
-
                 # PERF: passing count here permits faster generator realization
                 values, _ = iterable_to_array_1d(
                         values,
@@ -545,16 +543,16 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 return Series(values, name=name, index=index, own_index=own_index)
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
-            # Only use this path if the Index to be returned is different than the source container
-            name_index = None # NOTE: what should this be?
-            if self._container._NDIM == 2 and kwargs['axis'] == 0:
+            # apply_constructor should be implemented to take a pairs of label, value; only used for iter_window
+            # axis 0 iters windows labelled by the index, axis 1 iters windows labelled by the columns
+            if self._container._NDIM == 2 and kwargs['axis'] == 1:
                 index_constructor = partial(
                         self._container._columns.from_labels, #type: ignore
-                        name=name_index)
+                        name=self._container._columns._name) # type: ignore
             else:
                 index_constructor = partial(
                         self._container._index.from_labels,
-                        name=name_index)
+                        name=self._container._index._name)
             # always return a Series
             apply_constructor = partial(
                     Series.from_items,
