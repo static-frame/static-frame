@@ -413,7 +413,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         # will be set with re-axis
         # self._index = None
         # self._columns = None
-        self._assign_axis = True # Boolean to controll deferred axis index creation
+        self._assign_axis = True # Boolean to control deferred axis index creation
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
@@ -885,7 +885,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     )
 
         parts: tp.List[tp.Any] = []
-        bus_keys: tp.Iterable[tp.Hashable]
+        frame_labels: tp.Iterable[tp.Hashable]
 
         if self._axis == 0:
             sel_key = row_key
@@ -902,11 +902,13 @@ class Quilt(ContainerBase, StoreClientMixin):
         # get ordered unique Bus labels
         axis_map_sub = self._axis_hierarchy.iloc[sel_key]
         if isinstance(axis_map_sub, tuple): #type: ignore
-            bus_keys = (axis_map_sub[0],) #type: ignore
+            frame_labels = (axis_map_sub[0],) #type: ignore
         else:
-            bus_keys = axis_map_sub._levels.index
+            # get the outer level, or just the unique frame labels needed
+            frame_labels = axis_map_sub._levels.index
 
-        for key_count, key in enumerate(bus_keys):
+        for key_count, key in enumerate(frame_labels):
+            # get Boolean segment for this Frame
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
