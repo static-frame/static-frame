@@ -113,6 +113,36 @@ class TestUnit(TestCase):
                 ((0, ((('f6', 3), 1699.34),)), (1, ((('f6', 3), 114.58),)))
                 )
 
+    def test_quilt_init_e(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,2)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,2)').rename('f4')
+        f5 = ff.parse('s(4,2)').rename('f5')
+        f6 = ff.parse('s(6,2)').rename('f6')
+
+        bm1 = Bus.from_frames((f1, f2, f3), name='b1')
+        bm2 = Bus.from_frames((f4,), name='b2')
+        bm3 = Bus.from_frames((f5, f6), name='b3')
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2, temp_file('.zip') as fp3:
+            bm1.to_zip_pickle(fp1)
+            bm2.to_zip_pickle(fp2)
+            bm3.to_zip_pickle(fp3)
+
+            b1 = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            b2 = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+            b3 = Bus.from_zip_pickle(fp3, max_persist=1).rename('c')
+
+            y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
+
+            q1 = Quilt(y1, retain_labels=True)
+            self.assertEqual(q1.shape, (22, 2))
+            self.assertEqual(q1.loc[[('f6', 3)]].to_pairs(),
+                    ((0, ((('f6', 3), 1699.34),)), (1, ((('f6', 3), 114.58),)))
+                    )
+
+
     #---------------------------------------------------------------------------
     def test_quilt_from_items_a(self) -> None:
 

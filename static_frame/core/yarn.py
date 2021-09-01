@@ -474,15 +474,14 @@ class Yarn(ContainerBase, StoreClientMixin):
         # get the outer-most index of the hierarchical index
         target_bus_index = target_hierarchy._levels.index
 
-        # do avoid having to do a group by or other selection on the targetted bus, we create a Boolean array equal to the entire realized length
+        # create a Boolean array equal to the entire realized length
         valid = np.full(len(self._index), False)
         valid[key] = True
 
         buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
-        # must run accross all labels to get incremental slices of Boolean array, but maybe there is a way to avoid
+
         pos = 0
         for bus_label, width in self._hierarchy.label_widths_at_depth(0): #type: ignore
-            # this should always be a bus
             if bus_label not in target_bus_index:
                 pos += width
                 continue
