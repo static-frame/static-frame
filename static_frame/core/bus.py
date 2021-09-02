@@ -656,6 +656,36 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
         self._loaded_all = self._loaded.all()
 
+    def unpersist(self) -> None:
+        '''Replace loaded :obj:`Frame` with :obj:`FrameDeferred`.
+        '''
+        if self._store is None:
+            # have this be a no-op so that Yarn or Quilt can call regardless of Store
+            return
+
+        if self._max_persist is not None:
+            last_accessed = self._last_accessed
+        else:
+            last_accessed = dict.fromkeys(self.index)
+
+        index = self._series.index
+        array = self._series.values.copy() # not a deepcopy
+
+        for label_remove in last_accessed:
+            idx_remove = index._loc_to_iloc(label_remove)
+            self._loaded[idx_remove] = False
+            array[idx_remove] = FrameDeferred
+
+        last_accessed.clear()
+
+        array.flags.writeable = False
+        self._series = Series(array,
+                index=self._series._index,
+                dtype=object,
+                own_index=True,
+                )
+        self._loaded_all = False
+
     #---------------------------------------------------------------------------
     # extraction
 
