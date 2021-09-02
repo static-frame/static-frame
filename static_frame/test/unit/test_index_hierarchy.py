@@ -22,12 +22,20 @@ from static_frame import Series
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexLevel
+from static_frame.core.index_level import TreeNodeT
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
+
+    def _assert_to_tree_consistency(self, tree: TreeNodeT) -> None:
+        # Ensure all IndexHierarchy's created using `from_tree` return the same tree using `to_tree`
+        ih = IndexHierarchy.from_tree(tree)
+        self.assertDictEqual(tree, ih.to_tree())
+
+    #--------------------------------------------------------------------------
 
     def test_hierarchy_slotted_a(self) -> None:
 
@@ -320,6 +328,7 @@ class TestUnit(TestCase):
                 ])
 
         ih = IndexHierarchy.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
 
         post = ih._loc_to_iloc(HLoc['I', 'B', 1])
         self.assertEqual(post, 2)
@@ -374,6 +383,7 @@ class TestUnit(TestCase):
                 ])
 
         ih = IndexHierarchy.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
 
         # TODO: add additional validaton
         post = ih.loc[('I', 'B', 2): ('II', 'A', 2)]  # type: ignore
@@ -563,7 +573,6 @@ class TestUnit(TestCase):
         post2 = ih1._loc_to_iloc(HLoc[:, :, ILoc[-4]])
         self.assertEqual(post1, [4, 5, 6, 7])
 
-
     def test_hierarchy_loc_to_iloc_m(self) -> None:
         idx = Index(range(20), loc_is_iloc=True)
         idx_alt = Index(range(20))
@@ -731,22 +740,18 @@ class TestUnit(TestCase):
     #--------------------------------------------------------------------------
 
     def test_hierarchy_from_tree_a(self) -> None:
-
         OD = OrderedDict
-
         tree = OD([('A', (1, 2, 3, 4)), ('B', (1, 2))])
 
         ih = IndexHierarchy.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
 
         self.assertEqual(ih.to_frame().to_pairs(0),
                 ((0, ((0, 'A'), (1, 'A'), (2, 'A'), (3, 'A'), (4, 'B'), (5, 'B'))), (1, ((0, 1), (1, 2), (2, 3), (3, 4), (4, 1), (5, 2))))
                 )
 
-
     def test_hierarchy_from_tree_b(self) -> None:
-
         OD = OrderedDict
-
         tree = OD([
                 ('I', OD([
                         ('A', (1, 2)), ('B', (1, 2, 3)), ('C', (2, 3))
@@ -759,9 +764,11 @@ class TestUnit(TestCase):
                 ])
 
         ih = IndexHierarchy.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
         self.assertEqual(ih.to_frame().to_pairs(0),
                 ((0, ((0, 'I'), (1, 'I'), (2, 'I'), (3, 'I'), (4, 'I'), (5, 'I'), (6, 'I'), (7, 'II'), (8, 'II'), (9, 'II'), (10, 'II'))), (1, ((0, 'A'), (1, 'A'), (2, 'B'), (3, 'B'), (4, 'B'), (5, 'C'), (6, 'C'), (7, 'A'), (8, 'A'), (9, 'A'), (10, 'B'))), (2, ((0, 1), (1, 2), (2, 1), (3, 2), (4, 3), (5, 2), (6, 3), (7, 1), (8, 2), (9, 3), (10, 1))))
                 )
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_from_labels_a(self) -> None:
@@ -1081,6 +1088,7 @@ class TestUnit(TestCase):
                 ])
 
         ih = IndexHierarchy.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
 
         # this iterates over numpy arrays, which can be used with contains
         self.assertEqual([k in ih for k in ih], #pylint: disable=E1133
@@ -1118,6 +1126,7 @@ class TestUnit(TestCase):
                 ])
 
         ih = IndexHierarchyGO.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
 
         self.assertEqual([k in ih for k in ih], #pylint: disable=E1133
                 [True, True, True, True, True, True, True, True]
@@ -1144,6 +1153,7 @@ class TestUnit(TestCase):
                 ])
 
         ih = IndexHierarchy.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
 
         post = ih.display()
         self.assertEqual(len(post), 10)
@@ -1166,6 +1176,7 @@ class TestUnit(TestCase):
                 ])
 
         ih = IndexHierarchy.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
 
         s = Series(range(8), index=ih)
 
@@ -1179,7 +1190,9 @@ class TestUnit(TestCase):
 
     def test_hierarchy_series_a(self) -> None:
         f1 = IndexHierarchy.from_tree
-        s1 = Series.from_element(23, index=f1(dict(a=(1,2,3))))
+        tree = dict(a=(1,2,3))
+        s1 = Series.from_element(23, index=f1(tree))
+        self._assert_to_tree_consistency(tree)
         self.assertEqual(s1.values.tolist(), [23, 23, 23])
 
         f2 = IndexHierarchy.from_product
@@ -1202,6 +1215,7 @@ class TestUnit(TestCase):
                 ])
 
         ih = IndexHierarchy.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
 
         data = np.arange(6*6).reshape(6, 6)
         f1 = Frame(data, index=ih, columns=ih)
@@ -1238,6 +1252,7 @@ class TestUnit(TestCase):
                 ])
 
         ih = IndexHierarchyGO.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
         data = np.arange(6*6).reshape(6, 6)
         # TODO: this only works if own_columns is True for now
         f1 = FrameGO(data, index=range(6), columns=ih, own_columns=True)
@@ -1274,6 +1289,7 @@ class TestUnit(TestCase):
                 ),
                 ])
         ih1 = IndexHierarchyGO.from_tree(tree1)
+        self._assert_to_tree_consistency(tree1)
 
         tree2 = OD([
                 ('III', OD([
@@ -1286,6 +1302,7 @@ class TestUnit(TestCase):
                 ),
                 ])
         ih2 = IndexHierarchyGO.from_tree(tree2)
+        self._assert_to_tree_consistency(tree2)
 
         ih1.extend(ih2)
 
@@ -1960,7 +1977,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
 
-
     def test_hierarchy_drop_level_b(self) -> None:
 
         labels = (
@@ -2005,7 +2021,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih.level_drop(1).values.tolist(),
                 [1, 2, 3, 4])
 
-
     def test_hierarchy_drop_level_e(self) -> None:
 
         ih = IndexHierarchy.from_product(('a',), (1,), ('x', 'y'))
@@ -2014,7 +2029,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(ih.level_drop(1).values.tolist(),
                 [[1, 'x'], [1, 'y']])
-
 
     def test_hierarchy_drop_level_f(self) -> None:
 
@@ -2027,7 +2041,6 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_product(('a',), (1,), ('x',))
         with self.assertRaises(NotImplementedError):
             _ = ih.level_drop(0)
-
 
     def test_hierarchy_drop_level_h(self) -> None:
 
@@ -2096,6 +2109,18 @@ class TestUnit(TestCase):
         ih4 = ih1.level_drop(-3)
         self.assertEqual(ih4.name, 'a')
 
+    def test_hierarchy_drop_level_k(self) -> None:
+        tree = {
+            'f1': {'i_I': ('1',), 'i_II': ('2',)},
+            'f2': {'c_I': ('A', ), 'c_II': ('B',)}
+        }
+        ih = IndexHierarchy.from_tree(tree)
+        self._assert_to_tree_consistency(tree)
+        post = ih.level_drop(1)
+
+        # This used to raise `ValueError: negative dimensions are not allowed`
+        # as the `ih` hadn't properly updated its internal cache before creation
+        post.display()
 
     #---------------------------------------------------------------------------
 

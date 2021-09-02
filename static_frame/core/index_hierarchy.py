@@ -31,6 +31,7 @@ from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import IndexLevel
 from static_frame.core.index_level import IndexLevelGO
+from static_frame.core.index_level import TreeNodeT
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_datetime import IndexDatetime
 
@@ -85,6 +86,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series #pylint: disable=W0611,C0412 #pragma: no cover
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
+
+TreeNodeGrowableT = tp.Dict[tp.Any, tp.Union[tp.List[tp.Any], "TreeNodeGrowableT"]]
 
 
 #-------------------------------------------------------------------------------
@@ -173,7 +176,7 @@ class IndexHierarchy(IndexBase):
 
     @classmethod
     def from_tree(cls: tp.Type[IH],
-            tree: tp.Any,
+            tree: TreeNodeT,
             *,
             name: NameType = None
             ) -> IH:
@@ -1565,6 +1568,37 @@ class IndexHierarchy(IndexBase):
         mi.names = self.names
         return mi
 
+    def to_tree(self) -> TreeNodeT:
+        '''Returns the tree representation of an IndexHierarchy
+        '''
+        def add_labels(tree: TreeNodeGrowableT, labels: tp.Sequence[tp.Any]) -> None:
+            # For a set of labels, add them into a tree
+            outermost_label, *inner_labels = labels
+            if len(inner_labels) == 1:
+                if outermost_label not in tree:
+                    tree[outermost_label] = []
+                tree[outermost_label].append(inner_labels[0])
+                return
+
+            if outermost_label not in tree:
+                tree[outermost_label] = {}
+            add_labels(tree[outermost_label], inner_labels)
+
+        tree: TreeNodeGrowableT = {}
+        for labels in self.iter_label():
+            add_labels(tree, labels)
+
+        def clean(tree: TreeNodeGrowableT) -> None:
+            # Make the leafs immutable!
+            for k in tuple(tree.keys()):
+                if isinstance(tree[k], list):
+                    tree[k] = tuple(tree[k])
+                else:
+                    clean(tree[k])
+
+        clean(tree)
+        return tree
+
     def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.
         '''
@@ -1604,8 +1638,10 @@ class IndexHierarchy(IndexBase):
         Args:
             count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative value is the number of depths to remove from the leaf (inner) side of the hierarchy.
         '''
-        # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
+        if self._recache:
+            self._update_array_cache()
 
+        # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
         if self._name_is_names():
             if count < 0:
                 name = self._name[:count] #type: ignore
@@ -1665,7 +1701,7 @@ class IndexHierarchy(IndexBase):
                 return self.__class__(levels,
                         name=name,
                         blocks=blocks,
-                        own_blocks=True
+                        own_blocks=True,
                         )
             return self.__class__(levels, name=name)
 

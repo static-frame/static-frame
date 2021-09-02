@@ -327,6 +327,8 @@ class DisplayConfig(metaclass=InterfaceMeta):
             'type_color_index',
             'type_color_series',
             'type_color_frame',
+            'type_color_bus',
+            'type_color_quilt',
 
             'type_delimiter_left',
             'type_delimiter_right',
@@ -335,6 +337,8 @@ class DisplayConfig(metaclass=InterfaceMeta):
             'value_format_float_scientific',
             'value_format_complex_positional',
             'value_format_complex_scientific',
+
+            'cell_placeholder',
 
             'display_format',
             'display_columns',
@@ -385,6 +389,8 @@ class DisplayConfig(metaclass=InterfaceMeta):
             type_color_index: ColorConstructor = 0x777777,
             type_color_series: ColorConstructor = 0x777777,
             type_color_frame: ColorConstructor = 0x777777,
+            type_color_bus: ColorConstructor = 0x777777,
+            type_color_quilt: ColorConstructor = 0x777777,
 
             type_delimiter_left: str = '<',
             type_delimiter_right: str = '>',
@@ -394,6 +400,8 @@ class DisplayConfig(metaclass=InterfaceMeta):
             value_format_float_scientific: str = '{:.8e}',
             value_format_complex_positional: str = '{}',
             value_format_complex_scientific: str = '{:.2e}',
+
+            cell_placeholder: str = '.',
 
             display_format: str = DisplayFormats.TERMINAL,
             display_columns: int = 12,
@@ -423,6 +431,8 @@ class DisplayConfig(metaclass=InterfaceMeta):
         self.type_color_index = type_color_index
         self.type_color_series = type_color_series
         self.type_color_frame = type_color_frame
+        self.type_color_bus = type_color_bus
+        self.type_color_quilt = type_color_quilt
 
         self.type_delimiter_left = type_delimiter_left
         self.type_delimiter_right = type_delimiter_right
@@ -431,6 +441,8 @@ class DisplayConfig(metaclass=InterfaceMeta):
         self.value_format_float_scientific = value_format_float_scientific
         self.value_format_complex_positional = value_format_complex_positional
         self.value_format_complex_scientific = value_format_complex_scientific
+
+        self.cell_placeholder = cell_placeholder
 
         self.display_format = display_format
         self.display_columns = display_columns
@@ -507,6 +519,8 @@ class DisplayConfigs:
             type_color_index='DarkSlateGray',
             type_color_series='dimgray',
             type_color_frame='lightslategray',
+            type_color_bus='dimgray',
+            type_color_quilt='lightslategray',
             )
 
     UNBOUND = DisplayConfig(

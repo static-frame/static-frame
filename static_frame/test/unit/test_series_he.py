@@ -52,7 +52,7 @@ class TestUnit(TestCase):
 
         d = {s1: 'foo', s3: 'bar'}
         self.assertTrue(s2 in d)
-        self.assertEquals(d[s1], 'foo')
+        self.assertEqual(d[s1], 'foo')
 
         with self.assertRaises(TypeError):
             _ = s5 in d

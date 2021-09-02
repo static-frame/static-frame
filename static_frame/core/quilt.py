@@ -1,4 +1,5 @@
 import typing as tp
+from itertools import repeat
 from itertools import zip_longest
 from functools import partial
 
@@ -8,10 +9,12 @@ from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitQuilt
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import NotImplementedAxis
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
@@ -410,9 +413,6 @@ class Quilt(ContainerBase, StoreClientMixin):
         # can creation until needed
         self._axis_hierarchy = axis_hierarchy
         self._axis_opposite = axis_opposite
-        # will be set with re-axis
-        # self._index = None
-        # self._columns = None
         self._assign_axis = True # Boolean to control deferred axis index creation
 
     #---------------------------------------------------------------------------
@@ -427,15 +427,27 @@ class Quilt(ContainerBase, StoreClientMixin):
                     init_exception_cls=ErrorInitQuilt,
                     )
 
+        def get_explicit_failure() -> ErrorInitQuilt:
+            axis_label = 'index' if self._axis == 0 else 'column'
+            axis_labels = 'indices' if self._axis == 0 else 'columns'
+            err_msg = f"Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy"
+            return ErrorInitQuilt(err_msg)
+
         if self._axis == 0:
             if not self._retain_labels:
-                self._index = self._axis_hierarchy.level_drop(1)
+                try:
+                    self._index = self._axis_hierarchy.level_drop(1)
+                except ErrorInitIndexNonUnique:
+                    raise get_explicit_failure() from None
             else: # get hierarchical
                 self._index = self._axis_hierarchy
             self._columns = self._axis_opposite
         else:
             if not self._retain_labels:
-                self._columns = self._axis_hierarchy.level_drop(1)
+                try:
+                    self._columns = self._axis_hierarchy.level_drop(1)
+                except ErrorInitIndexNonUnique:
+                    raise get_explicit_failure() from None
             else:
                 self._columns = self._axis_hierarchy
             self._index = self._axis_opposite
@@ -467,28 +479,66 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
 
-    def __repr__(self) -> str:
-        '''Provide a display of the :obj:`Quilt` that does not realize the entire :obj:`Frame`.
-        '''
-        if self.name:
-            header = f'{self.__class__.__name__}: {self.name}'
-        else:
-            header = self.__class__.__name__
-        return f'<{header} at {hex(id(self))}>'
-
+    @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
-        '''Provide a :obj:`Frame`-style display of the :obj:`Quilt`.
+        '''{doc}
+
+        Args:
+            {config}
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self.to_frame().display( #type: ignore
-                config,
+
+        drop_column_dtype = False
+
+        if self._axis == 0:
+            if not self._retain_labels:
+                index = self.index.rename("Concatenated")
+            else:
+                index = self._bus.index.rename("Frames")
+            columns = self.columns.rename("Aligned")
+        else:
+            index = self.index.rename("Aligned")
+            if not self._retain_labels:
+                columns = self.columns.rename("Concatenated")
+            else:
+                columns = self._bus.index.rename("Frames")
+                drop_column_dtype = True
+
+        config = config or DisplayConfig()
+
+        def placeholder_gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
+            assert config is not None
+            yield from repeat(tuple(repeat(config.cell_placeholder, times=len(index))), times=len(columns))
+
+        d = Display.from_params(
+                index=index,
+                columns=columns,
+                header=DisplayHeader(self.__class__, self.name),
+                column_forward_iter=placeholder_gen,
+                column_reverse_iter=placeholder_gen,
+                column_default_iter=placeholder_gen,
+                config=config,
                 style_config=style_config,
                 )
+
+        # Strip out the dtype information!
+        if config.type_show:
+            if drop_column_dtype:
+                # First Column Row -> last element is the dtype of the column
+                # Guaranteed to not be index hierarchy as buses cannot have index hierarchies
+                d._rows[1].pop()
+
+            # Since placeholder_gen is not a ndarray, there is no dtype to append in the final row
+            # However, in the case of a center ellipsis being added, an ellipsis will be
+            # awkwardly placed direclty adjacent to the index dtype information.
+            if d._rows[-1][-1] == Display.CELL_ELLIPSIS:
+                d._rows[-1].pop()
+        return d
 
     #---------------------------------------------------------------------------
     # accessors
@@ -917,7 +967,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     # component might be a Series, can call the same with first arg
-                    component = component.relabel_level_add(key) #type: ignore
+                    component = component.relabel_level_add(key) # type: ignore
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:

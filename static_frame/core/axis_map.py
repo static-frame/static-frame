@@ -5,6 +5,7 @@ from copy import deepcopy
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.bus import Bus
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_level import TreeNodeT
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_deepcopy
@@ -40,22 +41,27 @@ def bus_to_hierarchy(
     Given a :obj:`Bus` and an axis, derive a :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
     '''
     # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
-
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
-    tree = {}
+    def tree_extractor(index: IndexBase) -> tp.Union[IndexBase, TreeNodeT]:
+        index = extractor(index)
+        if isinstance(index, IndexHierarchy):
+            return index.to_tree()
+        return index
+
+    tree: TreeNodeT = {}
     opposite: tp.Optional[IndexBase] = None
 
     for label, f in bus.items():
         if axis == 0:
-            tree[label] = extractor(f.index)
+            tree[label] = tree_extractor(f.index)
             if opposite is None:
                 opposite = extractor(f.columns)
             else:
                 if not opposite.equals(f.columns):
                     raise init_exception_cls('opposite axis must have equivalent indices')
         elif axis == 1:
-            tree[label] = extractor(f.columns)
+            tree[label] = tree_extractor(f.columns)
             if opposite is None:
                 opposite = extractor(f.index)
             else:
@@ -63,8 +69,8 @@ def bus_to_hierarchy(
                     raise init_exception_cls('opposite axis must have equivalent indices')
         else:
             raise AxisInvalid(f'invalid axis {axis}')
-    return IndexHierarchy.from_tree(tree), opposite # type: ignore
 
+    return IndexHierarchy.from_tree(tree), opposite # type: ignore
 
 
 def buses_to_hierarchy(
@@ -87,10 +93,3 @@ def buses_to_hierarchy(
         tree[label] = extractor(bus._series._index)
 
     return IndexHierarchy.from_tree(tree)
-
-
-
-
-
-
-

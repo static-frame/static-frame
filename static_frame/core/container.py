@@ -29,7 +29,7 @@ T = tp.TypeVar('T')
 #-------------------------------------------------------------------------------
 class ContainerBase(metaclass=InterfaceMeta):
     '''
-    Root of all containers. Most containers, like Series, Frame, and Index, inherit from ContainerOperand; only Bus inherits from ContainerBase.
+    Root of all containers. The core containers, like Series, Frame, and Index, inherit from ContainerOperand. The higher-order containers, like Bus, Quilt, Batch, and Yarn, inherit from ContainerBase.
     '''
     __slots__ = EMPTY_TUPLE
 
