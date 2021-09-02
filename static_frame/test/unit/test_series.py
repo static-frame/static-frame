@@ -585,6 +585,25 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             _ = s1 == [10, 20]
 
+
+    def test_series_binary_operator_p(self) -> None:
+
+        s1 = Series([10, 20, 30]) << Series([1, 2, 1])
+        self.assertEqual(s1.to_pairs(),
+            ((0, 20), (1, 80), (2, 60)))
+
+        s2 = Series([10, 20, 30]) >> Series([1, 2, 1])
+        self.assertEqual(s2.to_pairs(),
+            ((0, 5), (1, 5), (2, 15)))
+
+        s3 = [10, 20, 30] / Series([1, 2, 1])
+        self.assertEqual(s3.to_pairs(),
+            ((0, 10), (1, 10), (2, 30)))
+
+        s4 = [10, 20, 30] // Series([2, 3, 4])
+        self.assertEqual(s4.to_pairs(),
+            ((0, 5), (1, 6), (2, 7)))
+
     #---------------------------------------------------------------------------
     def test_series_rename_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
