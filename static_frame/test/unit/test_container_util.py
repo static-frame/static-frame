@@ -16,6 +16,11 @@ from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import apply_binary_operator_blocks_columnar
+from static_frame.core.container_util import container_to_exporter_attr
+from static_frame.core.container_util import get_block_match
+
+from static_frame.core.frame import FrameHE
+
 
 from static_frame.test.test_case import TestCase
 
@@ -630,6 +635,45 @@ class TestUnit(TestCase):
         self.assertTrue(all(p.ndim == 1 for p in post))
         self.assertEqual(np.stack(post, axis=1).tolist(),
                 [[0, 0, 1, 0], [0, 0, 0, 0], [2, 4, 5, 20]])
+
+
+    #---------------------------------------------------------------------------
+    def test_container_to_exporter_attr(self) -> None:
+        self.assertEqual(container_to_exporter_attr(Frame), 'to_frame')
+        self.assertEqual(container_to_exporter_attr(FrameHE), 'to_frame_he')
+
+        with self.assertRaises(NotImplementedError):
+            container_to_exporter_attr(Series)
+
+    #---------------------------------------------------------------------------
+    def test_block_match_a(self) -> None:
+
+        # opperate on the back of the list
+        stack = [np.arange(4).reshape(2, 2), np.arange(0, 2), np.arange(6).reshape(2, 3)]
+        post1 = list(get_block_match(1, stack))
+
+        # takes front of each block in reverse order
+        self.assertEqual(post1[0].tolist(), [0, 3])
+
+        self.assertEqual([a.shape for a in post1],
+                [(2,)])
+        self.assertEqual([a.shape for a in stack],
+                [(2, 2), (2,), (2, 2)])
+
+    def test_block_match_b(self) -> None:
+
+        # opperate on the back of the list
+        stack = [np.arange(4).reshape(2, 2), np.arange(0, 2), np.arange(6).reshape(2, 3)]
+        post1 = list(get_block_match(5, stack))
+
+        # takes front of each block in reverse order
+        self.assertEqual(post1[0].tolist(), [[0, 1, 2], [3, 4, 5]])
+
+        self.assertEqual([a.shape for a in post1],
+                [(2, 3), (2,), (2, 1)])
+        self.assertEqual([a.shape for a in stack],
+                [(2, 1)])
+
 
 
 if __name__ == '__main__':
