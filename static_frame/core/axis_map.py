@@ -10,6 +10,9 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_deepcopy
 
+if tp.TYPE_CHECKING:
+    from static_frame.core.yarn import Yarn #pylint: disable=W0611 #pragma: no cover
+
 
 def get_extractor(
         deepcopy_from_bus: bool,
@@ -29,7 +32,7 @@ def get_extractor(
 
 
 def bus_to_hierarchy(
-        bus: Bus,
+        bus: tp.Union[Bus, 'Yarn'],
         axis: int,
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],

@@ -1,6 +1,20 @@
 What is New in Static Frame
 ===============================
 
+0.8.19
+----------
+
+Optimization of ``Bus.items()``, ``Bus.values``,  ``Bus.iter_element()``, and ``Bus.iter_element_items()`` when ``max_persist`` is greater than one.
+
+Added ``Yarn.iter_element()``, ``Yarn.iter_element_items()``.
+
+Added ``Yarn.drop[]``
+
+Fixed issue when using ``iter_window_*`` methods on two-dimensional containers where the opposite axis is not a default index constructor.
+
+Fixed issue when selecting rows from ``Frame`` with 0-length columns.
+
+
 0.8.18
 ----------
 

@@ -1686,7 +1686,7 @@ class Series(ContainerOperand):
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
-        yield from zip(self._index, self.values)
+        yield from zip(self._index.__iter__(), self.values)
 
     def _axis_element(self,
             ) -> tp.Iterator[tp.Any]:

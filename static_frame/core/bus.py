@@ -558,16 +558,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # cache management
 
-    def _iloc_to_labels(self,
-            key: GetItemKeyType
-            ) -> np.ndarray:
-        '''
-        Given a get-item key, translate to an iterator of loc positions.
-        '''
-        if isinstance(key, int):
-            return [self.index.values[key],] # needs to be a list for usage in loc assignment
-        return self.index.values[key]
-
     @staticmethod
     def _store_reader(
             store: Store,
@@ -585,6 +575,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             coll = []
             for label in labels:
                 coll.append(label)
+               # try to collect max_persist-sized bundles in coll, then use read_many to get all at once, then clear if we have more to iter
                 if len(coll) == max_persist:
                     for frame in store.read_many(coll, config=config):
                         yield frame
@@ -670,6 +661,36 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
         self._loaded_all = self._loaded.all()
 
+    def unpersist(self) -> None:
+        '''Replace loaded :obj:`Frame` with :obj:`FrameDeferred`.
+        '''
+        if self._store is None:
+            # have this be a no-op so that Yarn or Quilt can call regardless of Store
+            return
+
+        if self._max_persist is not None:
+            last_accessed = self._last_accessed
+        else:
+            last_accessed = dict.fromkeys(self.index)
+
+        index = self._series.index
+        array = self._series.values.copy() # not a deepcopy
+
+        for label_remove in last_accessed:
+            idx_remove = index._loc_to_iloc(label_remove)
+            self._loaded[idx_remove] = False
+            array[idx_remove] = FrameDeferred
+
+        last_accessed.clear()
+
+        array.flags.writeable = False
+        self._series = Series(array,
+                index=self._series._index,
+                dtype=object,
+                own_index=True,
+                )
+        self._loaded_all = False
+
     #---------------------------------------------------------------------------
     # extraction
 
@@ -736,29 +757,61 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # axis functions
 
     def _axis_element_items(self,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
-        yield from zip(self._series._index, self._series.values)
+        yield from self.items()
 
     def _axis_element(self,
             ) -> tp.Iterator[tp.Any]:
-        yield from self._series.values
+        if self._loaded_all:
+            yield from self._series.values
+        elif self._max_persist is None: # load all at once if possible
+            if not self._loaded_all:
+                self._update_series_cache_iloc(key=NULL_SLICE)
+            yield from self._series.values
+        elif self._max_persist > 1:
+            i = 0
+            i_max = len(self._series._index.values)
+            while i < i_max:
+                key = slice(i, min(i + self._max_persist, i_max))
+                # draw values to force usage of read_many in _store_reader
+                self._update_series_cache_iloc(key=key)
+                for j in range(key.start, key.stop):
+                    yield self._series.values[j]
+                i += self._max_persist
+        else: # max_persist is 1
+            for i in range(self.__len__()):
+                self._update_series_cache_iloc(key=i)
+                yield self._series.values[i]
 
     #---------------------------------------------------------------------------
-    # dictionary-like interface; these will force loadings contained Frame
+    # dictionary-like interface; these will force loading contained Frame
 
     def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
-        if self._max_persist is None: # load all at once if possible
+        if self._loaded_all:
+            yield from self._series.items()
+        elif self._max_persist is None: # load all at once if possible
             if not self._loaded_all:
                 self._update_series_cache_iloc(key=NULL_SLICE)
             yield from self._series.items()
-
-        else: # force new iteration to account for max_persist
-            for i, label in enumerate(self._series._index):
-                yield label, self._extract_iloc(i) #type: ignore
+        elif self._max_persist > 1:
+            labels = self._series._index.values
+            i = 0
+            i_max = len(labels)
+            while i < i_max:
+                key = slice(i, min(i + self._max_persist, i_max))
+                labels_select = labels[key] # may over select
+                # draw values to force usage of read_many in _store_reader
+                self._update_series_cache_iloc(key=key)
+                yield from zip(labels_select, self._series.values[key])
+                i += self._max_persist
+        else: # max_persist is 1
+            for i, label in enumerate(self._series._index.values):
+                self._update_series_cache_iloc(key=i)
+                yield label, self._series.values[i]
 
     _items_store = items
 
@@ -774,12 +827,24 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             self._update_series_cache_iloc(key=NULL_SLICE)
             return self._series.values
 
-        # force new iteration to account for max_persist
+        # return a new array; force new iteration to account for max_persist
         post = np.empty(self.__len__(), dtype=object)
-        for i, _ in enumerate(self._series._index):
-            post[i] = self._extract_iloc(i)
-        post.flags.writeable = False
 
+        if self._max_persist > 1:
+            i = 0
+            i_max = len(self._series._index.values)
+            while i < i_max:
+                key = slice(i, min(i + self._max_persist, i_max))
+                # draw values to force usage of read_many in _store_reader
+                self._update_series_cache_iloc(key=key)
+                post[key] = self._series.values[key]
+                i += self._max_persist
+        else: # max_persist is 1
+            for i in range(self.__len__()):
+                self._update_series_cache_iloc(key=i)
+                post[i] = self._series.values[i]
+
+        post.flags.writeable = False
         return post
 
     #---------------------------------------------------------------------------

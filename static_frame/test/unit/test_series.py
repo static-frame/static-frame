@@ -32,9 +32,8 @@ from static_frame import IndexSecond
 from static_frame import IndexYearMonth
 from static_frame import IndexAutoFactory
 from static_frame import IndexDefaultFactory
-
+from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame import HLoc
-
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 
@@ -585,6 +584,25 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ValueError):
             _ = s1 == [10, 20]
+
+
+    def test_series_binary_operator_p(self) -> None:
+
+        s1 = Series([10, 20, 30]) << Series([1, 2, 1])
+        self.assertEqual(s1.to_pairs(),
+            ((0, 20), (1, 80), (2, 60)))
+
+        s2 = Series([10, 20, 30]) >> Series([1, 2, 1])
+        self.assertEqual(s2.to_pairs(),
+            ((0, 5), (1, 5), (2, 15)))
+
+        s3 = [10, 20, 30] / Series([1, 2, 1])
+        self.assertEqual(s3.to_pairs(),
+            ((0, 10), (1, 10), (2, 30)))
+
+        s4 = [10, 20, 30] // Series([2, 3, 4])
+        self.assertEqual(s4.to_pairs(),
+            ((0, 5), (1, 6), (2, 7)))
 
     #---------------------------------------------------------------------------
     def test_series_rename_a(self) -> None:
@@ -3803,6 +3821,7 @@ class TestUnit(TestCase):
                 (('x', '2014-01-02*05:02:00'), ('y', '2013-02-05*16:55:00'))
                 )
 
+    #---------------------------------------------------------------------------
     def test_series_via_dt_weekday_a(self) -> None:
 
         s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55'),
@@ -3816,7 +3835,21 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             s1.via_dt.isoformat()
 
+    def test_series_via_dt_weekday_b(self) -> None:
+        index = IndexDate.from_date_range('0001-01-01', '1000-01-01')
+        s1 = Series(range(len(index)), index=index)
+        wd1 = s1.index.via_dt.weekday()
 
+        s2 = Series(s1.index.values.astype(object))
+        wd2 = s2.via_dt.weekday()
+
+        wd3 = np.array([dt.weekday() for dt in s2.values], dtype=DTYPE_INT_DEFAULT)
+
+        self.assertTrue((wd1 == wd3).all())
+        self.assertTrue((wd2 == wd3).all())
+
+
+    #---------------------------------------------------------------------------
     def test_series_via_dt_fromisoformat_a(self) -> None:
         s1 = Series(('2014-02-12', '2013-11-28'), index=('x', 'y'))
         post = s1.via_dt.fromisoformat()
@@ -4374,13 +4407,15 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 2), ('c', 4))
                 )
 
+        s2 = s1 + 1
+
         self.assertEqual(
-                round(10 / (s1.via_fill_value(1) + 1), 1).to_pairs(),
+                round(10 / s2.via_fill_value(1), 1).to_pairs(),
                 (('a', 10.0), ('b', 5.0), ('c', 3.3))
                 )
 
         self.assertEqual(
-                (10 // (s1.via_fill_value(0) + 1)).to_pairs(),
+                (10 // s2.via_fill_value(1)).to_pairs(),
                 (('a', 10), ('b', 5), ('c', 3))
                 )
 
@@ -4457,6 +4492,42 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 ((0, ('a===aa===aa', 2)), (1, ('aa===bab', 1)), (2, ('cab===baaa===ab', 2)))
                 )
+
+    def test_series_via_re_match_a(self) -> None:
+        s1 = sf.Series(('aaaaaa', 'aabab', 'cabbaaaab'))
+        s2 = s1.via_re('aa').match()
+        self.assertEqual(s2.to_pairs(),
+                ((0, True), (1, True), (2, False))
+                )
+
+        s3 = s1.via_re('aa').match(pos=4)
+        self.assertEqual(s3.to_pairs(),
+                ((0, True), (1, False), (2, True))
+                )
+
+        s4 = s1.via_re('aa').match(pos=4, endpos=1)
+        self.assertEqual(s4.to_pairs(),
+                ((0, False), (1, False), (2, False))
+                )
+
+    def test_series_via_re_fullmatch_a(self) -> None:
+        s1 = sf.Series(('aaaaaa', 'aabab', 'cabbaaaab'))
+        s2 = s1.via_re('aa').fullmatch()
+        self.assertEqual(s2.to_pairs(),
+                ((0, False), (1, False), (2, False))
+                )
+
+        s3 = s1.via_re('aa').fullmatch(pos=4)
+        self.assertEqual(s3.to_pairs(),
+                ((0, True), (1, False), (2, False))
+                )
+
+        s4 = s1.via_re('aa').fullmatch(pos=4, endpos=6)
+        self.assertEqual(s4.to_pairs(),
+                ((0, True), (1, False), (2, True))
+                )
+
+
 
     #---------------------------------------------------------------------------
     def test_series_rank_ordinal_a(self) -> None:

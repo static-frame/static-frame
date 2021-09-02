@@ -67,6 +67,7 @@ class TestUnit(TestCase):
         # failure when including objects
         f1 = Frame.from_dict(
                 dict(x=(1,2,-5,object()), y=(3,4,-5,-3000)),
+                name='foo',
                 )
         frames = (f1,)
 
@@ -137,6 +138,8 @@ class TestUnit(TestCase):
             self.assertEqual(f2.to_pairs(0),
                     (('0ax', ((0, 1), (1, 2), (2, -5), (3, 3))),
                     ('3iv', ((0, 3), (1, 4), (2, -5), (3, -3000)))))
+
+
 
     #---------------------------------------------------------------------------
 

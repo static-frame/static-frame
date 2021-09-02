@@ -139,7 +139,7 @@ class _StoreZip(Store):
 
     @staticmethod
     def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
-        raise NotImplementedError
+        raise NotImplementedError('implement on derived class') #pragma: no cover
 
     @store_coherent_write
     def write(self,

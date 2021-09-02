@@ -4,6 +4,7 @@ from datetime import datetime
 # from io import StringIO
 import typing as tp
 import numpy as np
+import frame_fixtures as ff
 
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
@@ -1365,8 +1366,6 @@ class TestUnit(TestCase):
             self.assertEqual(list(b2._last_accessed.keys()),
                     ['3', '0', '1', '2'])
 
-
-
     def test_bus_max_persist_f(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(5):
@@ -1394,7 +1393,6 @@ class TestUnit(TestCase):
             self.assertEqual(b2._loaded.tolist(),
                     [False, False, False, False, True])
 
-
     def test_bus_max_persist_g(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(5):
@@ -1421,7 +1419,67 @@ class TestUnit(TestCase):
             self.assertEqual(b2._loaded.tolist(),
                     [False, False, False, False, True])
 
+    def test_bus_max_persist_h(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        s1 = Series((f1, f2, f3), index=('a', 'b', 'c'))
+        with self.assertRaises(ErrorInitBus):
+            # max_persist cannot be less than the number of already loaded Frames
+            Bus(s1, max_persist=2)
 
+
+    def test_bus_max_persist_i(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2)
+            # NOTE: this type of selection forces _store_reader to use read_many at size of max_persist
+            b3 = b2[['f1', 'f2', 'f3', 'f4', 'f5']]
+            self.assertEqual(b3.status.loc[b3.status['loaded'], 'shape'].to_pairs(),
+                (('f4', (2, 8)), ('f5', (4, 4))),
+                )
+
+    def test_bus_max_persist_j(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2)
+            # NOTE: this type of selection forces _store_reader to use read_many at size of max_persist
+            a1 = b2.values
+            self.assertNotEqual(id(a1), id(b2._series.values))
+            self.assertEqual(b2.status['loaded'].sum(), 2)
+            self.assertTrue(all([f.__class__ is Frame for f in a1]))
 
     #---------------------------------------------------------------------------
     def test_bus_sort_index_a(self) -> None:
@@ -1565,6 +1623,99 @@ class TestUnit(TestCase):
         self.assertEqual(post[1].to_pairs(),
             (('c', (('x', 1), ('y', 2), ('z', 3))), ('b', (('x', 4), ('y', 5), ('z', 6))))
             )
+
+    def test_bus_iter_element_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2)
+
+            frames = list(b2.iter_element())
+            self.assertTrue(all(x.__class__ is Frame for x in frames))
+            self.assertEqual(len(frames), 6)
+            self.assertEqual( b2.status['loaded'].sum(), 2)
+
+    def test_bus_iter_element_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+
+            frames = list(b2.iter_element())
+            self.assertTrue(all(x.__class__ is Frame for x in frames))
+            self.assertEqual(len(frames), 6)
+            self.assertEqual( b2.status['loaded'].sum(), 1)
+
+    def test_bus_iter_element_d(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config)
+
+            frames = list(b2.iter_element())
+            self.assertTrue(all(x.__class__ is Frame for x in frames))
+            self.assertEqual(len(frames), 6)
+            self.assertEqual( b2.status['loaded'].sum(), 6)
+
+    #---------------------------------------------------------------------------
+    def test_bus_iter_element_items_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Bus.from_dict(dict(a=f1, b=f2))
+        post = tuple(b1.iter_element_items())
+        self.assertEqual(len(post), 2)
+        self.assertEqual([pair[0] for pair in post], ['a', 'b'])
+        self.assertTrue(post[0][1].equals(f1))
+        self.assertTrue(post[1][1].equals(f2))
 
     #---------------------------------------------------------------------------
     def test_bus_reindex_a(self) -> None:
@@ -1844,6 +1995,145 @@ class TestUnit(TestCase):
                     [(2, 5), (2, 5), (2, 5), (2, 5), (2, 5)]
                     )
 
+    #---------------------------------------------------------------------------
+    def test_bus_contains_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+
+        self.assertTrue('f1' in b1)
+        self.assertFalse('f3' in b1)
+
+    #---------------------------------------------------------------------------
+    def test_bus_get_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+
+        self.assertTrue(b1.get('f1').equals(f1))
+        self.assertEqual(b1.get('f3'), None)
+
+    #---------------------------------------------------------------------------
+    def test_bus_head_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        self.assertEqual(b1.head().index.values.tolist(), ['f1', 'f2', 'f3', 'f4', 'f5'])
+
+    #---------------------------------------------------------------------------
+    def test_bus_tail_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        self.assertEqual(b1.tail().index.values.tolist(), ['f2', 'f3', 'f4', 'f5', 'f6'])
+
+    #---------------------------------------------------------------------------
+    def test_bus_unpersist_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=3)
+            b3 = b2['f2':]
+            self.assertEqual(b2.status['loaded'].sum(), 3)
+            b2.unpersist()
+            self.assertEqual(b2.status['loaded'].sum(), 0)
+            self.assertEqual(b2['f6'].shape, (6, 4))
+            self.assertEqual(b2.status['loaded'].sum(), 1)
+
+            self.assertEqual(b3.status['loaded'].sum(), 3)
+
+    def test_bus_unpersist_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        b1.unpersist()
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2)
+            list(b2.items())
+            list(b2.items())
+            self.assertEqual(b2.status['loaded'].sum(), 2)
+
+            b2.unpersist()
+            self.assertEqual(b2.status['loaded'].sum(), 0)
+
+
+    def test_bus_unpersist_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        b1.unpersist()
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_pickle(fp, config=config)
+            list(b2.items())
+            self.assertEqual(b2.status['loaded'].sum(), 6)
+
+            b2.unpersist()
+            self.assertEqual(b2.status['loaded'].sum(), 0)
+
+            b3 = b2[['f2', 'f5', 'f6']]
+            self.assertEqual(b3.status['loaded'].sum(), 3)
+            self.assertEqual(b2.status['loaded'].sum(), 3)
+
+            b2.unpersist()
+            self.assertEqual(b2.status['loaded'].sum(), 0)
 
 if __name__ == '__main__':
 

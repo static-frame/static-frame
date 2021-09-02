@@ -47,13 +47,14 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.yarn import Yarn
 
 from static_frame.core.axis_map import bus_to_hierarchy
 from static_frame.core.axis_map import get_extractor
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''
-    A :obj:`Frame`-like view of the contents of a :obj:`Bus`. With the Quilt, :obj:`Frame` contained in a :obj:`Bus` can be conceived as stacking vertically (primary axis 0) or horizontally (primary axis 1). If the labels of the primary axis are unique accross all contained :obj:`Frame`, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the primary axis labels. A :obj:`Quilt` can only be created if labels of the opposite axis of all contained :obj:`Frame` are aligned.
+    A :obj:`Frame`-like view of the contents of a :obj:`Bus` or :obj:`Yarn`. With the Quilt, :obj:`Frame` contained in a :obj:`Bus` or :obj:`Yarn` can be conceived as stacking vertically (primary axis 0) or horizontally (primary axis 1). If the labels of the primary axis are unique accross all contained :obj:`Frame`, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the primary axis labels. A :obj:`Quilt` can only be created if labels of the opposite axis of all contained :obj:`Frame` are aligned.
     '''
 
     __slots__ = (
@@ -68,7 +69,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             '_deepcopy_from_bus',
             )
 
-    _bus: Bus
+    _bus: tp.Union[Bus, Yarn]
     _axis: int
     _axis_hierarchy: tp.Optional[IndexHierarchy]
     _axis_opposite: tp.Optional[IndexBase]
@@ -390,7 +391,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     @doc_inject(selector='quilt_init')
     def __init__(self,
-            bus: Bus,
+            bus: tp.Union[Bus, Yarn],
             *,
             axis: int = 0,
             retain_labels: bool,
@@ -873,11 +874,11 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key]._extract_array(sel_component, opposite_key) #type: ignore [attr-defined]
+                component = self._bus.loc[key]._extract_array(sel_component, opposite_key) #type: ignore
                 if sel_reduces:
                     component = component[0]
             else:
-                component = self._bus.loc[key]._extract_array(opposite_key, sel_component) #type: ignore [attr-defined]
+                component = self._bus.loc[key]._extract_array(opposite_key, sel_component) #type: ignore
                 if sel_reduces:
                     if component.ndim == 1:
                         component = component[0]
@@ -932,7 +933,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     )
 
         parts: tp.List[tp.Any] = []
-        bus_keys: tp.Iterable[tp.Hashable]
+        frame_labels: tp.Iterable[tp.Hashable]
 
         if self._axis == 0:
             sel_key = row_key
@@ -949,11 +950,13 @@ class Quilt(ContainerBase, StoreClientMixin):
         # get ordered unique Bus labels
         axis_map_sub = self._axis_hierarchy.iloc[sel_key]
         if isinstance(axis_map_sub, tuple): #type: ignore
-            bus_keys = (axis_map_sub[0],) #type: ignore
+            frame_labels = (axis_map_sub[0],) #type: ignore
         else:
-            bus_keys = axis_map_sub._levels.index
+            # get the outer level, or just the unique frame labels needed
+            frame_labels = axis_map_sub._levels.index
 
-        for key_count, key in enumerate(bus_keys):
+        for key_count, key in enumerate(frame_labels):
+            # get Boolean segment for this Frame
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
@@ -971,9 +974,9 @@ class Quilt(ContainerBase, StoreClientMixin):
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     if component_is_series:
-                        component = component.relabel_level_add(key)
+                        component = component.relabel_level_add(key) #type: ignore
                     else:
-                        component = component.relabel_level_add(columns=key)
+                        component = component.relabel_level_add(columns=key) #type: ignore
                 if sel_reduces: # make Frame into a Series, Series into an element
                     if component_is_series:
                         component = component.iloc[0]

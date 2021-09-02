@@ -129,6 +129,37 @@ class TestUnit(TestCase):
         with self.assertRaises(CustomError):
             bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=True, init_exception_cls=CustomError)
 
+    def test_buses_to_hierarchy_a(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        post = buses_to_hierarchy((b1, b2), (b1.name, b2.name), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
+
+        self.assertEqual(post.values.tolist(),
+                [['a', 'f1'], ['a', 'f2'], ['a', 'f3'], ['b', 'f4'], ['b', 'f5']])
+
+    def test_buses_to_hierarchy_b(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='foo')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='foo')
+
+        with self.assertRaises(ErrorInitYarn):
+            _ = buses_to_hierarchy((b1, b2),
+                    (b1.name, b2.name),
+                    deepcopy_from_bus=False,
+                    init_exception_cls=ErrorInitYarn)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -13,7 +13,7 @@ Brief Summary
 maximum 400 characters.
 
 
-This talk will introduce the NumPy `datetime64` datatype, describing its features and performance in comparison to Python's `date` and `datetime` objects. Practical examples of working with, and converting between, these types will be provided. The usage of `datetime64` with time series data in Pandas and StaticFrame will be compared, and StaticFrame's `via_dt` interface will be explored.
+This talk will introduce the NumPy `datetime64` datatype, describing its features and performance in comparison to Python's `date` and `datetime` objects. Practical examples of working with, and converting between, these types will be provided. The usage of `datetime64` with time series data in Pandas and StaticFrame will be compared, illustrating the value of using units with `datetime64`.
 
 # useful discussion here:
 https://stackoverflow.com/questions/13703720/converting-between-datetime-timestamp-and-datetime64
@@ -25,62 +25,52 @@ Brief Bullet Point Outline
 Brief outline.
 
 I. Introduction
+I.A. Motivation
+I.B. Confusing examples
+I.C. Y2262 illustrates datatype misuse.
 
-II. Why we need datetime64
-II.A. Python's ``date`` and ``datetime`` objects.
-II.B. The problem with ``datetime`` PyObjects in arrays
-II.C. Features of the ``datetime64`` dtype and ``datetime64`` arrays
-    The application of a time unit to a 64-bit signed integer
-    A wide range of time units
-    Time units permit maximizing range
+II. Fundamentals of ``datetime64`` and Python ``datetime``
+II.A. NumPy v. Python: boxed values v. contiguous bytes
+II.B. Datetime data representations
+II.C. Datetime units
+II.D. Representation differences between ``datetime64`` and Python ``datetime``
+II.E. ``timedelta64`` and ``timedelta``
+II.F. Comparing constructors
 
-III. Comparing ``datetime`` and ``datetime64``
-III.A. Constructors, interface, features, and "Not a Time"
-    A PyObject versus an int64
-    Units
-    Initialization
-        string v. discrete integers
-    Attributes and methods
-    Transformations, operator overloading, and timedeltas
-    NaT
-    np.datetime_data()
-III.B. Performance comparisons between ``datetime64`` arrays and ``datetime`` PyObjects.
-    Creation from strings
-    Arrays of datetime64 compared to arrays of datetime PyObjects
-    Transforming, applying timedeltas
+III. NumPy dtype and ``datetime64``
+III.A. dtype basics
+III.B. dtype with units
+III.C. Comparing dtype
 
-IV. Converting between ``datetime`` and ``datetime64``
-IV. A. ``datetime64`` supports units that cannot be represented as ``datetime``
-    Date objects cannot represent months or years without a date
-    Datetime objects cannot represent sub-microsecond timestamps
-IV. B. Converting from ``datetime64`` to ``datetime``
-    astype(object), tolist(), item()
-IV. C. Converting from ``datetime`` to ``datetime64``
-    np.array(), np.datetime64()
-IV. D. Pandas ``Timestamp``: a ``datetime``-like type with nanosecond units
-    Support for timezones
+IV. Comparing ``datetime64`` and Python ``datetime``
+IV.A. Resolution
+IV.B. Range
+IV.C. Converting Units
+IV.D. Comparing
+IV.E. Shifting
+IV.F. Missing Time
 
-V. Labelling values with ``datetime64`` in Pandas and StaticFrame
-V.A. Pandas exclusive usage of nanoseconds in DatetimeIndex and Timestamp objects
-V.B. StaticFrame's support for ``datetime64`` units
+V. Performance Comparisons
+V.A. The problem of Python ``datetime`` in object arrays
+V.B. DirectFromString, ParseFromString
+V.C. DeriveYear
+V.D. TrueOnMonday
+V.E. TrueLessThan
+V.F. ShiftDay
 
-VI. Advantages of unit-specification of dates and times
-VI.A. Unambiguous resolution specification
-    Do not suggest something is time when it is a date
-VI.B. Represent a larger range of dates and times
-    Want years beyond 1677 or 2262
-VI.C. More explicit typing leads to more-maintainable code
-    More narrow typing
-    self documenting
-    Monthly timeseries data
-    Specifying the resolution of a measurement
+VI. Converting between ``datetime64`` and Python ``datetime``
+VI.A. ``datetime64`` to Python ``datetime``
+VI.B. Python ``datetime`` to ``datetime64``
 
-VII. Making ``datetime64`` as easy to work with as ``datetime``
-VII.A. Pandas ``dt`` interface
-    Getting date-component attributes
-VII.B. StaticFrame ``via_dt`` interface
-    Utilities for string parsing and formatting
+VII. Labeling Data with Datetime
+VII.A. Pandas exclusive usage of nanoseconds in DatetimeIndex and Timestamp objects
+VII.B. Pandas retyping any ``datetime64`` to nanoseconds
+VII.C. StaticFrame datetime Index family permits usage of units
 
+VIII. Advantages of Units in Datetime
+VIII.A. Unambiguous resolution specification
+VIII.B. Represent a larger range of dates and times
+VIII.C. More explicit typing leads to more-maintainable code
 
 
 
@@ -88,9 +78,9 @@ Description
 Detailed outline.
 
 
-NumPy supports a date and time array datatype called ``datetime64``. Unlike Python's standard library types (``datetime`` and ``date``), ``datetime64`` supports an extensive range of time units, from year to attosecond. This specification of unit permits unambiguous resolution specification, more narrow typing of time information, and taking full advantage of time ranges that fit within the underlying representation (a 64-bit signed integer).
+NumPy supports a datetime array datatype called ``datetime64``. Unlike Python's standard library types (``datetime`` and ``date``), ``datetime64`` supports an extensive range of time units, from year to attosecond. This specification of unit permits unambiguous resolution specification, more narrow typing of time information, and taking full advantage of time ranges that fit within the underlying representation (a 64-bit signed integer).
 
-This talk will introduce ``datetime64`` arrays and describe their features and performance in comparison to Python's ``date`` and ``datetime`` types. Practical examples of working with, and converting between, these formats will be provided. As date and time information is particularly useful for labeled time-series data, the usage of ``datetime64`` in Pandas and StaticFrame indices will be examined. Pandas use of only a single unit (nanosecond) will be shown to lead to a "Y2262" problem and offer other disadvantages compared to StaticFrame's full support for ``datetime64`` units. Finally, StaticFrame's ``via_dt`` interface will be shown to offer utilities that make working with ``datetime64`` as easy as working with Python's ``date`` and ``datetime`` objects.
+This talk will introduce ``datetime64`` arrays and describe their features and performance in comparison to Python's ``date`` and ``datetime`` types. Practical examples of working with, and converting between, these formats will be provided. As date and time information is particularly useful for labeled time-series data, the usage of ``datetime64`` in Pandas and StaticFrame indices will be examined. Pandas exclusive and coercive use of only a single unit (nanosecond) will be shown to lead to a "Y2262" problem and offer other disadvantages compared to StaticFrame's full support for ``datetime64`` units.
 
 The audience for this talk is anyone working with NumPy ``datetime64`` or Pandas ``DatetimeIndex`` or ``Timestamp`` types, or those wanting to better understand the limitations of Python's ``date`` and ``datetime`` objects, particularly when used in NumPy arrays. Basic familiarity with these types is helpful but not required. This will be an informative presentation with concise code examples and practical tips for working with these types. Audience members will come away with a firm understanding of the limits and opportunities of these types, relevant for anyone working with time series data.
 

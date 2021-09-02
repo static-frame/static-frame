@@ -2383,6 +2383,9 @@ class TestUnit(TestCase):
         a2 = np.array([False, False, True, True, False, True, True])
         self.assertEqual(array1d_to_last_contiguous_to_edge(a2), 5)
 
+        a3 = np.array([False, False, False, False])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a3), 4)
+
     #---------------------------------------------------------------------------
     def test_array_sample_a(self) -> None:
         a1 = np.arange(10)

@@ -189,6 +189,11 @@ Series and Frame interfaces
 3. `fill_value` permits replacing NaNs with min value, max value, inf, or whichever
 
 
+s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, 15, 15], index=tuple('abcdefghij'))
+
+s1 = sf.Series([8, np.nan, 15, 7, 2, 20, np.nan, 4, 20, 7, 15, 15, np.nan], index=tuple('abcdefghijklm'))
+
+
 #-------------------------------------------------------------------------------
 Testing
 

@@ -1993,7 +1993,7 @@ class TypeBlocks(ContainerOperand):
         The result is suitable for passing to TypeBlocks constructor.
         '''
         row_key_null = (row_key is None or
-                (isinstance(row_key, slice) and row_key == NULL_SLICE))
+                (row_key.__class__ is slice and row_key == NULL_SLICE))
 
         single_row = False
         if row_key_null:
@@ -2015,34 +2015,38 @@ class TypeBlocks(ContainerOperand):
             single_row = True
 
         # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
-        for block_idx, slc in self._key_to_block_slices(column_key): # PREF: slow from line profiler
-            b = self._blocks[block_idx]
-            if b.ndim == 1: # given 1D array, our row key is all we need
-                if row_key_null:
-                    block_sliced = b
-                else:
-                    block_sliced = b[row_key] # PERF: slow from line profiler
-            else: # given 2D, use row key and column slice
-                if row_key_null:
-                    block_sliced = b[NULL_SLICE, slc]
-                else:
-                    block_sliced = b[row_key, slc]
+        if self._shape[1] == 0 and (column_key is None or
+                (column_key.__class__ is slice and column_key == NULL_SLICE)):
+            yield EMPTY_ARRAY.reshape(self._shape)[row_key]
+        else:
+            for block_idx, slc in self._key_to_block_slices(column_key): # PREF: slow from line profiler
+                b = self._blocks[block_idx]
+                if b.ndim == 1: # given 1D array, our row key is all we need
+                    if row_key_null:
+                        block_sliced = b
+                    else:
+                        block_sliced = b[row_key] # PERF: slow from line profiler
+                else: # given 2D, use row key and column slice
+                    if row_key_null:
+                        block_sliced = b[NULL_SLICE, slc]
+                    else:
+                        block_sliced = b[row_key, slc]
 
-            # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
-            if block_sliced.__class__ is np.ndarray:
-                # if we have a single row and the thing we sliced is 1d, we need to rotate it
-                if single_row and block_sliced.ndim == 1:
-                    block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
-                # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d
-                elif (block_sliced.ndim == 2
-                        and block_sliced.shape[0] == 1
-                        and not single_row):
-                    block_sliced = block_sliced[0]
-            else: # a single element, wrap back up in array
-                # NOTE: this is faster than using np.full(1, block_sliced, dtype=dtype)
-                block_sliced = np.array((block_sliced,), dtype=b.dtype)
+                # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
+                if block_sliced.__class__ is np.ndarray:
+                    # if we have a single row and the thing we sliced is 1d, we need to rotate it
+                    if single_row and block_sliced.ndim == 1:
+                        block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
+                    # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d
+                    elif (block_sliced.ndim == 2
+                            and block_sliced.shape[0] == 1
+                            and not single_row):
+                        block_sliced = block_sliced[0]
+                else: # a single element, wrap back up in array
+                    # NOTE: this is faster than using np.full(1, block_sliced, dtype=dtype)
+                    block_sliced = np.array((block_sliced,), dtype=b.dtype)
 
-            yield block_sliced
+                yield block_sliced
 
 
     def _extract_array(self,

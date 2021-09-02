@@ -28,16 +28,17 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.quilt import Quilt # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.bus import Bus # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.yarn import Yarn # pylint: disable=W0611 #pragma: no cover
 
 
-FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt')
+FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt', 'Yarn')
 PoolArgGen = tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]]
 # FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')
 
 
 class IterNodeApplyType(Enum):
     SERIES_VALUES = 0
-    SERIES_ITEMS = 1
+    SERIES_ITEMS = 1 # only used for iter_window_*
     SERIES_ITEMS_GROUP_VALUES = 2
     SERIES_ITEMS_GROUP_LABELS = 3
     FRAME_ELEMENTS = 4
@@ -208,7 +209,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
                 dtype=dtype,
                 name=name,
                 )
-
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='map_fill')
@@ -520,40 +520,39 @@ class IterNode(tp.Generic[FrameOrSeries]):
         apply_constructor: tp.Callable[..., tp.Union[Frame, Series]]
 
         if self._apply_type is IterNodeApplyType.SERIES_VALUES:
-            # Creating a Series that will have the same index as source container
-            if isinstance(self._container, Frame) and kwargs['axis'] == 0:
-                index = self._container._columns
-                own_index = False
-            else:
-                index = self._container._index
-                own_index = True
-
-            shape = index.shape
 
             def apply_constructor( #pylint: disable=E0102
                     values: tp.Iterator[tp.Any],
                     dtype: DtypeSpecifier,
                     name: NameType = None,
                     ) -> Series:
+
+                # Creating a Series that will have the same index as source container
+                if self._container._NDIM == 2 and kwargs['axis'] == 0:
+                    index = self._container._columns #type: ignore
+                    own_index = False
+                else:
+                    index = self._container._index
+                    own_index = True
                 # PERF: passing count here permits faster generator realization
                 values, _ = iterable_to_array_1d(
                         values,
-                        count=shape[0], # type: ignore
+                        count=index.shape[0],
                         dtype=dtype,
                         )
                 return Series(values, name=name, index=index, own_index=own_index)
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
-            # Only use this path if the Index to be returned is different than the source container
-            name_index = None # NOTE: what should this be?
-            if isinstance(self._container, Frame) and kwargs['axis'] == 0:
+            # apply_constructor should be implemented to take a pairs of label, value; only used for iter_window
+            # axis 0 iters windows labelled by the index, axis 1 iters windows labelled by the columns
+            if self._container._NDIM == 2 and kwargs['axis'] == 1:
                 index_constructor = partial(
-                        self._container._columns.from_labels,
-                        name=name_index)
+                        self._container._columns.from_labels, #type: ignore
+                        name=self._container._columns._name) # type: ignore
             else:
                 index_constructor = partial(
                         self._container._index.from_labels,
-                        name=name_index)
+                        name=self._container._index._name)
             # always return a Series
             apply_constructor = partial(
                     Series.from_items,

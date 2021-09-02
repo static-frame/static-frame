@@ -15,10 +15,10 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 # from static_frame.core.node_iter import IterNodeAxis
 # from static_frame.core.node_iter import IterNodeConstructorAxis
-# from static_frame.core.node_iter import IterNodeType
-# from static_frame.core.node_iter import IterNodeWindow
-# from static_frame.core.node_iter import IterNodeApplyType
-# from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_iter import IterNodeApplyType
+from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.util import IndexInitializer
 
 from static_frame.core.series import Series
@@ -205,43 +205,49 @@ class Yarn(ContainerBase, StoreClientMixin):
     def iloc(self) -> InterfaceGetItem['Yarn']:
         return InterfaceGetItem(self._extract_iloc)
 
-    # @property
-    # def drop(self) -> InterfaceSelectTrio['Yarn']:
-    #     '''
-    #     Interface for dropping elements from :obj:`Yarn`.
-    #     '''
-    #     return InterfaceSelectTrio( #type: ignore
-    #             func_iloc=self._drop_iloc,
-    #             func_loc=self._drop_loc,
-    #             func_getitem=self._drop_loc
-    #             )
+    @property
+    def drop(self) -> InterfaceSelectTrio['Yarn']:
+        '''
+        Interface for dropping elements from :obj:`Yarn`.
+        '''
+        return InterfaceSelectTrio( #type: ignore
+                func_iloc=self._drop_iloc,
+                func_loc=self._drop_loc,
+                func_getitem=self._drop_loc
+                )
 
     #---------------------------------------------------------------------------
-    # @property
-    # def iter_element(self) -> IterNodeNoArg['Bus']:
-    #     '''
-    #     Iterator of elements.
-    #     '''
-    #     return IterNodeNoArg(
-    #             container=self,
-    #             function_items=self._axis_element_items,
-    #             function_values=self._axis_element,
-    #             yield_type=IterNodeType.VALUES,
-    #             apply_type=IterNodeApplyType.SERIES_VALUES,
-    #             )
+    @property
+    def iter_element(self) -> IterNodeNoArg['Yarn']:
+        '''
+        Iterator of elements.
+        '''
+        if self._assign_index:
+            self._update_index_labels()
 
-    # @property
-    # def iter_element_items(self) -> IterNodeNoArg['Bus']:
-    #     '''
-    #     Iterator of label, element pairs.
-    #     '''
-    #     return IterNodeNoArg(
-    #             container=self,
-    #             function_items=self._axis_element_items,
-    #             function_values=self._axis_element,
-    #             yield_type=IterNodeType.ITEMS,
-    #             apply_type=IterNodeApplyType.SERIES_VALUES,
-    #             )
+        return IterNodeNoArg(
+                container=self,
+                function_items=self._axis_element_items,
+                function_values=self._axis_element,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
+                )
+
+    @property
+    def iter_element_items(self) -> IterNodeNoArg['Yarn']:
+        '''
+        Iterator of label, element pairs.
+        '''
+        if self._assign_index:
+            self._update_index_labels()
+
+        return IterNodeNoArg(
+                container=self,
+                function_items=self._axis_element_items,
+                function_values=self._axis_element,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_VALUES,
+                )
 
 
     #---------------------------------------------------------------------------
@@ -339,6 +345,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         if self._assign_index:
             self._update_index_labels()
+
         return self._index.__contains__(value)
 
     def get(self, key: tp.Hashable,
@@ -352,6 +359,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         if self._assign_index:
             self._update_index_labels()
+
         if key not in self._index:
             return default
         return self.__getitem__(key)
@@ -466,15 +474,14 @@ class Yarn(ContainerBase, StoreClientMixin):
         # get the outer-most index of the hierarchical index
         target_bus_index = target_hierarchy._levels.index
 
-        # do avoid having to do a group by or other selection on the targetted bus, we create a Boolean array equal to the entire realized lengt.
+        # create a Boolean array equal to the entire realized length
         valid = np.full(len(self._index), False)
         valid[key] = True
 
         buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
-        # must run accross all labels to get incremental slices of Boolean array, but maybe there is a way to avoid
+
         pos = 0
         for bus_label, width in self._hierarchy.label_widths_at_depth(0): #type: ignore
-            # this should always be a bus
             if bus_label not in target_bus_index:
                 pos += width
                 continue
@@ -519,25 +526,35 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
 
-    # def _drop_iloc(self, key: GetItemKeyType) -> 'Bus':
-    #     series = self._series._drop_iloc(key)
-    #     return self._derive(series)
+    def _drop_iloc(self, key: GetItemKeyType) -> 'Yarn':
+        if self._assign_index:
+            self._update_index_labels()
 
-    # def _drop_loc(self, key: GetItemKeyType) -> 'Bus':
-    #     return self._drop_iloc(self._series._index._loc_to_iloc(key))
+        invalid = np.full(len(self._index), True)
+        invalid[key] = False
+
+        return self._extract_iloc(invalid)
+
+    def _drop_loc(self, key: GetItemKeyType) -> 'Yarn':
+        if self._assign_index:
+            self._update_index_labels()
+
+        return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
     # axis functions
 
-    # def _axis_element_items(self,
-    #         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
-    #     '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
-    #     '''
-    #     yield from zip(self._series._index, self._series.values)
+    def _axis_element_items(self,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+        '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
+        '''
+        yield from self.items()
 
-    # def _axis_element(self,
-    #         ) -> tp.Iterator[tp.Any]:
-    #     yield from self._series.values
+    def _axis_element(self,
+            ) -> tp.Iterator[tp.Any]:
+
+        for bus in self._series.values:
+            yield from bus._axis_element()
 
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loadings contained Frame
@@ -550,9 +567,9 @@ class Yarn(ContainerBase, StoreClientMixin):
 
         labels = iter(self._index)
         for bus in self._series.values:
-            # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; cannot use Bus.values, as that will load all Frames at once
-            for i in range(len(bus)):
-                yield next(labels), bus._extract_iloc(i)
+            # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; Bus._axis_element is optimized for handling max_persist > 1 loading
+            for f in bus._axis_element():
+                yield next(labels), f
 
     _items_store = items
 
