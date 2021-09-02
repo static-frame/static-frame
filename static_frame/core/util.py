@@ -1675,8 +1675,6 @@ def array_shift(*,
     elif shift < 0:
         # do negative modulo to force negative value
         shift_mod = shift % -array.shape[axis]
-    else:
-        raise NotImplementedError('no handling for this configuration')
 
     if (not wrap and shift == 0) or (wrap and shift_mod == 0):
         # must copy so as not let caller mutate arguement
@@ -1725,8 +1723,7 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
         # if last values is False, no contiguous region
         return length
     count = array.sum()
-    if count == 0: # if not any are true, no regions found
-        return length
+    # count will always be > 0, as all False will hae the last value as False, which is handled above
     if count == length: # if all are true
         return 0
 
@@ -1739,7 +1736,7 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     # last element must be True, so there will always be one transition, and the last transition will mark the boundary of a contiguous region
     return transition_idx[-1]
 
-    # NOTE: last checks are not necessary
+    # NOTE: these checks are not necessary
     # if array[last_idx:].all():
     #     return last_idx
     # return length
