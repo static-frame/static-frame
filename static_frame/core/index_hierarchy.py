@@ -1674,7 +1674,7 @@ class IndexHierarchy(IndexBase):
                 blocks = self._blocks.iloc[NULL_SLICE, :count]
                 return self.__class__(levels,
                         blocks=blocks,
-                        own_blocks=True, # Should this be false?
+                        own_blocks=True,
                         name=name,
                         )
             return self.__class__(levels, name=name)
@@ -1701,7 +1701,7 @@ class IndexHierarchy(IndexBase):
                 return self.__class__(levels,
                         name=name,
                         blocks=blocks,
-                        own_blocks=True, # Should this be false?
+                        own_blocks=True,
                         )
             return self.__class__(levels, name=name)
 

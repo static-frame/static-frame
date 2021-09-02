@@ -427,16 +427,18 @@ class Quilt(ContainerBase, StoreClientMixin):
                     init_exception_cls=ErrorInitQuilt,
                     )
 
-        axis_label = 'index' if self._axis == 0 else 'column'
-        axis_labels = 'indices' if self._axis == 0 else 'columns'
-        err_msg = f"Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy"
+        def get_explicit_failure() -> ErrorInitQuilt:
+            axis_label = 'index' if self._axis == 0 else 'column'
+            axis_labels = 'indices' if self._axis == 0 else 'columns'
+            err_msg = f"Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy"
+            return ErrorInitQuilt(err_msg)
 
         if self._axis == 0:
             if not self._retain_labels:
                 try:
                     self._index = self._axis_hierarchy.level_drop(1)
                 except ErrorInitIndexNonUnique:
-                    raise ErrorInitQuilt(err_msg) from None
+                    raise get_explicit_failure() from None
             else: # get hierarchical
                 self._index = self._axis_hierarchy
             self._columns = self._axis_opposite
@@ -445,7 +447,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 try:
                     self._columns = self._axis_hierarchy.level_drop(1)
                 except ErrorInitIndexNonUnique:
-                    raise ErrorInitQuilt(err_msg) from None
+                    raise get_explicit_failure() from None
             else:
                 self._columns = self._axis_hierarchy
             self._index = self._axis_opposite
@@ -491,7 +493,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._assign_axis:
             self._update_axis_labels()
 
-        bus_columns = False # Flag to strip off column dtype info
+        drop_column_dtype = False
 
         if self._axis == 0:
             if not self._retain_labels:
@@ -505,7 +507,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 columns = self.columns.rename("Concatenated")
             else:
                 columns = self._bus.index.rename("Frames")
-                bus_columns = True
+                drop_column_dtype = True
 
         config = config or DisplayConfig()
 
@@ -526,7 +528,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         # Strip out the dtype information!
         if config.type_show:
-            if bus_columns:
+            if drop_column_dtype:
                 # First Column Row -> last element is the dtype of the column
                 # Guaranteed to not be index hierarchy as buses cannot have index hierarchies
                 d._rows[1].pop()
@@ -534,7 +536,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             # Since placeholder_gen is not a ndarray, there is no dtype to append in the final row
             # However, in the case of a center ellipsis being added, an ellipsis will be
             # awkwardly placed direclty adjacent to the index dtype information.
-            if d._rows[-1][-1] is Display.CELL_ELLIPSIS:
+            if d._rows[-1][-1] == Display.CELL_ELLIPSIS:
                 d._rows[-1].pop()
         return d
 

@@ -59,7 +59,6 @@ def bus_to_hierarchy(
                 opposite = extractor(f.columns)
             else:
                 if not opposite.equals(f.columns):
-                    # What about same labels different order?
                     raise init_exception_cls('opposite axis must have equivalent indices')
         elif axis == 1:
             tree[label] = tree_extractor(f.columns)
@@ -67,7 +66,6 @@ def bus_to_hierarchy(
                 opposite = extractor(f.index)
             else:
                 if not opposite.equals(f.index):
-                    # What about same labels different order?
                     raise init_exception_cls('opposite axis must have equivalent indices')
         else:
             raise AxisInvalid(f'invalid axis {axis}')
