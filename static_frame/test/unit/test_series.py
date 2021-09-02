@@ -4472,6 +4472,23 @@ class TestUnit(TestCase):
                 ((0, ('a===aa===aa', 2)), (1, ('aa===bab', 1)), (2, ('cab===baaa===ab', 2)))
                 )
 
+    def test_series_via_re_match_a(self) -> None:
+        s1 = sf.Series(('aaaaaa', 'aabab', 'cabbaaaab'))
+        s2 = s1.via_re('aa').match()
+        self.assertEqual(s2.to_pairs(),
+                ((0, True), (1, True), (2, False))
+                )
+
+        s3 = s1.via_re('aa').match(pos=4)
+        self.assertEqual(s3.to_pairs(),
+                ((0, True), (1, False), (2, True))
+                )
+
+        s4 = s1.via_re('aa').match(pos=4, endpos=1)
+        self.assertEqual(s4.to_pairs(),
+                ((0, False), (1, False), (2, False))
+                )
+
     #---------------------------------------------------------------------------
     def test_series_rank_ordinal_a(self) -> None:
 
