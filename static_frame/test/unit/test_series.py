@@ -4388,13 +4388,15 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 2), ('c', 4))
                 )
 
+        s2 = s1 + 1
+
         self.assertEqual(
-                round(10 / (s1.via_fill_value(1) + 1), 1).to_pairs(),
+                round(10 / s2.via_fill_value(1), 1).to_pairs(),
                 (('a', 10.0), ('b', 5.0), ('c', 3.3))
                 )
 
         self.assertEqual(
-                (10 // (s1.via_fill_value(0) + 1)).to_pairs(),
+                (10 // s2.via_fill_value(1)).to_pairs(),
                 (('a', 10), ('b', 5), ('c', 3))
                 )
 
