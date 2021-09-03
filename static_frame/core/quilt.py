@@ -972,7 +972,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     # component might be a Series, can call the same with first arg
-                    component = component.relabel_level_add(key) # type: ignore
+                    component = component.relabel_level_add(key)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
@@ -981,9 +981,9 @@ class Quilt(ContainerBase, StoreClientMixin):
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     if component_is_series:
-                        component = component.relabel_level_add(key) #type: ignore
+                        component = component.relabel_level_add(key)
                     else:
-                        component = component.relabel_level_add(columns=key) #type: ignore
+                        component = component.relabel_level_add(columns=key)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     if component_is_series:
                         component = component.iloc[0]

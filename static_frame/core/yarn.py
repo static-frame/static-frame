@@ -48,7 +48,7 @@ from static_frame.core.util import is_callable_or_mapping
 
 class Yarn(ContainerBase, StoreClientMixin):
     '''
-    A :obj:`Series`-like container made of an ordered collection of :obj:`Bus`.
+    A :obj:`Series`-like container made of an ordered collection of :obj:`Bus`. :obj:`Yarn` can be indexed independently of the contained :obj:`Bus`, permitting independent labels per contained :obj:`Frame`.
     '''
 
     __slots__ = (
@@ -780,4 +780,4 @@ class Yarn(ContainerBase, StoreClientMixin):
                 name=self._index.name,
                 )
 
-        return self._extract_iloc(iloc_map).relabel(index)
+        return self._extract_iloc(iloc_map).relabel(index) #type: ignore
