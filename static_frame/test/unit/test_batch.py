@@ -24,7 +24,7 @@ def func2(label: tp.Hashable, f: Frame) -> Frame:
 
 class TestUnit(TestCase):
 
-    def test_normalize_container_a(self):
+    def test_normalize_container_a(self) -> None:
         post = normalize_container(np.arange(8).reshape(2, 4))
         self.assertEqual(post.to_pairs(),
                 ((0, ((0, 0), (1, 4))), (1, ((0, 1), (1, 5))), (2, ((0, 2), (1, 6))), (3, ((0, 3), (1, 7))))
