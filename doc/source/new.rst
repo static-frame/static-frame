@@ -10,6 +10,8 @@ Added ``Yarn.iter_element()``, ``Yarn.iter_element_items()``.
 
 Added ``Yarn.drop[]``
 
+Added ``Yarn.reindex()``, ``Yarn.relabel_flat()``, ``Yarn.relabel_level_add()``, ``Yarn.relabel_level_drop()``, ``Yarn.rehierarch()``.
+
 Fixed issue when using ``iter_window_*`` methods on two-dimensional containers where the opposite axis is not a default index constructor.
 
 Fixed issue when selecting rows from ``Frame`` with 0-length columns.
