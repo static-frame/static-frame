@@ -16,6 +16,8 @@ Fixed issue when selecting rows from ``Frame`` with 0-length columns.
 
 Added ``Bus.unpersist()``, ``Yarn.unpersist()``, and ``Quilt.unpersist()``.
 
+Improvements to standard string representation of ``Quilt``.
+
 
 0.8.18
 ----------

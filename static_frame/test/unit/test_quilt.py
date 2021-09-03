@@ -143,6 +143,29 @@ class TestUnit(TestCase):
                     )
 
 
+    def test_quilt_init_f(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,2)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,2)').rename('f4')
+        f5 = ff.parse('s(4,2)').rename('f5')
+        f6 = ff.parse('s(6,2)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='b1')
+        b2 = Bus.from_frames((f4,), name='b2')
+        b3 = Bus.from_frames((f5, f6), name='b3')
+
+        y1 = Yarn((b1, b2, b3), index=tuple('abcdef'))
+
+        q1 = Quilt(y1, retain_labels=True)
+        self.assertEqual(q1.index.values.tolist(),
+                [['a', 0], ['a', 1], ['a', 2], ['a', 3], ['b', 0], ['b', 1], ['b', 2], ['b', 3], ['c', 0], ['c', 1], ['d', 0], ['d', 1], ['e', 0], ['e', 1], ['e', 2], ['e', 3], ['f', 0], ['f', 1], ['f', 2], ['f', 3], ['f', 4], ['f', 5]]
+                )
+        self.assertEqual(q1.shape, (22, 2))
+        self.assertEqual(q1.loc[[('f', 3)]].to_pairs(),
+                ((0, ((('f', 3), 1699.34),)), (1, ((('f', 3), 114.58),)))
+                )
+
     #---------------------------------------------------------------------------
     def test_quilt_from_items_a(self) -> None:
 
