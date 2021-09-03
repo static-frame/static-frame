@@ -27,6 +27,7 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame import ILoc
 from static_frame import HLoc
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.index_hierarchy import IndexHierarchy
 
 
 
@@ -1009,7 +1010,6 @@ class TestUnit(TestCase):
         b2 = Bus.from_frames((f4,))
         b3 = Bus.from_frames((f5, f6))
 
-        from static_frame.core.index_hierarchy import IndexHierarchy
         y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
 
 
