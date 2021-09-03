@@ -49,6 +49,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitQuilt):
             self.assertEqual(q2.shape, (7, 2))
 
+
     def test_quilt_init_b(self) -> None:
 
         f1 = Frame.from_dict(
@@ -87,10 +88,15 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
 
         b1 = Bus.from_frames((f1, f2, f3))
-        axis_hierarchy = bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=True, init_exception_cls=ErrorInitQuilt)
+        from static_frame.core.index_hierarchy import IndexHierarchy
+        y1 = Yarn((b1,), index=IndexHierarchy.from_labels(
+                ((1, 'a'), (1, 'b'), (2, 'a')),
+                ))
+        with self.assertRaises(ErrorInitQuilt):
+            Quilt(y1, retain_labels=False, axis=0).shape
 
         with self.assertRaises(ErrorInitQuilt):
-            _ = Quilt(b1, retain_labels=True, axis=0, axis_hierarchy=axis_hierarchy, axis_opposite=None)
+            Quilt(y1, retain_labels=False, axis=1).shape
 
 
     def test_quilt_init_d(self) -> None:

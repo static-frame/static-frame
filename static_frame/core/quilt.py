@@ -432,7 +432,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                     deepcopy_from_bus=self._deepcopy_from_bus,
                     init_exception_cls=ErrorInitQuilt,
                     )
-
         if self._axis == 0:
             if not self._retain_labels:
                 try:
