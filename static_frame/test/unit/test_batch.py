@@ -11,6 +11,7 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.display_config import DisplayConfig
 from static_frame.test.test_case import temp_file
 from static_frame.core.store import StoreConfig
+from static_frame.core.batch import normalize_container
 
 nan = np.nan
 
@@ -22,6 +23,13 @@ def func2(label: tp.Hashable, f: Frame) -> Frame:
     return f.loc['q']
 
 class TestUnit(TestCase):
+
+    def test_normalize_container_a(self):
+        post = normalize_container(np.arange(8).reshape(2, 4))
+        self.assertEqual(post.to_pairs(),
+                ((0, ((0, 0), (1, 4))), (1, ((0, 1), (1, 5))), (2, ((0, 2), (1, 6))), (3, ((0, 3), (1, 7))))
+                )
+
 
     def test_batch_slotted_a(self) -> None:
 
