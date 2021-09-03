@@ -158,6 +158,13 @@ class Yarn(ContainerBase, StoreClientMixin):
 
         self._assign_index = False
 
+
+    def unpersist(self) -> None:
+        '''For the :obj:`Bus` contained in this object, replace all loaded :obj:`Frame` with :obj:`FrameDeferred`.
+        '''
+        for b in self._series.values:
+            b.unpersist()
+
     #---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''

@@ -453,6 +453,11 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._index = self._axis_opposite
         self._assign_axis = False
 
+    def unpersist(self) -> None:
+        '''For the :obj:`Bus` or :obj:`Yarn` contained in this object, replace all loaded :obj:`Frame` with :obj:`FrameDeferred`.
+        '''
+        self._bus.unpersist()
+
     #---------------------------------------------------------------------------
     # name interface
 

@@ -892,9 +892,34 @@ class TestUnit(TestCase):
                 [('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2))]
                 )
 
+    #---------------------------------------------------------------------------
+    def test_yarn_unpersist_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
 
-        # import ipdb; ipdb.set_trace()
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
 
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
+            self.assertEqual(len(tuple(y1.items())), 6)
+
+            self.assertEqual(y1.status['loaded'].sum(), 2)
+            y1.unpersist()
+
+            self.assertEqual(y1.status['loaded'].sum(), 0)
+            self.assertEqual(len(tuple(y1.items())), 6)
+            self.assertEqual(y1.status['loaded'].sum(), 2)
 
 
 if __name__ == '__main__':

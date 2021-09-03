@@ -258,7 +258,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(q1.name, 'foo')
         self.assertEqual(q1.rename('bar').name, 'bar')
-        self.assertTrue(repr(q1).startswith('<Quilt: foo'))
+        self.assertTrue(repr(q1.display(DisplayConfig(type_color=False))).startswith('<Quilt: foo'))
 
         post, opp = bus_to_hierarchy(q1._bus, q1._axis, deepcopy_from_bus=True, init_exception_cls=ErrorInitQuilt)
         self.assertEqual(len(post), 100)
@@ -1439,5 +1439,39 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
+    def test_quilt_unpersist_a(self) -> None:
 
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+        items1 = dict(q1.items())
+        self.assertTrue(len(items1) == 8)
+
+        self.assertEqual(b1.status['loaded'].sum(), 2)
+        q1.unpersist()
+
+        # there is no Store with this Bus so unpersits makes not change
+        self.assertEqual(b1.status['loaded'].sum(), 2)
+
+    def test_quilt_unpersist_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)|c(I,str)').rename('f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True, axis=1)
+
+        with temp_file('.zip') as fp:
+            q1.to_zip_pickle(fp)
+            q2 = Quilt.from_zip_pickle(fp, retain_labels=True, axis=1)
+            self.assertEqual(len(dict(q2.items())), 12)
+
+            self.assertEqual(q2._bus.status['loaded'].sum(), 3)
+            q2.unpersist()
+
+            self.assertEqual(q2._bus.status['loaded'].sum(), 0)
+            self.assertEqual(len(dict(q2.items())), 12)
+            self.assertEqual(q2._bus.status['loaded'].sum(), 3)
 
