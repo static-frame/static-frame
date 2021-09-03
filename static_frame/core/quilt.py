@@ -418,7 +418,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # deferred loading of axis info
     @staticmethod
-    def _update_axis_labels_failure(axis) -> ErrorInitQuilt:
+    def _update_axis_labels_failure(axis: int) -> ErrorInitQuilt:
         axis_label = 'index' if axis == 0 else 'column'
         axis_labels = 'indices' if axis == 0 else 'columns'
         err_msg = f"Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy"
