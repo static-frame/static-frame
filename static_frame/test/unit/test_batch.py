@@ -1029,6 +1029,66 @@ class TestUnit(TestCase):
             # parquet brings in characters as objects, thus forcing different dtypes
             self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
 
+
+    #---------------------------------------------------------------------------
+    def test_batch_from_zip_tsv_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2), config=config)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_tsv(fp)
+            b2 = Batch.from_zip_tsv(fp, config=config)
+            frames = dict(b2.items())
+
+        for frame in (f1, f2):
+            # parquet brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
+
+    def test_batch_from_zip_csv_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2), config=config)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_csv(fp)
+            b2 = Batch.from_zip_csv(fp, config=config)
+            frames = dict(b2.items())
+
+        for frame in (f1, f2):
+            # parquet brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
+
+
+
     #---------------------------------------------------------------------------
     def test_batch_to_sqlite_a(self) -> None:
         f1 = Frame.from_dict(
