@@ -54,7 +54,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             )
 
     _series: Series
-    _hierarchy: tp.Optional[IndexHierarchy]
+    _hierarchy: IndexHierarchy
     _index: IndexBase
 
     _NDIM: int = 1
@@ -85,7 +85,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         if retain_labels:
             index = hierarchy
         else:
-            index = hierarchy.level_drop(1)
+            index = hierarchy.level_drop(1) #type: ignore
 
         return cls(series,
                 hierarchy=hierarchy,
@@ -108,7 +108,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             index: Optionally provide new labels for the result of the concatenation.
         '''
         bus_components = []
-        index_components = None if index is not None else []
+        index_components: tp.Optional[tp.List[IndexBase]] = None if index is not None else []
         for element in containers:
             if isinstance(element, Yarn):
                 bus_components.extend(element._series.values)
@@ -133,9 +133,9 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            series: Series,
+            series: tp.Union[Series, tp.Iterable[Bus]],
             *,
-            index: tp.Optional[IndexBase] = None,
+            index: tp.Optional[tp.Union[IndexBase, IndexAutoFactoryType]] = None,
             hierarchy: tp.Optional[IndexHierarchy] = None,
             deepcopy_from_bus: bool = False,
             index_constructor: tp.Optional[IndexConstructor] = None,
@@ -145,11 +145,15 @@ class Yarn(ContainerBase, StoreClientMixin):
         Args:
             series: A :obj:`Series` of :obj:`Bus`. The length of this container is not the same as ``index``, if provided.
         '''
-        if series.dtype != DTYPE_OBJECT:
-            raise ErrorInitYarn(
-                    f'Series passed to initializer must have dtype object, not {series.dtype}')
 
-        self._series = series # Bus by Bus label
+        if isinstance(series, Series):
+            if series.dtype != DTYPE_OBJECT:
+                raise ErrorInitYarn(
+                        f'Series passed to initializer must have dtype object, not {series.dtype}')
+            self._series = series # Bus by Bus label
+        else:
+            self._series = Series(series, dtype=DTYPE_OBJECT) # get a default index
+
         self._deepcopy_from_bus = deepcopy_from_bus
 
         # _hierarchy might be None while we still need to set self._index
@@ -165,9 +169,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
         if own_index:
             self._index = index #type: ignore
-        elif index is None: # deault is the hierarchy
-            self._index = self._hierarchy
-        elif index is IndexAutoFactory:
+        elif index is None or index is IndexAutoFactory:
             self._index = IndexAutoFactory.from_optional_constructor(
                     len(self._hierarchy),
                     default_constructor=Index,
@@ -178,8 +180,9 @@ class Yarn(ContainerBase, StoreClientMixin):
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
-            if len(self._index) != len(self._hierarchy):
-                raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)})')
+
+        if len(self._index) != len(self._hierarchy):
+            raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)})')
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
@@ -295,7 +298,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         Returns:
             :obj:`Tuple[int]`
         '''
-        return (self._hierarchy.shape[0],) #type: ignore
+        return (self._hierarchy.shape[0],)
 
     @property
     def ndim(self) -> int:
@@ -315,7 +318,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         Returns:
             :obj:`int`
         '''
-        return self._hierarchy.shape[0] #type: ignore
+        return self._hierarchy.shape[0]
 
     #---------------------------------------------------------------------------
 
@@ -467,7 +470,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         Returns:
             Yarn or, if an element is selected, a Frame
         '''
-        target_hierarchy = self._hierarchy._extract_iloc(key) #type: ignore
+        target_hierarchy = self._hierarchy._extract_iloc(key)
         if isinstance(target_hierarchy, tuple):
             # got a single element, return a Frame
             return self._series[target_hierarchy[0]][target_hierarchy[1]] #type: ignore
@@ -483,7 +486,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
 
         pos = 0
-        for bus_label, width in self._hierarchy.label_widths_at_depth(0): #type: ignore
+        for bus_label, width in self._hierarchy.label_widths_at_depth(0):
             if bus_label not in target_bus_index:
                 pos += width
                 continue
@@ -504,6 +507,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 index=index,
                 hierarchy=target_hierarchy,
                 deepcopy_from_bus=self._deepcopy_from_bus,
+                own_index=True,
                 )
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Yarn':

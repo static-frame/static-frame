@@ -418,7 +418,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # deferred loading of axis info
     @staticmethod
-    def _update_axis_labels_failure(axis: int) -> ErrorInitQuilt:
+    def _update_axis_labels_error(axis: int) -> ErrorInitQuilt:
         axis_label = 'index' if axis == 0 else 'column'
         axis_labels = 'indices' if axis == 0 else 'columns'
         err_msg = f"Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy"
@@ -438,7 +438,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 try:
                     self._index = self._axis_hierarchy.level_drop(1)
                 except ErrorInitIndexNonUnique:
-                    raise self._update_axis_labels_failure(self._axis) from None
+                    raise self._update_axis_labels_error(self._axis) from None
             else: # get hierarchical
                 self._index = self._axis_hierarchy
             self._columns = self._axis_opposite
@@ -447,7 +447,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 try:
                     self._columns = self._axis_hierarchy.level_drop(1)
                 except ErrorInitIndexNonUnique:
-                    raise self._update_axis_labels_failure(self._axis) from None
+                    raise self._update_axis_labels_error(self._axis) from None
             else:
                 self._columns = self._axis_hierarchy
             self._index = self._axis_opposite

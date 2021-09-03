@@ -1,6 +1,7 @@
 
 
 import unittest
+import datetime
 
 import frame_fixtures as ff
 import numpy as np
@@ -21,6 +22,8 @@ from static_frame.core.frame import Frame
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.index_datetime import IndexDate
 from static_frame import ILoc
 from static_frame import HLoc
 
@@ -29,8 +32,34 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_yarn_init_a(self) -> None:
 
-        with self.assertRaises(ErrorInitYarn):
+        with self.assertRaises(ErrorInitSeries):
             Yarn(np.array([3, 4]))
+
+    def test_yarn_init_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5))
+
+        y1 = Yarn((b1, b2), index=tuple('abcde'))
+        self.assertEqual(y1.index.values.tolist(), list('abcde'))
+        self.assertEqual(y1[['a', 'c', 'e']].shape, (3,))
+
+        y2 = Yarn((b1, b2))
+        self.assertEqual(y2.index.values.tolist(), list(range(5)))
+        self.assertEqual(y2[2:].shape, (3,))
+
+        y3 = Yarn((b2,), index=('2021-01-01', '2021-02-15'), index_constructor=IndexDate)
+        self.assertEqual(y3.index.__class__, IndexDate)
+        self.assertEqual(y3.index.values.tolist(), [datetime.date(2021, 1, 1), datetime.date(2021, 2, 15)])
+
+        with self.assertRaises(ErrorInitYarn):
+            y4 = Yarn((b2,), index=range(5))
 
 
     #---------------------------------------------------------------------------
