@@ -105,7 +105,10 @@ class Yarn(ContainerBase, StoreClientMixin):
         Concatenate multiple :obj:`Bus` into a new :obj:`Yarn`. Loaded status of :obj:`Frame` within each :obj:`Bus` will not be altered.
 
         Args:
+            containers:
             index: Optionally provide new labels for the result of the concatenation.
+            name:
+            deepcopy_from_bus:
         '''
         bus_components = []
         index_components: tp.Optional[tp.List[IndexBase]] = None if index is not None else []
@@ -136,14 +139,19 @@ class Yarn(ContainerBase, StoreClientMixin):
             series: tp.Union[Series, tp.Iterable[Bus]],
             *,
             index: tp.Optional[tp.Union[IndexBase, IndexAutoFactoryType]] = None,
-            hierarchy: tp.Optional[IndexHierarchy] = None,
-            deepcopy_from_bus: bool = False,
             index_constructor: tp.Optional[IndexConstructor] = None,
+            deepcopy_from_bus: bool = False,
+            hierarchy: tp.Optional[IndexHierarchy] = None,
             own_index: bool = False,
             ) -> None:
         '''
         Args:
-            series: A :obj:`Series` of :obj:`Bus`. The length of this container is not the same as ``index``, if provided.
+            series: An iterable (or :obj:`Series`) of :obj:`Bus`. The length of this container is not the same as ``index``, if provided.
+            index: Optionally provide an index for the :obj:`Frame` contained in all :obj:`Bus`.
+            index_constructor:
+            deepcopy_from_bus:
+            hierarchy:
+            own_index:
         '''
 
         if isinstance(series, Series):
@@ -182,7 +190,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                     )
 
         if len(self._index) != len(self._hierarchy):
-            raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)})')
+            raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)}).')
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
@@ -375,6 +383,27 @@ class Yarn(ContainerBase, StoreClientMixin):
             return default
         return self.__getitem__(key)
 
+    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
+        '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
+        '''
+        labels = iter(self._index)
+        for bus in self._series.values:
+            # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; Bus._axis_element is optimized for handling max_persist > 1 loading
+            for f in bus._axis_element():
+                yield next(labels), f
+
+    _items_store = items
+
+    @property
+    def values(self) -> np.ndarray:
+        '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
+        '''
+        array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
+        np.concatenate([b.values for b in self._series.values], out=array)
+        array.flags.writeable = False
+        return array
+
+
     #---------------------------------------------------------------------------
     @doc_inject()
     def equals(self,
@@ -550,29 +579,6 @@ class Yarn(ContainerBase, StoreClientMixin):
 
         for bus in self._series.values:
             yield from bus._axis_element()
-
-    #---------------------------------------------------------------------------
-    # dictionary-like interface; these will force loadings contained Frame
-
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
-        '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
-        '''
-        labels = iter(self._index)
-        for bus in self._series.values:
-            # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; Bus._axis_element is optimized for handling max_persist > 1 loading
-            for f in bus._axis_element():
-                yield next(labels), f
-
-    _items_store = items
-
-    @property
-    def values(self) -> np.ndarray:
-        '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
-        '''
-        array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
-        np.concatenate([b.values for b in self._series.values], out=array)
-        array.flags.writeable = False
-        return array
 
     #---------------------------------------------------------------------------
     def __len__(self) -> int:
