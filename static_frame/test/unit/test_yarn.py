@@ -15,7 +15,7 @@ from static_frame.core.bus import Bus
 # from static_frame.core.axis_map import AxisMap
 # from static_frame.core.index import Index
 # from static_frame.core.axis_map import IndexMap
-
+from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.yarn import Yarn
 from static_frame.core.frame import Frame
@@ -26,6 +26,9 @@ from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.index_datetime import IndexDate
 from static_frame import ILoc
 from static_frame import HLoc
+from static_frame.core.exception import RelabelInvalid
+
+
 
 class TestUnit(TestCase):
 
@@ -952,6 +955,45 @@ class TestUnit(TestCase):
             self.assertEqual(y1.status['loaded'].sum(), 0)
             self.assertEqual(len(tuple(y1.items())), 6)
             self.assertEqual(y1.status['loaded'].sum(), 2)
+
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_relabel_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3))
+
+        self.assertEqual(
+                y1.relabel(lambda x: f'--{x}--').loc['--4--'].shape, (4, 4)
+                )
+
+        # None is a no-op
+        self.assertEqual(
+                y1.relabel(None).loc[4].shape, (4, 4)
+                )
+
+        with self.assertRaises(RelabelInvalid):
+            y1.relabel({3,4,5})
+
+        self.assertEqual(
+                y1.relabel(tuple('abcdef'))['d':].status['shape'].to_pairs(),
+                (('d', (2, 8)), ('e', (4, 4)), ('f', (6, 4)))
+                )
+
+
+        y2 = Yarn((b1, b2, b3), index=tuple('abcdef'))
+        self.assertEqual(y2.index.values.tolist(), ['a', 'b', 'c', 'd', 'e', 'f'])
+        self.assertEqual(y2.relabel(IndexAutoFactory).index.values.tolist(), [0, 1, 2, 3, 4, 5])
 
 
 if __name__ == '__main__':
