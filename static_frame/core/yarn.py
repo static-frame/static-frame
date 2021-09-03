@@ -712,17 +712,22 @@ class Yarn(ContainerBase, StoreClientMixin):
                 own_index=own_index,
                 )
 
-    # @doc_inject(selector='relabel_flat', class_name='Yarn')
-    # def relabel_flat(self) -> 'Yarn':
-    #     '''
-    #     {doc}
-    #     '''
-    #     if not isinstance(self._index, IndexHierarchy):
-    #         raise RuntimeError('cannot flatten an Index that is not an IndexHierarchy')
+    @doc_inject(selector='relabel_flat', class_name='Yarn')
+    def relabel_flat(self) -> 'Yarn':
+        '''
+        {doc}
+        '''
+        if not isinstance(self._index, IndexHierarchy):
+            raise RuntimeError('cannot flatten an Index that is not an IndexHierarchy')
 
-    #     return self.__class__(self.values,
-    #             index=self._index.flat(),
-    #             name=self._name)
+        return self.__class__(self._series, # no change to Buses
+                index=self._index.flat(),
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                hierarchy=self._hierarchy, # no change
+                own_index=True,
+                )
+
+
 
     # @doc_inject(selector='relabel_level_add', class_name='Yarn')
     # def relabel_level_add(self,
@@ -774,3 +779,4 @@ class Yarn(ContainerBase, StoreClientMixin):
     #     return self.__class__(values,
     #             index=index,
     #             name=self._name)
+
