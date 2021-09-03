@@ -27,6 +27,7 @@ from static_frame.core.index_auto import IndexAutoFactory
 
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import StoreFileMutation
+from static_frame.core.exception import ErrorInitIndexNonUnique
 
 
 class TestUnit(TestCase):
@@ -123,6 +124,22 @@ class TestUnit(TestCase):
 
             self.assertEqualFrames(f1, f1_loaded)
             self.assertEqualFrames(f2, f2_loaded)
+
+    #---------------------------------------------------------------------------
+    def test_bus_from_frames_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='foo')
+
+        with self.assertRaises(ErrorInitIndexNonUnique):
+            _ = Bus.from_frames((f1, f2))
+
 
     #---------------------------------------------------------------------------
     def test_bus_rename_a(self) -> None:
