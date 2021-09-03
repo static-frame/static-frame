@@ -30,7 +30,7 @@ class TestUnit(TestCase):
     def test_yarn_init_a(self) -> None:
 
         with self.assertRaises(ErrorInitYarn):
-            Yarn(np.array([3, 4]), retain_labels=True)
+            Yarn(np.array([3, 4]))
 
 
     #---------------------------------------------------------------------------
@@ -135,8 +135,12 @@ class TestUnit(TestCase):
         f7 = ff.parse('s(4,2)|v(str)').rename('f7')
         b3 = Bus.from_frames((f6, f7), name='c')
 
-        y1 = Yarn.from_concat((b1, b2, b3), retain_labels=False)
+        y1 = Yarn.from_concat((Yarn.from_buses((b1,), retain_labels=True), Yarn.from_buses((b2, b3), retain_labels=True)))
         self.assertEqual(y1.shape, (7,))
+        self.assertEqual(y1.index.values.tolist(),
+                [['a', 'f1'], ['a', 'f2'], ['a', 'f3'], ['b', 'f4'], ['b', 'f5'], ['c', 'f6'], ['c', 'f7']]
+                )
+
 
     def test_yarn_from_concat_b(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
@@ -156,15 +160,14 @@ class TestUnit(TestCase):
             bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
             bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
 
-            y1 = Yarn.from_concat((bus_a, bus_b), retain_labels=False)
-            self.assertEqual(y1.shape, (6,))
-            self.assertEqual(y1.status['loaded'].sum(), 0)
+            y1 = Yarn.from_concat((Yarn.from_buses((bus_a,), retain_labels=True), Yarn.from_buses((bus_b,), retain_labels=True)))
 
             from static_frame import IndexAutoFactory
-            y2 = Yarn.from_concat((y1, y1), retain_labels=True, index=IndexAutoFactory)
-            self.assertEqual(y2[(1, 'f4')].shape, (2, 8))
-            self.assertEqual(y2[(2, 'f1')].shape, (4, 2))
-            self.assertEqual(y2[(3, 'f6')].shape, (6, 4))
+            y2 = Yarn.from_concat((y1, y1), index=IndexAutoFactory)
+
+            self.assertEqual(y2[3].shape, (2, 8))
+            self.assertEqual(y2[0].shape, (4, 2))
+            self.assertEqual(y2[5].shape, (6, 4))
 
             y3 = y2.iloc[4:]
             self.assertEqual(y3.shape, (8,))
@@ -175,7 +178,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(4,5)').rename('f2')
 
         with self.assertRaises(NotImplementedError):
-            Yarn.from_concat((f1, f2), retain_labels=True)
+            Yarn.from_concat((f1, f2))
 
     #---------------------------------------------------------------------------
     def test_yarn_reversed_a(self) -> None:

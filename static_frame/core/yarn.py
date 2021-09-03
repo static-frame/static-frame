@@ -34,17 +34,21 @@ from static_frame.core.axis_map import buses_to_hierarchy
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.container_util import index_many_set
+from static_frame.core.index import Index
+from static_frame.core.util import IndexConstructor
+from static_frame.core.container_util import index_from_optional_constructor
+
 
 
 class Yarn(ContainerBase, StoreClientMixin):
     '''
-    A :obj:`Series`-like container made of an ordered collection of :obj:`Bus`. If the labels of the index are unique accross all contained :obj:`Bus`, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the index labels.
+    A :obj:`Series`-like container made of an ordered collection of :obj:`Bus`.
     '''
 
     __slots__ = (
             '_series',
             '_hierarchy',
-            '_retain_labels',
             '_index',
             '_deepcopy_from_bus',
             )
@@ -52,7 +56,6 @@ class Yarn(ContainerBase, StoreClientMixin):
     _series: Series
     _hierarchy: tp.Optional[IndexHierarchy]
     _index: IndexBase
-    _assign_index: bool
 
     _NDIM: int = 1
 
@@ -71,55 +74,72 @@ class Yarn(ContainerBase, StoreClientMixin):
                     dtype=DTYPE_OBJECT,
                     name=name,
                     )
+
+        hierarchy = buses_to_hierarchy(
+                series.values,
+                series.index,
+                deepcopy_from_bus=deepcopy_from_bus,
+                init_exception_cls=ErrorInitYarn,
+                )
+
+        if retain_labels:
+            index = hierarchy
+        else:
+            index = hierarchy.level_drop(1)
+
         return cls(series,
-                retain_labels=retain_labels,
+                hierarchy=hierarchy,
+                index=index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 )
 
     @classmethod
     def from_concat(cls,
-            containers: tp.Iterable[tp.Union['Bus', 'Yarn']],
+            containers: tp.Iterable['Yarn'],
             *,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
             name: NameType = NAME_DEFAULT,
-            retain_labels: bool,
             deepcopy_from_bus: bool = False,
             ) -> 'Yarn':
         '''
         Concatenate multiple :obj:`Bus` into a new :obj:`Yarn`. Loaded status of :obj:`Frame` within each :obj:`Bus` will not be altered.
 
         Args:
-            index: Optionally provide new labels for each Bus. This is not the resultant index on the :obj:`Yarn`.
+            index: Optionally provide new labels for the result of the concatenation.
         '''
         bus_components = []
+        index_components = None if index is not None else []
         for element in containers:
-            if isinstance(element, Bus):
-                bus_components.append(element)
-            elif isinstance(element, Yarn):
-                # extend with Bus components of this Yarn
+            if isinstance(element, Yarn):
                 bus_components.extend(element._series.values)
+                if index_components is not None:
+                    index_components.append(element.index)
             else:
                 raise NotImplementedError(f'cannot instantiate from {type(element)}')
 
         array = np.empty(len(bus_components), dtype=DTYPE_OBJECT)
         for i, bus in enumerate(bus_components):
             array[i] = bus
-
         array.flags.writeable = False
-        series = Series(array, index=index, name=name)
+
+        if index_components is not None:
+            index = index_many_set(index_components, Index, union=True)
+
+        series = Series(array, name=name)
         return cls(series,
                 deepcopy_from_bus=deepcopy_from_bus,
-                retain_labels=retain_labels,
+                index=index,
                 )
 
     #---------------------------------------------------------------------------
     def __init__(self,
             series: Series,
             *,
-            retain_labels: bool,
             index: tp.Optional[IndexBase] = None,
             hierarchy: tp.Optional[IndexHierarchy] = None,
             deepcopy_from_bus: bool = False,
+            index_constructor: tp.Optional[IndexConstructor] = None,
+            own_index: bool = False,
             ) -> None:
         '''
         Args:
@@ -130,7 +150,6 @@ class Yarn(ContainerBase, StoreClientMixin):
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
 
         self._series = series # Bus by Bus label
-        self._retain_labels = retain_labels
         self._deepcopy_from_bus = deepcopy_from_bus
 
         # _hierarchy might be None while we still need to set self._index
@@ -144,16 +163,23 @@ class Yarn(ContainerBase, StoreClientMixin):
         else:
             self._hierarchy = hierarchy
 
-        if not self._retain_labels:
-            if index is not None:
-                self._index = index
-            else:
-                self._index = self._hierarchy.level_drop(1)
-        else: #
-            if index is not None:
-                raise NotImplementedError()
-            else:
-                self._index = self._hierarchy
+        if own_index:
+            self._index = index #type: ignore
+        elif index is None: # deault is the hierarchy
+            self._index = self._hierarchy
+        elif index is IndexAutoFactory:
+            self._index = IndexAutoFactory.from_optional_constructor(
+                    len(self._hierarchy),
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+        else: # an iterable of labels or an Index
+            self._index = index_from_optional_constructor(index, #type: ignore
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+            if len(self._index) != len(self._hierarchy):
+                raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)})')
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
@@ -193,7 +219,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         # NOTE: do not need to call _update_index_labels; can continue to defer
         series = self._series.rename(name)
         return self.__class__(series,
-                retain_labels=self._retain_labels,
+                index=self._index,
                 hierarchy=self._hierarchy,
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 )
@@ -452,6 +478,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         # create a Boolean array equal to the entire realized length
         valid = np.full(len(self._index), False)
         valid[key] = True
+        index = self._index.iloc[key]
 
         buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
 
@@ -474,7 +501,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
         return self.__class__(target_series,
-                retain_labels=self._retain_labels,
+                index=index,
                 hierarchy=target_hierarchy,
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 )
@@ -500,7 +527,6 @@ class Yarn(ContainerBase, StoreClientMixin):
     def _drop_iloc(self, key: GetItemKeyType) -> 'Yarn':
         invalid = np.full(len(self._index), True)
         invalid[key] = False
-
         return self._extract_iloc(invalid)
 
     def _drop_loc(self, key: GetItemKeyType) -> 'Yarn':

@@ -14,6 +14,8 @@ Fixed issue when using ``iter_window_*`` methods on two-dimensional containers w
 
 Fixed issue when selecting rows from ``Frame`` with 0-length columns.
 
+Added ``Bus.unpersist()``, ``Yarn.unpersist()``, and ``Quilt.unpersist()``.
+
 
 0.8.18
 ----------
