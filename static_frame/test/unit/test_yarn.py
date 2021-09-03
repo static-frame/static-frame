@@ -65,6 +65,16 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitYarn):
             y4 = Yarn((b2,), index=range(5))
 
+    def test_yarn_init_c(self) -> None:
+        from static_frame.core.series import Series
+
+        with self.assertRaises(ErrorInitYarn):
+            Yarn((ff.parse('s(2,2)'),))
+
+        with self.assertRaises(ErrorInitYarn):
+            Yarn(Series((ff.parse('s(2,2)'),), dtype=object))
+
+
 
     #---------------------------------------------------------------------------
     def test_yarn_from_buses_a(self) -> None:
@@ -195,7 +205,6 @@ class TestUnit(TestCase):
 
             y1 = Yarn.from_concat((Yarn.from_buses((bus_a,), retain_labels=True), Yarn.from_buses((bus_b,), retain_labels=True)))
 
-            from static_frame import IndexAutoFactory
             y2 = Yarn.from_concat((y1, y1), index=IndexAutoFactory)
 
             self.assertEqual(y2[3].shape, (2, 8))
