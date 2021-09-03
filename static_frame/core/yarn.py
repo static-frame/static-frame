@@ -21,6 +21,7 @@ from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.util import IndexInitializer
+from static_frame.core.container_util import rehierarch_from_index_hierarchy
 
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
@@ -727,56 +728,56 @@ class Yarn(ContainerBase, StoreClientMixin):
                 own_index=True,
                 )
 
+    @doc_inject(selector='relabel_level_add', class_name='Yarn')
+    def relabel_level_add(self,
+            level: tp.Hashable
+            ) -> 'Yarn':
+        '''
+        {doc}
 
+        Args:
+            level: {level}
+        '''
+        return self.__class__(self._series, # no change to Buses
+                index=self._index.level_add(level),
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                hierarchy=self._hierarchy, # no change
+                own_index=True,
+                )
 
-    # @doc_inject(selector='relabel_level_add', class_name='Yarn')
-    # def relabel_level_add(self,
-    #         level: tp.Hashable
-    #         ) -> 'Yarn':
-    #     '''
-    #     {doc}
+    @doc_inject(selector='relabel_level_drop', class_name='Yarn')
+    def relabel_level_drop(self,
+            count: int = 1
+            ) -> 'Yarn':
+        '''
+        {doc}
 
-    #     Args:
-    #         level: {level}
-    #     '''
-    #     return self.__class__(self.values,
-    #             index=self._index.level_add(level),
-    #             name=self._name)
+        Args:
+            count: {count}
+        '''
+        if not isinstance(self._index, IndexHierarchy):
+            raise RuntimeError('cannot drop level of an Index that is not an IndexHierarchy')
 
-    # @doc_inject(selector='relabel_level_drop', class_name='Yarn')
-    # def relabel_level_drop(self,
-    #         count: int = 1
-    #         ) -> 'Yarn':
-    #     '''
-    #     {doc}
+        return self.__class__(self._series, # no change to Buses
+                index=self._index.level_drop(count),
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                hierarchy=self._hierarchy, # no change
+                own_index=True,
+                )
 
-    #     Args:
-    #         count: {count}
-    #     '''
-    #     if not isinstance(self._index, IndexHierarchy):
-    #         raise RuntimeError('cannot drop level of an Index that is not an IndexHierarchy')
+    def rehierarch(self,
+            depth_map: tp.Sequence[int]
+            ) -> 'Yarn':
+        '''
+        Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
+        '''
+        if self.index.depth == 1:
+            raise RuntimeError('cannot rehierarch when there is no hierarchy')
 
-    #     return self.__class__(self.values,
-    #             index=self._index.level_drop(count),
-    #             name=self._name)
+        index, iloc_map = rehierarch_from_index_hierarchy(
+                labels=self._index, #type: ignore
+                depth_map=depth_map,
+                name=self._index.name,
+                )
 
-    # def rehierarch(self,
-    #         depth_map: tp.Sequence[int]
-    #         ) -> 'Yarn':
-    #     '''
-    #     Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
-    #     '''
-    #     if self.index.depth == 1:
-    #         raise RuntimeError('cannot rehierarch when there is no hierarchy')
-
-    #     index, iloc_map = rehierarch_from_index_hierarchy(
-    #             labels=self._index, #type: ignore
-    #             depth_map=depth_map,
-    #             name=self._index.name,
-    #             )
-    #     values = self.values[iloc_map]
-    #     values.flags.writeable = False
-    #     return self.__class__(values,
-    #             index=index,
-    #             name=self._name)
-
+        return self._extract_iloc(iloc_map).relabel(index)

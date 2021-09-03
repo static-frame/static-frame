@@ -1018,6 +1018,66 @@ class TestUnit(TestCase):
                 ((('a', 3), (2, 2)), (('b', 1), (2, 8)), (('b', 2), (4, 4)), (('b', 3), (6, 4)))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_yarn_relabel_level_add_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+
+        self.assertEqual(
+                y1.relabel_level_add('c').iloc[4:].status['shape'].to_pairs(),
+                ((('c', 'b', 2), (4, 4)), (('c', 'b', 3), (6, 4)))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_yarn_relabel_level_drop_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+
+        self.assertEqual(
+                y1.iloc[[0,2,4]].relabel_level_drop(1).status['shape'].to_pairs(),
+                ((1, (4, 2)), (3, (2, 2)), (2, (4, 4)))
+                )
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_rehierarch_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+        self.assertEqual(
+                y1.iloc[[0,2,4]].rehierarch((1, 0)).status['shape'].to_pairs(),
+                (((1, 'a'), (4, 2)), ((3, 'a'), (2, 2)), ((2, 'b'), (4, 4)))
+                )
+
 
 if __name__ == '__main__':
     unittest.main()
