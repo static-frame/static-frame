@@ -12,6 +12,7 @@ from static_frame.core.frame import Frame
 from static_frame.test.test_case import TestCase
 # from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitStoreConfig
+from static_frame.core.exception import StoreParameterConflict
 
 
 
@@ -273,6 +274,53 @@ class TestUnit(TestCase):
         self.assertEqual(field_names.tolist(), ['x', 'y', 'z']) #type: ignore
         self.assertEqual(dtypes,
                 [np.dtype('<U1'), np.dtype('bool'), np.dtype('O')])
+
+
+    def test_store_get_field_names_and_dtypes_c(self) -> None:
+
+        f1 = Frame.from_records((('a', True, None),), index=(('a',)), columns=(('x', 'y', 'z'))).rename(columns='foo')
+
+        with self.assertRaises(StoreParameterConflict):
+            field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
+                    include_index=False,
+                    include_index_name=True,
+                    include_columns=True,
+                    include_columns_name=True,
+                    )
+
+        field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
+                include_index=True,
+                include_index_name=False,
+                include_columns=True,
+                include_columns_name=True,
+                )
+        self.assertEqual(field_names, ['foo', 'x', 'y', 'z'])
+        self.assertTrue(len(field_names) == len(dtypes))
+
+
+    def test_store_get_field_names_and_dtypes_d(self) -> None:
+
+        from static_frame.core.index_hierarchy import IndexHierarchy
+        columns = IndexHierarchy.from_labels(((1, 'a'), (1, 'b'), (2, 'c')), name=('foo', 'bar'))
+        f1 = Frame.from_records((('a', True, None),), index=(('a',)), columns=columns)
+
+        field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
+                include_index=True,
+                include_index_name=False,
+                include_columns=True,
+                include_columns_name=True,
+                )
+        self.assertEqual(field_names, [('foo', 'bar'), "[1 'a']", "[1 'b']", "[2 'c']"])
+        self.assertTrue(len(field_names) == len(dtypes))
+
+
+        with self.assertRaises(StoreParameterConflict):
+            field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
+                    include_index=True,
+                    include_index_name=False,
+                    include_columns=True,
+                    include_columns_name=False,
+                    )
 
 
     #---------------------------------------------------------------------------
