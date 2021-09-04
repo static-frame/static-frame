@@ -523,12 +523,15 @@ class Store:
         if force_brackets:
             def gen() -> tp.Iterator[str]:
                 for name in field_names:
-                    name = str(name)
-                    if name.startswith('[') and name.endswith(']'):
-                        yield name
+                    name_str = str(name)
+                    if name_str.startswith('[') and name_str.endswith(']'):
+                        yield name_str
+                    elif isinstance(name, tuple):
+                        # make look like it came from the array
+                        yield f'[{" ".join((repr(n) for n in name))}]'
                     else:
-                        yield f'[{name}]'
-            field_names = tuple(gen())
+                        yield f'[{name_str}]'
+            field_names = list(gen())
 
         return field_names, dtypes
 

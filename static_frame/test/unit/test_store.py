@@ -314,6 +314,15 @@ class TestUnit(TestCase):
         self.assertTrue(len(field_names) == len(dtypes))
 
 
+        field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
+                include_index=True,
+                include_index_name=False,
+                include_columns=True,
+                include_columns_name=True,
+                force_brackets=True,
+                )
+        self.assertEqual(field_names, ["['foo' 'bar']", "[1 'a']", "[1 'b']", "[2 'c']"])
+
         with self.assertRaises(StoreParameterConflict):
             field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
                     include_index=True,
