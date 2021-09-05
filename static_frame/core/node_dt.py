@@ -348,6 +348,8 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
     def is_month_start(self) -> TContainer:
+        '''Return Boolean indicators if the day is the month start.
+        '''
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
@@ -363,7 +365,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
 
     def is_year_end(self) -> TContainer:
-        '''Return Boolean indicators if the day is the month end.
+        '''Return Boolean indicators if the day is the year end.
         '''
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
@@ -380,6 +382,8 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
     def is_year_start(self) -> TContainer:
+        '''Return Boolean indicators if the day is the year start.
+        '''
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
