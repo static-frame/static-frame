@@ -84,6 +84,7 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
         ))
 
 # all dt64 units that tolist() to go to a compatible Python type
+# NOTE: similar to DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO
 DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
         'D', 'h', 'm', 's', 'ms', 'us',
         ))

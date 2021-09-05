@@ -123,6 +123,7 @@ class InterfaceDatetime(Interface[TContainer]):
         raise RuntimeError(f'invalid dtype ({dtype}) for operation on string types')
 
     #---------------------------------------------------------------------------
+    # date, datetime attributes
 
     @property
     def year(self) -> TContainer:
@@ -192,6 +193,83 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
+    #---------------------------------------------------------------------------
+    # datetime attributes
+
+    @property
+    def hour(self) -> TContainer:
+        '''
+        Return the hour of each element, between 0 and 24.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                # permit all dt64 types
+                self._validate_dtype_non_str(block.dtype)
+
+                if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    if block.dtype != DT64_H:
+                        block = block.astype(DT64_H)
+                    # subtract the first of the month, then shfit
+                    array = block.astype(DTYPE_INT_DEFAULT) % 24
+                    array.flags.writeable = False
+                else: # must be object datetime type
+                    array = array_from_element_attr(
+                            array=block,
+                            attr_name='hour',
+                            dtype=DTYPE_INT_DEFAULT)
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+    @property
+    def minute(self) -> TContainer:
+        '''
+        Return the minute of each element, between 0 and 60.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                # permit all dt64 types
+                self._validate_dtype_non_str(block.dtype)
+
+                if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    if block.dtype != DT64_M:
+                        block = block.astype(DT64_M)
+                    # subtract the first of the month, then shfit
+                    array = block.astype(DTYPE_INT_DEFAULT) % 60
+                    array.flags.writeable = False
+                else: # must be object datetime type
+                    array = array_from_element_attr(
+                            array=block,
+                            attr_name='minute',
+                            dtype=DTYPE_INT_DEFAULT)
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+    @property
+    def second(self) -> TContainer:
+        '''
+        Return the second of each element, between 0 and 60.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                # permit all dt64 types
+                self._validate_dtype_non_str(block.dtype)
+
+                if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    if block.dtype != DT64_S:
+                        block = block.astype(DT64_S)
+                    # subtract the first of the month, then shfit
+                    array = block.astype(DTYPE_INT_DEFAULT) % 60
+                    array.flags.writeable = False
+                else: # must be object datetime type
+                    array = array_from_element_attr(
+                            array=block,
+                            attr_name='second',
+                            dtype=DTYPE_INT_DEFAULT)
+                yield array
+
+        return self._blocks_to_container(blocks())
 
 
     #---------------------------------------------------------------------------
@@ -220,6 +298,98 @@ class InterfaceDatetime(Interface[TContainer]):
                             args=EMPTY_TUPLE,
                             dtype=DTYPE_INT_DEFAULT
                             )
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+    def quarter(self) -> TContainer:
+        '''
+        Return the quarter of the year as an integer, where January through March is quarter 1.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype_non_str(block.dtype)
+                # astype object dtypes to month too
+                if block.dtype != DT64_MONTH: # go to day first, then object
+                    block = block.astype(DT64_MONTH)
+                # months will start from 0
+                block = block.astype(DTYPE_INT_DEFAULT) % 12
+                is_q1 = block <= 2 # 0-2
+                is_q4 = block >= 9 # 9-11
+                is_q2 = (block <= 5) & ~is_q1 #3-5
+
+                array = np.full(block.shape, 3, dtype=DTYPE_INT_DEFAULT)
+                array[is_q1] = 1
+                array[is_q4] = 4
+                array[is_q2] = 2
+                array.flags.writeable = False
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+    #---------------------------------------------------------------------------
+    # boolean matches
+
+    def is_month_end(self) -> TContainer:
+        '''Return Boolean indicators if the day is the month end.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
+                # astype object dtypes to day too
+                if block.dtype != DT64_DAY:
+                    block = block.astype(DT64_DAY)
+                # convert to month, shift to next, convert to day, slide back to eom
+                array = block == ((block.astype(DT64_MONTH) + 1).astype(DT64_DAY) - 1)
+                array.flags.writeable = False
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+    def is_month_start(self) -> TContainer:
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
+                # astype object dtypes to day too
+                if block.dtype != DT64_DAY:
+                    block = block.astype(DT64_DAY)
+                array = block == block.astype(DT64_MONTH).astype(DT64_DAY)
+                array.flags.writeable = False
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+
+    def is_year_end(self) -> TContainer:
+        '''Return Boolean indicators if the day is the month end.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
+                # astype object dtypes to day too
+                if block.dtype != DT64_DAY:
+                    block = block.astype(DT64_DAY)
+                # convert to year, shift to next, convert to day, slide back to eoy
+                array = block == ((block.astype(DT64_YEAR) + 1).astype(DT64_DAY) - 1)
+                array.flags.writeable = False
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+    def is_year_start(self) -> TContainer:
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
+                # astype object dtypes to day too
+                if block.dtype != DT64_DAY:
+                    block = block.astype(DT64_DAY)
+                # convert to month, shift to next, convert to day, slide back to eom
+                array = block == block.astype(DT64_YEAR).astype(DT64_DAY)
+                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())

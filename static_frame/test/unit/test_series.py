@@ -3850,6 +3850,157 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
+    def test_series_via_dt_quarter_a(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+
+        s1 = Series(index.values, index=index).via_dt.quarter()
+        self.assertEqual(s1['2021-01-01'], 1)
+        self.assertEqual(s1['2021-03-31'], 1)
+        self.assertEqual(s1['2021-04-01'], 2)
+        self.assertEqual(s1['2021-06-30'], 2)
+        self.assertEqual(s1['2021-07-01'], 3)
+        self.assertEqual(s1['2021-09-30'], 3)
+        self.assertEqual(s1['2021-10-01'], 4)
+        self.assertEqual(s1['2021-12-31'], 4)
+
+        self.assertEqual((s1 == 1).sum(), 2888)
+        self.assertEqual((s1 == 2).sum(), 2912)
+        self.assertEqual((s1 == 3).sum(), 2944)
+        self.assertEqual((s1 == 4).sum(), 2944)
+
+    #---------------------------------------------------------------------------
+    def test_series_via_dt_is_month_end_a(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values, index=index).via_dt.is_month_end()
+        self.assertEqual(s1.sum(), 384)
+        self.assertEqual(s1['2021-12-31'], True)
+        self.assertEqual(s1['2021-12-30'], False)
+        self.assertEqual(s1['2021-01-01'], False)
+        self.assertEqual(s1['2021-01-31'], True)
+
+    def test_series_via_dt_is_month_end_b(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values.astype(object), index=index).via_dt.is_month_end()
+        self.assertEqual(s1.sum(), 384)
+        self.assertEqual(s1['2021-12-31'], True)
+        self.assertEqual(s1['2021-12-30'], False)
+        self.assertEqual(s1['2021-01-01'], False)
+        self.assertEqual(s1['2021-01-31'], True)
+
+    #---------------------------------------------------------------------------
+
+    def test_series_via_dt_is_month_start_a(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values, index=index).via_dt.is_month_start()
+        self.assertEqual(s1.sum(), 384)
+        self.assertEqual(s1['2021-12-31'], False)
+        self.assertEqual(s1['2021-12-30'], False)
+        self.assertEqual(s1['2021-01-01'], True)
+        self.assertEqual(s1['2021-01-31'], False)
+
+    def test_series_via_dt_is_month_start_b(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values.astype(object), index=index).via_dt.is_month_start()
+        self.assertEqual(s1.sum(), 384)
+        self.assertEqual(s1['2021-12-31'], False)
+        self.assertEqual(s1['2021-12-30'], False)
+        self.assertEqual(s1['2021-01-01'], True)
+        self.assertEqual(s1['2021-01-31'], False)
+
+
+    #---------------------------------------------------------------------------
+    def test_series_via_dt_is_year_end_a(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values, index=index).via_dt.is_year_end()
+        self.assertEqual(s1.sum(), 32)
+        self.assertEqual(s1['2021-12-31'], True)
+        self.assertEqual(s1['2021-12-30'], False)
+        self.assertEqual(s1['2021-01-01'], False)
+        self.assertEqual(s1['2021-01-31'], False)
+
+    def test_series_via_dt_is_year_end_b(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values.astype(object), index=index).via_dt.is_year_end()
+        self.assertEqual(s1.sum(), 32)
+        self.assertEqual(s1['2021-12-31'], True)
+        self.assertEqual(s1['2021-12-30'], False)
+        self.assertEqual(s1['2021-01-01'], False)
+        self.assertEqual(s1['2021-01-31'], False)
+
+    #---------------------------------------------------------------------------
+
+    def test_series_via_dt_is_year_start_a(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values, index=index).via_dt.is_year_start()
+        self.assertEqual(s1.sum(), 32)
+        self.assertEqual(s1['2021-12-31'], False)
+        self.assertEqual(s1['2021-12-30'], False)
+        self.assertEqual(s1['2021-01-01'], True)
+        self.assertEqual(s1['2021-01-31'], False)
+
+    def test_series_via_dt_is_year_start_b(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values.astype(object), index=index).via_dt.is_year_start()
+        self.assertEqual(s1.sum(), 32)
+        self.assertEqual(s1['2021-12-31'], False)
+        self.assertEqual(s1['2021-12-30'], False)
+        self.assertEqual(s1['2021-01-01'], True)
+        self.assertEqual(s1['2021-01-31'], False)
+
+
+    #---------------------------------------------------------------------------
+    def test_series_via_dt_hour_a(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55', '2020-11-30T23:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[ns]'
+                )
+        self.assertEqual(s1.via_dt.hour.to_pairs(),
+                (('x', 5), ('y', 16), ('z', 23)))
+
+        s2 = Series(('2014-01-02T05:02', '2013-02-05T16:55', '2020-11-30T23:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[s]'
+                ).astype(object)
+        self.assertEqual(s2.via_dt.hour.to_pairs(),
+                (('x', 5), ('y', 16), ('z', 23)))
+
+    def test_series_via_dt_minute_a(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55', '2020-11-30T23:51'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[ns]'
+                )
+        self.assertEqual(s1.via_dt.minute.to_pairs(),
+                (('x', 2), ('y', 55), ('z', 51)))
+
+        s2 = Series(('2014-01-02T05:02', '2013-02-05T16:55', '2020-11-30T23:51'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[s]'
+                ).astype(object)
+        self.assertEqual(s2.via_dt.minute.to_pairs(),
+                (('x', 2), ('y', 55), ('z', 51)))
+
+
+    def test_series_via_dt_second_a(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02:00', '2013-02-05T16:55:30', '2020-11-30T23:51:13'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[ns]'
+                )
+        self.assertEqual(s1.via_dt.second.to_pairs(),
+                (('x', 0), ('y', 30), ('z', 13)))
+
+        s2 = Series(('2014-01-02T05:02:00', '2013-02-05T16:55:30', '2020-11-30T23:51:13'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[s]'
+                ).astype(object)
+        self.assertEqual(s2.via_dt.second.to_pairs(),
+                (('x', 0), ('y', 30), ('z', 13)))
+
+
+
+    #---------------------------------------------------------------------------
     def test_series_via_dt_fromisoformat_a(self) -> None:
         s1 = Series(('2014-02-12', '2013-11-28'), index=('x', 'y'))
         post = s1.via_dt.fromisoformat()
