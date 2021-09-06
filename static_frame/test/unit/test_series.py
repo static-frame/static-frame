@@ -3949,6 +3949,62 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
+    def test_series_via_dt_is_quarter_end_a(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values, index=index).via_dt.is_quarter_end()
+        self.assertEqual(s1.sum(), 128)
+        self.assertEqual(s1['2021-03-31'], True)
+        self.assertEqual(s1['2021-06-29'], False)
+        self.assertEqual(s1['2021-06-30'], True)
+        self.assertEqual(s1['2021-09-30'], True)
+        self.assertEqual(s1['2021-09-29'], False)
+        self.assertEqual(s1['2021-12-31'], True)
+
+    def test_series_via_dt_is_quarter_end_b(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values.astype(object), index=index).via_dt.is_quarter_end()
+        self.assertEqual(s1.sum(), 128)
+        self.assertEqual(s1['2021-03-31'], True)
+        self.assertEqual(s1['2021-06-29'], False)
+        self.assertEqual(s1['2021-06-30'], True)
+        self.assertEqual(s1['2021-09-30'], True)
+        self.assertEqual(s1['2021-09-29'], False)
+        self.assertEqual(s1['2021-12-31'], True)
+
+
+    #---------------------------------------------------------------------------
+    def test_series_via_dt_is_quarter_start_a(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values, index=index).via_dt.is_quarter_start()
+        self.assertEqual(s1.sum(), 128)
+        self.assertEqual(s1['2021-01-01'], True)
+        self.assertEqual(s1['2021-03-31'], False)
+        self.assertEqual(s1['2021-04-01'], True)
+        self.assertEqual(s1['2021-06-29'], False)
+        self.assertEqual(s1['2021-06-30'], False)
+        self.assertEqual(s1['2021-07-01'], True)
+        self.assertEqual(s1['2021-09-30'], False)
+        self.assertEqual(s1['2021-09-29'], False)
+        self.assertEqual(s1['2021-10-01'], True)
+        self.assertEqual(s1['2021-12-31'], False)
+
+    def test_series_via_dt_is_quarter_start_b(self) -> None:
+        index = IndexDate.from_date_range('1990-01-01', '2021-12-31')
+        s1 = Series(index.values.astype(object), index=index).via_dt.is_quarter_start()
+        self.assertEqual(s1.sum(), 128)
+        self.assertEqual(s1['2021-01-01'], True)
+        self.assertEqual(s1['2021-03-31'], False)
+        self.assertEqual(s1['2021-04-01'], True)
+        self.assertEqual(s1['2021-06-29'], False)
+        self.assertEqual(s1['2021-06-30'], False)
+        self.assertEqual(s1['2021-07-01'], True)
+        self.assertEqual(s1['2021-09-30'], False)
+        self.assertEqual(s1['2021-09-29'], False)
+        self.assertEqual(s1['2021-10-01'], True)
+        self.assertEqual(s1['2021-12-31'], False)
+
+
+    #---------------------------------------------------------------------------
     def test_series_via_dt_hour_a(self) -> None:
 
         s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55', '2020-11-30T23:55'),

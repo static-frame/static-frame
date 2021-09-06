@@ -399,6 +399,60 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
 
+    def is_quarter_end(self) -> TContainer:
+        '''Return Boolean indicators if the day is the quarter end.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
+                # astype object dtypes to day too
+                if block.dtype != DT64_DAY:
+                    block = block.astype(DT64_DAY)
+
+                # convert to month, shift to next, convert to day, slide back to eom
+                month = block.astype(DT64_MONTH)
+                eom = (month + 1).astype(DT64_DAY) - 1
+                # months starting from 0
+                month_int = month.astype(DTYPE_INT_DEFAULT) % 12
+                month_valid = ((month_int == 2)
+                        | (month_int == 5)
+                        | (month_int == 8)
+                        | (month_int == 11)
+                        )
+                array = (block == eom) & month_valid
+                array.flags.writeable = False
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+    def is_quarter_start(self) -> TContainer:
+        '''Return Boolean indicators if the day is the quarter start.
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
+                # astype object dtypes to day too
+                if block.dtype != DT64_DAY:
+                    block = block.astype(DT64_DAY)
+
+                # convert to month, shift to next, convert to day, slide back to eom
+                month = block.astype(DT64_MONTH)
+                som = month.astype(DT64_DAY)
+                # months starting from 0
+                month_int = month.astype(DTYPE_INT_DEFAULT) % 12
+                month_valid = ((month_int == 0)
+                        | (month_int == 3)
+                        | (month_int == 6)
+                        | (month_int == 9)
+                        )
+                array = (block == som) & month_valid
+                array.flags.writeable = False
+                yield array
+
+        return self._blocks_to_container(blocks())
+
     #---------------------------------------------------------------------------
     # time methods
 
