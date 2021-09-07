@@ -728,57 +728,6 @@ class TestUnit(TestCase):
         self.assertTrue(tree["II"]["D"].equals(lvl.targets[1].targets[0].index)) # type: ignore
         self.assertTrue(tree["II"]["E"].equals(lvl.targets[1].targets[1].index)) # type: ignore
 
-    #---------------------------------------------------------------------------
-
-    def test_repr(self) -> None:
-        tree = {
-            "I": {"A": (1, 2), "B": (1, 2, 3), "C": (2, 3)},
-            "II": {"A": (1, 2, 3), "B": (1,)},
-        }
-        lvl = IndexLevel.from_tree(tree)
-        actual = repr(lvl)
-        expected = [
-            "IndexLevel<{",
-            "    'I': {",
-            "        'A': {",
-            "                <Index>",
-            "                1",
-            "                2",
-            "                <int64>",
-            "        },",
-            "        'B': {",
-            "                <Index>",
-            "                1",
-            "                2",
-            "                3",
-            "                <int64>",
-            "        },",
-            "        'C': {",
-            "                <Index>",
-            "                2",
-            "                3",
-            "                <int64>",
-            "        },",
-            "    },",
-            "    'II': {",
-            "        'A': {",
-            "                <Index>",
-            "                1",
-            "                2",
-            "                3",
-            "                <int64>",
-            "        },",
-            "        'B': {",
-            "                <Index>",
-            "                1",
-            "                <int64>",
-            "        },",
-            "    },",
-            "}>",
-        ]
-
-        self.assertEqual(actual, "\n".join(expected))
-
 
 if __name__ == '__main__':
     unittest.main()
