@@ -174,7 +174,7 @@ class IndexLevel:
             self._length = 0
 
     #---------------------------------------------------------------------------
-    def _traverse(self) -> TreeNodeT:
+    def _traverse(self) -> tp.Union[Index, TreeNodeT]:
         if self.targets is None:
             return self.index
 

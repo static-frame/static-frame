@@ -715,18 +715,18 @@ class TestUnit(TestCase):
         }
         lvl = IndexLevel.from_tree(tree)
 
-        tree = lvl._traverse()
+        tree = lvl._traverse() # type: ignore
 
-        assert tuple(tree) == ("I", "II")
-        assert tuple(tree["I"]) == ("A", "B", "C")
-        assert tuple(tree["II"]) == ("D", "E")
+        self.assertEqual(tuple(tree), ("I", "II"))
+        self.assertEqual(tuple(tree["I"]), ("A", "B", "C"))
+        self.assertEqual(tuple(tree["II"]), ("D", "E"))
 
-        assert tree["I"]["A"].equals(lvl.targets[0].targets[0].index)
-        assert tree["I"]["B"].equals(lvl.targets[0].targets[1].index)
-        assert tree["I"]["C"].equals(lvl.targets[0].targets[2].index)
+        self.assertTrue(tree["I"]["A"].equals(lvl.targets[0].targets[0].index)) # type: ignore
+        self.assertTrue(tree["I"]["B"].equals(lvl.targets[0].targets[1].index)) # type: ignore
+        self.assertTrue(tree["I"]["C"].equals(lvl.targets[0].targets[2].index)) # type: ignore
 
-        assert tree["II"]["D"].equals(lvl.targets[1].targets[0].index)
-        assert tree["II"]["E"].equals(lvl.targets[1].targets[1].index)
+        self.assertTrue(tree["II"]["D"].equals(lvl.targets[1].targets[0].index)) # type: ignore
+        self.assertTrue(tree["II"]["E"].equals(lvl.targets[1].targets[1].index)) # type: ignore
 
     #---------------------------------------------------------------------------
 
