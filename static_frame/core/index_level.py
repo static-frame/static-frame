@@ -190,26 +190,24 @@ class IndexLevel:
         return tree
 
     def __repr__(self) -> str:
-        TABSIZE = 4
-
         def pad(s: str, offset: int) -> str:
-            return f"{' ' * offset}{s}"
+            return f"{' ' * offset * 4}{s}"
 
         def format_tree(tree: TreeNodeT, offset: int) -> str:
             if not isinstance(tree, dict):
                 return f"\n".join(
-                    (pad(line, offset + TABSIZE) for line in str(tree).split("\n"))
+                    (pad(line, offset + 1) for line in str(tree).split("\n"))
                 )
 
             results: tp.List[str] = []
             for label, target in tree.items():
                 results.append(pad(f"{repr(label)}: {{", offset))
-                results.append(format_tree(target, offset + TABSIZE))
+                results.append(format_tree(target, offset + 1))
                 results.append(pad("},", offset))
 
             return "\n".join(results)
 
-        body: str = format_tree(self.traverse(), offset=TABSIZE)
+        body: str = format_tree(self.traverse(), offset=1)
         return f"{self.__class__.__name__}<{{\n{body}\n}}>"
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'IndexLevel':
