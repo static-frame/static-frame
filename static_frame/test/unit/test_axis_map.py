@@ -76,7 +76,7 @@ class TestUnit(TestCase):
             hierarchy, opposite = bus_to_hierarchy(b1, axis=axis, deepcopy_from_bus=flag, init_exception_cls=ErrorInitBus)
 
             if axis == 0:
-                expected_tree: tp.Dict[str, tp.Sequence[tp.Any]] = {
+                expected_tree: tp.Dict[str, Index] = {
                     'f1': indices, 'f2': indices, 'f3': indices
                 }
                 expected_index = columns
