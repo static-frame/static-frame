@@ -1,6 +1,7 @@
 
 
 import unittest
+import datetime
 
 import frame_fixtures as ff
 import numpy as np
@@ -14,23 +15,65 @@ from static_frame.core.bus import Bus
 # from static_frame.core.axis_map import AxisMap
 # from static_frame.core.index import Index
 # from static_frame.core.axis_map import IndexMap
-
+from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.yarn import Yarn
 from static_frame.core.frame import Frame
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.index_datetime import IndexDate
 from static_frame import ILoc
 from static_frame import HLoc
+from static_frame.core.exception import RelabelInvalid
+from static_frame.core.index_hierarchy import IndexHierarchy
+
+
 
 class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_yarn_init_a(self) -> None:
 
+        with self.assertRaises(ErrorInitSeries):
+            Yarn(np.array([3, 4]))
+
+    def test_yarn_init_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5))
+
+        y1 = Yarn((b1, b2), index=tuple('abcde'))
+        self.assertEqual(y1.index.values.tolist(), list('abcde'))
+        self.assertEqual(y1[['a', 'c', 'e']].shape, (3,))
+
+        y2 = Yarn((b1, b2))
+        self.assertEqual(y2.index.values.tolist(), list(range(5)))
+        self.assertEqual(y2[2:].shape, (3,))
+
+        y3 = Yarn((b2,), index=('2021-01-01', '2021-02-15'), index_constructor=IndexDate)
+        self.assertEqual(y3.index.__class__, IndexDate)
+        self.assertEqual(y3.index.values.tolist(), [datetime.date(2021, 1, 1), datetime.date(2021, 2, 15)])
+
         with self.assertRaises(ErrorInitYarn):
-            Yarn(np.array([3, 4]), retain_labels=True)
+            y4 = Yarn((b2,), index=range(5))
+
+    def test_yarn_init_c(self) -> None:
+        from static_frame.core.series import Series
+
+        with self.assertRaises(ErrorInitYarn):
+            Yarn((ff.parse('s(2,2)'),))
+
+        with self.assertRaises(ErrorInitYarn):
+            Yarn(Series((ff.parse('s(2,2)'),), dtype=object))
+
 
 
     #---------------------------------------------------------------------------
@@ -135,8 +178,12 @@ class TestUnit(TestCase):
         f7 = ff.parse('s(4,2)|v(str)').rename('f7')
         b3 = Bus.from_frames((f6, f7), name='c')
 
-        y1 = Yarn.from_concat((b1, b2, b3), retain_labels=False)
+        y1 = Yarn.from_concat((Yarn.from_buses((b1,), retain_labels=True), Yarn.from_buses((b2, b3), retain_labels=True)))
         self.assertEqual(y1.shape, (7,))
+        self.assertEqual(y1.index.values.tolist(),
+                [['a', 'f1'], ['a', 'f2'], ['a', 'f3'], ['b', 'f4'], ['b', 'f5'], ['c', 'f6'], ['c', 'f7']]
+                )
+
 
     def test_yarn_from_concat_b(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
@@ -156,15 +203,13 @@ class TestUnit(TestCase):
             bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
             bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
 
-            y1 = Yarn.from_concat((bus_a, bus_b), retain_labels=False)
-            self.assertEqual(y1.shape, (6,))
-            self.assertEqual(y1.status['loaded'].sum(), 0)
+            y1 = Yarn.from_concat((Yarn.from_buses((bus_a,), retain_labels=True), Yarn.from_buses((bus_b,), retain_labels=True)))
 
-            from static_frame import IndexAutoFactory
-            y2 = Yarn.from_concat((y1, y1), retain_labels=True, index=IndexAutoFactory)
-            self.assertEqual(y2[(1, 'f4')].shape, (2, 8))
-            self.assertEqual(y2[(2, 'f1')].shape, (4, 2))
-            self.assertEqual(y2[(3, 'f6')].shape, (6, 4))
+            y2 = Yarn.from_concat((y1, y1), index=IndexAutoFactory)
+
+            self.assertEqual(y2[3].shape, (2, 8))
+            self.assertEqual(y2[0].shape, (4, 2))
+            self.assertEqual(y2[5].shape, (6, 4))
 
             y3 = y2.iloc[4:]
             self.assertEqual(y3.shape, (8,))
@@ -175,7 +220,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(4,5)').rename('f2')
 
         with self.assertRaises(NotImplementedError):
-            Yarn.from_concat((f1, f2), retain_labels=True)
+            Yarn.from_concat((f1, f2))
 
     #---------------------------------------------------------------------------
     def test_yarn_reversed_a(self) -> None:
@@ -892,11 +937,191 @@ class TestUnit(TestCase):
                 [('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2))]
                 )
 
+    #---------------------------------------------------------------------------
+    def test_yarn_unpersist_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
 
-        # import ipdb; ipdb.set_trace()
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
 
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
+            self.assertEqual(len(tuple(y1.items())), 6)
+
+            self.assertEqual(y1.status['loaded'].sum(), 2)
+            y1.unpersist()
+
+            self.assertEqual(y1.status['loaded'].sum(), 0)
+            self.assertEqual(len(tuple(y1.items())), 6)
+            self.assertEqual(y1.status['loaded'].sum(), 2)
+
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_relabel_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3))
+
+        self.assertEqual(
+                y1.relabel(lambda x: f'--{x}--').loc['--4--'].shape, (4, 4)
+                )
+
+        # None is a no-op
+        self.assertEqual(
+                y1.relabel(None).loc[4].shape, (4, 4)
+                )
+
+        with self.assertRaises(RelabelInvalid):
+            y1.relabel({3,4,5})
+
+        self.assertEqual(
+                y1.relabel(tuple('abcdef'))['d':].status['shape'].to_pairs(),
+                (('d', (2, 8)), ('e', (4, 4)), ('f', (6, 4)))
+                )
+
+
+        y2 = Yarn((b1, b2, b3), index=tuple('abcdef'))
+        self.assertEqual(y2.index.values.tolist(), ['a', 'b', 'c', 'd', 'e', 'f'])
+        self.assertEqual(y2.relabel(IndexAutoFactory).index.values.tolist(), [0, 1, 2, 3, 4, 5])
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_relabel_flat_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+
+
+        self.assertEqual(
+                y1.relabel_flat()[('a', 3):].status['shape'].to_pairs(),
+                ((('a', 3), (2, 2)), (('b', 1), (2, 8)), (('b', 2), (4, 4)), (('b', 3), (6, 4)))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_yarn_relabel_level_add_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+
+        self.assertEqual(
+                y1.relabel_level_add('c').iloc[4:].status['shape'].to_pairs(),
+                ((('c', 'b', 2), (4, 4)), (('c', 'b', 3), (6, 4)))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_yarn_relabel_level_drop_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+
+        self.assertEqual(
+                y1.iloc[[0,2,4]].relabel_level_drop(1).status['shape'].to_pairs(),
+                ((1, (4, 2)), (3, (2, 2)), (2, (4, 4)))
+                )
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_rehierarch_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+        self.assertEqual(
+                y1.iloc[[0,2,4]].rehierarch((1, 0)).status['shape'].to_pairs(),
+                (((1, 'a'), (4, 2)), ((3, 'a'), (2, 2)), ((2, 'b'), (4, 4)))
+                )
 
 
 if __name__ == '__main__':
     unittest.main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

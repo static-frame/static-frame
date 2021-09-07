@@ -49,6 +49,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitQuilt):
             self.assertEqual(q2.shape, (7, 2))
 
+
     def test_quilt_init_b(self) -> None:
 
         f1 = Frame.from_dict(
@@ -87,10 +88,15 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
 
         b1 = Bus.from_frames((f1, f2, f3))
-        axis_hierarchy = bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=True, init_exception_cls=ErrorInitQuilt)
+        from static_frame.core.index_hierarchy import IndexHierarchy
+        y1 = Yarn((b1,), index=IndexHierarchy.from_labels(
+                ((1, 'a'), (1, 'b'), (2, 'a')),
+                ))
+        with self.assertRaises(ErrorInitQuilt):
+            Quilt(y1, retain_labels=False, axis=0).shape
 
         with self.assertRaises(ErrorInitQuilt):
-            _ = Quilt(b1, retain_labels=True, axis=0, axis_hierarchy=axis_hierarchy, axis_opposite=None)
+            Quilt(y1, retain_labels=False, axis=1).shape
 
 
     def test_quilt_init_d(self) -> None:
@@ -142,6 +148,29 @@ class TestUnit(TestCase):
                     ((0, ((('f6', 3), 1699.34),)), (1, ((('f6', 3), 114.58),)))
                     )
 
+
+    def test_quilt_init_f(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,2)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,2)').rename('f4')
+        f5 = ff.parse('s(4,2)').rename('f5')
+        f6 = ff.parse('s(6,2)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='b1')
+        b2 = Bus.from_frames((f4,), name='b2')
+        b3 = Bus.from_frames((f5, f6), name='b3')
+
+        y1 = Yarn((b1, b2, b3), index=tuple('abcdef'))
+
+        q1 = Quilt(y1, retain_labels=True)
+        self.assertEqual(q1.index.values.tolist(),
+                [['a', 0], ['a', 1], ['a', 2], ['a', 3], ['b', 0], ['b', 1], ['b', 2], ['b', 3], ['c', 0], ['c', 1], ['d', 0], ['d', 1], ['e', 0], ['e', 1], ['e', 2], ['e', 3], ['f', 0], ['f', 1], ['f', 2], ['f', 3], ['f', 4], ['f', 5]]
+                )
+        self.assertEqual(q1.shape, (22, 2))
+        self.assertEqual(q1.loc[[('f', 3)]].to_pairs(),
+                ((0, ((('f', 3), 1699.34),)), (1, ((('f', 3), 114.58),)))
+                )
 
     #---------------------------------------------------------------------------
     def test_quilt_from_items_a(self) -> None:
@@ -258,7 +287,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(q1.name, 'foo')
         self.assertEqual(q1.rename('bar').name, 'bar')
-        self.assertTrue(repr(q1).startswith('<Quilt: foo'))
+        self.assertTrue(repr(q1.display(DisplayConfig(type_color=False))).startswith('<Quilt: foo'))
 
         post, opp = bus_to_hierarchy(q1._bus, q1._axis, deepcopy_from_bus=True, init_exception_cls=ErrorInitQuilt)
         self.assertEqual(len(post), 100)
@@ -1439,5 +1468,39 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
+    def test_quilt_unpersist_a(self) -> None:
 
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(bool)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+        items1 = dict(q1.items())
+        self.assertTrue(len(items1) == 8)
+
+        self.assertEqual(b1.status['loaded'].sum(), 2)
+        q1.unpersist()
+
+        # there is no Store with this Bus so unpersits makes not change
+        self.assertEqual(b1.status['loaded'].sum(), 2)
+
+    def test_quilt_unpersist_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)|c(I,str)').rename('f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True, axis=1)
+
+        with temp_file('.zip') as fp:
+            q1.to_zip_pickle(fp)
+            q2 = Quilt.from_zip_pickle(fp, retain_labels=True, axis=1)
+            self.assertEqual(len(dict(q2.items())), 12)
+
+            self.assertEqual(q2._bus.status['loaded'].sum(), 3)
+            q2.unpersist()
+
+            self.assertEqual(q2._bus.status['loaded'].sum(), 0)
+            self.assertEqual(len(dict(q2.items())), 12)
+            self.assertEqual(q2._bus.status['loaded'].sum(), 3)
 

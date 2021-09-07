@@ -3,6 +3,7 @@ from collections.abc import KeysView
 from itertools import zip_longest
 from functools import reduce
 from copy import deepcopy
+from collections import Counter
 
 import numpy as np
 
@@ -398,6 +399,19 @@ class Index(IndexBase):
         '''
         return cls(labels, name=name)
 
+
+    @staticmethod
+    def _error_init_index_non_unique(labels: tp.Iterable[tp.Hashable]) -> ErrorInitIndexNonUnique:
+        labels_counter = Counter(labels)
+        if len(labels_counter) == 0: # generator consumed
+            msg = 'Labels have non-unique values. Details from iterators not available.'
+        else:
+            labels_all = sum(labels_counter.values())
+            labels_duplicated = [repr(p[0]) for p in labels_counter.most_common(10) if p[1] > 1]
+            msg = f'Labels have {labels_all - len(labels_counter)} non-unique values, including {", ".join(labels_duplicated)}.'
+
+        return ErrorInitIndexNonUnique(msg)
+
     #---------------------------------------------------------------------------
     @doc_inject(selector='index_init')
     def __init__(self,
@@ -477,16 +491,12 @@ class Index(IndexBase):
                 labels_for_automap = labels.tolist() #type: ignore [attr-defined]
             else:
                 labels_for_automap = labels
+
             if not loc_is_iloc:
                 try:
                     self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)
                 except ValueError: # Automap will raise ValueError of non-unique values are encountered
-                    pass
-
-                if self._map is None:
-                    raise ErrorInitIndexNonUnique(
-                            f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})'
-                            )
+                    raise self._error_init_index_non_unique(labels_for_automap) from None
                 size = len(self._map)
             else:
                 # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator

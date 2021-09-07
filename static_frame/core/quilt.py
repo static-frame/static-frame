@@ -417,6 +417,12 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
+    @staticmethod
+    def _error_update_axis_labels(axis: int) -> ErrorInitQuilt:
+        axis_label = 'index' if axis == 0 else 'column'
+        axis_labels = 'indices' if axis == 0 else 'columns'
+        err_msg = f"Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy"
+        return ErrorInitQuilt(err_msg)
 
     def _update_axis_labels(self) -> None:
         if self._axis_hierarchy is None or self._axis_opposite is None:
@@ -426,19 +432,12 @@ class Quilt(ContainerBase, StoreClientMixin):
                     deepcopy_from_bus=self._deepcopy_from_bus,
                     init_exception_cls=ErrorInitQuilt,
                     )
-
-        def get_explicit_failure() -> ErrorInitQuilt:
-            axis_label = 'index' if self._axis == 0 else 'column'
-            axis_labels = 'indices' if self._axis == 0 else 'columns'
-            err_msg = f"Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy"
-            return ErrorInitQuilt(err_msg)
-
         if self._axis == 0:
             if not self._retain_labels:
                 try:
                     self._index = self._axis_hierarchy.level_drop(1)
                 except ErrorInitIndexNonUnique:
-                    raise get_explicit_failure() from None
+                    raise self._error_update_axis_labels(self._axis) from None
             else: # get hierarchical
                 self._index = self._axis_hierarchy
             self._columns = self._axis_opposite
@@ -447,11 +446,16 @@ class Quilt(ContainerBase, StoreClientMixin):
                 try:
                     self._columns = self._axis_hierarchy.level_drop(1)
                 except ErrorInitIndexNonUnique:
-                    raise get_explicit_failure() from None
+                    raise self._error_update_axis_labels(self._axis) from None
             else:
                 self._columns = self._axis_hierarchy
             self._index = self._axis_opposite
         self._assign_axis = False
+
+    def unpersist(self) -> None:
+        '''For the :obj:`Bus` or :obj:`Yarn` contained in this object, replace all loaded :obj:`Frame` with :obj:`FrameDeferred`.
+        '''
+        self._bus.unpersist()
 
     #---------------------------------------------------------------------------
     # name interface
@@ -967,7 +971,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     # component might be a Series, can call the same with first arg
-                    component = component.relabel_level_add(key) # type: ignore
+                    component = component.relabel_level_add(key)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
@@ -976,9 +980,9 @@ class Quilt(ContainerBase, StoreClientMixin):
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     if component_is_series:
-                        component = component.relabel_level_add(key) #type: ignore
+                        component = component.relabel_level_add(key)
                     else:
-                        component = component.relabel_level_add(columns=key) #type: ignore
+                        component = component.relabel_level_add(columns=key)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     if component_is_series:
                         component = component.iloc[0]

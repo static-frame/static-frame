@@ -11,6 +11,7 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.display_config import DisplayConfig
 from static_frame.test.test_case import temp_file
 from static_frame.core.store import StoreConfig
+from static_frame.core.batch import normalize_container
 
 nan = np.nan
 
@@ -22,6 +23,13 @@ def func2(label: tp.Hashable, f: Frame) -> Frame:
     return f.loc['q']
 
 class TestUnit(TestCase):
+
+    def test_normalize_container_a(self) -> None:
+        post = normalize_container(np.arange(8).reshape(2, 4))
+        self.assertEqual(post.to_pairs(),
+                ((0, ((0, 0), (1, 4))), (1, ((0, 1), (1, 5))), (2, ((0, 2), (1, 6))), (3, ((0, 3), (1, 7))))
+                )
+
 
     def test_batch_slotted_a(self) -> None:
 
@@ -1020,6 +1028,66 @@ class TestUnit(TestCase):
         for frame in (f1, f2):
             # parquet brings in characters as objects, thus forcing different dtypes
             self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
+
+
+    #---------------------------------------------------------------------------
+    def test_batch_from_zip_tsv_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2), config=config)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_tsv(fp)
+            b2 = Batch.from_zip_tsv(fp, config=config)
+            frames = dict(b2.items())
+
+        for frame in (f1, f2):
+            # parquet brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
+
+    def test_batch_from_zip_csv_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2), config=config)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_csv(fp)
+            b2 = Batch.from_zip_csv(fp, config=config)
+            frames = dict(b2.items())
+
+        for frame in (f1, f2):
+            # parquet brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
+
+
 
     #---------------------------------------------------------------------------
     def test_batch_to_sqlite_a(self) -> None:

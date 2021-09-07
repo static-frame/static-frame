@@ -21,6 +21,8 @@ from static_frame.test.test_case import TestCase
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import LocInvalid
+from static_frame.core.exception import ErrorInitIndexNonUnique
+
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import arrays_equal
 
@@ -114,6 +116,17 @@ class TestUnit(TestCase):
         i1 = Index([10, 20, 30], name='foo')
         i2 = Index(i1)
         self.assertEqual(i2.name, 'foo')
+
+
+    def test_index_init_j(self) -> None:
+        from itertools import chain
+
+        with self.assertRaises(ErrorInitIndexNonUnique):
+            idx1 = Index(list(chain(range(100), range(50, 200))))
+
+        with self.assertRaises(ErrorInitIndexNonUnique):
+            idx1 = Index(list(chain(range(100), range(50, 200))))
+
 
 
     #---------------------------------------------------------------------------

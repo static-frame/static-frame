@@ -105,7 +105,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                         name=name,
                         )
         except ErrorInitIndexNonUnique:
-            raise ErrorInitIndexNonUnique("Frames do not have unique names") from None
+            raise ErrorInitIndexNonUnique("Frames do not have unique names.") from None
 
         return cls(series, config=config)
 

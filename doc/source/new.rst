@@ -10,6 +10,18 @@ Added ``Yarn.iter_element()``, ``Yarn.iter_element_items()``.
 
 Added ``Yarn.drop[]``
 
+Added ``Yarn.reindex()``, ``Yarn.relabel_flat()``, ``Yarn.relabel_level_add()``, ``Yarn.relabel_level_drop()``, ``Yarn.rehierarch()``.
+
+Added ``Bus.unpersist()``, ``Yarn.unpersist()``, and ``Quilt.unpersist()``.
+
+Improvements to standard string representation of ``Quilt``.
+
+Added ``is_month_start()``, ``is_month_end()``, ``is_year_start()``, ``is_year_end()``, ``is_quarter_start()``, ``is_quarter_end()`` to ``via_dt`` interfaces.
+
+Added ``hour``, ``minute``, ``second`` properties to ``via_dt`` interfaces.
+
+Improved implementation of ``weekday()``, added ``quarter()`` to ``via_dt`` interfaces.
+
 Fixed issue when using ``iter_window_*`` methods on two-dimensional containers where the opposite axis is not a default index constructor.
 
 Fixed issue when selecting rows from ``Frame`` with 0-length columns.
@@ -18,7 +30,7 @@ Fixed issue when selecting rows from ``Frame`` with 0-length columns.
 0.8.18
 ----------
 
-Implementation of ``Yarn``, a container that presents numerous ``Bus`` as a uniform, 1D interface.
+Implementation of ``Yarn()``, a container that presents numerous ``Bus`` as a uniform, 1D interface.
 
 Fixed issue in ``Frame.astype[]`` when selecting targets with a Boolean ``Series`` or arrays.
 
