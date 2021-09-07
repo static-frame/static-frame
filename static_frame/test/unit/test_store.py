@@ -169,12 +169,11 @@ class TestUnit(TestCase):
         def compare_configs(config1: StoreConfigHE, config2: StoreConfigHE) -> None:
             self.assertNotEqual(config1, config2)
 
-
         config1 = StoreConfigHE(index_depth=1)
         config2 = StoreConfigHE(index_depth=2)
         compare_configs(config1, config2)
 
-        self.assertFalse(config1 is not None)
+        self.assertTrue(config1 is not None)
 
         config1 = StoreConfigHE(columns_select=['a'])
         config2 = StoreConfigHE(columns_select=('b',))
