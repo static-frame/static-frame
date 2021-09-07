@@ -1566,7 +1566,9 @@ class IndexHierarchy(IndexBase):
         return mi
 
     def to_tree(self) -> TreeNodeT:
-        return self._levels._traverse() # type: ignore
+        '''Returns the tree representation of an IndexHierarchy
+        '''
+        return self._levels.traverse() # type: ignore
 
     def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.

@@ -174,7 +174,9 @@ class IndexLevel:
             self._length = 0
 
     #---------------------------------------------------------------------------
-    def _traverse(self) -> tp.Union[Index, TreeNodeT]:
+    def traverse(self) -> tp.Union[Index, TreeNodeT]:
+        '''Traverses the IndexLevel tree via preorder traversal
+        '''
         if self.targets is None:
             return self.index
 
@@ -183,7 +185,7 @@ class IndexLevel:
         sentinel: tp.Any = object()
         for target, label in zip_longest(self.targets, self.index, fillvalue=sentinel):
             assert target is not sentinel and label is not sentinel, f"Malformed IndexLevel {self}"
-            tree[label] = target._traverse()
+            tree[label] = target.traverse()
 
         return tree
 
@@ -207,7 +209,7 @@ class IndexLevel:
 
             return "\n".join(results)
 
-        body: str = format_tree(self._traverse(), offset=TABSIZE)
+        body: str = format_tree(self.traverse(), offset=TABSIZE)
         return f"{self.__class__.__name__}<{{\n{body}\n}}>"
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'IndexLevel':

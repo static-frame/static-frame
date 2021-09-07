@@ -715,7 +715,7 @@ class TestUnit(TestCase):
         }
         lvl = IndexLevel.from_tree(tree)
 
-        tree = lvl._traverse() # type: ignore
+        tree = lvl.traverse() # type: ignore
 
         self.assertEqual(tuple(tree), ("I", "II"))
         self.assertEqual(tuple(tree["I"]), ("A", "B", "C"))
