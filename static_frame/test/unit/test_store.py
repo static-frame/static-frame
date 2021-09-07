@@ -174,7 +174,7 @@ class TestUnit(TestCase):
         config2 = StoreConfigHE(index_depth=2)
         compare_configs(config1, config2)
 
-        self.assertFalse(config1 == None)
+        self.assertFalse(config1 is not None)
 
         config1 = StoreConfigHE(columns_select=['a'])
         config2 = StoreConfigHE(columns_select=('b',))
