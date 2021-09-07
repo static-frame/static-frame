@@ -174,6 +174,42 @@ class IndexLevel:
             self._length = 0
 
     #---------------------------------------------------------------------------
+    def _traverse(self) -> TreeNodeT:
+        if self.targets is None:
+            return self.index
+
+        tree: TreeNodeT = {}
+
+        sentinel: tp.Any = object()
+        for target, label in zip_longest(self.targets, self.index, fillvalue=sentinel):
+            assert target is not sentinel and label is not sentinel, f"Malformed IndexLevel {self}"
+            tree[label] = target._traverse()
+
+        return tree
+
+    def __repr__(self) -> str:
+        TABSIZE = 4
+
+        def pad(s: str, offset: int) -> str:
+            return f"{' ' * offset}{s}"
+
+        def format_tree(tree: TreeNodeT, offset: int) -> str:
+            if not isinstance(tree, dict):
+                return f"\n".join(
+                    (pad(line, offset + TABSIZE) for line in str(tree).split("\n"))
+                )
+
+            results: tp.List[str] = []
+            for label, target in tree.items():
+                results.append(pad(f"{repr(label)}: {{", offset))
+                results.append(format_tree(target, offset + TABSIZE))
+                results.append(pad("},", offset))
+
+            return "\n".join(results)
+
+        body: str = format_tree(self._traverse(), offset=TABSIZE)
+        return f"{self.__class__.__name__}<{{\n{body}\n}}>"
+
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'IndexLevel':
         obj = self.__new__(self.__class__)
         obj.index = deepcopy(self.index, memo)
