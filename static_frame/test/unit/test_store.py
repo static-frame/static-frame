@@ -169,7 +169,6 @@ class TestUnit(TestCase):
         def compare_configs(config1: StoreConfigHE, config2: StoreConfigHE) -> None:
             self.assertNotEqual(config1, config2)
 
-
         config1 = StoreConfigHE(index_depth=1)
         config2 = StoreConfigHE(index_depth=2)
         compare_configs(config1, config2)

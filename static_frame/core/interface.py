@@ -549,7 +549,7 @@ class InterfaceRecord(tp.NamedTuple):
         elif cls_interface is InterfaceRe:
             group = InterfaceGroup.AccessorRe
         else:
-            raise NotImplementedError()
+            raise NotImplementedError() #pragma: no cover
 
         terminus_name_no_args: tp.Optional[str]
 
