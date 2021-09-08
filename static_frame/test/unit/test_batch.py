@@ -12,6 +12,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.test.test_case import temp_file
 from static_frame.core.store import StoreConfig
 from static_frame.core.batch import normalize_container
+from static_frame.core.exception import BatchIterableInvalid
 
 nan = np.nan
 
@@ -184,6 +185,12 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(0),
                 ((None, (('f1', 0.0), ('f2', 0.0))),))
 
+
+    def test_batch_h(self) -> None:
+
+        frame = ff.parse("s(10,3)")
+        with self.assertRaises(BatchIterableInvalid):
+            Batch(frame.iter_window(size=3)).std(ddof=1).to_frame()
 
     #---------------------------------------------------------------------------
     def test_batch_display_a(self) -> None:
