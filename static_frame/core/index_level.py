@@ -208,9 +208,7 @@ class IndexLevel:
         for label, target in zip(self.index, self.targets):
             results.append(target._repr(name=repr(label)))
 
-        results = "\n".join(results)
-
-        return self._format(self.pad(results), name=name)
+        return self._format(self.pad("\n".join(results)), name=name)
 
     def __repr__(self) -> str:
         return self._repr("ROOT").rstrip(',')
