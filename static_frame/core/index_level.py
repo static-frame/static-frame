@@ -211,7 +211,7 @@ class IndexLevel:
         return self._format(self.pad("\n".join(results)), name=name)
 
     def __repr__(self) -> str:
-        return self._repr("ROOT").rstrip(',')
+        return self._repr().rstrip(',')
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'IndexLevel':
         obj = self.__new__(self.__class__)
