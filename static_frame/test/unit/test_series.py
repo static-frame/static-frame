@@ -2089,9 +2089,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(s1.all(skipna=True), True)
         self.assertEqual(s1.any(), True)
-
-        with self.assertRaises(TypeError):
-            self.assertTrue(np.isnan(s1.all(skipna=False)))
+        self.assertTrue(s1.all(skipna=False))
 
     def test_series_all_c(self) -> None:
         s1 = Series([1, np.nan, 1], index=('a', 'b', 'c'))
@@ -2111,17 +2109,14 @@ class TestUnit(TestCase):
 
     def test_series_all_f(self) -> None:
         s1 = Series([True, None, 1], index=('a', 'b', 'c'))
-        with self.assertRaises(TypeError):
-            self.assertTrue(np.isnan(s1.all(skipna=False)))
-        with self.assertRaises(TypeError):
-            self.assertTrue(np.isnan(s1.any(skipna=False)))
+        self.assertFalse(s1.all(skipna=False))
+        self.assertTrue(s1.any(skipna=False))
 
     def test_series_all_g(self) -> None:
         s1 = Series(['', 'sdf', np.nan], index=('a', 'b', 'c'))
-        with self.assertRaises(TypeError):
-            self.assertTrue(np.isnan(s1.all(skipna=False)))
-        with self.assertRaises(TypeError):
-            self.assertTrue(np.isnan(s1.any(skipna=False)))
+        self.assertFalse(s1.all())
+        self.assertFalse(s1.all(skipna=False))
+        self.assertTrue(s1.any(skipna=False))
 
     def test_series_all_h(self) -> None:
         s1 = Series(['', 'sdf', 'wer'], index=('a', 'b', 'c'))
@@ -2147,6 +2142,13 @@ class TestUnit(TestCase):
         s1 = Series(['', 0, False], index=('a', 'b', 'c'))
         self.assertEqual(s1.all(), False)
         self.assertEqual(s1.any(), False)
+
+
+    def test_series_all_n(self) -> None:
+        s1 = Series(['foo', None, 'bar'])
+        self.assertEqual(s1.all(skipna=False), False)
+        self.assertEqual(s1.any(), True)
+
 
 
     #---------------------------------------------------------------------------

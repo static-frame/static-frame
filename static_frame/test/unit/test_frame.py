@@ -10677,21 +10677,17 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z')
                 )
 
-        with self.assertRaises(TypeError):
-            self.assertEqual(f1.all(skipna=False).to_pairs(),
-                    (('a', True), ('b', False)))
+        self.assertEqual(f1.all(skipna=False).to_pairs(),
+                (('a', True), ('b', False)))
 
-        with self.assertRaises(TypeError):
-            self.assertEqual(f1.any(skipna=False).to_pairs(),
-                    (('a', True), ('b', True)))
+        self.assertEqual(f1.any(skipna=False).to_pairs(),
+                (('a', True), ('b', True)))
 
-        with self.assertRaises(TypeError):
-            self.assertEqual(f1.all(axis=1, skipna=False).to_pairs(),
-                    (('x', True), ('y', False), ('z', True)))
+        self.assertEqual(f1.all(axis=1, skipna=False).to_pairs(),
+                (('x', True), ('y', False), ('z', True)))
 
-        with self.assertRaises(TypeError):
-            self.assertEqual(f1.any(axis=1, skipna=False).to_pairs(),
-                    (('x', True), ('y', False), ('z', True)))
+        self.assertEqual(f1.any(axis=1, skipna=False).to_pairs(),
+                (('x', True), ('y', True), ('z', True)))
 
 
     #---------------------------------------------------------------------------

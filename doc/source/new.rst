@@ -8,6 +8,7 @@ Incorrectly formed ``Batch`` iterables will now, upon iteration, raise a ``Batch
 
 Added ``Quilt.sample()``.
 
+``all()`` and ``any()`` on ``Series`` and ``Frame`` no longer raise when NA values are present and ``skipna`` is ``False``.
 
 
 0.8.19

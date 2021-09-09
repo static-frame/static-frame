@@ -2143,7 +2143,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_ufunc_logical_skipna_a(self) -> None:
+    def test_ufunc_logical_skipna_a1(self) -> None:
 
         # empty arrays
         a1 = np.array([], dtype=float)
@@ -2164,9 +2164,8 @@ class TestUnit(TestCase):
         a1 = np.array([0, np.nan, 0], dtype=float)
         self.assertEqual(_ufunc_logical_skipna(a1, np.any, skipna=True), False)
 
-        with self.assertRaises(TypeError):
-            a1 = np.array([0, np.nan, 0], dtype=float)
-            self.assertEqual(_ufunc_logical_skipna(a1, np.any, skipna=False), True)
+        a1 = np.array([0, np.nan, 0], dtype=float)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.any, skipna=False), True)
 
 
         # float arrays 2d
@@ -2186,44 +2185,47 @@ class TestUnit(TestCase):
         self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
                 [False, True])
 
+    def test_ufunc_logical_skipna_a2(self) -> None:
 
         # object arrays
         a1 = np.array([[2.4, 5.4, 0], [2.4, None, 3.2]], dtype=object)
 
+        self.assertEqual(
+            _ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
+            [False, False],
+            )
 
-        with self.assertRaises(TypeError):
-            self.assertAlmostEqualValues(
-                    _ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
-                    [False, np.nan])
+        self.assertEqual(
+            _ufunc_logical_skipna(a1, np.any, skipna=False, axis=1).tolist(),
+            [True, True])
 
-        with self.assertRaises(TypeError):
-            self.assertAlmostEqualValues(
-                    _ufunc_logical_skipna(a1, np.any, skipna=False, axis=1).tolist(),
-                    [True, np.nan])
+        self.assertEqual(
+            _ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
+            [True, False, False]
+            )
 
-        with self.assertRaises(TypeError):
-            self.assertAlmostEqualValues(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
-                    [True, np.nan, False])
+        self.assertEqual(
+            _ufunc_logical_skipna(a1, np.any, skipna=False, axis=0).tolist(),
+            [True, True, True])
 
-        with self.assertRaises(TypeError):
-            self.assertAlmostEqualValues(_ufunc_logical_skipna(a1, np.any, skipna=False, axis=0).tolist(),
-                    [True, np.nan, True])
-
+    def test_ufunc_logical_skipna_a3(self) -> None:
 
         a2 = np.array([[2.4, 5.4, 0], [2.4, np.nan, 3.2]], dtype=object)
 
-        with self.assertRaises(TypeError):
-            self.assertAlmostEqualValues(
-                    _ufunc_logical_skipna(a2, np.any, skipna=False, axis=1).tolist(),
-                    [True, np.nan])
+        self.assertEqual(
+            _ufunc_logical_skipna(a2, np.any, skipna=False, axis=1).tolist(),
+            [True, True],
+            )
 
-        with self.assertRaises(TypeError):
-            self.assertAlmostEqualValues(_ufunc_logical_skipna(a2, np.all, skipna=False, axis=0).tolist(),
-                    [True, np.nan, False])
+        self.assertEqual(
+            _ufunc_logical_skipna(a2, np.all, skipna=False, axis=0).tolist(),
+            [True, True, False],
+            )
 
-        with self.assertRaises(TypeError):
-            self.assertAlmostEqualValues(_ufunc_logical_skipna(a2, np.any, skipna=False, axis=0).tolist(),
-                    [True, np.nan, True])
+        self.assertEqual(
+            _ufunc_logical_skipna(a2, np.any, skipna=False, axis=0).tolist(),
+            [True, True, True],
+            )
 
 
     def test_ufunc_logical_skipna_b(self) -> None:
@@ -2239,7 +2241,6 @@ class TestUnit(TestCase):
                 _ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
                 [False, False]
                 )
-
 
         # string arrays
         a1 = np.array(['sdf', ''], dtype=str)
@@ -2275,12 +2276,10 @@ class TestUnit(TestCase):
     def test_ufunc_logical_skipna_d(self) -> None:
 
         a1 = np.array(['2018-01-01', '2018-02-01'], dtype=np.datetime64)
-        post1 = _ufunc_logical_skipna(a1, np.all, skipna=True)
-        self.assertTrue(post1)
+        self.assertTrue(_ufunc_logical_skipna(a1, np.all, skipna=True))
 
         a2 = np.array(['2018-01-01', '2018-02-01', None], dtype=np.datetime64)
-        with self.assertRaises(TypeError):
-            post2 = _ufunc_logical_skipna(a2, np.all, skipna=False)
+        self.assertTrue(_ufunc_logical_skipna(a2, np.all, skipna=False))
 
 
     def test_ufunc_logical_skipna_e(self) -> None:
@@ -2339,11 +2338,9 @@ class TestUnit(TestCase):
 
         self.assertFalse(ufunc_all(np.array([1, 0])))
         self.assertFalse(ufunc_all(np.array([False, False])))
+        self.assertFalse(ufunc_all(np.array([False, np.nan], dtype=object)))
 
-        with self.assertRaises(TypeError):
-            np.isnan(ufunc_all(np.array([False, np.nan], dtype=object)))
-        with self.assertRaises(TypeError):
-            np.isnan(ufunc_all(np.array([False, None], dtype=object)))
+        self.assertFalse(ufunc_all(np.array([False, None], dtype=object)))
 
     #---------------------------------------------------------------------------
     def test_array1d_to_last_contiguous_to_edge_a(self) -> None:
