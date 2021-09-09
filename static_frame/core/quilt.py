@@ -1028,7 +1028,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             columns_key = None
 
-        return self._extract(row_key=index_key, column_key=columns_key)
+        return self._extract(row_key=index_key, column_key=columns_key) #type: ignore
 
     #---------------------------------------------------------------------------
 
