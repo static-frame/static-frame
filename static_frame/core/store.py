@@ -488,7 +488,6 @@ class Store:
 
         if not include_index:
             if include_columns_name:
-                import ipdb; ipdb.set_trace()
                 raise StoreParameterConflict('cannot include_columns_name when include_index is False')
             dtypes = frame._blocks.dtypes.tolist()
             if include_columns:
