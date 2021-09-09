@@ -166,30 +166,29 @@ class TestUnit(TestCase):
 
 
     def test_store_config_he_b(self) -> None:
-        def compare_configs(config1: StoreConfigHE, config2: StoreConfigHE) -> None:
-            self.assertNotEqual(config1, config2)
 
         config1 = StoreConfigHE(index_depth=1)
         config2 = StoreConfigHE(index_depth=2)
-        compare_configs(config1, config2)
+        self.assertNotEqual(config1, config2)
 
         self.assertTrue(config1 is not None)
+        self.assertFalse(config1 == None)
 
         config1 = StoreConfigHE(columns_select=['a'])
         config2 = StoreConfigHE(columns_select=('b',))
-        compare_configs(config1, config2)
+        self.assertNotEqual(config1, config2)
 
         config1 = StoreConfigHE(dtypes=str)
         config2 = StoreConfigHE(dtypes=int)
-        compare_configs(config1, config2)
+        self.assertNotEqual(config1, config2)
 
         config1 = StoreConfigHE(dtypes=str)
         config2 = StoreConfigHE(dtypes=dict(a=int))
-        compare_configs(config1, config2)
+        self.assertNotEqual(config1, config2)
 
         config1 = StoreConfigHE(index_name_depth_level=None)
         config2 = StoreConfigHE(index_name_depth_level=(1, 2))
-        compare_configs(config1, config2)
+        self.assertNotEqual(config1, config2)
 
     def test_store_config_not_hashable(self) -> None:
         with self.assertRaises(NotImplementedError):
@@ -330,6 +329,13 @@ class TestUnit(TestCase):
                     include_columns_name=False,
                     )
 
+        with self.assertRaises(StoreParameterConflict):
+            field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
+                    include_index=False,
+                    include_index_name=False,
+                    include_columns=True,
+                    include_columns_name=True,
+                    )
 
     #---------------------------------------------------------------------------
 
