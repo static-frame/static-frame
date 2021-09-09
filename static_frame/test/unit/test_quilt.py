@@ -1504,3 +1504,20 @@ class TestUnit(TestCase):
             self.assertEqual(len(dict(q2.items())), 12)
             self.assertEqual(q2._bus.status['loaded'].sum(), 3)
 
+
+    #---------------------------------------------------------------------------
+    def test_quilt_sample_a(self) -> None:
+
+        f1 = ff.parse('s(20,20)|v(int)|c(I,str)|i(I,str)').rename('f1')
+        f2 = ff.parse('s(20,20)|v(bool)|c(I,str)|i(I,str)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+
+        self.assertEqual(q1.sample(4, 4, seed=0).to_pairs(),
+                ((('f1', 'zmVj'), (('ztsv', 146284), ('zr4u', 126025), ('zB7E', 164351), ('zwIp', 195850))), (('f2', 'zZbu'), (('ztsv', False), ('zr4u', False), ('zB7E', False), ('zwIp', False))), (('f2', 'zUvW'), (('ztsv', False), ('zr4u', True), ('zB7E', False), ('zwIp', True))), (('f2', 'z2Oo'), (('ztsv', True), ('zr4u', True), ('zB7E', True), ('zwIp', False))))
+                )
+
+        self.assertEqual(q1.sample(index=4).shape, (4, 40))
+        self.assertEqual(q1.sample(columns=4).shape, (20, 4))
+
+

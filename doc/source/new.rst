@@ -1,6 +1,15 @@
 What is New in Static Frame
 ===============================
 
+0.8.20
+----------
+
+Incorrectly formed ``Batch`` iterables will now, upon iteration, raise a ``BatchIterableInvalid`` exception.
+
+Added ``Quilt.sample()``.
+
+
+
 0.8.19
 ----------
 
