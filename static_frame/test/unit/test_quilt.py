@@ -172,6 +172,17 @@ class TestUnit(TestCase):
                 ((0, ((('f', 3), 1699.34),)), (1, ((('f', 3), 114.58),)))
                 )
 
+    def test_quilt_init_g(self) -> None:
+
+        f1 = ff.parse('s(4,100)|v(int)|i(I,str)|c(I,str)')
+
+        q1 = Quilt.from_frame(f1, chunksize=10, axis=1, retain_labels=False)
+
+        axis_hierarchy, opp = bus_to_hierarchy(q1._bus, q1._axis, deepcopy_from_bus=False, init_exception_cls=ErrorInitQuilt)
+
+        with self.assertRaises(ErrorInitQuilt):
+            Quilt(q1._bus, axis=1, retain_labels=False, axis_hierarchy=axis_hierarchy)
+
     #---------------------------------------------------------------------------
     def test_quilt_from_items_a(self) -> None:
 
