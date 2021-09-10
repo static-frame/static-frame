@@ -58,6 +58,43 @@ def get_defined() -> tp.Set[str]:
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 
+DOCUMENTED_COMPONENTS = (
+        sf.Series,
+        sf.SeriesHE,
+        sf.Frame,
+        sf.FrameGO,
+        sf.FrameHE,
+        sf.Bus,
+        sf.Batch,
+        sf.Yarn,
+        sf.Quilt,
+        sf.Index,
+        sf.IndexGO,
+        sf.IndexHierarchy,
+        sf.IndexHierarchyGO,
+        sf.IndexYear,
+        sf.IndexYearGO,
+        sf.IndexYearMonth,
+        sf.IndexYearMonthGO,
+        sf.IndexDate,
+        sf.IndexDateGO,
+        sf.IndexMinute,
+        sf.IndexMinuteGO,
+        sf.IndexHour,
+        sf.IndexHourGO,
+        sf.IndexSecond,
+        sf.IndexSecondGO,
+        sf.IndexMillisecond,
+        sf.IndexMillisecondGO,
+        sf.IndexMicrosecond,
+        sf.IndexMicrosecondGO,
+        sf.IndexNanosecond,
+        sf.IndexNanosecondGO,
+        sf.DisplayConfig,
+        sf.StoreConfig,
+        sf.StoreFilter,
+        )
+
 
 def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
@@ -76,43 +113,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
     # post['interface_groups'] = INTERFACE_GROUP_ORDER
 
     post['interface'] = {}
-    for target in (
-            sf.Series,
-            sf.SeriesHE,
-            sf.Frame,
-            sf.FrameGO,
-            sf.FrameHE,
-            sf.Bus,
-            sf.Batch,
-            sf.Yarn,
-            sf.Quilt,
-            sf.Index,
-            sf.IndexGO,
-            sf.IndexHierarchy,
-            sf.IndexHierarchyGO,
-            sf.IndexYear,
-            sf.IndexYearGO,
-            sf.IndexYearMonth,
-            sf.IndexYearMonthGO,
-            sf.IndexDate,
-            sf.IndexDateGO,
-            sf.IndexMinute,
-            sf.IndexMinuteGO,
-            sf.IndexHour,
-            sf.IndexHourGO,
-            sf.IndexSecond,
-            sf.IndexSecondGO,
-            sf.IndexMillisecond,
-            sf.IndexMillisecondGO,
-            sf.IndexMicrosecond,
-            sf.IndexMicrosecondGO,
-            sf.IndexNanosecond,
-            sf.IndexNanosecondGO,
-            sf.DisplayConfig,
-            sf.StoreConfig,
-            sf.StoreFilter,
-            ):
-
+    for target in DOCUMENTED_COMPONENTS:
         inter = InterfaceSummary.to_frame(target, #type: ignore
                 minimized=False,
                 max_args=99, # +inf, but keep as int
