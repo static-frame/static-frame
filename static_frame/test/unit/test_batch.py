@@ -192,6 +192,19 @@ class TestUnit(TestCase):
         with self.assertRaises(BatchIterableInvalid):
             Batch(frame.iter_window(size=3)).std(ddof=1).to_frame()
 
+    def test_batch_i(self) -> None:
+        # assure processing of same named Frame
+        f1 = ff.parse('s(3,2)|v(bool)|c(I,str)|i(I,int)')
+        f2 = ff.parse('s(3,5)|v(bool)|c(I,str)|i(I,int)')
+
+        post = Batch.from_frames((f1, f2)).drop['zZbu']
+        self.assertEqual(
+            [list(v.columns) for _, v in post.items()],
+            [['ztsv'], ['ztsv', 'zUvW', 'zkuW', 'zmVj']]
+            )
+
+
+
     #---------------------------------------------------------------------------
     def test_batch_display_a(self) -> None:
 
@@ -605,6 +618,35 @@ class TestUnit(TestCase):
                 (('a', ((('f1', 'x'), 10), (('f1', 'z'), 0), (('f2', 'x'), 0), (('f2', 'z'), 0))), ('c', ((('f1', 'x'), 0), (('f1', 'z'), 0), (('f2', 'x'), 1), (('f2', 'z'), 3))))
                 )
 
+
+    def test_batch_drop_b(self) -> None:
+
+        f1 = ff.parse('s(3,2)|v(bool)|c(I,str)|i(I,int)')
+        f2 = ff.parse('s(3,5)|v(bool)|c(I,str)|i(I,int)').rename('b')
+
+        post = Batch.from_frames((f1, f2)).drop['zZbu']
+        self.assertEqual(
+            [list(v.columns) for _, v in post.items()],
+            [['ztsv'], ['ztsv', 'zUvW', 'zkuW', 'zmVj']]
+            )
+
+
+    def test_batch_drop_c(self) -> None:
+
+        f1 = ff.parse('s(3,2)|v(bool)|c(I,str)|i(I,int)')
+        f2 = ff.parse('s(3,5)|v(bool)|c(I,str)|i(I,int)').rename('b')
+
+        post = Batch.from_frames((f1, f2)).drop.loc[-3648:, 'zZbu']
+        self.assertEqual(
+            [list(v.columns) for _, v in post.items()],
+            [['ztsv'], ['ztsv', 'zUvW', 'zkuW', 'zmVj']]
+            )
+
+        post = Batch.from_frames((f1, f2)).drop.loc[-3648:, 'zZbu']
+        self.assertEqual(
+            [list(v.index) for _, v in post.items()],
+            [[34715], [34715]]
+            )
 
     #---------------------------------------------------------------------------
     def test_batch_sort_index_a(self) -> None:
