@@ -152,7 +152,7 @@ class IndexBase(ContainerOperand):
             *,
             name: tp.Optional[tp.Hashable] = None
             ) -> I:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def __init__(self, initializer: tp.Any = None,
             *,
@@ -309,12 +309,12 @@ class IndexBase(ContainerOperand):
     def _loc_to_iloc(self,
             key: GetItemKeyType,
             ) -> GetItemKeyType:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
             ) -> GetItemKeyType:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def __getitem__(self: I,
             key: GetItemKeyType
@@ -455,17 +455,17 @@ class IndexBase(ContainerOperand):
 
     @property
     def via_str(self) -> InterfaceString[np.ndarray]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     @property
     def via_dt(self) -> InterfaceDatetime[np.ndarray]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def via_re(self,
             pattern: str,
             flags: int = 0,
             ) -> InterfaceRe[np.ndarray]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
     # exporters
