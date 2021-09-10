@@ -638,7 +638,7 @@ class TestUnit(TestCase):
 
         post = Batch.from_frames((f1, f2)).drop.loc[-3648:, 'zZbu']
         self.assertEqual(
-            [list(v.columns) for _, v in post.items()],
+            [list(v.columns) for _, v in post.items()], #type: ignore
             [['ztsv'], ['ztsv', 'zUvW', 'zkuW', 'zmVj']]
             )
 

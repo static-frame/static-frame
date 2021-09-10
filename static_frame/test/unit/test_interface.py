@@ -100,7 +100,7 @@ class TestUnit(TestCase):
         for component in DOCUMENTED_COMPONENTS:
             post = InterfaceSummary.get_instance(component)
             if not isinstance(post, ContainerBase):
-                self.assertTrue(isinstance(post, (
+                self.assertTrue(isinstance(post, ( # type: ignore
                     DisplayConfig,
                     StoreConfig,
                     StoreFilter,
