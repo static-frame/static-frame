@@ -4462,6 +4462,16 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(s4.dtype.kind, 'f')
 
+    def test_series_from_overlay_l(self) -> None:
+        s1 = Series((1, np.nan, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, -3, 3.1), index=('a', 'b', 'c', 'd'), name=1)
+        s3 = Series((199, 230), index=('c', 'b'))
+
+        s4 = Series.from_overlay(s for s in (s1, s2, s3) if s.name != 1)
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1.0), ('b', 230.0), ('c', 5.0))
+                )
+
 
     #---------------------------------------------------------------------------
     def test_series_sample_a(self) -> None:
