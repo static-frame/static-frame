@@ -3,18 +3,18 @@ import unittest
 
 import numpy as np
 
-from static_frame.core.interface import InterfaceSummary
-from static_frame.core.series import Series
-from static_frame.core.frame import FrameGO
-from static_frame.core.frame import Frame
-from static_frame.core.interface import _get_signatures
-from static_frame.test.test_case import TestCase
-from static_frame.core.interface import InterfaceGroup
 from doc.source.conf import DOCUMENTED_COMPONENTS
 from static_frame.core.container import ContainerBase
 from static_frame.core.display_config import DisplayConfig
+from static_frame.core.frame import Frame
+from static_frame.core.frame import FrameGO
+from static_frame.core.interface import InterfaceGroup
+from static_frame.core.interface import InterfaceSummary
+from static_frame.core.interface import _get_signatures
+from static_frame.core.series import Series
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
+from static_frame.test.test_case import TestCase
 
 class TestUnit(TestCase):
 
