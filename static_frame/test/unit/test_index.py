@@ -1481,6 +1481,11 @@ class TestUnit(TestCase):
                 ('a', 'e'), side_left=False, fill_value=None).tolist(),
                 ['b', None])
 
+    def test_index_iloc_searchsorted_c(self) -> None:
+        idx1 = Index(())
+        self.assertEqual(idx1.loc_searchsorted(0, fill_value=None), None)
+
+
     #---------------------------------------------------------------------------
     def test_index_via_re_a(self) -> None:
 

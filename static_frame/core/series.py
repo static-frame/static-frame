@@ -2350,7 +2350,7 @@ class Series(ContainerOperand):
         elif not unique and valid is not None:
             return valid.sum() #type: ignore [no-any-return]
         # not unique, valid is None, means no removals, handled above
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     @doc_inject(selector='sample')
     def sample(self,

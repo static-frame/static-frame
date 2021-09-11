@@ -8,13 +8,6 @@ import numpy as np
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.bus import Bus
-# from static_frame.core.exception import ErrorInitQuilt
-# from static_frame.core.exception import AxisInvalid
-# from static_frame.core.exception import ErrorInitYarn
-
-# from static_frame.core.axis_map import AxisMap
-# from static_frame.core.index import Index
-# from static_frame.core.axis_map import IndexMap
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.yarn import Yarn
@@ -28,6 +21,7 @@ from static_frame import ILoc
 from static_frame import HLoc
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.series import Series
 
 
 
@@ -66,7 +60,6 @@ class TestUnit(TestCase):
             y4 = Yarn((b2,), index=range(5))
 
     def test_yarn_init_c(self) -> None:
-        from static_frame.core.series import Series
 
         with self.assertRaises(ErrorInitYarn):
             Yarn((ff.parse('s(2,2)'),))
@@ -74,6 +67,11 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitYarn):
             Yarn(Series((ff.parse('s(2,2)'),), dtype=object))
 
+
+    def test_yarn_init_d(self) -> None:
+
+        with self.assertRaises(ErrorInitYarn):
+            Yarn(Series(np.array((False, True))))
 
 
     #---------------------------------------------------------------------------
@@ -1021,11 +1019,21 @@ class TestUnit(TestCase):
 
         y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
 
-
         self.assertEqual(
                 y1.relabel_flat()[('a', 3):].status['shape'].to_pairs(),
                 ((('a', 3), (2, 2)), (('b', 1), (2, 8)), (('b', 2), (4, 4)), (('b', 3), (6, 4)))
                 )
+
+    def test_yarn_relabel_flat_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        y1 = Yarn((b1,))
+        with self.assertRaises(RuntimeError):
+            y1.relabel_flat()
 
     #---------------------------------------------------------------------------
     def test_yarn_relabel_level_add_a(self) -> None:
@@ -1067,6 +1075,18 @@ class TestUnit(TestCase):
                 ((1, (4, 2)), (3, (2, 2)), (2, (4, 4)))
                 )
 
+    def test_yarn_relabel_level_drop_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        y1 = Yarn((b1,))
+        with self.assertRaises(RuntimeError):
+            y1.relabel_level_drop()
+
+
 
     #---------------------------------------------------------------------------
     def test_yarn_rehierarch_a(self) -> None:
@@ -1086,6 +1106,19 @@ class TestUnit(TestCase):
                 y1.iloc[[0,2,4]].rehierarch((1, 0)).status['shape'].to_pairs(),
                 (((1, 'a'), (4, 2)), ((3, 'a'), (2, 2)), ((2, 'b'), (4, 4)))
                 )
+
+    def test_yarn_rehierarch_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        y1 = Yarn((b1,))
+        with self.assertRaises(RuntimeError):
+            y1.rehierarch((1,0))
+
+
 
 
 if __name__ == '__main__':

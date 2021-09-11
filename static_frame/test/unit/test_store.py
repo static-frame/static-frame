@@ -172,7 +172,7 @@ class TestUnit(TestCase):
         self.assertNotEqual(config1, config2)
 
         self.assertTrue(config1 is not None)
-        self.assertFalse(config1 == None)
+        self.assertFalse(config1 == None) #pylint: disable=C0121
 
         config1 = StoreConfigHE(columns_select=['a'])
         config2 = StoreConfigHE(columns_select=('b',))
