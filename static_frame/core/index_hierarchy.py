@@ -624,7 +624,8 @@ class IndexHierarchy(IndexBase):
     def _iter_label_items(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None,
             ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
-
+        '''This function is not directly called in iter_label or related routines, fulfills the expectations of the IterNodeDepthLevel interface.
+        '''
         yield from enumerate(self._iter_label(depth_level=depth_level))
 
 

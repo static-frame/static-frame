@@ -2941,7 +2941,6 @@ class TestUnit(TestCase):
         self.assertEqual(list(idx.iter_label([0, 2])),
                 [('I', 1), ('I', 2), ('I', 1), ('I', 2), ('II', 1), ('II', 2), ('II', 1), ('II', 2)])
 
-
     def test_hierarchy_iter_label_c(self) -> None:
 
         idx = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
@@ -2949,10 +2948,16 @@ class TestUnit(TestCase):
         self.assertEqual(post,
                 [('I', 'A', 1), ('I', 'A', 2), ('I', 'B', 1), ('I', 'B', 2), ('II', 'A', 1), ('II', 'A', 2), ('II', 'B', 1), ('II', 'B', 2)]
                 )
-        # this returns a Series; probably should just be an array?
         self.assertEqual(idx.iter_label().apply(lambda x: x[:2]).tolist(),
                 [('I', 'A'), ('I', 'A'), ('I', 'B'), ('I', 'B'), ('II', 'A'), ('II', 'A'), ('II', 'B'), ('II', 'B')]
                 )
+
+    def test_hierarchy_iter_label_d(self) -> None:
+        idx = IndexHierarchy.from_product(('A', 'B'), (1, 2))
+        self.assertEqual(list(idx._iter_label_items()),
+                [(0, ('A', 1)), (1, ('A', 2)), (2, ('B', 1)), (3, ('B', 2))]
+                )
+
 
     #---------------------------------------------------------------------------
     def test_index_hierarchy_sample_a(self) -> None:
