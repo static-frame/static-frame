@@ -992,8 +992,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih.values.tolist(),
                 [['I', 'A'], ['I', 'B']])
 
-
-
     def test_hierarchy_from_labels_delimited_b(self) -> None:
 
         labels = (
@@ -1010,7 +1008,6 @@ class TestUnit(TestCase):
                 [['I', 'A', 0], ['I', 'A', 1], ['I', 'B', 0], ['I', 'B', 1], ['II', 'A', 0]]
                 )
 
-
     def test_hierarchy_from_labels_delimited_c(self) -> None:
 
         labels = (
@@ -1026,6 +1023,20 @@ class TestUnit(TestCase):
         self.assertEqual(ih.values.tolist(),
                 [['I', 'A', 0], ['I', 'A', 1], ['I', 'B', 0], ['I', 'B', 1], ['II', 'A', 0]]
                 )
+
+    def test_hierarchy_from_labels_delimited_d(self) -> None:
+
+        labels = (
+                "'I' 'A' 0",
+                "'I' 'A' 1",
+                "'I' 'B' 0",
+                "'I' B 1",
+                "'II' 'A' 0",
+                )
+
+        with self.assertRaises(ValueError):
+            ih = IndexHierarchy.from_labels_delimited(labels)
+
 
     #---------------------------------------------------------------------------
 

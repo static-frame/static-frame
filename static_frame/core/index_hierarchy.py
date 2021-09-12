@@ -385,7 +385,7 @@ class IndexHierarchy(IndexBase):
             try:
                 return tuple(literal_eval(p) for p in parts)
             except ValueError as e:
-                raise ValueError('A label is malformed. This is most likely due to not quoting a string label') from e
+                raise ValueError('A label is malformed. This may be due to not quoting a string label') from e
 
         return cls.from_labels(
                 (to_label(label) for label in labels),
