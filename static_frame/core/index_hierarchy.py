@@ -1671,7 +1671,7 @@ class IndexHierarchy(IndexBase):
                 return levels.index.rename(name)
 
             # if we have TypeBlocks and levels is the same length
-            if not self._recache and levels.__len__() == self.__len__():
+            if levels.__len__() == self.__len__():
                 blocks = self._blocks.iloc[NULL_SLICE, :count]
                 return self.__class__(levels,
                         blocks=blocks,
@@ -1696,15 +1696,14 @@ class IndexHierarchy(IndexBase):
                         index=index,
                         targets=ArrayGO(targets, own_iterable=True))
 
-            # if we have TypeBlocks and levels is the same length
-            if not self._recache and levels.__len__() == self.__len__():
-                blocks = self._blocks.iloc[NULL_SLICE, count:]
-                return self.__class__(levels,
-                        name=name,
-                        blocks=blocks,
-                        own_blocks=True,
-                        )
-            return self.__class__(levels, name=name)
+            # lengths must be equal if innner index components are unique; otherwise exception will have been raised
+            # assert levels.__len__() == self.__len__()
+            blocks = self._blocks.iloc[NULL_SLICE, count:]
+            return self.__class__(levels,
+                    name=name,
+                    blocks=blocks,
+                    own_blocks=True,
+                    )
 
         raise NotImplementedError('no handling for a 0 count drop level.')
 
