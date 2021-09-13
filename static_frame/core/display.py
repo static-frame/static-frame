@@ -636,14 +636,11 @@ class Display:
         max_width = 0
         for row_idx_src in row_indices:
             # get existing max width, up to the max
-            if row_idx_src is not None:
-                row = rows[row_idx_src]
-                if col_idx_src >= len(row): # this row does not have this column
-                    continue
-                cell = row[col_idx_src]
-                max_width = max(max_width, len(cell.raw))
-            else:
-                max_width = max(max_width, len(cls.ELLIPSIS))
+            row = rows[row_idx_src]
+            if col_idx_src >= len(row): # this row does not have this column
+                continue
+            cell = row[col_idx_src]
+            max_width = max(max_width, len(cell.raw))
             # if already exceeded max width, stop iterating
             if max_width >= width_limit:
                 break

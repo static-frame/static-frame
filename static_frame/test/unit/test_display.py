@@ -831,13 +831,26 @@ class TestUnit(TestCase):
                 ['b b', 'b b', 'b b']
                 )
 
-
     #---------------------------------------------------------------------------
     def test_display_value_color_a(self) -> None:
 
         f1 = ff.parse('s(10,3)|i(I,str)')
         s2 = f1.assign[1].apply(lambda s: s.iter_element().apply(lambda e: HexColor.format_terminal('green' if e > 0 else 'blue', str(e))))
         post = s2.display()
+
+    #---------------------------------------------------------------------------
+    def test_display_get_max_width_pad_width_a(self) -> None:
+
+        from static_frame.core.display import DisplayCell
+        row1 = [DisplayCell('foo', 'foo'), DisplayCell('bar', 'bar')]
+        row2 = [DisplayCell('foo', 'foo')]
+
+        post = Display._get_max_width_pad_width(rows=[row1, row2],
+                col_idx_src=1,
+                col_last_src=1,
+                row_indices=range(2),
+                )
+        self.assertEqual(post, (3, 3))
 
 
     #---------------------------------------------------------------------------
