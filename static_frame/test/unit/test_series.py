@@ -2640,6 +2640,10 @@ class TestUnit(TestCase):
         s1 = Series((2, 6, 0, np.nan, 0, 6), index=list('abcdef'))
         self.assertEqual(s1.count(skipna=True, unique=False), 5)
 
+    def test_series_count_i(self) -> None:
+        s1 = Series((2, 3, 8, 8, 6, None), index=list('abcdef'))
+        self.assertEqual(s1.count(skipna=False, skipfalsy=False, unique=True), 5)
+
     #---------------------------------------------------------------------------
     def test_series_roll_a(self) -> None:
         s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
@@ -2961,6 +2965,13 @@ class TestUnit(TestCase):
                 (('a', 2), ('b', 3), ('c', 0), ('d', 10), ('e', 20))
                 )
 
+    def test_series_from_concat_i(self) -> None:
+        s1 = Series((2, 3, 0,), index=list('abc'), name='a')
+        s2 = Series((10, 20), index=list('de'), name='a')
+        s3 = Series((8, 6), index=list('fg'), name='b')
+
+        s = Series.from_concat((s1, s2, s3))
+        self.assertEqual(s.name, None)
 
     #---------------------------------------------------------------------------
 
@@ -4946,6 +4957,7 @@ class TestUnit(TestCase):
             (('a', False), ('b', False), ('c', False), ('d', False))
             )
 
+    #---------------------------------------------------------------------------
     def test_series_dropfalsy_a(self) -> None:
 
         s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
@@ -4965,6 +4977,14 @@ class TestUnit(TestCase):
 
         s4 = Series(('', False, 0, np.nan), dtype=object, index=('a', 'b', 'c', 'd'))
         self.assertEqual(s4.dropfalsy().to_pairs(), ())
+
+    def test_series_dropfalsy_b(self) -> None:
+
+        s1 = Series((4, 2, 5), index=('a', 'b', 'c'))
+        self.assertEqual(s1.dropfalsy().to_pairs(),
+            (('a', 4), ('b', 2), ('c', 5))
+            )
+
 
     #---------------------------------------------------------------------------
     def test_series_fillfalsy_a(self) -> None:
