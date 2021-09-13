@@ -24,7 +24,7 @@ from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
 from static_frame.core.style_config import StyleConfig
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase # pylint: disable=unused-import
+    from static_frame.core.index_base import IndexBase # pylint: disable=unused-import #pragma: no cover
 
 
 _module = sys.modules[__name__]
@@ -360,7 +360,7 @@ class Display:
             return HexColor.format_html(color, FORMAT_EMPTY)
 
         if config.display_format in _DISPLAY_FORMAT_TERMINAL and terminal_ansi():
-            return HexColor.format_terminal(color, FORMAT_EMPTY)
+            return HexColor.format_terminal(color, FORMAT_EMPTY) #pragma: no cover
             # if not a compatible terminal, return label unaltered
 
         return FORMAT_EMPTY

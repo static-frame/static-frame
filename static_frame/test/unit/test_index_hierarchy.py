@@ -22,6 +22,7 @@ from static_frame import Series
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexLevel
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.index_level import TreeNodeT
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
@@ -992,8 +993,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih.values.tolist(),
                 [['I', 'A'], ['I', 'B']])
 
-
-
     def test_hierarchy_from_labels_delimited_b(self) -> None:
 
         labels = (
@@ -1010,7 +1009,6 @@ class TestUnit(TestCase):
                 [['I', 'A', 0], ['I', 'A', 1], ['I', 'B', 0], ['I', 'B', 1], ['II', 'A', 0]]
                 )
 
-
     def test_hierarchy_from_labels_delimited_c(self) -> None:
 
         labels = (
@@ -1026,6 +1024,20 @@ class TestUnit(TestCase):
         self.assertEqual(ih.values.tolist(),
                 [['I', 'A', 0], ['I', 'A', 1], ['I', 'B', 0], ['I', 'B', 1], ['II', 'A', 0]]
                 )
+
+    def test_hierarchy_from_labels_delimited_d(self) -> None:
+
+        labels = (
+                "'I' 'A' 0",
+                "'I' 'A' 1",
+                "'I' 'B' 0",
+                "'I' B 1",
+                "'II' 'A' 0",
+                )
+
+        with self.assertRaises(ValueError):
+            ih = IndexHierarchy.from_labels_delimited(labels)
+
 
     #---------------------------------------------------------------------------
 
@@ -1580,8 +1592,6 @@ class TestUnit(TestCase):
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 1], ['III', 2]]
                 )
 
-
-
     def test_hierarchy_set_operators_j(self) -> None:
         labels = (
                 ('II', 'B'),
@@ -1615,7 +1625,6 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels)
         with self.assertRaises(RuntimeError):
             _ = ih1.intersection(['a', 'b'])
-
 
     def test_hierarchy_set_operators_m(self) -> None:
         labels = (
@@ -1656,7 +1665,18 @@ class TestUnit(TestCase):
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B'], ['IV', 'A'], ['IV', 'B']]
                 )
 
-
+    def test_hierarchy_set_operators_l(self) -> None:
+        labels = (
+                ('II', 'B'),
+                ('II', 'A'),
+                ('I', 'B'),
+                ('I', 'A'),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+        post = ih1.intersection((('I', 'B'), ('II', 'B')))
+        self.assertEqual(post.values.tolist(),
+                [['I', 'B'], ['II', 'B']]
+                )
 
     #---------------------------------------------------------------------------
 
@@ -1885,6 +1905,17 @@ class TestUnit(TestCase):
         ih4 = ih1 * 2
         self.assertEqual(ih4.tolist(),
             [['II', 'AA'], ['II', 'BB'], ['IIII', 'AA'], ['IIII', 'BB']])
+
+
+    def test_hierarchy_binary_operators_j(self) -> None:
+
+        labels1 = (
+                (1, 1),
+                (2, 2),
+                )
+        ih1 = IndexHierarchy.from_labels(labels1)
+        with self.assertRaises(ValueError):
+                _ = ih1 * ih1.to_frame()
 
 
     #---------------------------------------------------------------------------
@@ -2121,6 +2152,17 @@ class TestUnit(TestCase):
         # This used to raise `ValueError: negative dimensions are not allowed`
         # as the `ih` hadn't properly updated its internal cache before creation
         post.display()
+
+    def test_hierarchy_drop_level_l(self) -> None:
+        labels = (
+                ('I', 'A', 1, False),
+                ('I', 'B', 2, True),
+                ('II', 'C', 3, False),
+                ('II', 'D', 3, False),
+                )
+        ih = IndexHierarchy.from_labels(labels)
+        with self.assertRaises(ErrorInitIndexNonUnique):
+            post = ih.level_drop(2)
 
     #---------------------------------------------------------------------------
 
@@ -2930,7 +2972,6 @@ class TestUnit(TestCase):
         self.assertEqual(list(idx.iter_label([0, 2])),
                 [('I', 1), ('I', 2), ('I', 1), ('I', 2), ('II', 1), ('II', 2), ('II', 1), ('II', 2)])
 
-
     def test_hierarchy_iter_label_c(self) -> None:
 
         idx = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
@@ -2938,10 +2979,16 @@ class TestUnit(TestCase):
         self.assertEqual(post,
                 [('I', 'A', 1), ('I', 'A', 2), ('I', 'B', 1), ('I', 'B', 2), ('II', 'A', 1), ('II', 'A', 2), ('II', 'B', 1), ('II', 'B', 2)]
                 )
-        # this returns a Series; probably should just be an array?
         self.assertEqual(idx.iter_label().apply(lambda x: x[:2]).tolist(),
                 [('I', 'A'), ('I', 'A'), ('I', 'B'), ('I', 'B'), ('II', 'A'), ('II', 'A'), ('II', 'B'), ('II', 'B')]
                 )
+
+    def test_hierarchy_iter_label_d(self) -> None:
+        idx = IndexHierarchy.from_product(('A', 'B'), (1, 2))
+        self.assertEqual(list(idx._iter_label_items()),
+                [(0, ('A', 1)), (1, ('A', 2)), (2, ('B', 1)), (3, ('B', 2))]
+                )
+
 
     #---------------------------------------------------------------------------
     def test_index_hierarchy_sample_a(self) -> None:
@@ -2966,6 +3013,12 @@ class TestUnit(TestCase):
         self.assertEqual(hidx.iloc_searchsorted(('B', 1)).tolist(), 3)
         self.assertEqual(hidx.iloc_searchsorted([('A', 1), ('B', 2)]).tolist(), [0, 4])
 
+    def test_index_hierarchy_iloc_searchsorted_b(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+        with self.assertRaises(NotImplementedError):
+            ih1.iloc_searchsorted(3)
+
+    #---------------------------------------------------------------------------
     def test_index_hierarchy_loc_searchsorted_a(self) -> None:
 
         idx1 = Index(('A', 'B'))
@@ -3008,7 +3061,7 @@ class TestUnit(TestCase):
                 ('B', np.datetime64('2019-01-08'), 1)])
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_unique(self) -> None:
+    def test_index_hierarchy_unique_a(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
 
         self.assertEqual(ih1.unique(0).tolist(), [1, 2])
@@ -3018,6 +3071,11 @@ class TestUnit(TestCase):
                 [(1, 2), (1, 5), (2, 2), (2, 5)])
         self.assertEqual(ih1.unique((1, 2)).tolist(),
                 [('a', 2), ('a', 5), ('b', 2), ('b', 5)])
+
+    def test_index_hierarchy_unique_b(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+        self.assertEqual(ih1.unique([1]).tolist(), ['a', 'b'])
+
 
     #---------------------------------------------------------------------------
 
