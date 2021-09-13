@@ -1915,7 +1915,7 @@ class TestUnit(TestCase):
                 )
         ih1 = IndexHierarchy.from_labels(labels1)
         with self.assertRaises(ValueError):
-                _ = ih1 * ih1.to_frame()
+            _ = ih1 * ih1.to_frame()
 
 
     #---------------------------------------------------------------------------
