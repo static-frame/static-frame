@@ -4,6 +4,7 @@ import argparse
 import typing as tp
 import fnmatch
 import timeit
+from time import sleep
 import cProfile
 import pstats
 import sys
@@ -22,6 +23,7 @@ import static_frame as sf
 
 from static_frame.core.display_color import HexColor
 from static_frame.core.util import AnyCallable, isin
+from static_frame.test.test_case import temp_file
 
 
 class PerfStatus(Enum):
@@ -798,7 +800,47 @@ class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
         self.pdf_str_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f))
 
 
+#-------------------------------------------------------------------------------
 
+#-------------------------------------------------------------------------------
+class BusItemsZipPickle(Perf):
+    NUMBER = 2
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        def items():
+            for i in range(1000):
+                columns = 100 + (i % 100)
+                f = ff.parse(f's(100,{columns})|v(int,bool)|i(I,str)|c(I,str)')
+                yield str(i), f
+
+        frames = sf.Series.from_items(items(), dtype=object)
+        _, self.fp = tempfile.mkstemp(suffix='.zip')
+        b1 = sf.Bus(frames)
+        b1.to_zip_pickle(self.fp)
+
+        # self.meta = {
+        #     'int_index_str_double': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=TypeBlocks._all_block_slices
+        #         ),
+        #     }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp)
+
+class BusItemsZipPickle_N(BusItemsZipPickle, Native):
+
+    def int_index_str(self) -> None:
+        bus = sf.Bus.from_zip_pickle(self.fp, max_persist=1)
+        for label, frame in bus.items():
+           assert frame.shape[0] == 100
+
+class BusItemsZipPickle_R(BusItemsZipPickle, Reference):
+
+    def int_index_str(self) -> None:
+        sleep(6)
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -969,7 +1011,6 @@ def line(
         cls_runner: tp.Type[Perf],
         pattern_func: str,
         ) -> None:
-    from static_frame import Series
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
