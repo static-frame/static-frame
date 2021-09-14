@@ -804,15 +804,14 @@ class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
 
 #-------------------------------------------------------------------------------
 class BusItemsZipPickle(Perf):
-    NUMBER = 4
+    NUMBER = 2
 
     def __init__(self) -> None:
         super().__init__()
 
         def items():
-            for i in range(1000):
-                columns = 100 + (i % 100)
-                f = ff.parse(f's(100,{columns})|v(int,bool)|i(I,str)|c(I,str)')
+            f = ff.parse(f's(2,2)|v(int)|i(I,str)|c(I,str)')
+            for i in range(2_000):
                 yield str(i), f
 
         frames = sf.Series.from_items(items(), dtype=object)
@@ -835,7 +834,7 @@ class BusItemsZipPickle_N(BusItemsZipPickle, Native):
     def int_index_str(self) -> None:
         bus = sf.Bus.from_zip_pickle(self.fp, max_persist=1)
         for label, frame in bus.items():
-           assert frame.shape[0] == 100
+           assert frame.shape[0] == 2
 
 class BusItemsZipPickle_R(BusItemsZipPickle, Reference):
 
