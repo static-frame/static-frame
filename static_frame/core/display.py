@@ -754,7 +754,7 @@ class Display:
         '''Define rows as a list of lists, for each row; the contained DisplayCell instances may be of different size, but they are expected to be aligned vertically in final presentation.
 
         Args:
-            header_depth: columns depth plus any addtional lines used for headers
+            header_depth: columns depth plus any additional lines used for headers
         '''
         config = config or DisplayActive.get()
 
@@ -805,9 +805,10 @@ class Display:
         post = []
         for idx, row in enumerate(self._to_rows_cells(self, self._config)):
             line = ''.join(row).rstrip()
-            if idx < self._header_depth:
-                if line == '': # type removal led to an empty line
-                    continue
+            # NOTE: apparently do not need special handling for empty lines
+            # if idx < self._header_depth:
+            #     if line == '': # type removal led to an empty line
+            #         continue
             post.append(line)
         return post
 
