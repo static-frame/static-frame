@@ -655,7 +655,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         array.flags.writeable = False
         self._series = Series(array,
-                index=self._series._index,
+                index=index,
                 dtype=object,
                 own_index=True,
                 )
@@ -1240,5 +1240,5 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def to_series(self) -> Series:
         '''Return a :obj:`Series` with the :obj:`Frame` contained in this :obj:`Bus`. If the :obj:`Bus` is associated with a :obj:`Store`, all :obj:`Frame` will be loaded into memory and the returned :obj:`Bus` will no longer be associated with the :obj:`Store`.
         '''
-        # values returns an immutable array and will fully reaize from Store
+        # values returns an immutable array and will fully realize from Store
         return Series(self.values, index=self.index, own_index=True)
