@@ -611,7 +611,7 @@ class Display:
             rows: tp.Sequence[tp.Sequence[DisplayCell]],
             col_idx_src: int,
             col_last_src: int,
-            row_indices: tp.Iterable[tp.Optional[int]],
+            row_indices: tp.Iterable[int],
             config: tp.Optional[DisplayConfig] = None,
             ) -> tp.Tuple[int, int]:
         '''
