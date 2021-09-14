@@ -811,7 +811,7 @@ class BusItemsZipPickle(Perf):
 
         def items():
             f = ff.parse(f's(2,2)|v(int)|i(I,str)|c(I,str)')
-            for i in range(2_000):
+            for i in range(10_000):
                 yield str(i), f
 
         frames = sf.Series.from_items(items(), dtype=object)
@@ -832,7 +832,7 @@ class BusItemsZipPickle(Perf):
 class BusItemsZipPickle_N(BusItemsZipPickle, Native):
 
     def int_index_str(self) -> None:
-        bus = sf.Bus.from_zip_pickle(self.fp, max_persist=1)
+        bus = sf.Bus.from_zip_pickle(self.fp, max_persist=100)
         for label, frame in bus.items():
            assert frame.shape[0] == 2
 
