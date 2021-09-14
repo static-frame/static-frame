@@ -67,6 +67,9 @@ class Perf(PerfKey):
 
 class Native(PerfKey): pass
 class Reference(PerfKey): pass
+class ReferenceMissing(Reference):
+    '''For classes that do not / cannot run a reference component.
+    '''
 
 
 
@@ -836,10 +839,10 @@ class BusItemsZipPickle_N(BusItemsZipPickle, Native):
         for label, frame in bus.items():
            assert frame.shape[0] == 2
 
-class BusItemsZipPickle_R(BusItemsZipPickle, Reference):
+class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
 
     def int_index_str(self) -> None:
-        sleep(1)
+        pass
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -1049,14 +1052,17 @@ def performance(
         row['iterations'] = cls_perf.NUMBER
 
         for label, runner in ((Native, runner_n), (Reference, runner_r)):
-            row[label.__name__] = timeit.timeit(
-                    f'runner.{func_name}()',
-                    globals=locals(),
-                    number=cls_perf.NUMBER)
+            if isinstance(runner, ReferenceMissing):
+                row[label.__name__] = np.nan
+            else:
+                row[label.__name__] = timeit.timeit(
+                        f'runner.{func_name}()',
+                        globals=locals(),
+                        number=cls_perf.NUMBER)
 
         row['n/r'] = row[Native.__name__] / row[Reference.__name__] #type: ignore
         row['r/n'] = row[Reference.__name__] / row[Native.__name__] #type: ignore
-        row['win'] = row['r/n'] > .99 #type: ignore
+        row['win'] = row['r/n'] > .99 if not np.isnan(row['r/n']) else True #type: ignore
 
         if runner_n.meta is not None and func_name in runner_n.meta:
             row['status'] = runner_n.meta[func_name].perf_status
