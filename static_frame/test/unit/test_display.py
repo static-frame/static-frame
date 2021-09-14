@@ -864,8 +864,6 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(post.__repr__(), 'foo bar\nfoo bar')
 
-
-
     #---------------------------------------------------------------------------
 
     @unittest.skip('too colorful')
