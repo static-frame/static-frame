@@ -804,7 +804,7 @@ class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
 
 #-------------------------------------------------------------------------------
 class BusItemsZipPickle(Perf):
-    NUMBER = 2
+    NUMBER = 4
 
     def __init__(self) -> None:
         super().__init__()
@@ -840,7 +840,7 @@ class BusItemsZipPickle_N(BusItemsZipPickle, Native):
 class BusItemsZipPickle_R(BusItemsZipPickle, Reference):
 
     def int_index_str(self) -> None:
-        sleep(6)
+        sleep(1)
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
