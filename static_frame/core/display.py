@@ -795,7 +795,7 @@ class Display:
                     dfc.LINE_SEP.join(outermost),
                     style_config=self._style_config,
                     )
-
+        # use mostly for debugging; strings in rows already have space / padding
         return dfc.LINE_SEP.join(''.join(r) for r in rows)
 
     def to_rows(self) -> tp.Iterable[str]:

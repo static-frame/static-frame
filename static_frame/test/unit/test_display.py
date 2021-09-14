@@ -28,9 +28,11 @@ from static_frame.core.display_color import HexColor
 from static_frame.core.display_config import DisplayFormatLaTeX
 from static_frame.core.display import DisplayTypeCategoryFactory
 from static_frame.core.display import terminal_ansi
+from static_frame.core.display import DisplayCell
+from static_frame.core.display import FORMAT_EMPTY
 from static_frame.core.display import DisplayTypeInt
-from static_frame.test.test_case import temp_file
 
+from static_frame.test.test_case import temp_file
 
 nan = np.nan
 
@@ -841,9 +843,8 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_display_get_max_width_pad_width_a(self) -> None:
 
-        from static_frame.core.display import DisplayCell
-        row1 = [DisplayCell('foo', 'foo'), DisplayCell('bar', 'bar')]
-        row2 = [DisplayCell('foo', 'foo')]
+        row1 = [DisplayCell(FORMAT_EMPTY, 'foo'), DisplayCell(FORMAT_EMPTY, 'bar')]
+        row2 = [DisplayCell(FORMAT_EMPTY, 'foo')]
 
         post = Display._get_max_width_pad_width(rows=[row1, row2],
                 col_idx_src=1,
@@ -851,6 +852,18 @@ class TestUnit(TestCase):
                 row_indices=range(2),
                 )
         self.assertEqual(post, (3, 3))
+
+    #---------------------------------------------------------------------------
+    def test_display_repr_a(self) -> None:
+
+        row1 = [DisplayCell(FORMAT_EMPTY, 'foo'), DisplayCell(FORMAT_EMPTY, 'bar')]
+        row2 = [DisplayCell(FORMAT_EMPTY, 'foo'), DisplayCell(FORMAT_EMPTY, 'bar')]
+
+        post = Display(rows=[row1, row2],
+                outermost=False,
+                )
+        self.assertEqual(post.__repr__(), 'foo bar\nfoo bar')
+
 
 
     #---------------------------------------------------------------------------
