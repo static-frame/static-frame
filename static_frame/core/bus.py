@@ -631,6 +631,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         target_labels = self._index.iloc[key]
         # targets = self._series.iloc[key] # key is iloc key
 
+        store_reader: tp.Iterator[Frame]
+        targets_items: tp.Iterable[tp.Tuple[
+                tp.Hashable, tp.Union[Frame, tp.Type[FrameDeferred]]]]
+
         if not isinstance(target_values, np.ndarray):
             # label = index[key] #type: ignore [unreachable]
             label = target_labels
