@@ -662,12 +662,12 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
 
         q1 = Quilt.from_frame(f1, chunksize=4, axis=1, retain_labels=False, deepcopy_from_bus=False)
-        a1_id_in_bus = id(q1._bus._series.values[0].values)
+        a1_id_in_bus = id(q1._bus._values_mutable[0].values) #type: ignore
         a1_id_via_quilt = id(q1._extract_array())
         self.assertEqual(a1_id_in_bus, a1_id_via_quilt)
 
         q2 = Quilt.from_frame(f1, chunksize=4, axis=1, retain_labels=False, deepcopy_from_bus=True)
-        a2_id_in_bus = id(q2._bus._series.values[0].values)
+        a2_id_in_bus = id(q2._bus._values_mutable[0].values) #type: ignore
         a2_id_via_quilt = id(q2._extract_array())
         self.assertNotEqual(a2_id_in_bus, a2_id_via_quilt)
 
@@ -1020,12 +1020,12 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,6)|v(int,str)|i(I,str)|c(I,str)')
 
         q2 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=False)
-        a2_src_id = id(q2._bus._series.values[0]._extract_array(None, 0))
+        a2_src_id = id(q2._bus._values_mutable[0]._extract_array(None, 0)) #type: ignore
         a2_dst_id = id(next(iter(q2.iter_array(axis=0))))
         self.assertTrue(a2_src_id == a2_dst_id)
 
         q1 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=True)
-        a1_src_id = id(q1._bus._series.values[0]._extract_array(None, 0))
+        a1_src_id = id(q1._bus._values_mutable[0]._extract_array(None, 0)) #type: ignore
         a1_dst_id = id(next(iter(q1.iter_array(axis=0))))
         self.assertTrue(a1_src_id != a1_dst_id)
 

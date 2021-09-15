@@ -92,6 +92,6 @@ def buses_to_hierarchy(
             raise init_exception_cls(f'Must provide an interable of Bus.')
         if label in tree:
             raise init_exception_cls(f'Bus names must be unique: {label} duplicated')
-        tree[label] = extractor(bus._series._index)
+        tree[label] = extractor(bus._index)
 
     return IndexHierarchy.from_tree(tree)

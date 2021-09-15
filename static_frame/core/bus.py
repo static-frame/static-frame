@@ -47,6 +47,7 @@ from static_frame.core.style_config import StyleConfig
 # from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 
+
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
     def __repr__(cls) -> str:
@@ -57,6 +58,11 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
     Token placeholder for :obj:`Frame` not yet loaded.
     '''
 
+BusItemsType = tp.Iterable[tp.Tuple[
+        tp.Hashable, tp.Union[Frame, tp.Type[FrameDeferred]]]]
+
+FrameIterType = tp.Iterator[Frame]
+
 #-------------------------------------------------------------------------------
 class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     '''
@@ -66,14 +72,17 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     __slots__ = (
         '_loaded',
         '_loaded_all',
-        '_series',
+        '_values_mutable',
+        '_index',
+        '_name',
         '_store',
         '_config',
         '_last_accessed',
         '_max_persist',
         )
 
-    _series: Series
+    _values_mutable: np.ndarray
+    _index: IndexBase
     _store: tp.Optional[Store]
     _config: StoreConfigMap
     _name: NameType
@@ -107,7 +116,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         except ErrorInitIndexNonUnique:
             raise ErrorInitIndexNonUnique("Frames do not have unique names.") from None
 
-        return cls(series, config=config)
+        return cls(series, config=config, own_data=True)
 
     @classmethod
     def from_items(cls,
@@ -127,7 +136,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 name=name,
                 index_constructor=index_constructor,
                 )
-        return cls(series, config=config)
+        return cls(series, config=config, own_data=True)
 
     @classmethod
     def from_dict(cls,
@@ -151,7 +160,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 name=name,
                 index_constructor=index_constructor,
                 )
-        return cls(series, config=config)
+        return cls(series, config=config, own_data=True)
 
     @classmethod
     def from_concat(cls,
@@ -165,7 +174,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         # will extract .values, .index from Bus, which will correct load from Store as needed
         series = Series.from_concat(containers, index=index, name=name)
-        return cls(series)
+        return cls(series, own_data=True)
 
     #---------------------------------------------------------------------------
     # constructors by data format
@@ -180,6 +189,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 store=store,
                 config=config,
                 max_persist=max_persist,
+                own_data=True,
                 )
 
 
@@ -325,13 +335,13 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             store: tp.Optional[Store] = None,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            own_data: bool = False,
             ):
         '''
         Default Bus constructor.
 
         {args}
         '''
-
         if series.dtype != DTYPE_OBJECT:
             raise ErrorInitBus(
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
@@ -354,7 +364,15 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         self._loaded = np.fromiter(gen(), dtype=DTYPE_BOOL, count=len(series))
         self._loaded_all = self._loaded.all()
-        self._series = series
+
+        if own_data:
+            self._values_mutable = series.values
+            self._values_mutable.flags.writeable = True
+        else:
+            self._values_mutable = series.values.copy()
+
+        self._index = series._index
+        self._name = series._name
         self._store = store
 
         # Not handling cases of max_persist being greater than the length of the Series (might floor to length)
@@ -368,6 +386,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     def _derive(self,
             series: Series,
+            *,
+            own_data: bool = False,
             ) -> 'Bus':
         '''Utility for creating a derived Bus, propagating the associated ``Store`` and configuration. This can be used if the passed `series` is a subset or re-ordering of self._series; however, if the index has been transformed, this method should not be used, as, if there is a Store, the labels are no longer found in that Store.
         '''
@@ -375,6 +395,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 store=self._store,
                 config=self._config,
                 max_persist=self._max_persist,
+                own_data=own_data,
                 )
 
     # ---------------------------------------------------------------------------
@@ -385,7 +406,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Index`
         '''
-        return reversed(self._series._index) #type: ignore
+        return reversed(self._index) #type: ignore
 
     # def __copy__(self) -> 'Bus':
     #     '''
@@ -404,14 +425,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''
-        return self._series._name
+        return self._name
 
     def rename(self, name: NameType) -> 'Bus':
         '''
-        Return a new Series with an updated name attribute.
+        Return a new :obj:`Bus` with an updated name attribute.
         '''
-        series = self._series.rename(name)
-        return self._derive(series)
+        series = self._to_series_state().rename(name)
+        return self._derive(series, own_data=True)
 
     #---------------------------------------------------------------------------
     # interfaces
@@ -564,7 +585,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             config: StoreConfigMap,
             labels: tp.Iterator[tp.Hashable],
             max_persist: tp.Optional[int],
-            ) -> tp.Iterator[Frame]:
+            ) -> FrameIterType:
         '''
         Read as many labels as possible from Store, then yield back each one at a time. If max_persist is active, max_persist will set the maximum number of Frame to load per read. Using Store.read_many is shown to have significant performance benefits on large collections of Frame.
         '''
@@ -601,7 +622,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         if not load and not max_persist_active:
             return
 
-        index = self._series.index
+        index = self._index
         if not load and max_persist_active: # must update LRU position
             labels = (index.iloc[key],) if isinstance(key, INT_TYPES) else index.iloc[key].values
             for label in labels: # update LRU position
@@ -613,22 +634,29 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         if max_persist_active:
             loaded_count = self._loaded.sum()
 
-        array = self._series.values.copy() # not a deepcopy
-        targets = self._series.iloc[key] # key is iloc key
+        array = self._values_mutable
+        target_values = array[key]
+        target_labels = self._index.iloc[key]
+        # targets = self._series.iloc[key] # key is iloc key
 
-        if not isinstance(targets, Series):
-            label = index[key] #type: ignore [unreachable]
-            targets_items = ((label, targets),) # present element as items
-            store_reader = (self._store.read(label, config=self._config[label]) for _ in  range(1))
+        store_reader: FrameIterType
+        targets_items: BusItemsType
+
+        if not isinstance(target_values, np.ndarray):
+            targets_items = ((target_labels, target_values),) # present element as items
+            store_reader = (self._store.read(target_labels,
+                    config=self._config[target_labels]) for _ in range(1))
         else: # more than one Frame
             store_reader = self._store_reader(
                     store=self._store,
                     config=self._config,
-                    labels=(label for label, f in targets.items() if f is FrameDeferred),
+                    labels=(label for label, f in zip(target_labels, target_values)
+                            if f is FrameDeferred),
                     max_persist=self._max_persist,
                     )
-            targets_items = targets.items()
+            targets_items = zip(target_labels, target_values)
 
+        # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
         for label, frame in targets_items:
             idx = index._loc_to_iloc(label)
 
@@ -653,12 +681,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 array[idx_remove] = FrameDeferred
                 loaded_count -= 1
 
-        array.flags.writeable = False
-        self._series = Series(array,
-                index=index,
-                dtype=object,
-                own_index=True,
-                )
         self._loaded_all = self._loaded.all()
 
     def unpersist(self) -> None:
@@ -673,8 +695,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         else:
             last_accessed = dict.fromkeys(self.index)
 
-        index = self._series.index
-        array = self._series.values.copy() # not a deepcopy
+        index = self._index
+        array = self._values_mutable
 
         for label_remove in last_accessed:
             idx_remove = index._loc_to_iloc(label_remove)
@@ -682,13 +704,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             array[idx_remove] = FrameDeferred
 
         last_accessed.clear()
-
-        array.flags.writeable = False
-        self._series = Series(array,
-                index=self._series._index,
-                dtype=object,
-                own_index=True,
-                )
         self._loaded_all = False
 
     #---------------------------------------------------------------------------
@@ -702,37 +717,22 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         self._update_series_cache_iloc(key=key)
 
         # iterable selection should be handled by NP
-        values = self._series.values[key]
+        values = self._values_mutable[key]
 
         if not values.__class__ is np.ndarray: # if we have a single element
             return values #type: ignore
 
+        # values will be copied and made immutable
         series = Series(
                 values,
-                index=self._series._index.iloc[key],
-                name=self._series._name)
-
-        return self._derive(series)
+                index=self._index.iloc[key],
+                name=self._name,
+                )
+        return self._derive(series, own_data=True)
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
-
-        iloc_key = self._series._index._loc_to_iloc(key)
-
-        # NOTE: if we update before slicing, we change the local and the object handed back
-        self._update_series_cache_iloc(key=iloc_key)
-
-        values = self._series.values[iloc_key]
-
-        if not values.__class__ is np.ndarray: # if we have a single element
-            return values #type: ignore
-
-        series = Series(values,
-                index=self._series._index.iloc[iloc_key],
-                own_index=True,
-                name=self._series._name)
-
-        return self._derive(series)
-
+        iloc_key = self._index._loc_to_iloc(key)
+        return self._extract_iloc(iloc_key)
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> 'Bus':
@@ -747,11 +747,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # utilities for alternate extraction: drop
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Bus':
-        series = self._series._drop_iloc(key)
-        return self._derive(series)
+        series = self._to_series_state()._drop_iloc(key)
+        return self._derive(series, own_data=True)
 
     def _drop_loc(self, key: GetItemKeyType) -> 'Bus':
-        return self._drop_iloc(self._series._index._loc_to_iloc(key))
+        return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
     # axis functions
@@ -765,25 +765,25 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def _axis_element(self,
             ) -> tp.Iterator[tp.Any]:
         if self._loaded_all:
-            yield from self._series.values
+            yield from self._values_mutable
         elif self._max_persist is None: # load all at once if possible
             if not self._loaded_all:
                 self._update_series_cache_iloc(key=NULL_SLICE)
-            yield from self._series.values
+            yield from self._values_mutable
         elif self._max_persist > 1:
             i = 0
-            i_max = len(self._series._index.values)
+            i_max = len(self._index.values)
             while i < i_max:
                 key = slice(i, min(i + self._max_persist, i_max))
                 # draw values to force usage of read_many in _store_reader
                 self._update_series_cache_iloc(key=key)
                 for j in range(key.start, key.stop):
-                    yield self._series.values[j]
+                    yield self._values_mutable[j]
                 i += self._max_persist
         else: # max_persist is 1
             for i in range(self.__len__()):
                 self._update_series_cache_iloc(key=i)
-                yield self._series.values[i]
+                yield self._values_mutable[i]
 
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loading contained Frame
@@ -792,13 +792,13 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
         if self._loaded_all:
-            yield from self._series.items()
+            yield from zip(self._index, self._values_mutable)
         elif self._max_persist is None: # load all at once if possible
             if not self._loaded_all:
                 self._update_series_cache_iloc(key=NULL_SLICE)
-            yield from self._series.items()
+            yield from zip(self._index, self._values_mutable)
         elif self._max_persist > 1:
-            labels = self._series._index.values
+            labels = self._index.values
             i = 0
             i_max = len(labels)
             while i < i_max:
@@ -806,43 +806,49 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 labels_select = labels[key] # may over select
                 # draw values to force usage of read_many in _store_reader
                 self._update_series_cache_iloc(key=key)
-                yield from zip(labels_select, self._series.values[key])
+                yield from zip(labels_select, self._values_mutable[key])
                 i += self._max_persist
         else: # max_persist is 1
-            for i, label in enumerate(self._series._index.values):
+            for i, label in enumerate(self._index.values):
                 self._update_series_cache_iloc(key=i)
-                yield label, self._series.values[i]
+                yield label, self._values_mutable[i]
 
     _items_store = items
 
     @property
     def values(self) -> np.ndarray:
-        '''A 1D object array of all :obj:`Frame` contained in the :obj:`Bus`.
+        '''A 1D object array of all :obj:`Frame` contained in the :obj:`Bus`. The returned ``np.ndarray`` will have ``Frame``; this will never return an array with ``FrameDeferred``, but ``max_persist`` will be observed in reading from the Store.
         '''
+        # NOTE: when self._values_mutable is fully loaded, it could become immutable and avoid a copy
+
         if self._loaded_all:
-            return self._series.values
+            post = self._values_mutable.copy()
+            post.flags.writeable = False
+            return post
 
         if self._max_persist is None: # load all at once if possible
             # b._loaded_all must be False
             self._update_series_cache_iloc(key=NULL_SLICE)
-            return self._series.values
+            post = self._values_mutable.copy()
+            post.flags.writeable = False
+            return post
 
         # return a new array; force new iteration to account for max_persist
         post = np.empty(self.__len__(), dtype=object)
 
         if self._max_persist > 1:
             i = 0
-            i_max = len(self._series._index.values)
+            i_max = len(self._index.values)
             while i < i_max:
                 key = slice(i, min(i + self._max_persist, i_max))
                 # draw values to force usage of read_many in _store_reader
                 self._update_series_cache_iloc(key=key)
-                post[key] = self._series.values[key]
+                post[key] = self._values_mutable[key]
                 i += self._max_persist
         else: # max_persist is 1
             for i in range(self.__len__()):
                 self._update_series_cache_iloc(key=i)
-                post[i] = self._series.values[i]
+                post[i] = self._values_mutable[i]
 
         post.flags.writeable = False
         return post
@@ -851,7 +857,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def __len__(self) -> int:
         '''Length of values.
         '''
-        return self._series.__len__()
+        return self._index.__len__()
 
     @doc_inject()
     def display(self,
@@ -867,9 +873,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         # NOTE: the key change over serires is providing the Bus as the displayed class
         config = config or DisplayActive.get()
         display_cls = Display.from_values((),
-                header=DisplayHeader(self.__class__, self._series._name),
+                header=DisplayHeader(self.__class__, self._name),
                 config=config)
-        return self._series._display(config,
+        return self._to_series_state()._display(config,
                 display_cls=display_cls,
                 style_config=style_config,
                 )
@@ -882,10 +888,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
         if not self._loaded.any():
-            return Series.from_element(None, index=self._series._index)
+            return Series.from_element(None, index=self._index)
 
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[tp.Tuple[int, ...]]]]:
-            for label, f in zip(self._series._index, self._series.values):
+            for label, f in zip(self._index, self._values_mutable):
                 if f is FrameDeferred:
                     yield label, None
                 else:
@@ -898,12 +904,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''Returns a :obj:`Frame` of dtype per column for all loaded Frames.
         '''
         if not self._loaded.any():
-            return Frame(index=self._series.index)
+            return Frame(index=self._index)
 
         f = Frame.from_concat(
-                frames=(f.dtypes for f in self._series.values if f is not FrameDeferred),
+                frames=(f.dtypes for f in self._values_mutable if f is not FrameDeferred),
                 fill_value=None,
-                ).reindex(index=self._series.index, fill_value=None)
+                ).reindex(index=self._index, fill_value=None)
         return tp.cast(Frame, f)
 
     @property
@@ -913,14 +919,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Series`
         '''
-        values = (f.shape if f is not FrameDeferred else None for f in self._series.values)
-        return Series(values, index=self._series._index, dtype=object, name='shape')
+        values = (f.shape if f is not FrameDeferred else None for f in self._values_mutable)
+        return Series(values, index=self._index, dtype=object, name='shape')
 
     @property
     def nbytes(self) -> int:
         '''Total bytes of data currently loaded in the Bus.
         '''
-        return sum(f.nbytes if f is not FrameDeferred else 0 for f in self._series.values)
+        return sum(f.nbytes if f is not FrameDeferred else 0 for f in self._values_mutable)
 
     @property
     def status(self) -> Frame:
@@ -930,7 +936,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         def gen() -> tp.Iterator[Series]:
 
             yield Series(self._loaded,
-                    index=self._series._index,
+                    index=self._index,
                     dtype=DTYPE_BOOL,
                     name='loaded')
 
@@ -941,8 +947,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     ):
 
                 values = (getattr(f, attr) if f is not FrameDeferred
-                        else missing for f in self._series.values)
-                yield Series(values, index=self._series._index, dtype=dtype, name=attr)
+                        else missing for f in self._values_mutable)
+                yield Series(values, index=self._index, dtype=dtype, name=attr)
 
         return tp.cast(Frame, Frame.from_concat(gen(), axis=1))
 
@@ -968,7 +974,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Tuple[int]`
         '''
-        return self._series.values.shape #type: ignore
+        return self._values_mutable.shape #type: ignore
 
     @property
     def ndim(self) -> int:
@@ -988,7 +994,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`int`
         '''
-        return self._series.values.size #type: ignore
+        return self._values_mutable.size #type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -1000,11 +1006,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Index`
         '''
-        return self._series._index
+        return self._index
 
-    @property
-    def _index(self) -> IndexBase:
-        return self._series._index
+    # @property
+    # def _index(self) -> IndexBase:
+    #     return self._series._index
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
@@ -1016,7 +1022,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Iterator[Hashable]`
         '''
-        return self._series._index
+        return self._index
 
     def __iter__(self) -> tp.Iterator[tp.Hashable]:
         '''
@@ -1025,7 +1031,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Iterator[Hashasble]`
         '''
-        return self._series._index.__iter__()
+        return self._index.__iter__()
 
     def __contains__(self, value: tp.Hashable) -> bool:
         '''
@@ -1034,7 +1040,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`bool`
         '''
-        return self._series._index.__contains__(value)
+        return self._index.__contains__(value)
 
     def get(self, key: tp.Hashable,
             default: tp.Any = None,
@@ -1045,9 +1051,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Any`
         '''
-        if key not in self._series._index:
+        if key not in self._index:
             return default
-        return self._series.__getitem__(key)
+        # will always return an element
+        return self._extract_loc(key=key)
 
     #---------------------------------------------------------------------------
     @doc_inject()
@@ -1080,14 +1087,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             return False
 
         # NOTE: dtype self._series is always object
-        if len(self._series) != len(other._series):
+        if len(self._index) != len(other._index):
             return False
 
-        if compare_name and self._series._name != other._series._name:
+        if compare_name and self._name != other._name:
             return False
 
-        if not self._series.index.equals(
-                other._series.index,
+        if not self._index.equals(
+                other._index,
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
@@ -1158,12 +1165,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Bus`
         '''
-        series = self._series.sort_index(
+        series = self._to_series_state().sort_index(
                 ascending=ascending,
                 kind=kind,
                 key=key,
                 )
-        return self._derive(series)
+        return self._derive(series, own_data=True)
 
     @doc_inject(selector='sort')
     def sort_values(self,
@@ -1186,18 +1193,16 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         values = self.values # this will handle max_persist, but will deliver an array with all Frame loaded
         cfs = Series(values,
-                index=self._series.index,
+                index=self._index,
                 own_index=True,
-                name=self._series.name,
+                name=self._name,
                 )
-
         series = cfs.sort_values(
                 ascending=ascending,
                 kind=kind,
                 key=key,
                 )
-
-        return self._derive(series)
+        return self._derive(series, own_data=True)
 
 
     def roll(self,
@@ -1214,8 +1219,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Bus`
         '''
-        series = self._series.roll(shift=shift, include_index=include_index)
-        return self._derive(series)
+        series = self._to_series_state().roll(shift=shift, include_index=include_index)
+        return self._derive(series, own_data=True)
 
     def shift(self,
             shift: int,
@@ -1231,14 +1236,26 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Bus`
         '''
-        series = self._series.shift(shift=shift, fill_value=fill_value)
-        return self._derive(series)
+        series = self._to_series_state().shift(shift=shift, fill_value=fill_value)
+        return self._derive(series, own_data=True)
 
     #---------------------------------------------------------------------------
     # exporter
+
+    def _to_series_state(self) -> Series:
+        # the mutable array will be copied in the Series construction
+        return Series(self._values_mutable,
+                index=self._index,
+                own_index=True,
+                name=self._name,
+                )
 
     def to_series(self) -> Series:
         '''Return a :obj:`Series` with the :obj:`Frame` contained in this :obj:`Bus`. If the :obj:`Bus` is associated with a :obj:`Store`, all :obj:`Frame` will be loaded into memory and the returned :obj:`Bus` will no longer be associated with the :obj:`Store`.
         '''
         # values returns an immutable array and will fully realize from Store
-        return Series(self.values, index=self.index, own_index=True)
+        return Series(self.values,
+                index=self._index,
+                own_index=True,
+                name=self._name,
+                )

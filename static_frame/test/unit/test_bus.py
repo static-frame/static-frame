@@ -1494,7 +1494,7 @@ class TestUnit(TestCase):
             b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2)
             # NOTE: this type of selection forces _store_reader to use read_many at size of max_persist
             a1 = b2.values
-            self.assertNotEqual(id(a1), id(b2._series.values))
+            self.assertNotEqual(id(a1), id(b2._values_mutable))
             self.assertEqual(b2.status['loaded'].sum(), 2)
             self.assertTrue(all([f.__class__ is Frame for f in a1]))
 
