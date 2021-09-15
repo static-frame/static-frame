@@ -10,6 +10,8 @@ Added ``Quilt.sample()``.
 
 ``all()`` and ``any()`` on ``Series`` and ``Frame`` no longer raise when NA values are present and ``skipna`` is ``False``.
 
+Performance enhancements to ``Bus`` loading routines when using ``max_persist`` by refactoring internal architecture of ``Bus`` to no longer hold a reference to a ``Series`` but instead use a mutable array.
+
 
 0.8.19
 ----------
