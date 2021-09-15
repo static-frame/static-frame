@@ -486,14 +486,8 @@ class Index(IndexBase):
 
         if self._map is None: # if _map not shared from another Index
             # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
-            if not is_typed and labels.__class__ is np.ndarray:
-                # NOTE: to implement GH # 374
-                # if labels.dtype.kind == DTYPE_DATETIME_KIND:
-                #     raise ErrorInitIndex()
-                if labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore [attr-defined]
-                    labels_for_automap = labels.tolist() #type: ignore [attr-defined]
-                else:
-                    labels_for_automap = labels
+            if not is_typed and labels.__class__ is np.ndarray and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore [attr-defined]
+                labels_for_automap = labels.tolist() #type: ignore [attr-defined]
             else:
                 labels_for_automap = labels
 
@@ -519,6 +513,12 @@ class Index(IndexBase):
         if self._DTYPE and self._labels.dtype != self._DTYPE:
             raise ErrorInitIndex('invalid label dtype for this Index', #pragma: no cover
                     self._labels.dtype, self._DTYPE)
+
+        # NOTE: to implement GH # 374; do this after final self._labels creation as user may pass a dtype argument
+        # if not is_typed and self._labels.dtype.kind == DTYPE_DATETIME_KIND:
+        #     raise ErrorInitIndex('Cannot create an Index with a datetime64 array; use a datetime64 subclass (IndexDate) or supply an `index_constructors` argument')
+
+
 
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
