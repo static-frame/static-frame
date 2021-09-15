@@ -3078,7 +3078,17 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
+    def test_index_hierarchy_union_a(self) -> None:
 
+        ih1 = IndexHierarchy.from_labels(((1, '2020-01-01'), (1, '2020-01-02'), (1, '2020-01-03')),
+                index_constructors=(Index, IndexDate))
+
+        ih2 = IndexHierarchy.from_labels(((1, '2020-01-01'), (1, '2020-01-02'), (1, '2020-01-05')),
+                index_constructors=(Index, IndexDate))
+
+        ih3 = ih1.union(ih2)
+        self.assertEqual(ih3.index_types.to_pairs(),
+            ((0, Index), (1, IndexDate)))
 
 
 if __name__ == '__main__':

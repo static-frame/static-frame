@@ -782,6 +782,31 @@ class TestUnit(TestCase):
                 (dt64('2021-01-15'), 0),
                 (dt64('2020-12-31'), 3)))
 
+    def test_series_reindex_j(self) -> None:
+
+        ih1 = IndexHierarchy.from_labels(((1, '2020-01-01'), (1, '2020-01-02'), (1, '2020-01-03')),
+                index_constructors=(Index, IndexDate))
+
+        ih2 = IndexHierarchy.from_labels(((1, '2020-01-01'), (1, '2020-01-02'), (1, '2020-01-05')),
+                index_constructors=(Index, IndexDate))
+
+        s1 = Series((1, 2, 3), index=ih1)
+        self.assertEqual(s1.reindex(ih2, fill_value=None).to_pairs(),
+                (((1, datetime.date(2020, 1, 1)), 1), ((1, datetime.date(2020, 1, 2)), 2), ((1, datetime.date(2020, 1, 5)), None)))
+
+
+    def test_series_reindex_k(self) -> None:
+        dt = datetime.date
+
+        s1 = sf.Frame.from_dict({'a': [1,1,1], 'b':[dt(2020, 1, 1), dt(2020, 1, 2), dt(2020, 1, 3)], 'd':['a', 'b', 'c']}, dtypes={'b': 'datetime64[D]'}).set_index_hierarchy(('a', 'b'), drop=True, index_constructors=(Index, IndexDate))['d']
+
+        ih2 = IndexHierarchy.from_labels(((1, '2020-01-01'), (1, '2020-01-02'), (1, '2020-01-05')),
+                index_constructors=(Index, IndexDate))
+
+        self.assertEqual(s1.reindex(ih2, fill_value=None).to_pairs(),
+                (((1, datetime.date(2020, 1, 1)), 'a'), ((1, datetime.date(2020, 1, 2)), 'b'), ((1, datetime.date(2020, 1, 5)), None)))
+
+
     #---------------------------------------------------------------------------
     def test_series_isna_a(self) -> None:
 

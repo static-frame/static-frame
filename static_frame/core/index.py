@@ -486,9 +486,14 @@ class Index(IndexBase):
 
         if self._map is None: # if _map not shared from another Index
             # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
-            if (not is_typed and labels.__class__ is np.ndarray
-                    and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS): #type: ignore [attr-defined]
-                labels_for_automap = labels.tolist() #type: ignore [attr-defined]
+            if not is_typed and labels.__class__ is np.ndarray:
+                # NOTE: to implement GH # 374
+                # if labels.dtype.kind == DTYPE_DATETIME_KIND:
+                #     raise ErrorInitIndex()
+                if labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore [attr-defined]
+                    labels_for_automap = labels.tolist() #type: ignore [attr-defined]
+                else:
+                    labels_for_automap = labels
             else:
                 labels_for_automap = labels
 
@@ -757,7 +762,7 @@ class Index(IndexBase):
     @doc_inject(select='astype')
     def astype(self, dtype: DtypeSpecifier) -> 'Index':
         '''
-        Return an Index with type determined by `dtype` argument. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
+        Return an Index with type determined by `dtype` argument. If a `datetime64` dtype is provided, the appropriate ``Index`` subclass will be returned. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
 
         Args:
             {dtype}
