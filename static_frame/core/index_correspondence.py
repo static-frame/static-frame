@@ -67,7 +67,7 @@ class IndexCorrespondence:
             has_common = len(common_labels) > 0
             assert not mixed_depth
         elif depth > 1:
-            # if either values arrays are object, we have to covert all values to tuples
+            # NOTE: calling .values will convert dt64 to objects
             common_labels = intersect2d(
                     src_index.values,
                     dst_index.values,
@@ -100,6 +100,7 @@ class IndexCorrespondence:
                         )
 
             # these will be equal sized
+            # NOTE: if this fails, it means that our common labels are not common, likely due to a type conversions
             iloc_src = src_index._loc_to_iloc(common_labels)
             iloc_dst = dst_index._loc_to_iloc(common_labels)
 

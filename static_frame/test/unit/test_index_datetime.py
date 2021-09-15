@@ -248,10 +248,10 @@ class TestUnit(TestCase):
             index = IndexYear(s1.index) #type: ignore
 
         # can reuse the map if going from dt64 index to normal index
-        idx2 = Index(s1.index)
-        self.assertTrue(id(idx2._map) == id(s1.index._map)) #type: ignore
+        # idx2 = Index(s1.index)
+        # self.assertTrue(id(idx2._map) == id(s1.index._map)) #type: ignore
 
-        idx3 = IndexDate(idx2)
+        idx3 = IndexDate(s1.index)
         self.assertTrue(id(idx3._map) == id(s1.index._map)) #type: ignore
 
         with self.assertRaises(ErrorInitIndex):
@@ -262,7 +262,7 @@ class TestUnit(TestCase):
         self.assertTrue(id(idx4._map) != id(s1.index._map)) #type: ignore
 
         # a GO has to create a new map
-        idx5 = IndexGO(s1.index)
+        idx5 = IndexDateGO(s1.index)
         self.assertTrue(id(idx4._map) != id(s1.index._map)) #type: ignore
 
         # supplying a dtype to coerce the labels
@@ -273,8 +273,8 @@ class TestUnit(TestCase):
             idx7 = Index(s1.index.values.astype('datetime64[Y]'))
 
         # final resolution from a normal index
-        idx8 = IndexMinute(idx2)
-        self.assertTrue(id(idx8._map) != id(idx2._map))
+        idx8 = IndexMinute(s1.index)
+        self.assertTrue(id(idx8._map) != id(s1.index._map))
 
     def test_index_date_init_b(self) -> None:
         i1 = IndexDate(('2017-12-30', '2017-12-31', '2018-01-05'), name='foo')
