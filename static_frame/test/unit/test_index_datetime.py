@@ -274,7 +274,7 @@ class TestUnit(TestCase):
 
         # final resolution from a normal index
         idx8 = IndexMinute(s1.index)
-        self.assertTrue(id(idx8._map) != id(s1.index._map))
+        self.assertTrue(id(idx8._map) != id(s1.index._map)) #type: ignore
 
     def test_index_date_init_b(self) -> None:
         i1 = IndexDate(('2017-12-30', '2017-12-31', '2018-01-05'), name='foo')

@@ -812,7 +812,7 @@ class BusItemsZipPickle(Perf):
     def __init__(self) -> None:
         super().__init__()
 
-        def items():
+        def items() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
             f = ff.parse(f's(2,2)|v(int)|i(I,str)|c(I,str)')
             for i in range(10_000):
                 yield str(i), f
