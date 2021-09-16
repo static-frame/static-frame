@@ -21,7 +21,7 @@ from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import path_filter
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructorOrConstructors
 
 #-------------------------------------------------------------------------------
 
@@ -32,10 +32,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
 
     index_depth: int
     index_name_depth_level: tp.Optional[DepthLevelSpecifier]
-    index_constructor: IndexConstructor
+    index_constructor: IndexConstructorOrConstructors
     columns_depth: int
     columns_name_depth_level: tp.Optional[DepthLevelSpecifier]
-    columns_constructor: IndexConstructor
+    columns_constructor: IndexConstructorOrConstructors
     columns_select: tp.Optional[tp.Iterable[str]]
     dtypes: DtypesSpecifier
     consolidate_blocks: bool
@@ -82,10 +82,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
             # constructors
             index_depth: int = 0, # this default does not permit round trip
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: IndexConstructorOrConstructors = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            columns_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructorOrConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
