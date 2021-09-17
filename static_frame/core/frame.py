@@ -43,6 +43,7 @@ from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.container_util import prepare_values_for_lex
+from static_frame.core.container_util import index_from_optional_constructors
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1814,16 +1815,14 @@ class Frame(ContainerOperand):
                     axis_depth=columns_depth)
 
             if columns_depth == 1:
-                # columns = index_from_optional_constructor(
-                #         columns_arrays[0],
-                #         default_constructor=cls._COLUMNS_CONSTRUCTOR,
-                #         name=columns_name,
-                #         # explicit_constructor=columns_constructors,
-                #         )
-                columns_constructor = cls._COLUMNS_CONSTRUCTOR
-                columns = columns_constructor(columns_arrays[0], name=columns_name)
+                # columns = cls._COLUMNS_CONSTRUCTOR(columns_arrays[0], name=columns_name)
+                columns, own_columns = index_from_optional_constructors(
+                        columns_arrays[0],
+                        depth=columns_depth,
+                        default_constructor=partial(cls._COLUMNS_CONSTRUCTOR, name=columns_name),
+                        explicit_constructors=columns_constructors, # cannot supply name
+                        )
             else:
-                columns_constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels
                 if columns_continuation_token:
                     labels = zip_longest(
                             *(store_filter.to_type_filter_iterable(x) for x in columns_arrays),
@@ -1831,12 +1830,17 @@ class Frame(ContainerOperand):
                             )
                 else:
                     labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
-                columns = columns_constructor(
-                        labels,
+
+                columns_constructor = partial(cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                         name=columns_name,
                         continuation_token=columns_continuation_token,
                         )
-            own_columns = True
+                columns, own_columns = index_from_optional_constructors(
+                        labels,
+                        depth=columns_depth,
+                        default_constructor=columns_constructor,
+                        explicit_constructors=columns_constructors,
+                        )
 
         if array.dtype.names is None: # not a structured array
             # genfromtxt may, in some situations, not return a structured array
@@ -1879,19 +1883,35 @@ class Frame(ContainerOperand):
                 axis_depth=index_depth)
 
         if index_depth == 1:
-            index_constructor = partial(Index, name=index_name)
-            return cls(
-                index=index_arrays[0],
-                index_constructor=index_constructor,
-                **kwargs)
-
-        index_constructor = partial(IndexHierarchy.from_labels,
-                name=index_name,
-                continuation_token=index_continuation_token,
+            value = index_arrays[0]
+            index_default_constructor = partial(Index, name=index_name)
+        else: # > 1
+            value = zip(*index_arrays)
+            index_default_constructor = partial(IndexHierarchy.from_labels,
+                    name=index_name,
+                    continuation_token=index_continuation_token,
+                    )
+        index, own_index = index_from_optional_constructors(
+                value,
+                depth=index_depth,
+                default_constructor=index_default_constructor,
+                explicit_constructors=index_constructors, # cannot supply name
                 )
+
+        # if index_depth == 1:
+        #     index_constructor = partial(Index, name=index_name)
+        #     return cls(
+        #         index=index_arrays[0],
+        #         index_constructor=index_constructor,
+        #         **kwargs)
+
+        # index_constructor = partial(IndexHierarchy.from_labels,
+        #         name=index_name,
+        #         continuation_token=index_continuation_token,
+        #         )
         return cls(
-                index=zip(*index_arrays),
-                index_constructor=index_constructor,
+                index=index,
+                own_index=own_index,
                 **kwargs
                 )
 

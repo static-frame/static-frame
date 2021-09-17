@@ -42,6 +42,7 @@ from static_frame.core.util import is_mapping
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
+from static_frame.core.util import NAME_DEFAULT
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -203,15 +204,15 @@ def index_from_optional_constructor(
         *,
         default_constructor: IndexConstructor,
         explicit_constructor: tp.Union[IndexConstructor, 'IndexDefaultFactory', None] = None,
-        name: NameType = None,
         ) -> IndexBase:
     '''
     Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
     '''
     # NOTE: this might return an own_index flag to show callers when a new index has been created
+    # NOTE: do not pass `name` here; instead, partial contstuctors if necessary
     from static_frame.core.index_auto import IndexAutoFactory
     from static_frame.core.index_auto import IndexDefaultFactory
-    # TODO: name argument is propagated to all constructors
+
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
                 default_constructor=default_constructor, #type: ignore
@@ -226,11 +227,11 @@ def index_from_optional_constructor(
 
     # default constructor could be a function with a STATIC attribute
     if isinstance(value, IndexBase):
-        # if default is STATIC, and value is not STATIC, get an immutabel
+        # if default is STATIC, and value is not STATIC, get an immutable
         if is_static(default_constructor):
             if not value.STATIC:
                 # v: ~S, dc: S, use immutable alternative
-                return value._IMMUTABLE_CONSTRUCTOR(value, name=name)
+                return value._IMMUTABLE_CONSTRUCTOR(value)
             # v: S, dc: S, both immutable
             return value
         else: # default constructor is mutable
@@ -238,7 +239,7 @@ def index_from_optional_constructor(
                 # v: ~S, dc: ~S, both are mutable
                 return value.copy()
             # v: S, dc: ~S, return a mutable version of something that is not mutable
-            return value._MUTABLE_CONSTRUCTOR(value, name=name)
+            return value._MUTABLE_CONSTRUCTOR(value)
 
     # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value)
@@ -249,16 +250,16 @@ def index_from_optional_constructors(
         depth: int,
         default_constructor: IndexConstructor,
         explicit_constructors: IndexConstructors = None,
-        name: NameType = None,
-        continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
         ) -> tp.Tuple[IndexBase, bool]:
-    '''For scenarios here `index_depth` is the primary way of specifying index creation from a data source.
+    '''For scenarios here `index_depth` is the primary way of specifying index creation from a data source and the returned index might be an `IndexHierarchy`. Note that we do not take `name` or `continuation_token` here, but expect constructors to be appropriately partialed.
     '''
     if depth == 0:
         index = None
         own_columns = False
     elif depth == 1:
-        if callable(explicit_constructors):
+        if not explicit_constructors:
+            explicit_constructor = None
+        elif callable(explicit_constructors):
             explicit_constructor = explicit_constructors
         else:
             if len(explicit_constructors) != 1:
@@ -269,17 +270,15 @@ def index_from_optional_constructors(
                 value,
                 default_constructor=default_constructor,
                 explicit_constructor=explicit_constructor,
-                name=name,
                 )
         own_columns = True
     else:
+        # if depth is > 1, the default constructor is expected to be an IndexHierarchy, and explicit constructors are optionally provided `index_constructors`
         if callable(explicit_constructors):
             explicit_constructors = [explicit_constructors] * depth
         # default_constructor is an IH type
         index = default_constructor(
                 value,
-                name=name,
-                continuation_token=continuation_token,
                 index_constructors=explicit_constructors
                 )
         own_columns = True
