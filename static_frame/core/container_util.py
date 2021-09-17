@@ -250,7 +250,7 @@ def index_from_optional_constructors(
         depth: int,
         default_constructor: IndexConstructor,
         explicit_constructors: IndexConstructors = None,
-        ) -> tp.Tuple[IndexBase, bool]:
+        ) -> tp.Tuple[tp.Optional[IndexBase], bool]:
     '''For scenarios here `index_depth` is the primary way of specifying index creation from a data source and the returned index might be an `IndexHierarchy`. Note that we do not take `name` or `continuation_token` here, but expect constructors to be appropriately partialed.
     '''
     if depth == 0:
