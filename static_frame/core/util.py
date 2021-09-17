@@ -1212,7 +1212,7 @@ def to_datetime64(
             dt = np.datetime64(value)
         else: # assume value is single value;
             # note that integers will be converted to units from epoch
-            if isinstance(value, int):
+            if isinstance(value, INT_TYPES):
                 if dtype == DT64_YEAR:
                     # convert to string as that is likely what is wanted
                     value = str(value)

@@ -115,6 +115,7 @@ class IndexLevel:
             else:
                 explicit_constructor = None
 
+            # import ipdb; ipdb.set_trace()
             return index_from_optional_constructor(labels, #type: ignore
                     default_constructor=cls._INDEX_CONSTRUCTOR,
                     explicit_constructor=explicit_constructor)

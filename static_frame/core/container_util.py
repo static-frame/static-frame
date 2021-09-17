@@ -277,6 +277,7 @@ def index_from_optional_constructors(
         if callable(explicit_constructors):
             explicit_constructors = [explicit_constructors] * depth
         # default_constructor is an IH type
+        # import ipdb; ipdb.set_trace()
         index = default_constructor(
                 value,
                 index_constructors=explicit_constructors

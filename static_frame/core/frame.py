@@ -1886,6 +1886,7 @@ class Frame(ContainerOperand):
             value = index_arrays[0]
             index_default_constructor = partial(Index, name=index_name)
         else: # > 1
+            # NOTE: build a TypeBlocks
             value = zip(*index_arrays)
             index_default_constructor = partial(IndexHierarchy.from_labels,
                     name=index_name,
@@ -1898,17 +1899,6 @@ class Frame(ContainerOperand):
                 explicit_constructors=index_constructors, # cannot supply name
                 )
 
-        # if index_depth == 1:
-        #     index_constructor = partial(Index, name=index_name)
-        #     return cls(
-        #         index=index_arrays[0],
-        #         index_constructor=index_constructor,
-        #         **kwargs)
-
-        # index_constructor = partial(IndexHierarchy.from_labels,
-        #         name=index_name,
-        #         continuation_token=index_continuation_token,
-        #         )
         return cls(
                 index=index,
                 own_index=own_index,
@@ -1922,9 +1912,11 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -1946,9 +1938,11 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
                 index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
                 columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
@@ -1967,9 +1961,11 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -1991,9 +1987,11 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
                 index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
                 columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
@@ -2012,9 +2010,11 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -2045,9 +2045,11 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
                 index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
                 columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,

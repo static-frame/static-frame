@@ -483,14 +483,12 @@ class Index(IndexBase):
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
-
         if self._map is None: # if _map not shared from another Index
             # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
             if not is_typed and labels.__class__ is np.ndarray and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore [attr-defined]
                 labels_for_automap = labels.tolist() #type: ignore [attr-defined]
             else:
                 labels_for_automap = labels
-
             if not loc_is_iloc:
                 try:
                     self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)

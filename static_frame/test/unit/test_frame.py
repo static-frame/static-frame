@@ -5878,6 +5878,32 @@ class TestUnit(TestCase):
             self.assertEqual(f1.to_pairs(0),
                     (('A', ((False, False), (True, True))), ('B', ((False, True), (True, False)))))
 
+
+
+    def test_frame_from_delimited_c(self) -> None:
+        msg = 'a|b|c|d\n1940|2021-04-03|3|5\n1492|1743-04-03|-4|9\n'
+        self.assertEqual(Frame.from_delimited(msg.split('\n'), delimiter='|').to_pairs(),
+                (('a', ((0, 1940), (1, 1492))),
+                ('b', ((0, '2021-04-03'), (1, '1743-04-03'))),
+                ('c', ((0, 3), (1, -4))),
+                ('d', ((0, 5), (1, 9))))
+                )
+
+        f1 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=IndexYear, index_depth=1)
+        self.assertEqual(f1.index.dtype, np.dtype('<M8[Y]'))
+
+        f2 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear,), index_depth=1)
+        self.assertEqual(f2.index.dtype, np.dtype('<M8[Y]'))
+
+        with self.assertRaises(RuntimeError):
+            _ = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear, IndexDate), index_depth=1)
+
+        f3 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear, IndexDate), index_depth=2)
+        self.assertEqual(f3.index.depth, 2)
+        self.assertEqual(f3.index.index_types.values.tolist(), [IndexYear, IndexDate])
+
+        # import ipdb; ipdb.set_trace()
+
     #---------------------------------------------------------------------------
     def test_frame_from_tsv_a(self) -> None:
 
