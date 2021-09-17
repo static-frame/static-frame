@@ -41,6 +41,7 @@ from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
+from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -201,7 +202,8 @@ def index_from_optional_constructor(
         value: tp.Union[IndexInitializer, 'IndexAutoFactory'],
         *,
         default_constructor: IndexConstructor,
-        explicit_constructor: tp.Optional[tp.Union[IndexConstructor, 'IndexDefaultFactory']] = None,
+        explicit_constructor: tp.Union[IndexConstructor, 'IndexDefaultFactory', None] = None,
+        name: NameType = None,
         ) -> IndexBase:
     '''
     Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
@@ -209,7 +211,7 @@ def index_from_optional_constructor(
     # NOTE: this might return an own_index flag to show callers when a new index has been created
     from static_frame.core.index_auto import IndexAutoFactory
     from static_frame.core.index_auto import IndexDefaultFactory
-
+    # TODO: name argument is propagated to all constructors
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
                 default_constructor=default_constructor, #type: ignore
@@ -228,7 +230,7 @@ def index_from_optional_constructor(
         if is_static(default_constructor):
             if not value.STATIC:
                 # v: ~S, dc: S, use immutable alternative
-                return value._IMMUTABLE_CONSTRUCTOR(value)
+                return value._IMMUTABLE_CONSTRUCTOR(value, name=name)
             # v: S, dc: S, both immutable
             return value
         else: # default constructor is mutable
@@ -236,10 +238,53 @@ def index_from_optional_constructor(
                 # v: ~S, dc: ~S, both are mutable
                 return value.copy()
             # v: S, dc: ~S, return a mutable version of something that is not mutable
-            return value._MUTABLE_CONSTRUCTOR(value)
+            return value._MUTABLE_CONSTRUCTOR(value, name=name)
 
     # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value)
+
+def index_from_optional_constructors(
+        value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+        *,
+        depth: int,
+        default_constructor: IndexConstructor,
+        explicit_constructors: IndexConstructors = None,
+        name: NameType = None,
+        continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
+        ) -> tp.Tuple[IndexBase, bool]:
+    '''For scenarios here `index_depth` is the primary way of specifying index creation from a data source.
+    '''
+    if depth == 0:
+        index = None
+        own_columns = False
+    elif depth == 1:
+        if callable(explicit_constructors):
+            explicit_constructor = explicit_constructors
+        else:
+            if len(explicit_constructors) != 1:
+                raise RuntimeError('Cannot specify multiple index constructors for depth 1 indicies.')
+            explicit_constructor = explicit_constructors[0]
+
+        index = index_from_optional_constructor(
+                value,
+                default_constructor=default_constructor,
+                explicit_constructor=explicit_constructor,
+                name=name,
+                )
+        own_columns = True
+    else:
+        if callable(explicit_constructors):
+            explicit_constructors = [explicit_constructors] * depth
+        # default_constructor is an IH type
+        index = default_constructor(
+                value,
+                name=name,
+                continuation_token=continuation_token,
+                index_constructors=explicit_constructors
+                )
+        own_columns = True
+    return index, own_columns
+
 
 def index_constructor_empty(
         index: tp.Union[IndexInitializer, 'IndexAutoFactoryType']

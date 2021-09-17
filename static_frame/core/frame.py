@@ -1681,10 +1681,12 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            index_constructors: IndexConstructors = None,
+            index_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            columns_constructors: IndexConstructors = None,
+            columns_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1718,7 +1720,7 @@ class Frame(ContainerOperand):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
-        # TODO: add columns_select as usecols styles selective loading
+        # TODO: add columns_select as usecols style selective loading
 
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
@@ -1812,6 +1814,12 @@ class Frame(ContainerOperand):
                     axis_depth=columns_depth)
 
             if columns_depth == 1:
+                # columns = index_from_optional_constructor(
+                #         columns_arrays[0],
+                #         default_constructor=cls._COLUMNS_CONSTRUCTOR,
+                #         name=columns_name,
+                #         # explicit_constructor=columns_constructors,
+                #         )
                 columns_constructor = cls._COLUMNS_CONSTRUCTOR
                 columns = columns_constructor(columns_arrays[0], name=columns_name)
             else:
