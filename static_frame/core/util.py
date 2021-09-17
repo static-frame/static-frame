@@ -272,7 +272,7 @@ IndexConstructor = tp.Callable[..., 'IndexBase']
 
 IndexConstructors = tp.Sequence[IndexConstructor]
 
-IndexConstructorOrConstructors = tp.Union[IndexConstructor, IndexConstructors]
+LabelsConstructors = tp.Union[IndexConstructor, IndexConstructors, None]
 
 # take integers for size; otherwise, extract size from any other index initializer
 
