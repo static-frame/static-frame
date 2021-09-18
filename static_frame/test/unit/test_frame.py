@@ -5902,7 +5902,26 @@ class TestUnit(TestCase):
         self.assertEqual(f3.index.depth, 2)
         self.assertEqual(f3.index.index_types.values.tolist(), [IndexYear, IndexDate])
 
-        # import ipdb; ipdb.set_trace()
+
+
+    def test_frame_from_delimited_d(self) -> None:
+        msg = '1930|1931\n2021-01-01|2022-04-03\n3|5\n-4|9\n'
+
+        f1 = Frame.from_delimited(msg.split('\n'), delimiter='|', columns_constructors=IndexYear, columns_depth=1)
+        self.assertEqual(f1.columns.__class__, IndexYear)
+
+        with self.assertRaises(RuntimeError):
+            _ = Frame.from_delimited(msg.split('\n'), delimiter='|',
+                    columns_constructors=(IndexYear, IndexDate), columns_depth=1)
+
+        f2 = Frame.from_delimited(msg.split('\n'), delimiter='|',
+                columns_constructors=IndexYear, columns_depth=2)
+        self.assertEqual(f2.columns.index_types.values.tolist(), [IndexYear, IndexYear])
+
+        f3 = Frame.from_delimited(msg.split('\n'), delimiter='|',
+                columns_constructors=(IndexYear, IndexDate), columns_depth=2)
+        self.assertEqual(f3.columns.index_types.values.tolist(), [IndexYear, IndexDate])
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_tsv_a(self) -> None:

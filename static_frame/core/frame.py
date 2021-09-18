@@ -1886,7 +1886,7 @@ class Frame(ContainerOperand):
             value = index_arrays[0]
             index_default_constructor = partial(Index, name=index_name)
         else: # > 1
-            # NOTE: build a TypeBlocks
+            # might use _from_type_blocks, but would not be able to use continuation token
             value = zip(*index_arrays)
             index_default_constructor = partial(IndexHierarchy.from_labels,
                     name=index_name,
