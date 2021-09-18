@@ -41,9 +41,6 @@ from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
-from static_frame.core.util import NAME_DEFAULT
-
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 
