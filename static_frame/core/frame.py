@@ -1883,17 +1883,17 @@ class Frame(ContainerOperand):
                 axis_depth=index_depth)
 
         if index_depth == 1:
-            value = index_arrays[0]
+            index_values = index_arrays[0]
             index_default_constructor = partial(Index, name=index_name)
         else: # > 1
             # might use _from_type_blocks, but would not be able to use continuation token
-            value = zip(*index_arrays)
+            index_values = zip(*index_arrays)
             index_default_constructor = partial(IndexHierarchy.from_labels,
                     name=index_name,
                     continuation_token=index_continuation_token,
                     )
         index, own_index = index_from_optional_constructors(
-                value,
+                index_values,
                 depth=index_depth,
                 default_constructor=index_default_constructor,
                 explicit_constructors=index_constructors, # cannot supply name
@@ -2071,8 +2071,10 @@ class Frame(ContainerOperand):
             label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             skip_header: int = 0,
@@ -2093,8 +2095,10 @@ class Frame(ContainerOperand):
         config = StoreConfig(
                 index_depth=index_depth,
                 index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 skip_header=skip_header,

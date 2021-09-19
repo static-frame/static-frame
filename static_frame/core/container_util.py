@@ -252,7 +252,7 @@ def index_from_optional_constructors(
     '''
     if depth == 0:
         index = None
-        own_columns = False
+        own_index = False
     elif depth == 1:
         if not explicit_constructors:
             explicit_constructor = None
@@ -268,7 +268,7 @@ def index_from_optional_constructors(
                 default_constructor=default_constructor,
                 explicit_constructor=explicit_constructor,
                 )
-        own_columns = True
+        own_index = True
     else:
         # if depth is > 1, the default constructor is expected to be an IndexHierarchy, and explicit constructors are optionally provided `index_constructors`
         if callable(explicit_constructors):
@@ -279,8 +279,8 @@ def index_from_optional_constructors(
                 value,
                 index_constructors=explicit_constructors
                 )
-        own_columns = True
-    return index, own_columns
+        own_index = True
+    return index, own_index
 
 
 def index_constructor_empty(

@@ -7041,6 +7041,41 @@ class TestUnit(TestCase):
             # we keep the last column (all None) because there is a valid label
             self.assertEqual(f2.shape, (4, 4))
 
+    def test_frame_from_xlsx_n(self) -> None:
+        records = (
+                (2012, '2021-04-17', 'k', False, False),
+                (1542, '1945-11-28', 'q', True, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x', 'y'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            f2 = Frame.from_xlsx(fp, index_depth=3, index_constructors=(Index, IndexYear, IndexDate))
+            self.assertEqual(f2.index.depth, 3)
+            self.assertEqual(f2.index.index_types.values.tolist(),
+                        [Index, IndexYear, IndexDate])
+
+    def test_frame_from_xlsx_o(self) -> None:
+        records = (
+                (False, True, 120, 540),
+                (True, False, 602, 403),
+                )
+        f1 = Frame.from_records(records,
+                columns=IndexHierarchy.from_product(
+                        (1920, 1542),
+                        ('2021-01-05', '1264-10-31')),
+                index=('x', 'y'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            f2 = Frame.from_xlsx(fp, columns_depth=2, index_depth=1,
+                        columns_constructors=(IndexYear, IndexDate))
+            self.assertEqual(f2.columns.depth, 2)
+            self.assertEqual(f2.columns.index_types.values.tolist(),
+                        [IndexYear, IndexDate])
+            self.assertEqual(f2.shape, (2, 4))
 
 
     #---------------------------------------------------------------------------
@@ -7088,7 +7123,7 @@ class TestUnit(TestCase):
                     columns_depth=f1.columns.depth)
             self.assertEqualFrames(f1, f2)
 
-
+    #---------------------------------------------------------------------------
     def test_frame_from_hdf5_a(self) -> None:
         records = (
                 (2, 2, 'a', False, False),
