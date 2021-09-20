@@ -531,7 +531,7 @@ class StoreXLSX(Store):
                         name=columns_name,
                         continuation_token=None, # NOTE: needed, not the default
                         )
-                columns_values = zip(*columns_values)
+                columns_values = zip(*columns_values) #type: ignore
 
             columns, own_columns = index_from_optional_constructors(
                     columns_values,
