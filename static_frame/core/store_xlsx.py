@@ -10,7 +10,6 @@ from static_frame.core.container_util import index_from_optional_constructors
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
