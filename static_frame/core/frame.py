@@ -2194,6 +2194,8 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
+        # NOTE: this might be refactored to support `index_constructors` and `columns_constructors` arguments such that intra index types can be specified for IndexHierarchy.
+
         import pandas
         if not isinstance(value, pandas.DataFrame):
             raise ErrorInitFrame(f'from_pandas must be called with a Pandas DataFrame object, not: {type(value)}')
