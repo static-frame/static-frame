@@ -274,13 +274,36 @@ def index_from_optional_constructors(
         if callable(explicit_constructors):
             explicit_constructors = [explicit_constructors] * depth
         # default_constructor is an IH type
-        # import ipdb; ipdb.set_trace()
         index = default_constructor(
                 value,
                 index_constructors=explicit_constructors
                 )
         own_index = True
     return index, own_index
+
+
+def index_from_optional_constructors_deferred(
+        *,
+        depth: int,
+        default_constructor: IndexConstructor,
+        explicit_constructors: IndexConstructors = None,
+        ) -> tp.Callable[
+                [tp.Union[np.ndarray, tp.Iterable[tp.Hashable]]],
+                tp.Optional[IndexBase]]:
+    '''
+    Partiaal `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
+    '''
+    def func(
+            value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            ) -> tp.Optional[IndexBase]:
+        # drop the own_index Boolean
+        index, _ = index_from_optional_constructors(value,
+                depth=depth,
+                default_constructor=default_constructor,
+                explicit_constructors=explicit_constructors,
+                )
+        return index
+    return func
 
 
 def index_constructor_empty(

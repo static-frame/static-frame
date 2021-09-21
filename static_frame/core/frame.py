@@ -44,6 +44,7 @@ from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import index_from_optional_constructors
+from static_frame.core.container_util import index_from_optional_constructors_deferred
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1502,8 +1503,10 @@ class Frame(ContainerOperand):
             *,
             connection: sqlite3.Connection,
             index_depth: int = 0,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
+            columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
@@ -1516,7 +1519,11 @@ class Frame(ContainerOperand):
             query: A query string.
             connection: A DBAPI2 (PEP 249) Connection object, such as those returned from SQLite (via the sqlite3 module) or PyODBC.
             {dtypes}
+            index_depth:
+            index_constructors:
+            columns_depth:
             columns_select: An optional iterable of field names to extract from the results of the query.
+            columns_constructors:
             {name}
             {consolidate_blocks}
             parameters: Provide a list of values for an SQL query expecting parameter substitution.
@@ -1537,7 +1544,7 @@ class Frame(ContainerOperand):
                     post = selector(row)
                     return post if not selector_reduces else (post,)
 
-            if columns_depth >= 1 or columns_select:
+            if columns_depth > 0 or columns_select:
                 # always need to derive labels if using columns_select
                 labels = (col for (col, *_) in cursor.description[index_depth:])
 
@@ -1549,13 +1556,30 @@ class Frame(ContainerOperand):
                 selector_reduces = len(iloc_sel) == 1
 
             if columns_depth == 1:
-                columns = cls._COLUMNS_CONSTRUCTOR(labels)
-                own_columns = True
+                # columns = cls._COLUMNS_CONSTRUCTOR(labels)
+                # own_columns = True
+                columns, own_columns = index_from_optional_constructors(
+                        labels,
+                        depth=columns_depth,
+                        default_constructor=cls._COLUMNS_CONSTRUCTOR,
+                        explicit_constructors=columns_constructors, # cannot supply name
+                        )
             elif columns_depth > 1:
                 # NOTE: we only support loading in IH if encoded in each header with a space delimiter
-                constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
-                columns = constructor(labels, delimiter=' ')
-                own_columns = True
+                # constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
+                # columns = constructor(labels, delimiter=' ')
+                # own_columns = True
+
+                columns_constructor = partial(
+                        cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
+                        delimiter=' ',
+                        )
+                columns, own_columns = index_from_optional_constructors(
+                        labels,
+                        depth=columns_depth,
+                        default_constructor=columns_constructor,
+                        explicit_constructors=columns_constructors,
+                        )
 
                 if columns_select:
                     iloc_sel = columns._loc_to_iloc(columns.isin(columns_select))
@@ -1563,43 +1587,65 @@ class Frame(ContainerOperand):
                     selector_reduces = len(iloc_sel) == 1
                     columns = columns.iloc[iloc_sel]
 
-            index_constructor = None
+            # map dtypes in context of pre-index extraction
             if index_depth > 0:
-                # map dtypes in context of pre-index extraction
                 get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                         dtypes,
                         [col for (col, *_) in cursor.description],
                         )
-                if index_depth == 1:
-                    index = [] # lazily populate
-                    if get_col_dtype:
-                        index_constructor = partial(Index, dtype=get_col_dtype(0))
-                    else:
-                        index_constructor = Index
-                    def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                        for row in cursor:
-                            index.append(row[0])
-                            yield row[1:]
-                else: # > 1
-                    index = [list() for _ in range(index_depth)]
-                    def index_constructor(iterables) -> IndexHierarchy: #pylint: disable=function-redefined
-                        if get_col_dtype:
-                            blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
-                                    for i, it in enumerate(iterables)]
-                        else:
-                            blocks = [iterable_to_array_1d(it)[0] for it in iterables]
-                        return IndexHierarchy._from_type_blocks(
-                                TypeBlocks.from_blocks(blocks),
-                                own_blocks=True)
 
-                    def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                        for row in cursor:
-                            for i, label in enumerate(row[:index_depth]):
-                                index[i].append(label)
-                            yield row[index_depth:]
-            else:
+            if index_depth == 0:
                 index = None
                 row_gen = lambda: cursor
+                index_constructor = None
+            elif index_depth == 1:
+                index = [] # lazily populate
+                if get_col_dtype:
+                    default_constructor = partial(Index, dtype=get_col_dtype(0))
+                else:
+                    default_constructor = Index
+
+                # parital to include everything but values
+                index_constructor = index_from_optional_constructors_deferred(
+                        depth=index_depth,
+                        default_constructor=default_constructor,
+                        explicit_constructors=index_constructors,
+                        )
+
+                def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in cursor:
+                        index.append(row[0])
+                        yield row[1:]
+            else: # > 1
+                index = [list() for _ in range(index_depth)]
+
+                def default_constructor(
+                        iterables: tp.Iterable[tp.Hashable],
+                        index_constructors: IndexConstructors,
+                        ) -> IndexHierarchy: #pylint: disable=function-redefined
+                    if get_col_dtype:
+                        blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
+                                for i, it in enumerate(iterables)]
+                    else:
+                        blocks = [iterable_to_array_1d(it)[0] for it in iterables]
+                    return IndexHierarchy._from_type_blocks(
+                            TypeBlocks.from_blocks(blocks),
+                            index_constructors=index_constructors,
+                            own_blocks=True,
+                            )
+
+                # parital to include everything but values
+                index_constructor = index_from_optional_constructors_deferred(
+                        depth=index_depth,
+                        default_constructor=default_constructor,
+                        explicit_constructors=index_constructors,
+                        )
+
+                def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in cursor:
+                        for i, label in enumerate(row[:index_depth]):
+                            index[i].append(label)
+                        yield row[index_depth:]
 
             if columns_select:
                 row_gen_final = (filter_row(row) for row in row_gen())
@@ -2117,7 +2163,9 @@ class Frame(ContainerOperand):
             *,
             label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
+            columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -2131,7 +2179,9 @@ class Frame(ContainerOperand):
         st = StoreSQLite(fp)
         config = StoreConfig(
                 index_depth=index_depth,
+                index_constructors=index_constructors,
                 columns_depth=columns_depth,
+                columns_constructors=columns_constructors,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 )
