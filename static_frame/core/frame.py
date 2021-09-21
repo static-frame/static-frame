@@ -2434,20 +2434,6 @@ class Frame(ContainerOperand):
                 axis_depth=columns_depth,
                 )
 
-        # if columns_depth == 0:
-        #     columns = None
-        #     own_columns = False
-        # elif columns_depth == 1:
-        #     columns = cls._COLUMNS_CONSTRUCTOR(columns_labels, name=columns_name)
-        #     own_columns = True
-        # elif columns_depth > 1:
-        #     columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited(
-        #             columns_labels,
-        #             delimiter=' ',
-        #             name=columns_name,
-        #             )
-        #     own_columns = True
-
         if columns_depth <= 1:
             columns_default_constructor = partial(
                     cls._COLUMNS_CONSTRUCTOR,
@@ -2471,31 +2457,16 @@ class Frame(ContainerOperand):
                 axis_depth=index_depth,
                 )
 
-        # if index_depth == 0:
-        #     index = None
-        #     own_index = False
-
-        # elif index_depth == 1:
-        #     index = Index(index_arrays[0], name=index_name)
-        #     own_index = True
-        # elif index_depth > 1:
-        #     index = IndexHierarchy._from_type_blocks(
-        #             TypeBlocks.from_blocks(index_arrays),
-        #             name=index_name,
-        #             own_blocks=True,
-        #             )
-        #     own_index = False
-
         if index_depth == 1:
             index_values = index_arrays[0]
             index_default_constructor = partial(Index, name=index_name)
-        else: # >
+        else: # > 1
             index_values = index_arrays
 
             def index_default_constructor(values,
                     *,
                     index_constructors: IndexConstructors = None,
-                    ):
+                    ) -> IndexBase:
                 return IndexHierarchy._from_type_blocks(
                     TypeBlocks.from_blocks(values),
                     name=index_name,
