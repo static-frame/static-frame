@@ -7056,7 +7056,7 @@ class TestUnit(TestCase):
             f1.to_xlsx(fp)
             f2 = Frame.from_xlsx(fp, index_depth=3, index_constructors=(Index, IndexYear, IndexDate))
             self.assertEqual(f2.index.depth, 3)
-            self.assertEqual(f2.index.index_types.values.tolist(), #type: ignore
+            self.assertEqual(f2.index.index_types.values.tolist(),
                         [Index, IndexYear, IndexDate])
 
     def test_frame_from_xlsx_o(self) -> None:
@@ -7075,7 +7075,7 @@ class TestUnit(TestCase):
             f2 = Frame.from_xlsx(fp, columns_depth=2, index_depth=1,
                         columns_constructors=(IndexYear, IndexDate))
             self.assertEqual(f2.columns.depth, 2)
-            self.assertEqual(f2.columns.index_types.values.tolist(), #type: ignore
+            self.assertEqual(f2.columns.index_types.values.tolist(),
                         [IndexYear, IndexDate])
             self.assertEqual(f2.shape, (2, 4))
 

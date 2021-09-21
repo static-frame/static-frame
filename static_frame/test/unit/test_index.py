@@ -1497,7 +1497,11 @@ class TestUnit(TestCase):
                 [True, True, False, True, False])
 
 
+    #---------------------------------------------------------------------------
+    def test_index_index_types_a(self) -> None:
 
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
+        self.assertEqual(idx1.index_types.to_pairs(), (('foo', IndexGO),))
 
 if __name__ == '__main__':
     unittest.main()

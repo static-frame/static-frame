@@ -185,6 +185,10 @@ class IndexBase(ContainerOperand):
             ) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
+    @property
+    def index_types(self) -> 'Series':
+        raise NotImplementedError() # pragma: no cover
+
     def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
 

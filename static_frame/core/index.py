@@ -927,6 +927,17 @@ class Index(IndexBase):
         self._depth_level_validate(depth_level)
         yield from zip_longest(self.values, EMPTY_TUPLE, fillvalue=1)
 
+    @property
+    def index_types(self) -> 'Series':
+        '''
+        Return a Series of Index classes for each index depth.
+
+        Returns:
+            :obj:`Series`
+        '''
+        from static_frame.core.series import Series
+        return Series((self.__class__,), index=(self._name,), dtype=DTYPE_OBJECT)
+
 
     #---------------------------------------------------------------------------
 

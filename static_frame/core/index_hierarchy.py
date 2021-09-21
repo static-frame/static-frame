@@ -52,7 +52,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_BOOL
-
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -1007,7 +1007,7 @@ class IndexHierarchy(IndexBase):
         Return a Series of Index classes for each index depth.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         from static_frame.core.series import Series
 
@@ -1019,7 +1019,7 @@ class IndexHierarchy(IndexBase):
             labels = None
 
         # NOTE: consider caching index_types
-        return Series(self._levels.index_types(), index=labels)
+        return Series(self._levels.index_types(), index=labels, dtype=DTYPE_OBJECT)
 
     #---------------------------------------------------------------------------
     def relabel(self, mapper: RelabelInput) -> 'IndexHierarchy':
