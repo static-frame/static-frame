@@ -5834,8 +5834,10 @@ class TestUnit(TestCase):
                 data=tb,
                 index_depth=0,
                 index_arrays=(),
+                index_constructors=None,
                 columns_depth=0,
                 columns_labels=(),
+                columns_constructors=None,
                 name='foo',
                 )
         self.assertEqual(f1.to_pairs(0),
@@ -7122,6 +7124,51 @@ class TestUnit(TestCase):
                     index_depth=f1.index.depth,
                     columns_depth=f1.columns.depth)
             self.assertEqualFrames(f1, f2)
+
+    def test_frame_from_sqlite_c(self) -> None:
+        records = (
+                (2020, '2020-11-12', False, False),
+                (2020, '2020-12-31', True, False),
+                (1492, '1492-03-12', False, False),
+                (1492, '1492-03-19', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'))
+
+        with temp_file('.sqlite') as fp:
+            f1.to_sqlite(fp, include_index=False)
+            f2 = Frame.from_sqlite(fp,
+                        index_depth=2,
+                        index_constructors=(IndexYear, IndexDate))
+            self.assertEqual(f2.index.depth, 2)
+            self.assertEqual(f2.index.index_types.values.tolist(),
+                        [IndexYear, IndexDate])
+
+
+    def test_frame_from_sqlite_d(self) -> None:
+
+        f1 = Frame.from_records((
+                (10, 20, 50, False, 10, 20, 50, False),
+                (50.0, 60.4, -50, True, 50.0, 60.4, -50, True),
+                ),
+                columns=IndexHierarchy.from_product(('I', 'II'),
+                        (1910, 1915),
+                        ('2021-01-03', '1918-05-04'),
+                        )
+                )
+
+        with temp_file('.sqlite') as fp:
+            f1.to_sqlite(fp, include_index=False)
+            f2 = Frame.from_sqlite(fp,
+                    index_depth=0,
+                    columns_depth=3,
+                    columns_constructors=(Index, IndexYear, IndexDate)
+                    )
+            self.assertEqual(f2.columns.depth, 3)
+            self.assertEqual(f2.columns.index_types.values.tolist(),
+                        [Index, IndexYear, IndexDate])
+            self.assertEqual(f2.name, None)
 
     #---------------------------------------------------------------------------
     def test_frame_from_hdf5_a(self) -> None:
@@ -9607,6 +9654,22 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(),
                 (('date', ((0, np.datetime64('2006-01-01')), (1, np.datetime64('2006-01-02')))), ('identifier', ((0, 'a1'), (1, 'a1'))), ('value', ((0, 12.5), (1, 12.5))), ('count', ((0, 20), (1, 22)))))
 
+    def test_frame_from_sql_d(self) -> None:
+
+        conn: sqlite3.Connection = self.get_test_db_e()
+
+        f1 = sf.Frame.from_sql(
+                'select * from events',
+                connection=conn,
+                index_depth=2,
+                index_constructors=(IndexDate, Index)
+                )
+        self.assertEqual(f1.index.depth, 2)
+        self.assertEqual(f1.index.index_types.values.tolist(),
+                [IndexDate, Index])
+
+
+    #---------------------------------------------------------------------------
     def test_frame_from_sql_no_args(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_a()
 
@@ -9716,7 +9779,6 @@ class TestUnit(TestCase):
                 (('value', (((0, '2006-01-01', 'a1'), 12.5), ((1, '2006-01-02', 'a1'), 12.5), ((2, '2006-01-01', 'b2'), 12.5), ((3, '2006-01-02', 'b2'), 12.5))), ('count', (((0, '2006-01-01', 'a1'), 8), ((1, '2006-01-02', 'a1'), 8), ((2, '2006-01-01', 'b2'), 8), ((3, '2006-01-02', 'b2'), 8))))
                 )
 
-
     def test_frame_from_sql_columns_select_w_col_h(self) -> None:
 
         conn: sqlite3.Connection = self.get_test_db_c()
@@ -9736,7 +9798,6 @@ class TestUnit(TestCase):
                 ((('date', 'to'), ((0, 'a1'), (1, 'a1'), (2, 'b2'), (3, 'b2'))), (('value', 'a'), ((0, 12.5), (1, 12.5), (2, 12.5), (3, 12.5))), (('value', 'b'), ((0, 8), (1, 8), (2, 8), (3, 8))))
                 )
 
-
     def test_frame_from_sql_columns_select_w_idx_col_h(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_d()
 
@@ -9755,7 +9816,6 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 ((('date', 'to'), ((('0', '2006-01-01'), 'a1'), (('1', '2006-01-02'), 'a1'), (('2', '2006-01-01'), 'b2'), (('3', '2006-01-02'), 'b2'))), (('value', 'a'), ((('0', '2006-01-01'), 12.5), (('1', '2006-01-02'), 12.5), (('2', '2006-01-01'), 12.5), (('3', '2006-01-02'), 12.5))))
                 )
-
 
     #---------------------------------------------------------------------------
 

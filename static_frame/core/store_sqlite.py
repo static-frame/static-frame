@@ -157,18 +157,22 @@ class StoreSQLite(Store):
 
                 if label is STORE_LABEL_DEFAULT:
                     label_encoded = 'None'
+                    name = None
                 else:
                     label_encoded = config_map.default.label_encode(label)
+                    name = label
 
                 query = f'SELECT * from "{label_encoded}"'
 
                 yield tp.cast(Frame, container_type.from_sql(query=query,
                         connection=conn,
                         index_depth=c.index_depth,
+                        index_constructors=c.index_constructors,
                         columns_depth=c.columns_depth,
                         columns_select=c.columns_select,
+                        columns_constructors=c.columns_constructors,
                         dtypes=c.dtypes,
-                        name=label,
+                        name=name,
                         consolidate_blocks=c.consolidate_blocks
                         ))
 

@@ -81,7 +81,9 @@ class StoreHDF5(Store):
                 label_encoded = config_map.default.label_encode(label)
 
                 index_depth = c.index_depth
+                index_constructors = c.index_constructors
                 columns_depth = c.columns_depth
+                columns_constructors = c.columns_constructors
                 consolidate_blocks = c.consolidate_blocks
                 if c.dtypes:
                     raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
@@ -103,7 +105,6 @@ class StoreHDF5(Store):
                         if col_idx < index_depth:
                             index_arrays.append(array)
                             continue
-
                         # only store column labels for those yielded
                         columns_labels.append(colname)
                         yield array
@@ -118,8 +119,10 @@ class StoreHDF5(Store):
                         data=data,
                         index_depth=index_depth,
                         index_arrays=index_arrays,
+                        index_constructors=index_constructors,
                         columns_depth=columns_depth,
                         columns_labels=columns_labels,
+                        columns_constructors=columns_constructors,
                         name=label,
                         )
 
