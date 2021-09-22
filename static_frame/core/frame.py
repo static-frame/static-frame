@@ -5010,24 +5010,8 @@ class Frame(ContainerOperand):
                 ascending=ascending,
                 values_for_lex=values_for_lex,
                 )
-        # asc_is_element = isinstance(ascending, BOOL_TYPES)
-        # if not asc_is_element:
-        #     ascending = tuple(ascending)
-        #     if values_for_lex is None or len(ascending) != len(values_for_lex):
-        #         raise RuntimeError(f'Multiple ascending values must match number of arrays selected.')
 
         if values_for_lex is not None:
-            # if not asc_is_element:
-            #     # values for lex are in reversed order; thus take ascending reversed
-            #     values_for_lex_post = []
-            #     for asc, a in zip(reversed(ascending), values_for_lex):
-            #         # if not ascending, replace with an inverted dense rank
-            #         if not asc:
-            #             values_for_lex_post.append(
-            #                     rank_1d(a, method=RankMethod.DENSE, ascending=False))
-            #         else:
-            #             values_for_lex_post.append(a)
-            #     values_for_lex = values_for_lex_post
             order = np.lexsort(values_for_lex)
         elif values_for_sort is not None:
             order = np.argsort(values_for_sort, kind=kind)
