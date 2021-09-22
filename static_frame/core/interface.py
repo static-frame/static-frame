@@ -879,7 +879,6 @@ class InterfaceSummary(Features):
             *,
             max_args: int = MAX_ARGS
             ) -> tp.Iterator[InterfaceRecord]:
-
         for name_attr, obj, obj_cls in cls.name_obj_iter(target):
             doc = ''
 
