@@ -2893,7 +2893,8 @@ class TestUnit(TestCase):
         idx = IndexDate.from_year_month_range('2020-01', '2020-02')
 
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), idx)
-        ih2 = IndexHierarchy.from_product((1, 2), ('a', 'b'), Index(idx.values))
+        ih2 = IndexHierarchy.from_product((1, 2), ('a', 'b'),
+                Index(idx.values.astype(object)))
 
         self.assertFalse(ih1.equals(ih2, compare_class=True))
         self.assertTrue(ih1.equals(ih2, compare_class=False))

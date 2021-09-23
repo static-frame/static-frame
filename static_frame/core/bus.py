@@ -43,6 +43,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import IndexConstructor
 from static_frame.core.style_config import StyleConfig
 # from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
@@ -91,17 +92,26 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     _NDIM: int = 1
 
     @staticmethod
-    def _deferred_series(labels: tp.Iterable[tp.Hashable]) -> Series:
+    def _deferred_series(
+            labels: tp.Iterable[tp.Hashable],
+            *,
+            index_constructor: IndexConstructor = None,
+            ) -> Series:
         '''
         Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
         '''
         # NOTE: need to accept an  IndexConstructor to support reanimating Index subtypes, IH
-        return Series.from_element(FrameDeferred, index=labels, dtype=DTYPE_OBJECT)
+        return Series.from_element(FrameDeferred,
+                index=labels,
+                dtype=DTYPE_OBJECT,
+                index_constructor=index_constructor,
+                )
 
     @classmethod
     def from_frames(cls,
             frames: tp.Iterable[Frame],
             *,
+            index_constructor: IndexConstructor = None,
             config: StoreConfigMapInitializer = None,
             name: NameType = None,
             ) -> 'Bus':
@@ -112,6 +122,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                         ((f.name, f) for f in frames),
                         dtype=DTYPE_OBJECT,
                         name=name,
+                        index_constructor=index_constructor,
                         )
         except ErrorInitIndexNonUnique:
             raise ErrorInitIndexNonUnique("Frames do not have unique names.") from None
@@ -184,8 +195,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            index_constructor: IndexConstructor = None,
             ) -> 'Bus':
-        return cls(cls._deferred_series(store.labels(config=config)),
+        return cls(cls._deferred_series(
+                        store.labels(config=config),
+                        index_constructor=index_constructor,
+                        ),
                 store=store,
                 config=config,
                 max_persist=max_persist,
@@ -200,6 +215,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            index_constructor: IndexConstructor = None,
             ) -> 'Bus':
         '''
         Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -210,6 +226,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return cls._from_store(store,
                 config=config,
                 max_persist=max_persist,
+                index_constructor=index_constructor,
                 )
 
     @classmethod
@@ -219,6 +236,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            index_constructor: IndexConstructor = None,
             ) -> 'Bus':
         '''
         Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -229,6 +247,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return cls._from_store(store,
                 config=config,
                 max_persist=max_persist,
+                index_constructor=index_constructor,
                 )
 
     @classmethod
@@ -238,6 +257,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            index_constructor: IndexConstructor = None,
             ) -> 'Bus':
         '''
         Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -248,6 +268,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return cls._from_store(store,
                 config=config,
                 max_persist=max_persist,
+                index_constructor=index_constructor,
                 )
 
     @classmethod
@@ -257,6 +278,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            index_constructor: IndexConstructor = None,
             ) -> 'Bus':
         '''
         Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -267,6 +289,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return cls._from_store(store,
                 config=config,
                 max_persist=max_persist,
+                index_constructor=index_constructor,
                 )
 
     @classmethod
@@ -276,6 +299,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            index_constructor: IndexConstructor = None,
             ) -> 'Bus':
         '''
         Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -287,6 +311,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return cls._from_store(store,
                 config=config,
                 max_persist=max_persist,
+                index_constructor=index_constructor,
                 )
 
     @classmethod
@@ -296,6 +321,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            index_constructor: IndexConstructor = None,
             ) -> 'Bus':
         '''
         Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -306,6 +332,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return cls._from_store(store,
                 config=config,
                 max_persist=max_persist,
+                index_constructor=index_constructor,
                 )
 
     @classmethod
@@ -315,6 +342,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            index_constructor: IndexConstructor = None,
             ) -> 'Bus':
         '''
         Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -325,6 +353,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return cls._from_store(store,
                 config=config,
                 max_persist=max_persist,
+                index_constructor=index_constructor,
                 )
 
     #---------------------------------------------------------------------------

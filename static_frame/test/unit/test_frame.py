@@ -9619,6 +9619,7 @@ class TestUnit(TestCase):
                 connection=conn,
                 dtypes={'date': 'datetime64[D]'},
                 index_depth=2,
+                index_constructors=(IndexDate, Index),
                 )
 
         self.assertEqual([dt.kind for dt in f2.index.dtypes.values],
@@ -10657,7 +10658,7 @@ class TestUnit(TestCase):
         f1["b"] = np.array(range(3), "datetime64[D]")
         f1["c"] = np.array(range(3)) * 1e9
 
-        f2 = f1.pivot("b", "a", fill_value=0)
+        f2 = f1.pivot("b", "a", fill_value=0, index_constructor=IndexDate)
         self.assertEqual(f2.to_pairs(0),
                 ((10001, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 0.0), (np.datetime64('1970-01-03'), 0.0))), (10002, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 1000000000.0), (np.datetime64('1970-01-03'), 0.0))), (10003, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 0.0), (np.datetime64('1970-01-03'), 2000000000.0))))
                 )

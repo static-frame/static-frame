@@ -710,7 +710,7 @@ class TestUnit(TestCase):
 
         index = IndexDate.from_date_range('2020-03-05', '2020-03-10')
 
-        s1 = Series(range(6), index=index.values) # create an Index
+        s1 = Series(range(6), index=index.values, index_constructor=IndexDate) # create an Index
         s2 = s1.reindex(index) # same values, different class
         self.assertTrue(s2.index.__class__, index.__class__)
 
@@ -721,13 +721,13 @@ class TestUnit(TestCase):
                 datetime.date(2021,1,15),
                 datetime.date(2021,1,31)))
 
-        s2 = s1.reindex([np.datetime64(d) for d in s1.index[:2]], fill_value=None) #type: ignore
+        s2 = s1.reindex(IndexDate([np.datetime64(d) for d in s1.index[:2]]), fill_value=None) #type: ignore
         self.assertEqual(s2.to_pairs(),
                 ((np.datetime64('2020-12-31'), 3),
                 (np.datetime64('2021-01-15'), 0))
                 )
 
-        s3 = s1.reindex([np.datetime64(d) for d in s1.index], fill_value=None)
+        s3 = s1.reindex(IndexDate([np.datetime64(d) for d in s1.index]), fill_value=None)
 
         self.assertEqual(s3.to_pairs(),
                 ((np.datetime64('2020-12-31'), 3),
@@ -740,19 +740,19 @@ class TestUnit(TestCase):
         dt = datetime.date
         dt64 = np.datetime64
 
-        s1 = sf.Series((3, 0, 1), index=(
+        s1 = sf.Series((3, 0, 1), index=IndexDate((
                 dt(2020,12,31),
                 dt(2021,1,15),
                 dt(2021,1,31),
-                ))
+                )))
 
-        s2 = s1.reindex(list(reversed(s1.index))) #type: ignore
+        s2 = s1.reindex(IndexDate(reversed(s1.index))) #type: ignore
         self.assertEqual(s2.to_pairs(),
                 ((dt(2021, 1, 31), 1),
                 (dt(2021, 1, 15), 0),
                 (dt(2020, 12, 31), 3)))
 
-        s3 = s1.reindex([dt64(d) for d in reversed(s1.index)]) #type: ignore
+        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)])) #type: ignore
         self.assertEqual(s3.to_pairs(),
                 ((dt64('2021-01-31'), 1),
                 (dt64('2021-01-15'), 0),
@@ -770,13 +770,13 @@ class TestUnit(TestCase):
                 dt(2021,1,31),
                 )))
 
-        s2 = s1.reindex(list(reversed(s1.index))) #type: ignore
+        s2 = s1.reindex(IndexDate(reversed(s1.index))) #type: ignore
         self.assertEqual(s2.to_pairs(),
                 ((dt(2021, 1, 31), 1),
                 (dt(2021, 1, 15), 0),
                 (dt(2020, 12, 31), 3)))
 
-        s3 = s1.reindex([dt64(d) for d in reversed(s1.index)]) #type: ignore
+        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)])) #type: ignore
         self.assertEqual(s3.to_pairs(),
                 ((dt64('2021-01-31'), 1),
                 (dt64('2021-01-15'), 0),

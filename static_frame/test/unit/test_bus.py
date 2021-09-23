@@ -29,6 +29,8 @@ from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import StoreFileMutation
 from static_frame.core.exception import ErrorInitIndexNonUnique
 
+from static_frame.core.index_datetime import IndexDate
+
 
 class TestUnit(TestCase):
 
@@ -667,12 +669,16 @@ class TestUnit(TestCase):
                 label_encoder=str,
                 label_decoder=dt64,
                 )
-        b1 = Bus.from_frames((f1, f2), config=config)
+        b1 = Bus.from_frames((f1, f2),
+                config=config,
+                index_constructor=IndexDate)
 
         with temp_file('.xlsx') as fp:
             b1.to_xlsx(fp, config=config)
 
-            b2 = Bus.from_xlsx(fp, config=config)
+            b2 = Bus.from_xlsx(fp,
+                    config=config,
+                    index_constructor=IndexDate)
             tuple(b2.items()) # force loading all
 
         for frame in (f1, f2):
@@ -745,12 +751,14 @@ class TestUnit(TestCase):
                 label_encoder=str,
                 label_decoder=dt64,
                 )
-        b1 = Bus.from_frames((f1, f2), config=config)
+        b1 = Bus.from_frames((f1, f2),
+                config=config,
+                index_constructor=IndexDate)
 
         with temp_file('.db') as fp:
             b1.to_sqlite(fp, config=config)
 
-            b2 = Bus.from_sqlite(fp, config=config)
+            b2 = Bus.from_sqlite(fp, config=config, index_constructor=IndexDate)
             tuple(b2.items()) # force loading all
             self.assertEqual(b2.index.dtype.kind, 'M')
 
@@ -825,12 +833,12 @@ class TestUnit(TestCase):
                 label_encoder=str,
                 label_decoder=dt64,
                 )
-        b1 = Bus.from_frames((f1, f2), config=config)
+        b1 = Bus.from_frames((f1, f2), config=config, index_constructor=IndexDate)
 
         with temp_file('.h5') as fp:
             b1.to_hdf5(fp, config=config)
 
-            b2 = Bus.from_hdf5(fp, config=config)
+            b2 = Bus.from_hdf5(fp, config=config, index_constructor=IndexDate)
             tuple(b2.items()) # force loading all
             self.assertEqual(b2.index.dtype.kind, 'M')
 
@@ -1172,13 +1180,15 @@ class TestUnit(TestCase):
                 label_decoder=dt64
                 )
 
-        b1 = Bus.from_frames((f1, f2, f3), config=config)
+        b1 = Bus.from_frames((f1, f2, f3), config=config, index_constructor=IndexDate)
         self.assertEqual(b1.index.dtype.kind, 'M')
 
         with temp_file('.zip') as fp:
             b1.to_zip_parquet(fp, config=config)
 
-            b2 = Bus.from_zip_parquet(fp, config=config)
+            b2 = Bus.from_zip_parquet(fp,
+                    config=config,
+                    index_constructor=IndexDate)
             self.assertEqual(b2.index.dtype.kind, 'M')
 
             key = dt64('2020-01-01')

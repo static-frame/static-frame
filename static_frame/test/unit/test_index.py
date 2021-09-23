@@ -1384,7 +1384,7 @@ class TestUnit(TestCase):
     def test_index_equals_c(self) -> None:
 
         idx1 = IndexDate.from_year_range('2010', '2011')
-        idx2 = Index(idx1.values)
+        idx2 = Index(idx1.values.astype(object))
 
         self.assertFalse(idx1.equals(idx2, compare_class=True))
         self.assertTrue(idx1.equals(idx2, compare_class=False),)
@@ -1424,10 +1424,9 @@ class TestUnit(TestCase):
 
     def test_index_equals_g(self) -> None:
         dt64 = np.datetime64
-        dt = datetime.date
 
-        a = Index([dt64('2021-01-01'), dt64('1954-01-01')])
-        b = Index([dt64('2021'), dt64('1954')])
+        a = IndexDate([dt64('2021-01-01'), dt64('1954-01-01')])
+        b = IndexYear([dt64('2021'), dt64('1954')])
 
         self.assertFalse(arrays_equal(a, b, skipna=True))
 

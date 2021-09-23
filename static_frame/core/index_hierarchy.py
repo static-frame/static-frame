@@ -1603,7 +1603,7 @@ class IndexHierarchy(IndexBase):
     def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.
         '''
-        return self._INDEX_CONSTRUCTOR(self.__iter__())
+        return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name)
 
     def level_add(self: IH, level: tp.Hashable) -> IH:
         '''Return an IndexHierarchy with a new root (outer) level added.

@@ -5931,6 +5931,7 @@ class Frame(ContainerOperand):
             *,
             func: CallableOrCallableMap = None,
             fill_value: object = np.nan,
+            index_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
         Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if ``data_fields`` is not provided, all unused fields will be displayed.
@@ -5939,8 +5940,10 @@ class Frame(ContainerOperand):
             index_fields
             columns_fields
             data_fields
+            *,
             fill_value: If the index expansion produces coordinates that have no existing data value, fill that position with this value.
             func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
+            index_constructor:
         '''
         func = np.nansum if func is None else func
         if callable(func):
@@ -5972,13 +5975,31 @@ class Frame(ContainerOperand):
                 axis=0)
 
         # index_inner is used for avoiding dealing with IndexHierarchy
-        if index_depth == 1:
-            index = Index(index_values, name=index_fields[0])
-            index_inner = index
-        else:
-            index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
-            index_inner = index.flat() # insure we have the right order of tuples
+        # if index_depth == 1:
+        #     index = Index(index_values, name=index_fields[0])
+        #     index_inner = index
+        # else:
+        #     index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
+        #     index_inner = index.flat() # insure we have the right order of tuples
 
+        if index_depth == 1:
+            name = index_fields[0]
+            index_inner = index_from_optional_constructor(
+                    index_values,
+                    default_constructor=partial(Index, name=name),
+                    explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                    )
+        else: # > 1
+            name = tuple(index_fields)
+            index_inner = index_from_optional_constructor(
+                    index_values,
+                    default_constructor=partial(
+                            IndexHierarchy.from_labels,
+                            name=name,
+                            ),
+                    explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                    ).flat()
+        index = index_inner
         # For data fields, we add the field name, not the field values, to the columns.
         columns_name = tuple(columns_fields)
         if len(data_fields) > 1 or not columns_fields: # if no columns_fields, have to add values label
@@ -6107,6 +6128,7 @@ class Frame(ContainerOperand):
                                 sub._blocks._extract(row_key=None,
                                         column_key=data_fields_iloc),
                                 index=sub_index_labels,
+                                index_constructor=index_constructor,
                                 own_data=True)
                     else:
                         def blocks() -> tp.Iterator[np.ndarray]:
