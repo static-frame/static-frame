@@ -268,10 +268,8 @@ IndexInitializer = tp.Union[
         tp.Iterable[tp.Hashable],
         tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarhcy
         ]
-IndexConstructor = tp.Callable[..., 'IndexBase']
 
-# IndexConstructors = tp.Sequence[IndexConstructor]
-
+IndexConstructor = tp.Optional[tp.Callable[..., 'IndexBase']]
 IndexConstructors = tp.Union[IndexConstructor, tp.Sequence[IndexConstructor], None]
 
 # take integers for size; otherwise, extract size from any other index initializer
