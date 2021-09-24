@@ -10287,7 +10287,7 @@ class TestUnit(TestCase):
 
 
     def test_unset_index_column_hierarchy_w_dates(self) -> None:
-        f = ff.parse('s(3,3)|i(I,str)|c((I, ID, I),(str,dtY,tdD))').rename(
+        f = ff.parse('s(3,3)|i(I,str)|c((I, IY, I),(str,dtY,tdD))').rename(
                 index='index_name',
                 columns=('l1', 'l2'),
         )
