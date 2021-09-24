@@ -513,8 +513,10 @@ class Index(IndexBase):
                     self._labels.dtype, self._DTYPE)
 
         # NOTE: to implement GH # 374; do this after final self._labels creation as user may pass a dtype argument
-        # if not is_typed and self._labels.dtype.kind == DTYPE_DATETIME_KIND:
-        #     raise ErrorInitIndex('Cannot create an Index with a datetime64 array; use a datetime64 subclass (IndexDate) or supply an `index_constructors` argument')
+        if not is_typed and self._labels.dtype.kind == DTYPE_DATETIME_KIND:
+            from static_frame.core.exception import deprecated #pragma: no cover
+            deprecated('Creating an Index with a datetime64 array is deprecated and will be removed in v0.9; use an Index subclass (e.g. IndexDate) or supply an `index_constructors` argument') #pragma: no cover
+            # raise ErrorInitIndex('Cannot create an Index with a datetime64 array; use an Index subclass (e.g. IndexDate) or supply an `index_constructors` argument')
 
 
 

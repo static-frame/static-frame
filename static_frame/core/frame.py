@@ -5329,17 +5329,21 @@ class Frame(ContainerOperand):
     def unset_index(self, *,
             names: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
             # index_column_first: tp.Optional[tp.Union[int, str]] = 0,
-            consolidate_blocks: bool = False
+            consolidate_blocks: bool = False,
+            columns_constructors: IndexConstructors = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame where the index is added to the front of the data, and an :obj:`IndexAutoFactory` is used to populate a new index. If the :obj:`Index` has a ``name``, that name will be used for the column name, otherwise a suitable default will be used. As underlying NumPy arrays are immutable, data is not copied.
 
         Args:
             names: An iterable of hashables to be used to name the unset index. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
+            consolidate_blocks:
+            columns_constructors:
         '''
         from static_frame.core.index_level import IndexLevel
 
         def blocks() -> tp.Iterator[np.ndarray]:
+            # yield index as columns, then remaining blocks currently in Frame
             if self._index.ndim == 1:
                 yield self._index.values
             else:
@@ -5363,25 +5367,32 @@ class Frame(ContainerOperand):
             self._columns._update_array_cache()
 
         if self._columns.depth > 1:
-            column_blocks = self._columns._blocks._blocks
-            column_blocks_new = tuple(
+            columns_labels = TypeBlocks.from_blocks(
                     concat_resolved((np.array([name]), block[np.newaxis]), axis=1).T
-                    for name, block in zip(names_t, column_blocks)
+                    for name, block in zip(names_t, self._columns._blocks._blocks)
                     )
-            column_type_blocks = TypeBlocks.from_blocks(column_blocks_new)
-            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
-                    column_type_blocks,
-                    #index_constructors=index_constructors,
-                    own_blocks=True,
-                    )
+            columns_default_constructor = partial(
+                    self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
+                    own_blocks=True)
+
         else:
-            columns = chain(names, self._columns.values)
+            columns_labels = chain(names, self._columns.values)
+            columns_default_constructor = self._COLUMNS_CONSTRUCTOR
+
+        columns, own_columns = index_from_optional_constructors(
+                columns_labels,
+                depth=self._columns.depth,
+                default_constructor=columns_default_constructor,
+                explicit_constructors=columns_constructors, # cannot supply name
+                )
 
         return self.__class__(
                 TypeBlocks.from_blocks(block_gen()),
                 columns=columns,
+                own_columns=own_columns,
                 index=None,
                 own_data=True,
+                name=self._name,
                 )
 
     def __round__(self, decimals: int = 0) -> 'Frame':

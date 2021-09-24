@@ -10307,7 +10307,7 @@ class TestUnit(TestCase):
         # dtypes should be preserved when possible.
         dt = f.columns.values_at_depth(1)[1]
         td = f.columns.values_at_depth(2)[1]
-        unset2 = f.unset_index(names=[(f.index.name, dt, td)])
+        unset2 = f.unset_index(names=[(f.index.name, dt, td)], columns_constructors=(Index, IndexYear, Index))
 
         assert unset2.columns.values.tolist() == [
                 ['index_name', 105269, datetime.timedelta(days=146284)],
