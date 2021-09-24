@@ -1438,7 +1438,7 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=(np.power(50, 50, dtype=np.float64), np.power(100, 100, dtype=np.float64), np.float64(300*300)),
-                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                index=IndexDate((np.datetime64('1999-12-31'), np.datetime64('2000-01-01')))
                 )
         msg = f1.to_msgpack()
 
@@ -1455,7 +1455,7 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
-                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                index=IndexDate((np.datetime64('1999-12-31'), np.datetime64('2000-01-01')))
                 )
         msg = f1.to_msgpack()
 
@@ -1480,7 +1480,7 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
-                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                index=IndexDate((np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))),
                 )
         msg = f1.to_msgpack()
 
@@ -10287,7 +10287,7 @@ class TestUnit(TestCase):
 
 
     def test_unset_index_column_hierarchy_w_dates(self) -> None:
-        f = ff.parse('s(3,3)|i(I,str)|c(IH,(str,dtY,tdD))').rename(
+        f = ff.parse('s(3,3)|i(I,str)|c((I, ID, I),(str,dtY,tdD))').rename(
                 index='index_name',
                 columns=('l1', 'l2'),
         )

@@ -24,6 +24,8 @@ from arraykit import resolve_dtype_iter
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
+from static_frame.core.container import container_opperand_map
+
 from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import axis_window_items
@@ -2575,11 +2577,11 @@ class Frame(ContainerOperand):
                 ) -> object:
 
             # NOTE: maybe this can be replaced by dictionary of SF containers provided by container_util
-            globals_ref = globals()
+            cls_map = container_opperand_map()
 
             if b'sf' in obj:
                 clsname = obj[b'sf']
-                cls = globals_ref[clsname]
+                cls = cls_map[clsname]
 
                 if issubclass(cls, Frame):
                     blocks = unpackb(obj[b'blocks'])
@@ -2592,7 +2594,7 @@ class Frame(ContainerOperand):
                             )
                 elif issubclass(cls, IndexHierarchy):
                     index_constructors=[
-                            globals_ref[clsname] for clsname in unpackb(
+                            cls_map[clsname] for clsname in unpackb(
                                    obj[b'index_constructors'])]
                     blocks = unpackb(obj[b'blocks'])
                     return cls._from_type_blocks(
@@ -5990,6 +5992,7 @@ class Frame(ContainerOperand):
                     explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
                     )
         else: # > 1
+            # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
             name = tuple(index_fields)
             index_inner = index_from_optional_constructor(
                     index_values,
@@ -6019,6 +6022,7 @@ class Frame(ContainerOperand):
         if not columns_fields: # group by is index_fields
             group_fields = index_fields if index_depth > 1 else index_fields[0]
             columns = data_fields if func_single else tuple(product(data_fields, func_fields))
+            # NOTE: examine if need to use passed index_constructor here
             index_constructor = None if index_depth > 1 else partial(Index, name=index_fields[0])
 
             if len(columns) == 1:
