@@ -8872,6 +8872,34 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_frame_to_frame_he_a(self) -> None:
+
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+        f2 = f1.to_frame_he()
+        post = {f2, f2}
+        self.assertEqual(len(post), 1)
+
+        post.add(f2.to_frame_he())
+        self.assertEqual(len(post), 1)
+
+        f3 = f2.to_frame()
+        self.assertIs(f3.__class__, Frame)
+
+        f4 = f2.to_frame_go()
+        f4['s'] = None
+
+        self.assertEqual(f4.to_pairs(),
+                (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('s', (('w', None), ('x', None))))
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_astype_a(self) -> None:
         records = (
@@ -12592,6 +12620,10 @@ class TestUnit(TestCase):
         f5 = f1.rank_ordinal(axis=1, fill_value=-1)
         self.assertEqual(f5.values.dtype.kind, 'i')
 
+    def test_frame_rank_c(self) -> None:
+        f1 = Frame.from_fields([[np.nan, 0, 1], [0, None, 1]], index=('a','b','c'), columns=('x','y'))
+        with self.assertRaises(AxisInvalid):
+            f1.rank_ordinal(axis=3)
 
     def test_frame_rank_ordinal(self) -> None:
         f1 = sf.Frame.from_records(

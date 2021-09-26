@@ -5760,7 +5760,7 @@ class Frame(ContainerOperand):
                 elif not unique and valid is not None:
                     array[i] = valid.sum()
                 else: # not unique, valid is None, means no removals, handled above
-                    raise NotImplementedError()
+                    raise NotImplementedError() #pragma: no cover
 
         array.flags.writeable = False
         return Series(array, index=labels)
@@ -7801,7 +7801,7 @@ class FrameAssign(Assign):
             *.
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def apply(self,
             func: AnyCallable,
@@ -7816,7 +7816,7 @@ class FrameAssign(Assign):
             *.
             fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
         '''
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
 
 
