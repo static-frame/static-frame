@@ -12620,7 +12620,7 @@ class TestUnit(TestCase):
         f5 = f1.rank_ordinal(axis=1, fill_value=-1)
         self.assertEqual(f5.values.dtype.kind, 'i')
 
-    def test_frame_rank_c(self) -> None:
+    def test_frame_rank_d(self) -> None:
         f1 = Frame.from_fields([[np.nan, 0, 1], [0, None, 1]], index=('a','b','c'), columns=('x','y'))
         with self.assertRaises(AxisInvalid):
             f1.rank_ordinal(axis=3)
