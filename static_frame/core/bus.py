@@ -187,6 +187,25 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         series = Series.from_concat(containers, index=index, name=name)
         return cls(series, own_data=True)
 
+    @classmethod
+    def from_series(cls,
+            series: Series,
+            *,
+            store: tp.Optional[Store] = None,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
+            own_data: bool = False,
+            ):
+        '''
+        '''
+        # NOTE: this interface is for 0.9 after the default Bus no longer accepts a Series
+        return cls(series,
+                store=store,
+                config=config,
+                max_persist=max_persist,
+                own_data=own_data,
+                )
+
     #---------------------------------------------------------------------------
     # constructors by data format
     @classmethod

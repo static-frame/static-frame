@@ -795,6 +795,42 @@ class TestUnit(TestCase):
         self.assertEqual(f.shape, df.shape)
         self.assertEqual(f.values.tolist(), df.values.tolist())
 
+
+    def test_frame_from_pandas_s(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(dict(a=(1,2), b=('3','4'), c=(True,False), d=('a','b')))
+        f1 = Frame.from_pandas(df, dtypes={'c':int})
+        self.assertEqual([d.kind for d in f1.dtypes.values],
+                ['i', 'O', 'i', 'O']
+                )
+
+        f2 = Frame.from_pandas(df, dtypes=[bool, np.dtype('U1'), int, np.dtype('U1')])
+        self.assertEqual([d.kind for d in f2.dtypes.values],
+                ['b', 'U', 'i', 'U']
+                )
+
+    def test_frame_from_pandas_t(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(np.arange(20).reshape(2, 10) % 2)
+
+        f1 = Frame.from_pandas(df, dtypes={3:bool})
+        self.assertEqual([d.kind for d in f1.dtypes.values],
+                ['i', 'i', 'i', 'b', 'i', 'i', 'i', 'i', 'i', 'i'],
+                )
+
+        f2 = Frame.from_pandas(df, dtypes=bool)
+        self.assertEqual([d.kind for d in f2.dtypes.values],
+                ['b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b'],
+                )
+
+        f3 = Frame.from_pandas(df, dtypes={3:bool, 5:float})
+        self.assertEqual([d.kind for d in f3.dtypes.values],
+                ['i', 'i', 'i', 'b', 'i', 'f', 'i', 'i', 'i', 'i'],
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_pandas_a(self) -> None:

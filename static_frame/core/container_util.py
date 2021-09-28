@@ -64,7 +64,7 @@ def get_col_dtype_factory(
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
         ) -> tp.Callable[[int], np.dtype]:
     '''
-    Return a function, or None, to get values from a DtypeSpecifier.
+    Return a function, or None, to get values from a DtypeSpecifier by integer column positions.
 
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
@@ -92,6 +92,7 @@ def get_col_dtype_factory(
         if is_element:
             return dtypes
         if is_map:
+            # mappings can be incomplete
             return dtypes.get(columns[col_idx], None) #type: ignore
         # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here; INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
         if not hasattr(dtypes, '__len__') or not hasattr(dtypes, '__getitem__'):

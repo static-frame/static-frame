@@ -2234,6 +2234,7 @@ class Frame(ContainerOperand):
             *,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
+            dtypes: DtypesSpecifier = None,
             name: NameType = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             own_data: bool = False
@@ -2244,13 +2245,14 @@ class Frame(ContainerOperand):
             value: Pandas DataFrame.
             {index_constructor}
             {columns_constructor}
+            dtypes:
             {consolidate_blocks}
             {own_data}
 
         Returns:
             :obj:`Frame`
         '''
-        # NOTE: this might be refactored to support `index_constructors` and `columns_constructors` arguments such that intra index types can be specified for IndexHierarchy.
+        # NOTE: for specifyin intra index types within IndexHierarchy, a partialed constructor must be used
 
         import pandas
         if not isinstance(value, pandas.DataFrame):
@@ -2258,14 +2260,33 @@ class Frame(ContainerOperand):
 
         pdvu1 = pandas_version_under_1()
 
-        def part_to_array(part: 'pandas.DataFrame') -> np.ndarray:
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(
+                dtypes,
+                value.columns.values, # should be an array
+                )
+
+        def part_to_array(
+                part: 'pandas.DataFrame',
+                column_ilocs: tp.List[int],
+                ) -> tp.Iterator[np.ndarray]:
             if pdvu1:
                 array = part.values
                 if own_data:
                     array.flags.writeable = False
             else:
                 array = pandas_to_numpy(part, own_data=own_data)
-            return array
+
+            if get_col_dtype:
+                assert len(column_ilocs) == array.shape[1]
+                for col, iloc in enumerate(column_ilocs):
+                    # use iloc to get dtype
+                    dtype = get_col_dtype(iloc)
+                    if dtype is None or dtype == array.dtype:
+                        yield array[NULL_SLICE, col]
+                    else:
+                        yield array[NULL_SLICE, col].astype(dtype)
+            else:
+                yield array
 
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
@@ -2273,9 +2294,11 @@ class Frame(ContainerOperand):
             pairs = enumerate(value.dtypes.values)
             column_start, dtype_current = next(pairs)
             column_last = column_start
+            column_ilocs = [column_start]
+
             yield_block = False
 
-            for column, dtype in pairs:
+            for column, dtype in pairs: # iloc column values
                 try:
                     if dtype != dtype_current:
                         yield_block = True
@@ -2286,17 +2309,19 @@ class Frame(ContainerOperand):
                 if yield_block:
                     part = value.iloc[NULL_SLICE,
                             slice(column_start, column_last + 1)]
-                    yield part_to_array(part)
+                    yield from part_to_array(part, column_ilocs)
 
                     column_start = column
                     dtype_current = dtype
                     yield_block = False
+                    column_ilocs.clear()
 
+                column_ilocs.append(column)
                 column_last = column
 
             # always have left over
             part = value.iloc[NULL_SLICE, slice(column_start, None)]
-            yield part_to_array(part)
+            yield from part_to_array(part, column_ilocs)
 
         if consolidate_blocks:
             blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
@@ -2362,6 +2387,9 @@ class Frame(ContainerOperand):
             {dtypes}
             {name}
             {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
         '''
 
         # this is similar to from_structured_array

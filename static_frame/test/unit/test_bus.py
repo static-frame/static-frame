@@ -142,6 +142,15 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndexNonUnique):
             _ = Bus.from_frames((f1, f2))
 
+    #---------------------------------------------------------------------------
+    def test_bus_from_series_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        s1 = Series((f1, f2), index=('a', 'b'))
+        b1 = Bus.from_series(s1, own_data=True)
+        self.assertEqual(b1.status['shape'].to_pairs(),
+                (('a', (4, 2)), ('b', (4, 5))),
+                )
 
     #---------------------------------------------------------------------------
     def test_bus_rename_a(self) -> None:
