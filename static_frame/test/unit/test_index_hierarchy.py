@@ -23,7 +23,6 @@ from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexLevel
 from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.index_level import TreeNodeT
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
