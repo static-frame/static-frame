@@ -19,8 +19,8 @@ from static_frame.core.exception import ErrorInitIndexLevel
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase
 
-
 from static_frame.core.util import EMPTY_ARRAY
+
 
 class TestUnit(TestCase):
 
@@ -55,11 +55,9 @@ class TestUnit(TestCase):
 
         self.assertEqual(level2.depth, next(level2.depths()))
 
-
     def test_index_level_b(self) -> None:
         with self.assertRaises(ErrorInitIndexLevel):
             _ = IndexLevel(('A', 'B')) #type: ignore
-
 
     def test_index_level_dtypes_all_a(self) -> None:
         level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
@@ -67,7 +65,6 @@ class TestUnit(TestCase):
         self.assertEqual(post[0], np.dtype('<U1'))
         self.assertEqual(len(post), 1)
         self.assertEqual(level0.depth, next(level0.depths()))
-
 
     #---------------------------------------------------------------------------
 
@@ -80,7 +77,6 @@ class TestUnit(TestCase):
         level0 = IndexLevelGO(index=groups, targets=targets)
         self.assertEqual([d.kind for d in level0.dtype_per_depth()], ['U', 'U'])
 
-
     def test_index_level_dtypes_b(self) -> None:
         idx1 = Index(('A', 'B'))
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
@@ -91,7 +87,6 @@ class TestUnit(TestCase):
         self.assertEqual([dt.kind for dt in hidx._levels.dtype_per_depth()],
                 ['U', 'M', 'i'],
                 )
-
 
     def test_index_level_dtypes_c(self) -> None:
         level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
@@ -116,7 +111,6 @@ class TestUnit(TestCase):
                 (np.dtype('<U1'), np.dtype('<U1'), np.dtype('<U3'))
                 )
 
-
     def test_index_level_values_at_depth_a(self) -> None:
         hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 1, 'bar')))
         lvl = hidx._levels
@@ -128,7 +122,6 @@ class TestUnit(TestCase):
         hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 2, None)))
         lvl = hidx._levels
         self.assertEqual(lvl.values_at_depth(2).tolist(), ['x', 'y', 'foo', None])
-
 
     #---------------------------------------------------------------------------
 
@@ -143,21 +136,17 @@ class TestUnit(TestCase):
                 ['Index', 'IndexDate', 'Index'])
         self.assertEqual(lvl.depth, next(lvl.depths()))
 
-
     def test_index_level_index_types_b(self) -> None:
         level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
         post = tuple(level0.index_types())
         self.assertEqual(post[0], Index)
         self.assertEqual(len(post), 1)
 
-
     #---------------------------------------------------------------------------
     def test_index_level_contains_a(self) -> None:
         level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
         self.assertFalse(('c',) in level0)
         self.assertTrue(('a',) in level0)
-
-
 
     #---------------------------------------------------------------------------
 
@@ -166,9 +155,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             level0.extend(level0)
 
-
     #---------------------------------------------------------------------------
-
 
     def test_index_level_get_labels_a(self) -> None:
         groups = IndexGO(('A', 'B'))
@@ -219,13 +206,11 @@ class TestUnit(TestCase):
         self.assertEqual(lvl0.leaf_loc_to_iloc(('B', '2018-01-04', 'y'),), 15)
         self.assertEqual(lvl0.leaf_loc_to_iloc(('A', '2018-01-01', 'y')), 1)
 
-
     def test_index_level_leaf_loc_to_iloc_b(self) -> None:
 
         level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
         self.assertEqual(level0.leaf_loc_to_iloc(('b',)), 1)
         self.assertEqual(level0.leaf_loc_to_iloc(ILoc[1]), 1)
-
 
     def test_index_level_leaf_loc_to_iloc_c(self) -> None:
 
@@ -281,12 +266,10 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             level0.loc_to_iloc('a')
 
-
     def test_index_level_loc_to_iloc_b(self) -> None:
         level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
         with self.assertRaises(KeyError):
             level0.loc_to_iloc(HLoc['c',])
-
 
     #---------------------------------------------------------------------------
 
@@ -304,7 +287,6 @@ class TestUnit(TestCase):
         lvl1a = IndexLevelGO(index=groups,
                 targets=lvl2_targets,
                 offset=0)
-
 
         # must create new index levels for each lower node
         lvl2c = IndexLevelGO(index=observations)
@@ -363,7 +345,6 @@ class TestUnit(TestCase):
         self.assertEqual(lvl1a.values.tolist(),
                 [['A', 'x'], ['A', 'y'], ['B', 'x'], ['B', 'y'], [1, 2]])
 
-
     def test_index_level_append_c(self) -> None:
 
         levels1 = IndexLevelGO(IndexGO(()), depth_reference=3)
@@ -381,7 +362,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(levels1.values.tolist(),
                 [['III', 'A', 1], ['III', 'A', 2]])
-
 
     #---------------------------------------------------------------------------
 
@@ -409,7 +389,6 @@ class TestUnit(TestCase):
         post = list(levels.index_at_depth(2))
         self.assertEqual(post, [1, 2, 1, 2, 3, 2, 3, 1, 2, 3, 1])
 
-
     def test_index_level_iter_b(self) -> None:
         OD = OrderedDict
         tree = OD([
@@ -429,7 +408,6 @@ class TestUnit(TestCase):
                 tuples,
                 (('I', 'A', 1), ('I', 'A', 2), ('I', 'B', 1), ('I', 'B', 2), ('I', 'B', 3), ('I', 'C', 2), ('I', 'C', 3), ('II', 'A', 1), ('II', 'A', 2), ('II', 'A', 3), ('II', 'B', 1))
                 )
-
 
     def test_index_level_label_widths_at_depth_a(self) -> None:
         OD = OrderedDict
@@ -464,7 +442,6 @@ class TestUnit(TestCase):
             (((1, 1), (2, 1), (1, 1), (2, 1), (3, 1), (2, 1), (3, 1), (1, 1), (1, 1), (1, 1), (2, 1), (3, 1), (1, 1)))
         )
 
-
     def test_index_level_label_widths_at_depth_b(self) -> None:
         f = Frame.from_dict(
             dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
@@ -474,7 +451,6 @@ class TestUnit(TestCase):
         self.assertEqual(post1, ((1, 1), (2, 1), (3, 1), (4, 1)))
         post2 = tuple(f.index._levels.label_widths_at_depth(1))
         self.assertEqual(post2, ((True, 1), (False, 1), (True, 1), (False, 1)))
-
 
     def test_index_level_label_widths_at_depth_c(self) -> None:
         labels = (
@@ -517,7 +493,6 @@ class TestUnit(TestCase):
                 ((1, 1), (2, 1), (3, 1), (3, 1), (4, 1))
         )
 
-
     def test_index_levels_with_tuple_a(self) -> None:
         OD = OrderedDict
         tree = OD([
@@ -534,8 +509,6 @@ class TestUnit(TestCase):
         levels = IndexLevel.from_tree(tree)
         self.assertEqual(levels.depth, 3)
         self.assertEqual(levels.loc_to_iloc((('II', 'II'), 'B', 1)), 8)
-
-
 
     #---------------------------------------------------------------------------
     def test_index_levels_equals_a(self) -> None:
@@ -578,8 +551,6 @@ class TestUnit(TestCase):
                 ])
 
         levels3 = IndexLevel.from_tree(tree3)
-
-
 
         self.assertTrue(levels1.equals(levels1))
         self.assertTrue(levels1.equals(levels2))
@@ -713,7 +684,6 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(levels.labels_at_depth(2)),
                 (1, 2, 1, 2, 3, 2, 3, 1, 1, 1, 2, 3, 1))
 
-
     #---------------------------------------------------------------------------
 
     def test_index_level_deepcopy_a(self) -> None:
@@ -735,6 +705,28 @@ class TestUnit(TestCase):
         self.assertEqual(
                 id(post.targets[0].index._labels), #type: ignore
                 id(post.targets[1].index._labels)) #type: ignore
+
+    #---------------------------------------------------------------------------
+
+    def test_traverse(self) -> None:
+        tree = {
+            "I": {"A": (1, 2), "B": (1, 2, 3), "C": (2, 3)},
+            "II": {"D": (1, 2, 3), "E": (1,)},
+        }
+        lvl = IndexLevel.from_tree(tree)
+
+        tree = lvl.traverse() # type: ignore
+
+        self.assertEqual(tuple(tree), ("I", "II"))
+        self.assertEqual(tuple(tree["I"]), ("A", "B", "C"))
+        self.assertEqual(tuple(tree["II"]), ("D", "E"))
+
+        self.assertTrue(tree["I"]["A"].equals(lvl.targets[0].targets[0].index)) # type: ignore
+        self.assertTrue(tree["I"]["B"].equals(lvl.targets[0].targets[1].index)) # type: ignore
+        self.assertTrue(tree["I"]["C"].equals(lvl.targets[0].targets[2].index)) # type: ignore
+
+        self.assertTrue(tree["II"]["D"].equals(lvl.targets[1].targets[0].index)) # type: ignore
+        self.assertTrue(tree["II"]["E"].equals(lvl.targets[1].targets[1].index)) # type: ignore
 
 
 if __name__ == '__main__':

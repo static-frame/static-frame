@@ -6,7 +6,6 @@ from copy import deepcopy
 import numpy as np
 from arraykit import name_filter
 
-
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
@@ -86,8 +85,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series #pylint: disable=W0611,C0412 #pragma: no cover
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
-
-TreeNodeGrowableT = tp.Dict[tp.Any, tp.Union[tp.List[tp.Any], "TreeNodeGrowableT"]]
 
 
 #-------------------------------------------------------------------------------
@@ -1572,33 +1569,7 @@ class IndexHierarchy(IndexBase):
     def to_tree(self) -> TreeNodeT:
         '''Returns the tree representation of an IndexHierarchy
         '''
-        def add_labels(tree: TreeNodeGrowableT, labels: tp.Sequence[tp.Any]) -> None:
-            # For a set of labels, add them into a tree
-            outermost_label, *inner_labels = labels
-            if len(inner_labels) == 1:
-                if outermost_label not in tree:
-                    tree[outermost_label] = []
-                tree[outermost_label].append(inner_labels[0])
-                return
-
-            if outermost_label not in tree:
-                tree[outermost_label] = {}
-            add_labels(tree[outermost_label], inner_labels)
-
-        tree: TreeNodeGrowableT = {}
-        for labels in self.iter_label():
-            add_labels(tree, labels)
-
-        def clean(tree: TreeNodeGrowableT) -> None:
-            # Make the leafs immutable!
-            for k in tuple(tree.keys()):
-                if isinstance(tree[k], list):
-                    tree[k] = tuple(tree[k])
-                else:
-                    clean(tree[k])
-
-        clean(tree)
-        return tree
+        return self._levels.traverse() # type: ignore
 
     def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.
