@@ -1,12 +1,14 @@
 import unittest
 import typing as tp
-# from io import StringIO
+
+import frame_fixtures as ff
 
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.frame import FrameHE
 # from static_frame.core.bus import Bus
 # from static_frame.core.series import Series
+from static_frame.core.index_datetime import IndexDate
 
 from static_frame.core.store import StoreConfig
 # from static_frame.core.store import StoreConfigMap
@@ -251,6 +253,7 @@ class TestUnit(TestCase):
             self.assertTrue(post[1].__class__ is Frame)
             self.assertTrue(post[2].__class__ is Frame)
 
+
     #---------------------------------------------------------------------------
 
     def test_store_zip_parquet_a(self) -> None:
@@ -311,6 +314,31 @@ class TestUnit(TestCase):
                 self.assertEqual(post[0].name, 'baz')
                 self.assertEqual(post[1].name, 'bar')
                 self.assertEqual(post[2].name, 'foo')
+
+    def test_store_zip_parquet_c(self) -> None:
+
+        f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a')
+        f2 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('b')
+
+        config = StoreConfig(
+                index_depth=1,
+                include_index=True,
+                index_constructors=IndexDate,
+                columns_depth=1,
+                include_columns=True,
+        )
+
+        with temp_file('.zip') as fp:
+            st = StoreZipParquet(fp)
+            st.write(((f.name, f) for f in (f1, f2)), config=config)
+
+            post = tuple(st.read_many(('a', 'b'),
+                    container_type=Frame,
+                    config=config,
+                    ))
+
+            self.assertIs(post[0].index.__class__, IndexDate)
+            self.assertIs(post[1].index.__class__, IndexDate)
 
 
 class TestUnitMultiProcess(TestCase):

@@ -1194,6 +1194,25 @@ class TestUnit(TestCase):
             key = dt64('2020-01-01')
             self.assertEqualFrames(b1[key], b2[key], compare_dtype=False)
 
+    def test_bus_to_parquet_c(self) -> None:
+        f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a')
+        f2 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('b')
+
+        config = StoreConfig(
+                index_depth=1,
+                include_index=True,
+                index_constructors=IndexDate,
+                columns_depth=1,
+                include_columns=True,
+        )
+        b1 = Bus.from_frames((f1, f2))
+        with temp_file('.zip') as fp:
+            b1.to_zip_parquet(fp, config=config)
+            b2 = Bus.from_zip_parquet(fp, config=config)
+            self.assertIs(b2['a'].index.__class__, IndexDate)
+            self.assertIs(b2['b'].index.__class__, IndexDate)
+
+
     #---------------------------------------------------------------------------
     def test_bus_max_persist_a(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
