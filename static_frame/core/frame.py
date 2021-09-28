@@ -2270,8 +2270,6 @@ class Frame(ContainerOperand):
             pairs = enumerate(value.dtypes.values)
             column_start, dtype_current = next(pairs)
             column_last = column_start
-            column_ilocs = [column_start]
-
             yield_block = False
 
             for column, dtype in pairs: # iloc column values
@@ -2283,10 +2281,11 @@ class Frame(ContainerOperand):
                     yield_block = True
 
                 if yield_block:
+                    column_end = column_last + 1
                     part = value.iloc[NULL_SLICE,
-                            slice(column_start, column_last + 1)]
+                            slice(column_start, column_end)]
                     yield from df_slice_to_arrays(part=part,
-                            column_ilocs=column_ilocs,
+                            column_ilocs=range(column_start, column_end),
                             get_col_dtype=get_col_dtype,
                             pdvu1=pdvu1,
                             own_data=own_data,
@@ -2294,15 +2293,14 @@ class Frame(ContainerOperand):
                     column_start = column
                     dtype_current = dtype
                     yield_block = False
-                    column_ilocs.clear()
 
-                column_ilocs.append(column)
                 column_last = column
 
             # always have left over
-            part = value.iloc[NULL_SLICE, slice(column_start, None)]
+            column_end = column_last + 1
+            part = value.iloc[NULL_SLICE, slice(column_start, column_end)]
             yield from df_slice_to_arrays(part=part,
-                    column_ilocs=column_ilocs,
+                    column_ilocs=range(column_start, column_end),
                     get_col_dtype=get_col_dtype,
                     pdvu1=pdvu1,
                     own_data=own_data,
