@@ -104,7 +104,7 @@ For extended input and output, the following packages are required:
 
 - pandas >= 0.23.4
 - xlsxwriter >= 1.1.2
-- openpyxl >= 3.0.0
+- openpyxl >= 3.0.9
 - xarray >= 0.13.0
 - tables >= 3.6.1
 - pyarrow >= 0.16.0

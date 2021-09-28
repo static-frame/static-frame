@@ -21,7 +21,7 @@ sphinx_rtd_theme>=0.5.1
 sphinxcontrib-napoleon==0.7.0
 pandas==1.2.4
 xlsxwriter==1.1.2
-openpyxl==3.0.0
+openpyxl==3.0.9
 xarray==0.13.0
 tables==3.6.1
 pyarrow==3.0.0
