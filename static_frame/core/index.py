@@ -483,15 +483,12 @@ class Index(IndexBase):
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
-
         if self._map is None: # if _map not shared from another Index
             # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
-            if (not is_typed and labels.__class__ is np.ndarray
-                    and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS): #type: ignore [attr-defined]
+            if not is_typed and labels.__class__ is np.ndarray and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore [attr-defined]
                 labels_for_automap = labels.tolist() #type: ignore [attr-defined]
             else:
                 labels_for_automap = labels
-
             if not loc_is_iloc:
                 try:
                     self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)
@@ -514,6 +511,14 @@ class Index(IndexBase):
         if self._DTYPE and self._labels.dtype != self._DTYPE:
             raise ErrorInitIndex('invalid label dtype for this Index', #pragma: no cover
                     self._labels.dtype, self._DTYPE)
+
+        # NOTE: to implement GH # 374; do this after final self._labels creation as user may pass a dtype argument
+        if not is_typed and self._labels.dtype.kind == DTYPE_DATETIME_KIND:
+            from static_frame.core.exception import deprecated #pragma: no cover
+            deprecated('Creating an Index with a datetime64 array is deprecated and will be removed in v0.9; use an Index subclass (e.g. IndexDate) or supply an `index_constructors` argument') #pragma: no cover
+            # raise ErrorInitIndex('Cannot create an Index with a datetime64 array; use an Index subclass (e.g. IndexDate) or supply an `index_constructors` argument')
+
+
 
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
@@ -757,7 +762,7 @@ class Index(IndexBase):
     @doc_inject(select='astype')
     def astype(self, dtype: DtypeSpecifier) -> 'Index':
         '''
-        Return an Index with type determined by `dtype` argument. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
+        Return an Index with type determined by `dtype` argument. If a `datetime64` dtype is provided, the appropriate ``Index`` subclass will be returned. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
 
         Args:
             {dtype}
@@ -923,6 +928,17 @@ class Index(IndexBase):
         '''{}'''
         self._depth_level_validate(depth_level)
         yield from zip_longest(self.values, EMPTY_TUPLE, fillvalue=1)
+
+    @property
+    def index_types(self) -> 'Series':
+        '''
+        Return a Series of Index classes for each index depth.
+
+        Returns:
+            :obj:`Series`
+        '''
+        from static_frame.core.series import Series
+        return Series((self.__class__,), index=(self._name,), dtype=DTYPE_OBJECT)
 
 
     #---------------------------------------------------------------------------

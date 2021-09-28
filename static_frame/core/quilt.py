@@ -464,7 +464,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''
-        return self._bus._series._name
+        return self._bus.name #type: ignore
 
     def rename(self, name: NameType) -> 'Quilt':
         '''
@@ -998,6 +998,37 @@ class Quilt(ContainerBase, StoreClientMixin):
         if component_is_series:
             return Series.from_concat(parts)
         return Frame.from_concat(parts, axis=self._axis) #type: ignore
+
+    #---------------------------------------------------------------------------
+    @doc_inject(selector='sample')
+    def sample(self,
+            index: tp.Optional[int] = None,
+            columns: tp.Optional[int] = None,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> Frame:
+        '''
+        {doc}
+
+        Args:
+            {index}
+            {columns}
+            {seed}
+        '''
+        if self._assign_axis:
+            self._update_axis_labels()
+
+        if index is not None:
+            _, index_key = self._index._sample_and_key(count=index, seed=seed)
+        else:
+            index_key = None
+
+        if columns is not None:
+            _, columns_key = self._columns._sample_and_key(count=columns, seed=seed)
+        else:
+            columns_key = None
+
+        return self._extract(row_key=index_key, column_key=columns_key) #type: ignore
 
     #---------------------------------------------------------------------------
 

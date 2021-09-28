@@ -1,6 +1,20 @@
 What is New in Static Frame
 ===============================
 
+0.8.20
+----------
+
+Added ``index_constructors``, ``columns_constructors`` to the following interfaces: ``Frame.from_sql()``, ``Frame.from_structured_array()``, ``Frame.from_delimited()``, ``Frame.from_csv()``, ``Frame.from_clipboard``, ``Frame.from_tsv()``, ``Frame.from_xlsx()``, ``Frame.from_sqlite()``, ``Frame.from_hdf5()``, ``Frame.from_arrrow()``, ``Frame.from_parquet()``.
+
+Incorrectly formed ``Batch`` iterables will now, upon iteration, raise a ``BatchIterableInvalid`` exception.
+
+Added ``Quilt.sample()``.
+
+``all()`` and ``any()`` on ``Series`` and ``Frame`` no longer raise when NA values are present and ``skipna`` is ``False``.
+
+Performance enhancements to ``Bus`` loading routines when using ``max_persist`` by refactoring internal architecture of ``Bus`` to no longer hold a reference to a ``Series`` but instead use a mutable array.
+
+
 0.8.19
 ----------
 

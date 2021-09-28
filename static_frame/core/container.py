@@ -1,6 +1,6 @@
 import typing as tp
 from functools import partial
-
+from collections import deque
 import numpy as np
 
 from static_frame.core.display import Display
@@ -524,3 +524,15 @@ class ContainerOperand(ContainerBase):
         return repr(self.display(config))
 
 
+#-------------------------------------------------------------------------------
+def container_opperand_map() -> tp.Dict[str, tp.Type[ContainerOperand]]:
+
+    def collector() -> tp.Iterator[tp.Type[ContainerOperand]]:
+        targets = deque((ContainerOperand,))
+        while targets:
+            target = targets.popleft()
+            for part in target.__subclasses__():
+                targets.append(part)
+                yield part
+
+    return {cls.__name__: cls for cls in collector()}

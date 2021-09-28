@@ -4,6 +4,7 @@ import argparse
 import typing as tp
 import fnmatch
 import timeit
+from time import sleep
 import cProfile
 import pstats
 import sys
@@ -22,6 +23,7 @@ import static_frame as sf
 
 from static_frame.core.display_color import HexColor
 from static_frame.core.util import AnyCallable, isin
+from static_frame.test.test_case import temp_file
 
 
 class PerfStatus(Enum):
@@ -65,6 +67,9 @@ class Perf(PerfKey):
 
 class Native(PerfKey): pass
 class Reference(PerfKey): pass
+class ReferenceMissing(Reference):
+    '''For classes that do not / cannot run a reference component.
+    '''
 
 
 
@@ -798,7 +803,46 @@ class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
         self.pdf_str_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f))
 
 
+#-------------------------------------------------------------------------------
 
+#-------------------------------------------------------------------------------
+class BusItemsZipPickle(Perf):
+    NUMBER = 2
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        def items() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
+            f = ff.parse(f's(2,2)|v(int)|i(I,str)|c(I,str)')
+            for i in range(10_000):
+                yield str(i), f
+
+        frames = sf.Series.from_items(items(), dtype=object)
+        _, self.fp = tempfile.mkstemp(suffix='.zip')
+        b1 = sf.Bus(frames)
+        b1.to_zip_pickle(self.fp)
+
+        # self.meta = {
+        #     'int_index_str_double': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=TypeBlocks._all_block_slices
+        #         ),
+        #     }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp)
+
+class BusItemsZipPickle_N(BusItemsZipPickle, Native):
+
+    def int_index_str(self) -> None:
+        bus = sf.Bus.from_zip_pickle(self.fp, max_persist=100)
+        for label, frame in bus.items():
+           assert frame.shape[0] == 2
+
+class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
+
+    def int_index_str(self) -> None:
+        pass
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -969,7 +1013,6 @@ def line(
         cls_runner: tp.Type[Perf],
         pattern_func: str,
         ) -> None:
-    from static_frame import Series
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
@@ -1009,14 +1052,17 @@ def performance(
         row['iterations'] = cls_perf.NUMBER
 
         for label, runner in ((Native, runner_n), (Reference, runner_r)):
-            row[label.__name__] = timeit.timeit(
-                    f'runner.{func_name}()',
-                    globals=locals(),
-                    number=cls_perf.NUMBER)
+            if isinstance(runner, ReferenceMissing):
+                row[label.__name__] = np.nan
+            else:
+                row[label.__name__] = timeit.timeit(
+                        f'runner.{func_name}()',
+                        globals=locals(),
+                        number=cls_perf.NUMBER)
 
         row['n/r'] = row[Native.__name__] / row[Reference.__name__] #type: ignore
         row['r/n'] = row[Reference.__name__] / row[Native.__name__] #type: ignore
-        row['win'] = row['r/n'] > .99 #type: ignore
+        row['win'] = row['r/n'] > .99 if not np.isnan(row['r/n']) else True #type: ignore
 
         if runner_n.meta is not None and func_name in runner_n.meta:
             row['status'] = runner_n.meta[func_name].perf_status

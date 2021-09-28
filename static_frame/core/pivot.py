@@ -253,7 +253,7 @@ def pivot_derive_constructors(*,
         contract_dst = None
         contract_constructor = contract_cls
     else:
-        contract_src_types = contract_src.index_types.values #type: ignore
+        contract_src_types = contract_src.index_types.values
         contract_dst_types = contract_src_types[group_select]
         if group_depth == 0:
             contract_dst = None

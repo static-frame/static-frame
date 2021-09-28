@@ -51,7 +51,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_BOOL
-
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -382,7 +382,7 @@ class IndexHierarchy(IndexBase):
             try:
                 return tuple(literal_eval(p) for p in parts)
             except ValueError as e:
-                raise ValueError('A label is malformed. This is most likely due to not quoting a string label') from e
+                raise ValueError('A label is malformed. This may be due to not quoting a string label') from e
 
         return cls.from_labels(
                 (to_label(label) for label in labels),
@@ -621,7 +621,8 @@ class IndexHierarchy(IndexBase):
     def _iter_label_items(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None,
             ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
-
+        '''This function is not directly called in iter_label or related routines, fulfills the expectations of the IterNodeDepthLevel interface.
+        '''
         yield from enumerate(self._iter_label(depth_level=depth_level))
 
 
@@ -1003,7 +1004,7 @@ class IndexHierarchy(IndexBase):
         Return a Series of Index classes for each index depth.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         from static_frame.core.series import Series
 
@@ -1015,7 +1016,7 @@ class IndexHierarchy(IndexBase):
             labels = None
 
         # NOTE: consider caching index_types
-        return Series(self._levels.index_types(), index=labels)
+        return Series(self._levels.index_types(), index=labels, dtype=DTYPE_OBJECT)
 
     #---------------------------------------------------------------------------
     def relabel(self, mapper: RelabelInput) -> 'IndexHierarchy':
@@ -1573,7 +1574,7 @@ class IndexHierarchy(IndexBase):
     def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.
         '''
-        return self._INDEX_CONSTRUCTOR(self.__iter__())
+        return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name)
 
     def level_add(self: IH, level: tp.Hashable) -> IH:
         '''Return an IndexHierarchy with a new root (outer) level added.
@@ -1641,7 +1642,7 @@ class IndexHierarchy(IndexBase):
                 return levels.index.rename(name)
 
             # if we have TypeBlocks and levels is the same length
-            if not self._recache and levels.__len__() == self.__len__():
+            if levels.__len__() == self.__len__():
                 blocks = self._blocks.iloc[NULL_SLICE, :count]
                 return self.__class__(levels,
                         blocks=blocks,
@@ -1666,15 +1667,14 @@ class IndexHierarchy(IndexBase):
                         index=index,
                         targets=ArrayGO(targets, own_iterable=True))
 
-            # if we have TypeBlocks and levels is the same length
-            if not self._recache and levels.__len__() == self.__len__():
-                blocks = self._blocks.iloc[NULL_SLICE, count:]
-                return self.__class__(levels,
-                        name=name,
-                        blocks=blocks,
-                        own_blocks=True,
-                        )
-            return self.__class__(levels, name=name)
+            # lengths must be equal if innner index components are unique; otherwise exception will have been raised
+            # assert levels.__len__() == self.__len__()
+            blocks = self._blocks.iloc[NULL_SLICE, count:]
+            return self.__class__(levels,
+                    name=name,
+                    blocks=blocks,
+                    own_blocks=True,
+                    )
 
         raise NotImplementedError('no handling for a 0 count drop level.')
 

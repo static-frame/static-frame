@@ -110,10 +110,12 @@ class IndexLevel:
         def get_index(labels: IndexInitializer, depth: int) -> Index:
             explicit_constructor: tp.Optional[IndexConstructor]
 
-            if index_constructors is not None:
-                explicit_constructor = index_constructors[depth]
-            else:
+            if index_constructors is None:
                 explicit_constructor = None
+            elif callable(index_constructors):
+                explicit_constructor = index_constructors # it is a single value
+            else: # it is a sequence
+                explicit_constructor = index_constructors[depth]
 
             return index_from_optional_constructor(labels, #type: ignore
                     default_constructor=cls._INDEX_CONSTRUCTOR,

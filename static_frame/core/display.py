@@ -24,7 +24,7 @@ from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
 from static_frame.core.style_config import StyleConfig
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase # pylint: disable=unused-import
+    from static_frame.core.index_base import IndexBase # pylint: disable=unused-import #pragma: no cover
 
 
 _module = sys.modules[__name__]
@@ -360,7 +360,7 @@ class Display:
             return HexColor.format_html(color, FORMAT_EMPTY)
 
         if config.display_format in _DISPLAY_FORMAT_TERMINAL and terminal_ansi():
-            return HexColor.format_terminal(color, FORMAT_EMPTY)
+            return HexColor.format_terminal(color, FORMAT_EMPTY) #pragma: no cover
             # if not a compatible terminal, return label unaltered
 
         return FORMAT_EMPTY
@@ -611,7 +611,7 @@ class Display:
             rows: tp.Sequence[tp.Sequence[DisplayCell]],
             col_idx_src: int,
             col_last_src: int,
-            row_indices: tp.Iterable[tp.Optional[int]],
+            row_indices: tp.Iterable[int],
             config: tp.Optional[DisplayConfig] = None,
             ) -> tp.Tuple[int, int]:
         '''
@@ -636,14 +636,11 @@ class Display:
         max_width = 0
         for row_idx_src in row_indices:
             # get existing max width, up to the max
-            if row_idx_src is not None:
-                row = rows[row_idx_src]
-                if col_idx_src >= len(row): # this row does not have this column
-                    continue
-                cell = row[col_idx_src]
-                max_width = max(max_width, len(cell.raw))
-            else:
-                max_width = max(max_width, len(cls.ELLIPSIS))
+            row = rows[row_idx_src]
+            if col_idx_src >= len(row): # this row does not have this column
+                continue
+            cell = row[col_idx_src]
+            max_width = max(max_width, len(cell.raw))
             # if already exceeded max width, stop iterating
             if max_width >= width_limit:
                 break
@@ -757,7 +754,7 @@ class Display:
         '''Define rows as a list of lists, for each row; the contained DisplayCell instances may be of different size, but they are expected to be aligned vertically in final presentation.
 
         Args:
-            header_depth: columns depth plus any addtional lines used for headers
+            header_depth: columns depth plus any additional lines used for headers
         '''
         config = config or DisplayActive.get()
 
@@ -798,7 +795,7 @@ class Display:
                     dfc.LINE_SEP.join(outermost),
                     style_config=self._style_config,
                     )
-
+        # use mostly for debugging; strings in rows already have space / padding
         return dfc.LINE_SEP.join(''.join(r) for r in rows)
 
     def to_rows(self) -> tp.Iterable[str]:
@@ -808,9 +805,10 @@ class Display:
         post = []
         for idx, row in enumerate(self._to_rows_cells(self, self._config)):
             line = ''.join(row).rstrip()
-            if idx < self._header_depth:
-                if line == '': # type removal led to an empty line
-                    continue
+            # NOTE: apparently do not need special handling for empty lines
+            # if idx < self._header_depth:
+            #     if line == '': # type removal led to an empty line
+            #         continue
             post.append(line)
         return post
 

@@ -1384,7 +1384,7 @@ class TestUnit(TestCase):
     def test_index_equals_c(self) -> None:
 
         idx1 = IndexDate.from_year_range('2010', '2011')
-        idx2 = Index(idx1.values)
+        idx2 = Index(idx1.values.astype(object))
 
         self.assertFalse(idx1.equals(idx2, compare_class=True))
         self.assertTrue(idx1.equals(idx2, compare_class=False),)
@@ -1424,10 +1424,9 @@ class TestUnit(TestCase):
 
     def test_index_equals_g(self) -> None:
         dt64 = np.datetime64
-        dt = datetime.date
 
-        a = Index([dt64('2021-01-01'), dt64('1954-01-01')])
-        b = Index([dt64('2021'), dt64('1954')])
+        a = IndexDate([dt64('2021-01-01'), dt64('1954-01-01')])
+        b = IndexYear([dt64('2021'), dt64('1954')])
 
         self.assertFalse(arrays_equal(a, b, skipna=True))
 
@@ -1481,6 +1480,11 @@ class TestUnit(TestCase):
                 ('a', 'e'), side_left=False, fill_value=None).tolist(),
                 ['b', None])
 
+    def test_index_iloc_searchsorted_c(self) -> None:
+        idx1 = Index(())
+        self.assertEqual(idx1.loc_searchsorted(0, fill_value=None), None)
+
+
     #---------------------------------------------------------------------------
     def test_index_via_re_a(self) -> None:
 
@@ -1492,7 +1496,11 @@ class TestUnit(TestCase):
                 [True, True, False, True, False])
 
 
+    #---------------------------------------------------------------------------
+    def test_index_index_types_a(self) -> None:
 
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
+        self.assertEqual(idx1.index_types.to_pairs(), (('foo', IndexGO),))
 
 if __name__ == '__main__':
     unittest.main()

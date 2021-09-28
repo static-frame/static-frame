@@ -21,7 +21,7 @@ from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import path_filter
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import DepthLevelSpecifier
-
+from static_frame.core.util import IndexConstructors
 
 #-------------------------------------------------------------------------------
 
@@ -32,8 +32,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
 
     index_depth: int
     index_name_depth_level: tp.Optional[DepthLevelSpecifier]
+    index_constructors: IndexConstructors
     columns_depth: int
     columns_name_depth_level: tp.Optional[DepthLevelSpecifier]
+    columns_constructors: IndexConstructors
     columns_select: tp.Optional[tp.Iterable[str]]
     dtypes: DtypesSpecifier
     consolidate_blocks: bool
@@ -54,8 +56,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     __slots__ = (
             'index_depth',
             'index_name_depth_level',
+            'index_constructors',
             'columns_depth',
             'columns_name_depth_level',
+            'columns_constructors',
             'columns_select',
             'dtypes',
             'consolidate_blocks',
@@ -78,8 +82,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
             # constructors
             index_depth: int = 0, # this default does not permit round trip
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
@@ -108,8 +114,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         # constructor
         self.index_depth = index_depth
         self.index_name_depth_level = index_name_depth_level
+        self.index_constructors = index_constructors
         self.columns_depth = columns_depth
         self.columns_name_depth_level = columns_name_depth_level
+        self.columns_constructors = columns_constructors
         self.columns_select = columns_select
         self.dtypes = dtypes
         self.consolidate_blocks = consolidate_blocks
@@ -169,8 +177,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
             self._hash = hash((
                     self.index_depth, # int
                     self._hash_depth_specifier(self.index_name_depth_level),
+                    self.index_constructors, # class or callable
                     self.columns_depth, # int
                     self._hash_depth_specifier(self.columns_name_depth_level),
+                    self.columns_constructors, # class or callable
                     self.columns_select if self.columns_select is None else tuple(self.columns_select),
                     self._hash_dtypes_specifier(self.dtypes),
                     self.consolidate_blocks, # bool
@@ -222,8 +232,10 @@ class StoreConfig(StoreConfigHE):
     def __init__(self, *,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
@@ -245,8 +257,10 @@ class StoreConfig(StoreConfigHE):
         StoreConfigHE.__init__(self,
                 index_depth=index_depth,
                 index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
                 columns_select=columns_select,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,

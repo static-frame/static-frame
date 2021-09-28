@@ -268,10 +268,9 @@ IndexInitializer = tp.Union[
         tp.Iterable[tp.Hashable],
         tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarhcy
         ]
-IndexConstructor = tp.Callable[..., 'IndexBase']
 
-IndexConstructors = tp.Sequence[IndexConstructor]
-
+IndexConstructor = tp.Optional[tp.Callable[..., 'IndexBase']]
+IndexConstructors = tp.Union[IndexConstructor, tp.Sequence[IndexConstructor], None]
 
 # take integers for size; otherwise, extract size from any other index initializer
 
@@ -1211,7 +1210,7 @@ def to_datetime64(
             dt = np.datetime64(value)
         else: # assume value is single value;
             # note that integers will be converted to units from epoch
-            if isinstance(value, int):
+            if isinstance(value, INT_TYPES):
                 if dtype == DT64_YEAR:
                     # convert to string as that is likely what is wanted
                     value = str(value)
@@ -2228,7 +2227,6 @@ def _ufunc_logical_skipna(
         raise NotImplementedError(f'unsupported ufunc ({ufunc}); use np.all or np.any')
 
     if len(array) == 0:
-        # TODO: handle if this is ndim == 2 and has no length
         # any() of an empty array is False
         return ufunc == np.all
 
@@ -2255,21 +2253,8 @@ def _ufunc_logical_skipna(
             v = array.copy()
             v[isna] = fill_value
             return ufunc(v, axis=axis, out=out)
-        elif hasna and not skipna:
-            # if array.ndim == 1:
-            #     return np.nan
-            raise TypeError('cannot propagate NaN without expanding to object array result')
+        # NOTE: NaN will be interpreted as True
         return ufunc(array, axis=axis, out=out)
-
-    if kind in DTYPE_NAT_KINDS:
-        isna = isna_array(array)
-        hasna = isna.any() # returns single value for 1d, 2d
-        # all dates are truthy, special handling only to propagate NaNs
-        if hasna and not skipna:
-            # if array.ndim == 1:
-            #     return NAT
-            raise TypeError('cannot propagate NaN without expanding to object array result')
-        # to ignore NaN, simply fall back on all-truth behavior, below
 
     if kind == 'O':
         # all object types: convert to boolean aray then process
@@ -2278,18 +2263,16 @@ def _ufunc_logical_skipna(
         if hasna and skipna:
             # supply True for np.all, False for np.any
             fill_value = False if ufunc == np.any else True
-            v = array.copy()
-            v = v.astype(bool) # nan will be converted to True
+            v = array.astype(bool) # nan will be converted to True
             v[isna] = fill_value
-        elif hasna and not skipna:
-            # if array.ndim == 1:
-            #     return np.nan
-            raise TypeError('cannot propagate NaN without expanding to object array result')
         else:
+            # NOTE: NaN will be converted to True, None will be converted to False
             v = array.astype(bool)
         return ufunc(v, axis=axis, out=out)
 
-    # all types other than strings or objects assume truthy
+    # all other types assume truthy
+    # if kind in DTYPE_NAT_KINDS: # all dates are truthy, NAT is truthy
+
     if array.ndim == 1:
         return True
     return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)

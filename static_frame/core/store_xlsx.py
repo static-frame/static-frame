@@ -1,14 +1,15 @@
 
 import typing as tp
 import datetime
+from functools import partial
 
 import numpy as np
 
 from static_frame.core.container_util import apex_to_name
+from static_frame.core.container_util import index_from_optional_constructors
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
@@ -339,7 +340,6 @@ class StoreXLSX(Store):
                     wb,
                     format_funcs=(FormatDefaults.label, FormatDefaults.datetime,))
 
-
             ws = wb.add_worksheet(label) # label can be None
             self._frame_to_worksheet(frame,
                     ws,
@@ -387,8 +387,10 @@ class StoreXLSX(Store):
 
             index_depth = c.index_depth
             index_name_depth_level = c.index_name_depth_level
+            index_constructors = c.index_constructors
             columns_depth = c.columns_depth
             columns_name_depth_level = c.columns_name_depth_level
+            columns_constructors = c.columns_constructors
             trim_nadir = c.trim_nadir
             skip_header = c.skip_header
             skip_footer = c.skip_footer
@@ -492,18 +494,21 @@ class StoreXLSX(Store):
                     axis=0,
                     axis_depth=index_depth)
 
-            index: tp.Optional[IndexBase] = None
-            own_index = False
-            if index_depth == 1:
-                index = Index(index_values, name=index_name)
-                own_index = True
-            elif index_depth > 1:
-                index = IndexHierarchy.from_labels(
-                        index_values,
-                        continuation_token=None,
+            # index: tp.Optional[IndexBase] = None
+
+            if index_depth <= 1:
+                index_default_constructor = partial(Index, name=index_name)
+            else: # > 1
+                index_default_constructor = partial(IndexHierarchy.from_labels,
                         name=index_name,
+                        continuation_token=None, # NOTE: needed
                         )
-                own_index = True
+            index, own_index = index_from_optional_constructors(
+                    index_values,
+                    depth=index_depth,
+                    default_constructor=index_default_constructor,
+                    explicit_constructors=index_constructors, # cannot supply name
+                    )
 
             columns_name = None if index_depth == 0 else apex_to_name(
                         rows=apex_rows,
@@ -511,30 +516,38 @@ class StoreXLSX(Store):
                         axis=1,
                         axis_depth=columns_depth)
 
-            columns: tp.Optional[IndexBase] = None
-            own_columns = False
-            if columns_depth == 1:
-                columns = container_type._COLUMNS_CONSTRUCTOR(
-                        columns_values,
-                        name=columns_name)
-                own_columns = True
-            elif columns_depth > 1:
-                columns = container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(
-                        zip(*columns_values),
-                        continuation_token=None,
+            # columns: tp.Optional[IndexBase] = None
+            # own_columns = False
+
+            if columns_depth <= 1:
+                columns_default_constructor = partial(
+                        container_type._COLUMNS_CONSTRUCTOR,
                         name=columns_name,
                         )
-                own_columns = True
+            elif columns_depth > 1:
+                columns_default_constructor = partial(
+                        container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+                        name=columns_name,
+                        continuation_token=None, # NOTE: needed, not the default
+                        )
+                columns_values = zip(*columns_values) #type: ignore
+
+            columns, own_columns = index_from_optional_constructors(
+                    columns_values,
+                    depth=columns_depth,
+                    default_constructor=columns_default_constructor,
+                    explicit_constructors=columns_constructors, # cannot supply name
+                    )
 
             yield container_type.from_records(data,
-                            index=index,
-                            columns=columns,
-                            dtypes=dtypes,
-                            own_index=own_index,
-                            own_columns=own_columns,
-                            name=name,
-                            consolidate_blocks=consolidate_blocks
-                            )
+                    index=index,
+                    columns=columns,
+                    dtypes=dtypes,
+                    own_index=own_index,
+                    own_columns=own_columns,
+                    name=name,
+                    consolidate_blocks=consolidate_blocks
+                    )
         wb.close()
 
     @store_coherent_non_write

@@ -40,6 +40,7 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
 from static_frame.core.style_config import StyleConfig
+from static_frame.core.exception import BatchIterableInvalid
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -139,8 +140,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
-                                )
-
+                )
 
     @classmethod
     @doc_inject(selector='batch_constructor')
@@ -163,7 +163,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
-                                )
+                )
 
     @classmethod
     @doc_inject(selector='batch_constructor')
@@ -309,7 +309,6 @@ class Batch(ContainerOperand, StoreClientMixin):
                                 )
 
     #---------------------------------------------------------------------------
-
     @doc_inject(selector='batch_init')
     def __init__(self,
             items: IteratorFrameItems,
@@ -410,6 +409,16 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # core function application routines
 
+    def _iter_items(self) -> IteratorFrameItems:
+        '''Iter pairs in items, providing helpful exception of a pair is not found. Thies is necessary as we cannot validate the items until we actually do an iteration, and the iterable might be an iterator.
+        '''
+        for pair in self._items:
+            try:
+                label, frame = pair
+            except ValueError:
+                raise BatchIterableInvalid() from None
+            yield label, frame
+
     def _apply_pool(self,
             labels: tp.List[tp.Hashable],
             arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
@@ -462,13 +471,13 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         if self._max_workers is None:
             def gen() -> IteratorFrameItems:
-                for label, frame in self._items:
+                for label, frame in self._iter_items():
                     yield label, call_attr((frame, attr, args, kwargs))
             return self._derive(gen)
 
         labels = []
         def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]]:
-            for label, frame in self._items:
+            for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, attr, args, kwargs
 
@@ -480,13 +489,13 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         if self._max_workers is None:
             def gen() -> IteratorFrameItems:
-                for label, frame in self._items:
+                for label, frame in self._iter_items():
                     yield label, call_func((frame, func))
             return self._derive(gen)
 
         labels = []
         def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable]]:
-            for label, frame in self._items:
+            for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func
 
@@ -501,7 +510,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         if self._max_workers is None:
             def gen() -> IteratorFrameItems:
-                for label, frame in self._items:
+                for label, frame in self._iter_items():
                     try:
                         yield label, call_func((frame, func))
                     except exception:
@@ -510,7 +519,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         labels = []
         def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable]]:
-            for label, frame in self._items:
+            for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func
 
@@ -526,13 +535,13 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         if self._max_workers is None:
             def gen() -> IteratorFrameItems:
-                for label, frame in self._items:
+                for label, frame in self._iter_items():
                     yield label, call_func_items((frame, func, label))
             return self._derive(gen)
 
         labels = []
         def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]]:
-            for label, frame in self._items:
+            for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
 
@@ -547,7 +556,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         if self._max_workers is None:
             def gen() -> IteratorFrameItems:
-                for label, frame in self._items:
+                for label, frame in self._iter_items():
                     try:
                         yield label, call_func_items((frame, func, label))
                     except exception:
@@ -556,7 +565,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         labels = []
         def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]]:
-            for label, frame in self._items:
+            for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
 
@@ -644,7 +653,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         Iterator of :obj:`Frame` labels.
         '''
-        for k, _ in self._items:
+        for k, _ in self._iter_items():
             yield k
 
     def __iter__(self) -> tp.Iterator[tp.Hashable]:
@@ -658,13 +667,13 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         Return an iterator of values (:obj:`Frame` or :obj:`Series`) stored in this :obj:`Batch`.
         '''
-        return (v for _, v in self._items)
+        return (v for _, v in self._iter_items())
 
     def items(self) -> IteratorFrameItems:
         '''
         Iterator of labels, :obj:`Frame`.
         '''
-        return self._items.__iter__()
+        return self._iter_items()
 
     _items_store = items
 

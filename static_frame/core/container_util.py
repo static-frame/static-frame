@@ -41,7 +41,6 @@ from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
-
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 
@@ -201,12 +200,13 @@ def index_from_optional_constructor(
         value: tp.Union[IndexInitializer, 'IndexAutoFactory'],
         *,
         default_constructor: IndexConstructor,
-        explicit_constructor: tp.Optional[tp.Union[IndexConstructor, 'IndexDefaultFactory']] = None,
+        explicit_constructor: tp.Union[IndexConstructor, 'IndexDefaultFactory', None] = None,
         ) -> IndexBase:
     '''
     Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
     '''
     # NOTE: this might return an own_index flag to show callers when a new index has been created
+    # NOTE: do not pass `name` here; instead, partial contstuctors if necessary
     from static_frame.core.index_auto import IndexAutoFactory
     from static_frame.core.index_auto import IndexDefaultFactory
 
@@ -224,7 +224,7 @@ def index_from_optional_constructor(
 
     # default constructor could be a function with a STATIC attribute
     if isinstance(value, IndexBase):
-        # if default is STATIC, and value is not STATIC, get an immutabel
+        # if default is STATIC, and value is not STATIC, get an immutable
         if is_static(default_constructor):
             if not value.STATIC:
                 # v: ~S, dc: S, use immutable alternative
@@ -240,6 +240,71 @@ def index_from_optional_constructor(
 
     # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value)
+
+def index_from_optional_constructors(
+        value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+        *,
+        depth: int,
+        default_constructor: IndexConstructor,
+        explicit_constructors: IndexConstructors = None,
+        ) -> tp.Tuple[tp.Optional[IndexBase], bool]:
+    '''For scenarios here `index_depth` is the primary way of specifying index creation from a data source and the returned index might be an `IndexHierarchy`. Note that we do not take `name` or `continuation_token` here, but expect constructors to be appropriately partialed.
+    '''
+    if depth == 0:
+        index = None
+        own_index = False
+    elif depth == 1:
+        if not explicit_constructors:
+            explicit_constructor = None
+        elif callable(explicit_constructors):
+            explicit_constructor = explicit_constructors
+        else:
+            if len(explicit_constructors) != 1:
+                raise RuntimeError('Cannot specify multiple index constructors for depth 1 indicies.')
+            explicit_constructor = explicit_constructors[0]
+
+        index = index_from_optional_constructor(
+                value,
+                default_constructor=default_constructor,
+                explicit_constructor=explicit_constructor,
+                )
+        own_index = True
+    else:
+        # if depth is > 1, the default constructor is expected to be an IndexHierarchy, and explicit constructors are optionally provided `index_constructors`
+        if callable(explicit_constructors):
+            explicit_constructors = [explicit_constructors] * depth
+        # default_constructor is an IH type
+        index = default_constructor(
+                value,
+                index_constructors=explicit_constructors
+                )
+        own_index = True
+    return index, own_index
+
+
+def index_from_optional_constructors_deferred(
+        *,
+        depth: int,
+        default_constructor: IndexConstructor,
+        explicit_constructors: IndexConstructors = None,
+        ) -> tp.Callable[
+                [tp.Union[np.ndarray, tp.Iterable[tp.Hashable]]],
+                tp.Optional[IndexBase]]:
+    '''
+    Partiaal `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
+    '''
+    def func(
+            value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            ) -> tp.Optional[IndexBase]:
+        # drop the own_index Boolean
+        index, _ = index_from_optional_constructors(value,
+                depth=depth,
+                default_constructor=default_constructor,
+                explicit_constructors=explicit_constructors,
+                )
+        return index
+    return func
+
 
 def index_constructor_empty(
         index: tp.Union[IndexInitializer, 'IndexAutoFactoryType']

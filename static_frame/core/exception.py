@@ -63,6 +63,10 @@ class RelabelInvalid(RuntimeError):
     def __init__(self) -> None:
         super().__init__('Relabelling with an unordered iterable is not permitted.')
 
+class BatchIterableInvalid(RuntimeError):
+    def __init__(self) -> None:
+        super().__init__('Batch iterable does not yield expected pair of label, Frame.')
+
 #-------------------------------------------------------------------------------
 
 class StoreFileMutation(RuntimeError):

@@ -1438,7 +1438,7 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=(np.power(50, 50, dtype=np.float64), np.power(100, 100, dtype=np.float64), np.float64(300*300)),
-                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                index=IndexDate((np.datetime64('1999-12-31'), np.datetime64('2000-01-01')))
                 )
         msg = f1.to_msgpack()
 
@@ -1455,7 +1455,7 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
-                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                index=IndexDate((np.datetime64('1999-12-31'), np.datetime64('2000-01-01')))
                 )
         msg = f1.to_msgpack()
 
@@ -1480,7 +1480,7 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
-                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                index=IndexDate((np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))),
                 )
         msg = f1.to_msgpack()
 
@@ -5834,8 +5834,10 @@ class TestUnit(TestCase):
                 data=tb,
                 index_depth=0,
                 index_arrays=(),
+                index_constructors=None,
                 columns_depth=0,
                 columns_labels=(),
+                columns_constructors=None,
                 name='foo',
                 )
         self.assertEqual(f1.to_pairs(0),
@@ -5877,6 +5879,51 @@ class TestUnit(TestCase):
 
             self.assertEqual(f1.to_pairs(0),
                     (('A', ((False, False), (True, True))), ('B', ((False, True), (True, False)))))
+
+
+
+    def test_frame_from_delimited_c(self) -> None:
+        msg = 'a|b|c|d\n1940|2021-04-03|3|5\n1492|1743-04-03|-4|9\n'
+        self.assertEqual(Frame.from_delimited(msg.split('\n'), delimiter='|').to_pairs(),
+                (('a', ((0, 1940), (1, 1492))),
+                ('b', ((0, '2021-04-03'), (1, '1743-04-03'))),
+                ('c', ((0, 3), (1, -4))),
+                ('d', ((0, 5), (1, 9))))
+                )
+
+        f1 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=IndexYear, index_depth=1)
+        self.assertEqual(f1.index.dtype, np.dtype('<M8[Y]'))
+
+        f2 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear,), index_depth=1)
+        self.assertEqual(f2.index.dtype, np.dtype('<M8[Y]'))
+
+        with self.assertRaises(RuntimeError):
+            _ = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear, IndexDate), index_depth=1)
+
+        f3 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear, IndexDate), index_depth=2)
+        self.assertEqual(f3.index.depth, 2)
+        self.assertEqual(f3.index.index_types.values.tolist(), [IndexYear, IndexDate])
+
+
+
+    def test_frame_from_delimited_d(self) -> None:
+        msg = '1930|1931\n2021-01-01|2022-04-03\n3|5\n-4|9\n'
+
+        f1 = Frame.from_delimited(msg.split('\n'), delimiter='|', columns_constructors=IndexYear, columns_depth=1)
+        self.assertEqual(f1.columns.__class__, IndexYear)
+
+        with self.assertRaises(RuntimeError):
+            _ = Frame.from_delimited(msg.split('\n'), delimiter='|',
+                    columns_constructors=(IndexYear, IndexDate), columns_depth=1)
+
+        f2 = Frame.from_delimited(msg.split('\n'), delimiter='|',
+                columns_constructors=IndexYear, columns_depth=2)
+        self.assertEqual(f2.columns.index_types.values.tolist(), [IndexYear, IndexYear])
+
+        f3 = Frame.from_delimited(msg.split('\n'), delimiter='|',
+                columns_constructors=(IndexYear, IndexDate), columns_depth=2)
+        self.assertEqual(f3.columns.index_types.values.tolist(), [IndexYear, IndexDate])
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_tsv_a(self) -> None:
@@ -6996,6 +7043,41 @@ class TestUnit(TestCase):
             # we keep the last column (all None) because there is a valid label
             self.assertEqual(f2.shape, (4, 4))
 
+    def test_frame_from_xlsx_n(self) -> None:
+        records = (
+                (2012, '2021-04-17', 'k', False, False),
+                (1542, '1945-11-28', 'q', True, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x', 'y'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            f2 = Frame.from_xlsx(fp, index_depth=3, index_constructors=(Index, IndexYear, IndexDate))
+            self.assertEqual(f2.index.depth, 3)
+            self.assertEqual(f2.index.index_types.values.tolist(),
+                        [Index, IndexYear, IndexDate])
+
+    def test_frame_from_xlsx_o(self) -> None:
+        records = (
+                (False, True, 120, 540),
+                (True, False, 602, 403),
+                )
+        f1 = Frame.from_records(records,
+                columns=IndexHierarchy.from_product(
+                        (1920, 1542),
+                        ('2021-01-05', '1264-10-31')),
+                index=('x', 'y'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            f2 = Frame.from_xlsx(fp, columns_depth=2, index_depth=1,
+                        columns_constructors=(IndexYear, IndexDate))
+            self.assertEqual(f2.columns.depth, 2)
+            self.assertEqual(f2.columns.index_types.values.tolist(),
+                        [IndexYear, IndexDate])
+            self.assertEqual(f2.shape, (2, 4))
 
 
     #---------------------------------------------------------------------------
@@ -7043,7 +7125,52 @@ class TestUnit(TestCase):
                     columns_depth=f1.columns.depth)
             self.assertEqualFrames(f1, f2)
 
+    def test_frame_from_sqlite_c(self) -> None:
+        records = (
+                (2020, '2020-11-12', False, False),
+                (2020, '2020-12-31', True, False),
+                (1492, '1492-03-12', False, False),
+                (1492, '1492-03-19', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'))
 
+        with temp_file('.sqlite') as fp:
+            f1.to_sqlite(fp, include_index=False)
+            f2 = Frame.from_sqlite(fp,
+                        index_depth=2,
+                        index_constructors=(IndexYear, IndexDate))
+            self.assertEqual(f2.index.depth, 2)
+            self.assertEqual(f2.index.index_types.values.tolist(),
+                        [IndexYear, IndexDate])
+
+
+    def test_frame_from_sqlite_d(self) -> None:
+
+        f1 = Frame.from_records((
+                (10, 20, 50, False, 10, 20, 50, False),
+                (50.0, 60.4, -50, True, 50.0, 60.4, -50, True),
+                ),
+                columns=IndexHierarchy.from_product(('I', 'II'),
+                        (1910, 1915),
+                        ('2021-01-03', '1918-05-04'),
+                        )
+                )
+
+        with temp_file('.sqlite') as fp:
+            f1.to_sqlite(fp, include_index=False)
+            f2 = Frame.from_sqlite(fp,
+                    index_depth=0,
+                    columns_depth=3,
+                    columns_constructors=(Index, IndexYear, IndexDate)
+                    )
+            self.assertEqual(f2.columns.depth, 3)
+            self.assertEqual(f2.columns.index_types.values.tolist(),
+                        [Index, IndexYear, IndexDate])
+            self.assertEqual(f2.name, None)
+
+    #---------------------------------------------------------------------------
     def test_frame_from_hdf5_a(self) -> None:
         records = (
                 (2, 2, 'a', False, False),
@@ -8745,6 +8872,34 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_frame_to_frame_he_a(self) -> None:
+
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+        f2 = f1.to_frame_he()
+        post = {f2, f2}
+        self.assertEqual(len(post), 1)
+
+        post.add(f2.to_frame_he())
+        self.assertEqual(len(post), 1)
+
+        f3 = f2.to_frame()
+        self.assertIs(f3.__class__, Frame)
+
+        f4 = f2.to_frame_go()
+        f4['s'] = None
+
+        self.assertEqual(f4.to_pairs(),
+                (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('s', (('w', None), ('x', None))))
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_astype_a(self) -> None:
         records = (
@@ -9492,6 +9647,7 @@ class TestUnit(TestCase):
                 connection=conn,
                 dtypes={'date': 'datetime64[D]'},
                 index_depth=2,
+                index_constructors=(IndexDate, Index),
                 )
 
         self.assertEqual([dt.kind for dt in f2.index.dtypes.values],
@@ -9527,6 +9683,22 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(),
                 (('date', ((0, np.datetime64('2006-01-01')), (1, np.datetime64('2006-01-02')))), ('identifier', ((0, 'a1'), (1, 'a1'))), ('value', ((0, 12.5), (1, 12.5))), ('count', ((0, 20), (1, 22)))))
 
+    def test_frame_from_sql_d(self) -> None:
+
+        conn: sqlite3.Connection = self.get_test_db_e()
+
+        f1 = sf.Frame.from_sql(
+                'select * from events',
+                connection=conn,
+                index_depth=2,
+                index_constructors=(IndexDate, Index)
+                )
+        self.assertEqual(f1.index.depth, 2)
+        self.assertEqual(f1.index.index_types.values.tolist(),
+                [IndexDate, Index])
+
+
+    #---------------------------------------------------------------------------
     def test_frame_from_sql_no_args(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_a()
 
@@ -9636,7 +9808,6 @@ class TestUnit(TestCase):
                 (('value', (((0, '2006-01-01', 'a1'), 12.5), ((1, '2006-01-02', 'a1'), 12.5), ((2, '2006-01-01', 'b2'), 12.5), ((3, '2006-01-02', 'b2'), 12.5))), ('count', (((0, '2006-01-01', 'a1'), 8), ((1, '2006-01-02', 'a1'), 8), ((2, '2006-01-01', 'b2'), 8), ((3, '2006-01-02', 'b2'), 8))))
                 )
 
-
     def test_frame_from_sql_columns_select_w_col_h(self) -> None:
 
         conn: sqlite3.Connection = self.get_test_db_c()
@@ -9656,7 +9827,6 @@ class TestUnit(TestCase):
                 ((('date', 'to'), ((0, 'a1'), (1, 'a1'), (2, 'b2'), (3, 'b2'))), (('value', 'a'), ((0, 12.5), (1, 12.5), (2, 12.5), (3, 12.5))), (('value', 'b'), ((0, 8), (1, 8), (2, 8), (3, 8))))
                 )
 
-
     def test_frame_from_sql_columns_select_w_idx_col_h(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_d()
 
@@ -9675,7 +9845,6 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 ((('date', 'to'), ((('0', '2006-01-01'), 'a1'), (('1', '2006-01-02'), 'a1'), (('2', '2006-01-01'), 'b2'), (('3', '2006-01-02'), 'b2'))), (('value', 'a'), ((('0', '2006-01-01'), 12.5), (('1', '2006-01-02'), 12.5), (('2', '2006-01-01'), 12.5), (('3', '2006-01-02'), 12.5))))
                 )
-
 
     #---------------------------------------------------------------------------
 
@@ -10146,7 +10315,7 @@ class TestUnit(TestCase):
 
 
     def test_unset_index_column_hierarchy_w_dates(self) -> None:
-        f = ff.parse('s(3,3)|i(I,str)|c(IH,(str,dtY,tdD))').rename(
+        f = ff.parse('s(3,3)|i(I,str)|c((I, IY, I),(str,dtY,tdD))').rename(
                 index='index_name',
                 columns=('l1', 'l2'),
         )
@@ -10166,7 +10335,7 @@ class TestUnit(TestCase):
         # dtypes should be preserved when possible.
         dt = f.columns.values_at_depth(1)[1]
         td = f.columns.values_at_depth(2)[1]
-        unset2 = f.unset_index(names=[(f.index.name, dt, td)])
+        unset2 = f.unset_index(names=[(f.index.name, dt, td)], columns_constructors=(Index, IndexYear, Index))
 
         assert unset2.columns.values.tolist() == [
                 ['index_name', 105269, datetime.timedelta(days=146284)],
@@ -10517,7 +10686,7 @@ class TestUnit(TestCase):
         f1["b"] = np.array(range(3), "datetime64[D]")
         f1["c"] = np.array(range(3)) * 1e9
 
-        f2 = f1.pivot("b", "a", fill_value=0)
+        f2 = f1.pivot("b", "a", fill_value=0, index_constructor=IndexDate)
         self.assertEqual(f2.to_pairs(0),
                 ((10001, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 0.0), (np.datetime64('1970-01-03'), 0.0))), (10002, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 1000000000.0), (np.datetime64('1970-01-03'), 0.0))), (10003, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 0.0), (np.datetime64('1970-01-03'), 2000000000.0))))
                 )
@@ -10677,21 +10846,17 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z')
                 )
 
-        with self.assertRaises(TypeError):
-            self.assertEqual(f1.all(skipna=False).to_pairs(),
-                    (('a', True), ('b', False)))
+        self.assertEqual(f1.all(skipna=False).to_pairs(),
+                (('a', True), ('b', False)))
 
-        with self.assertRaises(TypeError):
-            self.assertEqual(f1.any(skipna=False).to_pairs(),
-                    (('a', True), ('b', True)))
+        self.assertEqual(f1.any(skipna=False).to_pairs(),
+                (('a', True), ('b', True)))
 
-        with self.assertRaises(TypeError):
-            self.assertEqual(f1.all(axis=1, skipna=False).to_pairs(),
-                    (('x', True), ('y', False), ('z', True)))
+        self.assertEqual(f1.all(axis=1, skipna=False).to_pairs(),
+                (('x', True), ('y', False), ('z', True)))
 
-        with self.assertRaises(TypeError):
-            self.assertEqual(f1.any(axis=1, skipna=False).to_pairs(),
-                    (('x', True), ('y', False), ('z', True)))
+        self.assertEqual(f1.any(axis=1, skipna=False).to_pairs(),
+                (('x', True), ('y', True), ('z', True)))
 
 
     #---------------------------------------------------------------------------
@@ -12455,6 +12620,10 @@ class TestUnit(TestCase):
         f5 = f1.rank_ordinal(axis=1, fill_value=-1)
         self.assertEqual(f5.values.dtype.kind, 'i')
 
+    def test_frame_rank_d(self) -> None:
+        f1 = Frame.from_fields([[np.nan, 0, 1], [0, None, 1]], index=('a','b','c'), columns=('x','y'))
+        with self.assertRaises(AxisInvalid):
+            f1.rank_ordinal(axis=3)
 
     def test_frame_rank_ordinal(self) -> None:
         f1 = sf.Frame.from_records(

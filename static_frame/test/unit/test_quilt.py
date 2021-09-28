@@ -172,6 +172,17 @@ class TestUnit(TestCase):
                 ((0, ((('f', 3), 1699.34),)), (1, ((('f', 3), 114.58),)))
                 )
 
+    def test_quilt_init_g(self) -> None:
+
+        f1 = ff.parse('s(4,100)|v(int)|i(I,str)|c(I,str)')
+
+        q1 = Quilt.from_frame(f1, chunksize=10, axis=1, retain_labels=False)
+
+        axis_hierarchy, opp = bus_to_hierarchy(q1._bus, q1._axis, deepcopy_from_bus=False, init_exception_cls=ErrorInitQuilt)
+
+        with self.assertRaises(ErrorInitQuilt):
+            Quilt(q1._bus, axis=1, retain_labels=False, axis_hierarchy=axis_hierarchy)
+
     #---------------------------------------------------------------------------
     def test_quilt_from_items_a(self) -> None:
 
@@ -651,12 +662,12 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
 
         q1 = Quilt.from_frame(f1, chunksize=4, axis=1, retain_labels=False, deepcopy_from_bus=False)
-        a1_id_in_bus = id(q1._bus._series.values[0].values)
+        a1_id_in_bus = id(q1._bus._values_mutable[0].values) #type: ignore
         a1_id_via_quilt = id(q1._extract_array())
         self.assertEqual(a1_id_in_bus, a1_id_via_quilt)
 
         q2 = Quilt.from_frame(f1, chunksize=4, axis=1, retain_labels=False, deepcopy_from_bus=True)
-        a2_id_in_bus = id(q2._bus._series.values[0].values)
+        a2_id_in_bus = id(q2._bus._values_mutable[0].values) #type: ignore
         a2_id_via_quilt = id(q2._extract_array())
         self.assertNotEqual(a2_id_in_bus, a2_id_via_quilt)
 
@@ -1009,12 +1020,12 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,6)|v(int,str)|i(I,str)|c(I,str)')
 
         q2 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=False)
-        a2_src_id = id(q2._bus._series.values[0]._extract_array(None, 0))
+        a2_src_id = id(q2._bus._values_mutable[0]._extract_array(None, 0)) #type: ignore
         a2_dst_id = id(next(iter(q2.iter_array(axis=0))))
         self.assertTrue(a2_src_id == a2_dst_id)
 
         q1 = Quilt.from_frame(f1, chunksize=3, axis=1, retain_labels=False, deepcopy_from_bus=True)
-        a1_src_id = id(q1._bus._series.values[0]._extract_array(None, 0))
+        a1_src_id = id(q1._bus._values_mutable[0]._extract_array(None, 0)) #type: ignore
         a1_dst_id = id(next(iter(q1.iter_array(axis=0))))
         self.assertTrue(a1_src_id != a1_dst_id)
 
@@ -1503,4 +1514,21 @@ class TestUnit(TestCase):
             self.assertEqual(q2._bus.status['loaded'].sum(), 0)
             self.assertEqual(len(dict(q2.items())), 12)
             self.assertEqual(q2._bus.status['loaded'].sum(), 3)
+
+
+    #---------------------------------------------------------------------------
+    def test_quilt_sample_a(self) -> None:
+
+        f1 = ff.parse('s(20,20)|v(int)|c(I,str)|i(I,str)').rename('f1')
+        f2 = ff.parse('s(20,20)|v(bool)|c(I,str)|i(I,str)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True, axis=1)
+
+        self.assertEqual(q1.sample(4, 4, seed=0).to_pairs(),
+                ((('f1', 'zmVj'), (('ztsv', 146284), ('zr4u', 126025), ('zB7E', 164351), ('zwIp', 195850))), (('f2', 'zZbu'), (('ztsv', False), ('zr4u', False), ('zB7E', False), ('zwIp', False))), (('f2', 'zUvW'), (('ztsv', False), ('zr4u', True), ('zB7E', False), ('zwIp', True))), (('f2', 'z2Oo'), (('ztsv', True), ('zr4u', True), ('zB7E', True), ('zwIp', False))))
+                )
+
+        self.assertEqual(q1.sample(index=4).shape, (4, 40))
+        self.assertEqual(q1.sample(columns=4).shape, (20, 4))
+
 

@@ -24,6 +24,8 @@ from arraykit import resolve_dtype_iter
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
+from static_frame.core.container import container_opperand_map
+
 from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import axis_window_items
@@ -43,6 +45,8 @@ from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.container_util import prepare_values_for_lex
+from static_frame.core.container_util import index_from_optional_constructors
+from static_frame.core.container_util import index_from_optional_constructors_deferred
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1171,10 +1175,6 @@ class Frame(ContainerOperand):
                 columns_constructor=columns_constructor
                 )
 
-
-
-
-
     @staticmethod
     def _structured_array_to_d_ia_cl(
             array: np.ndarray,
@@ -1293,46 +1293,53 @@ class Frame(ContainerOperand):
             data: TypeBlocks,
             index_depth: int,
             index_arrays: tp.Sequence[np.ndarray],
+            index_constructors: IndexConstructors,
             columns_depth: int,
             columns_labels: tp.Sequence[tp.Hashable],
+            columns_constructors: IndexConstructors,
             name: tp.Hashable,
             ) -> 'Frame':
         '''
         Private constructor used for specialized construction from NP Structured array, as well as StoreHDF5.
         '''
-        columns_constructor = None
-        if columns_depth == 0:
-            columns = None
-        elif columns_depth == 1:
-            columns = columns_labels
-        elif columns_depth > 1:
-            # assume deliminted IH extracted from SA labels
-            columns = columns_labels
-            columns_constructor = partial(
+        if columns_depth <= 1:
+            columns_default_constructor = cls._COLUMNS_CONSTRUCTOR
+        else:
+            columns_default_constructor = partial(
                     cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
                     delimiter=' ')
 
-        kwargs = dict(
-                data=data,
-                own_data=True,
-                columns=columns,
-                columns_constructor=columns_constructor,
-                name=name
+        columns, own_columns = index_from_optional_constructors(
+                columns_labels,
+                depth=columns_depth,
+                default_constructor=columns_default_constructor,
+                explicit_constructors=columns_constructors, # cannot supply name
                 )
 
-        if index_depth == 0:
-            return cls(
-                index=None,
-                **kwargs)
         if index_depth == 1:
-            return cls(
-                index=index_arrays[0],
-                **kwargs)
-        return cls(
-                index=zip(*index_arrays),
-                index_constructor=IndexHierarchy.from_labels,
-                **kwargs
+            index_values = index_arrays[0]
+            index_default_constructor = Index
+        else: # > 1
+            # might use _from_type_blocks, but would not be able to use continuation token
+            index_values = zip(*index_arrays)
+            index_default_constructor = IndexHierarchy.from_labels
+
+        index, own_index = index_from_optional_constructors(
+                index_values,
+                depth=index_depth,
+                default_constructor=index_default_constructor,
+                explicit_constructors=index_constructors, # cannot supply name
                 )
+
+        return cls(data=data,
+                own_data=True,
+                columns=columns,
+                own_columns=own_columns,
+                index=index,
+                own_index=own_index,
+                name=name,
+                )
+
 
     @classmethod
     @doc_inject(selector='constructor_frame')
@@ -1341,7 +1348,9 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             index_column_first: tp.Optional[IndexSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
+            columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
@@ -1374,8 +1383,10 @@ class Frame(ContainerOperand):
                 data=data,
                 index_depth=index_depth,
                 index_arrays=index_arrays,
+                index_constructors=index_constructors,
                 columns_depth=columns_depth,
                 columns_labels=columns_labels,
+                columns_constructors=columns_constructors,
                 name=name
                 )
 
@@ -1501,8 +1512,10 @@ class Frame(ContainerOperand):
             *,
             connection: sqlite3.Connection,
             index_depth: int = 0,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
+            columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
@@ -1515,7 +1528,11 @@ class Frame(ContainerOperand):
             query: A query string.
             connection: A DBAPI2 (PEP 249) Connection object, such as those returned from SQLite (via the sqlite3 module) or PyODBC.
             {dtypes}
+            index_depth:
+            index_constructors:
+            columns_depth:
             columns_select: An optional iterable of field names to extract from the results of the query.
+            columns_constructors:
             {name}
             {consolidate_blocks}
             parameters: Provide a list of values for an SQL query expecting parameter substitution.
@@ -1536,7 +1553,7 @@ class Frame(ContainerOperand):
                     post = selector(row)
                     return post if not selector_reduces else (post,)
 
-            if columns_depth >= 1 or columns_select:
+            if columns_depth > 0 or columns_select:
                 # always need to derive labels if using columns_select
                 labels = (col for (col, *_) in cursor.description[index_depth:])
 
@@ -1548,13 +1565,24 @@ class Frame(ContainerOperand):
                 selector_reduces = len(iloc_sel) == 1
 
             if columns_depth == 1:
-                columns = cls._COLUMNS_CONSTRUCTOR(labels)
-                own_columns = True
+                columns, own_columns = index_from_optional_constructors(
+                        labels,
+                        depth=columns_depth,
+                        default_constructor=cls._COLUMNS_CONSTRUCTOR,
+                        explicit_constructors=columns_constructors, # cannot supply name
+                        )
             elif columns_depth > 1:
                 # NOTE: we only support loading in IH if encoded in each header with a space delimiter
-                constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
-                columns = constructor(labels, delimiter=' ')
-                own_columns = True
+                columns_constructor = partial(
+                        cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
+                        delimiter=' ',
+                        )
+                columns, own_columns = index_from_optional_constructors(
+                        labels,
+                        depth=columns_depth,
+                        default_constructor=columns_constructor,
+                        explicit_constructors=columns_constructors,
+                        )
 
                 if columns_select:
                     iloc_sel = columns._loc_to_iloc(columns.isin(columns_select))
@@ -1562,43 +1590,60 @@ class Frame(ContainerOperand):
                     selector_reduces = len(iloc_sel) == 1
                     columns = columns.iloc[iloc_sel]
 
-            index_constructor = None
+            # NOTE: cannot own_index as we defer calling the constructor until after call Frame
+            # map dtypes in context of pre-index extraction
             if index_depth > 0:
-                # map dtypes in context of pre-index extraction
                 get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                         dtypes,
                         [col for (col, *_) in cursor.description],
                         )
-                if index_depth == 1:
-                    index = [] # lazily populate
-                    if get_col_dtype:
-                        index_constructor = partial(Index, dtype=get_col_dtype(0))
-                    else:
-                        index_constructor = Index
-                    def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                        for row in cursor:
-                            index.append(row[0])
-                            yield row[1:]
-                else: # > 1
-                    index = [list() for _ in range(index_depth)]
-                    def index_constructor(iterables) -> IndexHierarchy: #pylint: disable=function-redefined
-                        if get_col_dtype:
-                            blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
-                                    for i, it in enumerate(iterables)]
-                        else:
-                            blocks = [iterable_to_array_1d(it)[0] for it in iterables]
-                        return IndexHierarchy._from_type_blocks(
-                                TypeBlocks.from_blocks(blocks),
-                                own_blocks=True)
 
-                    def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                        for row in cursor:
-                            for i, label in enumerate(row[:index_depth]):
-                                index[i].append(label)
-                            yield row[index_depth:]
-            else:
+            if index_depth == 0:
                 index = None
                 row_gen = lambda: cursor
+                index_constructor = None
+            elif index_depth == 1:
+                index = [] # lazily populate
+                default_constructor = partial(Index, dtype=get_col_dtype(0)) if get_col_dtype else Index
+                # parital to include everything but values
+                index_constructor = index_from_optional_constructors_deferred(
+                        depth=index_depth,
+                        default_constructor=default_constructor,
+                        explicit_constructors=index_constructors,
+                        )
+                def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in cursor:
+                        index.append(row[0])
+                        yield row[1:]
+            else: # > 1
+                index = [list() for _ in range(index_depth)]
+
+                def default_constructor(
+                        iterables: tp.Iterable[tp.Hashable],
+                        index_constructors: IndexConstructors,
+                        ) -> IndexHierarchy: #pylint: disable=function-redefined
+                    if get_col_dtype:
+                        blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
+                                for i, it in enumerate(iterables)]
+                    else:
+                        blocks = [iterable_to_array_1d(it)[0] for it in iterables]
+                    return IndexHierarchy._from_type_blocks(
+                            TypeBlocks.from_blocks(blocks),
+                            index_constructors=index_constructors,
+                            own_blocks=True,
+                            )
+                # parital to include everything but values
+                index_constructor = index_from_optional_constructors_deferred(
+                        depth=index_depth,
+                        default_constructor=default_constructor,
+                        explicit_constructors=index_constructors,
+                        )
+
+                def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in cursor:
+                        for i, label in enumerate(row[:index_depth]):
+                            index[i].append(label)
+                        yield row[index_depth:]
 
             if columns_select:
                 row_gen_final = (filter_row(row) for row in row_gen())
@@ -1681,10 +1726,12 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            index_constructors: IndexConstructors = None,
+            index_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            columns_constructors: IndexConstructors = None,
+            columns_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1703,8 +1750,12 @@ class Frame(ContainerOperand):
             index_depth: Specify the number of columns used to create the index labels; a value greater than 1 will attempt to create a hierarchical index.
             index_column_first: Optionally specify a column, by position or name, to become the start of the index if index_depth is greater than 0. If not set and index_depth is greater than 0, the first column will be used.
             index_name_depth_level: If columns_depth is greater than 0, interpret values over index as the index name.
+            index_constructors:
+            index_continuation_token:
             columns_depth: Specify the number of rows after the skip_header used to create the column labels. A value of 0 will be no header; a value greater than 1 will attempt to create a hierarchical index.
             columns_name_depth_level: If index_depth is greater than 0, interpret values over index as the columns name.
+            columns_constructors:
+            columns_continuation_token:
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
             store_filter: A StoreFilter instance, defining translation between unrepresentable types. Presently nly the ``to_nan`` attributes is used.
@@ -1718,7 +1769,7 @@ class Frame(ContainerOperand):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
-        # TODO: add columns_select as usecols styles selective loading
+        # TODO: add columns_select as usecols style selective loading
 
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
@@ -1812,10 +1863,14 @@ class Frame(ContainerOperand):
                     axis_depth=columns_depth)
 
             if columns_depth == 1:
-                columns_constructor = cls._COLUMNS_CONSTRUCTOR
-                columns = columns_constructor(columns_arrays[0], name=columns_name)
+                # columns = cls._COLUMNS_CONSTRUCTOR(columns_arrays[0], name=columns_name)
+                columns, own_columns = index_from_optional_constructors(
+                        columns_arrays[0],
+                        depth=columns_depth,
+                        default_constructor=partial(cls._COLUMNS_CONSTRUCTOR, name=columns_name),
+                        explicit_constructors=columns_constructors, # cannot supply name
+                        )
             else:
-                columns_constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels
                 if columns_continuation_token:
                     labels = zip_longest(
                             *(store_filter.to_type_filter_iterable(x) for x in columns_arrays),
@@ -1823,12 +1878,17 @@ class Frame(ContainerOperand):
                             )
                 else:
                     labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
-                columns = columns_constructor(
-                        labels,
+
+                columns_constructor = partial(cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                         name=columns_name,
                         continuation_token=columns_continuation_token,
                         )
-            own_columns = True
+                columns, own_columns = index_from_optional_constructors(
+                        labels,
+                        depth=columns_depth,
+                        default_constructor=columns_constructor,
+                        explicit_constructors=columns_constructors,
+                        )
 
         if array.dtype.names is None: # not a structured array
             # genfromtxt may, in some situations, not return a structured array
@@ -1871,19 +1931,25 @@ class Frame(ContainerOperand):
                 axis_depth=index_depth)
 
         if index_depth == 1:
-            index_constructor = partial(Index, name=index_name)
-            return cls(
-                index=index_arrays[0],
-                index_constructor=index_constructor,
-                **kwargs)
-
-        index_constructor = partial(IndexHierarchy.from_labels,
-                name=index_name,
-                continuation_token=index_continuation_token,
+            index_values = index_arrays[0]
+            index_default_constructor = partial(Index, name=index_name)
+        else: # > 1
+            # might use _from_type_blocks, but would not be able to use continuation token
+            index_values = zip(*index_arrays)
+            index_default_constructor = partial(IndexHierarchy.from_labels,
+                    name=index_name,
+                    continuation_token=index_continuation_token,
+                    )
+        index, own_index = index_from_optional_constructors(
+                index_values,
+                depth=index_depth,
+                default_constructor=index_default_constructor,
+                explicit_constructors=index_constructors, # cannot supply name
                 )
+
         return cls(
-                index=zip(*index_arrays),
-                index_constructor=index_constructor,
+                index=index,
+                own_index=own_index,
                 **kwargs
                 )
 
@@ -1894,9 +1960,11 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -1918,9 +1986,11 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
                 index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
                 columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
@@ -1939,9 +2009,11 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -1963,9 +2035,11 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
                 index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
                 columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
@@ -1984,9 +2058,11 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -2017,9 +2093,11 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
                 index_continuation_token=index_continuation_token,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
                 columns_continuation_token=columns_continuation_token,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
@@ -2041,8 +2119,10 @@ class Frame(ContainerOperand):
             label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             skip_header: int = 0,
@@ -2063,8 +2143,10 @@ class Frame(ContainerOperand):
         config = StoreConfig(
                 index_depth=index_depth,
                 index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 skip_header=skip_header,
@@ -2083,7 +2165,9 @@ class Frame(ContainerOperand):
             *,
             label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
+            columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -2097,7 +2181,9 @@ class Frame(ContainerOperand):
         st = StoreSQLite(fp)
         config = StoreConfig(
                 index_depth=index_depth,
+                index_constructors=index_constructors,
                 columns_depth=columns_depth,
+                columns_constructors=columns_constructors,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 )
@@ -2113,7 +2199,9 @@ class Frame(ContainerOperand):
             *,
             label: tp.Hashable = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
+            columns_constructors: IndexConstructors = None,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
@@ -2126,7 +2214,9 @@ class Frame(ContainerOperand):
         st = StoreHDF5(fp)
         config = StoreConfig(
                 index_depth=index_depth,
+                index_constructors=index_constructors,
                 columns_depth=columns_depth,
+                columns_constructors=columns_constructors,
                 consolidate_blocks=consolidate_blocks,
                 )
         return st.read(label,
@@ -2160,6 +2250,8 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
+        # NOTE: this might be refactored to support `index_constructors` and `columns_constructors` arguments such that intra index types can be specified for IndexHierarchy.
+
         import pandas
         if not isinstance(value, pandas.DataFrame):
             raise ErrorInitFrame(f'from_pandas must be called with a Pandas DataFrame object, not: {type(value)}')
@@ -2253,8 +2345,10 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
@@ -2280,10 +2374,12 @@ class Frame(ContainerOperand):
             index_arrays = []
         else:
             apex_labels = None
+            index_arrays = None
 
         if columns_depth > 0:
             columns_labels = []
-
+        else:
+            columns_labels = None
 
         # by using value.columns_names, we expose access to the index arrays, which is deemed desirable as that is what we do in from_delimited
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
@@ -2340,19 +2436,22 @@ class Frame(ContainerOperand):
                 axis_depth=columns_depth,
                 )
 
-        if columns_depth == 0:
-            columns = None
-            own_columns = False
-        elif columns_depth == 1:
-            columns = cls._COLUMNS_CONSTRUCTOR(columns_labels, name=columns_name)
-            own_columns = True
-        elif columns_depth > 1:
-            columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited(
-                    columns_labels,
+        if columns_depth <= 1:
+            columns_default_constructor = partial(
+                    cls._COLUMNS_CONSTRUCTOR,
+                    name=columns_name)
+        else:
+            columns_default_constructor = partial(
+                    cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
                     delimiter=' ',
-                    name=columns_name,
-                    )
-            own_columns = True
+                    name=columns_name)
+
+        columns, own_columns = index_from_optional_constructors(
+                columns_labels,
+                depth=columns_depth,
+                default_constructor=columns_default_constructor,
+                explicit_constructors=columns_constructors, # cannot supply name
+                )
 
         index_name = None if not apex_labels else apex_to_name(rows=(apex_labels,),
                 depth_level=index_name_depth_level,
@@ -2360,19 +2459,29 @@ class Frame(ContainerOperand):
                 axis_depth=index_depth,
                 )
 
-        if index_depth == 0:
-            index = None
-            own_index = False
-        elif index_depth == 1:
-            index = Index(index_arrays[0], name=index_name)
-            own_index = True
-        elif index_depth > 1:
-            index = IndexHierarchy._from_type_blocks(
-                    TypeBlocks.from_blocks(index_arrays),
+        if index_depth == 1:
+            index_values = index_arrays[0]
+            index_default_constructor = partial(Index, name=index_name)
+        else: # > 1
+            index_values = index_arrays
+
+            def index_default_constructor(values,
+                    *,
+                    index_constructors: IndexConstructors = None,
+                    ) -> IndexBase:
+                return IndexHierarchy._from_type_blocks(
+                    TypeBlocks.from_blocks(values),
                     name=index_name,
+                    index_constructors=index_constructors,
                     own_blocks=True,
                     )
-            own_index = False
+
+        index, own_index = index_from_optional_constructors(
+                index_values,
+                depth=index_depth,
+                default_constructor=index_default_constructor,
+                explicit_constructors=index_constructors, # cannot supply name
+                )
 
         return cls(
                 data=data,
@@ -2392,8 +2501,10 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
@@ -2405,7 +2516,11 @@ class Frame(ContainerOperand):
         Args:
             {fp}
             {index_depth}
+            index_name_depth_level:
+            index_constructors:
             {columns_depth}
+            columns_name_depth_level:
+            columns_constructors:
             {columns_select}
             {dtypes}
             {name}
@@ -2435,8 +2550,10 @@ class Frame(ContainerOperand):
         return cls.from_arrow(table,
                 index_depth=index_depth,
                 index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 name=name
@@ -2460,11 +2577,11 @@ class Frame(ContainerOperand):
                 ) -> object:
 
             # NOTE: maybe this can be replaced by dictionary of SF containers provided by container_util
-            globals_ref = globals()
+            cls_map = container_opperand_map()
 
             if b'sf' in obj:
                 clsname = obj[b'sf']
-                cls = globals_ref[clsname]
+                cls = cls_map[clsname]
 
                 if issubclass(cls, Frame):
                     blocks = unpackb(obj[b'blocks'])
@@ -2477,7 +2594,7 @@ class Frame(ContainerOperand):
                             )
                 elif issubclass(cls, IndexHierarchy):
                     index_constructors=[
-                            globals_ref[clsname] for clsname in unpackb(
+                            cls_map[clsname] for clsname in unpackb(
                                    obj[b'index_constructors'])]
                     blocks = unpackb(obj[b'blocks'])
                     return cls._from_type_blocks(
@@ -4895,24 +5012,8 @@ class Frame(ContainerOperand):
                 ascending=ascending,
                 values_for_lex=values_for_lex,
                 )
-        # asc_is_element = isinstance(ascending, BOOL_TYPES)
-        # if not asc_is_element:
-        #     ascending = tuple(ascending)
-        #     if values_for_lex is None or len(ascending) != len(values_for_lex):
-        #         raise RuntimeError(f'Multiple ascending values must match number of arrays selected.')
 
         if values_for_lex is not None:
-            # if not asc_is_element:
-            #     # values for lex are in reversed order; thus take ascending reversed
-            #     values_for_lex_post = []
-            #     for asc, a in zip(reversed(ascending), values_for_lex):
-            #         # if not ascending, replace with an inverted dense rank
-            #         if not asc:
-            #             values_for_lex_post.append(
-            #                     rank_1d(a, method=RankMethod.DENSE, ascending=False))
-            #         else:
-            #             values_for_lex_post.append(a)
-            #     values_for_lex = values_for_lex_post
             order = np.lexsort(values_for_lex)
         elif values_for_sort is not None:
             order = np.argsort(values_for_sort, kind=kind)
@@ -5228,17 +5329,21 @@ class Frame(ContainerOperand):
     def unset_index(self, *,
             names: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
             # index_column_first: tp.Optional[tp.Union[int, str]] = 0,
-            consolidate_blocks: bool = False
+            consolidate_blocks: bool = False,
+            columns_constructors: IndexConstructors = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame where the index is added to the front of the data, and an :obj:`IndexAutoFactory` is used to populate a new index. If the :obj:`Index` has a ``name``, that name will be used for the column name, otherwise a suitable default will be used. As underlying NumPy arrays are immutable, data is not copied.
 
         Args:
             names: An iterable of hashables to be used to name the unset index. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
+            consolidate_blocks:
+            columns_constructors:
         '''
         from static_frame.core.index_level import IndexLevel
 
         def blocks() -> tp.Iterator[np.ndarray]:
+            # yield index as columns, then remaining blocks currently in Frame
             if self._index.ndim == 1:
                 yield self._index.values
             else:
@@ -5262,25 +5367,32 @@ class Frame(ContainerOperand):
             self._columns._update_array_cache()
 
         if self._columns.depth > 1:
-            column_blocks = self._columns._blocks._blocks
-            column_blocks_new = tuple(
+            columns_labels = TypeBlocks.from_blocks(
                     concat_resolved((np.array([name]), block[np.newaxis]), axis=1).T
-                    for name, block in zip(names_t, column_blocks)
+                    for name, block in zip(names_t, self._columns._blocks._blocks)
                     )
-            column_type_blocks = TypeBlocks.from_blocks(column_blocks_new)
-            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
-                    column_type_blocks,
-                    #index_constructors=index_constructors,
-                    own_blocks=True,
-                    )
+            columns_default_constructor = partial(
+                    self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
+                    own_blocks=True)
+
         else:
-            columns = chain(names, self._columns.values)
+            columns_labels = chain(names, self._columns.values)
+            columns_default_constructor = self._COLUMNS_CONSTRUCTOR
+
+        columns, own_columns = index_from_optional_constructors(
+                columns_labels,
+                depth=self._columns.depth,
+                default_constructor=columns_default_constructor,
+                explicit_constructors=columns_constructors, # cannot supply name
+                )
 
         return self.__class__(
                 TypeBlocks.from_blocks(block_gen()),
                 columns=columns,
+                own_columns=own_columns,
                 index=None,
                 own_data=True,
+                name=self._name,
                 )
 
     def __round__(self, decimals: int = 0) -> 'Frame':
@@ -5648,7 +5760,7 @@ class Frame(ContainerOperand):
                 elif not unique and valid is not None:
                     array[i] = valid.sum()
                 else: # not unique, valid is None, means no removals, handled above
-                    raise NotImplementedError()
+                    raise NotImplementedError() #pragma: no cover
 
         array.flags.writeable = False
         return Series(array, index=labels)
@@ -5832,6 +5944,7 @@ class Frame(ContainerOperand):
             *,
             func: CallableOrCallableMap = None,
             fill_value: object = np.nan,
+            index_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
         Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if ``data_fields`` is not provided, all unused fields will be displayed.
@@ -5840,8 +5953,10 @@ class Frame(ContainerOperand):
             index_fields
             columns_fields
             data_fields
+            *,
             fill_value: If the index expansion produces coordinates that have no existing data value, fill that position with this value.
             func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
+            index_constructor:
         '''
         func = np.nansum if func is None else func
         if callable(func):
@@ -5873,13 +5988,32 @@ class Frame(ContainerOperand):
                 axis=0)
 
         # index_inner is used for avoiding dealing with IndexHierarchy
-        if index_depth == 1:
-            index = Index(index_values, name=index_fields[0])
-            index_inner = index
-        else:
-            index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
-            index_inner = index.flat() # insure we have the right order of tuples
+        # if index_depth == 1:
+        #     index = Index(index_values, name=index_fields[0])
+        #     index_inner = index
+        # else:
+        #     index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
+        #     index_inner = index.flat() # insure we have the right order of tuples
 
+        if index_depth == 1:
+            name = index_fields[0]
+            index_inner = index_from_optional_constructor(
+                    index_values,
+                    default_constructor=partial(Index, name=name),
+                    explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                    )
+        else: # > 1
+            # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
+            name = tuple(index_fields)
+            index_inner = index_from_optional_constructor(
+                    index_values,
+                    default_constructor=partial(
+                            IndexHierarchy.from_labels,
+                            name=name,
+                            ),
+                    explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                    ).flat()
+        index = index_inner
         # For data fields, we add the field name, not the field values, to the columns.
         columns_name = tuple(columns_fields)
         if len(data_fields) > 1 or not columns_fields: # if no columns_fields, have to add values label
@@ -5899,6 +6033,7 @@ class Frame(ContainerOperand):
         if not columns_fields: # group by is index_fields
             group_fields = index_fields if index_depth > 1 else index_fields[0]
             columns = data_fields if func_single else tuple(product(data_fields, func_fields))
+            # NOTE: examine if need to use passed index_constructor here
             index_constructor = None if index_depth > 1 else partial(Index, name=index_fields[0])
 
             if len(columns) == 1:
@@ -6008,6 +6143,7 @@ class Frame(ContainerOperand):
                                 sub._blocks._extract(row_key=None,
                                         column_key=data_fields_iloc),
                                 index=sub_index_labels,
+                                index_constructor=index_constructor,
                                 own_data=True)
                     else:
                         def blocks() -> tp.Iterator[np.ndarray]:
@@ -7665,7 +7801,7 @@ class FrameAssign(Assign):
             *.
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def apply(self,
             func: AnyCallable,
@@ -7680,7 +7816,7 @@ class FrameAssign(Assign):
             *.
             fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
         '''
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
 
 

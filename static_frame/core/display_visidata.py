@@ -184,10 +184,9 @@ class StaticFrameSheet(Sheet):
             by_cols.append(col.expr)
             ascending.append(not reverse)
 
-        # NOTE: SF does not yet support ascending per column yet; just take the first
         self.rows = StaticFrameAdapter(self.rows.frame.sort_values(
                 by_cols,
-                ascending=ascending[0]),
+                ascending=ascending),
                 )
 
     def _checkSelectedIndex(self):

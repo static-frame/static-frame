@@ -710,7 +710,7 @@ class TestUnit(TestCase):
 
         index = IndexDate.from_date_range('2020-03-05', '2020-03-10')
 
-        s1 = Series(range(6), index=index.values) # create an Index
+        s1 = Series(range(6), index=index.values, index_constructor=IndexDate) # create an Index
         s2 = s1.reindex(index) # same values, different class
         self.assertTrue(s2.index.__class__, index.__class__)
 
@@ -721,13 +721,13 @@ class TestUnit(TestCase):
                 datetime.date(2021,1,15),
                 datetime.date(2021,1,31)))
 
-        s2 = s1.reindex([np.datetime64(d) for d in s1.index[:2]], fill_value=None) #type: ignore
+        s2 = s1.reindex(IndexDate([np.datetime64(d) for d in s1.index[:2]]), fill_value=None) #type: ignore
         self.assertEqual(s2.to_pairs(),
                 ((np.datetime64('2020-12-31'), 3),
                 (np.datetime64('2021-01-15'), 0))
                 )
 
-        s3 = s1.reindex([np.datetime64(d) for d in s1.index], fill_value=None)
+        s3 = s1.reindex(IndexDate([np.datetime64(d) for d in s1.index]), fill_value=None)
 
         self.assertEqual(s3.to_pairs(),
                 ((np.datetime64('2020-12-31'), 3),
@@ -740,19 +740,19 @@ class TestUnit(TestCase):
         dt = datetime.date
         dt64 = np.datetime64
 
-        s1 = sf.Series((3, 0, 1), index=(
+        s1 = sf.Series((3, 0, 1), index=IndexDate((
                 dt(2020,12,31),
                 dt(2021,1,15),
                 dt(2021,1,31),
-                ))
+                )))
 
-        s2 = s1.reindex(list(reversed(s1.index))) #type: ignore
+        s2 = s1.reindex(IndexDate(reversed(s1.index))) #type: ignore
         self.assertEqual(s2.to_pairs(),
                 ((dt(2021, 1, 31), 1),
                 (dt(2021, 1, 15), 0),
                 (dt(2020, 12, 31), 3)))
 
-        s3 = s1.reindex([dt64(d) for d in reversed(s1.index)]) #type: ignore
+        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)])) #type: ignore
         self.assertEqual(s3.to_pairs(),
                 ((dt64('2021-01-31'), 1),
                 (dt64('2021-01-15'), 0),
@@ -770,17 +770,42 @@ class TestUnit(TestCase):
                 dt(2021,1,31),
                 )))
 
-        s2 = s1.reindex(list(reversed(s1.index))) #type: ignore
+        s2 = s1.reindex(IndexDate(reversed(s1.index))) #type: ignore
         self.assertEqual(s2.to_pairs(),
                 ((dt(2021, 1, 31), 1),
                 (dt(2021, 1, 15), 0),
                 (dt(2020, 12, 31), 3)))
 
-        s3 = s1.reindex([dt64(d) for d in reversed(s1.index)]) #type: ignore
+        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)])) #type: ignore
         self.assertEqual(s3.to_pairs(),
                 ((dt64('2021-01-31'), 1),
                 (dt64('2021-01-15'), 0),
                 (dt64('2020-12-31'), 3)))
+
+    def test_series_reindex_j(self) -> None:
+
+        ih1 = IndexHierarchy.from_labels(((1, '2020-01-01'), (1, '2020-01-02'), (1, '2020-01-03')),
+                index_constructors=(Index, IndexDate))
+
+        ih2 = IndexHierarchy.from_labels(((1, '2020-01-01'), (1, '2020-01-02'), (1, '2020-01-05')),
+                index_constructors=(Index, IndexDate))
+
+        s1 = Series((1, 2, 3), index=ih1)
+        self.assertEqual(s1.reindex(ih2, fill_value=None).to_pairs(),
+                (((1, datetime.date(2020, 1, 1)), 1), ((1, datetime.date(2020, 1, 2)), 2), ((1, datetime.date(2020, 1, 5)), None)))
+
+
+    def test_series_reindex_k(self) -> None:
+        dt = datetime.date
+
+        s1 = sf.Frame.from_dict({'a': [1,1,1], 'b':[dt(2020, 1, 1), dt(2020, 1, 2), dt(2020, 1, 3)], 'd':['a', 'b', 'c']}, dtypes={'b': 'datetime64[D]'}).set_index_hierarchy(('a', 'b'), drop=True, index_constructors=(Index, IndexDate))['d']
+
+        ih2 = IndexHierarchy.from_labels(((1, '2020-01-01'), (1, '2020-01-02'), (1, '2020-01-05')),
+                index_constructors=(Index, IndexDate))
+
+        self.assertEqual(s1.reindex(ih2, fill_value=None).to_pairs(),
+                (((1, datetime.date(2020, 1, 1)), 'a'), ((1, datetime.date(2020, 1, 2)), 'b'), ((1, datetime.date(2020, 1, 5)), None)))
+
 
     #---------------------------------------------------------------------------
     def test_series_isna_a(self) -> None:
@@ -2089,9 +2114,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(s1.all(skipna=True), True)
         self.assertEqual(s1.any(), True)
-
-        with self.assertRaises(TypeError):
-            self.assertTrue(np.isnan(s1.all(skipna=False)))
+        self.assertTrue(s1.all(skipna=False))
 
     def test_series_all_c(self) -> None:
         s1 = Series([1, np.nan, 1], index=('a', 'b', 'c'))
@@ -2111,17 +2134,14 @@ class TestUnit(TestCase):
 
     def test_series_all_f(self) -> None:
         s1 = Series([True, None, 1], index=('a', 'b', 'c'))
-        with self.assertRaises(TypeError):
-            self.assertTrue(np.isnan(s1.all(skipna=False)))
-        with self.assertRaises(TypeError):
-            self.assertTrue(np.isnan(s1.any(skipna=False)))
+        self.assertFalse(s1.all(skipna=False))
+        self.assertTrue(s1.any(skipna=False))
 
     def test_series_all_g(self) -> None:
         s1 = Series(['', 'sdf', np.nan], index=('a', 'b', 'c'))
-        with self.assertRaises(TypeError):
-            self.assertTrue(np.isnan(s1.all(skipna=False)))
-        with self.assertRaises(TypeError):
-            self.assertTrue(np.isnan(s1.any(skipna=False)))
+        self.assertFalse(s1.all())
+        self.assertFalse(s1.all(skipna=False))
+        self.assertTrue(s1.any(skipna=False))
 
     def test_series_all_h(self) -> None:
         s1 = Series(['', 'sdf', 'wer'], index=('a', 'b', 'c'))
@@ -2147,6 +2167,13 @@ class TestUnit(TestCase):
         s1 = Series(['', 0, False], index=('a', 'b', 'c'))
         self.assertEqual(s1.all(), False)
         self.assertEqual(s1.any(), False)
+
+
+    def test_series_all_n(self) -> None:
+        s1 = Series(['foo', None, 'bar'])
+        self.assertEqual(s1.all(skipna=False), False)
+        self.assertEqual(s1.any(), True)
+
 
 
     #---------------------------------------------------------------------------
@@ -2638,6 +2665,10 @@ class TestUnit(TestCase):
         s1 = Series((2, 6, 0, np.nan, 0, 6), index=list('abcdef'))
         self.assertEqual(s1.count(skipna=True, unique=False), 5)
 
+    def test_series_count_i(self) -> None:
+        s1 = Series((2, 3, 8, 8, 6, None), index=list('abcdef'))
+        self.assertEqual(s1.count(skipna=False, skipfalsy=False, unique=True), 5)
+
     #---------------------------------------------------------------------------
     def test_series_roll_a(self) -> None:
         s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
@@ -2959,6 +2990,13 @@ class TestUnit(TestCase):
                 (('a', 2), ('b', 3), ('c', 0), ('d', 10), ('e', 20))
                 )
 
+    def test_series_from_concat_i(self) -> None:
+        s1 = Series((2, 3, 0,), index=list('abc'), name='a')
+        s2 = Series((10, 20), index=list('de'), name='a')
+        s3 = Series((8, 6), index=list('fg'), name='b')
+
+        s = Series.from_concat((s1, s2, s3))
+        self.assertEqual(s.name, None)
 
     #---------------------------------------------------------------------------
 
@@ -4460,6 +4498,16 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(s4.dtype.kind, 'f')
 
+    def test_series_from_overlay_l(self) -> None:
+        s1 = Series((1, np.nan, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, -3, 3.1), index=('a', 'b', 'c', 'd'), name=1)
+        s3 = Series((199, 230), index=('c', 'b'))
+
+        s4 = Series.from_overlay(s for s in (s1, s2, s3) if s.name != 1)
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1.0), ('b', 230.0), ('c', 5.0))
+                )
+
 
     #---------------------------------------------------------------------------
     def test_series_sample_a(self) -> None:
@@ -4934,6 +4982,7 @@ class TestUnit(TestCase):
             (('a', False), ('b', False), ('c', False), ('d', False))
             )
 
+    #---------------------------------------------------------------------------
     def test_series_dropfalsy_a(self) -> None:
 
         s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
@@ -4953,6 +5002,14 @@ class TestUnit(TestCase):
 
         s4 = Series(('', False, 0, np.nan), dtype=object, index=('a', 'b', 'c', 'd'))
         self.assertEqual(s4.dropfalsy().to_pairs(), ())
+
+    def test_series_dropfalsy_b(self) -> None:
+
+        s1 = Series((4, 2, 5), index=('a', 'b', 'c'))
+        self.assertEqual(s1.dropfalsy().to_pairs(),
+            (('a', 4), ('b', 2), ('c', 5))
+            )
+
 
     #---------------------------------------------------------------------------
     def test_series_fillfalsy_a(self) -> None:

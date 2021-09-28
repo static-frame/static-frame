@@ -18,6 +18,8 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import dtype_from_element
+from static_frame.core.util import EMPTY_TUPLE
+
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
@@ -152,7 +154,7 @@ class IndexBase(ContainerOperand):
             *,
             name: tp.Optional[tp.Hashable] = None
             ) -> I:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def __init__(self, initializer: tp.Any = None,
             *,
@@ -184,6 +186,12 @@ class IndexBase(ContainerOperand):
             depth_level: DepthLevelSpecifier = 0
             ) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
+
+    @property
+    def index_types(self) -> 'Series':
+        # NOTE: this implementation is here due to pydoc.render_doc call that led to calling this base class method
+        from static_frame.core.series import Series
+        return Series(EMPTY_TUPLE) # pragma: no cover
 
     def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
@@ -309,12 +317,12 @@ class IndexBase(ContainerOperand):
     def _loc_to_iloc(self,
             key: GetItemKeyType,
             ) -> GetItemKeyType:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
             ) -> GetItemKeyType:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def __getitem__(self: I,
             key: GetItemKeyType
@@ -455,17 +463,17 @@ class IndexBase(ContainerOperand):
 
     @property
     def via_str(self) -> InterfaceString[np.ndarray]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     @property
     def via_dt(self) -> InterfaceDatetime[np.ndarray]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def via_re(self,
             pattern: str,
             flags: int = 0,
             ) -> InterfaceRe[np.ndarray]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
     # exporters
