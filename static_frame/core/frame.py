@@ -2587,7 +2587,6 @@ class Frame(ContainerOperand):
                 chain: tp.Callable[[tp.Any], str] = msgpack_numpy.decode,
                 ) -> object:
 
-            # NOTE: maybe this can be replaced by dictionary of SF containers provided by container_util
             cls_map = container_opperand_map()
 
             if b'sf' in obj:

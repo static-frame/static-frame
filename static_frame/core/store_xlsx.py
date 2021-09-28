@@ -363,9 +363,10 @@ class StoreXLSX(Store):
     @staticmethod
     def _load_workbook(fp: str) -> 'Workbook':
         import openpyxl
+         # NOTE: read_only=True provides best performance, but may lead to empty cells with formatting being loaded
         return openpyxl.load_workbook(
                 filename=fp,
-                read_only=False, # NOTE: this was set to True for performance, but led empty cells with formatting to be loaded
+                read_only=True,
                 data_only=True
                 )
 
