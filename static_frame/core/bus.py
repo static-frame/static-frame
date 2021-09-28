@@ -195,7 +195,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
             own_data: bool = False,
-            ):
+            ) -> 'Bus':
         '''
         '''
         # NOTE: this interface is for 0.9 after the default Bus no longer accepts a Series

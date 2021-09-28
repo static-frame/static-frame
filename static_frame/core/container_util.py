@@ -199,7 +199,7 @@ def pandas_to_numpy(
 def df_slice_to_arrays(*,
         part: 'pd.DataFrame',
         column_ilocs: range,
-        get_col_dtype: tp.Callable[[int], np.dtype],
+        get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]],
         pdvu1: bool,
         own_data: bool,
         ) -> tp.Iterator[np.ndarray]:
