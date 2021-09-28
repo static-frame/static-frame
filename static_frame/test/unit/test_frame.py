@@ -830,6 +830,13 @@ class TestUnit(TestCase):
                 ['i', 'i', 'i', 'b', 'i', 'f', 'i', 'i', 'i', 'i'],
                 )
 
+    def test_frame_from_pandas_u(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(dict(a=(1,0)))
+        f1 = Frame.from_pandas(df, dtypes=bool, own_data=True)
+        self.assertEqual(f1.shape, (2, 1))
+        self.assertEqual([d.kind for d in f1.dtypes.values], ['b'])
 
     #---------------------------------------------------------------------------
 

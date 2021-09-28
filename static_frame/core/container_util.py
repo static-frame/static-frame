@@ -196,7 +196,38 @@ def pandas_to_numpy(
     array.flags.writeable = False
     return array
 
+def df_slice_to_arrays(*,
+        part: 'pd.DataFrame',
+        column_ilocs: tp.List[int],
+        get_col_dtype: tp.Callable[[int], np.dtype],
+        pdvu1: bool,
+        own_data: bool,
+        ) -> tp.Iterator[np.ndarray]:
+    '''
+    Given a slice of a DataFrame, extract an array and optionally convert dtypes. If dtypes are provided, they are read with iloc positions given by `columns_ilocs`.
+    '''
+    if pdvu1:
+        array = part.values
+        if own_data:
+            array.flags.writeable = False
+    else:
+        array = pandas_to_numpy(part, own_data=own_data)
 
+    if get_col_dtype:
+        assert len(column_ilocs) == array.shape[1]
+        for col, iloc in enumerate(column_ilocs):
+            # use iloc to get dtype
+            dtype = get_col_dtype(iloc)
+            if dtype is None or dtype == array.dtype:
+                yield array[NULL_SLICE, col]
+            else:
+                yield array[NULL_SLICE, col].astype(dtype)
+    else:
+        yield array
+
+
+
+#---------------------------------------------------------------------------
 def index_from_optional_constructor(
         value: tp.Union[IndexInitializer, 'IndexAutoFactory'],
         *,

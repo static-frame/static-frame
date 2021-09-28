@@ -47,6 +47,7 @@ from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors_deferred
+from static_frame.core.container_util import df_slice_to_arrays
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -2252,8 +2253,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        # NOTE: for specifyin intra index types within IndexHierarchy, a partialed constructor must be used
-
+        # NOTE: for specifying intra index types within IndexHierarchy, a partialed constructor must be used
         import pandas
         if not isinstance(value, pandas.DataFrame):
             raise ErrorInitFrame(f'from_pandas must be called with a Pandas DataFrame object, not: {type(value)}')
@@ -2264,30 +2264,6 @@ class Frame(ContainerOperand):
                 dtypes,
                 value.columns.values, # should be an array
                 )
-
-        def part_to_array(
-                part: 'pandas.DataFrame',
-                column_ilocs: tp.List[int],
-                ) -> tp.Iterator[np.ndarray]:
-            if pdvu1:
-                array = part.values
-                if own_data:
-                    array.flags.writeable = False
-            else:
-                array = pandas_to_numpy(part, own_data=own_data)
-
-            if get_col_dtype:
-                assert len(column_ilocs) == array.shape[1]
-                for col, iloc in enumerate(column_ilocs):
-                    # use iloc to get dtype
-                    dtype = get_col_dtype(iloc)
-                    if dtype is None or dtype == array.dtype:
-                        yield array[NULL_SLICE, col]
-                    else:
-                        yield array[NULL_SLICE, col].astype(dtype)
-            else:
-                yield array
-
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
         def blocks() -> tp.Iterator[np.ndarray]:
@@ -2309,8 +2285,12 @@ class Frame(ContainerOperand):
                 if yield_block:
                     part = value.iloc[NULL_SLICE,
                             slice(column_start, column_last + 1)]
-                    yield from part_to_array(part, column_ilocs)
-
+                    yield from df_slice_to_arrays(part=part,
+                            column_ilocs=column_ilocs,
+                            get_col_dtype=get_col_dtype,
+                            pdvu1=pdvu1,
+                            own_data=own_data,
+                            )
                     column_start = column
                     dtype_current = dtype
                     yield_block = False
@@ -2321,7 +2301,12 @@ class Frame(ContainerOperand):
 
             # always have left over
             part = value.iloc[NULL_SLICE, slice(column_start, None)]
-            yield from part_to_array(part, column_ilocs)
+            yield from df_slice_to_arrays(part=part,
+                    column_ilocs=column_ilocs,
+                    get_col_dtype=get_col_dtype,
+                    pdvu1=pdvu1,
+                    own_data=own_data,
+                    )
 
         if consolidate_blocks:
             blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))

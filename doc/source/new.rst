@@ -4,6 +4,8 @@ What is New in Static Frame
 0.8.20
 ----------
 
+Added ``dtypes`` parameter to ``Frame.from_pandas()``.
+
 Added ``index_constructors``, ``columns_constructors`` to the following interfaces: ``Frame.from_sql()``, ``Frame.from_structured_array()``, ``Frame.from_delimited()``, ``Frame.from_csv()``, ``Frame.from_clipboard``, ``Frame.from_tsv()``, ``Frame.from_xlsx()``, ``Frame.from_sqlite()``, ``Frame.from_hdf5()``, ``Frame.from_arrrow()``, ``Frame.from_parquet()``.
 
 ``StoreConfig`` now exposes ``index_constructros`` and ``columns_constructors`` arguments.
