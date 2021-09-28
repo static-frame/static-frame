@@ -1,5 +1,23 @@
 
 
+This documents confusing / potentially inconsistent designs in SF.
+
+
+Index Cosntructors:
+
+
+index_constructor, index_constructors
+
+index_constructors should only be available if index_depth arguments are present. This is because index_depth-based usage may do specialized handling for index constructions, and specifying internal constructors is more convenient.
+
+index_constructor arguments are generally available if an index argument (and not and an index_depth argument) is present.
+
+
+
+
+
+Axis:
+
 
 
 when summing, axis 0 sums rows (delivering labels of the axis 1)

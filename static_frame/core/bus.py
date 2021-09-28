@@ -197,6 +197,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             own_data: bool = False,
             ) -> 'Bus':
         '''
+        Create a :obj:`Bus` from a :obj:`Series` of :obj:`Frame`.
         '''
         # NOTE: this interface is for 0.9 after the default Bus no longer accepts a Series
         return cls(series,
