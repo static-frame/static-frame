@@ -192,9 +192,9 @@ class IndexLevel:
         return tree
 
     @staticmethod
-    def pad(s: str) -> str:
-        _pad = f"{' ' * 4}"
-        return _pad + f"\n{_pad}".join(s.split("\n"))
+    def _pad(s: str) -> str:
+        msg = f"{' ' * 4}"
+        return msg + f"\n{msg}".join(s.split("\n"))
 
     @classmethod
     def _format(cls, body: str, name: str = "") -> str:
@@ -204,13 +204,14 @@ class IndexLevel:
 
     def _repr(self, name: str = "") -> str:
         if self.targets is None:
-            return self._format(self.pad(str(self.index)), name=name)
+            # NOTE: str(self.index) does not permit passing a DisplayConfig
+            return self._format(self._pad(str(self.index)), name=name)
 
         results: tp.List[str] = []
         for label, target in zip(self.index, self.targets):
             results.append(target._repr(name=repr(label)))
 
-        return self._format(self.pad("\n".join(results)), name=name)
+        return self._format(self._pad("\n".join(results)), name=name)
 
     def __repr__(self) -> str:
         return self._repr().rstrip(',')

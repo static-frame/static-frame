@@ -708,7 +708,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_traverse(self) -> None:
+    def test_index_level_traverse(self) -> None:
         tree = {
             "I": {"A": (1, 2), "B": (1, 2, 3), "C": (2, 3)},
             "II": {"D": (1, 2, 3), "E": (1,)},
@@ -727,6 +727,19 @@ class TestUnit(TestCase):
 
         self.assertTrue(tree["II"]["D"].equals(lvl.targets[1].targets[0].index)) # type: ignore
         self.assertTrue(tree["II"]["E"].equals(lvl.targets[1].targets[1].index)) # type: ignore
+
+
+
+    #---------------------------------------------------------------------------
+
+    def test_index_level_repr(self) -> None:
+        tree = {
+            "I": {"A": (1, 2), "B": (1, 2, 3), "C": (2, 3)},
+            "II": {"D": (1, 2, 3), "E": (1,)},
+        }
+        lvl = IndexLevel.from_tree(tree)
+        msg = repr(lvl)
+        self.assertEqual(len(msg.split()), 52)
 
 
 if __name__ == '__main__':
