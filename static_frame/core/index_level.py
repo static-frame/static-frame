@@ -176,6 +176,45 @@ class IndexLevel:
             self._length = 0
 
     #---------------------------------------------------------------------------
+    def traverse(self) -> tp.Union[Index, TreeNodeT]:
+        '''Traverses the IndexLevel tree via preorder traversal
+        '''
+        if self.targets is None:
+            return self.index
+
+        tree: TreeNodeT = {}
+
+        sentinel: tp.Any = object()
+        for target, label in zip_longest(self.targets, self.index, fillvalue=sentinel):
+            assert target is not sentinel and label is not sentinel, f"Malformed IndexLevel {self}"
+            tree[label] = target.traverse()
+
+        return tree
+
+    @staticmethod
+    def pad(s: str) -> str:
+        _pad = f"{' ' * 4}"
+        return _pad + f"\n{_pad}".join(s.split("\n"))
+
+    @classmethod
+    def _format(cls, body: str, name: str = "") -> str:
+        if name:
+            name = " " + name
+        return f"{cls.__name__}:{name} {{\n{body}\n}},"
+
+    def _repr(self, name: str = "") -> str:
+        if self.targets is None:
+            return self._format(self.pad(str(self.index)), name=name)
+
+        results: tp.List[str] = []
+        for label, target in zip(self.index, self.targets):
+            results.append(target._repr(name=repr(label)))
+
+        return self._format(self.pad("\n".join(results)), name=name)
+
+    def __repr__(self) -> str:
+        return self._repr().rstrip(',')
+
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'IndexLevel':
         obj = self.__new__(self.__class__)
         obj.index = deepcopy(self.index, memo)
@@ -186,7 +225,6 @@ class IndexLevel:
 
         memo[id(self)] = obj
         return obj #type: ignore
-
 
     #---------------------------------------------------------------------------
     def depths(self) -> tp.Iterator[int]:
