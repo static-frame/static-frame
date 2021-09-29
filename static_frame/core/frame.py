@@ -7552,6 +7552,43 @@ class Frame(ContainerOperand):
                 # store_filter=store_filter,
                 )
 
+    def to_npz(self,
+            fp: PathSpecifier, # not sure file-like StringIO works
+            *,
+            include_index: bool = True,
+            include_columns: bool = True,
+            compress: bool = False,
+            ) -> None:
+        '''
+        Write the Frame as a npz file.
+        '''
+        d = {}
+        d['__name__'] = np.array(
+                [self._name, self._index._name, self._columns._name],
+                dtype=DTYPE_OBJECT,
+                )
+        d['__types__'] = np.array(
+                [self.__class__, self._index.__class__, self._columns.__class__],
+                dtype=DTYPE_OBJECT,
+                )
+        # TODO: store shape, index depths
+
+        for i in range(self._index.depth):
+            d[f'__values_index_{i}__'] = self._index.values_at_depth(i)
+        d[f'__types_index__'] = self._index.index_types.values
+
+
+        for i in range(self._columns.depth):
+            d[f'__values_columns_{i}__'] = self._columns.values_at_depth(i)
+        d[f'__types_columns__'] = self._columns.index_types.values
+
+        for i, b in enumerate(self._blocks._blocks):
+            d[f'__values_{i}__'] = b
+
+        np.savez(fp, **d)
+
+
+
     #---------------------------------------------------------------------------
 
     @doc_inject(class_name='Frame')

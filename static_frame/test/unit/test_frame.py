@@ -8941,6 +8941,14 @@ class TestUnit(TestCase):
                 (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('s', (('w', None), ('x', None))))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_frame_to_npz_a(self):
+        f1 = ff.parse('s(10_000,2)|v(int,str)')
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            import ipdb; ipdb.set_trace()
+            pass
 
     #---------------------------------------------------------------------------
 
