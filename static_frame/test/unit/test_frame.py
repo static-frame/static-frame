@@ -8942,7 +8942,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
-    def test_frame_to_npz_a(self):
+    def test_frame_to_npz_a(self) -> None:
         f1 = ff.parse('s(10_000,2)|v(int,str)')
 
         with temp_file('.npz') as fp:
