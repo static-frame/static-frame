@@ -8947,8 +8947,8 @@ class TestUnit(TestCase):
 
         with temp_file('.npz') as fp:
             f1.to_npz(fp)
-            import ipdb; ipdb.set_trace()
-            pass
+        #     import ipdb; ipdb.set_trace()
+        #     pass
 
     #---------------------------------------------------------------------------
 
