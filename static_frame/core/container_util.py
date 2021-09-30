@@ -1299,6 +1299,27 @@ class NPZConverter:
     KEY_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__'
     KEY_TEMPLATE_BLOCKS = '__blocks_{}__'
 
+    @staticmethod
+    def _extract_index(
+            *,
+            index: 'IndexBase',
+            key_template_values: str,
+            key_types: str,
+            depth: int,
+            include: bool,
+            ) -> tp.Dict[str, np.ndarray]:
+        d = {}
+        if depth == 1 and index._map is None: #type: ignore
+            pass # do not store anything
+        elif include:
+            if depth == 1:
+                d[key_template_values.format(0)] = index.values
+            else:
+                for i in range(index.depth):
+                    d[key_template_values.format(i)] = index.values_at_depth(i)
+                d[key_types] = index.index_types.values
+        return d
+
     @classmethod
     def to_npz(cls,
             *,
@@ -1323,34 +1344,29 @@ class NPZConverter:
                 )
 
         # store shape, index depths
-        shape = frame._blocks._shape
         depth_index = frame._index.depth
         depth_columns = frame._columns.depth
 
         d[cls.KEY_SHAPES] = np.array(
-                [shape[0], shape[1], depth_index, depth_columns],
+                [len(frame._blocks._blocks), depth_index, depth_columns],
                 dtype=DTYPE_INT_DEFAULT,
                 )
 
-        if depth_index == 1 and frame._index._map is None: #type: ignore
-            pass
-        elif include_index:
-            for i in range(frame._index.depth):
-                d[cls.KEY_TEMPLATE_VALUES_INDEX.format(i)] = frame._index.values_at_depth(i)
+        d.update(cls._extract_index(
+                index=frame._index,
+                key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
+                key_types=cls.KEY_TYPES_INDEX,
+                depth=depth_index,
+                include=include_index,
+                ))
 
-        if depth_index > 1:
-            d[cls.KEY_TYPES_INDEX] = frame._index.index_types.values
-
-
-        if depth_columns == 1 and frame._columns._map is None: #type: ignore
-            pass
-        elif include_columns:
-            for i in range(frame._columns.depth):
-                d[cls.KEY_TEMPLATE_VALUES_COLUMNS.format(i)] = frame._columns.values_at_depth(i)
-
-        if depth_columns > 1:
-            d[cls.KEY_TYPES_COLUMNS] = frame._columns.index_types.values
-
+        d.update(cls._extract_index(
+                index=frame._columns,
+                key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
+                key_types=cls.KEY_TYPES_COLUMNS,
+                depth=depth_columns,
+                include=include_columns,
+                ))
 
         for i, b in enumerate(frame._blocks._blocks):
             d[cls.KEY_TEMPLATE_BLOCKS.format(i)] = b
@@ -1406,11 +1422,12 @@ class NPZConverter:
         '''
         Create a :obj:`Frame` from an npz file.
         '''
+        from static_frame.core.type_blocks import TypeBlocks
 
         with np.load(fp, allow_pickle=allow_pickle, mmap_mode=mmap_mode) as data:
             name, name_index, name_columns = data[cls.KEY_NAMES]
             cls_index, cls_columns = data[cls.KEY_TYPES]
-            shape0, shape1, depth_index, depth_columns = data[cls.KEY_SHAPES]
+            block_count, depth_index, depth_columns = data[cls.KEY_SHAPES]
 
             index = cls._build_index(
                     data=data,
@@ -1430,8 +1447,22 @@ class NPZConverter:
                     name=name_columns,
                     )
 
-            # import ipdb; ipdb.set_trace()
-        return constructor()
+            def blocks() -> tp.Iterator[np.ndarray]:
+                for i in range(block_count):
+                    array = data[cls.KEY_TEMPLATE_BLOCKS.format(i)]
+                    array.flags.writeable = False
+                    yield array
+
+            tb = TypeBlocks.from_blocks(blocks())
+
+        return constructor(tb,
+                own_data=True,
+                index=index,
+                own_index = False if index is None else True,
+                columns=columns,
+                own_columns = False if columns is None else True,
+                name=name,
+                )
 
 
 

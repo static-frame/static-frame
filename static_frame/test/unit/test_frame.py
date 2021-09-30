@@ -8948,8 +8948,24 @@ class TestUnit(TestCase):
         with temp_file('.npz') as fp:
             f1.to_npz(fp)
             f2 = Frame.from_npz(fp)
-            # import ipdb; ipdb.set_trace()
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
+    def test_frame_to_npz_b(self) -> None:
+        f1 = ff.parse('s(10_000,2)|v(int,str)|c((I, ID),(str,dtD))|i(ID,dtD)').rename('foo')
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+
+    def test_frame_to_npz_c(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
 
     #---------------------------------------------------------------------------
