@@ -8943,12 +8943,14 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_frame_to_npz_a(self) -> None:
-        f1 = ff.parse('s(10_000,2)|v(int,str)')
+        f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
 
         with temp_file('.npz') as fp:
             f1.to_npz(fp)
-        #     import ipdb; ipdb.set_trace()
-        #     pass
+            f2 = Frame.from_npz(fp)
+            # import ipdb; ipdb.set_trace()
+
+
 
     #---------------------------------------------------------------------------
 

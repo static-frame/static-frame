@@ -43,6 +43,8 @@ from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
+from static_frame.core.util import PathSpecifier
+from static_frame.core.util import DTYPE_INT_DEFAULT
 
 from static_frame.core.exception import AxisInvalid
 
@@ -1284,15 +1286,152 @@ class MessagePackElement:
         return d
 
 
+#-------------------------------------------------------------------------------
+
+class NPZConverter:
+    KEY_NAMES = '__names__'
+    KEY_TYPES = '__types__'
+    KEY_SHAPES = '__shapes__'
+    KEY_TYPES_INDEX = '__types_index__'
+    KEY_TYPES_COLUMNS = '__types_columns__'
+
+    KEY_TEMPLATE_VALUES_INDEX = '__values_index_{}__'
+    KEY_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__'
+    KEY_TEMPLATE_BLOCKS = '__blocks_{}__'
+
+    @classmethod
+    def to_npz(cls,
+            *,
+            frame: 'Frame',
+            fp: PathSpecifier, # not sure file-like StringIO works
+            include_index: bool = True,
+            include_columns: bool = True,
+            compress: bool = False,
+            ) -> None:
+        '''
+        Write a :obj:`Frame` as an npz file.
+        '''
+        d = {}
+        d[cls.KEY_NAMES] = np.array(
+                [frame._name, frame._index._name, frame._columns._name],
+                dtype=DTYPE_OBJECT,
+                )
+        # do not store Frame class as caller will determine
+        d[cls.KEY_TYPES] = np.array(
+                [frame._index.__class__, frame._columns.__class__],
+                dtype=DTYPE_OBJECT,
+                )
+
+        # store shape, index depths
+        shape = frame._blocks._shape
+        depth_index = frame._index.depth
+        depth_columns = frame._columns.depth
+
+        d[cls.KEY_SHAPES] = np.array(
+                [shape[0], shape[1], depth_index, depth_columns],
+                dtype=DTYPE_INT_DEFAULT,
+                )
+
+        if depth_index == 1 and frame._index._map is None: #type: ignore
+            pass
+        elif include_index:
+            for i in range(frame._index.depth):
+                d[cls.KEY_TEMPLATE_VALUES_INDEX.format(i)] = frame._index.values_at_depth(i)
+
+        if depth_index > 1:
+            d[cls.KEY_TYPES_INDEX] = frame._index.index_types.values
 
 
+        if depth_columns == 1 and frame._columns._map is None: #type: ignore
+            pass
+        elif include_columns:
+            for i in range(frame._columns.depth):
+                d[cls.KEY_TEMPLATE_VALUES_COLUMNS.format(i)] = frame._columns.values_at_depth(i)
+
+        if depth_columns > 1:
+            d[cls.KEY_TYPES_COLUMNS] = frame._columns.index_types.values
 
 
+        for i, b in enumerate(frame._blocks._blocks):
+            d[cls.KEY_TEMPLATE_BLOCKS.format(i)] = b
+
+        if compress:
+            np.savez_compressed(fp, **d)
+        else:
+            np.savez(fp, **d)
 
 
+    @staticmethod
+    def _build_index(*,
+            data: np.lib.npyio.NpzFile,
+            key_template_values: str,
+            key_types: str,
+            depth: int,
+            cls_index: tp.Type['IndexBase'],
+            name: NameType,
+            ) -> tp.Optional['IndexBase']:
+        '''Build index or columns.
+        '''
+        from static_frame.core.type_blocks import TypeBlocks
+
+        if key_template_values.format(0) not in data:
+            index = None
+        elif depth == 1:
+            values_index = data[key_template_values.format(0)]
+            values_index.flags.writeable = False
+            index = cls_index(values_index, name=name)
+        else:
+            def blocks() -> tp.Iterator[np.ndarray]:
+                for i in range(depth):
+                    array = data[key_template_values.format(i)]
+                    array.flags.writeable = False
+                    yield array
+
+            index_tb = TypeBlocks.from_blocks(blocks())
+            index = cls_index._from_type_blocks(index_tb, #type: ignore
+                    name=name,
+                    index_constructors=data[key_types],
+                    )
+        return index
 
 
+    @classmethod
+    def from_npz(cls,
+            *,
+            constructor: tp.Type['Frame'],
+            fp: PathSpecifier,
+            allow_pickle: bool = True,
+            mmap_mode: tp.Optional[str] = None,
+            ) -> 'Frame':
+        '''
+        Create a :obj:`Frame` from an npz file.
+        '''
 
+        with np.load(fp, allow_pickle=allow_pickle, mmap_mode=mmap_mode) as data:
+            name, name_index, name_columns = data[cls.KEY_NAMES]
+            cls_index, cls_columns = data[cls.KEY_TYPES]
+            shape0, shape1, depth_index, depth_columns = data[cls.KEY_SHAPES]
+
+            index = cls._build_index(
+                    data=data,
+                    key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
+                    key_types=cls.KEY_TYPES_INDEX,
+                    depth=depth_index,
+                    cls_index=cls_index,
+                    name=name_index,
+                    )
+
+            columns = cls._build_index(
+                    data=data,
+                    key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
+                    key_types=cls.KEY_TYPES_COLUMNS,
+                    depth=depth_columns,
+                    cls_index=cls_columns,
+                    name=name_columns,
+                    )
+
+            # import ipdb; ipdb.set_trace()
+        return constructor()
 
 
 

@@ -48,6 +48,7 @@ from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors_deferred
 from static_frame.core.container_util import df_slice_to_arrays
+from static_frame.core.container_util import NPZConverter
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -2225,6 +2226,24 @@ class Frame(ContainerOperand):
                 container_type=cls,
                 # store_filter=store_filter,
                 )
+
+    @classmethod
+    def from_npz(cls,
+            fp: PathSpecifier,
+            *,
+            allow_pickle: bool = True,
+            mmap_mode: tp.Optional[str] = None,
+            ) -> 'Frame':
+        '''
+        Create a :obj:`Frame` from an npz file.
+        '''
+        return NPZConverter.from_npz(
+                constructor=cls,
+                fp=fp,
+                allow_pickle=allow_pickle,
+                mmap_mode=mmap_mode,
+                )
+
 
     #---------------------------------------------------------------------------
 
@@ -6883,7 +6902,7 @@ class Frame(ContainerOperand):
     def to_pairs(self, axis: int = 0) -> tp.Iterable[
             tp.Tuple[tp.Hashable, tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]]]:
         '''
-        Return a tuple of major axis key, minor axis key vlaue pairs, where major axis is determined by the axis argument.
+        Return a tuple of major axis key, minor axis key vlaue pairs, where major axis is determined by the axis argument. Note that the returned object is eagerly constructed; use an iterator interface for lazy iteration.
         '''
         index_values = tuple(self._index)
         columns_values = tuple(self._columns)
@@ -7046,7 +7065,6 @@ class Frame(ContainerOperand):
 
         packb = partial(msgpack.packb, default=encode)
         element_encode = partial(MessagePackElement.encode, packb=packb)
-
         return packb(self)
 
     def to_xarray(self) -> 'Dataset':
@@ -7560,33 +7578,15 @@ class Frame(ContainerOperand):
             compress: bool = False,
             ) -> None:
         '''
-        Write the Frame as a npz file.
+        Write a :obj:`Frame` as an npz file.
         '''
-        d = {}
-        d['__name__'] = np.array(
-                [self._name, self._index._name, self._columns._name],
-                dtype=DTYPE_OBJECT,
+        NPZConverter.to_npz(
+                frame=self,
+                fp=fp,
+                include_index=include_index,
+                include_columns=include_columns,
+                compress=compress,
                 )
-        d['__types__'] = np.array(
-                [self.__class__, self._index.__class__, self._columns.__class__],
-                dtype=DTYPE_OBJECT,
-                )
-        # TODO: store shape, index depths
-
-        for i in range(self._index.depth):
-            d[f'__values_index_{i}__'] = self._index.values_at_depth(i)
-        d[f'__types_index__'] = self._index.index_types.values
-
-
-        for i in range(self._columns.depth):
-            d[f'__values_columns_{i}__'] = self._columns.values_at_depth(i)
-        d[f'__types_columns__'] = self._columns.index_types.values
-
-        for i, b in enumerate(self._blocks._blocks):
-            d[f'__values_{i}__'] = b
-
-        np.savez(fp, **d)
-
 
 
     #---------------------------------------------------------------------------
