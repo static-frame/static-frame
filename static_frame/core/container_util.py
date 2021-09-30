@@ -1291,7 +1291,7 @@ class MessagePackElement:
 class NPZConverter:
     KEY_NAMES = '__names__'
     KEY_TYPES = '__types__'
-    KEY_SHAPES = '__shapes__'
+    KEY_DEPTHS = '__depths__'
     KEY_TYPES_INDEX = '__types_index__'
     KEY_TYPES_COLUMNS = '__types_columns__'
 
@@ -1300,7 +1300,7 @@ class NPZConverter:
     KEY_TEMPLATE_BLOCKS = '__blocks_{}__'
 
     @staticmethod
-    def _extract_index(
+    def _index_encode(
             *,
             index: 'IndexBase',
             key_template_values: str,
@@ -1347,12 +1347,12 @@ class NPZConverter:
         depth_index = frame._index.depth
         depth_columns = frame._columns.depth
 
-        d[cls.KEY_SHAPES] = np.array(
+        d[cls.KEY_DEPTHS] = np.array(
                 [len(frame._blocks._blocks), depth_index, depth_columns],
                 dtype=DTYPE_INT_DEFAULT,
                 )
 
-        d.update(cls._extract_index(
+        d.update(cls._index_encode(
                 index=frame._index,
                 key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
                 key_types=cls.KEY_TYPES_INDEX,
@@ -1360,7 +1360,7 @@ class NPZConverter:
                 include=include_index,
                 ))
 
-        d.update(cls._extract_index(
+        d.update(cls._index_encode(
                 index=frame._columns,
                 key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
                 key_types=cls.KEY_TYPES_COLUMNS,
@@ -1376,10 +1376,9 @@ class NPZConverter:
         else:
             np.savez(fp, **d)
 
-
     @staticmethod
-    def _build_index(*,
-            data: np.lib.npyio.NpzFile,
+    def _index_decode(*,
+            npz_file: np.lib.npyio.NpzFile,
             key_template_values: str,
             key_types: str,
             depth: int,
@@ -1390,26 +1389,25 @@ class NPZConverter:
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-        if key_template_values.format(0) not in data:
+        if key_template_values.format(0) not in npz_file:
             index = None
         elif depth == 1:
-            values_index = data[key_template_values.format(0)]
+            values_index = npz_file[key_template_values.format(0)]
             values_index.flags.writeable = False
             index = cls_index(values_index, name=name)
         else:
             def blocks() -> tp.Iterator[np.ndarray]:
                 for i in range(depth):
-                    array = data[key_template_values.format(i)]
+                    array = npz_file[key_template_values.format(i)]
                     array.flags.writeable = False
                     yield array
 
             index_tb = TypeBlocks.from_blocks(blocks())
             index = cls_index._from_type_blocks(index_tb, #type: ignore
                     name=name,
-                    index_constructors=data[key_types],
+                    index_constructors=npz_file[key_types],
                     )
         return index
-
 
     @classmethod
     def from_npz(cls,
@@ -1424,13 +1422,13 @@ class NPZConverter:
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-        with np.load(fp, allow_pickle=allow_pickle, mmap_mode=mmap_mode) as data:
-            name, name_index, name_columns = data[cls.KEY_NAMES]
-            cls_index, cls_columns = data[cls.KEY_TYPES]
-            block_count, depth_index, depth_columns = data[cls.KEY_SHAPES]
+        with np.load(fp, allow_pickle=allow_pickle, mmap_mode=mmap_mode) as npz_file:
+            name, name_index, name_columns = npz_file[cls.KEY_NAMES]
+            cls_index, cls_columns = npz_file[cls.KEY_TYPES]
+            block_count, depth_index, depth_columns = npz_file[cls.KEY_DEPTHS]
 
-            index = cls._build_index(
-                    data=data,
+            index = cls._index_decode(
+                    npz_file=npz_file,
                     key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
                     key_types=cls.KEY_TYPES_INDEX,
                     depth=depth_index,
@@ -1438,8 +1436,8 @@ class NPZConverter:
                     name=name_index,
                     )
 
-            columns = cls._build_index(
-                    data=data,
+            columns = cls._index_decode(
+                    npz_file=npz_file,
                     key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
                     key_types=cls.KEY_TYPES_COLUMNS,
                     depth=depth_columns,
@@ -1449,7 +1447,7 @@ class NPZConverter:
 
             def blocks() -> tp.Iterator[np.ndarray]:
                 for i in range(block_count):
-                    array = data[cls.KEY_TEMPLATE_BLOCKS.format(i)]
+                    array = npz_file[cls.KEY_TEMPLATE_BLOCKS.format(i)]
                     array.flags.writeable = False
                     yield array
 

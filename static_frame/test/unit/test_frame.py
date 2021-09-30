@@ -8958,7 +8958,6 @@ class TestUnit(TestCase):
             f2 = Frame.from_npz(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
-
     def test_frame_to_npz_c(self) -> None:
         f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
 
@@ -8966,6 +8965,42 @@ class TestUnit(TestCase):
             f1.to_npz(fp)
             f2 = Frame.from_npz(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npz_d(self) -> None:
+        f1 = ff.parse('s(10,100)|v(int,str,bool,bool,float,float)').rename(
+                'foo', index='bar', columns='baz')
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npz_e(self) -> None:
+        f1 = ff.parse('s(10,100)|v(bool,bool,float,float)|i(I,str)|c(I,int)').rename(
+                'foo', index='bar', columns='baz')
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npz_f(self) -> None:
+        f1 = ff.parse('s(10,100)|v(bool,bool,float,float)|i((ID,IY),(dtD,dtY))|c((IY,I),(dtY,str))').rename(
+                'foo', index='bar', columns='baz')
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npz_g(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp, compress=True)
+            f2 = Frame.from_npz(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
 
 
     #---------------------------------------------------------------------------
