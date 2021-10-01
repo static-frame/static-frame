@@ -92,7 +92,7 @@ UFUNC_AXIS_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
         # 'all': UfuncSkipnaAttrs(ufunc_all, ufunc_nanall),
         # 'any': UfuncSkipnaAttrs(ufunc_any, ufunc_nanany),
         'sum': UfuncSkipnaAttrs(np.sum, np.nansum),
-        'min': UfuncSkipnaAttrs( np.min, np.nanmin),
+        'min': UfuncSkipnaAttrs(np.min, np.nanmin),
         'max': UfuncSkipnaAttrs(np.max, np.nanmax),
         'mean': UfuncSkipnaAttrs(np.mean, np.nanmean),
         'median': UfuncSkipnaAttrs(np.median, np.nanmedian),

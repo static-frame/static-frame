@@ -13,7 +13,7 @@ import tempfile
 from enum import Enum
 
 from pyinstrument import Profiler #type: ignore
-from line_profiler import LineProfiler #type: ignore
+# from line_profiler import LineProfiler #type: ignore
 import gprof2dot #type: ignore
 
 import numpy as np
@@ -804,6 +804,32 @@ class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
 
 
 #-------------------------------------------------------------------------------
+class Pivot(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        f1 = ff.parse('s(100_000,10)|v(int,str,bool)|c(I,str)|i(I,int)')
+        self.sff = f1
+        self.pdf = f1.to_pandas()
+
+        # self.meta = {
+        #     }
+
+class Pivot_N(Pivot, Native):
+
+    def index1_data_2(self) -> None:
+        post = self.sff.pivot(index_fields='zUvW', data_fields=('zZbu', 'zkuW'))
+        assert post.shape == (2, 2)
+
+class Pivot_R(Pivot, Reference):
+
+    def index1_data_2(self) -> None:
+        post = self.pdf.pivot_table(index='zUvW', values=('zZbu', 'zkuW'), aggfunc=np.nansum)
+        assert post.shape == (2, 2)
+
+
 
 #-------------------------------------------------------------------------------
 class BusItemsZipPickle(Perf):

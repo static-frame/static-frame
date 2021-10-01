@@ -1291,7 +1291,8 @@ def key_to_datetime_key(
 
 def array_to_groups_and_locations(
         array: np.ndarray,
-        unique_axis: tp.Optional[int] = 0) -> tp.Tuple[np.ndarray, np.ndarray]:
+        unique_axis: tp.Optional[int] = 0,
+        ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''Locations are index positions for each group.
     '''
     try:

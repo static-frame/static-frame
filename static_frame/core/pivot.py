@@ -63,6 +63,26 @@ def extrapolate_column_fields(
     return sub_columns
 
 
+from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import DTYPE_FLOAT_KIND
+from static_frame.core.util import DTYPE_INT_DEFAULT
+
+
+func_dtype_kind_to_dtype = {
+    (np.sum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
+    (np.nansum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
+    (sum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
+
+    (np.sum, 'i'): DTYPE_INT_DEFAULT,
+    (np.nansum, 'i'): DTYPE_INT_DEFAULT,
+    (sum, 'i'): DTYPE_INT_DEFAULT,
+
+    (np.sum, 'u'): DTYPE_INT_DEFAULT, # CHECK this
+    (np.nansum, 'u'): DTYPE_INT_DEFAULT,
+    (sum, 'u'): DTYPE_INT_DEFAULT,
+
+}
+
 def pivot_records_dtypes(
         frame: 'Frame',
         data_fields: tp.Iterable[tp.Hashable],
@@ -70,6 +90,9 @@ def pivot_records_dtypes(
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
         ) -> tp.Iterator[np.dtype]:
     dtypes = frame.dtypes
+
+     # TODO: look at func and dtype kind and try to get dtype from a fixed mapping
+
     for field in data_fields:
         dtype = dtypes[field]
         if func_single:
@@ -77,7 +100,6 @@ def pivot_records_dtypes(
         else: # we assume
             for _, func in func_map:
                 yield None # do not know what func result will be
-
 
 def pivot_records_items(
         frame: 'Frame',
@@ -91,29 +113,40 @@ def pivot_records_items(
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
     take_group_index = group_depth > 1
-
-    for group_index, part in frame.iter_group_items(group_fields):
+    part_columns_loc_to_iloc = frame.columns._loc_to_iloc
+    data_field_ilocs = [part_columns_loc_to_iloc(field) for field in data_fields]
+    record_size = len(data_field_ilocs) * (1 if func_single else len(func_map))
+    group_field_ilocs = part_columns_loc_to_iloc(group_fields)
+    # NOTE: this delivers results by label row for use in a Frame.from_records_items constructor
+    # for group_index, part in frame.iter_group_items(group_fields):
+    for group_index, _, part in frame._blocks.group(axis=0, key=group_field_ilocs):
         label = group_index if take_group_index else group_index[0]
-        record = [] # This size can be pre allocated
-        # TODO: just use frame's loc to loc
-        part_columns_loc_to_iloc = part.columns._loc_to_iloc
-        for field in data_fields:
-            values = part._blocks._extract_array(
+        record = [None] * record_size # This size can be pre allocated, and teh type can be determined
+        # import ipdb; ipdb.set_trace()
+        part_rows = part.shape[0]
+        pos = 0
+        for column_key in data_field_ilocs:
+            # extract a column per group and reduce it to an element
+            values = part._extract_array(
                     row_key=None,
-                    column_key=part_columns_loc_to_iloc(field),
+                    column_key=column_key,
                     )
             if func_single:
-                if len(values) == 1:
-                    record.append(values[0])
+                if part_rows == 1:
+                    record[pos] = values[0]
                 else:
-                    record.append(func_single(values))
+                    record[pos] = func_single(values)
+                pos += 1
             else:
                 for _, func in func_map:
-                    if len(values) == 1:
-                        record.append(values[0])
+                    if part_rows == 1:
+                        record[pos] = values[0]
                     else:
-                        record.append(func(values))
+                        record[pos] = func(values)
+                    pos += 1
         yield label, record
+
+
 
 def pivot_items(
         frame: 'Frame',

@@ -5987,6 +5987,7 @@ class Frame(ContainerOperand):
             func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
             index_constructor:
         '''
+        # NOTE: default in Pandas pivot_table is a mean
         func = np.nansum if func is None else func
         if callable(func):
             func_map = (('', func),) # store iterable of pairs
