@@ -87,12 +87,15 @@ def pivot_records_items(
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
-
+    '''
+    Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
+    '''
     take_group_index = group_depth > 1
 
     for group_index, part in frame.iter_group_items(group_fields):
         label = group_index if take_group_index else group_index[0]
-        record = []
+        record = [] # This size can be pre allocated
+        # TODO: just use frame's loc to loc
         part_columns_loc_to_iloc = part.columns._loc_to_iloc
         for field in data_fields:
             values = part._blocks._extract_array(
