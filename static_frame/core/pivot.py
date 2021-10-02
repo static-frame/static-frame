@@ -68,20 +68,20 @@ from static_frame.core.util import DTYPE_FLOAT_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
 
 
-func_dtype_kind_to_dtype = {
-    (np.sum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
-    (np.nansum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
-    (sum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
+# func_dtype_kind_to_dtype = {
+#     (np.sum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
+#     (np.nansum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
+#     (sum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
 
-    (np.sum, 'i'): DTYPE_INT_DEFAULT,
-    (np.nansum, 'i'): DTYPE_INT_DEFAULT,
-    (sum, 'i'): DTYPE_INT_DEFAULT,
+#     (np.sum, 'i'): DTYPE_INT_DEFAULT,
+#     (np.nansum, 'i'): DTYPE_INT_DEFAULT,
+#     (sum, 'i'): DTYPE_INT_DEFAULT,
 
-    (np.sum, 'u'): DTYPE_INT_DEFAULT, # CHECK this
-    (np.nansum, 'u'): DTYPE_INT_DEFAULT,
-    (sum, 'u'): DTYPE_INT_DEFAULT,
+#     (np.sum, 'u'): DTYPE_INT_DEFAULT, # CHECK this
+#     (np.nansum, 'u'): DTYPE_INT_DEFAULT,
+#     (sum, 'u'): DTYPE_INT_DEFAULT,
 
-}
+# }
 
 def pivot_records_dtypes(
         frame: 'Frame',
@@ -121,16 +121,17 @@ def pivot_records_items(
     # for group_index, part in frame.iter_group_items(group_fields):
     for group_index, _, part in frame._blocks.group(axis=0, key=group_field_ilocs):
         label = group_index if take_group_index else group_index[0]
-        record = [None] * record_size # This size can be pre allocated, and teh type can be determined
+        record = [None] * record_size # This size can be pre allocated,
         # import ipdb; ipdb.set_trace()
         part_rows = part.shape[0]
         pos = 0
+
+        # if part_rows is 1, can walk trhough data felds directly
+
+        # import ipdb; ipdb.set_trace()
         for column_key in data_field_ilocs:
             # extract a column per group and reduce it to an element
-            values = part._extract_array(
-                    row_key=None,
-                    column_key=column_key,
-                    )
+            values = part._extract_array_column(column_key)
             if func_single:
                 if part_rows == 1:
                     record[pos] = values[0]

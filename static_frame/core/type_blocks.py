@@ -2066,7 +2066,7 @@ class TypeBlocks(ContainerOperand):
                     return b
                 return b[row_key]
             if row_key is None:
-                return b[:, column]
+                return b[NULL_SLICE, column]
             return b[row_key, column]
 
         # figure out shape from keys so as to not accumulate?
@@ -2095,6 +2095,17 @@ class TypeBlocks(ContainerOperand):
                 shape=(rows, columns),
                 row_dtype=row_dtype,
                 row_multiple=row_multiple)
+
+    def _extract_array_column(self,
+            key: int,
+            ) -> np.ndarray:
+        '''Alternative extractor that returns full-columns darrays from integer selection.
+        '''
+        block_idx, column = self._index[key]
+        b = self._blocks[block_idx]
+        if b.ndim == 1:
+            return b
+        return b[NULL_SLICE, column]
 
     def _extract(self,
             row_key: GetItemKeyType = None,
