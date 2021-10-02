@@ -119,6 +119,7 @@ def pivot_records_items(
     record_size = len(data_field_ilocs) * (1 if func_single else len(func_map))
     group_field_ilocs = part_columns_loc_to_iloc(group_fields)
 
+    # TODO if the grup fields are unuque, take an alternative path
 
     # PERF: educing to just group_field_ilocs | data_field_ilocs shown to more efficient
 
@@ -126,13 +127,25 @@ def pivot_records_items(
     # group / data ilocs should never overlap
     union_ilocs = list(data_field_ilocs)
     if isinstance(group_field_ilocs, INT_TYPES):
+        group_field_ilocs_post = len(union_ilocs)
         union_ilocs.append(group_field_ilocs)
     else:
+        group_field_ilocs_post = list(range(
+                len(union_ilocs),
+                len(union_ilocs) + len(group_field_ilocs)
+                ))
         union_ilocs.extend(group_field_ilocs)
     data_field_range = range(len(data_fields))
 
-    # for group_index, _, part in frame._blocks._extract(column_key=union_ilocs).group(axis=0, key=group_field_ilocs):
-    for group_index, _, part in frame._blocks.group(axis=0, key=group_field_ilocs):
+    # NOTE: this may re-order blocks
+    # import ipdb; ipdb.set_trace()
+    # TODO: only extract if union_ilocs is less than the full width
+    for group_index, _, part in frame._blocks._extract(
+            column_key=union_ilocs).group(
+            axis=0,
+            key=group_field_ilocs_post,
+            ):
+    # for group_index, _, part in frame._blocks.group(axis=0, key=group_field_ilocs):
 
         label = group_index if take_group_index else group_index[0]
         record = [None] * record_size # This size can be pre allocated,
@@ -140,26 +153,49 @@ def pivot_records_items(
         part_rows = part.shape[0]
         pos = 0
 
-        # if part_rows is 1, can walk through data felds directly
-
+        # NOTE: data_fields put in first part of extracted blocks
         # import ipdb; ipdb.set_trace()
-        # for column_key in data_field_range:
-        for column_key in data_field_ilocs:
-            # extract a column per group and reduce it to an element
-            values = part._extract_array_column(column_key)
-            if func_single:
-                if part_rows == 1:
-                    record[pos] = values[0]
-                else:
-                    record[pos] = func_single(values)
+        if part_rows == 1 and func_single:
+            for column_key in data_field_range:
+                record[pos] = part._extract(row_key=0, column_key=column_key)
                 pos += 1
-            else:
-                for _, func in func_map:
-                    if part_rows == 1:
-                        record[pos] = values[0]
-                    else:
-                        record[pos] = func(values)
+        elif part_rows == 1 and not func_single:
+            for column_key in data_field_range:
+                v = part._extract(row_key=0, column_key=column_key)
+                for _ in range(len(func_map)):
+                    record[pos] = v
                     pos += 1
+        elif part_rows > 1 and func_single:
+            for column_key in data_field_range:
+                values = part._extract_array_column(column_key)
+                record[pos] = func_single(values)
+                pos += 1
+        elif part_rows > 1 and not func_single:
+            for column_key in data_field_range:
+                values = part._extract_array_column(column_key)
+                for _, func in func_map:
+                    record[pos] = func(values)
+                    pos += 1
+        else:
+            raise NotImplementedError() #pragma: no cover
+
+        # for column_key in data_field_range:
+        # # for column_key in data_field_ilocs:
+        #     # extract a column per group and reduce it to an element
+        #     values = part._extract_array_column(column_key)
+        #     if func_single:
+        #         if part_rows == 1:
+        #             record[pos] = values[0]
+        #         else:
+        #             record[pos] = func_single(values)
+        #         pos += 1
+        #     else:
+        #         for _, func in func_map:
+        #             if part_rows == 1:
+        #                 record[pos] = values[0]
+        #             else:
+        #                 record[pos] = func(values)
+        #             pos += 1
         yield label, record
 
 
