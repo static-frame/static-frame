@@ -112,23 +112,38 @@ def pivot_records_items(
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
+    # NOTE: this delivers results by label row for use in a Frame.from_records_items constructor
     take_group_index = group_depth > 1
     part_columns_loc_to_iloc = frame.columns._loc_to_iloc
     data_field_ilocs = [part_columns_loc_to_iloc(field) for field in data_fields]
     record_size = len(data_field_ilocs) * (1 if func_single else len(func_map))
     group_field_ilocs = part_columns_loc_to_iloc(group_fields)
-    # NOTE: this delivers results by label row for use in a Frame.from_records_items constructor
-    # for group_index, part in frame.iter_group_items(group_fields):
+
+
+    # PERF: educing to just group_field_ilocs | data_field_ilocs shown to more efficient
+
+    from static_frame.core.util import INT_TYPES
+    # group / data ilocs should never overlap
+    union_ilocs = list(data_field_ilocs)
+    if isinstance(group_field_ilocs, INT_TYPES):
+        union_ilocs.append(group_field_ilocs)
+    else:
+        union_ilocs.extend(group_field_ilocs)
+    data_field_range = range(len(data_fields))
+
+    # for group_index, _, part in frame._blocks._extract(column_key=union_ilocs).group(axis=0, key=group_field_ilocs):
     for group_index, _, part in frame._blocks.group(axis=0, key=group_field_ilocs):
+
         label = group_index if take_group_index else group_index[0]
         record = [None] * record_size # This size can be pre allocated,
         # import ipdb; ipdb.set_trace()
         part_rows = part.shape[0]
         pos = 0
 
-        # if part_rows is 1, can walk trhough data felds directly
+        # if part_rows is 1, can walk through data felds directly
 
         # import ipdb; ipdb.set_trace()
+        # for column_key in data_field_range:
         for column_key in data_field_ilocs:
             # extract a column per group and reduce it to an element
             values = part._extract_array_column(column_key)

@@ -4574,10 +4574,11 @@ class Frame(ContainerOperand):
         '''
         yield from self._blocks.axis_values(axis)
 
-    def _axis_array_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
+    def _axis_array_items(self,
+            axis: int,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._blocks.axis_values(axis))
-
 
     def _axis_tuple(self, *,
             axis: int,

@@ -527,7 +527,7 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[:, column] # excpeted to be immutable
+                    yield b[NULL_SLICE, column] # excpeted to be immutable
         else:
             raise AxisInvalid(f'no support for axis: {axis}')
 
@@ -1075,6 +1075,7 @@ class TypeBlocks(ContainerOperand):
             else:
                 yield (idx, slice(0, b.shape[1]))
 
+    # NOTE: this might cache its results as it is it might be frequently called with the same arguments in some scenarios (group)
     def _key_to_block_slices(self,
             key: GetItemKeyTypeCompound,
             retain_key_order: bool = True
