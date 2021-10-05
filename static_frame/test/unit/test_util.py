@@ -2505,6 +2505,36 @@ class TestUnit(TestCase):
         self.assertEqual(isfalsy_array(a1).tolist(),
             [[True, False, True, True], [True, True, False, True]])
 
+    #---------------------------------------------------------------------------
+    def test_ufunc_dtype_to_dtype_a(self) -> None:
+
+        from static_frame.core.util import ufunc_dtype_to_dtype
+        from static_frame.core.util import UFUNC_MAP
+
+        # self.assertEqual(
+        #         ufunc_dtype_to_dtype(np.all, np.array((2, 4), np.int16)), np.bool,
+        #         )
+        # self.assertEqual(
+        #         ufunc_dtype_to_dtype(np.all, np.array((2, 4), np.int16)), np.bool,
+        #         )
+
+        for func in UFUNC_MAP.keys():
+            for array in (
+                    np.array((2, 4), dtype=np.int16),
+                    np.array((2, 4), dtype=np.int32),
+                    np.array((2, 4), dtype=np.int64),
+                    np.array((2, 4), dtype=np.float32),
+                    np.array((2, 4), dtype=np.float64),
+                    np.array((2, 4), dtype=np.complex128),
+                    np.array((1, 0, 1), dtype=bool),
+                    ):
+                post = func(array)
+                if not isinstance(post, np.ndarray):
+                    post = np.array(post)
+                # print(func, post)
+                # if post.dtype != ufunc_dtype_to_dtype(func, array.dtype):
+                #     import ipdb; ipdb.set_trace()
+                self.assertEqual(post.dtype, ufunc_dtype_to_dtype(func, array.dtype))
 
 if __name__ == '__main__':
     unittest.main()

@@ -337,6 +337,100 @@ for attr in ('__add__', '__sub__', '__mul__', '__matmul__', '__truediv__', '__fl
     rattr = '__r' + attr[2:]
     OPERATORS[rattr] = rfunc
 
+#-------------------------------------------------------------------------------
+class UFuncCategory(Enum):
+    BOOL = 0
+    SELECTION = 1
+    STATISTICAL = 2 # go to default float type if int, float/complex keep size
+    CUMMULATIVE = 3 # go to max size if int, float/complex keep size
+    SUMMING = 4 # same except bool goes to max int
+
+UFUNC_MAP: tp.Dict[UFunc, UFuncCategory] = {
+    all: UFuncCategory.BOOL,
+    any: UFuncCategory.BOOL,
+    np.all: UFuncCategory.BOOL,
+    np.any: UFuncCategory.BOOL,
+
+    sum: UFuncCategory.SUMMING,
+    np.sum: UFuncCategory.SUMMING,
+    np.nansum: UFuncCategory.SUMMING,
+
+    min: UFuncCategory.SELECTION,
+    np.min: UFuncCategory.SELECTION,
+    np.nanmin: UFuncCategory.SELECTION,
+    max: UFuncCategory.SELECTION,
+    np.max: UFuncCategory.SELECTION,
+    np.nanmax: UFuncCategory.SELECTION,
+
+    np.mean: UFuncCategory.STATISTICAL,
+    np.nanmean: UFuncCategory.STATISTICAL,
+    np.median: UFuncCategory.STATISTICAL,
+    np.nanmedian: UFuncCategory.STATISTICAL,
+    np.std: UFuncCategory.STATISTICAL,
+    np.nanstd: UFuncCategory.STATISTICAL,
+    np.var: UFuncCategory.STATISTICAL,
+    np.nanvar: UFuncCategory.STATISTICAL,
+
+    np.prod: UFuncCategory.CUMMULATIVE,
+    np.nanprod: UFuncCategory.CUMMULATIVE,
+    np.cumsum: UFuncCategory.CUMMULATIVE,
+    np.nancumsum: UFuncCategory.CUMMULATIVE,
+    np.cumprod: UFuncCategory.CUMMULATIVE,
+    np.nancumprod: UFuncCategory.CUMMULATIVE,
+}
+
+def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
+    '''Given a common UFunc and dtype, return the expected return dtype, or None if not possible.
+    '''
+    rt = UFUNC_MAP.get(func, None)
+
+    if rt is None:
+        return None
+
+    if rt is UFuncCategory.BOOL:
+        return DTYPE_BOOL
+
+    if rt is UFuncCategory.SELECTION:
+        if dtype == DTYPE_OBJECT:
+            return None # cannot be sure
+        else:
+            return dtype
+
+    if rt is UFuncCategory.SUMMING:
+        if dtype == DTYPE_OBJECT:
+            return None # cannot be sure
+        if dtype == DTYPE_BOOL or dtype.kind in DTYPE_INT_KINDS:
+            return DTYPE_INT_DEFAULT
+        if dtype.kind in DTYPE_INEXACT_KINDS:
+            if func is sum:
+                if dtype.kind == DTYPE_COMPLEX_KIND:
+                    return DTYPE_COMPLEX_DEFAULT
+                if dtype.kind == DTYPE_FLOAT_KIND:
+                    return DTYPE_FLOAT_DEFAULT
+            return dtype # keep same size
+
+    if rt is UFuncCategory.STATISTICAL:
+        if dtype == DTYPE_OBJECT or dtype == DTYPE_BOOL:
+            return DTYPE_FLOAT_DEFAULT
+        if dtype.kind in DTYPE_INT_KINDS:
+            return DTYPE_FLOAT_DEFAULT
+        if dtype.kind in DTYPE_INEXACT_KINDS:
+            if func in (np.std, np.nanstd, np.var, np.nanvar):
+                if dtype.kind == DTYPE_COMPLEX_KIND:
+                    return DTYPE_FLOAT_DEFAULT
+            return dtype # keep same size
+
+    if rt is UFuncCategory.CUMMULATIVE:
+        if dtype == DTYPE_OBJECT:
+            return None
+        elif dtype == DTYPE_BOOL:
+            return DTYPE_INT_DEFAULT
+        elif dtype.kind in DTYPE_INT_KINDS:
+            return DTYPE_INT_DEFAULT
+        elif dtype.kind in DTYPE_INEXACT_KINDS:
+            return dtype # keep same size
+
+    return None
 
 #-------------------------------------------------------------------------------
 # join utils
