@@ -14,6 +14,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
+from static_frame.core.util import INT_TYPES
 
 
 if tp.TYPE_CHECKING:
@@ -115,41 +116,43 @@ def pivot_records_items(
     # NOTE: this delivers results by label row for use in a Frame.from_records_items constructor
     take_group_index = group_depth > 1
     part_columns_loc_to_iloc = frame.columns._loc_to_iloc
-    data_field_ilocs = [part_columns_loc_to_iloc(field) for field in data_fields]
-    record_size = len(data_field_ilocs) * (1 if func_single else len(func_map))
+    data_field_ilocs: tp.List[int] = [part_columns_loc_to_iloc(field) for field in data_fields]
     group_field_ilocs = part_columns_loc_to_iloc(group_fields)
+    record_size = len(data_field_ilocs) * (1 if func_single else len(func_map))
 
-    # TODO if the grup fields are unuque, take an alternative path
-
-    # PERF: educing to just group_field_ilocs | data_field_ilocs shown to more efficient
-
-    from static_frame.core.util import INT_TYPES
+    # PERF: reducing to just group_field_ilocs | data_field_ilocs shown to more efficient
     # group / data ilocs should never overlap
-    union_ilocs = list(data_field_ilocs)
+    group_field_ilocs_post: tp.Union[int, tp.Iterable[tp.Hashable]]
+    extract_ilocs = list(data_field_ilocs) # make a copy to mutate
+    count_extract = len(extract_ilocs)
     if isinstance(group_field_ilocs, INT_TYPES):
-        group_field_ilocs_post = len(union_ilocs)
-        union_ilocs.append(group_field_ilocs)
+        group_field_ilocs_post = count_extract
+        extract_ilocs.append(group_field_ilocs)
     else:
         group_field_ilocs_post = list(range(
-                len(union_ilocs),
-                len(union_ilocs) + len(group_field_ilocs)
+                count_extract,
+                count_extract + len(group_field_ilocs)
                 ))
-        union_ilocs.extend(group_field_ilocs)
-    data_field_range = range(len(data_fields))
+        extract_ilocs.extend(group_field_ilocs)
 
-    # NOTE: this may re-order blocks
     # import ipdb; ipdb.set_trace()
-    # TODO: only extract if union_ilocs is less than the full width
-    for group_index, _, part in frame._blocks._extract(
-            column_key=union_ilocs).group(
-            axis=0,
-            key=group_field_ilocs_post,
-            ):
-    # for group_index, _, part in frame._blocks.group(axis=0, key=group_field_ilocs):
+    data_field_range: tp.Union[range, tp.Iterable[int]]
+    # only extract if extract_ilocs is less than the full width
+    if len(extract_ilocs) == frame._blocks._shape[0]:
+        extract_blocks = frame._blocks
+        data_field_range = data_field_ilocs # always a list
+        group_key = group_field_ilocs
+    else:
+        # NOTE: this may re-order blocks
+        extract_blocks = frame._blocks._extract(column_key=extract_ilocs)
+        data_field_range = range(len(data_fields))
+        group_key = group_field_ilocs_post
 
+    record: tp.List[tp.Any]
+
+    for group_index, _, part in extract_blocks.group(axis=0, key=group_key):
         label = group_index if take_group_index else group_index[0]
         record = [None] * record_size # This size can be pre allocated,
-        # import ipdb; ipdb.set_trace()
         part_rows = part.shape[0]
         pos = 0
 

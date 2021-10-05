@@ -13,7 +13,7 @@ import tempfile
 from enum import Enum
 
 from pyinstrument import Profiler #type: ignore
-# from line_profiler import LineProfiler #type: ignore
+from line_profiler import LineProfiler #type: ignore
 import gprof2dot #type: ignore
 
 import numpy as np
@@ -805,7 +805,7 @@ class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
 
 #-------------------------------------------------------------------------------
 class Pivot(Perf):
-    NUMBER = 100
+    NUMBER = 150
 
     def __init__(self) -> None:
         super().__init__()
