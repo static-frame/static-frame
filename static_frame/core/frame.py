@@ -6012,39 +6012,36 @@ class Frame(ContainerOperand):
                 raise ErrorInitFrame('no fields remain to populate data.')
 
         index_depth = len(index_fields)
-        index_loc = index_fields if index_depth > 1 else index_fields[0]
-        index_values = ufunc_unique(
-                self._blocks._extract_array(
-                        column_key=self._columns._loc_to_iloc(index_loc)),
-                axis=0)
 
-        # index_inner is used for avoiding dealing with IndexHierarchy
-        # if index_depth == 1:
-        #     index = Index(index_values, name=index_fields[0])
-        #     index_inner = index
-        # else:
-        #     index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
-        #     index_inner = index.flat() # insure we have the right order of tuples
+        def derive_index_inner() -> IndexBase:
+            index_loc = index_fields if index_depth > 1 else index_fields[0]
+            index_values = ufunc_unique(
+                    self._blocks._extract_array(
+                            column_key=self._columns._loc_to_iloc(index_loc)),
+                    axis=0)
 
-        if index_depth == 1:
-            name = index_fields[0]
-            index_inner = index_from_optional_constructor(
-                    index_values,
-                    default_constructor=partial(Index, name=name),
-                    explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
-                    )
-        else: # > 1
-            # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
-            name = tuple(index_fields)
-            index_inner = index_from_optional_constructor(
-                    index_values,
-                    default_constructor=partial(
-                            IndexHierarchy.from_labels,
-                            name=name,
-                            ),
-                    explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
-                    ).flat()
-        index = index_inner
+            if index_depth == 1:
+                name = index_fields[0]
+                index_inner = index_from_optional_constructor(
+                        index_values,
+                        default_constructor=partial(Index, name=name),
+                        explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                        )
+            else: # > 1
+                # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
+                name = tuple(index_fields)
+                index_inner = index_from_optional_constructor(
+                        index_values,
+                        default_constructor=partial(
+                                IndexHierarchy.from_labels,
+                                name=name,
+                                ),
+                        explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                        ).flat()
+            return index_inner
+
+        # index = index_inner
+
         # For data fields, we add the field name, not the field values, to the columns.
         columns_name = tuple(columns_fields)
         if len(data_fields) > 1 or not columns_fields: # if no columns_fields, have to add values label
@@ -6101,8 +6098,10 @@ class Frame(ContainerOperand):
                         dtypes=dtypes,
                         )
             # if we have an IH, we will relabel with that IH, and might have a different order than the order here; thus, reindex. This is not observed with the present implementation of iter_group_items, but that might change.
-            if index_depth > 1 and not f.index.equals(index_inner):
-                f = f.reindex(index_inner, own_index=True, check_equals=False) #pragma: no cover
+            if index_depth > 1:
+                index_inner = derive_index_inner()
+                if f.index.equals(index_inner):
+                    f = f.reindex(index_inner, own_index=True, check_equals=False) #pragma: no cover
         else:
             # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
             index_fields_len = len(index_fields)
@@ -6189,13 +6188,14 @@ class Frame(ContainerOperand):
                                 )
                 sub_frames.append(sub_frame)
 
+            index_inner = derive_index_inner()
             f = self.__class__.from_concat(sub_frames,
                     index=index_inner,
                     columns=sub_columns_collected,
                     axis=1,
                     fill_value=fill_value)
 
-        index_final = None if index_depth == 1 else index
+        index_final = None if index_depth == 1 else index_inner
 
         # have to rename columns if derived in from_concat
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
