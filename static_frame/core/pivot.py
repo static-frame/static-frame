@@ -15,6 +15,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
 from static_frame.core.util import INT_TYPES
+from static_frame.core.util import ufunc_dtype_to_dtype
 
 
 if tp.TYPE_CHECKING:
@@ -63,44 +64,23 @@ def extrapolate_column_fields(
 
     return sub_columns
 
-
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import DTYPE_FLOAT_KIND
-from static_frame.core.util import DTYPE_INT_DEFAULT
-
-
-# func_dtype_kind_to_dtype = {
-#     (np.sum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
-#     (np.nansum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
-#     (sum, DTYPE_FLOAT_KIND): DTYPE_FLOAT_DEFAULT,
-
-#     (np.sum, 'i'): DTYPE_INT_DEFAULT,
-#     (np.nansum, 'i'): DTYPE_INT_DEFAULT,
-#     (sum, 'i'): DTYPE_INT_DEFAULT,
-
-#     (np.sum, 'u'): DTYPE_INT_DEFAULT, # CHECK this
-#     (np.nansum, 'u'): DTYPE_INT_DEFAULT,
-#     (sum, 'u'): DTYPE_INT_DEFAULT,
-
-# }
-
 def pivot_records_dtypes(
         frame: 'Frame',
         data_fields: tp.Iterable[tp.Hashable],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
         ) -> tp.Iterator[np.dtype]:
+    '''
+    Iterator of ordered dtypes, providing multiple dtypes per field when func_map is provided.
+    '''
     dtypes = frame.dtypes
-
-     # TODO: look at func and dtype kind and try to get dtype from a fixed mapping
-
     for field in data_fields:
         dtype = dtypes[field]
         if func_single:
-            yield dtype
+            yield ufunc_dtype_to_dtype(func_single, dtype)
         else: # we assume
             for _, func in func_map:
-                yield None # do not know what func result will be
+                yield ufunc_dtype_to_dtype(func, dtype)
 
 def pivot_records_items(
         frame: 'Frame',
