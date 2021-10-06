@@ -2511,13 +2511,6 @@ class TestUnit(TestCase):
         from static_frame.core.util import ufunc_dtype_to_dtype
         from static_frame.core.util import UFUNC_MAP
 
-        # self.assertEqual(
-        #         ufunc_dtype_to_dtype(np.all, np.array((2, 4), np.int16)), np.bool,
-        #         )
-        # self.assertEqual(
-        #         ufunc_dtype_to_dtype(np.all, np.array((2, 4), np.int16)), np.bool,
-        #         )
-
         for func in UFUNC_MAP.keys():
             for array in (
                     np.array((2, 4), dtype=np.int16),
@@ -2527,14 +2520,23 @@ class TestUnit(TestCase):
                     np.array((2, 4), dtype=np.float64),
                     np.array((2, 4), dtype=np.complex128),
                     np.array((1, 0, 1), dtype=bool),
+                    np.array((1, 0, 1), dtype=object),
                     ):
-                post = func(array)
+                try:
+                    post = func(array)
+                except (AttributeError, TypeError): # object arrays
+                    continue
+
                 if not isinstance(post, np.ndarray):
                     post = np.array(post)
+                resolved = ufunc_dtype_to_dtype(func, array.dtype)
+                if resolved == None and array.dtype == object:
+                    continue
+                if post.dtype != resolved:
+                    pass
                 # print(func, post)
-                # if post.dtype != ufunc_dtype_to_dtype(func, array.dtype):
-                #     import ipdb; ipdb.set_trace()
-                self.assertEqual(post.dtype, ufunc_dtype_to_dtype(func, array.dtype))
+                # import ipdb; ipdb.set_trace()
+                self.assertEqual(post.dtype, resolved)
 
 if __name__ == '__main__':
     unittest.main()

@@ -388,6 +388,8 @@ def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
         return None
 
     if rt is UFuncCategory.BOOL:
+        if dtype == DTYPE_OBJECT:
+            return None # an object array returns a value from the array
         return DTYPE_BOOL
 
     if rt is UFuncCategory.SELECTION:
