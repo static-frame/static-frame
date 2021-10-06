@@ -1,8 +1,6 @@
 import unittest
-import datetime
 
 import frame_fixtures as ff
-import numpy as np
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.pivot import pivot_records_items
