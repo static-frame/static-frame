@@ -2511,7 +2511,7 @@ class TestUnit(TestCase):
         from static_frame.core.util import ufunc_dtype_to_dtype
         from static_frame.core.util import UFUNC_MAP
 
-        for func in UFUNC_MAP.keys():
+        for func in UFUNC_MAP:
             for array in (
                     np.array((2, 4), dtype=np.int16),
                     np.array((2, 4), dtype=np.int32),
@@ -2530,12 +2530,10 @@ class TestUnit(TestCase):
                 if not isinstance(post, np.ndarray):
                     post = np.array(post)
                 resolved = ufunc_dtype_to_dtype(func, array.dtype)
-                if resolved == None and array.dtype == object:
+                if resolved is None and array.dtype == object:
                     continue
                 if post.dtype != resolved:
                     pass
-                # print(func, post)
-                # import ipdb; ipdb.set_trace()
                 self.assertEqual(post.dtype, resolved)
 
 if __name__ == '__main__':
