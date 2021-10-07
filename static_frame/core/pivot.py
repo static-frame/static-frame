@@ -171,6 +171,8 @@ def pivot_items(
     column_iloc = columns_loc_to_iloc(data_fields[0])
     group_field_ilocs = columns_loc_to_iloc(group_fields)
 
+    group_field_ilocs_post: tp.Union[int, tp.Iterable[tp.Hashable]]
+
     if isinstance(group_field_ilocs, INT_TYPES):
         extract_ilocs = [column_iloc, group_field_ilocs]
         group_field_ilocs_post = 1
@@ -193,6 +195,31 @@ def pivot_items(
         # will always be first
         values = sub._extract_array_column(extract_col)
         yield label, func_single(values)
+
+
+# def pivot_items(
+#         frame: 'Frame',
+#         group_fields: tp.Iterable[tp.Hashable],
+#         group_depth: int,
+#         data_fields: tp.Sequence[tp.Hashable],
+#         func_single: UFunc,
+#         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+#     '''
+#     Specialized generator of Pairs for when group_fields has been reduced to a single column.
+#     '''
+#     take_group = group_depth > 1
+
+#     for group, sub in frame.iter_group_items(group_fields):
+#         label = group if take_group else group[0]
+#         values = sub._blocks._extract_array(
+#                 row_key=None,
+#                 column_key=sub.columns._loc_to_iloc(data_fields[0]),
+#                 )
+#         if len(values) == 1:
+#             yield label, values[0]
+#         else: # can be sure we only have func_single
+#             yield label, func_single(values)
+
 
 #-------------------------------------------------------------------------------
 class PivotIndexMap(tp.NamedTuple):

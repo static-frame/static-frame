@@ -288,7 +288,7 @@ class TypeBlocks(ContainerOperand):
             self._row_dtype = None
 
         # lazily store as needed; must be cleared on mutation
-        self._block_slices = None
+        self._block_slices: tp.Optional[tp.List[tp.Tuple[int, slice]]] = None
     #---------------------------------------------------------------------------
     def __setstate__(self,
             state: tp.Tuple[object, tp.Mapping[str, tp.Any]],
@@ -1071,6 +1071,8 @@ class TypeBlocks(ContainerOperand):
     def _all_block_slices(self) -> tp.List[tp.Tuple[int, slice]]:
         '''
         Alternaitve to _indices_to_contiguous_pairs when we need all indices per block in a slice.
+
+        NOTE: this is a lazily populated internal mutable attribute.
         '''
         if self._block_slices is None:
             self._block_slices = []
