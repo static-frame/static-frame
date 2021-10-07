@@ -810,19 +810,26 @@ class Pivot(Perf):
     def __init__(self) -> None:
         super().__init__()
 
-        f1 = ff.parse('s(100_000,10)|v(int,str,bool)|c(I,str)|i(I,int)')
-        self.sff1 = f1
-        self.pdf1 = f1.to_pandas()
+        self.sff1 = ff.parse('s(100_000,10)|v(int,str,bool)|c(I,str)|i(I,int)')
+        self.pdf1 = self.sff1.to_pandas()
 
         # narrow eav table
-        f2 = ff.parse('s(100_000,10)|v(int,str,bool)|c(I,str)|i(I,int)')
+        self.sff2 = ff.parse('s(100_000,3)|v(int,int,int)').assign[0].apply(
+                lambda s: s % 6).assign[1].apply(
+                lambda s: s % 12
+                )
+        self.pdf2 = self.sff2.to_pandas()
 
-        # from static_frame import Frame
+        from static_frame import Frame
         from static_frame import TypeBlocks
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
-                # perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=TypeBlocks._key_to_block_slices,
+                explanation='nearly identical, favoring slower'
+                ),
+            'index1_columns1_data1': FunctionMetaData(
+                line_target=Frame.pivot,
                 ),
             }
 
@@ -832,12 +839,20 @@ class Pivot_N(Pivot, Native):
         post = self.sff1.pivot(index_fields='zUvW', data_fields=('zZbu', 'zkuW'))
         assert post.shape == (2, 2)
 
+    def index1_columns1_data1(self) -> None:
+        post = self.sff2.pivot(index_fields=0, columns_fields=1)
+        assert post.shape == (6, 12)
+
+
 class Pivot_R(Pivot, Reference):
 
     def index1_columns0_data2(self) -> None:
         post = self.pdf1.pivot_table(index='zUvW', values=('zZbu', 'zkuW'), aggfunc=np.nansum)
         assert post.shape == (2, 2)
 
+    def index1_columns1_data1(self) -> None:
+        post = self.pdf2.pivot_table(index=0, columns=1, aggfunc=np.nansum)
+        assert post.shape == (6, 12)
 
 #-------------------------------------------------------------------------------
 class BusItemsZipPickle(Perf):

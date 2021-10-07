@@ -95,11 +95,11 @@ def pivot_records_items(
     '''
     # NOTE: this delivers results by label row for use in a Frame.from_records_items constructor
     take_group_index = group_depth > 1
-    part_columns_loc_to_iloc = frame.columns._loc_to_iloc
+    columns_loc_to_iloc = frame.columns._loc_to_iloc
 
-    data_field_ilocs: tp.List[int] = [part_columns_loc_to_iloc(field)
+    data_field_ilocs: tp.List[int] = [columns_loc_to_iloc(field)
             for field in data_fields]
-    group_field_ilocs = part_columns_loc_to_iloc(group_fields)
+    group_field_ilocs = columns_loc_to_iloc(group_fields)
 
     record_size = len(data_field_ilocs) * (1 if func_single else len(func_map))
 
@@ -166,17 +166,33 @@ def pivot_items(
     Specialized generator of Pairs for when group_fields has been reduced to a single column.
     '''
     take_group = group_depth > 1
+    columns_loc_to_iloc = frame.columns._loc_to_iloc
 
-    for group, sub in frame.iter_group_items(group_fields):
+    column_iloc = columns_loc_to_iloc(data_fields[0])
+    group_field_ilocs = columns_loc_to_iloc(group_fields)
+
+    if isinstance(group_field_ilocs, INT_TYPES):
+        extract_ilocs = [column_iloc, group_field_ilocs]
+        group_field_ilocs_post = 1
+    else:
+        extract_ilocs = [column_iloc]
+        extract_ilocs.extend(group_field_ilocs)
+        group_field_ilocs_post = list(range(1, 1 + len(group_field_ilocs)))
+
+    if len(extract_ilocs) == frame._blocks._shape[0]:
+        extract_blocks = frame._blocks
+        extract_col = column_iloc
+        group_key = group_field_ilocs
+    else:
+        extract_blocks = frame._blocks._extract(column_key=extract_ilocs)
+        extract_col = 0
+        group_key = group_field_ilocs_post
+
+    for group, _, sub in extract_blocks.group(axis=0, key=group_key):
         label = group if take_group else group[0]
-        values = sub._blocks._extract_array(
-                row_key=None,
-                column_key=sub.columns._loc_to_iloc(data_fields[0]),
-                )
-        if len(values) == 1:
-            yield label, values[0]
-        else: # can be sure we only have func_single
-            yield label, func_single(values)
+        # will always be first
+        values = sub._extract_array_column(extract_col)
+        yield label, func_single(values)
 
 #-------------------------------------------------------------------------------
 class PivotIndexMap(tp.NamedTuple):

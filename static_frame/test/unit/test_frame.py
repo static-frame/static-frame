@@ -10841,7 +10841,7 @@ class TestUnit(TestCase):
 
     def test_frame_pivot_r(self) -> None:
         f1 = sf.Frame.from_records([[0, 'A', False],[1, None, True], [2, 'B', False]])
-        f2 = f1.pivot((0, 1))
+        f2 = f1.pivot((0, 1), func=np.all)
 
         self.assertEqual(f2.dtypes.values.tolist(),
                 [np.dtype('bool')]
