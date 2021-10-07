@@ -1097,7 +1097,7 @@ class TypeBlocks(ContainerOperand):
             A generator iterable of pairs, where values are block index, slice or column index
         '''
         if key is None or (key.__class__ is slice and key == NULL_SLICE):
-            yield from self._all_block_slices() # PERF: slow from line profiler
+            yield from self._all_block_slices()
         else:
             if isinstance(key, INT_TYPES):
                 # the index has the pair block, column integer
