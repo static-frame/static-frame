@@ -108,6 +108,7 @@ def pivot_records_items(
     group_field_ilocs_post: tp.Union[int, tp.Iterable[tp.Hashable]]
     extract_ilocs = list(data_field_ilocs) # make a copy to mutate
     count_extract = len(extract_ilocs)
+
     if isinstance(group_field_ilocs, INT_TYPES):
         group_field_ilocs_post = count_extract
         extract_ilocs.append(group_field_ilocs)
@@ -118,7 +119,6 @@ def pivot_records_items(
                 ))
         extract_ilocs.extend(group_field_ilocs)
 
-    # import ipdb; ipdb.set_trace()
     data_field_range: tp.Union[range, tp.Iterable[int]]
     # only extract if extract_ilocs is less than the full width
     if len(extract_ilocs) == frame._blocks._shape[0]:
