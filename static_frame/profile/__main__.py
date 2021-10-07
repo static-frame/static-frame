@@ -811,24 +811,28 @@ class Pivot(Perf):
         super().__init__()
 
         f1 = ff.parse('s(100_000,10)|v(int,str,bool)|c(I,str)|i(I,int)')
-        self.sff = f1
-        self.pdf = f1.to_pandas()
+        self.sff1 = f1
+        self.pdf1 = f1.to_pandas()
 
-        # self.meta = {
-        #     }
+        from static_frame import Frame
+        self.meta = {
+            'index1_columns0_data2': FunctionMetaData(
+                # perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=Frame.pivot
+                ),
+            }
 
 class Pivot_N(Pivot, Native):
 
-    def index1_data_2(self) -> None:
-        post = self.sff.pivot(index_fields='zUvW', data_fields=('zZbu', 'zkuW'))
+    def index1_columns0_data2(self) -> None:
+        post = self.sff1.pivot(index_fields='zUvW', data_fields=('zZbu', 'zkuW'))
         assert post.shape == (2, 2)
 
 class Pivot_R(Pivot, Reference):
 
-    def index1_data_2(self) -> None:
-        post = self.pdf.pivot_table(index='zUvW', values=('zZbu', 'zkuW'), aggfunc=np.nansum)
+    def index1_columns0_data2(self) -> None:
+        post = self.pdf1.pivot_table(index='zUvW', values=('zZbu', 'zkuW'), aggfunc=np.nansum)
         assert post.shape == (2, 2)
-
 
 
 #-------------------------------------------------------------------------------
