@@ -96,8 +96,11 @@ def pivot_records_items(
     # NOTE: this delivers results by label row for use in a Frame.from_records_items constructor
     take_group_index = group_depth > 1
     part_columns_loc_to_iloc = frame.columns._loc_to_iloc
-    data_field_ilocs: tp.List[int] = [part_columns_loc_to_iloc(field) for field in data_fields]
+
+    data_field_ilocs: tp.List[int] = [part_columns_loc_to_iloc(field)
+            for field in data_fields]
     group_field_ilocs = part_columns_loc_to_iloc(group_fields)
+
     record_size = len(data_field_ilocs) * (1 if func_single else len(func_map))
 
     # PERF: reducing to just group_field_ilocs | data_field_ilocs shown to more efficient
@@ -133,11 +136,9 @@ def pivot_records_items(
     for group_index, _, part in extract_blocks.group(axis=0, key=group_key):
         label = group_index if take_group_index else group_index[0]
         record = [None] * record_size # This size can be pre allocated,
-        part_rows = part.shape[0]
         pos = 0
 
         # NOTE: data_fields put in first part of extracted blocks
-
         if func_single:
             for column_key in data_field_range:
                 values = part._extract_array_column(column_key)
@@ -149,30 +150,6 @@ def pivot_records_items(
                 for _, func in func_map:
                     record[pos] = func(values)
                     pos += 1
-
-        # if part_rows == 1 and func_single:
-        #     for column_key in data_field_range:
-        #         record[pos] = part._extract(row_key=0, column_key=column_key)
-        #         pos += 1
-        # elif part_rows == 1 and not func_single:
-        #     for column_key in data_field_range:
-        #         v = part._extract(row_key=0, column_key=column_key)
-        #         for _ in range(len(func_map)):
-        #             record[pos] = v
-        #             pos += 1
-        # elif part_rows > 1 and func_single:
-        #     for column_key in data_field_range:
-        #         values = part._extract_array_column(column_key)
-        #         record[pos] = func_single(values)
-        #         pos += 1
-        # elif part_rows > 1 and not func_single:
-        #     for column_key in data_field_range:
-        #         values = part._extract_array_column(column_key)
-        #         for _, func in func_map:
-        #             record[pos] = func(values)
-        #             pos += 1
-        # else:
-        #     raise NotImplementedError() #pragma: no cover
 
         yield label, record
 
