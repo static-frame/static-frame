@@ -79,6 +79,7 @@ class TypeBlocks(ContainerOperand):
             '_index',
             '_shape',
             '_row_dtype',
+            '_block_slices',
             )
 
     STATIC = False
@@ -286,6 +287,8 @@ class TypeBlocks(ContainerOperand):
             # NOTE: this violates the type; however, this is desirable when appending such that this value does not force an undesirable type resolution
             self._row_dtype = None
 
+        # lazily store as needed; must be cleared on mutation
+        self._block_slices = None
     #---------------------------------------------------------------------------
     def __setstate__(self,
             state: tp.Tuple[object, tp.Mapping[str, tp.Any]],
@@ -306,7 +309,7 @@ class TypeBlocks(ContainerOperand):
         obj._index = self._index.copy() # list of tuples of ints
         obj._shape = self._shape # immutable, no copy necessary
         obj._row_dtype = deepcopy(self._row_dtype, memo)
-
+        obj._block_slices = deepcopy(self._block_slices, memo)
         memo[id(self)] = obj
         return obj #type: ignore
 
@@ -1065,15 +1068,19 @@ class TypeBlocks(ContainerOperand):
         if last and bundle:
             yield (last[0], cls._cols_to_slice(bundle))
 
-    def _all_block_slices(self) -> tp.Iterator[tp.Tuple[int, slice]]:
+    def _all_block_slices(self) -> tp.List[tp.Tuple[int, slice]]:
         '''
         Alternaitve to _indices_to_contiguous_pairs when we need all indices per block in a slice.
         '''
-        for idx, b in enumerate(self._blocks):
-            if b.ndim == 1:
-                yield (idx, UNIT_SLICE) # cannot give an integer here instead of a slice
-            else:
-                yield (idx, slice(0, b.shape[1]))
+        if self._block_slices is None:
+            self._block_slices = []
+            for idx, b in enumerate(self._blocks):
+                if b.ndim == 1:
+                    self._block_slices.append((idx, UNIT_SLICE)) # cannot give an integer here instead of a slice
+                else:
+                    self._block_slices.append((idx, slice(0, b.shape[1])))
+
+        return self._block_slices
 
     # NOTE: this might cache its results as it is it might be frequently called with the same arguments in some scenarios (group)
     def _key_to_block_slices(self,
@@ -1090,7 +1097,7 @@ class TypeBlocks(ContainerOperand):
             A generator iterable of pairs, where values are block index, slice or column index
         '''
         if key is None or (key.__class__ is slice and key == NULL_SLICE):
-            yield from self._all_block_slices() # slow from line profiler, 80% of this function call
+            yield from self._all_block_slices() # PERF: slow from line profiler
         else:
             if isinstance(key, INT_TYPES):
                 # the index has the pair block, column integer
@@ -1997,17 +2004,16 @@ class TypeBlocks(ContainerOperand):
                 (row_key.__class__ is slice and row_key == NULL_SLICE))
 
         single_row = False
-        if row_key_null:
-            if self._shape[0] == 1:
-                # this codition used to only hold if the arg is a null slice; now if None too and shape has one row
-                single_row = True
+        if row_key_null and self._shape[0] == 1:
+            # this codition used to only hold if the arg is a null slice; now if None too and shape has one row
+            single_row = True
         elif isinstance(row_key, INT_TYPES):
             single_row = True
         elif row_key.__class__ is slice:
             # need to determine if there is only one index returned by range (after getting indices from the slice); do this without creating a list/tuple, or walking through the entire range; get constant time look-up of range length after uses slice.indicies
             if len(range(*row_key.indices(self._shape[0]))) == 1: #type: ignore
                 single_row = True
-        elif row_key.__class__ is np.ndarray and row_key.dtype == bool: #type: ignore
+        elif row_key.__class__ is np.ndarray and row_key.dtype == DTYPE_BOOL: #type: ignore
             # must check this case before general iterables, below
             if row_key.sum() == 1: #type: ignore
                 single_row = True
@@ -2020,7 +2026,7 @@ class TypeBlocks(ContainerOperand):
                 (column_key.__class__ is slice and column_key == NULL_SLICE)):
             yield EMPTY_ARRAY.reshape(self._shape)[row_key]
         else:
-            for block_idx, slc in self._key_to_block_slices(column_key): # PREF: slow from line profiler
+            for block_idx, slc in self._key_to_block_slices(column_key): # PERF: slow from line profiler
                 b = self._blocks[block_idx]
                 if b.ndim == 1: # given 1D array, our row key is all we need
                     if row_key_null:
@@ -3248,20 +3254,25 @@ class TypeBlocks(ContainerOperand):
         if block.shape[0] != row_count:
             raise RuntimeError(f'appended block shape {block.shape} does not align with shape {self._shape}')
 
+        # get ref to append
+        bs = self._all_block_slices()
+        block_idx = len(self._blocks) # next block
         if block.ndim == 1:
             # length already confirmed to match row count; even if this is a zero length 1D array, we keep it as it (by definition) defines a column (if the existing row_count is zero). said another way, a zero length, 1D array always has a shape of (0, 1)
             block_columns = 1
+            bs.append((block_idx, UNIT_SLICE))
         else:
             block_columns = block.shape[1]
             if block_columns == 0:
                 # do not append 0 width arrays
                 return
+            bs = self._all_block_slices()
+            bs.append((block_idx, slice(0, block_columns)))
 
         # extend shape, or define it if not yet set
         self._shape = (row_count, self._shape[1] + block_columns)
 
         # add block, dtypes, index
-        block_idx = len(self._blocks) # next block
         for i in range(block_columns):
             self._index.append((block_idx, i))
             self._dtypes.append(block.dtype)

@@ -814,11 +814,12 @@ class Pivot(Perf):
         self.sff1 = f1
         self.pdf1 = f1.to_pandas()
 
-        from static_frame import Frame
+        # from static_frame import Frame
+        from static_frame import TypeBlocks
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
                 # perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=Frame.pivot
+                line_target=TypeBlocks._slice_blocks,
                 ),
             }
 

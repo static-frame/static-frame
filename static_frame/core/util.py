@@ -1395,14 +1395,16 @@ def array_to_groups_and_locations(
         groups, locations = np.unique(
                 array,
                 return_inverse=True,
-                axis=unique_axis)
+                axis=unique_axis,
+                )
     except TypeError:
-        # group by string representations, necessary when types are not comparable
+        # group by string representations, necessary when object types are not comparable; some object arrays will not need to follow this path.
         _, group_index, locations = np.unique(
                 array.astype(str),
                 return_index=True,
                 return_inverse=True,
-                axis=unique_axis)
+                axis=unique_axis,
+                )
         # groups here are the strings; need to restore to values
         groups = array[group_index]
 
