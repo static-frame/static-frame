@@ -254,7 +254,7 @@ def pivot_outer_index(
                 axis=0)
         # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
         name = tuple(index_fields)
-        index_inner = index_from_optional_constructor(
+        index_inner = index_from_optional_constructor( # type: ignore
                 index_values,
                 default_constructor=partial(
                         IndexHierarchy.from_labels,
