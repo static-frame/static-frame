@@ -820,6 +820,12 @@ class Pivot(Perf):
                 )
         self.pdf2 = self.sff2.to_pandas()
 
+        # more than one data fields
+        self.sff3 = ff.parse('s(100_000,4)|v(int,int,int,int)').assign[0].apply(
+                lambda s: s % 6).assign[1].apply(
+                lambda s: s % 12
+                )
+
         from static_frame import Frame
         from static_frame import TypeBlocks
         from static_frame.core.util import array_to_groups_and_locations

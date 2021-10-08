@@ -16,10 +16,12 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import ufunc_dtype_to_dtype
-
+from static_frame.core.util import ufunc_unique
+from static_frame.core.container_util import index_from_optional_constructor
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
 
 
 
@@ -31,7 +33,8 @@ def extrapolate_column_fields(
         data_fields: tp.Sequence[tp.Hashable],
         func_fields: tp.Iterable[tp.Hashable],
         ) -> tp.Iterable[tp.Hashable]:
-    '''Used in Frame.pivot.
+    '''"Determine columns to be reatined from gruop and data fields.
+    Used in Frame.pivot.
 
     Args:
         group: a unique label from the the result of doing a group-by with the `columns_fields`.
@@ -46,7 +49,8 @@ def extrapolate_column_fields(
             sub_columns = group # already a tuple
         else:
             sub_columns = [group + (label,) for label in func_fields]
-    elif columns_fields_len == 1 and data_fields_len > 1: # create a sub heading for each data field
+    elif columns_fields_len == 1 and data_fields_len > 1:
+        # create a sub heading for each data field
         if not func_fields:
             sub_columns = list(product(group, data_fields))
         else:
@@ -65,7 +69,7 @@ def extrapolate_column_fields(
     return sub_columns
 
 def pivot_records_dtypes(
-        frame: 'Frame',
+        dtype_map: 'Series',
         data_fields: tp.Iterable[tp.Hashable],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
@@ -73,9 +77,8 @@ def pivot_records_dtypes(
     '''
     Iterator of ordered dtypes, providing multiple dtypes per field when func_map is provided.
     '''
-    dtypes = frame.dtypes
     for field in data_fields:
-        dtype = dtypes[field]
+        dtype = dtype_map[field]
         if func_single:
             yield ufunc_dtype_to_dtype(func_single, dtype)
         else: # we assume
@@ -159,16 +162,16 @@ def pivot_items(
         frame: 'Frame',
         group_fields: tp.Iterable[tp.Hashable],
         group_depth: int,
-        data_fields: tp.Sequence[tp.Hashable],
+        data_field: tp.Hashable,
         func_single: UFunc,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''
-    Specialized generator of Pairs for when group_fields has been reduced to a single column.
+    Specialized generator of pairs.
     '''
     take_group = group_depth > 1
     columns_loc_to_iloc = frame.columns._loc_to_iloc
 
-    column_iloc = columns_loc_to_iloc(data_fields[0])
+    column_iloc = columns_loc_to_iloc(data_field)
     group_field_ilocs = columns_loc_to_iloc(group_fields)
 
     group_field_ilocs_post: tp.Union[int, tp.Iterable[tp.Hashable]]
@@ -186,6 +189,7 @@ def pivot_items(
         extract_col = column_iloc
         group_key = group_field_ilocs
     else:
+        # reduce to relevant fields
         extract_blocks = frame._blocks._extract(column_key=extract_ilocs)
         extract_col = 0
         group_key = group_field_ilocs_post
@@ -220,8 +224,49 @@ def pivot_items(
 #         else: # can be sure we only have func_single
 #             yield label, func_single(values)
 
+#-------------------------------------------------------------------------------
+
+def pivot_outer_index(
+        frame: 'Frame',
+        index_fields: tp.Sequence[tp.Hashable],
+        index_depth: int,
+        index_constructor: IndexConstructor = None,
+        ) -> IndexBase:
+
+    index_loc = index_fields if index_depth > 1 else index_fields[0]
+
+    if index_depth == 1:
+        index_values = ufunc_unique(
+                frame._blocks._extract_array_column(
+                        frame._columns._loc_to_iloc(index_loc)),
+                axis=0)
+        name = index_fields[0]
+        index_inner = index_from_optional_constructor(
+                index_values,
+                default_constructor=partial(Index, name=name),
+                explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                )
+    else: # > 1
+        # NOTE: this might force type an undesirable consolidation
+        index_values = ufunc_unique(
+                frame._blocks._extract_array(
+                        column_key=frame._columns._loc_to_iloc(index_loc)),
+                axis=0)
+        # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
+        name = tuple(index_fields)
+        index_inner = index_from_optional_constructor(
+                index_values,
+                default_constructor=partial(
+                        IndexHierarchy.from_labels,
+                        name=name,
+                        ),
+                explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                ).flat()
+    return index_inner
+
 
 #-------------------------------------------------------------------------------
+
 class PivotIndexMap(tp.NamedTuple):
     targets_unique: tp.Iterable[tp.Hashable]
     target_depth: int
