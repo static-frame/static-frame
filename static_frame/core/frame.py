@@ -6117,14 +6117,17 @@ class Frame(ContainerOperand):
                 columns_group = columns_fields
                 retuple_group_label = False
 
+            columns_loc_to_iloc = self.columns._loc_to_iloc
+            # group by on 1 or more columns fields
             for group, sub in self.iter_group_items(columns_group):
                 if index_fields_len == 1:
-                    sub_index_labels = sub._blocks._extract_array(row_key=None,
-                            column_key=sub.columns._loc_to_iloc(index_fields[0]))
+                    sub_index_labels = sub._blocks._extract_array_column(
+                            columns_loc_to_iloc(index_fields[0])
+                            )
                 else: # match to an index of tuples; the order might not be the same as IH
+                    # NOTE: might be able to keep arays and concat below
                     sub_index_labels = tuple(zip(*(
-                            sub._blocks._extract_array(row_key=None,
-                                    column_key=sub.columns._loc_to_iloc(f))
+                            sub._blocks._extract_array_column(columns_loc_to_iloc(f))
                             for f in index_fields)))
 
                 sub_columns = extrapolate_column_fields(
@@ -6137,15 +6140,15 @@ class Frame(ContainerOperand):
                 # if sub_index_labels are not unique we need to aggregate
                 if len(set(sub_index_labels)) != len(sub_index_labels):
                     if len(sub_columns) == 1:
-                        sub_frame = Frame.from_series(
-                                Series.from_items(
-                                        pivot_items(frame=sub,
-                                                group_fields=index_fields,
-                                                group_depth=index_depth,
-                                                data_fields=data_fields,
-                                                func_single=func_single,
-                                                ),
-                                        ))
+                        # NOTE: dtype here?
+                        sub_frame = Series.from_items(
+                                pivot_items(frame=sub,
+                                        group_fields=index_fields,
+                                        group_depth=index_depth,
+                                        data_fields=data_fields,
+                                        func_single=func_single,
+                                        ),
+                                )
                     else:
                         dtypes = tuple(pivot_records_dtypes(
                                 frame=self,
@@ -6166,9 +6169,9 @@ class Frame(ContainerOperand):
                 else:
                     if func_single: # assume no aggregation necessary
                         if len(data_fields) == 1:
-                            data_fields_iloc = sub.columns._loc_to_iloc(data_fields[0])
+                            data_fields_iloc = columns_loc_to_iloc(data_fields[0])
                         else:
-                            data_fields_iloc = sub.columns._loc_to_iloc(data_fields)
+                            data_fields_iloc = columns_loc_to_iloc(data_fields)
                         sub_frame = Frame(
                                 sub._blocks._extract(row_key=None,
                                         column_key=data_fields_iloc),
@@ -6179,8 +6182,9 @@ class Frame(ContainerOperand):
                         def blocks() -> tp.Iterator[np.ndarray]:
                             for field in data_fields:
                                 for _, func in func_map:
-                                    yield sub._blocks._extract_array(row_key=None,
-                                            column_key=sub.columns._loc_to_iloc(field))
+                                    yield sub._blocks._extract_array_column(
+                                            columns_loc_to_iloc(field),
+                                            )
                         sub_frame = Frame(
                                 TypeBlocks.from_blocks(blocks()),
                                 index=sub_index_labels,
@@ -6188,12 +6192,14 @@ class Frame(ContainerOperand):
                                 )
                 sub_frames.append(sub_frame)
 
+            # import ipdb; ipdb.set_trace()
             index_inner = derive_index_inner()
             f = self.__class__.from_concat(sub_frames,
                     index=index_inner,
                     columns=sub_columns_collected,
                     axis=1,
-                    fill_value=fill_value)
+                    fill_value=fill_value,
+                    )
 
         index_final = None if index_depth == 1 else index_inner
 
