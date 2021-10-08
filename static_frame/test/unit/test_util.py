@@ -63,6 +63,8 @@ from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import isfalsy_array
+from static_frame.core.util import ufunc_dtype_to_dtype
+from static_frame.core.util import UFUNC_MAP
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -2508,9 +2510,6 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_ufunc_dtype_to_dtype_a(self) -> None:
 
-        from static_frame.core.util import ufunc_dtype_to_dtype
-        from static_frame.core.util import UFUNC_MAP
-
         for func in UFUNC_MAP:
             for array in (
                     np.array((2, 4), dtype=np.int16),
@@ -2532,9 +2531,18 @@ class TestUnit(TestCase):
                 resolved = ufunc_dtype_to_dtype(func, array.dtype)
                 if resolved is None and array.dtype == object:
                     continue
-                if post.dtype != resolved:
-                    pass
                 self.assertEqual(post.dtype, resolved)
+
+    #---------------------------------------------------------------------------
+    def test_unique1d_array(self):
+        from static_frame.core.util import unique1d_array
+        a1, _ = unique1d_array(np.array([10, 20, 30, 10, 20]))
+        self.assertEqual(a1.tolist(), [10, 30, 20])
+
+        a2, _ = unique1d_array(np.array([10, None, 30, 'foo', 'foo']))
+        self.assertEqual(a2.tolist(), [10, None, 30, 'foo'])
+
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

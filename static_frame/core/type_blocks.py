@@ -913,7 +913,6 @@ class TypeBlocks(ContainerOperand):
 
             # If dtypes were specified, we know we have specific targets in mind for output
             out = np.empty(shape, dtype=dtype)
-            # print('out', out, out.dtype, self._row_dtype)
             for idx, b in enumerate(self._blocks):
 
                 if astype_pre and b.dtype != dtype:

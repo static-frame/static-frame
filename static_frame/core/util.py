@@ -103,6 +103,8 @@ DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
 DTYPE_STR = np.dtype(str)
 DTYPE_INT_DEFAULT = np.dtype(np.int64)
+DTYPE_INT_PLATFORM = np.dtype(int) # 32 on windows
+
 DTYPE_FLOAT_DEFAULT = np.dtype(np.float64)
 DTYPE_COMPLEX_DEFAULT = np.dtype(np.complex128)
 
@@ -402,7 +404,7 @@ def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
         if dtype == DTYPE_OBJECT:
             return None # cannot be sure
         if dtype == DTYPE_BOOL or dtype.kind in DTYPE_INT_KINDS:
-            return DTYPE_INT_DEFAULT
+            return DTYPE_INT_PLATFORM
         if dtype.kind in DTYPE_INEXACT_KINDS:
             if func is sum:
                 if dtype.kind == DTYPE_COMPLEX_KIND:
@@ -426,9 +428,9 @@ def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
         if dtype == DTYPE_OBJECT:
             return None
         elif dtype == DTYPE_BOOL:
-            return DTYPE_INT_DEFAULT
+            return DTYPE_INT_PLATFORM
         elif dtype.kind in DTYPE_INT_KINDS:
-            return DTYPE_INT_DEFAULT
+            return DTYPE_INT_PLATFORM
         elif dtype.kind in DTYPE_INEXACT_KINDS:
             return dtype # keep same size
 
@@ -795,6 +797,77 @@ def ufunc_axis_skipna(
         return ufunc_skipna(v, axis=axis, out=out)
     return ufunc(v, axis=axis, out=out)
 
+#-------------------------------------------------------------------------------
+# unique value discovery; based on NP's arraysetops.py
+
+def unique1d_array(array: np.ndarray
+        ) -> tp.Tuple[np.ndarray, tp.Optional[np.ndarray]]:
+    '''
+    Return an array of unique elements, handling
+    '''
+
+    if array.dtype.kind == 'O':
+        try:
+            # avoid making a copy until we know we can sort
+            sel = array.argsort()
+        except TypeError: # if unorderable types
+            mutable = None
+        else:
+            mutable = array[sel]
+    else:
+        mutable = array.copy()
+        mutable.sort() # can sort in-place with any sort algorithm
+
+    if mutable is not None:
+        mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+        mask[0] = True
+        mask[1:] = mutable[1:] != mutable[:-1] # where not equal
+        return array[mask], mask
+
+    store = dict.fromkeys(array)
+    array = np.empty(len(store), dtype=object)
+    array[NULL_SLICE] = tuple(store)
+
+    # we do not hae a mask; caller will need to make one
+    return array, None
+
+
+
+
+# def _unique1d(ar,
+#         return_index=False,
+#         return_inverse=False,
+#         ):
+#     """
+#     Find the unique elements of an array, ignoring shape.
+#     """
+#     optional_indices = return_index or return_inverse
+
+#     if optional_indices:
+#         perm = ar.argsort(kind='mergesort' if return_index else 'quicksort')
+#         aux = ar[perm]
+#     else:
+#         ar.sort()
+#         aux = ar
+
+#     mask = np.empty(aux.shape, dtype=DTYPE_BOOL)
+#     mask[:1] = True
+#     mask[1:] = aux[1:] != aux[:-1]
+
+#     # ret = (aux[mask],)
+#     unique_array = aux[mask]
+
+#     if return_index:
+#         ret += (perm[mask],)
+#     if return_inverse:
+#         imask = np.cumsum(mask) - 1
+#         inv_idx = np.empty(mask.shape, dtype=np.intp)
+#         inv_idx[perm] = imask
+#         ret += (inv_idx,)
+
+#     return ret
+
+
 
 def ufunc_unique(
         array: np.ndarray,
@@ -802,7 +875,7 @@ def ufunc_unique(
         axis: tp.Optional[int] = None,
         ) -> np.ndarray:
     '''
-    Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a hetergenous object type.
+    Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a heterogenous object type.
 
     Args:
 
@@ -1839,6 +1912,7 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     # if array[last_idx:].all():
     #     return last_idx
     # return length
+
 
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling

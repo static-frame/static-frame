@@ -822,10 +822,11 @@ class Pivot(Perf):
 
         from static_frame import Frame
         from static_frame import TypeBlocks
+        from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=TypeBlocks._key_to_block_slices,
+                line_target=array_to_groups_and_locations,
                 explanation='nearly identical, favoring slower'
                 ),
             'index1_columns1_data1': FunctionMetaData(
