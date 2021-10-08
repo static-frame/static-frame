@@ -103,7 +103,7 @@ DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
 DTYPE_STR = np.dtype(str)
 DTYPE_INT_DEFAULT = np.dtype(np.int64)
-DTYPE_INT_PLATFORM = np.dtype(int) # 32 on windows
+# DTYPE_INT_PLATFORM = np.dtype(int) # 32 on windows
 
 DTYPE_FLOAT_DEFAULT = np.dtype(np.float64)
 DTYPE_COMPLEX_DEFAULT = np.dtype(np.complex128)
@@ -404,7 +404,7 @@ def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
         if dtype == DTYPE_OBJECT:
             return None # cannot be sure
         if dtype == DTYPE_BOOL or dtype.kind in DTYPE_INT_KINDS:
-            return DTYPE_INT_PLATFORM
+            return DTYPE_INT_DEFAULT
         if dtype.kind in DTYPE_INEXACT_KINDS:
             if func is sum:
                 if dtype.kind == DTYPE_COMPLEX_KIND:
@@ -428,9 +428,9 @@ def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
         if dtype == DTYPE_OBJECT:
             return None
         elif dtype == DTYPE_BOOL:
-            return DTYPE_INT_PLATFORM
+            return DTYPE_INT_DEFAULT
         elif dtype.kind in DTYPE_INT_KINDS:
-            return DTYPE_INT_PLATFORM
+            return DTYPE_INT_DEFAULT
         elif dtype.kind in DTYPE_INEXACT_KINDS:
             return dtype # keep same size
 

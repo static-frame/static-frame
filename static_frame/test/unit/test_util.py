@@ -68,7 +68,7 @@ from static_frame.core.util import UFUNC_MAP
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
-
+from static_frame.test.test_case import skip_win
 
 class TestUnit(TestCase):
 
@@ -2508,6 +2508,7 @@ class TestUnit(TestCase):
             [[True, False, True, True], [True, True, False, True]])
 
     #---------------------------------------------------------------------------
+    @skip_win
     def test_ufunc_dtype_to_dtype_a(self) -> None:
 
         for func in UFUNC_MAP:
@@ -2534,7 +2535,7 @@ class TestUnit(TestCase):
                 self.assertEqual(post.dtype, resolved)
 
     #---------------------------------------------------------------------------
-    def test_unique1d_array(self):
+    def test_unique1d_array(self) -> None:
         from static_frame.core.util import unique1d_array
         a1, _ = unique1d_array(np.array([10, 20, 30, 10, 20]))
         self.assertEqual(a1.tolist(), [10, 30, 20])
