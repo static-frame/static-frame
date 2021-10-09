@@ -800,11 +800,12 @@ def ufunc_axis_skipna(
 #-------------------------------------------------------------------------------
 # unique value discovery; based on NP's arraysetops.py
 
-def unique1d_array(array: np.ndarray
+def unique1d_array_mask(array: np.ndarray
         ) -> tp.Tuple[np.ndarray, tp.Optional[np.ndarray]]:
     '''
     Return an array of unique elements, handling
     '''
+    # NOTE: might optionally own data to avoid making copy
 
     if array.dtype.kind == 'O':
         try:
@@ -822,7 +823,7 @@ def unique1d_array(array: np.ndarray
         mask = np.empty(array.shape, dtype=DTYPE_BOOL)
         mask[0] = True
         mask[1:] = mutable[1:] != mutable[:-1] # where not equal
-        return array[mask], mask
+        return mutable[mask], mask
 
     store = dict.fromkeys(array)
     array = np.empty(len(store), dtype=object)

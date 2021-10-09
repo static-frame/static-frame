@@ -2535,13 +2535,16 @@ class TestUnit(TestCase):
                 self.assertEqual(post.dtype, resolved)
 
     #---------------------------------------------------------------------------
-    def test_unique1d_array(self) -> None:
-        from static_frame.core.util import unique1d_array
-        a1, _ = unique1d_array(np.array([10, 20, 30, 10, 20]))
-        self.assertEqual(a1.tolist(), [10, 30, 20])
+    def test_unique1d_array_mask_a(self) -> None:
+        from static_frame.core.util import unique1d_array_mask
+        a1, _ = unique1d_array_mask(np.array([10, 20, 30, 10, 20]))
+        self.assertEqual(a1.tolist(), [10, 20, 30])
 
-        a2, _ = unique1d_array(np.array([10, None, 30, 'foo', 'foo']))
+        a2, _ = unique1d_array_mask(np.array([10, None, 30, 'foo', 'foo']))
         self.assertEqual(a2.tolist(), [10, None, 30, 'foo'])
+
+        a3, _ = unique1d_array_mask(np.array([10, 40, 50, 50, 10], dtype=object))
+        self.assertEqual(a3.tolist(), [10, 40, 50])
 
         # import ipdb; ipdb.set_trace()
 
