@@ -514,9 +514,14 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2))
         b2 = b1.iloc[1, 1]
-        post = list(s.values.tolist() for s in b2.values)
-        self.assertEqual(post, [[4], [5]])
+        post = list(b2.values)
+        self.assertEqual(post, [4, 5])
 
+        b3 = Batch.from_frames((f1, f2))
+        # TODO: add containerize
+        b4 = b3.iloc[1, 1].via_container
+        post = list(s.values.tolist() for s in b4.values)
+        self.assertEqual(post, [[4], [5]])
 
     def test_batch_iloc_b(self) -> None:
         f1 = Frame.from_dict(
@@ -529,7 +534,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         b1 = Batch.from_frames((f1, f2), max_workers=8, use_threads=True)
-        b2 = b1.iloc[1, 1]
+        b2 = b1.iloc[1, 1].via_container
         post = list(s.values.tolist() for s in b2.values)
         self.assertEqual(post, [[4], [5]])
 
@@ -1233,8 +1238,13 @@ class TestUnit(TestCase):
                 (('f1', ((0, 1), (1, 2), (2, 3), (3, 4), (4, None), (5, None))), ('f2', ((0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6))), ('f3', ((0, 10), (1, 20), (2, 50), (3, 60), (4, None), (5, None))))
                 )
 
-
-
+    #---------------------------------------------------------------------------
+    def test_batch_to_series_a(self) -> None:
+        frame = Frame.from_records([["A", 1.0], ["B", 2.0], ["C", 3.0], ["C", 4.0]], columns=tuple("AB"))
+        s = Batch(frame.iter_group_items("A"))["B"].sum().to_series()
+        self.assertEqual(s.to_pairs(),
+                (('A', 1.0), ('B', 2.0), ('C', 7.0))
+                )
 
 if __name__ == '__main__':
     unittest.main()
