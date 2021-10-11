@@ -15,6 +15,7 @@ from static_frame.core.display_color import HexColor
 
 FF_wide = 's(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
 FF_tall = 's(10_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
+FF_square = 's(1_000,1_000)|v(float)|i(I,str)|c(I,int)'
 
 class FileIOTest:
     NUMBER = 4
@@ -76,6 +77,24 @@ class FileWriteNPZ(FileIOTest):
 #         self.fixture.to_npz(self.fp, compress=True)
 
 
+class FileReadPickle(FileIOTest):
+    SUFFIX = '.pickle'
+
+    def __init__(self, fixture):
+        super().__init__(fixture)
+        self.file = open(self.fp, 'wb')
+        pickle.dump(self.fixture, self.file)
+        self.file.close()
+
+    def run(self):
+        with open(self.fp, 'rb') as f:
+            _ = pickle.load(f)
+
+    def __del__(self) -> None:
+        self.file.close()
+        os.unlink(self.fp)
+
+
 class FileWritePickle(FileIOTest):
     SUFFIX = '.pickle'
 
@@ -118,7 +137,12 @@ def get_format():
 
 def run_test():
     records = []
-    for label, fixture in (('wide', FF_wide), ('tall', FF_tall)):
+    for label, fixture in (
+            ('wide', FF_wide),
+            ('tall', FF_tall),
+            ('square', FF_square),
+            ):
+    # for label, fixture in (('square', FF_square),):
         for cls in (
                 FileWriteParquet,
                 FileWriteNPZ,
@@ -126,6 +150,7 @@ def run_test():
                 FileWritePickle,
                 FileReadParquet,
                 FileReadNPZ,
+                FileReadPickle,
                 ):
             runner = cls(fixture)
             record = [cls.__name__, cls.NUMBER, label]

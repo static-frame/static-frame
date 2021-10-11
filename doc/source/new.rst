@@ -1,12 +1,12 @@
 What is New in Static Frame
 ===============================
 
-0.8.20
+0.8.21
 ----------
 
 Added ``Frame.to_npz()``, ``Frame.from_npz()``
 
-Performance enhancements to ``Frame.pivot()``
+Performance enhancements to ``Frame.pivot()`` when doing index-only grouping.
 
 Introduction of ``TypeBlocks._block_slices`` as lazily derived and persistently stored.
 
@@ -18,7 +18,7 @@ Added ``dtypes`` parameter to ``Frame.from_pandas()``.
 
 Added ``index_constructors``, ``columns_constructors`` to the following interfaces: ``Frame.from_sql()``, ``Frame.from_structured_array()``, ``Frame.from_delimited()``, ``Frame.from_csv()``, ``Frame.from_clipboard``, ``Frame.from_tsv()``, ``Frame.from_xlsx()``, ``Frame.from_sqlite()``, ``Frame.from_hdf5()``, ``Frame.from_arrrow()``, ``Frame.from_parquet()``.
 
-``StoreConfig`` now exposes ``index_constructros`` and ``columns_constructors`` arguments.
+``StoreConfig`` now exposes ``index_constructors`` and ``columns_constructors`` arguments.
 
 Incorrectly formed ``Batch`` iterables will now, upon iteration, raise a ``BatchIterableInvalid`` exception.
 
