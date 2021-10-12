@@ -6106,7 +6106,14 @@ class Frame(ContainerOperand):
 
             columns_loc_to_iloc = self.columns._loc_to_iloc
             # group by on 1 or more columns fields
+            # NOTE: explored doing one group on index and coluns that insert into pre-allocated arrays, but that proved slower than this approach
+            # for group, sub in self.iter_group_items(columns_group):
+            group_key = [columns_loc_to_iloc(field) for field in self.columns]
+            extract_blocks = self._blocks # NOTE: can reduce size
             for group, sub in self.iter_group_items(columns_group):
+
+            # for group, _, sub in extract_blocks.group(axis=0, key=group_key):
+
                 # sub is the Frame group per unique value in columns_group; this Frame may or may not have unique index fields; if not, it needs to be aggregated
                 if index_fields_len == 1:
                     sub_index_labels = sub._blocks._extract_array_column(
@@ -6204,7 +6211,7 @@ class Frame(ContainerOperand):
 
 
 
-    # def _pivot(self,
+    # def pivot(self,
     #         index_fields: KeyOrKeys,
     #         columns_fields: KeyOrKeys = EMPTY_TUPLE,
     #         data_fields: KeyOrKeys = EMPTY_TUPLE,

@@ -837,8 +837,12 @@ class TypeBlocks(ContainerOperand):
             elif axis == 1:
                 groups = array2d_to_tuples(groups.T)
 
+        # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
+        selection = np.empty(len(locations), dtype=DTYPE_BOOL)
         for idx, g in enumerate(groups):
-            selection = locations == idx
+            # derive a Boolean array of variable size for each location
+            # selection = locations == idx
+            np.equal(locations, idx, out=selection)
             if axis == 0: # return row extractions
                 yield g, selection, self._extract(row_key=selection)
             elif axis == 1: # return columns extractions
