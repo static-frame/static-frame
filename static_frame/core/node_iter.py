@@ -48,6 +48,60 @@ class IterNodeType(Enum):
     VALUES = 1
     ITEMS = 2
 
+
+# class ApplyConstructors:
+
+#     __slots__ = ('_container',)
+
+#     def __init__(self,
+#             container: FrameOrSeries,
+#             ):
+#         self._container = container
+
+#     def series_values(self,
+#             values: tp.Iterator[tp.Any],
+#             dtype: DtypeSpecifier,
+#             name: NameType = None,
+#             ) -> Series:
+
+#         # Creating a Series that will have the same index as source container
+#         if self._container._NDIM == 2 and kwargs['axis'] == 0:
+#             index = self._container._columns #type: ignore
+#             own_index = False
+#         else:
+#             index = self._container._index
+#             own_index = True
+#         # PERF: passing count here permits faster generator realization
+#         values, _ = iterable_to_array_1d(
+#                 values,
+#                 count=index.shape[0],
+#                 dtype=dtype,
+#                 )
+#         return Series(values,
+#                 name=name,
+#                 index=index,
+#                 own_index=own_index,
+#                 )
+
+#     def series_items(self,
+#             ) -> Series:
+#         # apply_constructor should be implemented to take a pairs of label, value; only used for iter_window
+#         # axis 0 iters windows labelled by the index, axis 1 iters windows labelled by the columns
+#         if self._container._NDIM == 2 and kwargs['axis'] == 1:
+#             index_constructor = partial(
+#                     self._container._columns.from_labels, #type: ignore
+#                     name=self._container._columns._name) # type: ignore
+#         else:
+#             index_constructor = partial(
+#                     self._container._index.from_labels,
+#                     name=self._container._index._name)
+#         # always return a Series
+#         apply_constructor = partial(
+#                 Series.from_items,
+#                 index_constructor=index_constructor
+#                 )
+
+
 class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     '''
     Delegate returned from :obj:`static_frame.IterNode`, providing iteration as well as a family of apply methods.
@@ -540,7 +594,11 @@ class IterNode(tp.Generic[FrameOrSeries]):
                         count=index.shape[0],
                         dtype=dtype,
                         )
-                return Series(values, name=name, index=index, own_index=own_index)
+                return Series(values,
+                        name=name,
+                        index=index,
+                        own_index=own_index,
+                        )
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
             # apply_constructor should be implemented to take a pairs of label, value; only used for iter_window
