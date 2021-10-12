@@ -70,18 +70,18 @@ def normalize_container(post: tp.Any
 def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]
         ) -> FrameOrSeries:
     container, func = bundle
-    return func(container)
+    return func(container) # type: ignore
 
 def call_func_items(bundle: tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]
         ) -> FrameOrSeries:
     container, func, label = bundle
-    return func(label, container)
+    return func(label, container) # type: ignore
 
 def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]
         ) -> FrameOrSeries:
     container, attr, args, kwargs = bundle
     func = getattr(container, attr)
-    return func(*args, **kwargs)
+    return func(*args, **kwargs) # type: ignore
 
 #-------------------------------------------------------------------------------
 class Batch(ContainerOperand, StoreClientMixin):
