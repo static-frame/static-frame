@@ -89,9 +89,9 @@ def pivot_records_dtypes(
 
 def pivot_records_items(
         frame: 'Frame',
-        group_fields: tp.Iterable[tp.Hashable],
+        group_fields_iloc: tp.Iterable[tp.Hashable],
         group_depth: int,
-        data_fields: tp.Iterable[tp.Hashable],
+        data_fields_iloc: tp.Iterable[tp.Hashable],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
@@ -99,30 +99,32 @@ def pivot_records_items(
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
     # NOTE: this delivers results by label row for use in a Frame.from_records_items constructor
-    take_group_index = group_depth > 1
-    columns_loc_to_iloc = frame.columns._loc_to_iloc
+    # take_group_index = group_depth > 1
+    # columns_loc_to_iloc = frame.columns._loc_to_iloc
 
-    data_field_ilocs: tp.List[int] = [columns_loc_to_iloc(field)
-            for field in data_fields]
-    group_field_ilocs = columns_loc_to_iloc(group_fields)
+    # data_field_ilocs: tp.List[int] = [columns_loc_to_iloc(field)
+    #         for field in data_fields]
+    # group_field_ilocs = columns_loc_to_iloc(group_fields)
 
-    record_size = len(data_field_ilocs) * (1 if func_single else len(func_map))
+    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
+
+    record_size = len(data_fields_iloc) * (1 if func_single else len(func_map))
 
     record: tp.List[tp.Any]
 
-    for group_index, _, part in frame._blocks.group(axis=0, key=group_field_ilocs):
-        label = group_index if take_group_index else group_index[0]
+    for label, _, part in frame._blocks.group(axis=0, key=group_key):
+        # label = group_index if take_group_index else group_index[0]
         record = [None] * record_size # This size can be pre allocated,
         pos = 0
 
         # NOTE: data_fields put in first part of extracted blocks
         if func_single:
-            for column_key in data_field_ilocs:
+            for column_key in data_fields_iloc:
                 values = part._extract_array_column(column_key)
                 record[pos] = func_single(values)
                 pos += 1
         else:
-            for column_key in data_field_ilocs:
+            for column_key in data_fields_iloc:
                 values = part._extract_array_column(column_key)
                 for _, func in func_map:
                     record[pos] = func(values)
@@ -174,6 +176,12 @@ def pivot_core(
     data_fields_len = len(data_fields)
     index_depth = len(index_fields)
 
+    # all are lists of hashables; get converted to lists of integers
+    columns_loc_to_iloc = frame.columns._loc_to_iloc
+    index_fields_iloc = columns_loc_to_iloc(index_fields)
+    data_fields_iloc = columns_loc_to_iloc(data_fields)
+    columns_fields_iloc = columns_loc_to_iloc(columns_fields)
+
     # For data fields, we add the field name, not the field values, to the columns.
     columns_name = tuple(columns_fields)
     if data_fields_len > 1 or not columns_fields:
@@ -204,6 +212,7 @@ def pivot_core(
 
     if not columns_fields: # group by is only index_fields
         group_fields = index_fields if index_depth > 1 else index_fields[0]
+
         columns = data_fields if func_single else tuple(product(data_fields, func_fields))
         # NOTE: examine if need to use passed index_constructor here
         index_constructor = None if index_depth > 1 else partial(Index, name=index_fields[0])
@@ -224,12 +233,13 @@ def pivot_core(
                             ),
                     columns_constructor=columns_constructor)
         else:
+            # import ipdb; ipdb.set_trace()
             f = frame.from_records_items(
                     pivot_records_items(
                             frame=frame,
-                            group_fields=group_fields,
-                            group_depth=np.inf, # avoid reducing labels
-                            data_fields=data_fields,
+                            group_fields_iloc=index_fields_iloc,
+                            group_depth=index_depth,
+                            data_fields_iloc=data_fields_iloc,
                             func_single=func_single,
                             func_map=func_map,
                     ),
@@ -266,8 +276,7 @@ def pivot_core(
         columns_loc_to_iloc = frame.columns._loc_to_iloc
         # group by on 1 or more columns fields
         # NOTE: explored doing one group on index and coluns that insert into pre-allocated arrays, but that proved slower than this approach
-        # for group, sub in frame.iter_group_items(columns_group):
-        group_key = [columns_loc_to_iloc(field) for field in frame.columns]
+        # group_key = [columns_loc_to_iloc(field) for field in columns_group]
         for group, sub in frame.iter_group_items(columns_group):
 
         # for group, _, sub in extract_blocks.group(axis=0, key=group_key):
@@ -311,9 +320,9 @@ def pivot_core(
                     sub_frame = Frame.from_records_items(
                             pivot_records_items(
                                     frame=sub,
-                                    group_fields=index_fields,
+                                    group_fields_iloc=index_fields_iloc,
                                     group_depth=index_depth,
-                                    data_fields=data_fields,
+                                    data_fields_iloc=data_fields_iloc,
                                     func_single=func_single,
                                     func_map=func_map),
                             dtypes=dtypes_per_data_fields,

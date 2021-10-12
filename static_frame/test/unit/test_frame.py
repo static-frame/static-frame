@@ -10570,7 +10570,7 @@ class TestUnit(TestCase):
                 )
 
     @skip_win #type: ignore
-    def test_frame_pivot_e(self) -> None:
+    def test_frame_pivot_e1(self) -> None:
 
         index = IndexHierarchy.from_product(
                 ('far', 'near'), ('up', 'down'), ('left', 'right'),
@@ -10593,6 +10593,18 @@ class TestUnit(TestCase):
                 (('b', (('far', 82), ('near', 86))),)
                 )
 
+
+    def test_frame_pivot_e2(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+        f2 = f1.unset_index()
         self.assertEqual(
                 f2.pivot('z', data_fields=('a', 'b')).to_pairs(0),
                 (('a', (('far', 6), ('near', 22))), ('b', (('far', 82), ('near', 86))))
