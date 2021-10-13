@@ -447,6 +447,19 @@ class TestUnit(TestCase):
         post2 = tuple(f.iter_group('a'))
         self.assertEqual(post2, ())
 
+    def test_frame_iter_group_g(self) -> None:
+        f = sf.Frame.from_records(
+                [['1998-10-12', 1], ['1998-10-13', 2]],
+                columns=['A', 'B'],
+                dtypes=['datetime64[D]', int]
+                )
+        post = f.iter_group('A').apply(lambda v: v['B'].sum(),
+                index_constructor=IndexDate)
+
+        self.assertEqual(post.index.__class__, IndexDate)
+        self.assertEqual(post.to_pairs(),
+            ((np.datetime64('1998-10-12'), 1),
+            (np.datetime64('1998-10-13'), 2)))
 
     #---------------------------------------------------------------------------
     def test_frame_iter_group_items_a(self) -> None:

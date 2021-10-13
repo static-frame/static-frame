@@ -4363,8 +4363,6 @@ class TestUnit(TestCase):
                 axis=0,
                 )
 
-        # import ipdb; ipdb.set_trace()
-
     #---------------------------------------------------------------------------
     def test_frame_from_items_a(self) -> None:
 
