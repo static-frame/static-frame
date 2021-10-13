@@ -219,7 +219,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
                 dtype=dtype,
                 index_constructor=index_constructor,
                 name=name,
-                    )
+                )
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='map_fill')
@@ -558,8 +558,8 @@ class IterNode(tp.Generic[FrameOrSeries]):
         if self._container._NDIM == 2 and axis == 1:
             index_constructor = (index_constructor
                     if index_constructor is not None
-                    else self._container._columns.from_labels)
-            name_index = self._container._columns._name
+                    else self._container._columns.from_labels) #type: ignore
+            name_index = self._container._columns._name #type: ignore
         else:
             index_constructor = (index_constructor
                     if index_constructor is not None
@@ -567,7 +567,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             name_index = self._container._index._name
 
         index_constructor_final = partial(
-                index_constructor, #type: ignore
+                index_constructor,
                 name=name_index,
                 )
         # always return a Series
