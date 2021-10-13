@@ -503,7 +503,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
     # apply constructors
 
-    def series_values(self,
+    def to_series_values(self,
             values: tp.Iterator[tp.Any],
             dtype: DtypeSpecifier,
             name: NameType = None,
@@ -530,7 +530,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 own_index=own_index,
                 )
 
-    def series_items(self,
+    def to_series_items(self,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
@@ -559,7 +559,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 index_constructor=index_constructor
                 )
 
-    def series_items_group_values(self,
+    def to_series_items_group_values(self,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
@@ -584,7 +584,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 index_constructor=index_constructor
                 )
 
-    def series_items_group_labels(self,
+    def to_series_items_group_labels(self,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
@@ -610,28 +610,27 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 index_constructor=index_constructor
                 )
 
-    def frame_elements(self,
+    def to_frame_elements(self,
             items: tp.Iterable[tp.Tuple[
                     tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
             *,
             name: NameType = None,
             dtype: DtypeSpecifier = None,
             axis: int = 0,
-            ) -> 'Series':
-
+            ) -> 'Frame':
         # NOTE: dtype is not used
         return self._container.__class__.from_element_items(
-                    items,
-                    index=self._container._index,
-                    columns=self._container._columns,
-                    axis=axis,
-                    own_index=True,
-                    index_constructor=self._container._index.from_labels,
-                    columns_constructor=self._container._columns.from_labels,
-                    name=name,
-                    )
+                items,
+                index=self._container._index,
+                columns=self._container._columns,
+                axis=axis,
+                own_index=True,
+                index_constructor=self._container._index.from_labels,
+                columns_constructor=self._container._columns.from_labels,
+                name=name,
+                )
 
-    def index_labels(self,
+    def to_index_labels(self,
             values: tp.Iterator[tp.Hashable], #pylint: disable=function-redefined
             dtype: DtypeSpecifier = None,
             name: NameType = None,
@@ -643,7 +642,6 @@ class IterNode(tp.Generic[FrameOrSeries]):
         array, _ = iterable_to_array_1d(values, count=shape[0], dtype=dtype) #type: ignore
         return array
 
-
     #---------------------------------------------------------------------------
     def get_delegate(self,
             **kwargs: object
@@ -654,135 +652,41 @@ class IterNode(tp.Generic[FrameOrSeries]):
         Args:
             kwargs: kwarg args to be passed to both self._func_values and self._func_items
         '''
-        from static_frame.core.series import Series
         from static_frame.core.frame import Frame
-        from static_frame.core.index import Index
 
         func_values = partial(self._func_values, **kwargs)
         func_items = partial(self._func_items, **kwargs)
         # only some apply_types can use
         shape: tp.Optional[tp.Tuple[int, ...]] = None
+        axis = kwargs.get('axis', 0)
 
-        apply_constructor: tp.Callable[..., tp.Union[Frame, Series]]
+        apply_constructor: tp.Callable[..., tp.Union['Frame', 'Series']]
 
         if self._apply_type is IterNodeApplyType.SERIES_VALUES:
-            apply_constructor = partial(self.series_values, axis=kwargs.get('axis', 0))
-
-            # def apply_constructor( #pylint: disable=E0102
-            #         values: tp.Iterator[tp.Any],
-            #         dtype: DtypeSpecifier,
-            #         name: NameType = None,
-            #         ) -> Series:
-
-            #     # Creating a Series that will have the same index as source container
-            #     if self._container._NDIM == 2 and kwargs['axis'] == 0:
-            #         index = self._container._columns #type: ignore
-            #         own_index = False
-            #     else:
-            #         index = self._container._index
-            #         own_index = True
-            #     # PERF: passing count here permits faster generator realization
-            #     values, _ = iterable_to_array_1d(
-            #             values,
-            #             count=index.shape[0],
-            #             dtype=dtype,
-            #             )
-            #     return Series(values,
-            #             name=name,
-            #             index=index,
-            #             own_index=own_index,
-            #             )
+            apply_constructor = partial(self.to_series_values, axis=axis)
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
-            # apply_constructor should be implemented to take a pairs of label, value; only used for iter_window
-            # axis 0 iters windows labelled by the index, axis 1 iters windows labelled by the columns
-
-            apply_constructor = partial(self.series_items, axis=kwargs.get('axis', 0))
-
-            # if self._container._NDIM == 2 and kwargs['axis'] == 1:
-            #     index_constructor = partial(
-            #             self._container._columns.from_labels, #type: ignore
-            #             name=self._container._columns._name) # type: ignore
-            # else:
-            #     index_constructor = partial(
-            #             self._container._index.from_labels,
-            #             name=self._container._index._name)
-            # # always return a Series
-            # apply_constructor = partial(
-            #         Series.from_items,
-            #         index_constructor=index_constructor
-            #         )
+            apply_constructor = partial(self.to_series_items, axis=axis)
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES:
-            # use default index constructor
-            # NOTE: when used on labels, this key is given; when used on lables (indices) depth_level is given; only take the key if it is a hashable (a string or a tuple, not a slice, list, or array)
-
             try:
                 name_index = name_filter(kwargs.get('key', None))
             except TypeError:
                 name_index = None
-
-            apply_constructor = partial(self.series_items_group_values,
+            apply_constructor = partial(self.to_series_items_group_values,
                     name_index=name_index,
                     )
 
-
-            # index_constructor = partial(
-            #         Index.from_labels,
-            #         name=name_index)
-            # apply_constructor = partial(
-            #         Series.from_items,
-            #         index_constructor=index_constructor,
-            #         )
-
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS:
-            # use default index constructor
-            # will always have `depth_level` in kwargs, and for Frame an axis; could attempt to get name from the index if it has a name
-
-            apply_constructor = self.series_items_group_labels
-
-            # name_index = None
-
-            # index_constructor = partial(
-            #         Index.from_labels,
-            #         name=name_index)
-            # apply_constructor = partial(
-            #         Series.from_items,
-            #         index_constructor=index_constructor,
-            #         )
+            apply_constructor = self.to_series_items_group_labels
 
         elif self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
             assert isinstance(self._container, Frame) # for typing
-            # for element-wise function application, axis will always be 0 or 1, as we always do full iteration; from_element_items accepts axis of None for incomplete specification, but that will never be used here.
-
-            apply_constructor = partial(self.frame_elements, axis=kwargs.get('axis', 0))
-
-            # apply_constructor = partial(
-            #         self._container.__class__.from_element_items,
-            #         index=self._container._index,
-            #         columns=self._container._columns,
-            #         axis=kwargs['axis'],
-            #         own_index=True,
-            #         index_constructor=self._container._index.from_labels,
-            #         columns_constructor=self._container._columns.from_labels
-            #         )
-            # shape = self._container.shape
+            apply_constructor = partial(self.to_frame_elements, axis=axis)
 
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
+            apply_constructor = self.to_index_labels
 
-            apply_constructor = self.index_labels
-
-            # shape = self._container.shape
-
-            # def apply_constructor( #pylint: disable=E0102
-            #         values: tp.Iterator[tp.Hashable], #pylint: disable=function-redefined
-            #         dtype: DtypeSpecifier = None,
-            #         name: NameType = None,
-            #         ) -> np.ndarray:
-            #     # NOTE: name argument is for common interface
-            #     # PERF: passing count here permits faster generator realization
-            #     array, _ = iterable_to_array_1d(values, count=shape[0], dtype=dtype) #type: ignore
-            #     return array
         else:
             raise NotImplementedError(self._apply_type) #pragma: no cover
 
