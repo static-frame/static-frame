@@ -381,6 +381,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             *,
             dtype: DtypeSpecifier = None,  # can be DtypesSpecifier in some contexts
             name: NameType = None,
+            index_constructor: tp.Optional[IndexConstructor]= None,
             ) -> FrameOrSeries:
         '''
         {doc} Returns a new container.
@@ -392,19 +393,23 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         if not callable(func):
             raise RuntimeError('use map_fill(), map_any(), or map_all() for applying a mapping type')
 
-        if (self._apply_type is IterNodeApplyType.SERIES_VALUES
-                or self._apply_type is IterNodeApplyType.INDEX_LABELS):
-            return self._apply_constructor(
-                    self.apply_iter(func),
-                    dtype=dtype,
-                    name=name,
-                    )
-
         # only use when we need pairs of values to dynamically create an Index
+        # TODO: invert this matching
+        if self._apply_type in (
+                IterNodeApplyType.FRAME_ELEMENTS,
+                IterNodeApplyType.SERIES_ITEMS,
+                IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS,
+                ):
+            apply_func = self.apply_iter_items
+        else:
+            apply_func = self.apply_iter
+
         return self._apply_constructor(
-                self.apply_iter_items(func),
+                apply_func(func),
                 dtype=dtype,
                 name=name,
+                index_constructor=index_constructor,
                 )
 
     @doc_inject(selector='apply')
@@ -413,6 +418,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             *,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
+            index_constructor: tp.Optional[IndexConstructor]= None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False
@@ -429,27 +435,49 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {chunksize}
             {use_threads}
         '''
-        if (self._apply_type is IterNodeApplyType.SERIES_VALUES
-                or self._apply_type is IterNodeApplyType.INDEX_LABELS):
-            return self._apply_constructor(
-                    self._apply_iter_parallel(
-                            func=func,
-                            max_workers=max_workers,
-                            chunksize=chunksize,
-                            use_threads=use_threads),
-                    dtype=dtype,
-                    name=name,
-                    )
-
+        # only use when we need pairs of values to dynamically create an Index
+        if self._apply_type in (
+                IterNodeApplyType.FRAME_ELEMENTS,
+                IterNodeApplyType.SERIES_ITEMS,
+                IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS,
+                ):
+            apply_func = self._apply_iter_items_parallel
+        else:
+            apply_func = self._apply_iter_parallel
+        # ipdb; ipdb.set_trace()
         return self._apply_constructor(
-                self._apply_iter_items_parallel(
-                        func=func,
+                apply_func(func,
                         max_workers=max_workers,
                         chunksize=chunksize,
-                        use_threads=use_threads),
+                        use_threads=use_threads,
+                        ),
                 dtype=dtype,
                 name=name,
+                index_constructor=index_constructor,
                 )
+
+        # if (self._apply_type is IterNodeApplyType.SERIES_VALUES
+        #         or self._apply_type is IterNodeApplyType.INDEX_LABELS):
+        #     return self._apply_constructor(
+        #             self._apply_iter_parallel(
+        #                     func=func,
+        #                     max_workers=max_workers,
+        #                     chunksize=chunksize,
+        #                     use_threads=use_threads),
+        #             dtype=dtype,
+        #             name=name,
+        #             )
+
+        # return self._apply_constructor(
+        #         self._apply_iter_items_parallel(
+        #                 func=func,
+        #                 max_workers=max_workers,
+        #                 chunksize=chunksize,
+        #                 use_threads=use_threads),
+        #         dtype=dtype,
+        #         name=name,
+        #         )
 
     def __iter__(self) -> tp.Union[
             tp.Iterator[tp.Any],
@@ -505,8 +533,10 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
     def to_series_values(self,
             values: tp.Iterator[tp.Any],
+            *,
             dtype: DtypeSpecifier,
             name: NameType = None,
+            index_constructor: tp.Optional[IndexConstructor] = None,
             axis: int = 0,
             ) -> 'Series':
         from static_frame.core.series import Series
@@ -614,11 +644,11 @@ class IterNode(tp.Generic[FrameOrSeries]):
             items: tp.Iterable[tp.Tuple[
                     tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
             *,
-            name: NameType = None,
             dtype: DtypeSpecifier = None,
+            name: NameType = None,
+            index_constructor: tp.Optional[IndexConstructor]= None,
             axis: int = 0,
             ) -> 'Frame':
-        # NOTE: dtype is not used
         return self._container.__class__.from_element_items(
                 items,
                 index=self._container._index,
@@ -634,6 +664,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             values: tp.Iterator[tp.Hashable], #pylint: disable=function-redefined
             dtype: DtypeSpecifier = None,
             name: NameType = None,
+            index_constructor: tp.Optional[IndexConstructor]= None,
             ) -> np.ndarray:
         # self._apply_type is IterNodeApplyType.INDEX_LABELS:
         # NOTE: name argument is for common interface

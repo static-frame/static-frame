@@ -447,6 +447,16 @@ class TestUnit(TestCase):
         post2 = tuple(f.iter_group('a'))
         self.assertEqual(post2, ())
 
+    def test_frame_iter_group_g(self) -> None:
+        f = sf.Frame.from_records(
+                [['1998-10-12', 1], ['1998-10-13', 2]],
+                columns=['A', 'B'],
+                dtypes=['datetime64[D]', int]
+                )
+        post = f.iter_group('A').apply(lambda v: v['B'].sum())
+
+        # import ipdb; ipdb.set_trace()
+        # self.assertEqual(post.index.__class__, IndexDate)
 
     #---------------------------------------------------------------------------
     def test_frame_iter_group_items_a(self) -> None:
