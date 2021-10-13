@@ -165,11 +165,6 @@ def run_test():
             columns=('name', 'number', 'fixture', 'time')
             )
 
-    # f['dt64/dt'] = f['dt64'] / f['dt']
-    # f['dt/dt64'] = f['dt'] / f['dt64']
-
-    # f['dt64-faster'] = f['dt/dt64'] > 1
-
     display = f.iter_element_items().apply(get_format())
 
     config = sf.DisplayConfig(
