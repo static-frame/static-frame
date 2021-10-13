@@ -519,6 +519,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
         else:
             index = self._container._index
             own_index = True
+
         # PERF: passing count here permits faster generator realization
         values, _ = iterable_to_array_1d(
                 values,
@@ -543,6 +544,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
         # apply_constructor should be implemented to take a pairs of label, value; only used for iter_window
         # axis 0 iters windows labelled by the index, axis 1 iters windows labelled by the columns
+        # TODO: use index_constructor
         if self._container._NDIM == 2 and axis == 1:
             index_constructor = partial(
                     self._container._columns.from_labels, #type: ignore
@@ -571,13 +573,12 @@ class IterNode(tp.Generic[FrameOrSeries]):
         from static_frame.core.series import Series
         from static_frame.core.index import Index
 
-        # use default index constructor
-        # NOTE: when used on labels, this key is given; when used on lables (indices) depth_level is given; only take the key if it is a hashable (a string or a tuple, not a slice, list, or array)
+        # NOTE: when used on labels, this key is given; when used on labels (indices) depth_level is given; only take the key if it is a hashable (a string or a tuple, not a slice, list, or array)
+
         index_constructor = partial(
-                Index.from_labels,
+                Index if index_constructor is None else index_constructor,
                 name=name_index,
                 )
-
         return Series.from_items(
                 pairs=pairs,
                 dtype=dtype,
