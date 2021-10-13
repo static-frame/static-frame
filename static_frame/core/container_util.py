@@ -325,7 +325,7 @@ def index_from_optional_constructors_deferred(
                 [tp.Union[np.ndarray, tp.Iterable[tp.Hashable]]],
                 tp.Optional[IndexBase]]:
     '''
-    Partiaal `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
+    Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
     '''
     def func(
             value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
