@@ -7,6 +7,8 @@ from enum import Enum
 from functools import partial
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
+# import multiprocessing as mp
+# mp_context = mp.get_context('spawn')
 
 import numpy as np
 from arraykit import name_filter
