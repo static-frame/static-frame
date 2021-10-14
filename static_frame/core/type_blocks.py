@@ -834,7 +834,7 @@ class TypeBlocks(ContainerOperand):
             # make the groups hashable for usage in index construction
             if axis == 0:
                 groups = array2d_to_tuples(groups)
-            elif axis == 1:
+            else:
                 groups = array2d_to_tuples(groups.T)
 
         # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
@@ -845,7 +845,7 @@ class TypeBlocks(ContainerOperand):
             np.equal(locations, idx, out=selection)
             if axis == 0: # return row extractions
                 yield g, selection, self._extract(row_key=selection)
-            elif axis == 1: # return columns extractions
+            else: # return columns extractions
                 yield g, selection, self._extract(column_key=selection)
 
     #---------------------------------------------------------------------------
