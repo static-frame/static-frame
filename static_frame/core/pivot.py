@@ -269,10 +269,9 @@ def pivot_core(
         columns_loc_to_iloc = frame.columns._loc_to_iloc
         # group by on 1 or more columns fields
         # NOTE: explored doing one group on index and coluns that insert into pre-allocated arrays, but that proved slower than this approach
-        group_key = columns_fields_iloc if len(columns_fields_iloc) > 1 else index_fields_iloc[0]
+        group_key = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
 
         # for group, sub in frame.iter_group_items(columns_group):
-
         for group, _, sub in frame._blocks.group(axis=0, key=group_key):
             # derive the column fields represented by this group
             sub_columns = extrapolate_column_fields(
@@ -321,6 +320,7 @@ def pivot_core(
                             dtypes=dtypes_per_data_fields,
                             )
             else:
+                # we have unique values per index item, but may not have a complete index
                 if func_single:
                     # NOTE: should apply function even with func_single
                     if len(data_fields) == 1:
@@ -340,8 +340,7 @@ def pivot_core(
                     def blocks() -> tp.Iterator[np.ndarray]:
                         for field in data_fields_iloc:
                             for _, func in func_map:
-                                yield sub._extract_array_column(field),
-
+                                yield sub._extract_array_column(field)
                     sub_frame = Frame(
                             TypeBlocks.from_blocks(blocks()),
                             index=sub_index_labels,
