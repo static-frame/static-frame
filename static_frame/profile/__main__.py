@@ -826,7 +826,7 @@ class Pivot(Perf):
                 lambda s: s % 12
                 )
 
-        from static_frame import Frame
+        from static_frame.core.pivot import pivot_outer_index
         from static_frame import TypeBlocks
         from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
@@ -836,7 +836,7 @@ class Pivot(Perf):
                 explanation='nearly identical, favoring slower'
                 ),
             'index1_columns1_data1': FunctionMetaData(
-                line_target=Frame.pivot,
+                line_target=pivot_outer_index,
                 ),
             }
 
