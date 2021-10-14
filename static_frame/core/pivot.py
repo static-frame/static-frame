@@ -194,7 +194,6 @@ def pivot_core(
                 name=columns_name)
 
     dtype_map = frame.dtypes
-    # final resultant dtypes
     dtypes_per_data_fields = tuple(pivot_records_dtypes(
             dtype_map=dtype_map,
             data_fields=data_fields,
@@ -206,13 +205,11 @@ def pivot_core(
 
     if not columns_fields: # group by is only index_fields
         # group_fields = index_fields if index_depth > 1 else index_fields[0]
-
         columns = data_fields if func_single else tuple(product(data_fields, func_fields))
         # NOTE: examine if need to use passed index_constructor here
         index_constructor = None if index_depth > 1 else partial(Index, name=index_fields[0])
-
         if len(columns) == 1:
-            assert len(data_fields) == 1
+            # assert len(data_fields) == 1
             f = frame.from_series(
                     Series.from_items(
                             pivot_items(blocks=frame._blocks,
@@ -227,7 +224,6 @@ def pivot_core(
                             ),
                     columns_constructor=columns_constructor)
         else:
-            # import ipdb; ipdb.set_trace()
             f = frame.from_records_items(
                     pivot_records_items(
                             blocks=frame._blocks,
@@ -253,11 +249,6 @@ def pivot_core(
                 # TODO: is this branch needed?
                 f = f.reindex(index_outer, own_index=True, check_equals=False)
     else:
-        # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
-        sub_frames = []
-        sub_columns_collected = []
-
-        # import ipdb; ipdb.set_trace()
         # avoid doing a multi-column-style selection if not needed
         if len(columns_fields) == 1:
             # columns_group = columns_fields[0]
@@ -270,6 +261,16 @@ def pivot_core(
         # group by on 1 or more columns fields
         # NOTE: explored doing one group on index and coluns that insert into pre-allocated arrays, but that proved slower than this approach
         group_key = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
+
+        index_outer = pivot_outer_index(frame=frame,
+                    index_fields=index_fields,
+                    index_depth=index_depth,
+                    index_constructor=index_constructor,
+                    )
+
+        # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
+        sub_frames = []
+        sub_columns_collected = []
 
         # for group, sub in frame.iter_group_items(columns_group):
         for group, _, sub in frame._blocks.group(axis=0, key=group_key):
@@ -346,20 +347,31 @@ def pivot_core(
                             index=sub_index_labels,
                             own_data=True,
                             )
-            sub_frames.append(sub_frame)
 
-        # import ipdb; ipdb.set_trace()
-        index_outer = pivot_outer_index(frame=frame,
-                    index_fields=index_fields,
-                    index_depth=index_depth,
-                    index_constructor=index_constructor,
+            sub_frame = sub_frame.reindex(index_outer,
+                    own_index=True,
+                    fill_value=fill_value,
                     )
-        f = frame.__class__.from_concat(sub_frames,
+            if sub_frame.ndim == 1:
+                sub_frames.append(sub_frame.values)
+            else:
+                sub_frames.extend(sub_frame._blocks._blocks)
+
+        tb = TypeBlocks.from_blocks(sub_frames)
+        f = frame.__class__(tb,
                 index=index_outer,
                 columns=sub_columns_collected,
-                axis=1,
-                fill_value=fill_value,
+                own_data=True,
+                own_index=True,
+                # own_columns=True,
                 )
+
+        # f = frame.__class__.from_concat(sub_frames,
+        #         index=index_outer,
+        #         columns=sub_columns_collected,
+        #         axis=1,
+        #         fill_value=fill_value,
+        #         )
 
     index_final = None if index_depth == 1 else index_outer
 

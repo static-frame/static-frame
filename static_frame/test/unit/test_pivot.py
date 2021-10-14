@@ -16,7 +16,7 @@ class TestUnit(TestCase):
         func_map = None
         loc_to_iloc = frame.columns.loc_to_iloc
         post = tuple(pivot_records_items(
-                frame=frame,
+                blocks=frame._blocks,
                 group_fields_iloc=loc_to_iloc(group_fields),
                 group_depth=group_depth,
                 data_fields_iloc=loc_to_iloc(data_fields),
@@ -37,7 +37,7 @@ class TestUnit(TestCase):
         loc_to_iloc = frame.columns.loc_to_iloc
 
         post = tuple(pivot_records_items(
-                frame=frame,
+                blocks=frame._blocks,
                 group_fields_iloc=loc_to_iloc(group_fields),
                 group_depth=group_depth,
                 data_fields_iloc=loc_to_iloc(data_fields),
