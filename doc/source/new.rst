@@ -10,6 +10,8 @@ Performance enhancements to ``Frame.pivot()`` when doing index-only grouping.
 
 Introduction of ``TypeBlocks._block_slices`` as lazily derived and persistently stored.
 
+Fixed issue with ``Frame.from_overlay`` when called with ``FrameGO``.
+
 
 0.8.20
 ----------
