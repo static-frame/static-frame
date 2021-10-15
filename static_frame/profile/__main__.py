@@ -900,6 +900,62 @@ class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
     def int_index_str(self) -> None:
         pass
 
+
+#-------------------------------------------------------------------------------
+class Group(Perf):
+    NUMBER = 150
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff1 = ff.parse('s(100_000,10)|v(int,str,bool)|c(I,str)|i(I,int)')
+        self.pdf1 = self.sff1.to_pandas()
+
+        # narrow eav table
+        self.sff2 = ff.parse('s(100_000,3)|v(int,int,int)').assign[0].apply(
+                lambda s: s % 6).assign[1].apply(
+                lambda s: s % 12
+                )
+        self.pdf2 = self.sff2.to_pandas()
+
+
+        # from static_frame import Frame
+        # from static_frame import TypeBlocks
+        # from static_frame.core.util import array_to_groups_and_locations
+        # self.meta = {
+        #     'index1_columns0_data2': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=array_to_groups_and_locations,
+        #         explanation='nearly identical, favoring slower'
+        #         ),
+        #     'index1_columns1_data1': FunctionMetaData(
+        #         line_target=Frame.pivot,
+        #         ),
+        #     }
+
+class Group_N(Group, Native):
+
+    def wide_group_2(self) -> None:
+        post = tuple(self.sff1.iter_group_items('zUvW'))
+        assert len(post) == 2
+
+    def tall_group_12(self) -> None:
+        post = tuple(self.sff2.iter_group_items(1))
+        assert len(post) == 12
+
+
+class Group_R(Group, Reference):
+
+    def wide_group_2(self) -> None:
+        post = tuple(self.pdf1.groupby('zUvW'))
+        assert len(post) == 2
+
+    def tall_group_12(self) -> None:
+        post = tuple(self.pdf2.groupby(1))
+        assert len(post) == 12
+
+
+
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 

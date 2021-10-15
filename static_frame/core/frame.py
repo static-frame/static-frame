@@ -168,6 +168,7 @@ from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import ufunc_dtype_to_dtype
+from static_frame.core.util import roll_1d
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -4649,9 +4650,10 @@ class Frame(ContainerOperand):
             key: GetItemKeyType,
             *,
             axis: int,
+            drop: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
 
-        for group, selection, tb in self._blocks.group(axis=axis, key=key):
+        for group, selection, tb in self._blocks.group(axis=axis, key=key, drop=drop):
             if axis == 0:
                 # axis 0 is a row iter, so need to slice index, keep columns
                 yield group, self.__class__(tb,
@@ -4679,6 +4681,8 @@ class Frame(ContainerOperand):
         '''
         Optimized grouping when key is an element.
         '''
+        # TODO: implement this on TypeBlocks?
+
         # Create a sorted copy since we do not want to change the underlying data
         frame_sorted: Frame = self.sort_values(key, axis=not axis)
 
@@ -4686,6 +4690,8 @@ class Frame(ContainerOperand):
                 key: GetItemKeyType,
                 index: IndexBase,
                 ) -> 'Frame':
+            '''Return a Frame consisting only of the target of grouping
+            '''
             if axis == 0:
                 return Frame(frame_sorted._blocks._extract(row_key=key),
                         columns=self._columns,
@@ -4705,6 +4711,7 @@ class Frame(ContainerOperand):
         if not self._blocks.size:
             return
 
+        # get array of sorted group target
         if axis == 0:
             index: Index = frame_sorted.index
             group_values = frame_sorted._blocks._extract_array(column_key=iloc_key)
@@ -4712,11 +4719,13 @@ class Frame(ContainerOperand):
             index = frame_sorted.columns
             group_values = frame_sorted._blocks._extract_array(row_key=iloc_key)
 
-        # find where new value is not equal to previous; drop the first as roll wraps
-        transitions = np.flatnonzero(group_values != np.roll(group_values, 1))[1:]
+        # assert group_values.ndim == 1
+        # find iloc positions wheregrtupo new value is not equal to previous; drop the first as roll wraps
+        transitions = np.flatnonzero(group_values != roll_1d(group_values, 1))[1:]
         start = 0
         for t in transitions:
             slc = slice(start, t)
+            # slice the sorted index to be aligned with the sorted blocks from above
             yield group_values[start], extract_frame(slc, index[slc])
             start = t
         yield group_values[start], extract_frame(slice(start, None), index[start:])
@@ -5039,9 +5048,9 @@ class Frame(ContainerOperand):
                 if isinstance(cfs, Frame):
                     cfs = cfs._blocks
                 if cfs.shape[1] == 1:
-                    values_for_sort = cfs._extract_array(column_key=0)
+                    values_for_sort = cfs._extract_array_column(0)
                 else:
-                    values_for_lex = [cfs._extract_array(column_key=i)
+                    values_for_lex = [cfs._extract_array_column(i)
                             for i in range(cfs.shape[1]-1, -1, -1)]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
@@ -5065,7 +5074,7 @@ class Frame(ContainerOperand):
 
         if axis == 0:
             columns = self._columns[order]
-            blocks = self._blocks[order] # order columns
+            blocks = self._blocks._extract(column_key=order) # order columns
             return self.__class__(blocks,
                     index=self._index,
                     columns=columns,
@@ -5076,7 +5085,7 @@ class Frame(ContainerOperand):
                     )
 
         index = self._index[order]
-        blocks = self._blocks.iloc[order]
+        blocks = self._blocks._extract(row_key=order)
         return self.__class__(blocks,
                 index=index,
                 columns=self._columns,

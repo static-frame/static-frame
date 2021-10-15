@@ -792,6 +792,58 @@ class TypeBlocks(ContainerOperand):
                             values.flags.writeable = False
                             yield values
 
+
+    def sort(self,
+            axis: int,
+            key: GetItemKeyTypeCompound,
+            ) -> 'TypeBlocks':
+        '''While sorting generally happens at the Frame level, some lower level operations will benefit from sorting on type blocks directly.
+        '''
+        values_for_sort: tp.Optional[np.ndarray] = None
+        values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
+
+        if axis == 0: # get a column ordering based on one or more rows
+            cfs = self._blocks._extract_array(row_key=key)
+            cfs_is_array = True
+            if cfs.ndim == 1:
+                values_for_sort = cfs
+            elif cfs.ndim == 2 and cfs.shape[0] == 1:
+                values_for_sort = cfs[0]
+            else:
+                values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
+
+        elif axis == 1: # get a row ordering based on one or more columns
+            cfs = self._blocks._extract(column_key=iloc_key) # get TypeBlocks
+            cfs_is_array = cfs.__class__ is np.ndarray
+
+            if cfs_is_array:
+                if cfs.ndim == 1:
+                    values_for_sort = cfs
+                elif cfs.ndim == 2 and cfs.shape[1] == 1:
+                    values_for_sort = cfs[:, 0]
+                else:
+                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
+            else: #TypeBlocks from here
+                if cfs.shape[1] == 1:
+                    values_for_sort = cfs._extract_array_column(0)
+                else:
+                    values_for_lex = [cfs._extract_array_column(i)
+                            for i in range(cfs.shape[1]-1, -1, -1)]
+        else:
+            raise AxisInvalid(f'invalid axis: {axis}')
+
+        if values_for_lex is not None:
+            order = np.lexsort(values_for_lex)
+        elif values_for_sort is not None:
+            order = np.argsort(values_for_sort) # NOTE: not passing kind here
+        else:
+            raise RuntimeError('unable to resovle sort type')
+
+        if axis == 0:
+            return self._extract(column_key=order) # order columns
+        return self._extract(row_key=order)
+
+
     def group(self,
             axis: int,
             key: GetItemKeyTypeCompound,
@@ -800,6 +852,7 @@ class TypeBlocks(ContainerOperand):
         '''
         Args:
             key: iloc selector on opposite axis
+            drop: Optionall drop the target of the grouping as specified by ``key``.
 
         Returns:
             Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
