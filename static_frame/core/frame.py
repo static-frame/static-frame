@@ -4653,7 +4653,11 @@ class Frame(ContainerOperand):
             drop: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
 
-        for group, selection, tb in self._blocks.group(axis=axis, key=key, drop=drop):
+        for group, selection, tb in self._blocks.group(
+                axis=axis,
+                key=key,
+                drop=drop,
+                ):
             if axis == 0:
                 # axis 0 is a row iter, so need to slice index, keep columns
                 yield group, self.__class__(tb,
@@ -4662,7 +4666,7 @@ class Frame(ContainerOperand):
                         own_columns=self.STATIC, # own if static
                         own_index=True,
                         own_data=True)
-            elif axis == 1:
+            else:
                 # axis 1 is a column iterators, so need to slice columns, keep index
                 yield group, self.__class__(tb,
                         index=self._index,
@@ -4670,65 +4674,62 @@ class Frame(ContainerOperand):
                         own_index=True,
                         own_columns=True,
                         own_data=True)
-            else:
-                raise AxisInvalid(f'invalid axis: {axis}') #pragma: no cover (already caught above)
 
-    def _axis_group_sort_items(self,
-            key: GetItemKeyType,
-            iloc_key: GetItemKeyType,
-            axis: int
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
-        '''
-        Optimized grouping when key is an element.
-        '''
-        # TODO: implement this on TypeBlocks?
+    # def _axis_group_sort_items(self,
+    #         key: GetItemKeyType,
+    #         iloc_key: GetItemKeyType,
+    #         axis: int
+    #         ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+    #     '''
+    #     Optimized grouping when key is an element.
+    #     '''
+    #     # TODO: implement this on TypeBlocks?
 
-        # Create a sorted copy since we do not want to change the underlying data
-        frame_sorted: Frame = self.sort_values(key, axis=not axis)
+    #     # Create a sorted copy since we do not want to change the underlying data
+    #     frame_sorted: Frame = self.sort_values(key, axis=not axis)
 
-        def extract_frame(
-                key: GetItemKeyType,
-                index: IndexBase,
-                ) -> 'Frame':
-            '''Return a Frame consisting only of the target of grouping
-            '''
-            if axis == 0:
-                return Frame(frame_sorted._blocks._extract(row_key=key),
-                        columns=self._columns,
-                        index=index,
-                        own_columns=self.STATIC, # own if static
-                        own_index=True,
-                        own_data=True,
-                        )
-            return Frame(frame_sorted._blocks._extract(column_key=key),
-                    columns=index,
-                    index=self._index,
-                    own_columns=True,
-                    own_index=True,
-                    own_data=True,
-                    )
+    #     if not self._blocks.size:
+    #         return
 
-        if not self._blocks.size:
-            return
+    #     def extract_frame(
+    #             key: GetItemKeyType,
+    #             index: IndexBase,
+    #             ) -> 'Frame':
+    #         '''Return a Frame consisting only of the target of grouping
+    #         '''
+    #         if axis == 0:
+    #             return Frame(frame_sorted._blocks._extract(row_key=key),
+    #                     columns=self._columns,
+    #                     index=index,
+    #                     own_columns=self.STATIC, # own if static
+    #                     own_index=True,
+    #                     own_data=True,
+    #                     )
+    #         return Frame(frame_sorted._blocks._extract(column_key=key),
+    #                 columns=index,
+    #                 index=self._index,
+    #                 own_columns=True,
+    #                 own_index=True,
+    #                 own_data=True,
+    #                 )
 
-        # get array of sorted group target
-        if axis == 0:
-            index: Index = frame_sorted.index
-            group_values = frame_sorted._blocks._extract_array(column_key=iloc_key)
-        else:
-            index = frame_sorted.columns
-            group_values = frame_sorted._blocks._extract_array(row_key=iloc_key)
+    #     # get array of sorted group target
+    #     if axis == 0:
+    #         index: Index = frame_sorted.index
+    #         group_values = frame_sorted._blocks._extract_array(column_key=iloc_key)
+    #     else:
+    #         index = frame_sorted.columns
+    #         group_values = frame_sorted._blocks._extract_array(row_key=iloc_key)
 
-        # assert group_values.ndim == 1
-        # find iloc positions wheregrtupo new value is not equal to previous; drop the first as roll wraps
-        transitions = np.flatnonzero(group_values != roll_1d(group_values, 1))[1:]
-        start = 0
-        for t in transitions:
-            slc = slice(start, t)
-            # slice the sorted index to be aligned with the sorted blocks from above
-            yield group_values[start], extract_frame(slc, index[slc])
-            start = t
-        yield group_values[start], extract_frame(slice(start, None), index[start:])
+    #     # find iloc positions where new value is not equal to previous; drop the first as roll wraps
+    #     transitions = np.flatnonzero(group_values != roll_1d(group_values, 1))[1:]
+    #     start = 0
+    #     for t in transitions:
+    #         slc = slice(start, t)
+    #         # slice the sorted index to be aligned with the sorted blocks from above
+    #         yield group_values[start], extract_frame(slc, index[slc])
+    #         start = t
+    #     yield group_values[start], extract_frame(slice(start, None), index[start:])
 
 
     def _axis_group_loc_items(self,
@@ -4747,25 +4748,24 @@ class Frame(ContainerOperand):
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
-        # NOTE: might identify when key is a list of one item
+        yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
 
-        # Optimized sorting approach is only supported in a limited number of cases
-        if (self.columns.depth == 1 and
-                self.index.depth == 1 and
-                not isinstance(key, KEY_MULTIPLE_TYPES)
-                ):
-            if axis == 0:
-                has_object = self._blocks.dtypes[iloc_key] == DTYPE_OBJECT
-            else:
-                has_object = self._blocks._row_dtype == DTYPE_OBJECT
-            if not has_object:
-                yield from self._axis_group_sort_items(key=key,
-                        iloc_key=iloc_key,
-                        axis=axis)
-            else:
-                yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
-        else:
-            yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
+        # # Optimized sorting approach is only supported in a limited number of cases
+        # if not isinstance(key, KEY_MULTIPLE_TYPES):
+        #     if axis == 0:
+        #         has_object = self._blocks.dtypes[iloc_key] == DTYPE_OBJECT
+        #     else:
+        #         has_object = self._blocks._row_dtype == DTYPE_OBJECT
+        #     if not has_object:
+        #         yield from self._axis_group_iloc_items(
+        #                 key=iloc_key,
+        #                 axis=axis,
+        #                 sort=True,
+        #                 )
+        #     else:
+        #         yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
+        # else:
+        #     yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
 
 
     def _axis_group_loc(self,

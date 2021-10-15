@@ -63,6 +63,7 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import arrays_equal
 from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import roll_1d
 
 from static_frame.core.style_config import StyleConfig
 
@@ -850,7 +851,7 @@ class TypeBlocks(ContainerOperand):
         return self._extract(row_key=order), order
 
 
-    def group(self,
+    def group_match(self,
             axis: int,
             key: GetItemKeyTypeCompound,
             drop: bool = False,
@@ -863,13 +864,13 @@ class TypeBlocks(ContainerOperand):
         Returns:
             Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
         '''
-        # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
-        unique_axis = None
 
         # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
         if self._shape[0] == 0 or self._shape[1] == 0: # zero sized
             return
 
+        # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
+        unique_axis = None
         if axis == 0:
             # axis 0 means we return row groups; key is a column key
             group_source = self._extract_array(column_key=key)
@@ -895,20 +896,17 @@ class TypeBlocks(ContainerOperand):
             else:
                 groups = array2d_to_tuples(groups.T)
 
-        # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
-        selection = np.empty(len(locations), dtype=DTYPE_BOOL)
         if drop:
-            # find region to intersect with
-            # set true everywhere, then set false to drop region
             # axis 0 means we return row groups; key is a column key
             shape = self._shape[1] if axis == 0 else self._shape[0]
             drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
             drop_mask[key] = False
 
+        # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
+        selection = np.empty(len(locations), dtype=DTYPE_BOOL)
         for idx, g in enumerate(groups):
-            # derive a Boolean array of variable size for each location
+            # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
             np.equal(locations, idx, out=selection)
-            # intersect with drop mask
 
             if axis == 0: # return row
                 column_key = None if not drop else drop_mask
@@ -922,6 +920,95 @@ class TypeBlocks(ContainerOperand):
                         row_key=row_key,
                         column_key=selection,
                         )
+
+    def group_sort(self,
+            axis: int,
+            key: int,
+            drop: bool = False,
+            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
+        '''
+        Args:
+            key: iloc selector on opposite axis; must be an integer
+            drop: Optionall drop the target of the grouping as specified by ``key``.
+
+        Returns:
+            Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
+        '''
+
+        # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
+        if self._shape[0] == 0 or self._shape[1] == 0: # zero sized
+            return
+
+        blocks, order = self.sort(key=key, axis=not axis, kind='quicksort')
+
+        if axis == 0:
+            # axis 0 means we return row groups; key is a column key
+            group_source = blocks._extract_array_column(key)
+        elif axis == 1:
+            # axis 1 means we return column groups; key is a row key
+            group_source = blocks._extract_array(row_key=key)
+        else:
+            raise AxisInvalid(f'invalid axis: {axis}')
+
+        if drop:
+            # axis 0 means we return row groups; key is a column key
+            shape = self._shape[1] if axis == 0 else self._shape[0]
+            drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
+            drop_mask[key] = False
+
+        selection = np.empty(len(group_source), dtype=DTYPE_BOOL)
+        # find iloc positions where new value is not equal to previous; drop the first as roll wraps
+        transitions = np.flatnonzero(group_source != roll_1d(group_source, 1))[1:]
+        start = 0
+        for t in transitions:
+            slc = slice(start, t)
+            # slice order to get elemtns in original ordering that are selected
+            selection[NULL_SLICE] = False
+            selection[order[slc]] = True
+
+            if axis == 0:
+                column_key = None if not drop else drop_mask
+                yield group_source[start], selection, blocks._extract(
+                        row_key=slc,
+                        column_key=column_key,
+                        )
+            else:
+                row_key = None if not drop else drop_mask
+                yield group_source[start], selection, blocks._extract(
+                        row_key=row_key,
+                        column_key=slc,
+                        )
+            start = t
+
+        if start < len(group_source):
+            slc = slice(start, None)
+            selection[NULL_SLICE] = False
+            selection[order[slc]] = True
+
+            if axis == 0:
+                column_key = None if not drop else drop_mask
+                yield group_source[start], selection, blocks._extract(
+                        row_key=slc,
+                        column_key=column_key,
+                        )
+            else:
+                row_key = None if not drop else drop_mask
+                yield group_source[start], selection, blocks._extract(
+                        row_key=row_key,
+                        column_key=slc,
+                        )
+
+
+    def group(self,
+            axis: int,
+            key: int,
+            drop: bool = False,
+            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
+        # might unpack keys that are lists of one element
+        if isinstance(key, INT_TYPES) and self.dtypes[key] != DTYPE_OBJECT:
+            yield from self.group_sort(axis, key, drop)
+        else:
+            yield from self.group_match(axis, key, drop)
 
 
 
