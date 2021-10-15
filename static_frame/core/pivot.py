@@ -166,9 +166,9 @@ def pivot_core(
 
     # all are lists of hashables; get converted to lists of integers
     columns_loc_to_iloc = frame.columns._loc_to_iloc
-    index_fields_iloc: tp.Iterable[int] = columns_loc_to_iloc(index_fields)
-    data_fields_iloc: tp.Iterable[int] = columns_loc_to_iloc(data_fields)
-    columns_fields_iloc: tp.Iterable[int] = columns_loc_to_iloc(columns_fields)
+    index_fields_iloc: tp.Sequence[int] = columns_loc_to_iloc(index_fields) #type: ignore
+    data_fields_iloc: tp.Sequence[int] = columns_loc_to_iloc(data_fields) #type: ignore
+    columns_fields_iloc: tp.Sequence[int] = columns_loc_to_iloc(columns_fields) #type: ignore
 
     # For data fields, we add the field name, not the field values, to the columns.
     columns_name = tuple(columns_fields)
@@ -180,7 +180,7 @@ def pivot_core(
 
     columns_depth = len(columns_name)
     if columns_depth == 1:
-        columns_name = columns_name[0]
+        columns_name = columns_name[0] # type: ignore
         columns_constructor = partial(frame._COLUMNS_CONSTRUCTOR, name=columns_name)
     else:
         columns_constructor = partial(frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
@@ -250,7 +250,7 @@ def pivot_core(
         # have to rename columns if derived in from_concat
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
                 else columns_constructor(f.columns))
-        return f.relabel(index=index_final, columns=columns_final)
+        return f.relabel(index=index_final, columns=columns_final) #type: ignore
 
     #---------------------------------------------------------------------------
     # second major branch: we are only grouping be index and columns fields
@@ -276,7 +276,7 @@ def pivot_core(
 
     # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
     sub_blocks = []
-    sub_columns_collected = []
+    sub_columns_collected: tp.List[tp.Hashable] = []
 
     # for group, sub in frame.iter_group_items(columns_group):
     for group, _, sub in frame._blocks.group(axis=0, key=group_key):
@@ -299,6 +299,7 @@ def pivot_core(
                     for f in index_fields)))
             sub_index_labels_unique = set(sub_index_labels)
 
+        sub_frame: tp.Union[Frame, Series]
 
         # if sub_index_labels are not unique we need to aggregate
         if len(sub_index_labels_unique) != len(sub_index_labels):
@@ -361,7 +362,7 @@ def pivot_core(
         if sub_frame.ndim == 1:
             sub_blocks.append(sub_frame.values)
         else:
-            sub_blocks.extend(sub_frame._blocks._blocks)
+            sub_blocks.extend(sub_frame._blocks._blocks) # type: ignore
 
     tb = TypeBlocks.from_blocks(sub_blocks)
     return frame.__class__(tb,

@@ -831,12 +831,12 @@ class Pivot(Perf):
         from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=array_to_groups_and_locations,
-                explanation='nearly identical, favoring slower'
                 ),
             'index1_columns1_data1': FunctionMetaData(
                 line_target=pivot_outer_index,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             }
 
