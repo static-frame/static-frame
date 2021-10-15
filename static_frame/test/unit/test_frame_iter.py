@@ -888,10 +888,6 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('w', 'x', 'y', 'z'))
 
-        with self.assertRaises(AxisInvalid):
-            post = tuple(f1._axis_group_iloc_items(4, axis=-1))
-
-
         post = tuple(f1._axis_group_iloc_items(4, axis=0)) # row iter, group by column 4
 
         group1, group_frame_1 = post[0]
