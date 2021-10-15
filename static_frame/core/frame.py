@@ -49,6 +49,7 @@ from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors_deferred
 from static_frame.core.container_util import df_slice_to_arrays
 from static_frame.core.container_util import NPZConverter
+from static_frame.core.container_util import frame_to_frame
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -167,6 +168,7 @@ from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import ufunc_dtype_to_dtype
+from static_frame.core.util import roll_1d
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -603,6 +605,7 @@ class Frame(ContainerOperand):
             index: An optional :obj:`Index`, :obj:`IndexHierarchy`, or index initializer, to be used as the index upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
             columns: An optional :obj:`Index`, :obj:`IndexHierarchy`, or columns initializer, to be used as the columns upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
             union: If True, and no ``index`` or ``columns`` argument is supplied, a union index or columns from ``containers`` will be used; if False, the intersection index or columns will be used.
+            name:
         '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
@@ -632,13 +635,16 @@ class Frame(ContainerOperand):
         containers_iter = iter(containers)
         container = next(containers_iter)
         fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
-        post = container.reindex(
+
+        # get the first container
+        post = frame_to_frame(container, cls).reindex(
                 index=index,
                 columns=columns,
                 fill_value=fill_value,
                 own_index=True,
                 own_columns=True,
                 )
+
         for container in containers_iter:
             values = []
             for col, dtype_at_col in post.dtypes.items():
@@ -3311,6 +3317,7 @@ class Frame(ContainerOperand):
             {fill_value}
             {own_index}
             {own_columns}
+            check_equals:
         '''
         if index is None and columns is None:
             raise RuntimeError('must specify one of index or columns')
@@ -4643,9 +4650,10 @@ class Frame(ContainerOperand):
             key: GetItemKeyType,
             *,
             axis: int,
+            drop: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
 
-        for group, selection, tb in self._blocks.group(axis=axis, key=key):
+        for group, selection, tb in self._blocks.group(axis=axis, key=key, drop=drop):
             if axis == 0:
                 # axis 0 is a row iter, so need to slice index, keep columns
                 yield group, self.__class__(tb,
@@ -4673,6 +4681,8 @@ class Frame(ContainerOperand):
         '''
         Optimized grouping when key is an element.
         '''
+        # TODO: implement this on TypeBlocks?
+
         # Create a sorted copy since we do not want to change the underlying data
         frame_sorted: Frame = self.sort_values(key, axis=not axis)
 
@@ -4680,6 +4690,8 @@ class Frame(ContainerOperand):
                 key: GetItemKeyType,
                 index: IndexBase,
                 ) -> 'Frame':
+            '''Return a Frame consisting only of the target of grouping
+            '''
             if axis == 0:
                 return Frame(frame_sorted._blocks._extract(row_key=key),
                         columns=self._columns,
@@ -4699,6 +4711,7 @@ class Frame(ContainerOperand):
         if not self._blocks.size:
             return
 
+        # get array of sorted group target
         if axis == 0:
             index: Index = frame_sorted.index
             group_values = frame_sorted._blocks._extract_array(column_key=iloc_key)
@@ -4706,11 +4719,13 @@ class Frame(ContainerOperand):
             index = frame_sorted.columns
             group_values = frame_sorted._blocks._extract_array(row_key=iloc_key)
 
-        # find where new value is not equal to previous; drop the first as roll wraps
-        transitions = np.flatnonzero(group_values != np.roll(group_values, 1))[1:]
+        # assert group_values.ndim == 1
+        # find iloc positions wheregrtupo new value is not equal to previous; drop the first as roll wraps
+        transitions = np.flatnonzero(group_values != roll_1d(group_values, 1))[1:]
         start = 0
         for t in transitions:
             slc = slice(start, t)
+            # slice the sorted index to be aligned with the sorted blocks from above
             yield group_values[start], extract_frame(slc, index[slc])
             start = t
         yield group_values[start], extract_frame(slice(start, None), index[start:])
@@ -5033,9 +5048,9 @@ class Frame(ContainerOperand):
                 if isinstance(cfs, Frame):
                     cfs = cfs._blocks
                 if cfs.shape[1] == 1:
-                    values_for_sort = cfs._extract_array(column_key=0)
+                    values_for_sort = cfs._extract_array_column(0)
                 else:
-                    values_for_lex = [cfs._extract_array(column_key=i)
+                    values_for_lex = [cfs._extract_array_column(i)
                             for i in range(cfs.shape[1]-1, -1, -1)]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
@@ -5059,7 +5074,7 @@ class Frame(ContainerOperand):
 
         if axis == 0:
             columns = self._columns[order]
-            blocks = self._blocks[order] # order columns
+            blocks = self._blocks._extract(column_key=order) # order columns
             return self.__class__(blocks,
                     index=self._index,
                     columns=columns,
@@ -5070,7 +5085,7 @@ class Frame(ContainerOperand):
                     )
 
         index = self._index[order]
-        blocks = self._blocks.iloc[order]
+        blocks = self._blocks._extract(row_key=order)
         return self.__class__(blocks,
                 index=index,
                 columns=self._columns,

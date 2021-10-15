@@ -793,14 +793,66 @@ class TypeBlocks(ContainerOperand):
                             yield values
 
 
+    def sort(self,
+            axis: int,
+            key: GetItemKeyTypeCompound,
+            ) -> 'TypeBlocks':
+        '''While sorting generally happens at the Frame level, some lower level operations will benefit from sorting on type blocks directly.
+        '''
+        values_for_sort: tp.Optional[np.ndarray] = None
+        values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
+
+        if axis == 0: # get a column ordering based on one or more rows
+            cfs = self._extract_array(row_key=key)
+            cfs_is_array = True
+            if cfs.ndim == 1:
+                values_for_sort = cfs
+            elif cfs.ndim == 2 and cfs.shape[0] == 1:
+                values_for_sort = cfs[0]
+            else:
+                values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
+
+        elif axis == 1: # get a row ordering based on one or more columns
+            cfs = self._extract(column_key=key) # get TypeBlocks
+            cfs_is_array = cfs.__class__ is np.ndarray
+
+            if cfs_is_array:
+                if cfs.ndim == 1:
+                    values_for_sort = cfs
+                elif cfs.ndim == 2 and cfs.shape[1] == 1:
+                    values_for_sort = cfs[:, 0]
+                else:
+                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
+            else: #TypeBlocks from here
+                if cfs.shape[1] == 1:
+                    values_for_sort = cfs._extract_array_column(0)
+                else:
+                    values_for_lex = [cfs._extract_array_column(i)
+                            for i in range(cfs.shape[1]-1, -1, -1)]
+        else:
+            raise AxisInvalid(f'invalid axis: {axis}')
+
+        if values_for_lex is not None:
+            order = np.lexsort(values_for_lex)
+        elif values_for_sort is not None:
+            order = np.argsort(values_for_sort) # NOTE: not passing kind here
+        else:
+            raise RuntimeError('unable to resovle sort type')
+
+        if axis == 0:
+            return self._extract(column_key=order) # order columns
+        return self._extract(row_key=order)
+
+
     def group(self,
             axis: int,
             key: GetItemKeyTypeCompound,
-            # drop: bool = False,
+            drop: bool = False,
             ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
         '''
         Args:
             key: iloc selector on opposite axis
+            drop: Optionall drop the target of the grouping as specified by ``key``.
 
         Returns:
             Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
@@ -836,17 +888,36 @@ class TypeBlocks(ContainerOperand):
                 groups = array2d_to_tuples(groups)
             else:
                 groups = array2d_to_tuples(groups.T)
+        if drop:
+            # find region to intersect with
+            # set true everywhere, then set false to drop region
+            # axis 0 means we return row groups; key is a column key
+            shape = self._shape[1] if axis == 0 else self._shape[0]
+            drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
+            drop_mask[key] = False
 
         # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
         selection = np.empty(len(locations), dtype=DTYPE_BOOL)
+
         for idx, g in enumerate(groups):
             # derive a Boolean array of variable size for each location
-            # selection = locations == idx
             np.equal(locations, idx, out=selection)
-            if axis == 0: # return row extractions
-                yield g, selection, self._extract(row_key=selection)
+            # intersect with drop mask
+
+            if axis == 0: # return row
+                column_key = None if not drop else drop_mask
+                yield g, selection, self._extract(
+                        row_key=selection,
+                        column_key=column_key,
+                        )
             else: # return columns extractions
-                yield g, selection, self._extract(column_key=selection)
+                row_key = None if not drop else drop_mask
+                yield g, selection, self._extract(
+                        row_key=row_key,
+                        column_key=selection,
+                        )
+
+
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
