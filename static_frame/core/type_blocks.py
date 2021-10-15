@@ -802,7 +802,8 @@ class TypeBlocks(ContainerOperand):
             ) -> 'TypeBlocks':
         '''While sorting generally happens at the Frame level, some lower level operations will benefit from sorting on type blocks directly.
 
-
+        Args:
+            axis: 0 orders columns by row(s) given by ``key``; 1 orders rows by column(s) given by ``key``.
         '''
         values_for_sort: tp.Optional[np.ndarray] = None
         values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
@@ -845,8 +846,8 @@ class TypeBlocks(ContainerOperand):
             raise RuntimeError('unable to resovle sort type')
 
         if axis == 0:
-            return self._extract(column_key=order) # order columns
-        return self._extract(row_key=order)
+            return self._extract(column_key=order), order # order columns
+        return self._extract(row_key=order), order
 
 
     def group(self,

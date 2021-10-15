@@ -3385,18 +3385,18 @@ class TestUnit(TestCase):
     def test_type_blocks_sort_a(self) -> None:
         tb1 = ff.parse('s(10,4)|v(str,int,bool,float)')._blocks
 
-        tb2 = tb1.sort(axis=1, key=1)
+        tb2, _ = tb1.sort(axis=1, key=1)
         self.assertEqual(tb2.iloc[-1].values.tolist(),
                 [['zjZQ', 162197, True, 1080.4]])
 
-        tb3 = tb1.sort(axis=1, key=[2,1])
+        tb3, _ = tb1.sort(axis=1, key=[2,1])
         self.assertEqual(tb3.iloc[0].values.tolist(),
                 [['zO5l', -41157, False, 2580.34]])
 
     def test_type_blocks_sort_b(self) -> None:
         tb1 = ff.parse('s(6,3)|v(str,str)')._blocks
 
-        tb2 = tb1.sort(axis=0, key=4)
+        tb2, _ = tb1.sort(axis=0, key=4)
         self.assertEqual(tb2.iloc[4].values.tolist(),
                 [['z2Oo', 'zKka', 'zwIp']]
                 )
@@ -3404,7 +3404,7 @@ class TestUnit(TestCase):
     def test_type_blocks_sort_c(self) -> None:
         tb1 = ff.parse('s(6,4)|v(bool)')._blocks
 
-        tb2 = tb1.sort(axis=0, key=[2, 3])
+        tb2, _ = tb1.sort(axis=0, key=[2, 3])
 
         self.assertEqual(tb2.values.tolist(),
                 [[False, False, True, False],
