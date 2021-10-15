@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Added ``Frame.to_npz()``, ``Frame.from_npz()``
 
+Performance enhancements to ``Frame.iter_group()`` and ``Frame.iter_group_items()``.
+
 Performance enhancements to ``Frame.pivot()`` when doing index-only grouping.
 
 Introduction of ``TypeBlocks._block_slices`` as lazily derived and persistently stored.
