@@ -49,6 +49,7 @@ from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors_deferred
 from static_frame.core.container_util import df_slice_to_arrays
 from static_frame.core.container_util import NPZConverter
+from static_frame.core.container_util import frame_to_frame
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -603,6 +604,7 @@ class Frame(ContainerOperand):
             index: An optional :obj:`Index`, :obj:`IndexHierarchy`, or index initializer, to be used as the index upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
             columns: An optional :obj:`Index`, :obj:`IndexHierarchy`, or columns initializer, to be used as the columns upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
             union: If True, and no ``index`` or ``columns`` argument is supplied, a union index or columns from ``containers`` will be used; if False, the intersection index or columns will be used.
+            name:
         '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
@@ -632,13 +634,16 @@ class Frame(ContainerOperand):
         containers_iter = iter(containers)
         container = next(containers_iter)
         fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
-        post = container.reindex(
+
+        # get the first container
+        post = frame_to_frame(container, cls).reindex(
                 index=index,
                 columns=columns,
                 fill_value=fill_value,
                 own_index=True,
                 own_columns=True,
                 )
+
         for container in containers_iter:
             values = []
             for col, dtype_at_col in post.dtypes.items():
@@ -3311,6 +3316,7 @@ class Frame(ContainerOperand):
             {fill_value}
             {own_index}
             {own_columns}
+            check_equals:
         '''
         if index is None and columns is None:
             raise RuntimeError('must specify one of index or columns')
