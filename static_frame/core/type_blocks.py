@@ -800,7 +800,7 @@ class TypeBlocks(ContainerOperand):
             axis: int,
             key: GetItemKeyTypeCompound,
             kind: str = DEFAULT_SORT_KIND,
-            ) -> 'TypeBlocks':
+            ) -> tp.Tuple['TypeBlocks', np.ndarray]:
         '''While sorting generally happens at the Frame level, some lower level operations will benefit from sorting on type blocks directly.
 
         Args:
