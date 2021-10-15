@@ -1491,7 +1491,10 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
         groups = list(tb1.group(axis=0, key=0, drop=True))
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(len(groups), 3)
+        self.assertEqual([x[2].shape for x in groups],
+                [(2, 6), (1, 6), (1, 6)]
+                )
 
 
 
