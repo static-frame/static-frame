@@ -12202,6 +12202,14 @@ class TestUnit(TestCase):
         self.assertEqual(f.shape, (3, 2))
         self.assertTrue(f.equals(ff.parse('s(3,2)')))
 
+    def test_frame_from_overlay_f(self) -> None:
+
+        f1 = FrameGO.from_element('a', index=[1,2,3,4], columns = list('abcd'))
+        f2 = FrameGO.from_element('b', index=[1,2,3,4], columns = list('abcd'))
+
+        f3 = Frame.from_overlay((f1, f2))
+        self.assertEqual(f3.shape, (4, 4))
+        self.assertIs(f3.__class__, Frame)
 
     #---------------------------------------------------------------------------
 
