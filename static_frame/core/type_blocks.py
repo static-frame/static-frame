@@ -796,7 +796,7 @@ class TypeBlocks(ContainerOperand):
     def group(self,
             axis: int,
             key: GetItemKeyTypeCompound,
-            # drop: bool = False,
+            drop: bool = False,
             ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
         '''
         Args:
@@ -839,14 +839,31 @@ class TypeBlocks(ContainerOperand):
 
         # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
         selection = np.empty(len(locations), dtype=DTYPE_BOOL)
+        if drop:
+            # find region to intersect with
+            # set true everywhere, then set false to drop region
+            # axis 0 means we return row groups; key is a column key
+            shape = self._shape[1] if axis == 0 else self._shape[0]
+            drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
+            drop_mask[key] = False
+
         for idx, g in enumerate(groups):
             # derive a Boolean array of variable size for each location
-            # selection = locations == idx
             np.equal(locations, idx, out=selection)
-            if axis == 0: # return row extractions
-                yield g, selection, self._extract(row_key=selection)
+            # intersect with drop mask
+
+            if axis == 0: # return row
+                column_key = None if not drop else drop_mask
+                yield g, selection, self._extract(
+                        row_key=selection,
+                        column_key=column_key,
+                        )
             else: # return columns extractions
-                yield g, selection, self._extract(column_key=selection)
+                row_key = None if not drop else drop_mask
+                yield g, selection, self._extract(
+                        row_key=row_key,
+                        column_key=selection,
+                        )
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
