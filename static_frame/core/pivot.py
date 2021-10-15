@@ -15,7 +15,6 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
-from static_frame.core.util import INT_TYPES
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import ufunc_unique
 from static_frame.core.container_util import index_from_optional_constructor
