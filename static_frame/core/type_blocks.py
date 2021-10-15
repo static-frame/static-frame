@@ -62,6 +62,8 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import arrays_equal
+from static_frame.core.util import DEFAULT_SORT_KIND
+
 from static_frame.core.style_config import StyleConfig
 
 
@@ -796,8 +798,11 @@ class TypeBlocks(ContainerOperand):
     def sort(self,
             axis: int,
             key: GetItemKeyTypeCompound,
+            kind: str = DEFAULT_SORT_KIND,
             ) -> 'TypeBlocks':
         '''While sorting generally happens at the Frame level, some lower level operations will benefit from sorting on type blocks directly.
+
+
         '''
         values_for_sort: tp.Optional[np.ndarray] = None
         values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
@@ -835,7 +840,7 @@ class TypeBlocks(ContainerOperand):
         if values_for_lex is not None:
             order = np.lexsort(values_for_lex)
         elif values_for_sort is not None:
-            order = np.argsort(values_for_sort) # NOTE: not passing kind here
+            order = np.argsort(values_for_sort, kind=kind)
         else:
             raise RuntimeError('unable to resovle sort type')
 
