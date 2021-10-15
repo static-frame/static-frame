@@ -203,6 +203,9 @@ def pivot_core(
     if func_single and data_fields_len == 1:
         dtype_single = ufunc_dtype_to_dtype(func_single, dtype_map[data_fields[0]])
 
+    #---------------------------------------------------------------------------
+    # first major branch: if we are only grouping be index fields
+
     if not columns_fields: # group by is only index_fields
         # group_fields = index_fields if index_depth > 1 else index_fields[0]
         columns = data_fields if func_single else tuple(product(data_fields, func_fields))
@@ -254,6 +257,9 @@ def pivot_core(
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
                 else columns_constructor(f.columns))
         return f.relabel(index=index_final, columns=columns_final)
+
+    #---------------------------------------------------------------------------
+    # second major branch: we are only grouping be index and columns fields
 
     # avoid doing a multi-column-style selection if not needed
     if len(columns_fields) == 1:
