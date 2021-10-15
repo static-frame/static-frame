@@ -1476,6 +1476,30 @@ class TestUnit(TestCase):
                 [[0, 0, 1, 2, True, False, True], [0, 0, 1, 1, True, False, True]])
 
 
+    def test_type_blocks_group_c(self) -> None:
+
+        a1 = np.array([
+                [1, 2, 3,4],
+                [4,2,6,3],
+                [0, 0, 1,2],
+                [0, 0, 1,1]
+                ])
+        a2 = np.array([[False, False, True],
+                [False, False, True],
+                [True, False, True],
+                [True, False, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        groups = list(tb1.group(axis=0, key=0, drop=True))
+        self.assertEqual(len(groups), 3)
+        self.assertEqual([x[2].shape for x in groups],
+                [(2, 6), (1, 6), (1, 6)]
+                )
+
+
+    #---------------------------------------------------------------------------
+
     def test_type_blocks_transpose_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
