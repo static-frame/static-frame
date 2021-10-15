@@ -930,6 +930,7 @@ class TypeBlocks(ContainerOperand):
         Args:
             key: iloc selector on opposite axis; must be an integer
             drop: Optionall drop the target of the grouping as specified by ``key``.
+            axis: if 0, key is column selection, yield groups of rows; if 1, key is row selection, yield gruops of columns
 
         Returns:
             Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
@@ -1005,7 +1006,11 @@ class TypeBlocks(ContainerOperand):
             drop: bool = False,
             ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
         # might unpack keys that are lists of one element
-        if isinstance(key, INT_TYPES) and self.dtypes[key] != DTYPE_OBJECT:
+        key_is_int = isinstance(key, INT_TYPES)
+
+        if key_is_int and axis == 0 and self.dtypes[key] != DTYPE_OBJECT:
+            yield from self.group_sort(axis, key, drop)
+        elif key_is_int and axis == 1 and self._row_dtype != DTYPE_OBJECT:
             yield from self.group_sort(axis, key, drop)
         else:
             yield from self.group_match(axis, key, drop)
