@@ -803,7 +803,7 @@ class TypeBlocks(ContainerOperand):
         values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
 
         if axis == 0: # get a column ordering based on one or more rows
-            cfs = self._blocks._extract_array(row_key=key)
+            cfs = self._extract_array(row_key=key)
             cfs_is_array = True
             if cfs.ndim == 1:
                 values_for_sort = cfs
@@ -813,7 +813,7 @@ class TypeBlocks(ContainerOperand):
                 values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
 
         elif axis == 1: # get a row ordering based on one or more columns
-            cfs = self._blocks._extract(column_key=iloc_key) # get TypeBlocks
+            cfs = self._extract(column_key=key) # get TypeBlocks
             cfs_is_array = cfs.__class__ is np.ndarray
 
             if cfs_is_array:
