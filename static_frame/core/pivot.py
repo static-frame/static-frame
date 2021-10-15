@@ -102,7 +102,7 @@ def pivot_records_items(
     # take_group_index = group_depth > 1
     # columns_loc_to_iloc = frame.columns._loc_to_iloc
 
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
+    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
     record_size = len(data_fields_iloc) * (1 if func_single else len(func_map))
     record: tp.List[tp.Any]
 
@@ -135,19 +135,13 @@ def pivot_items(
     '''
     Specialized generator of pairs for when we hae only one data_field and one function.
     '''
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
-
-    # take_group = group_depth > 1
-    # columns_loc_to_iloc = frame.columns._loc_to_iloc
-    # column_iloc = columns_loc_to_iloc(data_field)
-    # group_field_ilocs = columns_loc_to_iloc(group_fields)
+    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
 
     for label, _, sub in blocks.group(axis=0, key=group_key):
         # label = group if take_group else group[0]
         # will always be first
         values = sub._extract_array_column(data_field_iloc)
         yield label, func_single(values)
-
 
 
 def pivot_core(
@@ -161,7 +155,7 @@ def pivot_core(
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]],
         fill_value: object = np.nan,
         index_constructor: IndexConstructor = None,
-        ):
+        ) -> 'Frame':
     '''Core implementation of Frame.pivot(). The Frame has already been reduced to just relevant columns, and all fields groups are normalized as lists of hashables.
     '''
     from static_frame.core.series import Series
@@ -172,9 +166,9 @@ def pivot_core(
 
     # all are lists of hashables; get converted to lists of integers
     columns_loc_to_iloc = frame.columns._loc_to_iloc
-    index_fields_iloc = columns_loc_to_iloc(index_fields)
-    data_fields_iloc = columns_loc_to_iloc(data_fields)
-    columns_fields_iloc = columns_loc_to_iloc(columns_fields)
+    index_fields_iloc: tp.Iterable[int] = columns_loc_to_iloc(index_fields)
+    data_fields_iloc: tp.Iterable[int] = columns_loc_to_iloc(data_fields)
+    columns_fields_iloc: tp.Iterable[int] = columns_loc_to_iloc(columns_fields)
 
     # For data fields, we add the field name, not the field values, to the columns.
     columns_name = tuple(columns_fields)
