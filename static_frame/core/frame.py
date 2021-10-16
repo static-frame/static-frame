@@ -96,11 +96,6 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
-from static_frame.core.pivot import extrapolate_column_fields
-from static_frame.core.pivot import pivot_records_items
-from static_frame.core.pivot import pivot_records_dtypes
-from static_frame.core.pivot import pivot_items
-from static_frame.core.pivot import pivot_outer_index
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import _read_url
 from static_frame.core.util import AnyCallable
@@ -167,7 +162,6 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import DTYPE_BOOL
 
 from static_frame.core.rank import rank_1d
