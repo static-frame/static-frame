@@ -10,6 +10,8 @@ Performance enhancements to ``Frame.iter_group()`` and ``Frame.iter_group_items(
 
 Performance enhancements to ``Frame.pivot()`` when doing index-only grouping.
 
+Added ``drop`` parameter to ``Frame.iter_group()`` and ``Frame.iter_group_items()``.
+
 Introduction of ``TypeBlocks._block_slices`` as lazily derived and persistently stored.
 
 Fixed issue with ``Frame.from_overlay`` when called with ``FrameGO``.
