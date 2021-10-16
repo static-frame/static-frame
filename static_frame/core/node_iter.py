@@ -656,10 +656,10 @@ class IterNode(tp.Generic[FrameOrSeries]):
         '''
         from static_frame.core.frame import Frame
 
+        # all kwargs, like ``drop```, are partialed into func_values, func_items
         func_values = partial(self._func_values, **kwargs)
         func_items = partial(self._func_items, **kwargs)
-        # only some apply_types can use
-        shape: tp.Optional[tp.Tuple[int, ...]] = None
+
         axis = kwargs.get('axis', 0)
 
         apply_constructor: tp.Callable[..., tp.Union['Frame', 'Series']]
@@ -765,9 +765,10 @@ class IterNodeGroupAxis(IterNode[FrameOrSeries]):
     def __call__(self,
             key: KEY_ITERABLE_TYPES, # type: ignore
             *,
-            axis: int = 0
+            axis: int = 0,
+            drop: bool = False,
             ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNode.get_delegate(self, key=key, axis=axis)
+        return IterNode.get_delegate(self, key=key, axis=axis, drop=drop)
 
 
 class IterNodeDepthLevel(IterNode[FrameOrSeries]):
