@@ -926,12 +926,14 @@ class TypeBlocks(ContainerOperand):
             axis: int,
             key: int,
             drop: bool = False,
+            kind: str = DEFAULT_SORT_KIND,
             ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
         '''
         Args:
             key: iloc selector on opposite axis; must be an integer
             drop: Optionall drop the target of the grouping as specified by ``key``.
             axis: if 0, key is column selection, yield groups of rows; if 1, key is row selection, yield gruops of columns
+            kind: Type of sort; a stable sort is required to preserve original odering.
 
         Returns:
             Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
@@ -941,7 +943,7 @@ class TypeBlocks(ContainerOperand):
         if self._shape[0] == 0 or self._shape[1] == 0: # zero sized
             return
 
-        blocks, order = self.sort(key=key, axis=not axis, kind='quicksort')
+        blocks, order = self.sort(key=key, axis=not axis, kind=kind)
 
         if axis == 0:
             # axis 0 means we return row groups; key is a column key
@@ -1000,7 +1002,6 @@ class TypeBlocks(ContainerOperand):
                         column_key=slc,
                         )
 
-
     def group(self,
             axis: int,
             key: int,
@@ -1009,13 +1010,14 @@ class TypeBlocks(ContainerOperand):
         # might unpack keys that are lists of one element
         key_is_int = isinstance(key, INT_TYPES)
 
+        # NOTE: using a stable sort is necssary for groups to retain initial ordering.
+
         if key_is_int and axis == 0 and self.dtypes[key] != DTYPE_OBJECT:
-            yield from self.group_sort(axis, key, drop)
+            yield from self.group_sort(axis, key, drop, DEFAULT_SORT_KIND)
         elif key_is_int and axis == 1 and self._row_dtype != DTYPE_OBJECT:
-            yield from self.group_sort(axis, key, drop)
+            yield from self.group_sort(axis, key, drop, DEFAULT_SORT_KIND)
         else:
             yield from self.group_match(axis, key, drop)
-
 
 
     #---------------------------------------------------------------------------
