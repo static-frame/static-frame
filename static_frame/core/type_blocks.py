@@ -904,6 +904,7 @@ class TypeBlocks(ContainerOperand):
 
         # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
         selection = np.empty(len(locations), dtype=DTYPE_BOOL)
+
         for idx, g in enumerate(groups):
             # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
             np.equal(locations, idx, out=selection)
