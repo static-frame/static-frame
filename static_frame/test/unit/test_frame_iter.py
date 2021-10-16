@@ -933,7 +933,21 @@ class TestUnit(TestCase):
                 (('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))),))
 
 
+    def test_frame_group_c(self) -> None:
+        # reindex both axis
+        f = ff.parse('s(10,3)|v(int,str,bool)').assign[0].apply(lambda s: s % 4)
+        post = tuple(f.iter_group(0, axis=0, drop=True))
+        self.assertEqual(len(post), 2)
+        self.assertEqual(post[0].to_pairs(),
+                ((1, ((3, 'zuVU'), (5, 'zJXD'), (6, 'zPAQ'), (7, 'zyps'))), (2, ((3, True), (5, False), (6, True), (7, True))))
+                )
 
+        self.assertEqual(post[1].to_pairs(),
+                ((1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'), (4, 'zKka'), (8, 'zyG5'), (9, 'zvMu'))), (2, ((0, True), (1, False), (2, False), (4, False), (8, True), (9, False))))
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_frame_axis_interface_b(self) -> None:
         # reindex both axis
         records = (

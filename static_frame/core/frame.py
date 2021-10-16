@@ -4658,18 +4658,26 @@ class Frame(ContainerOperand):
                 key=key,
                 drop=drop,
                 ):
+
+            if drop:
+                shape = self._blocks._shape[1] if axis == 0 else self._blocks._shape[0]
+                drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
+                drop_mask[key] = False
+
             if axis == 0:
                 # axis 0 is a row iter, so need to slice index, keep columns
+                columns = self._columns if not drop else self._columns[drop_mask]
                 yield group, self.__class__(tb,
                         index=self._index[selection],
-                        columns=self._columns,
+                        columns=columns,
                         own_columns=self.STATIC, # own if static
                         own_index=True,
                         own_data=True)
             else:
                 # axis 1 is a column iterators, so need to slice columns, keep index
+                index = self._index if not drop else self._index[drop_mask]
                 yield group, self.__class__(tb,
-                        index=self._index,
+                        index=index,
                         columns=self._columns[selection],
                         own_index=True,
                         own_columns=True,
