@@ -16,6 +16,8 @@ Introduction of ``TypeBlocks._block_slices`` as lazily derived and persistently 
 
 Fixed issue with ``Frame.from_overlay`` when called with ``FrameGO``.
 
+Added ``index_constructor`` argument to ``apply``, ``apply_pool``, ``map_any``, ``map_fill``, ``map_all``.
+
 
 0.8.20
 ----------
