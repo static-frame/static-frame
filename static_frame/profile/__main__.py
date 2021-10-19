@@ -914,7 +914,7 @@ class Group(Perf):
         # narrow eav table
         self.sff2 = ff.parse('s(100_000,3)|v(int,int,int)').assign[0].apply(
                 lambda s: s % 6).assign[1].apply(
-                lambda s: s % 12
+                lambda s: s % 100
                 )
         self.pdf2 = self.sff2.to_pandas()
 
@@ -939,9 +939,9 @@ class Group_N(Group, Native):
         post = tuple(self.sff1.iter_group_items('zUvW'))
         assert len(post) == 2
 
-    def tall_group_12(self) -> None:
+    def tall_group_100(self) -> None:
         post = tuple(self.sff2.iter_group_items(1))
-        assert len(post) == 12
+        assert len(post) == 100
 
 
 class Group_R(Group, Reference):
@@ -950,9 +950,9 @@ class Group_R(Group, Reference):
         post = tuple(self.pdf1.groupby('zUvW'))
         assert len(post) == 2
 
-    def tall_group_12(self) -> None:
+    def tall_group_100(self) -> None:
         post = tuple(self.pdf2.groupby(1))
-        assert len(post) == 12
+        assert len(post) == 100
 
 
 

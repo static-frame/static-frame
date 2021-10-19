@@ -3418,17 +3418,11 @@ class TestUnit(TestCase):
     def test_type_blocks_group_sort_a(self) -> None:
 
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
-        post = tuple(tb1.group_sort(axis=0, key=0))
+
+        post = tuple(tb1.group(axis=0, key=0))
         self.assertEqual([(x[0], x[2].shape) for x in post],
                 [(0, (5, 3)), (2, (1, 3)), (3, (6, 3))]
                 )
-
-        post_iter = iter(tb1.group_sort(axis=0, key=0))
-        for i, val in ((0, 0), (1, 2), (2, 3)):
-            x = next(post_iter)
-            self.assertEqual(
-                np.unique(tb1._extract(row_key=x[1], column_key=0).values).tolist(),
-                [val])
 
 
 if __name__ == '__main__':
