@@ -250,6 +250,13 @@ class TestUnit(TestCase):
                 [0, 1, 3, 4]
                 )
 
+    def test_index_loc_to_iloc_i(self) -> None:
+        idx1 = Index(range(4), loc_is_iloc=True)
+        self.assertTrue(idx1._map is None)
+
+        idx2 = idx1[:]
+        self.assertTrue(idx2._map is None)
+
 
     #---------------------------------------------------------------------------
     def test_index_mloc_a(self) -> None:
