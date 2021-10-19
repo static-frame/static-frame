@@ -255,7 +255,7 @@ class TestUnit(TestCase):
         self.assertTrue(idx1._map is None)
 
         idx2 = idx1[:]
-        self.assertTrue(idx2._map is None)
+        self.assertTrue(idx2._map is None) #type: ignore
 
 
     #---------------------------------------------------------------------------

@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.22
+----------
+
+Performance enhancements to ``Frame.iter_group()`` and ``Frame.iter_group_items()``.
+
+
 0.8.21
 ----------
 
