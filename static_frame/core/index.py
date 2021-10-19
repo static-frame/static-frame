@@ -443,7 +443,9 @@ class Index(IndexBase):
 
         #-----------------------------------------------------------------------
         # handle all Index subclasses
-        if isinstance(labels, IndexBase):
+        if labels.__class__ is np.ndarray:
+            pass
+        elif isinstance(labels, IndexBase):
             if labels._recache:
                 labels._update_array_cache()
             if name is NAME_DEFAULT:
@@ -500,7 +502,6 @@ class Index(IndexBase):
                 size = len(labels) #type: ignore
                 if positions is None:
                     positions = labels
-                    # positions = PositionsAllocator.get(size)
         else: # map shared from another Index
             size = len(self._map)
 
@@ -1073,31 +1074,38 @@ class Index(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
-            key: GetItemKeyType
+            key: GetItemKeyType,
             ) -> tp.Union['Index', tp.Hashable]:
-        '''Extract a new index given an iloc key
+        '''Extract a new index given an iloc key.
         '''
         if self._recache:
             self._update_array_cache()
 
         if key is None:
             labels = self._labels
+            loc_is_iloc = self._map is None
         elif key.__class__ is slice:
             if key == NULL_SLICE:
                 labels = self._labels
+                loc_is_iloc = self._map is None
             else:
                 # if labels is an np array, this will be a view; if a list, a copy
                 labels = self._labels[key]
                 labels.flags.writeable = False
+                loc_is_iloc = False
         elif isinstance(key, KEY_ITERABLE_TYPES):
             # we assume Booleans have been normalized to integers here
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
             labels.flags.writeable = False
+            loc_is_iloc = False
         else: # select a single label value
             return self._labels[key] #type: ignore
 
-        return self.__class__(labels=labels, name=self._name)
+        return self.__class__(labels=labels,
+                loc_is_iloc=loc_is_iloc,
+                name=self._name,
+                )
 
     def _extract_loc(self: I,
             key: GetItemKeyType

@@ -4648,7 +4648,9 @@ class Frame(ContainerOperand):
             axis: int,
             drop: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
-
+        '''
+        Core group implementation.
+        '''
         key_is_int = isinstance(key, INT_TYPES)
         blocks = self._blocks
 
