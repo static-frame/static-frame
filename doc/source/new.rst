@@ -1,14 +1,35 @@
 What is New in Static Frame
 ===============================
 
+
+0.8.23
+----------
+
+Corrected issue where summing a ``Frame`` of Booleans along axis 0 resulted in Booleans instead of integers.
+
+
+0.8.22
+----------
+
+Performance enhancements to ``Frame.iter_group()`` and ``Frame.iter_group_items()``.
+
+
 0.8.21
 ----------
 
 Added ``Frame.to_npz()``, ``Frame.from_npz()``
 
-Performance enhancements to ``Frame.pivot()`` when doing index-only grouping.
+Performance enhancements to ``Frame.iter_group()`` and ``Frame.iter_group_items()``.
+
+Performance enhancements to ``Frame.pivot()``.
+
+Added ``drop`` parameter to ``Frame.iter_group()`` and ``Frame.iter_group_items()``.
 
 Introduction of ``TypeBlocks._block_slices`` as lazily derived and persistently stored.
+
+Fixed issue with ``Frame.from_overlay`` when called with ``FrameGO``.
+
+Added ``index_constructor`` argument to ``apply``, ``apply_pool``, ``map_any``, ``map_fill``, ``map_all``.
 
 
 0.8.20

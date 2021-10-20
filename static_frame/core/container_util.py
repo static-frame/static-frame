@@ -325,7 +325,7 @@ def index_from_optional_constructors_deferred(
                 [tp.Union[np.ndarray, tp.Iterable[tp.Hashable]]],
                 tp.Optional[IndexBase]]:
     '''
-    Partiaal `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
+    Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
     '''
     def func(
             value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
@@ -1153,6 +1153,14 @@ def container_to_exporter_attr(container_type: tp.Type['Frame']) -> str:
         return 'to_frame_he'
     raise NotImplementedError(f'no handling for {container_type}')
 
+def frame_to_frame(
+        frame: 'Frame',
+        container_type: tp.Type['Frame'],
+        ) -> 'Frame':
+    if frame.__class__ is container_type:
+        return frame
+    f = getattr(frame, container_to_exporter_attr(container_type))
+    return f() # type: ignore
 
 def prepare_values_for_lex(
         *,

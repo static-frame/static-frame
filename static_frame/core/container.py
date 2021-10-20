@@ -310,7 +310,7 @@ class ContainerOperand(ContainerBase):
                 ufunc=np.sum,
                 ufunc_skipna=np.nansum,
                 composable=False,
-                dtypes=EMPTY_TUPLE, # float or int, row type will match
+                dtypes=EMPTY_TUPLE, # float or int, row type will match except Boolean
                 size_one_unity=True
                 )
 

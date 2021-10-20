@@ -22,7 +22,6 @@ from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
 import numpy as np
 
-
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index #pylint: disable=W0611 #pragma: no cover
@@ -221,6 +220,7 @@ AnyCallable = tp.Callable[..., tp.Any]
 Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
 
+ShapeType = tp.Union[int, tp.Tuple[int, int]]
 
 def is_mapping(value: tp.Any) -> bool:
     from static_frame import Series
@@ -750,14 +750,14 @@ def dtype_kind_to_na(kind: str) -> tp.Any:
         return NAT
     return None
 
-def ufunc_axis_skipna(
+def array_ufunc_axis_skipna(
         array: np.ndarray,
         *,
         skipna: bool,
         axis: int,
         ufunc: UFunc,
         ufunc_skipna: UFunc,
-        out: tp.Optional[np.ndarray]=None
+        out: tp.Optional[np.ndarray] = None
         ) -> np.ndarray:
     '''For ufunc array application, when two ufunc versions are available. Expected to always reduce dimensionality.
     '''

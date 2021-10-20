@@ -34,7 +34,6 @@ from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import binary_transition
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
@@ -53,7 +52,7 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
-from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import NULL_SLICE
@@ -62,7 +61,168 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import arrays_equal
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import roll_1d
+from static_frame.core.util import ShapeType
+from static_frame.core.util import ufunc_dtype_to_dtype
+
+
 from static_frame.core.style_config import StyleConfig
+
+
+
+
+#---------------------------------------------------------------------------
+def group_match(
+        blocks: 'TypeBlocks',
+        axis: int,
+        key: GetItemKeyTypeCompound,
+        drop: bool = False,
+        ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
+    '''
+    Args:
+        key: iloc selector on opposite axis
+        drop: Optionall drop the target of the grouping as specified by ``key``.
+
+    Returns:
+        Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
+    '''
+
+    # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
+    if blocks._shape[0] == 0 or blocks._shape[1] == 0: # zero sized
+        return
+
+    # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
+    unique_axis = None
+    if axis == 0:
+        # axis 0 means we return row groups; key is a column key
+        group_source = blocks._extract_array(column_key=key)
+        if group_source.ndim > 1:
+            unique_axis = 0
+    elif axis == 1:
+        # axis 1 means we return column groups; key is a row key
+        group_source = blocks._extract_array(row_key=key)
+        if group_source.ndim > 1 and group_source.shape[0] > 1:
+            unique_axis = 1
+    else:
+        raise AxisInvalid(f'invalid axis: {axis}')
+
+    groups, locations = array_to_groups_and_locations(
+            group_source,
+            unique_axis)
+
+    if unique_axis is not None:
+        # NOTE: this is expensive!
+        # make the groups hashable for usage in index construction
+        if axis == 0:
+            groups = array2d_to_tuples(groups)
+        else:
+            groups = array2d_to_tuples(groups.T)
+
+    if drop:
+        # axis 0 means we return row groups; key is a column key
+        shape = blocks._shape[1] if axis == 0 else blocks._shape[0]
+        drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
+        drop_mask[key] = False
+
+    # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
+    selection = np.empty(len(locations), dtype=DTYPE_BOOL)
+
+    for idx, g in enumerate(groups):
+        # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
+        np.equal(locations, idx, out=selection)
+
+        if axis == 0: # return row
+            column_key = None if not drop else drop_mask
+            yield g, selection, blocks._extract(
+                    row_key=selection,
+                    column_key=column_key,
+                    )
+        else: # return columns extractions
+            row_key = None if not drop else drop_mask
+            yield g, selection, blocks._extract(
+                    row_key=row_key,
+                    column_key=selection,
+                    )
+
+def group_sort(
+        blocks: 'TypeBlocks',
+        axis: int,
+        key: int,
+        drop: bool = False,
+        ) -> tp.Iterator[tp.Tuple[np.ndarray, slice, 'TypeBlocks']]:
+    '''
+    This method must be called on sorted TypeBlocks instance.
+    Args:
+        blocks: sorted TypeBlocks
+        order: args
+        key: iloc selector on opposite axis; must be an integer
+        drop: Optionall drop the target of the grouping as specified by ``key``.
+        axis: if 0, key is column selection, yield groups of rows; if 1, key is row selection, yield gruops of columns
+        kind: Type of sort; a stable sort is required to preserve original odering.
+
+    Returns:
+        Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
+    '''
+
+    # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
+    if blocks._shape[0] == 0 or blocks._shape[1] == 0: # zero sized
+        return
+
+    # blocks, order = self.sort(key=key, axis=not axis, kind=kind)
+
+    if axis == 0:
+        # axis 0 means we return row groups; key is a column key
+        group_source = blocks._extract_array_column(key)
+    elif axis == 1:
+        # axis 1 means we return column groups; key is a row key
+        group_source = blocks._extract_array(row_key=key)
+    else:
+        raise AxisInvalid(f'invalid axis: {axis}')
+
+    if drop:
+        # axis 0 means we return row groups; key is a column key
+        shape = blocks._shape[1] if axis == 0 else blocks._shape[0]
+        drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
+        drop_mask[key] = False
+
+    # find iloc positions where new value is not equal to previous; drop the first as roll wraps
+    transitions = np.flatnonzero(group_source != roll_1d(group_source, 1))[1:]
+    start = 0
+    for t in transitions:
+        slc = slice(start, t)
+        # slice order to get elemtns in original ordering that are selected
+
+        if axis == 0:
+            column_key = None if not drop else drop_mask
+            yield group_source[start], slc, blocks._extract(
+                    row_key=slc,
+                    column_key=column_key,
+                    )
+        else:
+            row_key = None if not drop else drop_mask
+            yield group_source[start], slc, blocks._extract(
+                    row_key=row_key,
+                    column_key=slc,
+                    )
+        start = t
+
+    if start < len(group_source):
+        slc = slice(start, None)
+
+        if axis == 0:
+            column_key = None if not drop else drop_mask
+            yield group_source[start], slc, blocks._extract(
+                    row_key=slc,
+                    column_key=column_key,
+                    )
+        else:
+            row_key = None if not drop else drop_mask
+            yield group_source[start], slc, blocks._extract(
+                    row_key=row_key,
+                    column_key=slc,
+                    )
+
 
 
 
@@ -793,56 +953,88 @@ class TypeBlocks(ContainerOperand):
                             yield values
 
 
-    def group(self,
+    def sort(self,
             axis: int,
             key: GetItemKeyTypeCompound,
-            # drop: bool = False,
-            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
-        '''
+            kind: str = DEFAULT_SORT_KIND,
+            ) -> tp.Tuple['TypeBlocks', np.ndarray]:
+        '''While sorting generally happens at the Frame level, some lower level operations will benefit from sorting on type blocks directly.
+
         Args:
-            key: iloc selector on opposite axis
-
-        Returns:
-            Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
+            axis: 0 orders columns by row(s) given by ``key``; 1 orders rows by column(s) given by ``key``.
         '''
-        # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
-        unique_axis = None
+        values_for_sort: tp.Optional[np.ndarray] = None
+        values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
 
-        # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
-        if self._shape[0] == 0 or self._shape[1] == 0: # zero sized
-            return
+        if axis == 0: # get a column ordering based on one or more rows
+            cfs = self._extract_array(row_key=key)
+            cfs_is_array = True
+            if cfs.ndim == 1:
+                values_for_sort = cfs
+            elif cfs.ndim == 2 and cfs.shape[0] == 1:
+                values_for_sort = cfs[0]
+            else:
+                values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
 
-        if axis == 0:
-            # axis 0 means we return row groups; key is a column key
-            group_source = self._extract_array(column_key=key)
-            if group_source.ndim > 1:
-                unique_axis = 0
-        elif axis == 1:
-            # axis 1 means we return column groups; key is a row key
-            group_source = self._extract_array(row_key=key)
-            if group_source.ndim > 1 and group_source.shape[0] > 1:
-                unique_axis = 1
+        elif axis == 1: # get a row ordering based on one or more columns
+            cfs = self._extract(column_key=key) # get TypeBlocks
+            cfs_is_array = cfs.__class__ is np.ndarray
+
+            if cfs_is_array:
+                if cfs.ndim == 1:
+                    values_for_sort = cfs
+                elif cfs.ndim == 2 and cfs.shape[1] == 1:
+                    values_for_sort = cfs[:, 0]
+                else:
+                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
+            else: #TypeBlocks from here
+                if cfs.shape[1] == 1:
+                    values_for_sort = cfs._extract_array_column(0)
+                else:
+                    values_for_lex = [cfs._extract_array_column(i)
+                            for i in range(cfs.shape[1]-1, -1, -1)]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
-        groups, locations = array_to_groups_and_locations(
-                group_source,
-                unique_axis)
+        if values_for_lex is not None:
+            order = np.lexsort(values_for_lex)
+        elif values_for_sort is not None:
+            order = np.argsort(values_for_sort, kind=kind)
+        else:
+            raise RuntimeError('unable to resovle sort type')
 
-        if unique_axis is not None:
-            # NOTE: this is expensive!
-            # make the groups hashable for usage in index construction
-            if axis == 0:
-                groups = array2d_to_tuples(groups)
-            elif axis == 1:
-                groups = array2d_to_tuples(groups.T)
+        if axis == 0:
+            return self._extract(column_key=order), order # order columns
+        return self._extract(row_key=order), order
 
-        for idx, g in enumerate(groups):
-            selection = locations == idx
-            if axis == 0: # return row extractions
-                yield g, selection, self._extract(row_key=selection)
-            elif axis == 1: # return columns extractions
-                yield g, selection, self._extract(column_key=selection)
+
+    def group(self,
+            axis: int,
+            key: int,
+            drop: bool = False,
+            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
+        '''
+        NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering
+        '''
+
+        # might unpack keys that are lists of one element
+        key_is_int = isinstance(key, INT_TYPES)
+
+        # NOTE: using a stable sort is necssary for groups to retain initial ordering.
+
+        if key_is_int and axis == 0 and self.dtypes[key] != DTYPE_OBJECT:
+            use_sort = True
+        elif key_is_int and axis == 1 and self._row_dtype != DTYPE_OBJECT:
+            use_sort = True
+        else:
+            use_sort = False
+
+        if use_sort:
+            blocks, _ = self.sort(key=key, axis=not axis, kind=DEFAULT_SORT_KIND)
+            yield from group_sort(blocks, axis, key, drop)
+        else:
+            yield from group_match(self, axis, key, drop)
+
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
@@ -860,7 +1052,7 @@ class TypeBlocks(ContainerOperand):
 
         Args:
             composable: when True, the function application will return a correct result by applying the function to blocks first, and then the result of the blocks (i.e., add, prod); where observation count is relevant (i.e., mean, var, std), this must be False.
-            dtypes: if we know the return type of func, we can provide it here to avoid having to use the row dtype.
+            dtypes: if we know the return type of func, we can provide it here to avoid having to use the row dtype. We provide multiple values and attempt to match the kind: if the row dtype is the same as a kind in this tuple, we will use the row dtype.
 
         Returns:
             As this is a reduction of axis where the caller (a Frame) is likely to return a Series, this function is not a generator of blocks, but instead just returns a consolidated 1d array.
@@ -868,7 +1060,7 @@ class TypeBlocks(ContainerOperand):
         if axis < 0 or axis > 1:
             raise RuntimeError(f'invalid axis: {axis}')
 
-        func = partial(ufunc_axis_skipna,
+        func = partial(array_ufunc_axis_skipna,
                 skipna=skipna,
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna,
@@ -878,72 +1070,77 @@ class TypeBlocks(ContainerOperand):
             result = func(array=column_2d_filter(self._blocks[0]), axis=axis)
             result.flags.writeable = False
             return result
+
+        shape: ShapeType
+
+        if axis == 0:
+            # reduce all rows to 1d with column width
+            shape = self._shape[1]
+            pos = 0
+        elif composable: # axis 1
+            # reduce all columns to 2d blocks with 1 column
+            shape = (self._shape[0], len(self._blocks))
+        else: # axis 1, not block composable
+            # Cannot do block-wise processing, must resolve to single array and return
+            array = self._blocks_to_array(
+                    blocks=self._blocks,
+                    shape=self._shape,
+                    row_dtype=self._row_dtype,
+                    row_multiple=True)
+            result = func(array=array, axis=axis)
+            result.flags.writeable = False
+            return result
+
+        # this will be uninitialzied and thus, if a value is not assigned, will have garbage
+        if dtypes:
+            # Favor self._row_dtype's kind if it is in dtypes, else take first of passed dtypes
+            for dt in dtypes:
+                if self._row_dtype.kind == dt.kind:
+                    dtype = self._row_dtype
+                    break
+            else: # no break encountered
+                dtype = dtypes[0]
+            # astype_pre = dtype.kind in DTYPE_INEXACT_KINDS
         else:
-            if axis == 0:
-                # reduce all rows to 1d with column width
-                shape: tp.Union[int, tp.Tuple[int, int]] = self._shape[1]
-                pos = 0
-            elif composable: # axis 1
-                # reduce all columns to 2d blocks with 1 column
-                shape = (self._shape[0], len(self._blocks))
-            else: # axis 1, not block composable
-                # Cannot do block-wise processing, must resolve to single array and return
-                array = self._blocks_to_array(
-                        blocks=self._blocks,
-                        shape=self._shape,
-                        row_dtype=self._row_dtype,
-                        row_multiple=True)
-                result = func(array=array, axis=axis)
-                result.flags.writeable = False
-                return result
+            # _row_dtype gives us the compatible dtype for all blocks, whether we are reducing vertically (axis 0) or horizontall (axis 1)
+            # dtype = self._row_dtype
+            dtype = ufunc_dtype_to_dtype(ufunc_skipna if skipna else ufunc, self._row_dtype)
+            assert dtype is not None
+            # astype_pre = True # if no dtypes given (like bool) we can coerce
 
-            # this will be uninitialzied and thus, if a value is not assigned, will have garbage
-            if dtypes:
-                # Favor self._row_dtype's kind if it is in dtypes, else take first of passed dtypes
-                for dt in dtypes:
-                    if self._row_dtype.kind == dt.kind:
-                        dtype = self._row_dtype
-                        break
-                else: # no break encountered
-                    dtype = dtypes[0]
-                astype_pre = dtype.kind in DTYPE_INEXACT_KINDS
-            else:
-                dtype = self._row_dtype
-                astype_pre = True # if no dtypes given (like bool) we can coerce
+        # If dtypes were specified, we know we have specific targets in mind for output
+        out = np.empty(shape, dtype=dtype)
+        for idx, b in enumerate(self._blocks):
+            # This was disabled for 0.8.23 as it no longer appears necessary or useful
+            # if astype_pre and b.dtype != dtype:
+            #     b = b.astype(dtype)
 
-            # If dtypes were specified, we know we have specific targets in mind for output
-            out = np.empty(shape, dtype=dtype)
-            for idx, b in enumerate(self._blocks):
-
-                if astype_pre and b.dtype != dtype:
-                    b = b.astype(dtype)
-
-                if axis == 0: # Combine rows, end with columns shape.
-                    if b.size == 1 and size_one_unity and not skipna:
-                        # No function call is necessary; if skipna could turn NaN to zero.
-                        end = pos + 1
-                        # Can assign an array, even 2D, as an element if size is 1
-                        out[pos] = b
-                    elif b.ndim == 1:
-                        end = pos + 1
-                        out[pos] = func(array=b, axis=axis)
-                    else:
-                        end = pos + b.shape[1]
-                        func(array=b, axis=axis, out=out[pos: end])
-                    pos = end
+            if axis == 0: # Combine rows, end with columns shape.
+                if b.size == 1 and size_one_unity and not skipna:
+                    # No function call is necessary; if skipna could turn NaN to zero.
+                    end = pos + 1
+                    # Can assign an array, even 2D, as an element if size is 1
+                    out[pos] = b
+                elif b.ndim == 1:
+                    end = pos + 1
+                    out[pos] = func(array=b, axis=axis)
                 else:
-                    # Combine columns, end with block length shape and then call func again, for final result
-                    if b.size == 1 and size_one_unity and not skipna:
+                    end = pos + b.shape[1]
+                    func(array=b, axis=axis, out=out[pos: end])
+                pos = end
+            else:
+                # Combine columns, end with block length shape and then call func again, for final result
+                if b.size == 1 and size_one_unity and not skipna:
+                    out[:, idx] = b
+                elif b.ndim == 1:
+                    # if this is a composable, numeric single columns we just copy it and process it later; but if this is a logical application (and, or) then it is already Boolean
+                    if out.dtype == DTYPE_BOOL and b.dtype != DTYPE_BOOL:
+                        # making 2D with axis 0 func will result in element-wise operation
+                        out[:, idx] = func(array=column_2d_filter(b), axis=1)
+                    else: # otherwise, keep as is
                         out[:, idx] = b
-                    elif b.ndim == 1:
-                        # if this is a composable, numeric single columns we just copy it and process it later; but if this is a logical application (and, or) then it is already Boolean
-                        if out.dtype == DTYPE_BOOL and b.dtype != DTYPE_BOOL:
-                            # making 2D with axis 0 func will result in element-wise operation
-                            out[:, idx] = func(array=column_2d_filter(b), axis=1)
-                        else: # otherwise, keep as is
-                            out[:, idx] = b
-                    else:
-                        func(array=b, axis=axis, out=out[:, idx])
+                else:
+                    func(array=b, axis=axis, out=out[:, idx])
 
         if axis == 0: # nothing more to do
             out.flags.writeable = False

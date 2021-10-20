@@ -52,7 +52,7 @@ from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
-from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
 from static_frame.core.util import ufunc_set_iter
@@ -1012,7 +1012,7 @@ class TestUnit(TestCase):
                 (30, 34, None, 80.6, 90.123),
                 ], dtype=object)
 
-        a2 = ufunc_axis_skipna(array=a1,
+        a2 = array_ufunc_axis_skipna(array=a1,
                 skipna=True,
                 axis=0,
                 ufunc=np.sum,
@@ -1021,7 +1021,7 @@ class TestUnit(TestCase):
         self.assertEqual(a2.tolist(),
                 [32, 36, 3, 84.83, 90.123])
 
-        a3 = ufunc_axis_skipna(array=a1,
+        a3 = array_ufunc_axis_skipna(array=a1,
                 skipna=True,
                 axis=1,
                 ufunc=np.sum,
@@ -1036,7 +1036,7 @@ class TestUnit(TestCase):
 
         a1 = np.array((None, None), dtype=object)
 
-        post = ufunc_axis_skipna(array=a1,
+        post = array_ufunc_axis_skipna(array=a1,
                 skipna=True,
                 axis=0,
                 ufunc=np.sum,

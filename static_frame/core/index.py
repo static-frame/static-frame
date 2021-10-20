@@ -78,7 +78,7 @@ from static_frame.core.util import SLICE_STOP_ATTR
 from static_frame.core.util import slice_to_inclusive_slice
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import UFunc
-from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import union1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
@@ -443,7 +443,9 @@ class Index(IndexBase):
 
         #-----------------------------------------------------------------------
         # handle all Index subclasses
-        if isinstance(labels, IndexBase):
+        if labels.__class__ is np.ndarray:
+            pass
+        elif isinstance(labels, IndexBase):
             if labels._recache:
                 labels._update_array_cache()
             if name is NAME_DEFAULT:
@@ -485,8 +487,8 @@ class Index(IndexBase):
 
         if self._map is None: # if _map not shared from another Index
             # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
-            if not is_typed and labels.__class__ is np.ndarray and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore [attr-defined]
-                labels_for_automap = labels.tolist() #type: ignore [attr-defined]
+            if not is_typed and labels.__class__ is np.ndarray and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore
+                labels_for_automap = labels.tolist() #type: ignore
             else:
                 labels_for_automap = labels
             if not loc_is_iloc:
@@ -500,7 +502,6 @@ class Index(IndexBase):
                 size = len(labels) #type: ignore
                 if positions is None:
                     positions = labels
-                    # positions = PositionsAllocator.get(size)
         else: # map shared from another Index
             size = len(self._map)
 
@@ -1073,31 +1074,38 @@ class Index(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
-            key: GetItemKeyType
+            key: GetItemKeyType,
             ) -> tp.Union['Index', tp.Hashable]:
-        '''Extract a new index given an iloc key
+        '''Extract a new index given an iloc key.
         '''
         if self._recache:
             self._update_array_cache()
 
         if key is None:
             labels = self._labels
+            loc_is_iloc = self._map is None
         elif key.__class__ is slice:
             if key == NULL_SLICE:
                 labels = self._labels
+                loc_is_iloc = self._map is None
             else:
                 # if labels is an np array, this will be a view; if a list, a copy
                 labels = self._labels[key]
                 labels.flags.writeable = False
+                loc_is_iloc = False
         elif isinstance(key, KEY_ITERABLE_TYPES):
             # we assume Booleans have been normalized to integers here
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
             labels.flags.writeable = False
+            loc_is_iloc = False
         else: # select a single label value
             return self._labels[key] #type: ignore
 
-        return self.__class__(labels=labels, name=self._name)
+        return self.__class__(labels=labels,
+                loc_is_iloc=loc_is_iloc,
+                name=self._name,
+                )
 
     def _extract_loc(self: I,
             key: GetItemKeyType
@@ -1182,7 +1190,7 @@ class Index(IndexBase):
             self._update_array_cache()
 
         # do not need to pass on composabel here
-        return ufunc_axis_skipna(
+        return array_ufunc_axis_skipna(
                 array=self._labels,
                 skipna=skipna,
                 axis=0,

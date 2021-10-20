@@ -447,6 +447,19 @@ class TestUnit(TestCase):
         post2 = tuple(f.iter_group('a'))
         self.assertEqual(post2, ())
 
+    def test_frame_iter_group_g(self) -> None:
+        f = sf.Frame.from_records(
+                [['1998-10-12', 1], ['1998-10-13', 2]],
+                columns=['A', 'B'],
+                dtypes=['datetime64[D]', int]
+                )
+        post = f.iter_group('A').apply(lambda v: v['B'].sum(),
+                index_constructor=IndexDate)
+
+        self.assertEqual(post.index.__class__, IndexDate)
+        self.assertEqual(post.to_pairs(),
+            ((np.datetime64('1998-10-12'), 1),
+            (np.datetime64('1998-10-13'), 2)))
 
     #---------------------------------------------------------------------------
     def test_frame_iter_group_items_a(self) -> None:
@@ -875,10 +888,6 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('w', 'x', 'y', 'z'))
 
-        with self.assertRaises(AxisInvalid):
-            post = tuple(f1._axis_group_iloc_items(4, axis=-1))
-
-
         post = tuple(f1._axis_group_iloc_items(4, axis=0)) # row iter, group by column 4
 
         group1, group_frame_1 = post[0]
@@ -924,7 +933,43 @@ class TestUnit(TestCase):
                 (('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))),))
 
 
+    def test_frame_group_c(self) -> None:
+        f = ff.parse('s(10,3)|v(int,str,bool)').assign[0].apply(lambda s: s % 4)
+        post1 = tuple(f.iter_group(0, axis=0, drop=True))
+        self.assertEqual(len(post1), 2)
+        self.assertEqual(post1[0].to_pairs(),
+                ((1, ((3, 'zuVU'), (5, 'zJXD'), (6, 'zPAQ'), (7, 'zyps'))), (2, ((3, True), (5, False), (6, True), (7, True))))
+                )
 
+        self.assertEqual(post1[1].to_pairs(),
+                ((1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'), (4, 'zKka'), (8, 'zyG5'), (9, 'zvMu'))), (2, ((0, True), (1, False), (2, False), (4, False), (8, True), (9, False))))
+                )
+
+        post2 = tuple(f.iter_group_items(0, axis=0, drop=True))
+        self.assertEqual(len(post2), 2)
+        self.assertEqual(post2[0][0], 0)
+        self.assertEqual(post2[0][1].shape, (4, 2))
+        self.assertEqual(post2[1][0], 3)
+        self.assertEqual(post2[1][1].shape, (6, 2))
+
+
+    def test_frame_group_d(self) -> None:
+        f = ff.parse('s(3,6)|v(bool)')
+        post1 = tuple(f.iter_group(0, axis=1, drop=True))
+        self.assertEqual(len(post1), 2)
+        self.assertEqual(post1[0].shape, (2, 4))
+        self.assertEqual(post1[1].shape, (2, 2))
+
+        post2 = tuple(f.iter_group_items(0, axis=1, drop=True))
+        self.assertEqual(len(post1), 2)
+        self.assertEqual(post2[0][0], False)
+        self.assertEqual(post2[0][1].shape, (2, 4))
+        self.assertEqual(post2[1][0], True)
+        self.assertEqual(post2[1][1].shape, (2, 2))
+
+
+
+    #---------------------------------------------------------------------------
     def test_frame_axis_interface_b(self) -> None:
         # reindex both axis
         records = (

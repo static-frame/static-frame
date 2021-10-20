@@ -5,6 +5,7 @@ import copy
 
 import numpy as np
 from arraykit import immutable_filter
+import frame_fixtures as ff
 
 from static_frame import mloc
 from static_frame import TypeBlocks
@@ -1475,6 +1476,30 @@ class TestUnit(TestCase):
         self.assertEqual(subtb.values.tolist(),
                 [[0, 0, 1, 2, True, False, True], [0, 0, 1, 1, True, False, True]])
 
+
+    def test_type_blocks_group_c(self) -> None:
+
+        a1 = np.array([
+                [1, 2, 3,4],
+                [4,2,6,3],
+                [0, 0, 1,2],
+                [0, 0, 1,1]
+                ])
+        a2 = np.array([[False, False, True],
+                [False, False, True],
+                [True, False, True],
+                [True, False, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        groups = list(tb1.group(axis=0, key=0, drop=True))
+        self.assertEqual(len(groups), 3)
+        self.assertEqual([x[2].shape for x in groups],
+                [(2, 6), (1, 6), (1, 6)]
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_transpose_a(self) -> None:
 
@@ -3357,6 +3382,47 @@ class TestUnit(TestCase):
         self.assertTrue(id(tb1._blocks[2]) != id(tb2._blocks[2]))
 
 
+    def test_type_blocks_sort_a(self) -> None:
+        tb1 = ff.parse('s(10,4)|v(str,int,bool,float)')._blocks
+
+        tb2, _ = tb1.sort(axis=1, key=1)
+        self.assertEqual(tb2.iloc[-1].values.tolist(),
+                [['zjZQ', 162197, True, 1080.4]])
+
+        tb3, _ = tb1.sort(axis=1, key=[2,1])
+        self.assertEqual(tb3.iloc[0].values.tolist(),
+                [['zO5l', -41157, False, 2580.34]])
+
+    def test_type_blocks_sort_b(self) -> None:
+        tb1 = ff.parse('s(6,3)|v(str,str)')._blocks
+
+        tb2, _ = tb1.sort(axis=0, key=4)
+        self.assertEqual(tb2.iloc[4].values.tolist(),
+                [['z2Oo', 'zKka', 'zwIp']]
+                )
+
+    def test_type_blocks_sort_c(self) -> None:
+        tb1 = ff.parse('s(6,4)|v(bool)')._blocks
+
+        tb2, _ = tb1.sort(axis=0, key=[2, 3])
+
+        self.assertEqual(tb2.values.tolist(),
+                [[False, False, True, False],
+                [False, False, False, False],
+                [False, False, False, True],
+                [False, True, True, True],
+                [False, False, False, True],
+                [False, True, False, False]])
+
+
+    def test_type_blocks_group_sort_a(self) -> None:
+
+        tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+
+        post = tuple(tb1.group(axis=0, key=0))
+        self.assertEqual([(x[0], x[2].shape) for x in post],
+                [(0, (5, 3)), (2, (1, 3)), (3, (6, 3))]
+                )
 
 
 if __name__ == '__main__':

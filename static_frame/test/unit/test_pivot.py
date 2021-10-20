@@ -11,14 +11,15 @@ class TestUnit(TestCase):
         frame = ff.parse('s(3,6)|v(int,str,bool)|c(I,str)|i(I,int)')
         group_fields = ['zUvW',] # needs to be valif loc selection
         group_depth = 1
-        data_fields = ('zkuW', 'z2Oo')
+        data_fields = ['zkuW', 'z2Oo']
         func_single = sum
         func_map = None
+        loc_to_iloc = frame.columns.loc_to_iloc
         post = tuple(pivot_records_items(
-                frame=frame,
-                group_fields=group_fields,
+                blocks=frame._blocks,
+                group_fields_iloc=loc_to_iloc(group_fields),
                 group_depth=group_depth,
-                data_fields=data_fields,
+                data_fields_iloc=loc_to_iloc(data_fields),
                 func_single=func_single,
                 func_map=func_map,
                 ))
@@ -30,14 +31,16 @@ class TestUnit(TestCase):
         frame = ff.parse('s(3,6)|v(int,str,bool)|c(I,str)|i(I,int)')
         group_fields = ['zUvW',] # needs to be valif loc selection
         group_depth = 1
-        data_fields = ('zkuW', 'z2Oo')
+        data_fields = ['zkuW', 'z2Oo']
         func_single = None
         func_map = (('zkuW', sum), ('z2Oo', min))
+        loc_to_iloc = frame.columns.loc_to_iloc
+
         post = tuple(pivot_records_items(
-                frame=frame,
-                group_fields=group_fields,
+                blocks=frame._blocks,
+                group_fields_iloc=loc_to_iloc(group_fields),
                 group_depth=group_depth,
-                data_fields=data_fields,
+                data_fields_iloc=loc_to_iloc(data_fields),
                 func_single=func_single,
                 func_map=func_map,
                 ))

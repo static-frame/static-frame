@@ -91,7 +91,7 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
-from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DTYPE_NA_KINDS
@@ -1395,7 +1395,7 @@ class Series(ContainerOperand):
         Args:
             dtype: not used, part of signature for a common interface
         '''
-        return ufunc_axis_skipna(
+        return array_ufunc_axis_skipna(
                 array=self.values,
                 skipna=skipna,
                 axis=0,
@@ -1418,7 +1418,7 @@ class Series(ContainerOperand):
         Args:
             dtypes: not used, part of signature for a common interface
         '''
-        values = ufunc_axis_skipna(
+        values = array_ufunc_axis_skipna(
                 array=self.values,
                 skipna=skipna,
                 axis=0,

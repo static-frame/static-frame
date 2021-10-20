@@ -4363,8 +4363,6 @@ class TestUnit(TestCase):
                 axis=0,
                 )
 
-        # import ipdb; ipdb.set_trace()
-
     #---------------------------------------------------------------------------
     def test_frame_from_items_a(self) -> None:
 
@@ -5219,6 +5217,32 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.notna().to_pairs(0),
                 (('A', ((0, False), (1, True), (2, False))), ('B', ((0, True), (1, True), (2, False))), ('C', ((0, False), (1, False), (2, False))), ('D', ((0, True), (1, True), (2, True)))))
+
+
+    def test_frame_isna_b(self) -> None:
+        # f1 will wave 2 blocks, where as f2 will have single contiguous block
+        f1 = sf.Frame.from_dict({'a': ['', ''], 'b': ['', '']}, dtypes=('<U7', '<U9'))
+        f2 = sf.Frame.from_element('', columns=['a', 'b'], index=[0, 1])
+
+        self.assertEqual(f1.isna().to_pairs(),
+                (('a', ((0, False), (1, False))), ('b', ((0, False), (1, False))))
+                )
+        self.assertEqual(f2.isna().to_pairs(),
+                (('a', ((0, False), (1, False))), ('b', ((0, False), (1, False))))
+                )
+
+        post1 = f1.isna().sum()
+        self.assertEqual(post1.to_pairs(),
+                (('a', 0), ('b', 0)))
+
+        post2 = f2.isna().sum()
+        self.assertEqual(post2.to_pairs(),
+                (('a', 0), ('b', 0)))
+
+        post3 = sf.Frame.from_dict(dict(a=(True, True, True), b=(True, True, True)), index=range(3)).sum()
+        self.assertEqual(post3.to_pairs(),
+                (('a', 3), ('b', 3)))
+
 
     #---------------------------------------------------------------------------
     def test_frame_dropna_a(self) -> None:
@@ -10570,7 +10594,7 @@ class TestUnit(TestCase):
                 )
 
     @skip_win #type: ignore
-    def test_frame_pivot_e(self) -> None:
+    def test_frame_pivot_e1(self) -> None:
 
         index = IndexHierarchy.from_product(
                 ('far', 'near'), ('up', 'down'), ('left', 'right'),
@@ -10593,6 +10617,18 @@ class TestUnit(TestCase):
                 (('b', (('far', 82), ('near', 86))),)
                 )
 
+
+    def test_frame_pivot_e2(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+        f2 = f1.unset_index()
         self.assertEqual(
                 f2.pivot('z', data_fields=('a', 'b')).to_pairs(0),
                 (('a', (('far', 6), ('near', 22))), ('b', (('far', 82), ('near', 86))))
@@ -12204,6 +12240,14 @@ class TestUnit(TestCase):
         self.assertEqual(f.shape, (3, 2))
         self.assertTrue(f.equals(ff.parse('s(3,2)')))
 
+    def test_frame_from_overlay_f(self) -> None:
+
+        f1 = FrameGO.from_element('a', index=[1,2,3,4], columns = list('abcd'))
+        f2 = FrameGO.from_element('b', index=[1,2,3,4], columns = list('abcd'))
+
+        f3 = Frame.from_overlay((f1, f2))
+        self.assertEqual(f3.shape, (4, 4))
+        self.assertIs(f3.__class__, Frame)
 
     #---------------------------------------------------------------------------
 
@@ -12811,6 +12855,10 @@ class TestUnit(TestCase):
         self.assertEqual(f3.index.values.tolist(), [1, 2])
 
         self.assertEqual(f2.loc[[0, 2]].index.values.tolist(), [0, 2])
+
+
+
+
 
 
 if __name__ == '__main__':
