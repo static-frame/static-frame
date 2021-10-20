@@ -202,6 +202,7 @@ def pivot_core(
     if not columns_fields: # group by is only index_fields
         columns = data_fields if func_single else tuple(product(data_fields, func_fields))
 
+        # NOTE: at this time we do not automatically give back an IndexHierarchy when index_depth is == 1, as the order of the resultant values may not be hierarchable.
         name_index = index_fields[0] if index_depth == 1 else tuple(index_fields)
         if index_constructor:
             index_constructor = partial(index_constructor, name=name_index)
@@ -238,21 +239,7 @@ def pivot_core(
                     index_constructor=index_constructor,
                     dtypes=dtypes_per_data_fields,
                     )
-        # if we have an IH, we will relabel with that IH, and might have a different order than the order here; thus, reindex. This is not observed with the present implementation of iter_group_items, but that might change.
-        if index_depth > 1:
-            pass
-            # import ipdb; ipdb.set_trace()
-            # index_outer = pivot_outer_index(frame=frame,
-            #         index_fields=index_fields,
-            #         index_depth=index_depth,
-            #         index_constructor=index_constructor,
-            #         )
-            # if not f.index.equals(index_outer):
-            #     # TODO: is this branch needed?
-            #     import ipdb; ipdb.set_trace()
-            #     f = f.reindex(index_outer, own_index=True, check_equals=False)
 
-        # index_final = None if index_depth == 1 else index_outer
         # have to rename columns if derived in from_concat
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
                 else columns_constructor(f.columns))
