@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.8.23
+----------
+
+Corrected issue where summing a ``Frame`` of Booleans along axis 0 resulted in Booleans instead of integers.
+
+
 0.8.22
 ----------
 
