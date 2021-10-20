@@ -200,10 +200,14 @@ def pivot_core(
     # first major branch: if we are only grouping be index fields
 
     if not columns_fields: # group by is only index_fields
-        # group_fields = index_fields if index_depth > 1 else index_fields[0]
         columns = data_fields if func_single else tuple(product(data_fields, func_fields))
-        # NOTE: examine if need to use passed index_constructor here
-        index_constructor = None if index_depth > 1 else partial(Index, name=index_fields[0])
+
+        name_index = index_fields[0] if index_depth == 1 else tuple(index_fields)
+        if index_constructor:
+            index_constructor = partial(index_constructor, name=name_index)
+        else:
+            index_constructor = partial(Index, name=name_index)
+
         if len(columns) == 1:
             # assert len(data_fields) == 1
             f = frame.from_series(
@@ -236,20 +240,23 @@ def pivot_core(
                     )
         # if we have an IH, we will relabel with that IH, and might have a different order than the order here; thus, reindex. This is not observed with the present implementation of iter_group_items, but that might change.
         if index_depth > 1:
-            index_outer = pivot_outer_index(frame=frame,
-                    index_fields=index_fields,
-                    index_depth=index_depth,
-                    index_constructor=index_constructor,
-                    )
-            if not f.index.equals(index_outer):
-                # TODO: is this branch needed?
-                f = f.reindex(index_outer, own_index=True, check_equals=False)
+            pass
+            # import ipdb; ipdb.set_trace()
+            # index_outer = pivot_outer_index(frame=frame,
+            #         index_fields=index_fields,
+            #         index_depth=index_depth,
+            #         index_constructor=index_constructor,
+            #         )
+            # if not f.index.equals(index_outer):
+            #     # TODO: is this branch needed?
+            #     import ipdb; ipdb.set_trace()
+            #     f = f.reindex(index_outer, own_index=True, check_equals=False)
 
-        index_final = None if index_depth == 1 else index_outer
+        # index_final = None if index_depth == 1 else index_outer
         # have to rename columns if derived in from_concat
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
                 else columns_constructor(f.columns))
-        return f.relabel(index=index_final, columns=columns_final) #type: ignore
+        return f.relabel(columns=columns_final) #type: ignore
 
     #---------------------------------------------------------------------------
     # second major branch: we are only grouping be index and columns fields

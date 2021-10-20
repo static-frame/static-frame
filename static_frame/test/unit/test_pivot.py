@@ -4,6 +4,7 @@ import frame_fixtures as ff
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.pivot import pivot_records_items
+from static_frame.core.pivot import pivot_core
 
 class TestUnit(TestCase):
 
@@ -49,6 +50,14 @@ class TestUnit(TestCase):
                 (True, [129017, 129017, False, False]))
                 )
 
+
+    def test_pivot_core_a(self) -> None:
+
+        frame = ff.parse('s(20,4)|v(int)').assign[0].apply(lambda s: s % 4).assign[1].apply(lambda s: s % 3)
+
+        post = frame.pivot([0, 1])
+
+        import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':

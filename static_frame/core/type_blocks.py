@@ -449,6 +449,7 @@ class TypeBlocks(ContainerOperand):
 
         # lazily store as needed; must be cleared on mutation
         self._block_slices: tp.Optional[tp.List[tp.Tuple[int, slice]]] = None
+
     #---------------------------------------------------------------------------
     def __setstate__(self,
             state: tp.Tuple[object, tp.Mapping[str, tp.Any]],
