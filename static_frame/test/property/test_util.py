@@ -126,7 +126,7 @@ class TestUnit(TestCase):
 
             with np.errstate(over='ignore', under='ignore', divide='ignore'):
 
-                post = util.ufunc_axis_skipna(array=array,
+                post = util.array_ufunc_axis_skipna(array=array,
                         skipna=True,
                         axis=0,
                         ufunc=ufunc,

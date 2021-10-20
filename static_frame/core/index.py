@@ -78,7 +78,7 @@ from static_frame.core.util import SLICE_STOP_ATTR
 from static_frame.core.util import slice_to_inclusive_slice
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import UFunc
-from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import union1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
@@ -1190,7 +1190,7 @@ class Index(IndexBase):
             self._update_array_cache()
 
         # do not need to pass on composabel here
-        return ufunc_axis_skipna(
+        return array_ufunc_axis_skipna(
                 array=self._labels,
                 skipna=skipna,
                 axis=0,

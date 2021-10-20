@@ -53,7 +53,7 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
-from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import NULL_SLICE
@@ -64,6 +64,9 @@ from static_frame.core.util import array_deepcopy
 from static_frame.core.util import arrays_equal
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import roll_1d
+from static_frame.core.util import ShapeType
+from static_frame.core.util import ufunc_dtype_to_dtype
+
 
 from static_frame.core.style_config import StyleConfig
 
@@ -1050,7 +1053,7 @@ class TypeBlocks(ContainerOperand):
 
         Args:
             composable: when True, the function application will return a correct result by applying the function to blocks first, and then the result of the blocks (i.e., add, prod); where observation count is relevant (i.e., mean, var, std), this must be False.
-            dtypes: if we know the return type of func, we can provide it here to avoid having to use the row dtype.
+            dtypes: if we know the return type of func, we can provide it here to avoid having to use the row dtype. We provide multiple values and attempt to match the kind: if the row dtype is the same as a kind in this tuple, we will use the row dtype.
 
         Returns:
             As this is a reduction of axis where the caller (a Frame) is likely to return a Series, this function is not a generator of blocks, but instead just returns a consolidated 1d array.
@@ -1058,7 +1061,7 @@ class TypeBlocks(ContainerOperand):
         if axis < 0 or axis > 1:
             raise RuntimeError(f'invalid axis: {axis}')
 
-        func = partial(ufunc_axis_skipna,
+        func = partial(array_ufunc_axis_skipna,
                 skipna=skipna,
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna,
@@ -1068,72 +1071,77 @@ class TypeBlocks(ContainerOperand):
             result = func(array=column_2d_filter(self._blocks[0]), axis=axis)
             result.flags.writeable = False
             return result
+
+        shape: ShapeType
+
+        if axis == 0:
+            # reduce all rows to 1d with column width
+            shape = self._shape[1]
+            pos = 0
+        elif composable: # axis 1
+            # reduce all columns to 2d blocks with 1 column
+            shape = (self._shape[0], len(self._blocks))
+        else: # axis 1, not block composable
+            # Cannot do block-wise processing, must resolve to single array and return
+            array = self._blocks_to_array(
+                    blocks=self._blocks,
+                    shape=self._shape,
+                    row_dtype=self._row_dtype,
+                    row_multiple=True)
+            result = func(array=array, axis=axis)
+            result.flags.writeable = False
+            return result
+
+        # this will be uninitialzied and thus, if a value is not assigned, will have garbage
+        if dtypes:
+            # Favor self._row_dtype's kind if it is in dtypes, else take first of passed dtypes
+            for dt in dtypes:
+                if self._row_dtype.kind == dt.kind:
+                    dtype = self._row_dtype
+                    break
+            else: # no break encountered
+                dtype = dtypes[0]
+            # astype_pre = dtype.kind in DTYPE_INEXACT_KINDS
         else:
-            if axis == 0:
-                # reduce all rows to 1d with column width
-                shape: tp.Union[int, tp.Tuple[int, int]] = self._shape[1]
-                pos = 0
-            elif composable: # axis 1
-                # reduce all columns to 2d blocks with 1 column
-                shape = (self._shape[0], len(self._blocks))
-            else: # axis 1, not block composable
-                # Cannot do block-wise processing, must resolve to single array and return
-                array = self._blocks_to_array(
-                        blocks=self._blocks,
-                        shape=self._shape,
-                        row_dtype=self._row_dtype,
-                        row_multiple=True)
-                result = func(array=array, axis=axis)
-                result.flags.writeable = False
-                return result
+            # _row_dtype gives us the compatible dtype for all blocks, whether we are reducing vertically (axis 0) or horizontall (axis 1)
+            # dtype = self._row_dtype
+            dtype = ufunc_dtype_to_dtype(ufunc_skipna if skipna else ufunc, self._row_dtype)
+            assert dtype is not None
+            # astype_pre = True # if no dtypes given (like bool) we can coerce
 
-            # this will be uninitialzied and thus, if a value is not assigned, will have garbage
-            if dtypes:
-                # Favor self._row_dtype's kind if it is in dtypes, else take first of passed dtypes
-                for dt in dtypes:
-                    if self._row_dtype.kind == dt.kind:
-                        dtype = self._row_dtype
-                        break
-                else: # no break encountered
-                    dtype = dtypes[0]
-                astype_pre = dtype.kind in DTYPE_INEXACT_KINDS
-            else:
-                dtype = self._row_dtype
-                astype_pre = True # if no dtypes given (like bool) we can coerce
+        # If dtypes were specified, we know we have specific targets in mind for output
+        out = np.empty(shape, dtype=dtype)
+        for idx, b in enumerate(self._blocks):
+            # This was disabled for 0.8.23 as it no longer appears necessary or useful
+            # if astype_pre and b.dtype != dtype:
+            #     b = b.astype(dtype)
 
-            # If dtypes were specified, we know we have specific targets in mind for output
-            out = np.empty(shape, dtype=dtype)
-            for idx, b in enumerate(self._blocks):
-
-                if astype_pre and b.dtype != dtype:
-                    b = b.astype(dtype)
-
-                if axis == 0: # Combine rows, end with columns shape.
-                    if b.size == 1 and size_one_unity and not skipna:
-                        # No function call is necessary; if skipna could turn NaN to zero.
-                        end = pos + 1
-                        # Can assign an array, even 2D, as an element if size is 1
-                        out[pos] = b
-                    elif b.ndim == 1:
-                        end = pos + 1
-                        out[pos] = func(array=b, axis=axis)
-                    else:
-                        end = pos + b.shape[1]
-                        func(array=b, axis=axis, out=out[pos: end])
-                    pos = end
+            if axis == 0: # Combine rows, end with columns shape.
+                if b.size == 1 and size_one_unity and not skipna:
+                    # No function call is necessary; if skipna could turn NaN to zero.
+                    end = pos + 1
+                    # Can assign an array, even 2D, as an element if size is 1
+                    out[pos] = b
+                elif b.ndim == 1:
+                    end = pos + 1
+                    out[pos] = func(array=b, axis=axis)
                 else:
-                    # Combine columns, end with block length shape and then call func again, for final result
-                    if b.size == 1 and size_one_unity and not skipna:
+                    end = pos + b.shape[1]
+                    func(array=b, axis=axis, out=out[pos: end])
+                pos = end
+            else:
+                # Combine columns, end with block length shape and then call func again, for final result
+                if b.size == 1 and size_one_unity and not skipna:
+                    out[:, idx] = b
+                elif b.ndim == 1:
+                    # if this is a composable, numeric single columns we just copy it and process it later; but if this is a logical application (and, or) then it is already Boolean
+                    if out.dtype == DTYPE_BOOL and b.dtype != DTYPE_BOOL:
+                        # making 2D with axis 0 func will result in element-wise operation
+                        out[:, idx] = func(array=column_2d_filter(b), axis=1)
+                    else: # otherwise, keep as is
                         out[:, idx] = b
-                    elif b.ndim == 1:
-                        # if this is a composable, numeric single columns we just copy it and process it later; but if this is a logical application (and, or) then it is already Boolean
-                        if out.dtype == DTYPE_BOOL and b.dtype != DTYPE_BOOL:
-                            # making 2D with axis 0 func will result in element-wise operation
-                            out[:, idx] = func(array=column_2d_filter(b), axis=1)
-                        else: # otherwise, keep as is
-                            out[:, idx] = b
-                    else:
-                        func(array=b, axis=axis, out=out[:, idx])
+                else:
+                    func(array=b, axis=axis, out=out[:, idx])
 
         if axis == 0: # nothing more to do
             out.flags.writeable = False

@@ -4518,8 +4518,6 @@ class Frame(ContainerOperand):
             ) -> 'Series':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
-        assert axis < 2
-
         post = self._blocks.ufunc_axis_skipna(
                 skipna=skipna,
                 axis=axis,
@@ -4549,8 +4547,6 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
-        assert axis < 2
-
         dtype = None if not dtypes else dtypes[0] # only a tuple
 
         # assumed not composable for axis 1, full-shape processing requires processing contiguous values
