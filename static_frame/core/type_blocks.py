@@ -1091,8 +1091,8 @@ class TypeBlocks(ContainerOperand):
             result.flags.writeable = False
             return result
 
-        # this will be uninitialzied and thus, if a value is not assigned, will have garbage
         if dtypes:
+            # If dtypes were specified, we know we have specific targets in mind for output
             # Favor self._row_dtype's kind if it is in dtypes, else take first of passed dtypes
             for dt in dtypes:
                 if self._row_dtype.kind == dt.kind:
@@ -1108,7 +1108,6 @@ class TypeBlocks(ContainerOperand):
                 # if we do not have a mapping for this function and dtype, assume row_dtype is appropriate
                 dtype = self._row_dtype
 
-        # If dtypes were specified, we know we have specific targets in mind for output
         out = np.empty(shape, dtype=dtype)
         for idx, b in enumerate(self._blocks):
             if axis == 0: # Combine rows, end with columns shape.
