@@ -1103,18 +1103,14 @@ class TypeBlocks(ContainerOperand):
             # astype_pre = dtype.kind in DTYPE_INEXACT_KINDS
         else:
             # _row_dtype gives us the compatible dtype for all blocks, whether we are reducing vertically (axis 0) or horizontall (axis 1)
-            # dtype = self._row_dtype
             dtype = ufunc_dtype_to_dtype(ufunc_skipna if skipna else ufunc, self._row_dtype)
-            assert dtype is not None
-            # astype_pre = True # if no dtypes given (like bool) we can coerce
+            if dtype is None:
+                # if we do not have a mapping for this function and dtype, assume row_dtype is appropriate
+                dtype = self._row_dtype
 
         # If dtypes were specified, we know we have specific targets in mind for output
         out = np.empty(shape, dtype=dtype)
         for idx, b in enumerate(self._blocks):
-            # This was disabled for 0.8.23 as it no longer appears necessary or useful
-            # if astype_pre and b.dtype != dtype:
-            #     b = b.astype(dtype)
-
             if axis == 0: # Combine rows, end with columns shape.
                 if b.size == 1 and size_one_unity and not skipna:
                     # No function call is necessary; if skipna could turn NaN to zero.
