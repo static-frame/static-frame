@@ -1121,8 +1121,12 @@ class TypeBlocks(ContainerOperand):
                     end = pos + 1
                     out[pos] = func(array=b, axis=axis)
                 else:
-                    end = pos + b.shape[1]
-                    func(array=b, axis=axis, out=out[pos: end])
+                    span = b.shape[1]
+                    end = pos + span
+                    if span == 1: # just one column, reducing to one value
+                        out[pos] = func(array=b, axis=axis)
+                    else:
+                        func(array=b, axis=axis, out=out[pos: end])
                 pos = end
             else:
                 # Combine columns, end with block length shape and then call func again, for final result
