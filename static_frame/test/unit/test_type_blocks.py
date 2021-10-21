@@ -3506,7 +3506,20 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(),
                 [20, -24968, 1241716])
 
+    def test_type_blocks_ufunc_axis_skipna_b(self):
+        tb1 = ff.parse('s(5,3)|v(int,bool)')._blocks
 
+        post = tb1.ufunc_axis_skipna(
+                skipna=True,
+                axis=0,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+        self.assertEqual(post.dtype, np.dtype(int))
+        self.assertEqual(post.tolist(), [278844, 0, 300895])
 
 if __name__ == '__main__':
     unittest.main()

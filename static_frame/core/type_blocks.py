@@ -994,7 +994,7 @@ class TypeBlocks(ContainerOperand):
         elif values_for_sort is not None:
             order = np.argsort(values_for_sort, kind=kind)
         else:
-            raise RuntimeError('unable to resovle sort type')
+            raise RuntimeError('unable to resovle sort type') #pragma: no cover
 
         if axis == 0:
             return self._extract(column_key=order), order # order columns
@@ -1069,7 +1069,7 @@ class TypeBlocks(ContainerOperand):
         if axis == 0:
             # reduce all rows to 1d with column width
             shape = self._shape[1]
-            pos = 0
+            pos = 0 # used below undex axis 0
         elif composable: # axis 1
             # reduce all columns to 2d blocks with 1 column
             shape = (self._shape[0], len(self._blocks))
@@ -1096,10 +1096,19 @@ class TypeBlocks(ContainerOperand):
             # astype_pre = dtype.kind in DTYPE_INEXACT_KINDS
         else:
             # _row_dtype gives us the compatible dtype for all blocks, whether we are reducing vertically (axis 0) or horizontall (axis 1)
-            dtype = ufunc_dtype_to_dtype(ufunc_skipna if skipna else ufunc, self._row_dtype)
+            ufunc_selected = ufunc_skipna if skipna else ufunc
+            dtype = ufunc_dtype_to_dtype(ufunc_selected, self._row_dtype)
             if dtype is None:
-                # if we do not have a mapping for this function and dtype, assume row_dtype is appropriate
-                dtype = self._row_dtype
+                # if we do not have a mapping for this function and row dtype, try to get a compatible type for the result of the function applied to each block
+                block_dtypes = []
+                for b in self._blocks:
+                    dt = ufunc_dtype_to_dtype(ufunc_selected, b.dtype)
+                    if dt is not None:
+                        block_dtypes.append(dt)
+                if len(block_dtypes) == len(self._blocks): # if all resolved
+                    dtype = resolve_dtype_iter(block_dtypes)
+                else: # assume row_dtype is appropriate
+                    dtype = self._row_dtype
 
         out = np.empty(shape, dtype=dtype)
         for idx, b in enumerate(self._blocks):
