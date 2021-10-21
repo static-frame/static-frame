@@ -3463,25 +3463,25 @@ class TestUnit(TestCase):
         self.assertEqual([(x[0], x[2].shape) for x in post],
                 [(0, (5, 3)), (2, (1, 3)), (3, (6, 3))]
                 )
-    def test_type_blocks_group_sort_b(self):
+    def test_type_blocks_group_sort_b(self) -> None:
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
         with self.assertRaises(RuntimeError):
             _ = tuple(group_sort(tb1, axis=3, key=0))
 
     #---------------------------------------------------------------------------
-    def test_type_blocks_group_match_a(self):
+    def test_type_blocks_group_match_a(self) -> None:
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
         with self.assertRaises(RuntimeError):
             _ = tuple(group_match(tb1, axis=3, key=0))
 
-    def test_type_blocks_group_match_b(self):
+    def test_type_blocks_group_match_b(self) -> None:
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
         post = tuple(group_match(tb1, axis=0, key=0, drop=True))
         self.assertEqual([x.shape for _, _, x in post],
                 [(5, 2), (1, 2), (6, 2)])
 
     #---------------------------------------------------------------------------
-    def test_type_blocks_ufunc_axis_skipna_a(self):
+    def test_type_blocks_ufunc_axis_skipna_a(self) -> None:
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
 
         with self.assertRaises(AxisInvalid):
@@ -3508,7 +3508,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(),
                 [20, -24968, 1241716])
 
-    def test_type_blocks_ufunc_axis_skipna_b(self):
+    def test_type_blocks_ufunc_axis_skipna_b(self) -> None:
         tb1 = ff.parse('s(5,3)|v(int,bool)')._blocks
 
         post = tb1.ufunc_axis_skipna(
@@ -3520,10 +3520,10 @@ class TestUnit(TestCase):
                 dtypes=(),
                 size_one_unity=True,
                 )
-        self.assertEqual(post.dtype, np.dtype(int))
+        self.assertEqual(post.dtype, np.dtype(np.int64))
         self.assertEqual(post.tolist(), [278844, 0, 300895])
 
-    def test_type_blocks_ufunc_axis_skipna_c(self):
+    def test_type_blocks_ufunc_axis_skipna_c(self) -> None:
         tb1 = ff.parse('s(5,3)|v(int,str)')._blocks
 
         post = tb1.ufunc_axis_skipna(
@@ -3538,7 +3538,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.dtype, np.dtype(object))
         self.assertEqual(post.tolist(), [-88017, 'zDdR', -3648])
 
-    def test_type_blocks_ufunc_axis_skipna_d(self):
+    def test_type_blocks_ufunc_axis_skipna_d(self) -> None:
         tb1 = ff.parse('s(5,3)|v(int,object)')._blocks
 
         # this error exercises a dtype resolution that happens before function application
@@ -3553,7 +3553,7 @@ class TestUnit(TestCase):
                 size_one_unity=True,
                 )
 
-    def test_type_blocks_ufunc_axis_skipna_e(self):
+    def test_type_blocks_ufunc_axis_skipna_e(self) -> None:
         tb1 = ff.parse('s(1,2)|v(int,float)')._blocks
 
         post = tb1.ufunc_axis_skipna(
