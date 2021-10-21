@@ -3448,8 +3448,11 @@ class TestUnit(TestCase):
         with self.assertRaises(AxisInvalid):
             _ = tb1.sort(axis=3, key=1)
 
+    def test_type_blocks_sort_g(self) -> None:
+        tb1 = ff.parse('s(5,4)|v(int)')._blocks
+        post, sel = tb1.sort(axis=1, key=[1])
+        self.assertEqual(sel.tolist(), [3, 1, 2, 4, 0])
 
-        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
     def test_type_blocks_group_sort_a(self) -> None:
@@ -3460,7 +3463,6 @@ class TestUnit(TestCase):
         self.assertEqual([(x[0], x[2].shape) for x in post],
                 [(0, (5, 3)), (2, (1, 3)), (3, (6, 3))]
                 )
-
     def test_type_blocks_group_sort_b(self):
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
         with self.assertRaises(RuntimeError):
