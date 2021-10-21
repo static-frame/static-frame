@@ -16,6 +16,9 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import isna_array
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase
+from static_frame.core.type_blocks import group_match
+from static_frame.core.type_blocks import group_sort
+
 
 nan = np.nan
 
@@ -3041,6 +3044,11 @@ class TestUnit(TestCase):
         self.assertEqual(len(tb.shapes), 4)
 
 
+    def test_type_blocks_from_blocks_e(self) -> None:
+        with self.assertRaises(ErrorInitTypeBlocks):
+            _ = TypeBlocks.from_blocks([])
+
+    #---------------------------------------------------------------------------
     def test_type_blocks_append_a(self) -> None:
         a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
@@ -3414,7 +3422,7 @@ class TestUnit(TestCase):
                 [False, False, False, True],
                 [False, True, False, False]])
 
-
+    #---------------------------------------------------------------------------
     def test_type_blocks_group_sort_a(self) -> None:
 
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
@@ -3423,6 +3431,23 @@ class TestUnit(TestCase):
         self.assertEqual([(x[0], x[2].shape) for x in post],
                 [(0, (5, 3)), (2, (1, 3)), (3, (6, 3))]
                 )
+
+    def test_type_blocks_group_sort_b(self):
+        tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+        with self.assertRaises(RuntimeError):
+            _ = tuple(group_sort(tb1, axis=3, key=0))
+
+    #---------------------------------------------------------------------------
+    def test_type_blocks_group_match_a(self):
+        tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+        with self.assertRaises(RuntimeError):
+            _ = tuple(group_match(tb1, axis=3, key=0))
+
+    def test_type_blocks_group_match_b(self):
+        tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+        post = tuple(group_match(tb1, axis=0, key=0, drop=True))
+        self.assertEqual([x.shape for _, _, x in post],
+                [(5, 2), (1, 2), (6, 2)])
 
 
 if __name__ == '__main__':
