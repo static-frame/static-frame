@@ -3553,6 +3553,22 @@ class TestUnit(TestCase):
                 size_one_unity=True,
                 )
 
+    def test_type_blocks_ufunc_axis_skipna_e(self):
+        tb1 = ff.parse('s(1,2)|v(int,float)')._blocks
+
+        post = tb1.ufunc_axis_skipna(
+                skipna=False,
+                axis=0,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual(post.dtype, np.dtype(float))
+        self.assertEqual(post.tolist(), [-88017.0, -610.8])
+
 
 if __name__ == '__main__':
     unittest.main()

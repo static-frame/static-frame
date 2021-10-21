@@ -1112,7 +1112,7 @@ class TypeBlocks(ContainerOperand):
         out = np.empty(shape, dtype=dtype)
         for idx, b in enumerate(self._blocks):
             if axis == 0: # Combine rows, end with columns shape.
-                if b.size == 1 and size_one_unity and not skipna:
+                if size_one_unity and b.size == 1 and not skipna:
                     # No function call is necessary; if skipna could turn NaN to zero.
                     end = pos + 1
                     # Can assign an array, even 2D, as an element if size is 1
