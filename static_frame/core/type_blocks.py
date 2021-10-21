@@ -969,7 +969,6 @@ class TypeBlocks(ContainerOperand):
 
         if axis == 0: # get a column ordering based on one or more rows
             cfs = self._extract_array(row_key=key)
-            cfs_is_array = True
             if cfs.ndim == 1:
                 values_for_sort = cfs
             elif cfs.ndim == 2 and cfs.shape[0] == 1:
@@ -978,24 +977,17 @@ class TypeBlocks(ContainerOperand):
                 values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
 
         elif axis == 1: # get a row ordering based on one or more columns
-            cfs = self._extract(column_key=key) # get TypeBlocks
-            cfs_is_array = cfs.__class__ is np.ndarray
-
-            if cfs_is_array:
-                if cfs.ndim == 1:
-                    values_for_sort = cfs
-                elif cfs.ndim == 2 and cfs.shape[1] == 1:
-                    values_for_sort = cfs[:, 0]
-                else:
-                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
+            if isinstance(key, INT_TYPES):
+                values_for_sort = self._extract_array_column(key)
             else: #TypeBlocks from here
+                cfs = self._extract(column_key=key) # get TypeBlocks
                 if cfs.shape[1] == 1:
                     values_for_sort = cfs._extract_array_column(0)
                 else:
                     values_for_lex = [cfs._extract_array_column(i)
                             for i in range(cfs.shape[1]-1, -1, -1)]
         else:
-            raise AxisInvalid(f'invalid axis: {axis}')
+            raise AxisInvalid(f'invalid axis: {axis}') #pragma: no cover
 
         if values_for_lex is not None:
             order = np.lexsort(values_for_lex)
@@ -1059,7 +1051,7 @@ class TypeBlocks(ContainerOperand):
             As this is a reduction of axis where the caller (a Frame) is likely to return a Series, this function is not a generator of blocks, but instead just returns a consolidated 1d array.
         '''
         if axis < 0 or axis > 1:
-            raise RuntimeError(f'invalid axis: {axis}')
+            raise AxisInvalid(f'invalid axis: {axis}')
 
         func = partial(array_ufunc_axis_skipna,
                 skipna=skipna,

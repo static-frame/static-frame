@@ -1479,7 +1479,6 @@ class TestUnit(TestCase):
         self.assertEqual(subtb.values.tolist(),
                 [[0, 0, 1, 2, True, False, True], [0, 0, 1, 1, True, False, True]])
 
-
     def test_type_blocks_group_c(self) -> None:
 
         a1 = np.array([
@@ -1499,6 +1498,13 @@ class TestUnit(TestCase):
         self.assertEqual(len(groups), 3)
         self.assertEqual([x[2].shape for x in groups],
                 [(2, 6), (1, 6), (1, 6)]
+                )
+
+    def test_type_blocks_group_d(self) -> None:
+        tb1 = ff.parse('s(6,2)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+        post = tuple(tb1.group(axis=1, key=0))
+        self.assertEqual([x.shape for _, _, x in post],
+                [(6, 1), (6, 1)]
                 )
 
 
@@ -3389,7 +3395,7 @@ class TestUnit(TestCase):
         self.assertTrue(tb1.shape == tb2.shape)
         self.assertTrue(id(tb1._blocks[2]) != id(tb2._blocks[2]))
 
-
+    #---------------------------------------------------------------------------
     def test_type_blocks_sort_a(self) -> None:
         tb1 = ff.parse('s(10,4)|v(str,int,bool,float)')._blocks
 
@@ -3422,6 +3428,29 @@ class TestUnit(TestCase):
                 [False, False, False, True],
                 [False, True, False, False]])
 
+    def test_type_blocks_sort_d(self) -> None:
+        tb1 = ff.parse('s(5,4)|v(int)')._blocks
+
+        tb2, _ = tb1.sort(axis=0, key=[2])
+        self.assertEqual(tb2.shape, (5, 4))
+        self.assertEqual(tb2.iloc[2].values.tolist(),
+                [[5729, 30205, 84967, 166924]])
+
+    def test_type_blocks_sort_e(self) -> None:
+        tb1 = ff.parse('s(5,4)|v(int)')._blocks
+        tb2, _ = tb1.sort(axis=1, key=1)
+        self.assertEqual(tb2.shape, (5, 4))
+        self.assertEqual(tb2[1].values.tolist(),
+                [[-168387], [-41157], [5729], [140627], [162197]])
+
+    def test_type_blocks_sort_f(self) -> None:
+        tb1 = ff.parse('s(5,4)|v(int)')._blocks
+        with self.assertRaises(AxisInvalid):
+            _ = tb1.sort(axis=3, key=1)
+
+
+        # import ipdb; ipdb.set_trace()
+
     #---------------------------------------------------------------------------
     def test_type_blocks_group_sort_a(self) -> None:
 
@@ -3448,6 +3477,35 @@ class TestUnit(TestCase):
         post = tuple(group_match(tb1, axis=0, key=0, drop=True))
         self.assertEqual([x.shape for _, _, x in post],
                 [(5, 2), (1, 2), (6, 2)])
+
+    #---------------------------------------------------------------------------
+    def test_type_blocks_ufunc_axis_skipna_a(self):
+        tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+
+        with self.assertRaises(AxisInvalid):
+            _ = tb1.ufunc_axis_skipna(
+                skipna=True,
+                axis=3,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+
+        post = tb1.ufunc_axis_skipna(
+                skipna=True,
+                axis=0,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+
+        self.assertEqual(post.tolist(),
+                [20, -24968, 1241716])
+
 
 
 if __name__ == '__main__':
