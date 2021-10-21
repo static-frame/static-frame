@@ -2,6 +2,12 @@ What is New in Static Frame
 ===============================
 
 
+0.8.24
+----------
+
+Improved dtype resoltion on ``Frame`` methods that reduce dimensionality.
+
+
 0.8.23
 ----------
 

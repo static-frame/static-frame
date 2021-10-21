@@ -1093,7 +1093,6 @@ class TypeBlocks(ContainerOperand):
                     break
             else: # no break encountered
                 dtype = dtypes[0]
-            # astype_pre = dtype.kind in DTYPE_INEXACT_KINDS
         else:
             # _row_dtype gives us the compatible dtype for all blocks, whether we are reducing vertically (axis 0) or horizontall (axis 1)
             ufunc_selected = ufunc_skipna if skipna else ufunc

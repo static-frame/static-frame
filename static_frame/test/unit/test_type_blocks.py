@@ -3523,5 +3523,36 @@ class TestUnit(TestCase):
         self.assertEqual(post.dtype, np.dtype(int))
         self.assertEqual(post.tolist(), [278844, 0, 300895])
 
+    def test_type_blocks_ufunc_axis_skipna_c(self):
+        tb1 = ff.parse('s(5,3)|v(int,str)')._blocks
+
+        post = tb1.ufunc_axis_skipna(
+                skipna=True,
+                axis=0,
+                ufunc=np.min,
+                ufunc_skipna=np.nanmin,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+        self.assertEqual(post.dtype, np.dtype(object))
+        self.assertEqual(post.tolist(), [-88017, 'zDdR', -3648])
+
+    def test_type_blocks_ufunc_axis_skipna_d(self):
+        tb1 = ff.parse('s(5,3)|v(int,object)')._blocks
+
+        # this error exercises a dtype resolution that happens before function application
+        with self.assertRaises(TypeError):
+            post = tb1.ufunc_axis_skipna(
+                skipna=True,
+                axis=0,
+                ufunc=np.min,
+                ufunc_skipna=np.nanmin,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+
+
 if __name__ == '__main__':
     unittest.main()
