@@ -1008,7 +1008,7 @@ class ManyToOneType(Enum):
 def _index_many_to_one(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
-        many_to_one_type = ManyToOneType,
+        many_to_one_type: ManyToOneType,
         ) -> IndexBase:
     '''
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
@@ -1018,6 +1018,8 @@ def _index_many_to_one(
         cls_default: Default Index class to be used if no alignment of classes; also used to determine if result Index should be static or mutable.
     '''
     from static_frame.core.index_auto import IndexAutoFactory
+
+    array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
 
     if many_to_one_type is ManyToOneType.UNION:
         array_processor = partial(ufunc_set_iter,
