@@ -2819,7 +2819,8 @@ class TypeBlocks(ContainerOperand):
     def _fillna_sided_axis_0(
             blocks: tp.Iterable[np.ndarray],
             value: tp.Any,
-            sided_leading: bool) -> tp.Iterator[np.ndarray]:
+            sided_leading: bool,
+            ) -> tp.Iterator[np.ndarray]:
         '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0, meaning vertically.
 
         Args:

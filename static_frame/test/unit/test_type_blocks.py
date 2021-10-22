@@ -2165,6 +2165,29 @@ class TestUnit(TestCase):
             tb1.fillna_leading(value=np.array((3, 4)), axis=0)
 
 
+
+    def test_type_blocks_fillna_leading_h(self) -> None:
+
+        a1 = np.array(['foo', None, None], dtype=object)
+        a2 = np.array([None, None, 'bar'], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        tb2 = tb1.fillna_leading(value=3, axis=0)
+        self.assertEqual(tb2.values.tolist(),
+                [['foo', 3], [None, 3], [None, 'bar']])
+
+
+    def test_type_blocks_fillna_leading_i(self) -> None:
+
+        a1 = np.array([np.nan, 10, np.nan], dtype=float)
+        a2 = np.array([np.nan, np.nan, 20], dtype=float)
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        tb2 = tb1.fillna_leading(value=None, axis=0)
+        self.assertEqual(tb2.values[:2,:].tolist(),
+                [[None, None], [10.0, None]])
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_type_blocks_fillna_forward_a(self) -> None:
