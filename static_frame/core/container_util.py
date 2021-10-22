@@ -1048,7 +1048,7 @@ def _index_many_to_one(
             name_aligned = False
         if cls_aligned and index.__class__ != cls_first:
             cls_aligned = False
-        if index_auto_aligned and (index.ndim != 1 or index._map is not None):
+        if index_auto_aligned and (index.ndim != 1 or index._map is not None): #type: ignore
             index_auto_aligned = False
 
         if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
