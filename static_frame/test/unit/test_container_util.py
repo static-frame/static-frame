@@ -504,6 +504,30 @@ class TestUnit(TestCase):
         post2 = index_many_set((), Index, union=True)
         self.assertEqual(len(post2), 0) #type: ignore
 
+
+    def test_index_many_set_d(self) -> None:
+        idx1 = Index(range(3), loc_is_iloc=True)
+        idx2 = Index(range(3), loc_is_iloc=True)
+        idx3 = index_many_set((idx1, idx2), Index, union=True)
+        self.assertTrue(idx3._map is None)
+        self.assertEqual(idx3.values.tolist(), [0, 1, 2])
+
+
+    def test_index_many_set_e(self) -> None:
+        idx1 = Index(range(2), loc_is_iloc=True)
+        idx2 = Index(range(4), loc_is_iloc=True)
+        idx3 = index_many_set((idx1, idx2), Index, union=True)
+        self.assertTrue(idx3._map is None)
+        self.assertEqual(idx3.values.tolist(), [0, 1, 2, 3])
+
+    def test_index_many_set_f(self) -> None:
+        idx1 = Index(range(2), loc_is_iloc=True)
+        idx2 = Index(range(4), loc_is_iloc=True)
+        idx3 = index_many_set((idx1, idx2), Index, union=False)
+        self.assertTrue(idx3._map is None)
+        self.assertEqual(idx3.values.tolist(), [0, 1])
+
+
     #---------------------------------------------------------------------------
     def test_get_col_dtype_factory_a(self) -> None:
 

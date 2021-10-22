@@ -1046,12 +1046,11 @@ def _index_many_to_one(
     cls_first = index.__class__
     cls_aligned = True
 
-    # if we are unioning, not concatenating, we can give back an index_auto_aligned
+    # if we are unioning we can give back an index_auto_aligned
     index_auto_aligned = (many_to_one_type is not ManyToOneType.CONCAT
             and index.ndim == 1
-            and index._map is None,
+            and index._map is None
             )
-    index_auto_aligned = False
 
     # if IndexHierarchy, collect index_types generators
     if index.ndim == 2:
@@ -1076,9 +1075,11 @@ def _index_many_to_one(
             index_types_aligned = False
 
     name = name_first if name_aligned else None
-
     if index_auto_aligned:
-        size = max(a.size for a in arrays)
+        if many_to_one_type is ManyToOneType.UNION:
+            size = max(a.size for a in arrays)
+        elif many_to_one_type is ManyToOneType.INTERSECT:
+            size = min(a.size for a in arrays)
         return IndexAutoFactory(size, name=name).to_index(default_constructor=cls_default)
 
     if index_types_aligned:
