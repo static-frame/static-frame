@@ -1570,6 +1570,22 @@ class TestUnit(TestCase):
                 ((0, 'a'), (1, 'b'), (2, 'c'))
                 )
 
+    def test_series_loc_extract_h(self) -> None:
+        a1 = np.array((None, None, None))
+        a1[2] = [3, 4]
+        a1[0] = [9]
+        s1 = Series(a1, index=('a', 'b', 'c'))
+        self.assertEqual(s1['a'], [9])
+        self.assertEqual(s1['c'], [3, 4])
+
+
+    def test_series_loc_extract_i(self) -> None:
+        a1 = np.array((None, None, None))
+        a1[2] = np.array([3, 4])
+        a1[0] = np.array([9])
+        s1 = Series(a1, index=('a', 'b', 'c'))
+        self.assertEqual(s1['a'].tolist(), [9])
+        self.assertEqual(s1['c'].tolist(), [3, 4])
 
 
     #---------------------------------------------------------------------------
