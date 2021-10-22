@@ -4363,6 +4363,24 @@ class TestUnit(TestCase):
                 axis=0,
                 )
 
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_from_element_items_a(self) -> None:
+        items = (
+                ((0,1), 'g'),
+                ((1,0), 'q'),
+                ((1,1), 'a'),
+                ((0,0), 'b'),
+                )
+        with self.assertRaises(ErrorInitFrame):
+            _ = Frame.from_element_items(items,
+                    index=range(2),
+                    columns=range(2),
+                    axis=None,
+                    dtype=(int, float),
+                    )
+
     #---------------------------------------------------------------------------
     def test_frame_from_items_a(self) -> None:
 
