@@ -3333,8 +3333,6 @@ class TestUnit(TestCase):
         self.assertFalse(tb1.equals(tb2))
 
 
-
-
     #---------------------------------------------------------------------------
     def test_type_blocks_ufunc_binary_operator_a(self) -> None:
         a1 = np.array([10, 20, 30])
