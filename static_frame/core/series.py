@@ -1561,8 +1561,10 @@ class Series(ContainerOperand):
         # iterable selection should be handled by NP
         values = self.values[key]
 
-        if not values.__class__ is np.ndarray: # if we have a single element
+        if isinstance(key, INT_TYPES): # if we have a single element
+            # NOTE: cannot check if we have an array as an array might be an element
             return values #type: ignore
+
         return self.__class__(
                 values,
                 index=self._index.iloc[key],
@@ -1576,7 +1578,8 @@ class Series(ContainerOperand):
         iloc_key = self._index._loc_to_iloc(key)
         values = self.values[iloc_key]
 
-        if not values.__class__ is np.ndarray: # if we have a single element
+        if isinstance(iloc_key, INT_TYPES): # if we have a single element
+            # NOTE: cannot check if we have an array as an array might be an element
             # NOTE: this branch is not encountered and may not be necessary
             # if isinstance(key, HLoc) and key.has_key_multiple():
             #     # must return a Series, even though we do not have an array
