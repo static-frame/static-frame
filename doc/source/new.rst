@@ -2,6 +2,12 @@ What is New in Static Frame
 ===============================
 
 
+0.8.26
+----------
+
+``Frame.to_pandas()`` now creates ``pd.RangeIndex`` for ``IndexAutoFactory``-created indices.
+
+
 0.8.25
 ----------
 

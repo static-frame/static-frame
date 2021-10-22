@@ -1407,6 +1407,8 @@ class Index(IndexBase):
         '''
         import pandas
         # must copy to remove immutability, decouple reference
+        if self._map is None:
+            return pandas.RangeIndex(self.__len__(), name=self._name)
         return pandas.Index(self.values.copy(),
                 name=self._name)
 

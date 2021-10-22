@@ -863,7 +863,7 @@ class Pivot_R(Pivot, Reference):
 
 #-------------------------------------------------------------------------------
 class BusItemsZipPickle(Perf):
-    NUMBER = 2
+    NUMBER = 1
 
     def __init__(self) -> None:
         super().__init__()
@@ -954,6 +954,49 @@ class Group_R(Group, Reference):
         post = tuple(self.pdf2.groupby(1))
         assert len(post) == 100
 
+
+
+
+#-------------------------------------------------------------------------------
+class FrameFromConcat(Perf):
+    NUMBER = 1
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.tall_mixed_sff1 = [
+            ff.parse('s(100_000,10)|v(int,str,int,bool)')
+            for _ in range(20)
+            ]
+        self.tall_mixed_pdf1 = [f.to_pandas() for f in self.tall_mixed_sff1]
+
+        # from static_frame import Frame
+        # from static_frame import TypeBlocks
+        # from static_frame.core.util import array_to_groups_and_locations
+        # self.meta = {
+        #     'wide_group_2': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=Frame._axis_group_iloc_items,
+        #         explanation='nearly identical, favoring slower'
+        #         ),
+        #     'tall_group_100': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=Frame._axis_group_iloc_items,
+        #         ),
+        #     }
+
+class FrameFromConcat_N(FrameFromConcat, Native):
+
+    def tall_mixed_20(self) -> None:
+        f = sf.Frame.from_concat(self.tall_mixed_sff1, index=sf.IndexAutoFactory)
+        assert f.shape == (2_000_000, 10)
+
+class FrameFromConcat_R(FrameFromConcat, Reference):
+
+    def tall_mixed_20(self) -> None:
+        df = pd.concat(self.tall_mixed_pdf1)
+        assert df.shape == (2_000_000, 10)
+
+        # import ipdb; ipdb.set_trace()
 
 
 #-------------------------------------------------------------------------------

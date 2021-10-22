@@ -1050,14 +1050,14 @@ class IndexHierarchy(IndexBase):
                 )
 
 
-    def relabel_at_depth(self: IH,
-            mapper: RelabelInput,
-            depth_level: DepthLevelSpecifier = 0
-            ) -> IH:
-        '''
-        Return a new :obj:`IndexHierarchy` after applying the hte `mapper` to the depth level or levels specified by `depth_level`.
-        '''
-        pass
+    # def relabel_at_depth(self: IH,
+    #         mapper: RelabelInput,
+    #         depth_level: DepthLevelSpecifier = 0
+    #         ) -> IH:
+    #     '''
+    #     Return a new :obj:`IndexHierarchy` after applying the hte `mapper` to the depth level or levels specified by `depth_level`.
+    #     '''
+    #     pass
 
     def rehierarch(self: IH,
             depth_map: tp.Sequence[int]
