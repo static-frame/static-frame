@@ -2275,15 +2275,16 @@ def ufunc_set_iter(
         ufunc = union2d if union else intersect2d
         ndim = 2
 
-    # array_id = id(result)
+    # skip processing for the same array instance
+    array_id = id(result)
     for array in arrays:
         if array.ndim != ndim:
             raise RuntimeError('arrays do not all have the same ndim')
-        # if array_id:
-        #     if id(array) == array_id:
-        #         continue
-        #     else:
-        #         array_id = 0
+        if array_id:
+            if id(array) == array_id:
+                continue
+            else:
+                array_id = 0
         # to retain order on identity, assume_unique must be True
         result = ufunc(result, array, assume_unique=assume_unique)
 
