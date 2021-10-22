@@ -1049,7 +1049,7 @@ def _index_many_to_one(
     # if we are unioning we can give back an index_auto_aligned
     index_auto_aligned = (many_to_one_type is not ManyToOneType.CONCAT
             and index.ndim == 1
-            and index._map is None
+            and index._map is None #type: ignore
             )
 
     # if IndexHierarchy, collect index_types generators

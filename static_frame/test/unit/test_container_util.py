@@ -509,23 +509,22 @@ class TestUnit(TestCase):
         idx1 = Index(range(3), loc_is_iloc=True)
         idx2 = Index(range(3), loc_is_iloc=True)
         idx3 = index_many_set((idx1, idx2), Index, union=True)
-        self.assertTrue(idx3._map is None)
-        self.assertEqual(idx3.values.tolist(), [0, 1, 2])
-
+        self.assertTrue(idx3._map is None) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1, 2]) #type: ignore
 
     def test_index_many_set_e(self) -> None:
         idx1 = Index(range(2), loc_is_iloc=True)
         idx2 = Index(range(4), loc_is_iloc=True)
         idx3 = index_many_set((idx1, idx2), Index, union=True)
-        self.assertTrue(idx3._map is None)
-        self.assertEqual(idx3.values.tolist(), [0, 1, 2, 3])
+        self.assertTrue(idx3._map is None) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1, 2, 3]) #type: ignore
 
     def test_index_many_set_f(self) -> None:
         idx1 = Index(range(2), loc_is_iloc=True)
         idx2 = Index(range(4), loc_is_iloc=True)
         idx3 = index_many_set((idx1, idx2), Index, union=False)
-        self.assertTrue(idx3._map is None)
-        self.assertEqual(idx3.values.tolist(), [0, 1])
+        self.assertTrue(idx3._map is None) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1]) #type: ignore
 
 
     #---------------------------------------------------------------------------
