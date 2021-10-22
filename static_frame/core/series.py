@@ -362,6 +362,7 @@ class Series(ContainerOperand):
         if container_first.index.equals(index):
             post = cls(container_first.values, index=index, own_index=True, name=name)
         else:
+            # if the indices are not equal, we have to reindex, and we need to provide a fill_value that does minimal type corcion to the original
             fill_value = dtype_kind_to_na(container_first.dtype.kind)
             post = container_first.reindex(index, fill_value=fill_value).rename(name)
 

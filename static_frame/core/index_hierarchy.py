@@ -1049,11 +1049,21 @@ class IndexHierarchy(IndexBase):
                 index_constructors=index_constructors,
                 )
 
+
+    def relabel_at_depth(self: IH,
+            mapper: RelabelInput,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> IH:
+        '''
+        Return a new :obj:`IndexHierarchy` after applying the hte `mapper` to the depth level or levels specified by `depth_level`.
+        '''
+        pass
+
     def rehierarch(self: IH,
             depth_map: tp.Sequence[int]
             ) -> IH:
         '''
-        Return a new `IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
+        Return a new :obj:`IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
         '''
         if self._recache:
             self._update_array_cache()
