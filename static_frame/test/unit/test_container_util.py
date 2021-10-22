@@ -526,6 +526,14 @@ class TestUnit(TestCase):
         self.assertTrue(idx3._map is None) #type: ignore
         self.assertEqual(idx3.values.tolist(), [0, 1]) #type: ignore
 
+    def test_index_many_set_g(self) -> None:
+        idx1 = Index(range(2), loc_is_iloc=True)
+        idx2 = Index([3, 2, 1, 0])
+        idx3 = index_many_set((idx1, idx2), Index, union=False)
+        self.assertTrue(idx3._map is not None) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1]) #type: ignore
+
+
 
     #---------------------------------------------------------------------------
     def test_get_col_dtype_factory_a(self) -> None:
