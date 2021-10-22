@@ -8,6 +8,7 @@ from functools import partial
 import datetime
 from fractions import Fraction
 import typing as tp
+from enum import Enum
 
 import numpy as np
 from numpy import char as npc
@@ -998,11 +999,16 @@ def key_from_container_key(
 
 
 #---------------------------------------------------------------------------
+class ManyToOneType(Enum):
+    CONCAT = 0
+    UNION = 1
+    INTERSECT = 2
+
 
 def _index_many_to_one(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
-        array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
+        many_to_one_type = ManyToOneType,
         ) -> IndexBase:
     '''
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
@@ -1012,6 +1018,17 @@ def _index_many_to_one(
         cls_default: Default Index class to be used if no alignment of classes; also used to determine if result Index should be static or mutable.
     '''
     from static_frame.core.index_auto import IndexAutoFactory
+
+    if many_to_one_type is ManyToOneType.UNION:
+        array_processor = partial(ufunc_set_iter,
+                union=True,
+                assume_unique=True)
+    elif many_to_one_type is ManyToOneType.INTERSECT:
+        array_processor = partial(ufunc_set_iter,
+                union=False,
+                assume_unique=True)
+    elif many_to_one_type is ManyToOneType.CONCAT:
+        array_processor = concat_resolved
 
     indices_iter = iter(indices)
     try:
@@ -1094,7 +1111,7 @@ def index_many_concat(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
         ) -> tp.Optional[IndexBase]:
-    return _index_many_to_one(indices, cls_default, concat_resolved)
+    return _index_many_to_one(indices, cls_default, ManyToOneType.CONCAT)
 
 def index_many_set(
         indices: tp.Iterable[IndexBase],
@@ -1102,12 +1119,12 @@ def index_many_set(
         union: bool,
         ) -> tp.Optional[IndexBase]:
     '''
-    Given multiple Index objects, concatenate them in order. Preserve name and index type if aligned.
+    Given multiple Index objects, union them. Preserve name and index type if aligned.
     '''
-    array_processor = partial(ufunc_set_iter,
-            union=union,
-            assume_unique=True)
-    return _index_many_to_one(indices, cls_default, array_processor)
+    return _index_many_to_one(indices,
+            cls_default,
+            ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
+            )
 
 
 #-------------------------------------------------------------------------------
