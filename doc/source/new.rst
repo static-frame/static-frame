@@ -2,6 +2,12 @@ What is New in Static Frame
 ===============================
 
 
+0.8.25
+----------
+
+Corrected issue extracting containers stored in ``Series``.
+
+
 0.8.24
 ----------
 
