@@ -1011,6 +1011,8 @@ def _index_many_to_one(
         indices: can be a generator
         cls_default: Default Index class to be used if no alignment of classes; also used to determine if result Index should be static or mutable.
     '''
+    from static_frame.core.index_auto import IndexAutoFactory
+
     indices_iter = iter(indices)
     try:
         index = next(indices_iter)
@@ -1025,12 +1027,19 @@ def _index_many_to_one(
     cls_first = index.__class__
     cls_aligned = True
 
+    # if we are unioning, not concatenating, we can give back an index_auto_aligned
+    # index_auto_aligned = (array_processor is not concat_resolved
+    #         and index.ndim == 1
+    #         and index._map is None,
+    #         )
+    index_auto_aligned = False
+
     # if IndexHierarchy, collect index_types generators
     if index.ndim == 2:
         depth_first = index.depth
         index_types_gen = [index._levels.index_types()] #type: ignore
         index_types_aligned = True
-    else:
+    else: # for 1D we ignore this
         index_types_aligned = False
 
     for index in indices_iter:
@@ -1039,11 +1048,19 @@ def _index_many_to_one(
             name_aligned = False
         if cls_aligned and index.__class__ != cls_first:
             cls_aligned = False
+        if index_auto_aligned and (index.ndim != 1 or index._map is not None):
+            index_auto_aligned = False
 
         if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
             index_types_gen.append(index._levels.index_types()) #type: ignore
         else:
             index_types_aligned = False
+
+    name = name_first if name_aligned else None
+
+    if index_auto_aligned:
+        size = max(a.size for a in arrays)
+        return IndexAutoFactory(size, name=name).to_index(default_constructor=cls_default)
 
     if index_types_aligned:
         # all depths are already aligned
@@ -1065,8 +1082,6 @@ def _index_many_to_one(
             constructor = cls_first.from_labels
     else:
         constructor = cls_default.from_labels
-
-    name = name_first if name_aligned else None
 
     # returns an immutable array
     array = array_processor(arrays)

@@ -452,6 +452,7 @@ class Frame(ContainerOperand):
                         cls._COLUMNS_CONSTRUCTOR,
                         union=union,
                         )
+                # columns = frames[0]._columns
                 own_columns = True
 
             def blocks() -> tp.Iterator[np.ndarray]:

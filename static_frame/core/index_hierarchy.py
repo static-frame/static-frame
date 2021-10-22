@@ -115,6 +115,7 @@ class IndexHierarchy(IndexBase):
     _UFUNC_INTERSECTION = intersect2d
     _UFUNC_DIFFERENCE = setdiff2d
     _NDIM: int = 2
+
     #---------------------------------------------------------------------------
     # constructors
 

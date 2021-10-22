@@ -35,7 +35,7 @@ Performance enhancements to ``Frame.iter_group()`` and ``Frame.iter_group_items(
 0.8.21
 ----------
 
-Added ``Frame.to_npz()``, ``Frame.from_npz()``
+Added ``Frame.to_npz()``, ``Frame.from_npz()``.
 
 Performance enhancements to ``Frame.iter_group()`` and ``Frame.iter_group_items()``.
 
