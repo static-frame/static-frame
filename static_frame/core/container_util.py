@@ -1047,10 +1047,10 @@ def _index_many_to_one(
     cls_aligned = True
 
     # if we are unioning, not concatenating, we can give back an index_auto_aligned
-    # index_auto_aligned = (array_processor is not concat_resolved
-    #         and index.ndim == 1
-    #         and index._map is None,
-    #         )
+    index_auto_aligned = (many_to_one_type is not ManyToOneType.CONCAT
+            and index.ndim == 1
+            and index._map is None,
+            )
     index_auto_aligned = False
 
     # if IndexHierarchy, collect index_types generators
