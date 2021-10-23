@@ -2283,8 +2283,7 @@ def ufunc_set_iter(
         if array_id:
             if id(array) == array_id:
                 continue
-            else:
-                array_id = 0
+            array_id = 0
         # to retain order on identity, assume_unique must be True
         result = ufunc(result, array, assume_unique=assume_unique)
 
