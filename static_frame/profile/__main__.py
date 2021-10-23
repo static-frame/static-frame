@@ -980,13 +980,13 @@ class FrameFromConcat(Perf):
         from static_frame import Frame
         # from static_frame import TypeBlocks
         # from static_frame.core.util import array_to_groups_and_locations
-        self.meta = {
-            'tall_uniform_20': FunctionMetaData(
-                # perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=Frame.from_concat,
-                # explanation='nearly identical, favoring slower'
-                ),
-            }
+        # self.meta = {
+        #     'tall_uniform_20': FunctionMetaData(
+        #         # perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=Frame.from_concat,
+        #         # explanation='nearly identical, favoring slower'
+        #         ),
+        #     }
 
 class FrameFromConcat_N(FrameFromConcat, Native):
 
