@@ -7,6 +7,8 @@ What is New in Static Frame
 
 ``Frame.to_pandas()`` now creates ``pd.RangeIndex`` for ``IndexAutoFactory``-created indices.
 
+Performance enhancements to ``Frame.from_concat()``.
+
 
 0.8.25
 ----------
