@@ -1315,8 +1315,6 @@ class TypeBlocks(ContainerOperand):
                         indices = (self._index[x] for x in key)
                     else:
                         indices = (self._index[x] for x in sorted(key))
-                elif key is None: # get all
-                    indices = self._index
                 else:
                     raise NotImplementedError('Cannot handle key', key)
                 yield from self._indices_to_contiguous_pairs(indices)
