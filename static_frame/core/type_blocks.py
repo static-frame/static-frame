@@ -2218,6 +2218,13 @@ class TypeBlocks(ContainerOperand):
             single_row = True
 
         # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
+
+        # if (column_key is None or
+        #         (column_key.__class__ is slice and column_key == NULL_SLICE):
+        #     if self._shape[1] == 0:
+        #         yield EMPTY_ARRAY.reshape(self._shape)[row_key]
+        #     else: # when column_key is full
+
         if self._shape[1] == 0 and (column_key is None or
                 (column_key.__class__ is slice and column_key == NULL_SLICE)):
             yield EMPTY_ARRAY.reshape(self._shape)[row_key]
@@ -2240,11 +2247,11 @@ class TypeBlocks(ContainerOperand):
                     # if we have a single row and the thing we sliced is 1d, we need to rotate it
                     if single_row and block_sliced.ndim == 1:
                         block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
-                    # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d
+                    # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d, which would go to element.
                     elif (block_sliced.ndim == 2
-                            and block_sliced.shape[0] == 1
+                            and block_sliced.shape[1] == 1
                             and not single_row):
-                        block_sliced = block_sliced[0]
+                        block_sliced = block_sliced[NULL_SLICE, 0]
                 else: # a single element, wrap back up in array
                     # NOTE: this is faster than using np.full(1, block_sliced, dtype=dtype)
                     block_sliced = np.array((block_sliced,), dtype=b.dtype)
