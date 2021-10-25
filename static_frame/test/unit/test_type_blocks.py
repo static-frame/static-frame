@@ -143,6 +143,7 @@ class TestUnit(TestCase):
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
 
         row1 = tb1.iloc[2]
+        # import ipdb; ipdb.set_trace()
 
         self.assertEqual(tb1.shape, (3, 4))
 
@@ -3599,4 +3600,6 @@ class TestUnit(TestCase):
         self.assertEqual([a.shape for a in post], [(3,)])
 
 if __name__ == '__main__':
-    unittest.main()
+#     unittest.main()
+    t = TestUnit()
+    t.test_type_blocks_c()
