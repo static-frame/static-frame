@@ -2217,8 +2217,6 @@ class TypeBlocks(ContainerOperand):
             # an iterable of index integers is expected here
             single_row = True
 
-        # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
-
         # if column_key_null
         if column_key is None or (
                 column_key.__class__ is slice and column_key == NULL_SLICE
@@ -2228,7 +2226,6 @@ class TypeBlocks(ContainerOperand):
             elif row_key_null: # when column_key is full
                 yield from self._blocks
             else:
-                # import ipdb; ipdb.set_trace()
                 for b in self._blocks:
                     # selection work for both 1D and 2D
                     block_sliced = b[row_key] # PERF: slow from line profiler
@@ -2238,11 +2235,8 @@ class TypeBlocks(ContainerOperand):
                     else: # wrap element back into an array
                         block_sliced = np.array((block_sliced,), dtype=b.dtype)
                     yield block_sliced
-
-        # if self._shape[1] == 0 and (column_key is None or
-        #         (column_key.__class__ is slice and column_key == NULL_SLICE)):
-        #     yield EMPTY_ARRAY.reshape(self._shape)[row_key]
         else:
+            # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
             for block_idx, slc in self._key_to_block_slices(column_key): # PERF: slow from line profiler
                 b = self._blocks[block_idx]
                 if b.ndim == 1: # given 1D array, our row key is all we need

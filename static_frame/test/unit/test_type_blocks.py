@@ -3600,6 +3600,8 @@ class TestUnit(TestCase):
         self.assertEqual([a.shape for a in post], [(3,)])
 
 if __name__ == '__main__':
-#     unittest.main()
-    t = TestUnit()
-    t.test_type_blocks_c()
+    unittest.main()
+    # t = TestUnit()
+    # t.test_type_blocks_c()
+
+
