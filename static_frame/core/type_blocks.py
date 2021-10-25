@@ -1973,7 +1973,7 @@ class TypeBlocks(ContainerOperand):
         start = 0
         for block, target in zip_longest(self._blocks, targets):
             if block is None or target is None:
-                raise RuntimeError('blocks or targets do not align')
+                raise RuntimeError('blocks or targets do not align') # COV_MISSING
 
             if block.ndim == 1:
                 end = start + 1
@@ -2047,7 +2047,7 @@ class TypeBlocks(ContainerOperand):
             target = bloc_key[NULL_SLICE, target_slice]
 
             if not target.any():
-                yield block
+                yield block # COV_MISSING
             else:
                 assigned_dtype = resolve_dtype(value_dtype, block.dtype)
                 if block.dtype == assigned_dtype:
@@ -2124,7 +2124,7 @@ class TypeBlocks(ContainerOperand):
                         if block.dtype == assigned_dtype:
                             assigned = block[NULL_SLICE, a_slice].copy()
                         else:
-                            assigned = block[NULL_SLICE, a_slice].astype(assigned_dtype)
+                            assigned = block[NULL_SLICE, a_slice].astype(assigned_dtype) # COV_MISSING
 
                         assigned[target_part] = value_part[target_part]
 
@@ -2779,8 +2779,8 @@ class TypeBlocks(ContainerOperand):
             if width == width_target:
                 return block
             elif width > width_target:
-                source.append(block[NULL_SLICE, width_target:])
-                return block[NULL_SLICE, :width_target]
+                source.append(block[NULL_SLICE, width_target:]) # COV_MISSING
+                return block[NULL_SLICE, :width_target]  # COV_MISSING
 
             # width < width_target, accumulate multiple blocks
             parts = [column_2d_filter(block)]
@@ -2863,7 +2863,7 @@ class TypeBlocks(ContainerOperand):
                 if b.dtype == assignable_dtype:
                     assigned = b.copy()
                 else:
-                    assigned = b.astype(assignable_dtype)
+                    assigned = b.astype(assignable_dtype) # COV_MISSING
 
                 # because np.nonzero is easier / faster to parse if applied on a 1D array, w can make 2d look like 1D here
                 if ndim == 1:
@@ -2884,7 +2884,7 @@ class TypeBlocks(ContainerOperand):
                         sel_slice = NULL_SLICE
 
                     if ndim == 1:
-                        assigned[sel_slice] = value
+                        assigned[sel_slice] = value # COV_MISSING
                     else:
                         assigned[sel_slice, idx] = value
 
