@@ -1131,7 +1131,7 @@ class TypeBlocks(ContainerOperand):
             else:
                 # Combine columns, end with block length shape and then call func again, for final result
                 if b.size == 1 and size_one_unity and not skipna:
-                    out[:, idx] = b
+                    out[:, idx] = b # COV_MISSING
                 elif b.ndim == 1:
                     # if this is a composable, numeric single columns we just copy it and process it later; but if this is a logical application (and, or) then it is already Boolean
                     if out.dtype == DTYPE_BOOL and b.dtype != DTYPE_BOOL:
@@ -1190,7 +1190,7 @@ class TypeBlocks(ContainerOperand):
         for block in self._blocks:
             block = column_2d_filter(block)
             if block.shape[1] == 0:
-                continue
+                continue # COV_MISSING
 
             h = '' if idx > 0 else self.__class__
 
@@ -2797,7 +2797,7 @@ class TypeBlocks(ContainerOperand):
                     source.append(block[NULL_SLICE, trim:])
                     return concat_resolved(parts, axis=1)
                 # width < width_target
-                parts.append(block)
+                parts.append(block) # COV_MISSING
 
         def blocks() -> tp.Iterator[np.ndarray]:
             start = end = 0
@@ -2884,7 +2884,7 @@ class TypeBlocks(ContainerOperand):
                         sel_slice = NULL_SLICE
 
                     if ndim == 1:
-                        assigned[sel_slice] = value # COV_MISSING
+                        assigned[sel_slice] = value
                     else:
                         assigned[sel_slice, idx] = value
 
@@ -2898,7 +2898,7 @@ class TypeBlocks(ContainerOperand):
             blocks: tp.Iterable[np.ndarray],
             value: tp.Any,
             sided_leading: bool) -> tp.Iterator[np.ndarray]:
-        '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 1.
+        '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 1. Leading axis 1 fills rows, going from left to right.
 
         NOTE: blocks are generated in reverse order when sided_leading is False.
 
@@ -2941,7 +2941,6 @@ class TypeBlocks(ContainerOperand):
                     assigned = b.copy()
                 else:
                     assigned = b.astype(assignable_dtype)
-
                 if ndim == 1:
                     # if one dim, we simply fill nan values
                     assigned[isna_entry] = value
@@ -2961,11 +2960,7 @@ class TypeBlocks(ContainerOperand):
                                 sel_slice = slice(targets[-1]+1, None)
                         else: # all are NaN
                             sel_slice = NULL_SLICE
-
-                        if ndim == 1:
-                            assigned[sel_slice] = value
-                        else:
-                            assigned[idx, sel_slice] = value
+                        assigned[idx, sel_slice] = value
 
                 assigned.flags.writeable = False
                 yield assigned

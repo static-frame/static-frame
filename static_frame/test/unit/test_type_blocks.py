@@ -2065,7 +2065,7 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             tb1.fillna_trailing(value=3, axis=2)
 
-
+    #---------------------------------------------------------------------------
     def test_type_blocks_fillna_leading_a(self) -> None:
 
         for axis in (0, 1):
@@ -2090,7 +2090,6 @@ class TestUnit(TestCase):
 
         self.assertAlmostEqualValues(list(tb2.values.flat),
                 [0.0, 0.0, 3.0, 4.0, 0, 0.0, 0.0, 6.0, nan, 0, 5.0, 0.0, nan, nan, 0])
-
 
 
     def test_type_blocks_fillna_leading_c(self) -> None:
@@ -2186,6 +2185,22 @@ class TestUnit(TestCase):
         self.assertEqual(tb2.values[:2,:].tolist(),
                 [[None, None], [10.0, None]])
 
+
+
+    def test_type_blocks_fillna_leading_j(self) -> None:
+
+        a1 = np.array([[np.nan, 10, 0],
+                       [np.nan, np.nan, 20]], dtype=float)
+
+        tb1 = TypeBlocks.from_blocks((a1,))
+        tb2 = tb1.fillna_leading(value=None, axis=1)
+        self.assertEqual(tb2.dtypes.tolist(),
+                [np.dtype('O'), np.dtype('O'), np.dtype('O')]
+                )
+
+        self.assertEqual(tb2.values.tolist(),
+                [[None, 10.0, 0.0], [None, None, 20.0]]
+                )
 
 
 
