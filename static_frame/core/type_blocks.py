@@ -1977,7 +1977,7 @@ class TypeBlocks(ContainerOperand):
         start = 0
         for block, target in zip_longest(self._blocks, targets):
             if block is None or target is None:
-                raise RuntimeError('blocks or targets do not align') # COV_MISSING
+                raise RuntimeError('blocks or targets do not align')
 
             if block.ndim == 1:
                 end = start + 1

@@ -1415,6 +1415,28 @@ class TestUnit(TestCase):
                 [[3, True, -5.0, 'df', 500, 'er'], [4, False, 2.5, 'fd', 700, False]]
                 )
 
+    def test_type_blocks_assign_blocks_value_arrays_d(self) -> None:
+
+        a1 = np.array([[3, 20, -5], [4, 80, -20],])
+        a2 = np.array([['df', 'er', 'er'], ['fd', 'ij', 'we'],])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        targets = (np.array([[False, True, False], [False, True, True]]),)
+
+        values = (np.array([None, None]),
+                np.array([True, False]),
+                np.array([1.5, 2.5]),
+                np.array([100, 200]),
+                np.array([500, 700]),
+                np.array([None, False]),
+                )
+        with self.assertRaises(RuntimeError):
+            _ = TypeBlocks.from_blocks(
+                    tb1._assign_from_boolean_blocks_by_blocks(
+                           targets=targets,
+                           values=values
+                           ))
+
     #--------------------------------------------------------------------------
     def test_type_blocks_group_a(self) -> None:
 
