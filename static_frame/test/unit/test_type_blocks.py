@@ -18,6 +18,7 @@ from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase
 from static_frame.core.type_blocks import group_match
 from static_frame.core.type_blocks import group_sort
+from static_frame.core.display_config import DisplayConfig
 
 
 nan = np.nan
@@ -1539,7 +1540,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(disp), 5)
 
     def test_type_blocks_display_b(self) -> None:
-        from static_frame.core.display import DisplayConfig
         tb = TypeBlocks.from_blocks(np.array(()).reshape(2,0))
         disp = tb.display(config=DisplayConfig(type_color=False))
         self.assertEqual(repr(disp), '<TypeBlocks>')
