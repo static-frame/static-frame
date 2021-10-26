@@ -2772,6 +2772,7 @@ class TypeBlocks(ContainerOperand):
             block = source.pop()
             width = shape_filter(block)[1]
 
+            import ipdb; ipdb.set_trace()
             if width_target == 1:
                 if width > 1: # 2d array with more than one column
                     source.append(block[NULL_SLICE, 1:])

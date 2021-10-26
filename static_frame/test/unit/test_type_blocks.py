@@ -1957,6 +1957,18 @@ class TestUnit(TestCase):
                 [5.0, 0.0, 0.0, 0.0]])
 
 
+    # def test_type_blocks_clip_g(self) -> None:
+    #     arrays = (np.array((8, 6, 8)),
+    #             np.array((2, 0, 2)),
+    #             np.array((2, 0, 2)),
+    #             np.array((0, 1, 0)))
+
+    #     tb1 = TypeBlocks.from_blocks(arrays)
+
+    #     ub = np.array([[6, 2, 6, 2], [6, 2, 6, 2], [6, 2, 6, 2]], dtype=float)
+    #     tb2 = tb1.clip(None, ub)
+    #     import ipdb; ipdb.set_trace()
+
 
     #---------------------------------------------------------------------------
 
