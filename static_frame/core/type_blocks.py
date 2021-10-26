@@ -55,6 +55,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import isin_array
 from static_frame.core.util import iterable_to_array_1d
@@ -306,7 +307,7 @@ class TypeBlocks(ContainerOperand):
                 else: # assign on first
                     row_count = r
 
-                # we keep array with 0 rows but > 0 columns, as they take type spce in the TypeBlocks object; arrays with 0 columns do not take type space and thus can be skipped entirely
+                # we keep array with 0 rows but > 0 columns, as they take type space in the TypeBlocks object; arrays with 0 columns do not take type space and thus can be skipped entirely
                 if c == 0:
                     continue
 
@@ -1189,9 +1190,7 @@ class TypeBlocks(ContainerOperand):
         idx = 0
         for block in self._blocks:
             block = column_2d_filter(block)
-            if block.shape[1] == 0:
-                continue # COV_MISSING
-
+            # NOTE: we do not expect 0 width arrays
             h = '' if idx > 0 else self.__class__
 
             display = Display.from_values(block,
@@ -1206,7 +1205,12 @@ class TypeBlocks(ContainerOperand):
             # explicitly enumerate so as to not count no-width blocks
             idx += 1
 
-        assert d is not None # for mypy
+        if d is None:
+            # if we do not have blocks, provide an empty display
+            d = Display.from_values(EMPTY_TUPLE,
+                    header=self.__class__,
+                    config=config,
+                    outermost=outermost)
         return d
 
 
@@ -3440,7 +3444,6 @@ class TypeBlocks(ContainerOperand):
             if block_columns == 0:
                 # do not append 0 width arrays
                 return
-            bs = self._all_block_slices()
             bs.append((block_idx, slice(0, block_columns)))
 
         # extend shape, or define it if not yet set
