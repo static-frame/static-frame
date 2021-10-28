@@ -8331,6 +8331,10 @@ class TestUnit(TestCase):
                 ((0, ((('ztsv', 'z2Oo', 'zDVQ'), 'zjZQ'), (('zUvW', 'z5l6', 'z5hI'), 'zO5l'), (('zkuW', 'zCE3', 'zyT8'), 'zEdH'))), (1, ((('ztsv', 'z2Oo', 'zDVQ'), 'zaji'), (('zUvW', 'z5l6', 'z5hI'), 'zJnC'), (('zkuW', 'zCE3', 'zyT8'), 'zDdR'))))
                 )
 
+    def test_frame_set_index_f(self) -> None:
+        f1 = Frame.from_records([(1,2,3)])
+        f2 = f1.set_index(None, drop=True)
+        self.assertTrue(f1.equals(f2))
 
     #---------------------------------------------------------------------------
     def test_frame_head_tail_a(self) -> None:

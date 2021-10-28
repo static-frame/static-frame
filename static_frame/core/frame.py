@@ -5244,6 +5244,8 @@ class Frame(ContainerOperand):
         Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
         '''
         column_iloc = self._columns._loc_to_iloc(column)
+        if column_iloc is None: # if None was a key it would have an iloc
+            return self if self.STATIC else self.__class__(self)
 
         if drop:
             blocks = TypeBlocks.from_blocks(
