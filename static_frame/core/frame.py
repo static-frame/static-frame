@@ -5241,7 +5241,13 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = Index,
             ) -> 'Frame':
         '''
-        Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
+        Return a new :obj:`Frame` produced by setting the given column as the index, optionally removing that column from the new :obj:`Frame`.
+
+        Args:
+            column:
+            *,
+            drop:
+            index_constructor:
         '''
         column_iloc = self._columns._loc_to_iloc(column)
         if column_iloc is None: # if None was a key it would have an iloc

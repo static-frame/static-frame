@@ -6,6 +6,9 @@ What is New in Static Frame
 
 ``Frame.from_pndas()`` now support zero-sized DataFrame.
 
+Fixed issue in ``Frame.set_index()`` where ``column`` is passed as ``None``.
+
+
 
 0.8.26
 ----------
