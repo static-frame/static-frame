@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.27
+----------
+
+``Frame.from_pndas()`` now support zero-sized DataFrame.
+
+
 0.8.26
 ----------
 
