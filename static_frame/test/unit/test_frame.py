@@ -934,7 +934,6 @@ class TestUnit(TestCase):
         df = f.to_pandas()
         self.assertEqual(df.shape, (100, 20))
 
-
     #---------------------------------------------------------------------------
 
 
@@ -8832,6 +8831,7 @@ class TestUnit(TestCase):
                 ((('II', 'a'), ((('I', 'x'), 1), (('I', 'y'), 30), (('I', 'z'), 54))), (('II', 'b'), ((('I', 'x'), 2), (('I', 'y'), 34), (('I', 'z'), 95))), (('II', 'c'), ((('I', 'x'), 'a'), (('I', 'y'), 'b'), (('I', 'z'), 'c'))), (('II', 'd'), ((('I', 'x'), False), (('I', 'y'), True), (('I', 'z'), False))), (('II', 'e'), ((('I', 'x'), True), (('I', 'y'), False), (('I', 'z'), False))))
                 )
 
+    #---------------------------------------------------------------------------
 
     def test_frame_from_from_pandas_a(self) -> None:
         import pandas as pd
@@ -8845,6 +8845,11 @@ class TestUnit(TestCase):
 
         sff = Frame.from_pandas(pdf)
         self.assertTrue((pdf.dtypes.values == sff.dtypes.values).all())
+
+    def test_frame_from_from_pandas_b(self) -> None:
+        import pandas as pd
+        f = Frame.from_pandas(pd.DataFrame())
+        self.assertEqual(f.shape, (0, 0))
 
     #---------------------------------------------------------------------------
 

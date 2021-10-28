@@ -2330,7 +2330,9 @@ class Frame(ContainerOperand):
                     own_data=own_data,
                     )
 
-        if consolidate_blocks:
+        if value.size == 0:
+            blocks = TypeBlocks.from_zero_size_shape(value.shape)
+        elif consolidate_blocks:
             blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
         else:
             blocks = TypeBlocks.from_blocks(blocks())
