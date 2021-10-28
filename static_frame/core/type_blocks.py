@@ -2772,8 +2772,6 @@ class TypeBlocks(ContainerOperand):
             block = source.pop()
             width = shape_filter(block)[1] # width is columns in next source (bounds)
 
-            # import ipdb; ipdb.set_trace()
-
             if width_target == 1:
                 if width > 1: # 2d array with more than one column
                     source.append(block[NULL_SLICE, 1:])
@@ -2785,8 +2783,8 @@ class TypeBlocks(ContainerOperand):
             if width == width_target:
                 return block
             elif width > width_target:
-                source.append(block[NULL_SLICE, width_target:]) # COV_MISSING
-                return block[NULL_SLICE, :width_target]  # COV_MISSING
+                source.append(block[NULL_SLICE, width_target:])
+                return block[NULL_SLICE, :width_target]
 
             # width < width_target, accumulate multiple blocks
             parts = [column_2d_filter(block)]

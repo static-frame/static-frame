@@ -1957,27 +1957,25 @@ class TestUnit(TestCase):
                 [5.0, 0.0, 0.0, 0.0]])
 
 
-#     def test_type_blocks_clip_g(self) -> None:
+    def test_type_blocks_clip_g(self) -> None:
 
-#         a1 = np.array([[10, 2, 10, 2], [10, 2, 10, 2], [10, 2, 10, 2]], dtype=float)
-#         tb1 = TypeBlocks.from_blocks((a1,))
+        a1 = np.array([[10, 2, 10, 2], [10, 2, 10, 2], [10, 2, 10, 2]], dtype=float)
+        tb1 = TypeBlocks.from_blocks((a1,))
 
+        arrays = (
+                np.array([[10, 12], [10, -2], [10, 14]], dtype=float),
+                np.array((2, 20, 2)),
+                np.array((20, 1, 0)))
 
-#         arrays = (np.array((8, 6, 8)),
-#                 np.array([[10, -2], [10, -2], [10, -2]], dtype=float),
-#                 np.array((2, 0, 2)),
-#                 np.array((0, 1, 0)))
+        tb1 = TypeBlocks.from_blocks(arrays)
 
-#         tb1 = TypeBlocks.from_blocks(arrays)
-
-#         ub = (
-#                 np.array([[6, 2, 6], [6, 2, 6], [6, 2, 6]], dtype=float),
-#                 np.array((1, 0, 1)),
-#                 )
-#         tb2 = tb1.clip(None, ub)
-
-#         # need width_target > 1, if 2, than width needs to be 3 to exercise; this is the width of the bounds
-#         import ipdb; ipdb.set_trace()
+        ub = (
+                np.array([[6, 2, 6], [6, 2, 6], [6, 2, 6]], dtype=float),
+                np.array((1, 0, 1)),
+                )
+        tb2 = tb1.clip(None, ub)
+        self.assertEqual(tb2.values.tolist(),
+                [[6.0, 2.0, 2.0, 1.0], [6.0, -2.0, 6.0, 0.0], [6.0, 2.0, 2.0, 0.0]])
 
 
     #---------------------------------------------------------------------------
