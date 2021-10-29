@@ -15,6 +15,17 @@ import static_frame as sf
 from static_frame.core.display_color import HexColor
 
 
+COUNT_ARRAY = 100
+CHUNK_SIZE = 20
+
+def work(array: np.ndarray):
+    # post = []
+    # for x in array:
+    #     if x > 0:
+    #         post.append(x)
+    v = array ** 2
+    return (v / v.sum()) ** 0.5
+
 class MMapTest:
     NUMBER = 1
 
@@ -23,7 +34,7 @@ class MMapTest:
         self.fp_dir = '/tmp/memmap'
 
         self.arrays = {}
-        for i in range(100):
+        for i in range(COUNT_ARRAY):
             self.arrays[str(i)] = np.arange(1_000_000)
 
         np.savez(self.fp_npz, **self.arrays)
@@ -44,46 +55,73 @@ class MMapTest:
 
         print(self, 'del complete')
 
-class MMapMemorySum(MMapTest):
+class MemorySum(MMapTest):
 
     def __call__(self):
         for a in self.arrays.values():
-            a.sum()
+            work(a)
 
-class MMapMemoryMPForkSum(MMapTest):
 
-    @staticmethod
-    def func(a: np.ndarray):
-        return a.sum()
+class MemoryThreadSum(MMapTest):
+    def __call__(self):
+        with ThreadPoolExecutor() as executor:
+            post = tuple(executor.map(work, self.arrays.values(), chunksize=CHUNK_SIZE))
+            assert len(post) == COUNT_ARRAY
+
+class MemoryForkSum(MMapTest):
 
     def __call__(self):
-        with ProcessPoolExecutor(mp_context=get_mp_context('fork')) as executor:
-            post = tuple(executor.map(self.func, self.arrays.values()))
+        with ProcessPoolExecutor(mp_context=get_mp_context('fork'), ) as executor:
+            post = tuple(executor.map(work, self.arrays.values(), chunksize=CHUNK_SIZE))
+            assert len(post) == COUNT_ARRAY
 
-
-class MMapMemoryMPSpawnSum(MMapTest):
-
-    @staticmethod
-    def func(a: np.ndarray):
-        return a.sum()
+class MemorySpawnSum(MMapTest):
 
     def __call__(self):
         with ProcessPoolExecutor(mp_context=get_mp_context('spawn')) as executor:
-            post = tuple(executor.map(self.func, self.arrays.values()))
+            post = tuple(executor.map(work, self.arrays.values(), chunksize=CHUNK_SIZE))
+            assert len(post) == COUNT_ARRAY
 
 
-class MMapMMapMPForkSum(MMapTest):
+
+class MMapThreadSum(MMapTest):
 
     @staticmethod
     def func(fp: str):
         a = np.load(fp, mmap_mode='r')
-        return a.sum()
+        return work(a)
+
+    def __call__(self):
+        fps = (os.path.join(self.fp_dir, f'{fn}.npy') for fn in self.arrays.keys())
+        with ThreadPoolExecutor() as executor:
+            post = tuple(executor.map(self.func, fps, chunksize=CHUNK_SIZE))
+            assert len(post) == COUNT_ARRAY
+
+class MMapForkSum(MMapTest):
+
+    @staticmethod
+    def func(fp: str):
+        a = np.load(fp, mmap_mode='r')
+        return work(a)
 
     def __call__(self):
         fps = (os.path.join(self.fp_dir, f'{fn}.npy') for fn in self.arrays.keys())
         with ProcessPoolExecutor(mp_context=get_mp_context('fork')) as executor:
-            post = tuple(executor.map(self.func, fps))
+            post = tuple(executor.map(self.func, fps, chunksize=CHUNK_SIZE))
+            assert len(post) == COUNT_ARRAY
 
+class MMapSpawnSum(MMapTest):
+
+    @staticmethod
+    def func(fp: str):
+        a = np.load(fp, mmap_mode='r')
+        return work(a)
+
+    def __call__(self):
+        fps = (os.path.join(self.fp_dir, f'{fn}.npy') for fn in self.arrays.keys())
+        with ProcessPoolExecutor(mp_context=get_mp_context('spawn')) as executor:
+            post = tuple(executor.map(self.func, fps, chunksize=CHUNK_SIZE))
+            assert len(post) == COUNT_ARRAY
 
 
 
@@ -119,10 +157,13 @@ def run_test():
             ('None', None),
             ):
         for cls in (
-                MMapMemorySum,
-                MMapMemoryMPForkSum,
-                MMapMemoryMPSpawnSum,
-                MMapMMapMPForkSum,
+                MemorySum,
+                MemoryThreadSum,
+                MemoryForkSum,
+                MemorySpawnSum,
+                MMapThreadSum,
+                MMapForkSum,
+                MMapSpawnSum,
                 ):
             runner = cls(fixture)
             record = [cls.__name__, cls.NUMBER, label]
