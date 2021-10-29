@@ -28,7 +28,7 @@ class FileIOTest:
     def __del__(self) -> None:
         os.unlink(self.fp)
 
-    def run(self):
+    def __call__(self):
         raise NotImplementedError()
 
 
@@ -40,13 +40,13 @@ class FileReadParquet(FileIOTest):
         super().__init__(fixture)
         self.fixture.to_parquet(self.fp)
 
-    def run(self):
+    def __call__(self):
         _ = sf.Frame.from_parquet(self.fp)
 
 class FileWriteParquet(FileIOTest):
     SUFFIX = '.parquet'
 
-    def run(self):
+    def __call__(self):
         self.fixture.to_parquet(self.fp)
 
 
@@ -60,20 +60,20 @@ class FileReadNPZ(FileIOTest):
         super().__init__(fixture)
         self.fixture.to_npz(self.fp)
 
-    def run(self):
+    def __call__(self):
         _ = sf.Frame.from_npz(self.fp)
 
 class FileWriteNPZ(FileIOTest):
     SUFFIX = '.npz'
 
-    def run(self):
+    def __call__(self):
         self.fixture.to_npz(self.fp)
 
 
 
 # class FileWriteNPZCompressed(FileIOTest):
 
-#     def run(self):
+#     def __call__(self):
 #         self.fixture.to_npz(self.fp, compress=True)
 
 
@@ -86,7 +86,7 @@ class FileReadPickle(FileIOTest):
         pickle.dump(self.fixture, self.file)
         self.file.close()
 
-    def run(self):
+    def __call__(self):
         with open(self.fp, 'rb') as f:
             _ = pickle.load(f)
 
@@ -102,7 +102,7 @@ class FileWritePickle(FileIOTest):
         super().__init__(fixture)
         self.file = open(self.fp, 'wb')
 
-    def run(self):
+    def __call__(self):
         pickle.dump(self.fixture, self.file)
 
     def __del__(self) -> None:
@@ -135,7 +135,7 @@ def get_format():
     return format
 
 
-def run_test():
+def __call___test():
     records = []
     for label, fixture in (
             ('wide', FF_wide),
@@ -155,7 +155,7 @@ def run_test():
             runner = cls(fixture)
             record = [cls.__name__, cls.NUMBER, label]
             result = timeit.timeit(
-                    f'runner.run()',
+                    f'runner()',
                     globals=locals(),
                     number=cls.NUMBER)
             record.append(result)
