@@ -1332,15 +1332,15 @@ class MessagePackElement:
 #-------------------------------------------------------------------------------
 
 class NPZConverter:
-    KEY_NAMES = '__names__'
-    KEY_TYPES = '__types__'
-    KEY_DEPTHS = '__depths__'
-    KEY_TYPES_INDEX = '__types_index__'
-    KEY_TYPES_COLUMNS = '__types_columns__'
+    KEY_NAMES = '__names__.json'
+    KEY_TYPES = '__types__.json'
+    KEY_DEPTHS = '__depths__.json'
+    KEY_TYPES_INDEX = '__types_index__.json'
+    KEY_TYPES_COLUMNS = '__types_columns__.json'
 
-    KEY_TEMPLATE_VALUES_INDEX = '__values_index_{}__'
-    KEY_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__'
-    KEY_TEMPLATE_BLOCKS = '__blocks_{}__'
+    KEY_TEMPLATE_VALUES_INDEX = '__values_index_{}__.npy'
+    KEY_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__.npy'
+    KEY_TEMPLATE_BLOCKS = '__blocks_{}__.npy'
 
     @staticmethod
     def _index_encode(
@@ -1422,9 +1422,18 @@ class NPZConverter:
         for i, b in enumerate(frame._blocks._blocks):
             to_npy[cls.KEY_TEMPLATE_BLOCKS.format(i)] = b
 
-        # TODO: create and write zip
+        # TODO: not tested
+        from json import dumps
+        with zipfile.ZipFile(fp, 'w', zipfile.ZIP_STORED) as zf:
+            for label, array in to_npy.values():
+                # this will write it without a container
+                b = BytesIO()
+                np.save(b, array, allow_pickle=True)
+                zf.writestr(label, b.getvalue())
+            for label, json_obj in to_json.values():
+                # this will write it without a container
+                zf.writestr(label, dumps(json_obj))
 
-        # np.savez(fp, **d)
 
     @staticmethod
     def _index_decode(*,
