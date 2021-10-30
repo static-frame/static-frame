@@ -9048,7 +9048,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
 
         with temp_file('.npz') as fp:
-            f1.to_npz(fp, compress=True)
+            f1.to_npz(fp)
             f2 = Frame.from_npz(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 

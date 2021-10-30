@@ -1350,18 +1350,21 @@ class NPZConverter:
             key_types: str,
             depth: int,
             include: bool,
-            ) -> tp.Dict[str, np.ndarray]:
-        d = {}
+            ) -> tp.Tuple[tp.Dict[str, np.ndarray], tp.Dict[str, tp.Any]]:
+
+        to_json = {}
+        to_npy = {}
+
         if depth == 1 and index._map is None: #type: ignore
             pass # do not store anything
         elif include:
             if depth == 1:
-                d[key_template_values.format(0)] = index.values
+                to_npy[key_template_values.format(0)] = index.values
             else:
                 for i in range(index.depth):
-                    d[key_template_values.format(i)] = index.values_at_depth(i)
-                d[key_types] = index.index_types.values
-        return d
+                    to_npy[key_template_values.format(i)] = index.values_at_depth(i)
+                to_json[key_types] = [cls.name for cls in index.index_types.values]
+        return to_npy, to_json
 
     @classmethod
     def to_npz(cls,
@@ -1370,54 +1373,58 @@ class NPZConverter:
             fp: PathSpecifier, # not sure file-like StringIO works
             include_index: bool = True,
             include_columns: bool = True,
-            compress: bool = False,
             ) -> None:
         '''
         Write a :obj:`Frame` as an npz file.
         '''
-        d = {}
-        d[cls.KEY_NAMES] = np.array(
-                [frame._name, frame._index._name, frame._columns._name],
-                dtype=DTYPE_OBJECT,
-                )
+        to_json = {}
+        to_npy = {}
+
+        to_json[cls.KEY_NAMES] = [frame._name,
+                frame._index._name,
+                frame._columns._name,
+                ]
         # do not store Frame class as caller will determine
-        d[cls.KEY_TYPES] = np.array(
-                [frame._index.__class__, frame._columns.__class__],
-                dtype=DTYPE_OBJECT,
-                )
+        to_json[cls.KEY_TYPES] = [
+                frame._index.__class__.__name__,
+                frame._columns.__class__.__name__,
+                ]
 
         # store shape, index depths
         depth_index = frame._index.depth
         depth_columns = frame._columns.depth
 
-        d[cls.KEY_DEPTHS] = np.array(
-                [len(frame._blocks._blocks), depth_index, depth_columns],
-                dtype=DTYPE_INT_DEFAULT,
-                )
+        to_json[cls.KEY_DEPTHS] = [
+                len(frame._blocks._blocks),
+                depth_index,
+                depth_columns]
 
-        d.update(cls._index_encode(
+        index_npy, index_json = cls._index_encode(
                 index=frame._index,
                 key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
                 key_types=cls.KEY_TYPES_INDEX,
                 depth=depth_index,
                 include=include_index,
-                ))
+                )
+        to_json.update(index_json)
+        to_npy.update(index_npy)
 
-        d.update(cls._index_encode(
+        columns_npy, columns_json = cls._index_encode(
                 index=frame._columns,
                 key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
                 key_types=cls.KEY_TYPES_COLUMNS,
                 depth=depth_columns,
                 include=include_columns,
-                ))
+                )
+        to_json.update(columns_json)
+        to_npy.update(columns_npy)
 
         for i, b in enumerate(frame._blocks._blocks):
-            d[cls.KEY_TEMPLATE_BLOCKS.format(i)] = b
+            to_npy[cls.KEY_TEMPLATE_BLOCKS.format(i)] = b
 
-        if compress:
-            np.savez_compressed(fp, **d)
-        else:
-            np.savez(fp, **d)
+        # TODO: create and write zip
+
+        # np.savez(fp, **d)
 
     @staticmethod
     def _index_decode(*,
@@ -1457,15 +1464,13 @@ class NPZConverter:
             *,
             constructor: tp.Type['Frame'],
             fp: PathSpecifier,
-            allow_pickle: bool = True,
-            mmap_mode: tp.Optional[str] = None,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an npz file.
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-        with np.load(fp, allow_pickle=allow_pickle, mmap_mode=mmap_mode) as npz_file:
+        with np.load(fp, allow_pickle=True) as npz_file:
             name, name_index, name_columns = npz_file[cls.KEY_NAMES]
             cls_index, cls_columns = npz_file[cls.KEY_TYPES]
             block_count, depth_index, depth_columns = npz_file[cls.KEY_DEPTHS]

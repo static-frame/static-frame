@@ -2235,9 +2235,6 @@ class Frame(ContainerOperand):
     @classmethod
     def from_npz(cls,
             fp: PathSpecifier,
-            *,
-            allow_pickle: bool = True,
-            mmap_mode: tp.Optional[str] = None,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an npz file.
@@ -2245,8 +2242,6 @@ class Frame(ContainerOperand):
         return NPZConverter.from_npz(
                 constructor=cls,
                 fp=fp,
-                allow_pickle=allow_pickle,
-                mmap_mode=mmap_mode,
                 )
 
 
@@ -7407,7 +7402,6 @@ class Frame(ContainerOperand):
             *,
             include_index: bool = True,
             include_columns: bool = True,
-            compress: bool = False,
             ) -> None:
         '''
         Write a :obj:`Frame` as an npz file.
@@ -7417,7 +7411,6 @@ class Frame(ContainerOperand):
                 fp=fp,
                 include_index=include_index,
                 include_columns=include_columns,
-                compress=compress,
                 )
 
 

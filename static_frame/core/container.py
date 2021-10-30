@@ -526,7 +526,8 @@ class ContainerOperand(ContainerBase):
 
 #-------------------------------------------------------------------------------
 def container_opperand_map() -> tp.Dict[str, tp.Type[ContainerOperand]]:
-
+    '''Return a mapping of ContainerOperand types, from name to cls. Note that other modules must be loaded before this returns usable results.
+    '''
     def collector() -> tp.Iterator[tp.Type[ContainerOperand]]:
         targets = deque((ContainerOperand,))
         while targets:
