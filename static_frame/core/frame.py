@@ -6831,6 +6831,7 @@ class Frame(ContainerOperand):
                 include_columns_name=include_columns_name,
                 )
         fp = path_filter(fp)
+        # NOTE:  compression='none' shown to not provide a clear performance improvement over the assumed default, 'snappy'
         pq.write_table(table, fp)
 
 
