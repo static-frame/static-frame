@@ -9,6 +9,9 @@ import datetime
 from fractions import Fraction
 import typing as tp
 from enum import Enum
+import zipfile
+from io import BytesIO
+import json
 
 import numpy as np
 from numpy import char as npc
@@ -46,7 +49,6 @@ from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import DTYPE_INT_DEFAULT
-
 from static_frame.core.exception import AxisInvalid
 
 if tp.TYPE_CHECKING:
@@ -59,7 +61,53 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
 
+
+
+class ContainerMap:
+
+    _map: tp.Optional[tp.Dict[str, tp.Type['ContainerOperand']]] = None
+
+    @classmethod
+    def _update_map(cls) -> None:
+        from static_frame.core.frame import Frame
+        from static_frame.core.frame import FrameGO
+        from static_frame.core.frame import FrameHE
+        from static_frame.core.series import Series
+        from static_frame.core.series import SeriesHE
+        from static_frame.core.index import Index
+        from static_frame.core.index import IndexGO
+        from static_frame.core.index_hierarchy import IndexHierarchy
+        from static_frame.core.index_hierarchy import IndexHierarchyGO
+        from static_frame.core.index_datetime import IndexDate
+        from static_frame.core.index_datetime import IndexDateGO
+        from static_frame.core.index_datetime import IndexYear
+        from static_frame.core.index_datetime import IndexYearGO
+        from static_frame.core.index_datetime import IndexYearMonth
+        from static_frame.core.index_datetime import IndexYearMonthGO
+        from static_frame.core.index_datetime import IndexMinute
+        from static_frame.core.index_datetime import IndexMinuteGO
+        from static_frame.core.index_datetime import IndexSecond
+        from static_frame.core.index_datetime import IndexSecondGO
+        from static_frame.core.index_datetime import IndexMillisecond
+        from static_frame.core.index_datetime import IndexMillisecondGO
+        from static_frame.core.index_datetime import IndexMicrosecond
+        from static_frame.core.index_datetime import IndexMicrosecondGO
+        from static_frame.core.index_datetime import IndexNanosecond
+        from static_frame.core.index_datetime import IndexNanosecondGO
+
+        cls._map = {k: v for k, v in locals().items() if v is not cls}
+
+    # @staticmethod
+    # def cls_to_str(cls: tp.Type['ContainerOperand']) -> str:
+    #     return
+
+    @classmethod
+    def str_to_cls(cls, name: str) -> tp.Type['ContainerOperand']:
+        if cls._map is None:
+            cls._update_map()
+        return cls._map[name]
 
 
 def get_col_dtype_factory(
@@ -1332,11 +1380,12 @@ class MessagePackElement:
 #-------------------------------------------------------------------------------
 
 class NPZConverter:
-    KEY_NAMES = '__names__.json'
-    KEY_TYPES = '__types__.json'
-    KEY_DEPTHS = '__depths__.json'
-    KEY_TYPES_INDEX = '__types_index__.json'
-    KEY_TYPES_COLUMNS = '__types_columns__.json'
+    FILE_META = '__meta__.json'
+    KEY_NAMES = '__names__'
+    KEY_TYPES = '__types__'
+    KEY_DEPTHS = '__depths__'
+    KEY_TYPES_INDEX = '__types_index__'
+    KEY_TYPES_COLUMNS = '__types_columns__'
 
     KEY_TEMPLATE_VALUES_INDEX = '__values_index_{}__.npy'
     KEY_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__.npy'
@@ -1345,26 +1394,28 @@ class NPZConverter:
     @staticmethod
     def _index_encode(
             *,
+            payload_json: tp.Dict[str, tp.Hashable],
+            payload_npy: tp.Dict[str, np.ndarray],
             index: 'IndexBase',
             key_template_values: str,
             key_types: str,
             depth: int,
             include: bool,
-            ) -> tp.Tuple[tp.Dict[str, np.ndarray], tp.Dict[str, tp.Any]]:
-
-        to_json = {}
-        to_npy = {}
-
+            ) -> None:
+        '''
+        Args:
+            payload_json: mutates in place with json components
+            payload_npy: mutates in place with npy components
+        '''
         if depth == 1 and index._map is None: #type: ignore
             pass # do not store anything
         elif include:
             if depth == 1:
-                to_npy[key_template_values.format(0)] = index.values
+                payload_npy[key_template_values.format(0)] = index.values
             else:
-                for i in range(index.depth):
-                    to_npy[key_template_values.format(i)] = index.values_at_depth(i)
-                to_json[key_types] = [cls.name for cls in index.index_types.values]
-        return to_npy, to_json
+                for i in range(depth):
+                    payload_npy[key_template_values.format(i)] = index.values_at_depth(i)
+                payload_json[key_types] = [cls.__name__ for cls in index.index_types.values]
 
     @classmethod
     def to_npz(cls,
@@ -1373,19 +1424,20 @@ class NPZConverter:
             fp: PathSpecifier, # not sure file-like StringIO works
             include_index: bool = True,
             include_columns: bool = True,
+            allow_pickle: bool = True,
             ) -> None:
         '''
         Write a :obj:`Frame` as an npz file.
         '''
-        to_json = {}
-        to_npy = {}
+        payload_json = {}
+        payload_npy = {}
 
-        to_json[cls.KEY_NAMES] = [frame._name,
+        payload_json[cls.KEY_NAMES] = [frame._name,
                 frame._index._name,
                 frame._columns._name,
                 ]
         # do not store Frame class as caller will determine
-        to_json[cls.KEY_TYPES] = [
+        payload_json[cls.KEY_TYPES] = [
                 frame._index.__class__.__name__,
                 frame._columns.__class__.__name__,
                 ]
@@ -1394,50 +1446,55 @@ class NPZConverter:
         depth_index = frame._index.depth
         depth_columns = frame._columns.depth
 
-        to_json[cls.KEY_DEPTHS] = [
+        payload_json[cls.KEY_DEPTHS] = [
                 len(frame._blocks._blocks),
                 depth_index,
                 depth_columns]
 
-        index_npy, index_json = cls._index_encode(
+        cls._index_encode(
+                payload_json=payload_json,
+                payload_npy=payload_npy,
                 index=frame._index,
                 key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
                 key_types=cls.KEY_TYPES_INDEX,
                 depth=depth_index,
                 include=include_index,
                 )
-        to_json.update(index_json)
-        to_npy.update(index_npy)
 
-        columns_npy, columns_json = cls._index_encode(
+        cls._index_encode(
+                payload_json=payload_json,
+                payload_npy=payload_npy,
                 index=frame._columns,
                 key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
                 key_types=cls.KEY_TYPES_COLUMNS,
                 depth=depth_columns,
                 include=include_columns,
                 )
-        to_json.update(columns_json)
-        to_npy.update(columns_npy)
 
-        for i, b in enumerate(frame._blocks._blocks):
-            to_npy[cls.KEY_TEMPLATE_BLOCKS.format(i)] = b
-
-        # TODO: not tested
-        from json import dumps
         with zipfile.ZipFile(fp, 'w', zipfile.ZIP_STORED) as zf:
-            for label, array in to_npy.values():
-                # this will write it without a container
-                b = BytesIO()
-                np.save(b, array, allow_pickle=True)
-                zf.writestr(label, b.getvalue())
-            for label, json_obj in to_json.values():
-                # this will write it without a container
-                zf.writestr(label, dumps(json_obj))
+            for label, array in payload_npy.items():
+                bio = BytesIO()
+                np.save(bio, array, allow_pickle=allow_pickle)
+                zf.writestr(label, bio.getvalue())
 
+            for i, array in enumerate(frame._blocks._blocks):
+                bio = BytesIO()
+                np.save(bio, array, allow_pickle=allow_pickle)
+                label = cls.KEY_TEMPLATE_BLOCKS.format(i)
+                zf.writestr(label, bio.getvalue())
 
+            zf.writestr(cls.FILE_META, json.dumps(payload_json))
+
+# bytes = self.zip.open(key)
+# return format.read_array(bytes,
+#                                          allow_pickle=self.allow_pickle,
+#                                          pickle_kwargs=self.pickle_kwargs)
     @staticmethod
     def _index_decode(*,
-            npz_file: np.lib.npyio.NpzFile,
+            zf: zipfile.ZipFile,
+            zf_labels: tp.FrozenSet[str],
+            allow_pickle: bool,
+            payload_json: tp.Dict[str, tp.Any],
             key_template_values: str,
             key_types: str,
             depth: int,
@@ -1447,24 +1504,34 @@ class NPZConverter:
         '''Build index or columns.
         '''
         from static_frame.core.type_blocks import TypeBlocks
+        from numpy.lib.format import read_array
 
-        if key_template_values.format(0) not in npz_file:
+        if key_template_values.format(0) not in zf_labels:
             index = None
         elif depth == 1:
-            values_index = npz_file[key_template_values.format(0)]
+            bio = zf.open(key_template_values.format(0))
+            values_index = read_array(bio,
+                    allow_pickle=allow_pickle,
+                    )
             values_index.flags.writeable = False
             index = cls_index(values_index, name=name)
         else:
             def blocks() -> tp.Iterator[np.ndarray]:
                 for i in range(depth):
-                    array = npz_file[key_template_values.format(i)]
+                    bio = zf.open(key_template_values.format(i))
+                    array = read_array(bio,
+                            allow_pickle=allow_pickle,
+                            )
                     array.flags.writeable = False
                     yield array
 
             index_tb = TypeBlocks.from_blocks(blocks())
+            index_constructors = [ContainerMap.str_to_cls(name)
+                    for name in payload_json[key_types]]
+
             index = cls_index._from_type_blocks(index_tb, #type: ignore
                     name=name,
-                    index_constructors=npz_file[key_types],
+                    index_constructors=index_constructors,
                     )
         return index
 
@@ -1473,19 +1540,28 @@ class NPZConverter:
             *,
             constructor: tp.Type['Frame'],
             fp: PathSpecifier,
+            allow_pickle: bool = True,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an npz file.
         '''
         from static_frame.core.type_blocks import TypeBlocks
+        from numpy.lib.format import read_array
 
-        with np.load(fp, allow_pickle=True) as npz_file:
-            name, name_index, name_columns = npz_file[cls.KEY_NAMES]
-            cls_index, cls_columns = npz_file[cls.KEY_TYPES]
-            block_count, depth_index, depth_columns = npz_file[cls.KEY_DEPTHS]
+        with zipfile.ZipFile(fp) as zf:
+            zf_labels = frozenset(zf.namelist())
+
+            payload_json = json.loads(zf.read(cls.FILE_META))
+            name, name_index, name_columns = payload_json[cls.KEY_NAMES]
+            block_count, depth_index, depth_columns = payload_json[cls.KEY_DEPTHS]
+            cls_index, cls_columns = (ContainerMap.str_to_cls(name)
+                    for name in payload_json[cls.KEY_TYPES])
 
             index = cls._index_decode(
-                    npz_file=npz_file,
+                    zf=zf,
+                    zf_labels=zf_labels,
+                    allow_pickle=allow_pickle,
+                    payload_json=payload_json,
                     key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
                     key_types=cls.KEY_TYPES_INDEX,
                     depth=depth_index,
@@ -1494,7 +1570,10 @@ class NPZConverter:
                     )
 
             columns = cls._index_decode(
-                    npz_file=npz_file,
+                    zf=zf,
+                    zf_labels=zf_labels,
+                    allow_pickle=allow_pickle,
+                    payload_json=payload_json,
                     key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
                     key_types=cls.KEY_TYPES_COLUMNS,
                     depth=depth_columns,
@@ -1504,7 +1583,8 @@ class NPZConverter:
 
             def blocks() -> tp.Iterator[np.ndarray]:
                 for i in range(block_count):
-                    array = npz_file[cls.KEY_TEMPLATE_BLOCKS.format(i)]
+                    bio = zf.open(cls.KEY_TEMPLATE_BLOCKS.format(i))
+                    array = read_array(bio, allow_pickle=allow_pickle)
                     array.flags.writeable = False
                     yield array
 

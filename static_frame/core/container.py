@@ -525,6 +525,8 @@ class ContainerOperand(ContainerBase):
 
 
 #-------------------------------------------------------------------------------
+# TODO: replace usage with ContainerMap; use this in a test to validate
+
 def container_opperand_map() -> tp.Dict[str, tp.Type[ContainerOperand]]:
     '''Return a mapping of ContainerOperand types, from name to cls. Note that other modules must be loaded before this returns usable results.
     '''

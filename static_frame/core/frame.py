@@ -2242,6 +2242,7 @@ class Frame(ContainerOperand):
         return NPZConverter.from_npz(
                 constructor=cls,
                 fp=fp,
+                allow_pickle=False,
                 )
 
 
@@ -7411,6 +7412,7 @@ class Frame(ContainerOperand):
                 fp=fp,
                 include_index=include_index,
                 include_columns=include_columns,
+                allow_pickle=False,
                 )
 
 
