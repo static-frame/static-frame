@@ -135,7 +135,7 @@ def get_format():
     return format
 
 
-def __call___test():
+def run_test():
     records = []
     for label, fixture in (
             ('wide', FF_wide),

@@ -1473,22 +1473,16 @@ class NPZConverter:
 
         with zipfile.ZipFile(fp, 'w', zipfile.ZIP_STORED) as zf:
             for label, array in payload_npy.items():
-                bio = BytesIO()
+                bio = zf.open(label, 'w')
                 np.save(bio, array, allow_pickle=allow_pickle)
-                zf.writestr(label, bio.getvalue())
-
+                bio.close()
             for i, array in enumerate(frame._blocks._blocks):
-                bio = BytesIO()
-                np.save(bio, array, allow_pickle=allow_pickle)
                 label = cls.KEY_TEMPLATE_BLOCKS.format(i)
-                zf.writestr(label, bio.getvalue())
-
+                bio = zf.open(label, 'w')
+                np.save(bio, array, allow_pickle=allow_pickle)
+                bio.close()
             zf.writestr(cls.FILE_META, json.dumps(payload_json))
 
-# bytes = self.zip.open(key)
-# return format.read_array(bytes,
-#                                          allow_pickle=self.allow_pickle,
-#                                          pickle_kwargs=self.pickle_kwargs)
     @staticmethod
     def _index_decode(*,
             zf: zipfile.ZipFile,
