@@ -107,7 +107,7 @@ class ContainerMap:
     def str_to_cls(cls, name: str) -> tp.Type['ContainerOperand']:
         if cls._map is None:
             cls._update_map()
-        return cls._map[name]
+        return cls._map[name] #type: ignore
 
 
 def get_col_dtype_factory(
@@ -1415,7 +1415,7 @@ class NPZConverter:
             else:
                 for i in range(depth):
                     payload_npy[key_template_values.format(i)] = index.values_at_depth(i)
-                payload_json[key_types] = [cls.__name__ for cls in index.index_types.values]
+                payload_json[key_types] = [cls.__name__ for cls in index.index_types.values] # type: ignore
 
     @classmethod
     def to_npz(cls,
@@ -1429,8 +1429,8 @@ class NPZConverter:
         '''
         Write a :obj:`Frame` as an npz file.
         '''
-        payload_json = {}
-        payload_npy = {}
+        payload_json: tp.Dict[str, tp.Any] = {}
+        payload_npy: tp.Dict[str, np.ndarray] = {}
 
         payload_json[cls.KEY_NAMES] = [frame._name,
                 frame._index._name,
@@ -1498,7 +1498,7 @@ class NPZConverter:
         '''Build index or columns.
         '''
         from static_frame.core.type_blocks import TypeBlocks
-        from numpy.lib.format import read_array
+        from numpy.lib.format import read_array #type: ignore
 
         if key_template_values.format(0) not in zf_labels:
             index = None
