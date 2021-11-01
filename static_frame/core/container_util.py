@@ -10,11 +10,13 @@ from fractions import Fraction
 import typing as tp
 from enum import Enum
 import zipfile
-from io import BytesIO
 import json
 
 import numpy as np
 from numpy import char as npc
+from numpy.lib.format import read_array
+
+
 from arraykit import column_2d_filter
 
 from static_frame.core.index_base import IndexBase
@@ -48,7 +50,6 @@ from static_frame.core.util import BOOL_TYPES
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 from static_frame.core.util import PathSpecifier
-from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.exception import AxisInvalid
 
 if tp.TYPE_CHECKING:
@@ -107,7 +108,7 @@ class ContainerMap:
     def str_to_cls(cls, name: str) -> tp.Type['ContainerOperand']:
         if cls._map is None:
             cls._update_map()
-        return cls._map[name] #type: ignore
+        return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
 
 
 def get_col_dtype_factory(
@@ -1498,7 +1499,6 @@ class NPZConverter:
         '''Build index or columns.
         '''
         from static_frame.core.type_blocks import TypeBlocks
-        from numpy.lib.format import read_array #type: ignore
 
         if key_template_values.format(0) not in zf_labels:
             index = None
@@ -1540,7 +1540,6 @@ class NPZConverter:
         Create a :obj:`Frame` from an npz file.
         '''
         from static_frame.core.type_blocks import TypeBlocks
-        from numpy.lib.format import read_array
 
         with zipfile.ZipFile(fp) as zf:
             zf_labels = frozenset(zf.namelist())
