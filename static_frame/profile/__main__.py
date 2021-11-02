@@ -900,6 +900,82 @@ class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
     def int_index_str(self) -> None:
         pass
 
+#-------------------------------------------------------------------------------
+class FrameToParquet(Perf):
+    NUMBER = 4
+
+    def __init__(self) -> None:
+        super().__init__()
+        _, self.fp = tempfile.mkstemp(suffix='.zip')
+
+        self.sff1 = ff.parse('s(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,str)')
+        self.pdf1 = self.sff1.to_pandas()
+
+        self.sff2 = ff.parse('s(10_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,str)')
+        self.pdf2 = self.sff2.to_pandas()
+
+
+        # self.meta = {
+        #     'int_index_str_double': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=TypeBlocks._all_block_slices
+        #         ),
+        #     }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp)
+
+class FrameToParquet_N(FrameToParquet, Native):
+
+    def write_wide_mixed_index_str(self) -> None:
+        self.sff1.to_parquet(self.fp)
+
+    def write_tall_mixed_index_str(self) -> None:
+        self.sff2.to_parquet(self.fp)
+
+
+class FrameToParquet_R(FrameToParquet, Reference):
+
+    def write_wide_mixed_index_str(self) -> None:
+        self.pdf1.to_parquet(self.fp)
+
+    def write_tall_mixed_index_str(self) -> None:
+        self.pdf2.to_parquet(self.fp)
+
+
+
+#-------------------------------------------------------------------------------
+class FrameToNPZ(Perf):
+    NUMBER = 1
+
+    def __init__(self) -> None:
+        super().__init__()
+        _, self.fp = tempfile.mkstemp(suffix='.zip')
+
+        self.sff1 = ff.parse('s(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,str)')
+        self.pdf1 = self.sff1.to_pandas()
+
+
+        # self.meta = {
+        #     'int_index_str_double': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=TypeBlocks._all_block_slices
+        #         ),
+        #     }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp)
+
+class FrameToNPZ_N(FrameToNPZ, Native):
+
+    def wide_mixed_index_str(self) -> None:
+        self.sff1.to_npz(self.fp)
+
+class FrameToNPZ_R(FrameToNPZ, Reference):
+
+    # NOTE: benchmark is SF to_parquet
+    def wide_mixed_index_str(self) -> None:
+        self.sff1.to_parquet(self.fp)
 
 #-------------------------------------------------------------------------------
 class Group(Perf):

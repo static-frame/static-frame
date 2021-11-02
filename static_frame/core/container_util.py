@@ -15,6 +15,7 @@ import json
 import numpy as np
 from numpy import char as npc
 from numpy.lib.format import read_array
+from numpy.lib.format import write_array
 
 
 from arraykit import column_2d_filter
