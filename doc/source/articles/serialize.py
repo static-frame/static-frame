@@ -41,7 +41,8 @@ class FileReadParquet(FileIOTest):
         self.fixture.to_parquet(self.fp)
 
     def __call__(self):
-        _ = sf.Frame.from_parquet(self.fp)
+        f = sf.Frame.from_parquet(self.fp, index_depth=1)
+        _ = f.loc['zkuW', '91301']
 
 class FileWriteParquet(FileIOTest):
     SUFFIX = '.parquet'
@@ -56,12 +57,16 @@ class FileReadNPZ(FileIOTest):
 
     # NOTE: must write a file with NPZ
 
+
+
     def __init__(self, fixture: str):
         super().__init__(fixture)
         self.fixture.to_npz(self.fp)
 
     def __call__(self):
-        _ = sf.Frame.from_npz(self.fp)
+        f = sf.Frame.from_npz(self.fp)
+        _ = f.loc['zkuW', 91301]
+
 
 class FileWriteNPZ(FileIOTest):
     SUFFIX = '.npz'
@@ -88,7 +93,9 @@ class FileReadPickle(FileIOTest):
 
     def __call__(self):
         with open(self.fp, 'rb') as f:
-            _ = pickle.load(f)
+            f = pickle.load(f)
+            _ = f.loc['zkuW', 91301]
+
 
     def __del__(self) -> None:
         self.file.close()
