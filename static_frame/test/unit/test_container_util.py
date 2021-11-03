@@ -18,6 +18,7 @@ from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import apply_binary_operator_blocks_columnar
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
+from static_frame.core.container_util import NPYConverter
 
 from static_frame.core.frame import FrameHE
 
@@ -719,17 +720,27 @@ class TestUnit(TestCase):
             self.assertTrue((a1 == a2).all())
 
 
-#     def test_from_npy_a(self) -> None:
-#         from static_frame.core.container_util import NPYConverter
-#         a1 = np.arange(20)
+    def test_from_npy_a(self) -> None:
+        a1 = np.arange(20)
 
-#         with temp_file('.npy') as fp:
-#             with open(fp, 'wb') as f:
-#                 NPYConverter.to_npy(f, a1)
-#             with open(fp, 'rb') as f:
-#                 a2 = NPYConverter.from_npy(f)
-#             self.assertTrue((a1 == a2).all())
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                NPYConverter.to_npy(f, a1)
+            with open(fp, 'rb') as f:
+                a2 = NPYConverter.from_npy(f)
+            self.assertTrue((a1 == a2).all())
 
+    def test_from_npy_b(self) -> None:
+        a1 = np.arange(100).reshape(5, 20)
+
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                NPYConverter.to_npy(f, a1)
+            with open(fp, 'rb') as f:
+                a2 = NPYConverter.from_npy(f)
+
+            self.assertTrue(a1.shape == a2.shape)
+            self.assertTrue((a1 == a2).all())
 
 
 

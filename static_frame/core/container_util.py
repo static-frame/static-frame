@@ -16,9 +16,6 @@ from ast import literal_eval
 
 import numpy as np
 from numpy import char as npc
-from numpy.lib.format import read_array
-
-
 from arraykit import column_2d_filter
 
 from static_frame.core.index_base import IndexBase
@@ -52,6 +49,8 @@ from static_frame.core.util import BOOL_TYPES
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import DTYPE_OBJECT_KIND
+
 from static_frame.core.exception import AxisInvalid
 
 if tp.TYPE_CHECKING:
@@ -1392,7 +1391,7 @@ class NPYConverter:
     STRUCT_FMT = '<I'
 
     @classmethod
-    def _encode_header(cls, header: str) -> bytes:
+    def _header_encode(cls, header: str) -> bytes:
         '''
         Takes a string header, and attaches the prefix and padding to it.
         This is hard-coded to only use Version 3.0
@@ -1412,14 +1411,14 @@ class NPYConverter:
     def to_npy(cls, file: tp.IO[bytes], array: np.ndarray):
         '''Write an NPY 3.0 file to the open, writeable, binary file given by ``file``.
         '''
-        if array.dtype == DTYPE_OBJECT:
+        if array.dtype.kind == DTYPE_OBJECT_KIND:
             raise ValueError('no support for object dtypes')
 
         flags = array.flags
         fortran_order = True if flags.f_contiguous else False
 
         header = f'{{"descr":"{array.dtype.str}","fortran_order":{fortran_order},"shape":{array.shape}}}'
-        file.write(cls._encode_header(header))
+        file.write(cls._header_encode(header))
 
         if flags.f_contiguous and not flags.c_contiguous:
             file.write(array.T.tobytes())
@@ -1427,24 +1426,48 @@ class NPYConverter:
             file.write(array.tobytes())
 
     @classmethod
-    def _decode_header(cls,
+    def _header_decode(cls,
             file: tp.IO[bytes],
-            ) -> tp.ValuesView[tp.Any]:
+            ) -> tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]:
         '''Extract and decode the header.
         '''
         length_size = file.read(struct.calcsize(cls.STRUCT_FMT))
         length_header = struct.unpack(cls.STRUCT_FMT, length_size)[0]
         header = file.read(length_header).decode('utf8')
-        return literal_eval(header).values()
+        dtype_str, fortran_order, shape = literal_eval(header).values()
+        return np.dtype(dtype_str), fortran_order, shape
 
     @classmethod
     def from_npy(cls, file: tp.IO[bytes]) -> np.ndarray:
         '''Read an NPY 3.0 file.
         '''
-        _ = file.read(cls.MAGIC_LEN)
+        if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
+            raise ValueError('Invalud NPY header found.')
 
-        dtype, fortran_order, shape = cls._decode_header(file)
-        # import ipdb; ipdb.set_trace()
+        dtype, fortran_order, shape = cls._header_decode(file)
+        if dtype.kind == DTYPE_OBJECT_KIND:
+            raise ValueError('no support for object dtypes')
+
+        ndim = len(shape)
+        if ndim == 0:
+            size = 1
+        elif ndim == 1:
+            size = shape[0]
+        elif ndim == 2:
+            size = shape[0] * shape[1]
+        else:
+            raise ValueError(f'No support for {ndim}-dimensional arrays')
+
+        # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
+        # NOTE: np.frombuffer produces a read-only view on the existing data
+        array = np.frombuffer(file.read(size * dtype.itemsize), dtype=dtype)
+
+        if fortran_order and ndim == 2:
+            array.shape = shape[::-1]
+            array = array.transpose()
+        else:
+            array.shape = shape
+        return array
 
 
 class NPZConverter:
@@ -1573,18 +1596,14 @@ class NPZConverter:
             index = None
         elif depth == 1:
             bio = zf.open(key_template_values.format(0))
-            values_index = read_array(bio,
-                    allow_pickle=allow_pickle,
-                    )
+            values_index = NPYConverter.from_npy(bio)
             values_index.flags.writeable = False
             index = cls_index(values_index, name=name)
         else:
             def blocks() -> tp.Iterator[np.ndarray]:
                 for i in range(depth):
                     bio = zf.open(key_template_values.format(i))
-                    array = read_array(bio,
-                            allow_pickle=allow_pickle,
-                            )
+                    array = NPYConverter.from_npy(bio)
                     array.flags.writeable = False
                     yield array
 
@@ -1646,7 +1665,7 @@ class NPZConverter:
             def blocks() -> tp.Iterator[np.ndarray]:
                 for i in range(block_count):
                     bio = zf.open(cls.KEY_TEMPLATE_BLOCKS.format(i))
-                    array = read_array(bio, allow_pickle=allow_pickle)
+                    array = NPYConverter.from_npy(bio)
                     array.flags.writeable = False
                     yield array
 
