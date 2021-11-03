@@ -11,6 +11,7 @@ import typing as tp
 from enum import Enum
 import zipfile
 import json
+import struct
 
 import numpy as np
 from numpy import char as npc
@@ -1381,6 +1382,54 @@ class MessagePackElement:
 
 #-------------------------------------------------------------------------------
 
+class NPYConverter:
+    '''Optimized implementation based on numpy/lib/format.py
+    '''
+    # BUFFER_SIZE_NUMERATOR = 16 * 1024 ** 2
+    MAGIC_PREFIX = b'\x93NUMPY' + bytes((3, 0)) # version 3.0
+    MAGIC_LEN = len(MAGIC_PREFIX)
+    ARRAY_ALIGN = 64
+    STRUCT_FMT = '<I'
+
+    @classmethod
+    def _encode_header(cls, header):
+        '''
+        Takes a string header, and attaches the prefix and padding to it.
+        This is hard-coded to only use Version 3.0
+        '''
+        header = header.encode('utf8')
+        hlen = len(header) + 1
+
+        padlen = cls.ARRAY_ALIGN - (
+               (cls.MAGIC_LEN + struct.calcsize(cls.STRUCT_FMT) + hlen) % cls.ARRAY_ALIGN
+               )
+        prefix = cls.MAGIC_PREFIX + struct.pack(cls.STRUCT_FMT, hlen + padlen)
+        postfix = b' ' * padlen + b'\n'
+
+        return prefix + header + postfix
+
+
+    @classmethod
+    def to_npy(cls, file: tp.IO[bytes], array: np.ndarray):
+        '''Write an NPY 3.0 file to the open, writeable, binary file given by ``file``.
+        '''
+        if array.dtype == DTYPE_OBJECT:
+            raise ValueError('no support for object dtypes')
+
+        flags = array.flags
+        fortran_order = True if flags.f_contiguous else False
+
+        header = f'{{"descr":"{array.dtype.str}","fortran_order":{fortran_order},"shape":{array.shape}}}'
+        file.write(cls._encode_header(header))
+
+        # buffersize = 0 if array.itemsize == 0 else max(cls.BUFFER_SIZE_NUMERATOR // array.itemsize, 1)
+
+        if flags.f_contiguous and not flags.c_contiguous:
+            file.write(array.T.tobytes())
+        else:
+            file.write(array.tobytes())
+
+
 class NPZConverter:
     FILE_META = '__meta__.json'
     KEY_NAMES = '__names__'
@@ -1476,12 +1525,14 @@ class NPZConverter:
         with zipfile.ZipFile(fp, 'w', zipfile.ZIP_STORED) as zf:
             for label, array in payload_npy.items():
                 bio = zf.open(label, 'w')
-                np.save(bio, array, allow_pickle=allow_pickle)
+                # np.save(bio, array, allow_pickle=allow_pickle)
+                NPYConverter.to_npy(bio, array)
                 bio.close()
             for i, array in enumerate(frame._blocks._blocks):
                 label = cls.KEY_TEMPLATE_BLOCKS.format(i)
                 bio = zf.open(label, 'w')
-                np.save(bio, array, allow_pickle=allow_pickle)
+                NPYConverter.to_npy(bio, array)
+                # np.save(bio, array, allow_pickle=allow_pickle)
                 bio.close()
             zf.writestr(cls.FILE_META, json.dumps(payload_json))
 

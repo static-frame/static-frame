@@ -23,6 +23,7 @@ from static_frame.core.frame import FrameHE
 
 
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 from static_frame.core.exception import AxisInvalid
 
@@ -705,6 +706,17 @@ class TestUnit(TestCase):
         self.assertEqual([a.shape for a in stack],
                 [(2, 1)])
 
+    #---------------------------------------------------------------------------
+    def test_to_npy_a(self) -> None:
+        from static_frame.core.container_util import NPYConverter
+        a1 = np.arange(20)
+
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                NPYConverter.to_npy(f, a1)
+
+            a2 = np.load(fp)
+            self.assertTrue((a1 == a2).all())
 
 
 if __name__ == '__main__':
