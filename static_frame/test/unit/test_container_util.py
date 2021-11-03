@@ -719,5 +719,19 @@ class TestUnit(TestCase):
             self.assertTrue((a1 == a2).all())
 
 
+#     def test_from_npy_a(self) -> None:
+#         from static_frame.core.container_util import NPYConverter
+#         a1 = np.arange(20)
+
+#         with temp_file('.npy') as fp:
+#             with open(fp, 'wb') as f:
+#                 NPYConverter.to_npy(f, a1)
+#             with open(fp, 'rb') as f:
+#                 a2 = NPYConverter.from_npy(f)
+#             self.assertTrue((a1 == a2).all())
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

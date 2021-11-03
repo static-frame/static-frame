@@ -12,11 +12,11 @@ from enum import Enum
 import zipfile
 import json
 import struct
+from ast import literal_eval
 
 import numpy as np
 from numpy import char as npc
 from numpy.lib.format import read_array
-from numpy.lib.format import write_array
 
 
 from arraykit import column_2d_filter
@@ -1392,7 +1392,7 @@ class NPYConverter:
     STRUCT_FMT = '<I'
 
     @classmethod
-    def _encode_header(cls, header):
+    def _encode_header(cls, header: str) -> bytes:
         '''
         Takes a string header, and attaches the prefix and padding to it.
         This is hard-coded to only use Version 3.0
@@ -1408,7 +1408,6 @@ class NPYConverter:
 
         return prefix + header + postfix
 
-
     @classmethod
     def to_npy(cls, file: tp.IO[bytes], array: np.ndarray):
         '''Write an NPY 3.0 file to the open, writeable, binary file given by ``file``.
@@ -1422,12 +1421,30 @@ class NPYConverter:
         header = f'{{"descr":"{array.dtype.str}","fortran_order":{fortran_order},"shape":{array.shape}}}'
         file.write(cls._encode_header(header))
 
-        # buffersize = 0 if array.itemsize == 0 else max(cls.BUFFER_SIZE_NUMERATOR // array.itemsize, 1)
-
         if flags.f_contiguous and not flags.c_contiguous:
             file.write(array.T.tobytes())
         else:
             file.write(array.tobytes())
+
+    @classmethod
+    def _decode_header(cls,
+            file: tp.IO[bytes],
+            ) -> tp.ValuesView[tp.Any]:
+        '''Extract and decode the header.
+        '''
+        length_size = file.read(struct.calcsize(cls.STRUCT_FMT))
+        length_header = struct.unpack(cls.STRUCT_FMT, length_size)[0]
+        header = file.read(length_header).decode('utf8')
+        return literal_eval(header).values()
+
+    @classmethod
+    def from_npy(cls, file: tp.IO[bytes]) -> np.ndarray:
+        '''Read an NPY 3.0 file.
+        '''
+        _ = file.read(cls.MAGIC_LEN)
+
+        dtype, fortran_order, shape = cls._decode_header(file)
+        # import ipdb; ipdb.set_trace()
 
 
 class NPZConverter:
