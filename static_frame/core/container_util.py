@@ -1389,6 +1389,7 @@ class NPYConverter:
     MAGIC_LEN = len(MAGIC_PREFIX)
     ARRAY_ALIGN = 64
     STRUCT_FMT = '<I'
+    STRUCT_FMT_SIZE = struct.calcsize(STRUCT_FMT)
 
     @classmethod
     def _header_encode(cls, header: str) -> bytes:
@@ -1400,7 +1401,7 @@ class NPYConverter:
         hlen = len(header) + 1
 
         padlen = cls.ARRAY_ALIGN - (
-               (cls.MAGIC_LEN + struct.calcsize(cls.STRUCT_FMT) + hlen) % cls.ARRAY_ALIGN
+               (cls.MAGIC_LEN + cls.STRUCT_FMT_SIZE + hlen) % cls.ARRAY_ALIGN
                )
         prefix = cls.MAGIC_PREFIX + struct.pack(cls.STRUCT_FMT, hlen + padlen)
         postfix = b' ' * padlen + b'\n'
@@ -1431,7 +1432,7 @@ class NPYConverter:
             ) -> tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]:
         '''Extract and decode the header.
         '''
-        length_size = file.read(struct.calcsize(cls.STRUCT_FMT))
+        length_size = file.read(cls.STRUCT_FMT_SIZE)
         length_header = struct.unpack(cls.STRUCT_FMT, length_size)[0]
         header = file.read(length_header).decode('utf8')
         dtype_str, fortran_order, shape = literal_eval(header).values()
@@ -1515,7 +1516,6 @@ class NPZConverter:
             fp: PathSpecifier, # not sure file-like StringIO works
             include_index: bool = True,
             include_columns: bool = True,
-            allow_pickle: bool = True,
             ) -> None:
         '''
         Write a :obj:`Frame` as an npz file.
@@ -1565,14 +1565,12 @@ class NPZConverter:
         with zipfile.ZipFile(fp, 'w', zipfile.ZIP_STORED) as zf:
             for label, array in payload_npy.items():
                 bio = zf.open(label, 'w')
-                # np.save(bio, array, allow_pickle=allow_pickle)
                 NPYConverter.to_npy(bio, array)
                 bio.close()
             for i, array in enumerate(frame._blocks._blocks):
                 label = cls.KEY_TEMPLATE_BLOCKS.format(i)
                 bio = zf.open(label, 'w')
                 NPYConverter.to_npy(bio, array)
-                # np.save(bio, array, allow_pickle=allow_pickle)
                 bio.close()
             zf.writestr(cls.FILE_META, json.dumps(payload_json))
 
@@ -1580,7 +1578,6 @@ class NPZConverter:
     def _index_decode(*,
             zf: zipfile.ZipFile,
             zf_labels: tp.FrozenSet[str],
-            allow_pickle: bool,
             payload_json: tp.Dict[str, tp.Any],
             key_template_values: str,
             key_types: str,
@@ -1622,7 +1619,6 @@ class NPZConverter:
             *,
             constructor: tp.Type['Frame'],
             fp: PathSpecifier,
-            allow_pickle: bool = True,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an npz file.
@@ -1641,7 +1637,6 @@ class NPZConverter:
             index = cls._index_decode(
                     zf=zf,
                     zf_labels=zf_labels,
-                    allow_pickle=allow_pickle,
                     payload_json=payload_json,
                     key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
                     key_types=cls.KEY_TYPES_INDEX,
@@ -1653,7 +1648,6 @@ class NPZConverter:
             columns = cls._index_decode(
                     zf=zf,
                     zf_labels=zf_labels,
-                    allow_pickle=allow_pickle,
                     payload_json=payload_json,
                     key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
                     key_types=cls.KEY_TYPES_COLUMNS,

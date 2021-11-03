@@ -2242,7 +2242,6 @@ class Frame(ContainerOperand):
         return NPZConverter.from_npz(
                 constructor=cls,
                 fp=fp,
-                allow_pickle=False,
                 )
 
 
