@@ -36,6 +36,7 @@ from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import GetItemKeyType
@@ -244,6 +245,30 @@ class Quilt(ContainerBase, StoreClientMixin):
                 max_persist=max_persist,
                 )
 
+    @classmethod
+    @doc_inject(selector='quilt_constructor')
+    def from_zip_npz(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to zipped parquet :obj:`Quilt` store, return a :obj:`Quilt` instance.
+
+        {args}
+        '''
+        store = StoreZipNPZ(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
 
     @classmethod
     @doc_inject(selector='quilt_constructor')
@@ -269,7 +294,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 deepcopy_from_bus=deepcopy_from_bus,
                 max_persist=max_persist,
                 )
-
 
     @classmethod
     @doc_inject(selector='quilt_constructor')

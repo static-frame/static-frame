@@ -18,6 +18,7 @@ from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipParquet
+from static_frame.core.store_zip import StoreZipNPZ
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -388,6 +389,26 @@ class TestUnitMultiProcess(TestCase):
     def test_store_zip_parquet_mp(self) -> None:
         self.run_assertions(StoreZipParquet)
 
+    #---------------------------------------------------------------------------
+
+    def test_store_zip_npz_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a')
+        f2 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('b')
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            st = StoreZipNPZ(fp)
+            st.write(((f.name, f) for f in (f1, f2)), config=config)
+
+            post = tuple(st.read_many(('a', 'b'),
+                    container_type=Frame,
+                    config=config,
+                    ))
+
+            self.assertIs(post[0].index.__class__, IndexDate)
+            self.assertIs(post[1].index.__class__, IndexDate)
 
 if __name__ == '__main__':
     unittest.main()

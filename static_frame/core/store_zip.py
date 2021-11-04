@@ -287,6 +287,38 @@ class StoreZipPickle(_StoreZip):
     def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
         return payload.name, payload.exporter(payload.frame)
 
+#-------------------------------------------------------------------------------
+class StoreZipNPZ(_StoreZip):
+    '''A zip of npz files, permitting incremental loading of Frames.
+    '''
+    _EXT_CONTAINED = '.npz'
+    _EXPORTER = Frame.to_npz
+
+    @classmethod
+    def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
+        return container_type.from_npz
+
+    @staticmethod
+    def _build_frame(
+            src: bytes,
+            name: tp.Hashable,
+            config: tp.Union[StoreConfigHE, StoreConfig],
+            constructor: FrameConstructor,
+        ) -> Frame:
+        return constructor( # type: ignore
+            BytesIO(src),
+            )
+
+    @staticmethod
+    def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
+        c = payload.config
+        dst = BytesIO()
+        payload.exporter(payload.frame,
+                dst,
+                include_index=c.include_index,
+                include_columns=c.include_columns,
+                )
+        return payload.name, dst.getvalue()
 
 #-------------------------------------------------------------------------------
 

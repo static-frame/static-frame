@@ -11,6 +11,7 @@ from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.util import PathSpecifier
 from static_frame.core.store import StoreConfigMap
 
@@ -77,6 +78,21 @@ class StoreClientMixin:
         '''
         store = StoreZipPickle(fp)
         # config must be None for pickels, will raise otherwise
+        store.write(self._items_store(), config=config)
+
+    @doc_inject(selector='store_client_exporter')
+    def to_zip_npz(self,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None
+            ) -> None:
+        '''
+        Write the complete :obj:`Bus` as a zipped archive of NPZ files.
+
+        {args}
+        '''
+        store = StoreZipNPZ(fp)
+        config = config if not config is None else self._config
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
