@@ -7412,7 +7412,6 @@ class Frame(ContainerOperand):
                 fp=fp,
                 include_index=include_index,
                 include_columns=include_columns,
-                allow_pickle=False,
                 )
 
 

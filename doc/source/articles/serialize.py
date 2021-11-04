@@ -14,7 +14,11 @@ from static_frame.core.display_color import HexColor
 
 
 FF_wide = 's(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
+FF_wide_ext = 's(1000,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
+
 FF_tall = 's(10_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
+FF_tall_ext = 's(10_000,1000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
+
 FF_square = 's(1_000,1_000)|v(float)|i(I,str)|c(I,int)'
 
 class FileIOTest:
@@ -55,10 +59,6 @@ class FileWriteParquet(FileIOTest):
 class FileReadNPZ(FileIOTest):
     SUFFIX = '.npz'
 
-    # NOTE: must write a file with NPZ
-
-
-
     def __init__(self, fixture: str):
         super().__init__(fixture)
         self.fixture.to_npz(self.fp)
@@ -74,12 +74,6 @@ class FileWriteNPZ(FileIOTest):
     def __call__(self):
         self.fixture.to_npz(self.fp)
 
-
-
-# class FileWriteNPZCompressed(FileIOTest):
-
-#     def __call__(self):
-#         self.fixture.to_npz(self.fp, compress=True)
 
 
 class FileReadPickle(FileIOTest):
@@ -119,6 +113,54 @@ class FileWritePickle(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
+def convert_size(size_bytes):
+    import math
+    if size_bytes == 0:
+        return "0B"
+    size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s = round(size_bytes / p, 2)
+    return "%s %s" % (s, size_name[i])
+
+def get_sizes():
+    records = []
+    for label, fixture in (
+            ('wide', FF_wide),
+            ('wide_ext', FF_wide_ext),
+            ('tall', FF_tall),
+            ('tall_ext', FF_tall_ext),
+            ('square', FF_square),
+            ):
+        f = ff.parse(fixture)
+        record = [label, f.shape]
+
+        _, fp = tempfile.mkstemp(suffix='.parquet')
+        f.to_parquet(fp, include_index=True)
+        size = os.path.getsize(fp)
+        os.unlink(fp)
+        record.append(convert_size(size))
+
+        _, fp = tempfile.mkstemp(suffix='.npz')
+        f.to_npz(fp, include_columns=True)
+        size = os.path.getsize(fp)
+        os.unlink(fp)
+        record.append(convert_size(size))
+
+        _, fp = tempfile.mkstemp(suffix='.pickle')
+        file = open(fp, 'wb')
+        pickle.dump(f, file)
+        file.close()
+        size = os.path.getsize(fp)
+        os.unlink(fp)
+        record.append(convert_size(size))
+
+        records.append(record)
+
+    f = sf.Frame.from_records(records, columns=('fixture', 'shape', 'parquet', 'npz', 'pickle')).set_index('fixture', drop=True)
+    print(f)
+
+
 def get_format():
 
     name_root_last = None
@@ -185,5 +227,6 @@ def run_test():
     # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
+    get_sizes()
     run_test()
 

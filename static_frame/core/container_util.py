@@ -1397,8 +1397,8 @@ class NPYConverter:
         Takes a string header, and attaches the prefix and padding to it.
         This is hard-coded to only use Version 3.0
         '''
-        header = header.encode('utf8')
-        hlen = len(header) + 1
+        center = header.encode('utf8')
+        hlen = len(center) + 1
 
         padlen = cls.ARRAY_ALIGN - (
                (cls.MAGIC_LEN + cls.STRUCT_FMT_SIZE + hlen) % cls.ARRAY_ALIGN
@@ -1406,10 +1406,10 @@ class NPYConverter:
         prefix = cls.MAGIC_PREFIX + struct.pack(cls.STRUCT_FMT, hlen + padlen)
         postfix = b' ' * padlen + b'\n'
 
-        return prefix + header + postfix
+        return prefix + center + postfix
 
     @classmethod
-    def to_npy(cls, file: tp.IO[bytes], array: np.ndarray):
+    def to_npy(cls, file: tp.IO[bytes], array: np.ndarray) -> None:
         '''Write an NPY 3.0 file to the open, writeable, binary file given by ``file``.
         '''
         if array.dtype.kind == DTYPE_OBJECT_KIND:
