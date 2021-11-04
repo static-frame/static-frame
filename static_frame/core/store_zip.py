@@ -305,7 +305,7 @@ class StoreZipNPZ(_StoreZip):
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> Frame:
-        return constructor( # type: ignore
+        return constructor(
             BytesIO(src),
             )
 
