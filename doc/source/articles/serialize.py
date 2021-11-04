@@ -14,9 +14,11 @@ from static_frame.core.display_color import HexColor
 
 
 FF_wide = 's(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
+FF_wide_col = 's(10,10_000)|v(int,bool,float)|i(I,str)|c(I,int)'
 FF_wide_ext = 's(1000,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
 
 FF_tall = 's(10_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
+FF_tall_col = 's(10_000,10)|v(int,bool,float)|i(I,str)|c(I,int)'
 FF_tall_ext = 's(10_000,1000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
 
 FF_square = 's(1_000,1_000)|v(float)|i(I,str)|c(I,int)'
@@ -188,7 +190,9 @@ def run_test():
     records = []
     for label, fixture in (
             ('wide', FF_wide),
+            ('wide_col', FF_wide_col),
             ('tall', FF_tall),
+            ('tall_col', FF_tall_col),
             ('square', FF_square),
             ):
     # for label, fixture in (('square', FF_square),):
