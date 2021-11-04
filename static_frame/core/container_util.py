@@ -1460,6 +1460,7 @@ class NPYConverter:
         elif ndim == 2:
             size = shape[0] * shape[1]
         else:
+            file.close()
             raise ValueError(f'No support for {ndim}-dimensional arrays')
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
