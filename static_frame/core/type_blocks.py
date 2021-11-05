@@ -3436,7 +3436,6 @@ class TypeBlocks(ContainerOperand):
         if block.ndim == 1:
             # length already confirmed to match row count; even if this is a zero length 1D array, we keep it as it (by definition) defines a column (if the existing row_count is zero). said another way, a zero length, 1D array always has a shape of (0, 1)
             block_columns = 1
-            bs.append((block_idx, UNIT_SLICE))
         else:
             block_columns = block.shape[1]
             if block_columns == 0:

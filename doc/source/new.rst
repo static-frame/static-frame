@@ -6,6 +6,10 @@ What is New in Static Frame
 0.8.27
 ----------
 
+Reimplemented ``Frame.to_npz()``, ``Frame.from_npz()``, removing support for object arrays (and pickles) and improving performance.
+
+Added ``Quilt.equals()``.
+
 ``Frame.from_pandas()`` now supports zero-sized DataFrame.
 
 Fixed issue in ``Frame.set_index()`` where ``column`` is passed as ``None``.

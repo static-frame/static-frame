@@ -1556,6 +1556,7 @@ class TestUnit(TestCase):
 
         self.assertTrue(q1.equals(q1, compare_class=True, compare_dtype=True, compare_name=True))
 
+        self.assertFalse(q1.equals(None, compare_class=True))
         self.assertFalse(q1.equals(None))
 
     def test_quilt_equals_b(self) -> None:
@@ -1596,7 +1597,7 @@ class TestUnit(TestCase):
 
         f3 = ff.parse('s(3,4)|v(int,float)|c(I,str)').rename('f1').reindex((1, 2, 5))
         f4 = ff.parse('s(3,4)|v(str)|c(I,str)').rename('f2').reindex((4, 8, 6))
-        q2 = Quilt.from_frames((f3, f4), retain_labels=False)
+        q2 = Quilt.from_frames((f3, f4), retain_labels=True)
 
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
 
@@ -1611,7 +1612,7 @@ class TestUnit(TestCase):
                 columns=lambda x: x.upper())
         f4 = ff.parse('s(3,4)|v(str)|c(I,str)').rename('f2').relabel(
                 columns=lambda x: x.upper())
-        q2 = Quilt.from_frames((f3, f4), retain_labels=False)
+        q2 = Quilt.from_frames((f3, f4), retain_labels=True)
 
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
 
