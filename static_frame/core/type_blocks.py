@@ -70,9 +70,6 @@ from static_frame.core.util import ufunc_dtype_to_dtype
 
 from static_frame.core.style_config import StyleConfig
 
-
-
-
 #---------------------------------------------------------------------------
 def group_match(
         blocks: 'TypeBlocks',
@@ -225,8 +222,6 @@ def group_sort(
                     )
 
 
-
-
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
     '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :obj:`Frame` for core, unindexed array management.
@@ -240,7 +235,7 @@ class TypeBlocks(ContainerOperand):
             '_index',
             '_shape',
             '_row_dtype',
-            '_block_slices',
+            # '_block_slices',
             )
 
     STATIC = False
@@ -449,7 +444,7 @@ class TypeBlocks(ContainerOperand):
             self._row_dtype = None
 
         # lazily store as needed; must be cleared on mutation
-        self._block_slices: tp.Optional[tp.List[tp.Tuple[int, slice]]] = None
+        # self._block_slices: tp.Optional[tp.List[tp.Tuple[int, slice]]] = None
 
     #---------------------------------------------------------------------------
     def __setstate__(self,
@@ -471,7 +466,7 @@ class TypeBlocks(ContainerOperand):
         obj._index = self._index.copy() # list of tuples of ints
         obj._shape = self._shape # immutable, no copy necessary
         obj._row_dtype = deepcopy(self._row_dtype, memo)
-        obj._block_slices = deepcopy(self._block_slices, memo)
+        # obj._block_slices = deepcopy(self._block_slices, memo)
         memo[id(self)] = obj
         return obj #type: ignore
 
@@ -1268,21 +1263,20 @@ class TypeBlocks(ContainerOperand):
         if last and bundle:
             yield (last[0], cls._cols_to_slice(bundle))
 
-    def _all_block_slices(self) -> tp.List[tp.Tuple[int, slice]]:
-        '''
-        Alternaitve to _indices_to_contiguous_pairs when we need all indices per block in a slice.
+    # def _all_block_slices(self) -> tp.Iterator[tp.Tuple[int, slice]]:
+    #     '''
+    #     Alternaitve to _indices_to_contiguous_pairs when we need all indices per block in a slice.
+    #     '''
+    #     # if self._block_slices is None:
+    #     #     self._block_slices = []
+    #     for idx, b in enumerate(self._blocks):
+    #         yield (idx, NULL_SLICE)
+    #             # if b.ndim == 1:
+    #             #     self._block_slices.append((idx, UNIT_SLICE)) # cannot give an integer here instead of a slice
+    #             # else:
+    #             #     self._block_slices.append((idx, slice(0, b.shape[1])))
 
-        NOTE: this is a lazily populated internal mutable attribute.
-        '''
-        if self._block_slices is None:
-            self._block_slices = []
-            for idx, b in enumerate(self._blocks):
-                if b.ndim == 1:
-                    self._block_slices.append((idx, UNIT_SLICE)) # cannot give an integer here instead of a slice
-                else:
-                    self._block_slices.append((idx, slice(0, b.shape[1])))
-
-        return self._block_slices
+    #     # return self._block_slices
 
     # NOTE: this might cache its results as it is it might be frequently called with the same arguments in some scenarios (group)
     def _key_to_block_slices(self,
@@ -1299,7 +1293,8 @@ class TypeBlocks(ContainerOperand):
             A generator iterable of pairs, where values are block index, slice or column index
         '''
         if key is None or (key.__class__ is slice and key == NULL_SLICE):
-            yield from self._all_block_slices()
+            # yield from self._all_block_slices()
+            yield from ((i, NULL_SLICE) for i in range(len(self._blocks)))
         else:
             if isinstance(key, INT_TYPES):
                 # the index has the pair block, column integer
@@ -1525,22 +1520,25 @@ class TypeBlocks(ContainerOperand):
                     target_block_idx = target_slice = None
                     break
 
-                assert target_slice is not None
                 # target_slice can be a slice or an integer
                 if isinstance(target_slice, slice):
-                    target_start = target_slice.start
-                    target_stop = target_slice.stop
+                    if target_slice == NULL_SLICE:
+                        target_start = 0
+                        target_stop = b.shape[1]
+                    else:
+                        target_start = target_slice.start
+                        target_stop = target_slice.stop
                 else: # it is an integer
                     target_start = target_slice
                     target_stop = target_slice + 1
 
                 assert target_start is not None and target_stop is not None
                 if target_start > part_start_last:
-                    # yield un changed components before and after
-                    parts.append(b[:, slice(part_start_last, target_start)])
+                    # yield unchanged components before and after
+                    parts.append(b[NULL_SLICE, slice(part_start_last, target_start)])
 
                 # apply func
-                parts.append(func(b[:, target_slice]))
+                parts.append(func(b[NULL_SLICE, target_slice]))
                 part_start_last = target_stop
 
                 target_block_idx = target_slice = None
@@ -1609,13 +1607,17 @@ class TypeBlocks(ContainerOperand):
 
                 # target_slice can be a slice or an integer
                 if isinstance(target_slice, slice):
-                    target_start = target_slice.start
-                    target_stop = target_slice.stop
+                    if target_slice == NULL_SLICE:
+                        target_start = 0
+                        target_stop = b.shape[1]
+                    else:
+                        target_start = target_slice.start
+                        target_stop = target_slice.stop
                 else: # it is an integer
                     target_start = target_slice # can be zero
                     target_stop = target_slice + 1
 
-                assert target_start is not None and target_stop is not None
+                # assert target_start is not None and target_stop is not None
                 # if the target start (what we want to remove) is greater than 0 or our last starting point, then we need to slice off everything that came before, so as to keep it
                 if target_start == 0 and target_stop == b.shape[1]:
                     drop_block = True
@@ -1743,14 +1745,20 @@ class TypeBlocks(ContainerOperand):
                         targets_remain = False # stop entering while loop
                         break
                     target_is_slice = isinstance(target_key, slice)
+                    target_is_null_slice = target_is_slice and target_key == NULL_SLICE
 
                 if block_idx != target_block_idx:
                     break # need to advance blocks, keep targets
 
                 if target_is_slice:
-                    t_start = target_key.start #type: ignore
-                    t_stop = target_key.stop #type: ignore
-                    t_width = t_stop - t_start
+                    if target_is_null_slice:
+                        t_start = 0
+                        t_stop = b.shape[1] if b.ndim == 2 else 1
+                        t_width = t_stop
+                    else:
+                        t_start = target_key.start #type: ignore
+                        t_stop = target_key.stop #type: ignore
+                        t_width = t_stop - t_start
                 else:
                     t_start = target_key
                     t_stop = t_start + 1
@@ -1820,13 +1828,20 @@ class TypeBlocks(ContainerOperand):
                         targets_remain = False # stop entering while loop
                         break
                     target_is_slice = isinstance(target_key, slice)
+                    target_is_null_slice = target_is_slice and target_key == NULL_SLICE
 
                 if block_idx != target_block_idx:
                     break # need to advance blocks, keep targets
 
                 # at least one target we need to apply in the current block.
                 block_is_column = b.ndim == 1 or (b.ndim > 1 and b.shape[1] == 1)
-                start: int = target_key if not target_is_slice else target_key.start # type: ignore
+                # start: int = target_key if not target_is_slice else target_key.start # type: ignore
+                if not target_is_slice:
+                    start = target_key
+                elif target_is_null_slice:
+                    start = 0
+                else:
+                    start = target_key.start
 
                 if start > assigned_stop: # yield component from the last assigned position
                     b_component = b[NULL_SLICE, slice(assigned_stop, start)] # keeps writeable=False
@@ -1834,9 +1849,13 @@ class TypeBlocks(ContainerOperand):
 
                 # add empty components for the assignment region
                 if target_is_slice and not block_is_column:
-                    # can assume this slice has no strides
-                    t_width = target_key.stop - target_key.start # type: ignore
-                    t_shape = (b.shape[0], t_width)
+                    if target_is_null_slice:
+                        t_width = b.shape[1]
+                        t_shape = b.shape
+                    else:
+                        # can assume this slice has no strides
+                        t_width = target_key.stop - target_key.start # type: ignore
+                        t_shape = (b.shape[0], t_width)
                 else: # b.ndim == 1 or target is an integer: get a 1d array
                     t_width = 1
                     t_shape = b.shape[0]
@@ -3433,7 +3452,7 @@ class TypeBlocks(ContainerOperand):
             raise RuntimeError(f'appended block shape {block.shape} does not align with shape {self._shape}')
 
         # get ref to append
-        bs = self._all_block_slices()
+        # bs = self._all_block_slices()
         block_idx = len(self._blocks) # next block
         if block.ndim == 1:
             # length already confirmed to match row count; even if this is a zero length 1D array, we keep it as it (by definition) defines a column (if the existing row_count is zero). said another way, a zero length, 1D array always has a shape of (0, 1)
@@ -3444,7 +3463,7 @@ class TypeBlocks(ContainerOperand):
             if block_columns == 0:
                 # do not append 0 width arrays
                 return
-            bs.append((block_idx, slice(0, block_columns)))
+            # bs.append((block_idx, slice(0, block_columns)))
 
         # extend shape, or define it if not yet set
         self._shape = (row_count, self._shape[1] + block_columns)

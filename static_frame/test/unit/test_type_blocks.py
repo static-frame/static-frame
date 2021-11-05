@@ -190,7 +190,7 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
         self.assertEqual(list(tb1._key_to_block_slices(None)),
-                [(0, slice(0, 1, None)), (1, slice(0, 2, None))]
+                [(0, NULL_SLICE), (1, NULL_SLICE)]
                 )
 
         with self.assertRaises(NotImplementedError):
