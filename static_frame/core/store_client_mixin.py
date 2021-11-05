@@ -11,6 +11,7 @@ from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.util import PathSpecifier
 from static_frame.core.store import StoreConfigMap
 
@@ -31,6 +32,16 @@ class StoreClientMixin:
     _items_store: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
 
 
+    def _filter_config(self,
+            config: StoreConfigMapInitializer,
+            ) -> StoreConfigMapInitializer:
+        if config is not None:
+            return config
+        if hasattr(self, '_bus'): # this is Quilt
+            return self._bus._config # type: ignore
+        # Yarn does not have a _config attr
+        return getattr(self, '_config', None) #type: ignore
+
     #---------------------------------------------------------------------------
     # exporters
 
@@ -46,7 +57,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipTSV(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -61,7 +72,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipCSV(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -76,7 +87,22 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipPickle(fp)
-        # config must be None for pickels, will raise otherwise
+        config = self._filter_config(config)
+        store.write(self._items_store(), config=config)
+
+    @doc_inject(selector='store_client_exporter')
+    def to_zip_npz(self,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None
+            ) -> None:
+        '''
+        Write the complete :obj:`Bus` as a zipped archive of NPZ files.
+
+        {args}
+        '''
+        store = StoreZipNPZ(fp)
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -91,7 +117,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipParquet(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -106,7 +132,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreXLSX(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -121,7 +147,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreSQLite(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -136,5 +162,5 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreHDF5(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)

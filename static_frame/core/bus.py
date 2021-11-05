@@ -31,6 +31,7 @@ from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
@@ -285,6 +286,27 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         {args}
         '''
         store = StoreZipPickle(fp)
+        return cls._from_store(store,
+                config=config,
+                max_persist=max_persist,
+                index_constructor=index_constructor,
+                )
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_npz(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
+            index_constructor: IndexConstructor = None,
+            ) -> 'Bus':
+        '''
+        Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipNPZ(fp)
         return cls._from_store(store,
                 config=config,
                 max_persist=max_persist,
