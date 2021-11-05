@@ -1311,6 +1311,73 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         return self.iloc[-count:]
 
+    #---------------------------------------------------------------------------
+    @doc_inject()
+    def equals(self,
+            other: tp.Any,
+            *,
+            compare_name: bool = False,
+            compare_dtype: bool = False,
+            compare_class: bool = False,
+            skipna: bool = True,
+            ) -> bool:
+        '''
+        {doc}
+
+        Note: this will attempt to load and compare all Frame managed by the Bus stored within this Quilt.
+
+        Args:
+            {compare_name}
+            {compare_dtype}
+            {compare_class}
+            {skipna}
+        '''
+        if id(other) == id(self):
+            return True
+
+        if compare_class and self.__class__ != other.__class__:
+            return False
+        elif not isinstance(other, Quilt):
+            return False
+
+        if self._axis != other._axis:
+            return False
+
+        if compare_name and self.name != other.name:
+            return False
+
+        if self._assign_axis:
+            self._update_axis_labels()
+        if other._assign_axis:
+            other._update_axis_labels()
+
+        if not self._axis_hierarchy.equals(
+                other._axis_hierarchy,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                ):
+            return False
+
+        if not self._axis_opposite.equals(
+                other._axis_opposite,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                ):
+            return False
+
+        if not self._bus.equals(other._bus,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                ):
+            return False
+
+        return True
 
     #---------------------------------------------------------------------------
     def to_frame(self) -> Frame:

@@ -32,6 +32,15 @@ class StoreClientMixin:
     _items_store: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
 
 
+    def _filter_config(self,
+            config: StoreConfigMapInitializer,
+            ) -> StoreConfigMap:
+        if config is not None:
+            return config
+        if hasattr(self, '_bus'): # this is Quilt
+            return self._bus._config
+        return self._config
+
     #---------------------------------------------------------------------------
     # exporters
 
@@ -47,7 +56,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipTSV(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -62,7 +71,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipCSV(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -77,7 +86,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipPickle(fp)
-        # config must be None for pickels, will raise otherwise
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -92,7 +101,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipNPZ(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -107,7 +116,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipParquet(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -122,7 +131,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreXLSX(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -137,7 +146,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreSQLite(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 
     @doc_inject(selector='store_client_exporter')
@@ -152,5 +161,5 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreHDF5(fp)
-        config = config if not config is None else self._config
+        config = self._filter_config(config)
         store.write(self._items_store(), config=config)
