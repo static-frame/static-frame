@@ -765,7 +765,6 @@ class FrameIterGroupApply(Perf):
         self.meta = {
             'int_index_str_double': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=TypeBlocks._all_block_slices
                 ),
             }
 

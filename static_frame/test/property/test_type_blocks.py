@@ -180,10 +180,6 @@ class TestUnit(TestCase):
         pass
 
     @unittest.skip('pending')
-    def test_all_block_slices(self) -> None:
-        pass
-
-    @unittest.skip('pending')
     def test_key_to_block_slices(self) -> None:
         pass
 
