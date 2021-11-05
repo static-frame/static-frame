@@ -1193,6 +1193,24 @@ class TestUnit(TestCase):
                 (('a', 3), ('b', 2), ('c', 4), ('d', 4), ('e', 5), ('f', 5), ('g', 5), ('h', 6)))
 
 
+    def test_series_fillfalsy_forward_a(self) -> None:
+
+        index = tuple(string.ascii_lowercase[:8])
+
+        # target_index [0 3 6]
+        s1 = Series((3, None, 0, '', 4, None, '', ''), index=index)
+
+        self.assertEqual(s1.fillfalsy_forward(limit=2).to_pairs(),
+                (('a', 3), ('b', 3), ('c', 3), ('d', ''), ('e', 4), ('f', 4), ('g', 4), ('h', ''))
+                )
+
+        self.assertEqual(s1.fillfalsy_forward(limit=1).to_pairs(),
+                (('a', 3), ('b', 3), ('c', 0), ('d', ''), ('e', 4), ('f', 4), ('g', ''), ('h', '')))
+
+        self.assertEqual(s1.fillfalsy_forward(limit=10).to_pairs(),
+                (('a', 3), ('b', 3), ('c', 3), ('d', 3), ('e', 4), ('f', 4), ('g', 4), ('h', 4)))
+
+
     def test_series_fillna_backward_a(self) -> None:
 
         index = tuple(string.ascii_lowercase[:8])
@@ -1251,6 +1269,25 @@ class TestUnit(TestCase):
         s3 = Series((None, 1, None, None, None, None, None, 5), index=index)
         self.assertEqual(s3.fillna_backward(4).to_pairs(),
                 (('a', 1), ('b', 1), ('c', None), ('d', 5), ('e', 5), ('f', 5), ('g', 5), ('h', 5)))
+
+
+    def test_series_fillfalsy_backward_a(self) -> None:
+
+        index = tuple(string.ascii_lowercase[:8])
+
+        # target_index [0 3 6]
+        s1 = Series((3, '', '', 4, '', '', 5, 6), index=index)
+        self.assertEqual(s1.fillfalsy_backward(1).to_pairs(),
+                (('a', 3), ('b', ''), ('c', 4), ('d', 4), ('e', ''), ('f', 5), ('g', 5), ('h', 6)))
+
+        s2 = Series((3, 0, 0, 0, 4, 0, 0, 0), index=index)
+        self.assertEqual(s2.fillfalsy_backward(2).to_pairs(),
+                (('a', 3), ('b', 0), ('c', 4), ('d', 4), ('e', 4), ('f', 0), ('g', 0), ('h', 0)))
+
+        s3 = Series(('', 1, '', '', '', '', '', 5), index=index)
+        self.assertEqual(s3.fillfalsy_backward(4).to_pairs(),
+                (('a', 1), ('b', 1), ('c', ''), ('d', 5), ('e', 5), ('f', 5), ('g', 5), ('h', 5)))
+
 
     #---------------------------------------------------------------------------
     def test_series_from_element_a(self) -> None:

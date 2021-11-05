@@ -8,6 +8,8 @@ What is New in Static Frame
 
 Reimplemented ``Frame.to_npz()``, ``Frame.from_npz()``, removing support for object arrays (and pickles) and improving performance.
 
+Implemented ``Series.fillfalsy_forward()``, ``Series.fillfalsy_backward()``, ``Series.fillfalsy_leading()``, ``Series.fillfalsy_trailing()``.
+
 Added ``Quilt.equals()``.
 
 ``Frame.from_pandas()`` now supports zero-sized DataFrame.
