@@ -34,12 +34,13 @@ class StoreClientMixin:
 
     def _filter_config(self,
             config: StoreConfigMapInitializer,
-            ) -> StoreConfigMap:
+            ) -> StoreConfigMapInitializer:
         if config is not None:
             return config
         if hasattr(self, '_bus'): # this is Quilt
-            return self._bus._config
-        return self._config
+            return self._bus._config # type: ignore
+        # Yarn does not have a _config attr
+        return getattr(self, '_config', None) #type: ignore
 
     #---------------------------------------------------------------------------
     # exporters

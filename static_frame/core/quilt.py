@@ -1351,7 +1351,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if other._assign_axis:
             other._update_axis_labels()
 
-        if not self._axis_hierarchy.equals(
+        if not self._axis_hierarchy.equals( # type: ignore
                 other._axis_hierarchy,
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
@@ -1360,7 +1360,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 ):
             return False
 
-        if not self._axis_opposite.equals(
+        if not self._axis_opposite.equals( # type: ignore
                 other._axis_opposite,
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
