@@ -3906,6 +3906,43 @@ class Frame(ContainerOperand):
                 own_data=True)
 
     @doc_inject(selector='fillna')
+    def fillfalsy_leading(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'Frame':
+        '''
+        Return a new ``Frame`` after filling leading (and only leading) falsy values with the first observed value.
+
+        Args:
+            {value}
+            {axis}
+        '''
+        return self.__class__(self._blocks.fillfalsy_leading(value, axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_trailing(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'Frame':
+        '''
+        Return a new ``Frame`` after filling trailing (and only trailing) falsy values with the last observed value.
+
+        Args:
+            {value}
+            {axis}
+        '''
+        return self.__class__(self._blocks.fillfalsy_trailing(value, axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+
+    @doc_inject(selector='fillna')
     def fillna_forward(self,
             limit: int = 0,
             *,
@@ -3936,6 +3973,43 @@ class Frame(ContainerOperand):
             {axis}
         '''
         return self.__class__(self._blocks.fillna_backward(limit=limit, axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_forward(self,
+            limit: int = 0,
+            *,
+            axis: int = 0) -> 'Frame':
+        '''
+        Return a new ``Frame`` after filling forward falsy values with the last observed value.
+
+        Args:
+            {limit}
+            {axis}
+        '''
+        return self.__class__(self._blocks.fillfalsy_forward(limit=limit, axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_backward(self,
+            limit: int = 0,
+            *,
+            axis: int = 0) -> 'Frame':
+        '''
+        Return a new ``Frame`` after filling backward falsy values with the first observed value.
+
+        Args:
+            {limit}
+            {axis}
+        '''
+        return self.__class__(self._blocks.fillfalsy_backward(limit=limit, axis=axis),
                 index=self._index,
                 columns=self._columns,
                 name=self._name,

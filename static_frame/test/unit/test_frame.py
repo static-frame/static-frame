@@ -5544,6 +5544,32 @@ class TestUnit(TestCase):
                 (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', 0), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', None), ('c', None))), ('x', (('a', 0), ('b', 6), ('c', None))), ('y', (('a', 0), ('b', None), ('c', None))), ('z', (('a', 4), ('b', 1), ('c', 5)))))
 
 
+    def test_frame_fillfalsy_leading_a(self) -> None:
+        a2 = np.array([
+                ['', '', '', ''],
+                ['', 1, '', 6],
+                ['', 5, '', '']
+                ], dtype=object)
+        a1 = np.array(['', '', ''], dtype=object)
+        a3 = np.array([
+                ['', 4],
+                ['', 1],
+                ['', 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=self.get_letters(-tb1.shape[1], None)
+                )
+
+        self.assertEqual(f1.fillfalsy_leading(0, axis=0).to_pairs(0),
+                (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', 0), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', 0), ('c', 0))), ('x', (('a', 0), ('b', 6), ('c', ''))), ('y', (('a', 0), ('b', 0), ('c', 0))), ('z', (('a', 4), ('b', 1), ('c', 5)))))
+
+        self.assertEqual(f1.fillfalsy_leading(0, axis=1).to_pairs(0),
+                (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', 0), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', ''), ('c', ''))), ('x', (('a', 0), ('b', 6), ('c', ''))), ('y', (('a', 0), ('b', ''), ('c', ''))), ('z', (('a', 4), ('b', 1), ('c', 5)))))
+
+
     def test_frame_fillna_trailing_a(self) -> None:
         a2 = np.array([
                 [None, None, None, None],
@@ -5570,6 +5596,35 @@ class TestUnit(TestCase):
         self.assertEqual(f1.fillna_trailing(0, axis=1).to_pairs(0),
                 (('t', (('a', None), ('b', None), ('c', None))), ('u', (('a', None), ('b', None), ('c', None))), ('v', (('a', None), ('b', 1), ('c', 5))), ('w', (('a', None), ('b', None), ('c', None))), ('x', (('a', None), ('b', 6), ('c', None))), ('y', (('a', None), ('b', None), ('c', None))), ('z', (('a', 4), ('b', 1), ('c', 5))))
                 )
+
+
+    def test_frame_fillfalsy_trailing_a(self) -> None:
+        a2 = np.array([
+                ['', '', '', ''],
+                ['', 1, '', 6],
+                ['', 5, '', '']
+                ], dtype=object)
+        a1 = np.array(['', '', ''], dtype=object)
+        a3 = np.array([
+                ['', 4],
+                ['', 1],
+                ['', 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=self.get_letters(-tb1.shape[1], None)
+                )
+
+        self.assertEqual(f1.fillfalsy_trailing(0, axis=0).to_pairs(0),
+                (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', ''), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', 0), ('c', 0))), ('x', (('a', ''), ('b', 6), ('c', 0))), ('y', (('a', 0), ('b', 0), ('c', 0))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
+        self.assertEqual(f1.fillfalsy_trailing(0, axis=1).to_pairs(0),
+                (('t', (('a', ''), ('b', ''), ('c', ''))), ('u', (('a', ''), ('b', ''), ('c', ''))), ('v', (('a', ''), ('b', 1), ('c', 5))), ('w', (('a', ''), ('b', ''), ('c', ''))), ('x', (('a', ''), ('b', 6), ('c', ''))), ('y', (('a', ''), ('b', ''), ('c', ''))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
 
 
 
@@ -5663,6 +5718,35 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.fillna_backward(axis=1, limit=2).to_pairs(0),
                 (('t', (('a', 8), ('b', 3), ('c', 0))), ('u', (('a', 8), ('b', 1), ('c', 0))), ('v', (('a', None), ('b', 1), ('c', 5))), ('w', (('a', None), ('b', 6), ('c', None))), ('x', (('a', 4), ('b', 6), ('c', 5))), ('y', (('a', 4), ('b', None), ('c', 5))), ('z', (('a', 4), ('b', None), ('c', 5))))
+                )
+
+    def test_frame_fillfalsy_forward_a(self) -> None:
+        a2 = np.array([
+                [8, '', '', ''],
+                ['', 1, '', 6],
+                [1, 5, '', '']
+                ], dtype=object)
+        a1 = np.array(['', 3, ''], dtype=object)
+        a3 = np.array([
+                ['', 4],
+                ['', 1],
+                ['', 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=self.get_letters(-tb1.shape[1], None)
+                )
+
+        self.assertEqual(
+                f1.fillfalsy_forward().to_pairs(0),
+                (('t', (('a', ''), ('b', 3), ('c', 3))), ('u', (('a', 8), ('b', 8), ('c', 1))), ('v', (('a', ''), ('b', 1), ('c', 5))), ('w', (('a', ''), ('b', ''), ('c', ''))), ('x', (('a', ''), ('b', 6), ('c', 6))), ('y', (('a', ''), ('b', ''), ('c', ''))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
+        self.assertEqual(
+                f1.fillfalsy_backward().to_pairs(0),
+                (('t', (('a', 3), ('b', 3), ('c', ''))), ('u', (('a', 8), ('b', 1), ('c', 1))), ('v', (('a', 1), ('b', 1), ('c', 5))), ('w', (('a', ''), ('b', ''), ('c', ''))), ('x', (('a', 6), ('b', 6), ('c', ''))), ('y', (('a', ''), ('b', ''), ('c', ''))), ('z', (('a', 4), ('b', 1), ('c', 5))))
                 )
 
 

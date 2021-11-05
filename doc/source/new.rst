@@ -10,6 +10,8 @@ Reimplemented ``Frame.to_npz()``, ``Frame.from_npz()``, removing support for obj
 
 Implemented ``Series.fillfalsy_forward()``, ``Series.fillfalsy_backward()``, ``Series.fillfalsy_leading()``, ``Series.fillfalsy_trailing()``.
 
+Implemented ``Frame.fillfalsy_forward()``, ``Frame.fillfalsy_backward()``, ``Frame.fillfalsy_leading()``, ``Frame.fillfalsy_trailing()``.
+
 Added ``Quilt.equals()``.
 
 ``Frame.from_pandas()`` now supports zero-sized DataFrame.

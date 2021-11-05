@@ -2832,9 +2832,10 @@ class TypeBlocks(ContainerOperand):
     # fillna sided
 
     @staticmethod
-    def _fillna_sided_axis_0(
+    def _fill_missing_sided_axis_0(
             blocks: tp.Iterable[np.ndarray],
             value: tp.Any,
+            func_target: UFunc,
             sided_leading: bool,
             ) -> tp.Iterator[np.ndarray]:
         '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0, meaning vertically.
@@ -2851,7 +2852,7 @@ class TypeBlocks(ContainerOperand):
         # store flag for when non longer need to check blocks, yield immediately
 
         for b in blocks:
-            sel = isna_array(b) # True for is NaN
+            sel = func_target(b) # True for is NaN
             ndim = sel.ndim
 
             if ndim == 1 and not sel[sided_index]:
@@ -2898,9 +2899,10 @@ class TypeBlocks(ContainerOperand):
 
 
     @staticmethod
-    def _fillna_sided_axis_1(
+    def _fill_missing_sided_axis_1(
             blocks: tp.Iterable[np.ndarray],
             value: tp.Any,
+            func_target: UFunc,
             sided_leading: bool) -> tp.Iterator[np.ndarray]:
         '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 1. Leading axis 1 fills rows, going from left to right.
 
@@ -2922,7 +2924,7 @@ class TypeBlocks(ContainerOperand):
 
         # iterate over blocks to observe NaNs contiguous horizontally
         for b in block_iter:
-            sel = isna_array(b) # True for is NaN
+            sel = func_target(b) # True for is NaN
             ndim = sel.ndim
 
             if isna_exit_previous is None:
@@ -2984,14 +2986,16 @@ class TypeBlocks(ContainerOperand):
         '''Return a TypeBlocks instance replacing leading values with the passed `value`. Leading, axis 0 fills columns, going from top to bottom. Leading axis 1 fills rows, going from left to right.
         '''
         if axis == 0:
-            return self.from_blocks(self._fillna_sided_axis_0(
+            return self.from_blocks(self._fill_missing_sided_axis_0(
                     blocks=self._blocks,
                     value=value,
+                    func_target=isna_array,
                     sided_leading=True))
         elif axis == 1:
-            return self.from_blocks(self._fillna_sided_axis_1(
+            return self.from_blocks(self._fill_missing_sided_axis_1(
                     blocks=self._blocks,
                     value=value,
+                    func_target=isna_array,
                     sided_leading=True))
         raise NotImplementedError(f'no support for axis {axis}')
 
@@ -3002,15 +3006,61 @@ class TypeBlocks(ContainerOperand):
         '''Return a TypeBlocks instance replacing trailing NaNs with the passed `value`. Trailing, axis 0 fills columns, going from bottom to top. Trailing axis 1 fills rows, going from right to left.
         '''
         if axis == 0:
-            return self.from_blocks(self._fillna_sided_axis_0(
+            return self.from_blocks(self._fill_missing_sided_axis_0(
                     blocks=self._blocks,
                     value=value,
+                    func_target=isna_array,
                     sided_leading=False))
         elif axis == 1:
             # must reverse when not leading
-            blocks = reversed(tuple(self._fillna_sided_axis_1(
+            blocks = reversed(tuple(self._fill_missing_sided_axis_1(
                     blocks=self._blocks,
                     value=value,
+                    func_target=isna_array,
+                    sided_leading=False)))
+            return self.from_blocks(blocks)
+
+        raise NotImplementedError(f'no support for axis {axis}')
+
+
+    def fillfalsy_leading(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'TypeBlocks':
+        '''Return a TypeBlocks instance replacing leading values with the passed `value`. Leading, axis 0 fills columns, going from top to bottom. Leading axis 1 fills rows, going from left to right.
+        '''
+        if axis == 0:
+            return self.from_blocks(self._fill_missing_sided_axis_0(
+                    blocks=self._blocks,
+                    value=value,
+                    func_target=isfalsy_array,
+                    sided_leading=True))
+        elif axis == 1:
+            return self.from_blocks(self._fill_missing_sided_axis_1(
+                    blocks=self._blocks,
+                    value=value,
+                    func_target=isfalsy_array,
+                    sided_leading=True))
+        raise NotImplementedError(f'no support for axis {axis}')
+
+    def fillfalsy_trailing(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'TypeBlocks':
+        '''Return a TypeBlocks instance replacing trailing NaNs with the passed `value`. Trailing, axis 0 fills columns, going from bottom to top. Trailing axis 1 fills rows, going from right to left.
+        '''
+        if axis == 0:
+            return self.from_blocks(self._fill_missing_sided_axis_0(
+                    blocks=self._blocks,
+                    value=value,
+                    func_target=isfalsy_array,
+                    sided_leading=False))
+        elif axis == 1:
+            # must reverse when not leading
+            blocks = reversed(tuple(self._fill_missing_sided_axis_1(
+                    blocks=self._blocks,
+                    value=value,
+                    func_target=isfalsy_array,
                     sided_leading=False)))
             return self.from_blocks(blocks)
 
@@ -3020,9 +3070,10 @@ class TypeBlocks(ContainerOperand):
     # fillna directional
 
     @staticmethod
-    def _fillna_directional_axis_0(
+    def _fill_missing_directional_axis_0(
             blocks: tp.Iterable[np.ndarray],
             directional_forward: bool,
+            func_target: UFunc,
             limit: int = 0
             ) -> tp.Iterator[np.ndarray]:
         '''
@@ -3033,7 +3084,7 @@ class TypeBlocks(ContainerOperand):
         '''
 
         for b in blocks:
-            sel = isna_array(b) # True for is NaN
+            sel = func_target(b) # True for is NaN
             ndim = sel.ndim
 
             if ndim == 1 and not np.any(sel):
@@ -3097,9 +3148,10 @@ class TypeBlocks(ContainerOperand):
 
 
     @staticmethod
-    def _fillna_directional_axis_1(
+    def _fill_missing_directional_axis_1(
             blocks: tp.Iterable[np.ndarray],
             directional_forward: bool,
+            func_target: UFunc,
             limit: int = 0
             ) -> tp.Iterator[np.ndarray]:
         '''
@@ -3119,7 +3171,7 @@ class TypeBlocks(ContainerOperand):
         bridging_isna: tp.Optional[np.ndarray] = None # Boolean array describing isna of bridging values
 
         for b in block_iter:
-            sel = isna_array(b) # True for is NaN
+            sel = func_target(b) # True for is NaN
             ndim = sel.ndim
 
             if ndim == 1 and not np.any(sel):
@@ -3264,15 +3316,17 @@ class TypeBlocks(ContainerOperand):
         '''Return a new ``TypeBlocks`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls. Forward axis 0 fills columns, going from top to bottom. Forward axis 1 fills rows, going from left to right.
         '''
         if axis == 0:
-            return self.from_blocks(self._fillna_directional_axis_0(
+            return self.from_blocks(self._fill_missing_directional_axis_0(
                     blocks=self._blocks,
                     directional_forward=True,
+                    func_target=isna_array,
                     limit=limit
                     ))
         elif axis == 1:
-            return self.from_blocks(self._fillna_directional_axis_1(
+            return self.from_blocks(self._fill_missing_directional_axis_1(
                     blocks=self._blocks,
                     directional_forward=True,
+                    func_target=isna_array,
                     limit=limit
                     ))
 
@@ -3286,15 +3340,65 @@ class TypeBlocks(ContainerOperand):
         '''Return a new ``TypeBlocks`` after feeding backward the last non-null (NaN or None) observation across contiguous nulls. Backward, axis 0 fills columns, going from bottom to top. Backward axis 1 fills rows, going from right to left.
         '''
         if axis == 0:
-            return self.from_blocks(self._fillna_directional_axis_0(
+            return self.from_blocks(self._fill_missing_directional_axis_0(
                     blocks=self._blocks,
                     directional_forward=False,
+                    func_target=isna_array,
                     limit=limit
                     ))
         elif axis == 1:
-            blocks = reversed(tuple(self._fillna_directional_axis_1(
+            blocks = reversed(tuple(self._fill_missing_directional_axis_1(
                     blocks=self._blocks,
                     directional_forward=False,
+                    func_target=isna_array,
+                    limit=limit
+                    )))
+            return self.from_blocks(blocks)
+
+        raise AxisInvalid(f'no support for axis {axis}')
+
+    def fillfalsy_forward(self,
+            limit: int = 0,
+            *,
+            axis: int = 0) -> 'TypeBlocks':
+        '''Return a new ``TypeBlocks`` after feeding forward the last non-falsy observation across contiguous missing values. Forward axis 0 fills columns, going from top to bottom. Forward axis 1 fills rows, going from left to right.
+        '''
+        if axis == 0:
+            return self.from_blocks(self._fill_missing_directional_axis_0(
+                    blocks=self._blocks,
+                    directional_forward=True,
+                    func_target=isfalsy_array,
+                    limit=limit
+                    ))
+        elif axis == 1:
+            return self.from_blocks(self._fill_missing_directional_axis_1(
+                    blocks=self._blocks,
+                    directional_forward=True,
+                    func_target=isfalsy_array,
+                    limit=limit
+                    ))
+
+        raise AxisInvalid(f'no support for axis {axis}')
+
+
+    def fillfalsy_backward(self,
+            limit: int = 0,
+            *,
+            axis: int = 0) -> 'TypeBlocks':
+        '''Return a new ``TypeBlocks`` after feeding backward the last non-falsy observation across contiguous missing values. Backward, axis 0 fills columns, going from bottom to top. Backward axis 1 fills rows, going from right to left.
+        '''
+        if axis == 0:
+            return self.from_blocks(self._fill_missing_directional_axis_0(
+                    blocks=self._blocks,
+                    directional_forward=False,
+                    func_target=isfalsy_array,
+                    limit=limit
+                    ))
+        elif axis == 1:
+            blocks = reversed(tuple(self._fill_missing_directional_axis_1(
+                    blocks=self._blocks,
+                    directional_forward=False,
+                    func_target=isfalsy_array,
                     limit=limit
                     )))
             return self.from_blocks(blocks)

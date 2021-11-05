@@ -1288,14 +1288,12 @@ class TestUnit(TestCase):
         self.assertEqual(s3.fillfalsy_backward(4).to_pairs(),
                 (('a', 1), ('b', 1), ('c', ''), ('d', 5), ('e', 5), ('f', 5), ('g', 5), ('h', 5)))
 
-
     #---------------------------------------------------------------------------
     def test_series_from_element_a(self) -> None:
         s1 = Series.from_element('a', index=range(3))
         self.assertEqual(s1.to_pairs(),
                 ((0, 'a'), (1, 'a'), (2, 'a'))
                 )
-
 
     def test_series_from_element_b(self) -> None:
         s1 = Series.from_element('foo', index=Index((3, 4, 5)), own_index=True)
