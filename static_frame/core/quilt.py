@@ -1343,6 +1343,9 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._axis != other._axis:
             return False
 
+        if self._retain_labels != other._retain_labels:
+            return False
+
         if compare_name and self.name != other.name:
             return False
 
