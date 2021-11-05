@@ -1174,16 +1174,20 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @staticmethod
-    def _fillna_directional(
+    def _fill_missing_directional(
             array: np.ndarray,
             directional_forward: bool,
-            limit: int = 0) -> np.ndarray:
+            func_target: UFunc,
+            limit: int = 0,
+            ) -> np.ndarray:
         '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
             count: Set the limit of nan values to be filled per nan region. A value of 0 is equivalent to no limit.
+            func_target: the function to use to identify fill targets
         '''
-        sel = isna_array(array)
+        # sel = isna_array(array)
+        sel = func_target(array)
         if not np.any(sel):
             return array
 
@@ -1217,9 +1221,10 @@ class Series(ContainerOperand):
         Args:
             {limit}
         '''
-        return self.__class__(self._fillna_directional(
+        return self.__class__(self._fill_missing_directional(
                     array=self.values,
                     directional_forward=True,
+                    func_target=isna_array,
                     limit=limit),
                 index=self._index,
                 name=self._name)
@@ -1231,23 +1236,58 @@ class Series(ContainerOperand):
         Args:
             {limit}
         '''
-        return self.__class__(self._fillna_directional(
+        return self.__class__(self._fill_missing_directional(
                     array=self.values,
                     directional_forward=False,
+                    func_target=isna_array,
                     limit=limit),
                 index=self._index,
                 name=self._name)
 
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_forward(self, limit: int = 0) -> 'Series':
+        '''Return a new :obj:`Series` after feeding forward the last non-falsy observation across contiguous falsy values.
+
+        Args:
+            {limit}
+        '''
+        return self.__class__(self._fill_missing_directional(
+                    array=self.values,
+                    directional_forward=True,
+                    func_target=isfalsy_array,
+                    limit=limit),
+                index=self._index,
+                name=self._name)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_backward(self, limit: int = 0) -> 'Series':
+        '''Return a new :obj:`Series` after feeding backward the last non-falsy observation across contiguous falsy values.
+
+        Args:
+            {limit}
+        '''
+        return self.__class__(self._fill_missing_directional(
+                    array=self.values,
+                    directional_forward=False,
+                    func_target=isfalsy_array,
+                    limit=limit),
+                index=self._index,
+                name=self._name)
+
+
+
     @staticmethod
-    def _fillna_sided(array: np.ndarray,
+    def _fill_missing_sided(array: np.ndarray,
             value: tp.Any,
             sided_leading: bool,
+            func_target: UFunc,
             ) -> np.ndarray:
         '''
         Args:
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
         '''
-        sel = isna_array(array)
+        sel = func_target(array)
 
         if not np.any(sel):
             return array
@@ -1290,9 +1330,10 @@ class Series(ContainerOperand):
         Args:
             {value}
         '''
-        return self.__class__(self._fillna_sided(
+        return self.__class__(self._fill_missing_sided(
                     array=self.values,
                     value=value,
+                    func_target=isna_array,
                     sided_leading=True),
                 index=self._index,
                 name=self._name)
@@ -1304,12 +1345,45 @@ class Series(ContainerOperand):
         Args:
             {value}
         '''
-        return self.__class__(self._fillna_sided(
+        return self.__class__(self._fill_missing_sided(
                     array=self.values,
                     value=value,
+                    func_target=isna_array,
                     sided_leading=False),
                 index=self._index,
                 name=self._name)
+
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_leading(self, value: tp.Any) -> 'Series':
+        '''Return a new :obj:`Series` after filling leading (and only leading) falsy values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self.__class__(self._fill_missing_sided(
+                    array=self.values,
+                    value=value,
+                    func_target=isfalsy_array,
+                    sided_leading=True),
+                index=self._index,
+                name=self._name)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_trailing(self, value: tp.Any) -> 'Series':
+        '''Return a new :obj:`Series` after filling trailing (and only trailing) falsy values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self.__class__(self._fill_missing_sided(
+                    array=self.values,
+                    value=value,
+                    func_target=isfalsy_array,
+                    sided_leading=False),
+                index=self._index,
+                name=self._name)
+
 
     #---------------------------------------------------------------------------
     # operators

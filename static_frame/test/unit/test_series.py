@@ -33,6 +33,8 @@ from static_frame import IndexYearMonth
 from static_frame import IndexAutoFactory
 from static_frame import IndexDefaultFactory
 from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import isna_array
+
 from static_frame import HLoc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
@@ -1003,9 +1005,10 @@ class TestUnit(TestCase):
     def test_series_fillna_directional_a(self) -> None:
 
         a1 = np.array((3, 4))
-        a2 = Series._fillna_directional(
+        a2 = Series._fill_missing_directional(
                 array=a1,
                 directional_forward=True,
+                func_target=isna_array,
                 limit=2)
 
         self.assertEqual(id(a1), id(a2))
@@ -1016,9 +1019,10 @@ class TestUnit(TestCase):
         a1 = np.array((np.nan, 3, np.nan))
 
         with self.assertRaises(RuntimeError):
-            _ = Series._fillna_sided(
+            _ = Series._fill_missing_sided(
                     array=a1,
                     value=a1,
+                    func_target=isna_array,
                     sided_leading=True)
 
 
@@ -1051,6 +1055,24 @@ class TestUnit(TestCase):
         s2 = s1.fillna_leading(0)
         self.assertTrue(s1.to_pairs() == s2.to_pairs())
 
+    def test_series_fillfalsy_leading_a(self) -> None:
+
+        s1 = Series((234.3, 3.2, 6.4, 0), index=('a', 'b', 'c', 'd'))
+        s2 = Series((0, 0, 6, 0), index=('a', 'b', 'c', 'd'))
+        s3 = Series(('', '', '', 4), index=('a', 'b', 'c', 'd'))
+        s4 = Series(('', '', '', ''), index=('a', 'b', 'c', 'd'))
+
+        self.assertEqual(s1.fillfalsy_leading(-1).to_pairs(),
+                (('a', 234.3), ('b', 3.2), ('c', 6.4), ('d', 0.0)))
+
+        self.assertEqual(s2.fillfalsy_leading(-1).to_pairs(),
+                (('a', -1), ('b', -1), ('c', 6), ('d', 0)))
+
+        self.assertEqual(s3.fillfalsy_leading('a').to_pairs(),
+                (('a', 'a'), ('b', 'a'), ('c', 'a'), ('d', 4.0)))
+
+        self.assertEqual(s4.fillfalsy_leading('b').to_pairs(),
+                (('a', 'b'), ('b', 'b'), ('c', 'b'), ('d', 'b')))
 
     def test_series_fillna_trailing_a(self) -> None:
 
@@ -1071,6 +1093,25 @@ class TestUnit(TestCase):
         self.assertEqual(s4.fillna_trailing('c').to_pairs(),
                 (('a', 'c'), ('b', 'c'), ('c', 'c'), ('d', 'c')))
 
+
+    def test_series_fillfalsy_trailing_a(self) -> None:
+
+        s1 = Series((234.3, 3.2, 0, 0), index=('a', 'b', 'c', 'd'))
+        s2 = Series(('', None, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
+        s3 = Series((np.nan, 2.3, 6.4, 4), index=('a', 'b', 'c', 'd'))
+        s4 = Series(('', '', '', ''), index=('a', 'b', 'c', 'd'))
+
+        self.assertEqual(s1.fillfalsy_trailing(-1).to_pairs(),
+                (('a', 234.3), ('b', 3.2), ('c', -1.0), ('d', -1.0)))
+
+        self.assertEqual(s2.fillfalsy_trailing(100).to_pairs(),
+                (('a', ''), ('b', None), ('c', 6.4), ('d', 100)))
+
+        self.assertEqual(s3.fillfalsy_trailing(2).fillna(-1).to_pairs(),
+                (('a', -1.0), ('b', 2.3), ('c', 6.4), ('d', 4.0)))
+
+        self.assertEqual(s4.fillfalsy_trailing('c').to_pairs(),
+                (('a', 'c'), ('b', 'c'), ('c', 'c'), ('d', 'c')))
 
 
     def test_series_fillna_forward_a(self) -> None:
