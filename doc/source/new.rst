@@ -6,9 +6,11 @@ What is New in Static Frame
 0.8.27
 ----------
 
-``Frame.from_pndas()`` now support zero-sized DataFrame.
+``Frame.from_pandas()`` now supports zero-sized DataFrame.
 
 Fixed issue in ``Frame.set_index()`` where ``column`` is passed as ``None``.
+
+Removed ``TypeBlocks._block_slices``.
 
 
 0.8.26

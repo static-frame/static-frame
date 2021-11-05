@@ -235,7 +235,6 @@ class TypeBlocks(ContainerOperand):
             '_index',
             '_shape',
             '_row_dtype',
-            # '_block_slices',
             )
 
     STATIC = False
@@ -443,8 +442,6 @@ class TypeBlocks(ContainerOperand):
             # NOTE: this violates the type; however, this is desirable when appending such that this value does not force an undesirable type resolution
             self._row_dtype = None
 
-        # lazily store as needed; must be cleared on mutation
-        # self._block_slices: tp.Optional[tp.List[tp.Tuple[int, slice]]] = None
 
     #---------------------------------------------------------------------------
     def __setstate__(self,
@@ -466,7 +463,6 @@ class TypeBlocks(ContainerOperand):
         obj._index = self._index.copy() # list of tuples of ints
         obj._shape = self._shape # immutable, no copy necessary
         obj._row_dtype = deepcopy(self._row_dtype, memo)
-        # obj._block_slices = deepcopy(self._block_slices, memo)
         memo[id(self)] = obj
         return obj #type: ignore
 
@@ -1263,21 +1259,6 @@ class TypeBlocks(ContainerOperand):
         if last and bundle:
             yield (last[0], cls._cols_to_slice(bundle))
 
-    # def _all_block_slices(self) -> tp.Iterator[tp.Tuple[int, slice]]:
-    #     '''
-    #     Alternaitve to _indices_to_contiguous_pairs when we need all indices per block in a slice.
-    #     '''
-    #     # if self._block_slices is None:
-    #     #     self._block_slices = []
-    #     for idx, b in enumerate(self._blocks):
-    #         yield (idx, NULL_SLICE)
-    #             # if b.ndim == 1:
-    #             #     self._block_slices.append((idx, UNIT_SLICE)) # cannot give an integer here instead of a slice
-    #             # else:
-    #             #     self._block_slices.append((idx, slice(0, b.shape[1])))
-
-    #     # return self._block_slices
-
     # NOTE: this might cache its results as it is it might be frequently called with the same arguments in some scenarios (group)
     def _key_to_block_slices(self,
             key: GetItemKeyTypeCompound,
@@ -1293,7 +1274,6 @@ class TypeBlocks(ContainerOperand):
             A generator iterable of pairs, where values are block index, slice or column index
         '''
         if key is None or (key.__class__ is slice and key == NULL_SLICE):
-            # yield from self._all_block_slices()
             yield from ((i, NULL_SLICE) for i in range(len(self._blocks)))
         else:
             if isinstance(key, INT_TYPES):
@@ -3452,7 +3432,6 @@ class TypeBlocks(ContainerOperand):
             raise RuntimeError(f'appended block shape {block.shape} does not align with shape {self._shape}')
 
         # get ref to append
-        # bs = self._all_block_slices()
         block_idx = len(self._blocks) # next block
         if block.ndim == 1:
             # length already confirmed to match row count; even if this is a zero length 1D array, we keep it as it (by definition) defines a column (if the existing row_count is zero). said another way, a zero length, 1D array always has a shape of (0, 1)
@@ -3463,7 +3442,6 @@ class TypeBlocks(ContainerOperand):
             if block_columns == 0:
                 # do not append 0 width arrays
                 return
-            # bs.append((block_idx, slice(0, block_columns)))
 
         # extend shape, or define it if not yet set
         self._shape = (row_count, self._shape[1] + block_columns)
