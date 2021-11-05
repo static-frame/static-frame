@@ -1482,7 +1482,6 @@ class NPZConverter:
     KEY_DEPTHS = '__depths__'
     KEY_TYPES_INDEX = '__types_index__'
     KEY_TYPES_COLUMNS = '__types_columns__'
-
     KEY_TEMPLATE_VALUES_INDEX = '__values_index_{}__.npy'
     KEY_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__.npy'
     KEY_TEMPLATE_BLOCKS = '__blocks_{}__.npy'

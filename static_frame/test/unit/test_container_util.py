@@ -22,7 +22,6 @@ from static_frame.core.container_util import NPYConverter
 
 from static_frame.core.frame import FrameHE
 
-
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
@@ -709,7 +708,6 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_to_npy_a(self) -> None:
-        from static_frame.core.container_util import NPYConverter
         a1 = np.arange(20)
 
         with temp_file('.npy') as fp:
