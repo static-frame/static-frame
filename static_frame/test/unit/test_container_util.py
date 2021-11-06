@@ -2,7 +2,7 @@ import unittest
 import datetime
 
 import numpy as np
-from numpy.lib.format import write_array
+from numpy.lib.format import write_array # type: ignore
 
 
 from static_frame.core.container_util import bloc_key_normalize
