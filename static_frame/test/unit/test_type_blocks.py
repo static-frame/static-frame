@@ -2109,7 +2109,7 @@ class TestUnit(TestCase):
 
         a1 = np.array([None, None, None], dtype=object)
         tb1 = TypeBlocks.from_blocks((a1,))
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(AxisInvalid):
             tb1.fillna_trailing(value=3, axis=2)
 
     #---------------------------------------------------------------------------
@@ -2198,7 +2198,7 @@ class TestUnit(TestCase):
 
         a1 = np.array([None, None, None], dtype=object)
         tb1 = TypeBlocks.from_blocks((a1,))
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(AxisInvalid):
             tb1.fillna_leading(value=3, axis=2)
 
 

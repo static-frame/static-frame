@@ -1427,7 +1427,7 @@ class NPYConverter:
         file.write(cls._header_encode(header))
 
         if flags.f_contiguous and not flags.c_contiguous:
-            file.write(array.T.tobytes()) # # COV_MISSING
+            file.write(array.T.tobytes())
         else:
             file.write(array.tobytes())
 

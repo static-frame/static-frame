@@ -733,6 +733,16 @@ class TestUnit(TestCase):
                 with self.assertRaises(ValueError):
                     NPYConverter.to_npy(f, a1)
 
+    def test_to_npy_d(self) -> None:
+        a1 = np.arange(12).reshape(2,6).T
+
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                NPYConverter.to_npy(f, a1)
+            with open(fp, 'rb') as f:
+                a2 = NPYConverter.from_npy(f)
+
+            self.assertTrue((a1 == a2).all())
 
 
     def test_from_npy_a(self) -> None:
