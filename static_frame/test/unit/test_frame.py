@@ -9160,7 +9160,8 @@ class TestUnit(TestCase):
 
     def test_frame_to_npz_f(self) -> None:
         f1 = ff.parse('s(10,100)|v(bool,bool,float,float)|i((ID,IY),(dtD,dtY))|c((IY,I),(dtY,str))').rename(
-                'foo', index='bar', columns='baz')
+                'foo', index=('a', 'b'), columns=('x', 'y')
+                )
 
         with temp_file('.npz') as fp:
             f1.to_npz(fp)

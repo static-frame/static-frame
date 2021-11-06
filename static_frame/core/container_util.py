@@ -1624,6 +1624,10 @@ class NPZConverter:
                     )
         return index
 
+    @staticmethod
+    def _list_filter(name: tp.Hashable):
+        return tuple(name) if name.__class__ is list else name
+
     @classmethod
     def from_npz(cls,
             *,
@@ -1639,7 +1643,11 @@ class NPZConverter:
             zf_labels = frozenset(zf.namelist())
 
             payload_json = json.loads(zf.read(cls.FILE_META))
-            name, name_index, name_columns = payload_json[cls.KEY_NAMES]
+
+            # JSON will bring back tuples  name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON. Using `is` here deemed appropriate as objects coming back from json decoder.
+            name, name_index, name_columns = (cls._list_filter(n)
+                    for n in payload_json[cls.KEY_NAMES])
+
             block_count, depth_index, depth_columns = payload_json[cls.KEY_DEPTHS]
             cls_index, cls_columns = (ContainerMap.str_to_cls(name)
                     for name in payload_json[cls.KEY_TYPES])
