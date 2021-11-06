@@ -84,6 +84,18 @@ class NotImplementedAxis(NotImplementedError):
         super().__init__('Iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
 
 
+#-------------------------------------------------------------------------------
+# NOTE: these are dervied from ValueError to match NumPy convention
+
+class ErrorNPYEncode(ValueError):
+    '''
+    Error encoding an NPY file.
+    '''
+
+class ErrorNPYDecode(ValueError):
+    '''
+    Error decoding an NPY file.
+    '''
 
 #-------------------------------------------------------------------------------
 

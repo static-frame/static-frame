@@ -52,6 +52,8 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import DTYPE_OBJECT_KIND
 
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorNPYDecode
+from static_frame.core.exception import ErrorNPYEncode
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
@@ -1412,18 +1414,21 @@ class NPYConverter:
     def to_npy(cls, file: tp.IO[bytes], array: np.ndarray) -> None:
         '''Write an NPY 3.0 file to the open, writeable, binary file given by ``file``.
         '''
-        if array.dtype.kind == DTYPE_OBJECT_KIND:
+        dtype = array.dtype
+        if dtype.kind == DTYPE_OBJECT_KIND:
             file.close()
-            raise ValueError('no support for object dtypes')
-
+            raise ErrorNPYEncode('no support for object dtypes')
+        if dtype.names is not None:
+            file.close()
+            raise ErrorNPYEncode('no support for structured arrays')
         if array.ndim == 0 or array.ndim > 2:
             file.close()
-            raise ValueError('no support for ndim == 0 or greater than two.')
+            raise ErrorNPYEncode('no support for ndim == 0 or greater than two.')
 
         flags = array.flags
         fortran_order = True if flags.f_contiguous else False
 
-        header = f'{{"descr":"{array.dtype.str}","fortran_order":{fortran_order},"shape":{array.shape}}}'
+        header = f'{{"descr":"{dtype.str}","fortran_order":{fortran_order},"shape":{array.shape}}}'
         file.write(cls._header_encode(header))
 
         if flags.f_contiguous and not flags.c_contiguous:
@@ -1445,16 +1450,16 @@ class NPYConverter:
 
     @classmethod
     def from_npy(cls, file: tp.IO[bytes]) -> np.ndarray:
-        '''Read an NPY 3.0 file.
+        '''Read an NPY 1.0 file.
         '''
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
             file.close()
-            raise ValueError('Invalid NPY header found.')
+            raise ErrorNPYDecode('Invalid NPY header found.')
 
         dtype, fortran_order, shape = cls._header_decode(file)
         if dtype.kind == DTYPE_OBJECT_KIND:
             file.close() # COV_MISSING
-            raise ValueError('no support for object dtypes')
+            raise ErrorNPYDecode('no support for object dtypes')
 
         ndim = len(shape)
         if ndim == 1:
@@ -1463,7 +1468,7 @@ class NPYConverter:
             size = shape[0] * shape[1]
         else:
             file.close() # COV_MISSING
-            raise ValueError(f'No support for {ndim}-dimensional arrays')
+            raise ErrorNPYDecode(f'No support for {ndim}-dimensional arrays')
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
         # NOTE: np.frombuffer produces a read-only view on the existing data
@@ -1484,9 +1489,9 @@ class NPZConverter:
     KEY_DEPTHS = '__depths__'
     KEY_TYPES_INDEX = '__types_index__'
     KEY_TYPES_COLUMNS = '__types_columns__'
-    KEY_TEMPLATE_VALUES_INDEX = '__values_index_{}__.npy'
-    KEY_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__.npy'
-    KEY_TEMPLATE_BLOCKS = '__blocks_{}__.npy'
+    FILE_TEMPLATE_VALUES_INDEX = '__values_index_{}__.npy'
+    FILE_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__.npy'
+    FILE_TEMPLATE_BLOCKS = '__blocks_{}__.npy'
 
     @staticmethod
     def _index_encode(
@@ -1551,7 +1556,7 @@ class NPZConverter:
                 payload_json=payload_json,
                 payload_npy=payload_npy,
                 index=frame._index,
-                key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
+                key_template_values=cls.FILE_TEMPLATE_VALUES_INDEX,
                 key_types=cls.KEY_TYPES_INDEX,
                 depth=depth_index,
                 include=include_index,
@@ -1561,7 +1566,7 @@ class NPZConverter:
                 payload_json=payload_json,
                 payload_npy=payload_npy,
                 index=frame._columns,
-                key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
+                key_template_values=cls.FILE_TEMPLATE_VALUES_COLUMNS,
                 key_types=cls.KEY_TYPES_COLUMNS,
                 depth=depth_columns,
                 include=include_columns,
@@ -1573,7 +1578,7 @@ class NPZConverter:
                 NPYConverter.to_npy(bio, array)
                 bio.close()
             for i, array in enumerate(frame._blocks._blocks):
-                label = cls.KEY_TEMPLATE_BLOCKS.format(i)
+                label = cls.FILE_TEMPLATE_BLOCKS.format(i)
                 bio = zf.open(label, 'w')
                 NPYConverter.to_npy(bio, array)
                 bio.close()
@@ -1643,7 +1648,7 @@ class NPZConverter:
                     zf=zf,
                     zf_labels=zf_labels,
                     payload_json=payload_json,
-                    key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
+                    key_template_values=cls.FILE_TEMPLATE_VALUES_INDEX,
                     key_types=cls.KEY_TYPES_INDEX,
                     depth=depth_index,
                     cls_index=cls_index,
@@ -1654,7 +1659,7 @@ class NPZConverter:
                     zf=zf,
                     zf_labels=zf_labels,
                     payload_json=payload_json,
-                    key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
+                    key_template_values=cls.FILE_TEMPLATE_VALUES_COLUMNS,
                     key_types=cls.KEY_TYPES_COLUMNS,
                     depth=depth_columns,
                     cls_index=cls_columns,
@@ -1663,7 +1668,7 @@ class NPZConverter:
 
             def blocks() -> tp.Iterator[np.ndarray]:
                 for i in range(block_count):
-                    bio = zf.open(cls.KEY_TEMPLATE_BLOCKS.format(i))
+                    bio = zf.open(cls.FILE_TEMPLATE_BLOCKS.format(i))
                     array = NPYConverter.from_npy(bio)
                     array.flags.writeable = False
                     yield array

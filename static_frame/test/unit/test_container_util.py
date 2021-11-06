@@ -27,6 +27,8 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorNPYDecode
+from static_frame.core.exception import ErrorNPYEncode
 
 from static_frame import Frame
 from static_frame import Index
@@ -723,14 +725,14 @@ class TestUnit(TestCase):
 
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ErrorNPYEncode):
                     NPYConverter.to_npy(f, a1)
 
     def test_to_npy_c(self) -> None:
         a1 = np.arange(12).reshape(2, 3, 2)
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ErrorNPYEncode):
                     NPYConverter.to_npy(f, a1)
 
     def test_to_npy_d(self) -> None:
@@ -753,6 +755,17 @@ class TestUnit(TestCase):
             # ensure compatibility with numpy loaders
             a2 = np.load(fp)
             self.assertTrue((a1 == a2).all())
+
+    def test_to_npy_f(self) -> None:
+        a1 = np.array([('Rex', 9, 81.0), ('Fido', 3, 27.0)],
+                dtype=[('name', 'U10'), ('age', 'i4'), ('weight', 'f4')]
+                )
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                with self.assertRaises(ErrorNPYEncode):
+                    NPYConverter.to_npy(f, a1)
+
+
 
 
     def test_from_npy_a(self) -> None:
@@ -785,7 +798,7 @@ class TestUnit(TestCase):
 
             with open(fp, 'rb') as f:
                 # invaliud header raises
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ErrorNPYDecode):
                     a2 = NPYConverter.from_npy(f)
 
 
@@ -798,7 +811,7 @@ class TestUnit(TestCase):
 
             with open(fp, 'rb') as f:
                 # invalid shape
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ErrorNPYDecode):
                     a2 = NPYConverter.from_npy(f)
 
     def test_from_npy_e(self) -> None:
@@ -810,7 +823,7 @@ class TestUnit(TestCase):
 
             with open(fp, 'rb') as f:
                 # invalid object dtype
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ErrorNPYDecode):
                     a2 = NPYConverter.from_npy(f)
 
 
