@@ -2,6 +2,7 @@ import unittest
 import datetime
 
 import numpy as np
+from numpy.lib.format import write_array
 
 
 from static_frame.core.container_util import bloc_key_normalize
@@ -717,6 +718,22 @@ class TestUnit(TestCase):
             a2 = np.load(fp)
             self.assertTrue((a1 == a2).all())
 
+    def test_to_npy_b(self) -> None:
+        a1 = np.array([None, 'foo', 3], dtype=object)
+
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                with self.assertRaises(ValueError):
+                    NPYConverter.to_npy(f, a1)
+
+    def test_to_npy_c(self) -> None:
+        a1 = np.arange(12).reshape(2, 3, 2)
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                with self.assertRaises(ValueError):
+                    NPYConverter.to_npy(f, a1)
+
+
 
     def test_from_npy_a(self) -> None:
         a1 = np.arange(20)
@@ -739,6 +756,43 @@ class TestUnit(TestCase):
 
             self.assertTrue(a1.shape == a2.shape)
             self.assertTrue((a1 == a2).all())
+
+
+    def test_from_npy_c(self) -> None:
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                f.write(b'foo')
+
+            with open(fp, 'rb') as f:
+                # invaliud header raises
+                with self.assertRaises(ValueError):
+                    a2 = NPYConverter.from_npy(f)
+
+
+    def test_from_npy_d(self) -> None:
+        a1 = np.arange(12).reshape(2, 3, 2)
+
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                write_array(f, a1, version=(3, 0))
+
+            with open(fp, 'rb') as f:
+                # invalid shape
+                with self.assertRaises(ValueError):
+                    a2 = NPYConverter.from_npy(f)
+
+    def test_from_npy_e(self) -> None:
+        a1 = np.array([None, 'foo', 3], dtype=object)
+
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                write_array(f, a1, version=(3, 0))
+
+            with open(fp, 'rb') as f:
+                # invalid object dtype
+                with self.assertRaises(ValueError):
+                    a2 = NPYConverter.from_npy(f)
+
 
 
 

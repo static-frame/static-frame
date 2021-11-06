@@ -1413,8 +1413,12 @@ class NPYConverter:
         '''Write an NPY 3.0 file to the open, writeable, binary file given by ``file``.
         '''
         if array.dtype.kind == DTYPE_OBJECT_KIND:
-            file.close() # COV_MISSING
+            file.close()
             raise ValueError('no support for object dtypes')
+
+        if array.ndim == 0 or array.ndim > 2:
+            file.close()
+            raise ValueError('no support for ndim == 0 or greater than two.')
 
         flags = array.flags
         fortran_order = True if flags.f_contiguous else False
@@ -1444,8 +1448,8 @@ class NPYConverter:
         '''Read an NPY 3.0 file.
         '''
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
-            file.close() # COV_MISSING
-            raise ValueError('Invalud NPY header found.')
+            file.close()
+            raise ValueError('Invalid NPY header found.')
 
         dtype, fortran_order, shape = cls._header_decode(file)
         if dtype.kind == DTYPE_OBJECT_KIND:
@@ -1453,9 +1457,7 @@ class NPYConverter:
             raise ValueError('no support for object dtypes')
 
         ndim = len(shape)
-        if ndim == 0:
-            size = 1 # COV_MISSING, possibly do not support
-        elif ndim == 1:
+        if ndim == 1:
             size = shape[0]
         elif ndim == 2:
             size = shape[0] * shape[1]
