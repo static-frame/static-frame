@@ -2997,7 +2997,7 @@ class TypeBlocks(ContainerOperand):
                     value=value,
                     func_target=isna_array,
                     sided_leading=True))
-        raise NotImplementedError(f'no support for axis {axis}')
+        raise AxisInvalid(f'no support for axis {axis}')
 
     def fillna_trailing(self,
             value: tp.Any,
@@ -3020,7 +3020,7 @@ class TypeBlocks(ContainerOperand):
                     sided_leading=False)))
             return self.from_blocks(blocks)
 
-        raise NotImplementedError(f'no support for axis {axis}')
+        raise AxisInvalid(f'no support for axis {axis}')
 
 
     def fillfalsy_leading(self,
@@ -3041,7 +3041,8 @@ class TypeBlocks(ContainerOperand):
                     value=value,
                     func_target=isfalsy_array,
                     sided_leading=True))
-        raise NotImplementedError(f'no support for axis {axis}')
+
+        raise AxisInvalid(f'no support for axis {axis}')
 
     def fillfalsy_trailing(self,
             value: tp.Any,
@@ -3064,7 +3065,7 @@ class TypeBlocks(ContainerOperand):
                     sided_leading=False)))
             return self.from_blocks(blocks)
 
-        raise NotImplementedError(f'no support for axis {axis}')
+        raise AxisInvalid(f'no support for axis {axis}')
 
     #---------------------------------------------------------------------------
     # fillna directional
