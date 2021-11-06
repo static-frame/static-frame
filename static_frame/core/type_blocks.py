@@ -53,7 +53,6 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import NULL_SLICE
