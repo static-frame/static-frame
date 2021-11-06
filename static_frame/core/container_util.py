@@ -1625,8 +1625,8 @@ class NPZConverter:
         return index
 
     @staticmethod
-    def _list_filter(name: tp.Hashable):
-        return tuple(name) if name.__class__ is list else name
+    def _list_filter(name: tp.Any) -> tp.Hashable:
+        return tuple(name) if name.__class__ is list else name #type: ignore
 
     @classmethod
     def from_npz(cls,

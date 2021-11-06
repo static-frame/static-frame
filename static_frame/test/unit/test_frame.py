@@ -5570,7 +5570,7 @@ class TestUnit(TestCase):
                 (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', 0), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', ''), ('c', ''))), ('x', (('a', 0), ('b', 6), ('c', ''))), ('y', (('a', 0), ('b', ''), ('c', ''))), ('z', (('a', 4), ('b', 1), ('c', 5)))))
 
         with self.assertRaises(AxisInvalid):
-            self.assertEqual(f1.fillfalsy_leading(0, axis=-1))
+            _ = f1.fillfalsy_leading(0, axis=-1)
 
 
     def test_frame_fillna_trailing_a(self) -> None:
@@ -5629,7 +5629,7 @@ class TestUnit(TestCase):
                 )
 
         with self.assertRaises(AxisInvalid):
-            self.assertEqual(f1.fillfalsy_trailing(0, axis=-1))
+            _ = f1.fillfalsy_trailing(0, axis=-1)
 
 
 
