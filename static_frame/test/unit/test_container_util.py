@@ -744,6 +744,16 @@ class TestUnit(TestCase):
 
             self.assertTrue((a1 == a2).all())
 
+    def test_to_npy_e(self) -> None:
+        a1 = np.arange(4)
+        with temp_file('.npy') as fp:
+
+            with open(fp, 'wb') as f:
+                NPYConverter.to_npy(f, a1)
+            # ensure compatibility with numpy loaders
+            a2 = np.load(fp)
+            self.assertTrue((a1 == a2).all())
+
 
     def test_from_npy_a(self) -> None:
         a1 = np.arange(20)
@@ -784,7 +794,7 @@ class TestUnit(TestCase):
 
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:
-                write_array(f, a1, version=(3, 0))
+                write_array(f, a1, version=(1, 0))
 
             with open(fp, 'rb') as f:
                 # invalid shape

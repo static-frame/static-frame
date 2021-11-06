@@ -1385,11 +1385,12 @@ class NPYConverter:
     '''Optimized implementation based on numpy/lib/format.py
     '''
     # BUFFER_SIZE_NUMERATOR = 16 * 1024 ** 2
-    MAGIC_PREFIX = b'\x93NUMPY' + bytes((3, 0)) # version 3.0
+    MAGIC_PREFIX = b'\x93NUMPY' + bytes((1, 0)) # version 1.0
     MAGIC_LEN = len(MAGIC_PREFIX)
     ARRAY_ALIGN = 64
-    STRUCT_FMT = '<I'
+    STRUCT_FMT = '<H' # version 1.0
     STRUCT_FMT_SIZE = struct.calcsize(STRUCT_FMT)
+    ENCODING = 'latin1' # version 1.0
 
     @classmethod
     def _header_encode(cls, header: str) -> bytes:
@@ -1397,7 +1398,7 @@ class NPYConverter:
         Takes a string header, and attaches the prefix and padding to it.
         This is hard-coded to only use Version 3.0
         '''
-        center = header.encode('utf8')
+        center = header.encode(cls.ENCODING)
         hlen = len(center) + 1
 
         padlen = cls.ARRAY_ALIGN - (
@@ -1405,7 +1406,6 @@ class NPYConverter:
                )
         prefix = cls.MAGIC_PREFIX + struct.pack(cls.STRUCT_FMT, hlen + padlen)
         postfix = b' ' * padlen + b'\n'
-
         return prefix + center + postfix
 
     @classmethod
@@ -1439,7 +1439,7 @@ class NPYConverter:
         '''
         length_size = file.read(cls.STRUCT_FMT_SIZE)
         length_header = struct.unpack(cls.STRUCT_FMT, length_size)[0]
-        header = file.read(length_header).decode('utf8')
+        header = file.read(length_header).decode(cls.ENCODING)
         dtype_str, fortran_order, shape = literal_eval(header).values()
         return np.dtype(dtype_str), fortran_order, shape
 

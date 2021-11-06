@@ -6,12 +6,14 @@ import unittest
 # import sqlite3
 # import gc
 
-# import numpy as np
+import numpy as np
 from hypothesis import given
 # from arraykit import isna_element
 
 from static_frame.core.frame import Frame
 from static_frame.core.index_datetime import IndexDate
+from static_frame.core.container_util import NPYConverter
+from static_frame.core.util import DTYPE_INEXACT_KINDS
 
 # from static_frame.core.frame import FrameGO
 # from static_frame.core.interface import UFUNC_AXIS_SKIPNA
@@ -53,6 +55,27 @@ class TestUnit(TestCase):
             f2 = Frame.from_npz(fp)
             self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
 
+
+    @given(sfst.get_array_1d2d(dtype_group=sfst.DTGroup.ALL_NO_OBJECT))
+    def test_frame_to_npy_a(self, a1: Frame) -> None:
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                NPYConverter.to_npy(f, a1)
+
+            a2 = np.load(fp)
+            if a2.dtype.kind in DTYPE_INEXACT_KINDS:
+                self.assertAlmostEqualArray(a1, a2)
+            else:
+                self.assertTrue((a1 == a2).all())
+            self.assertTrue(a1.shape == a2.shape)
+
+            with open(fp, 'rb') as f:
+                a3 = NPYConverter.from_npy(f)
+                if a3.dtype.kind in DTYPE_INEXACT_KINDS:
+                    self.assertAlmostEqualArray(a1, a3)
+                else:
+                    self.assertTrue((a1 == a3).all())
+                self.assertTrue(a1.shape == a3.shape)
 
 
 if __name__ == '__main__':
