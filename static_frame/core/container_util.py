@@ -1382,6 +1382,18 @@ class MessagePackElement:
 
 
 #-------------------------------------------------------------------------------
+class Decoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        json.JSONDecoder.__init__(self, *args, **kwargs)
+        # print(self.parse_array)
+
+        def post(func):
+            def wrapper(*args, **kwargs):
+                return tuple(func(*args, **kwargs))
+            return wrapper
+
+        self.parse_array = post(self.parse_array)
+
 
 class NPYConverter:
     '''Optimized implementation based on numpy/lib/format.py
