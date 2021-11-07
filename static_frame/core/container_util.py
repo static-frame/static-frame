@@ -1382,17 +1382,33 @@ class MessagePackElement:
 
 
 #-------------------------------------------------------------------------------
-class Decoder(json.JSONDecoder):
-    def __init__(self, *args, **kwargs):
-        json.JSONDecoder.__init__(self, *args, **kwargs)
-        # print(self.parse_array)
+# class JSONDecoder(json.JSONDecoder):
+#     def __init__(self, *args, **kwargs):
+#         json.JSONDecoder.__init__(self, *args, **kwargs)
 
-        def post(func):
-            def wrapper(*args, **kwargs):
-                return tuple(func(*args, **kwargs))
-            return wrapper
+#         def post(func):
+#             def wrapper(*args, **kwargs):
+#                 return tuple(func(*args, **kwargs))
+#             return wrapper
 
-        self.parse_array = post(self.parse_array)
+#         self.parse_array = post(self.parse_array)
+#         self.scan_once = json.scanner.make_scanner(self)
+
+    # def __init__(self, *, object_hook=None, parse_float=None,
+    #         parse_int=None, parse_constant=None, strict=True,
+    #         object_pairs_hook=None):
+
+    #     self.object_hook = object_hook
+    #     self.parse_float = parse_float or float
+    #     self.parse_int = parse_int or int
+    #     self.parse_constant = parse_constant or json._CONSTANTS.__getitem__
+    #     self.strict = strict
+    #     self.object_pairs_hook = object_pairs_hook
+    #     self.parse_object = json.JSONObject
+    #     self.parse_array = json.JSONArray
+    #     self.parse_string = json.scanstring
+    #     self.memo = {}
+    #     self.scan_once = json.scanner.make_scanner(self)
 
 
 class NPYConverter:
@@ -1638,6 +1654,7 @@ class NPZConverter:
 
     @staticmethod
     def _list_filter(name: tp.Any) -> tp.Hashable:
+        # Using `is` here deemed appropriate as objects coming back from json decoder.
         return tuple(name) if name.__class__ is list else name #type: ignore
 
     @classmethod
@@ -1654,11 +1671,12 @@ class NPZConverter:
         with zipfile.ZipFile(fp) as zf:
             zf_labels = frozenset(zf.namelist())
 
+            # payload_json = json.loads(zf.read(cls.FILE_META), cls=JSONDecoder)
             payload_json = json.loads(zf.read(cls.FILE_META))
 
-            # JSON will bring back tuples  name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON. Using `is` here deemed appropriate as objects coming back from json decoder.
-            name, name_index, name_columns = (cls._list_filter(n)
-                    for n in payload_json[cls.KEY_NAMES])
+            # import ipdb; ipdb.set_trace()
+            # JSON will bring back tuples  name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
+            name, name_index, name_columns = (cls._list_filter(n) for n in payload_json[cls.KEY_NAMES])
 
             block_count, depth_index, depth_columns = payload_json[cls.KEY_DEPTHS]
             cls_index, cls_columns = (ContainerMap.str_to_cls(name)
