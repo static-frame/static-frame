@@ -827,7 +827,7 @@ class TestUnit(TestCase):
                     a2 = NPYConverter.from_npy(f)
 
 
-    def test_from_npy_e(self) -> None:
+    def test_from_npy_f(self) -> None:
         a1 = np.array([None, 'foo', 3], dtype=object)
 
         with temp_file('.npy') as fp:
@@ -836,7 +836,6 @@ class TestUnit(TestCase):
 
             with open(fp, 'rb') as f:
                 # invalid object dtype
-                import ipdb; ipdb.set_trace()
                 with self.assertRaises(ErrorNPYDecode):
                     a2 = NPYConverter.from_npy(f)
 
