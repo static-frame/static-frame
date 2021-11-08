@@ -2,6 +2,7 @@ import typing as tp
 from itertools import chain
 from ast import literal_eval
 from copy import deepcopy
+from operator import itemgetter
 
 import numpy as np
 from arraykit import name_filter
@@ -1020,7 +1021,7 @@ class IndexHierarchy(IndexBase):
         return Series(self._levels.index_types(), index=labels, dtype=DTYPE_OBJECT)
 
     #---------------------------------------------------------------------------
-    def relabel(self, mapper: RelabelInput) -> 'IndexHierarchy':
+    def relabel(self, mapper: RelabelInput) -> "IndexHierarchy":
         '''
         Return a new IndexHierarchy with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
         '''
@@ -1031,13 +1032,11 @@ class IndexHierarchy(IndexBase):
 
         if not callable(mapper):
             # if a mapper, it must support both __getitem__ and __contains__
-            getitem = getattr(mapper, 'get')
-
             def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
                 for array in self._blocks.axis_values(axis=1):
                     # as np.ndarray are not hashable, must tuplize
                     label = tuple(array)
-                    yield getitem(label, label)
+                    yield mapper.get(label, label) # type: ignore
 
             return self.__class__.from_labels(gen(),
                     name=self._name,
@@ -1051,14 +1050,63 @@ class IndexHierarchy(IndexBase):
                 )
 
 
-    # def relabel_at_depth(self: IH,
-    #         mapper: RelabelInput,
-    #         depth_level: DepthLevelSpecifier = 0
-    #         ) -> IH:
-    #     '''
-    #     Return a new :obj:`IndexHierarchy` after applying the hte `mapper` to the depth level or levels specified by `depth_level`.
-    #     '''
-    #     pass
+    def relabel_at_depth(self,
+            mapper: RelabelInput,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> "IndexHierarchy":
+        '''
+        Return a new :obj:`IndexHierarchy` after applying the the `mapper` to the depth level or levels specified by `depth_level`.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if isinstance(depth_level, INT_TYPES):
+            # Single depth levels have an optimized path through IndexLevels
+            return self.__class__(
+                    levels=self._levels.relabel_at_specific_depth(mapper, depth_level),
+                    name=self._name,
+                    )
+
+        depth_level = list(depth_level)
+
+        if len(depth_level) == 1:
+            # Optimized path for single depth level
+            return self.__class__(
+                levels=self._levels.relabel_at_specific_depth(mapper, depth_level[0]),
+                name=self._name,
+                )
+        elif len(depth_level) == self.depth:
+            # Equivalent to relabel!
+            return self.relabel(mapper)
+
+        index_constructors = tuple(self._levels.index_types())
+
+        def get_modified(array_items: tuple) -> tp.Iterable[tp.Any]: # type: ignore
+            if callable(mapper):
+                return mapper(array_items) # type: ignore
+
+            # if a mapper, it must support both __getitem__ and __contains__
+            return mapper.get(array_items, array_items) # type: ignore
+
+        def gen() -> tp.Iterator[np.ndarray]:
+            for array in self._blocks.axis_values(axis=1):
+                array_items = itemgetter(*depth_level)(array)
+                modified_items = get_modified(array_items)
+
+                # Optimize for when the mapper is a dictionary, and our specific
+                # row was not found
+                if array_items is modified_items:
+                    yield array
+                    continue
+
+                array_copy = array.copy()
+                array_copy[depth_level] = modified_items
+                yield array_copy
+
+        return self.__class__.from_labels(gen(),
+                name=self._name,
+                index_constructors=index_constructors,
+                )
 
     def rehierarch(self: IH,
             depth_map: tp.Sequence[int]

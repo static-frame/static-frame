@@ -1339,8 +1339,6 @@ class TestUnit(TestCase):
 
         ih = IndexHierarchy.from_labels(labels)
 
-        ih.relabel({('I', 'B'): ('I', 'C')})
-
         ih2 = ih.relabel({('I', 'B'): ('I', 'C')})
 
         self.assertEqual(ih2.values.tolist(),
@@ -1355,7 +1353,83 @@ class TestUnit(TestCase):
                 ih3.values.tolist(),
                 [['i', 'a'], ['i', 'b'], ['ii', 'a'], ['ii', 'b']])
 
+    def test_hierarchy_relabel_at_depth_a(self) -> None: # 2D
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
 
+        ih = IndexHierarchy.from_labels(labels)
+
+        # Simple rename at depth 0
+        ih2 = ih.relabel_at_depth(dict(I=1), depth_level=0)
+        self.assertEqual(ih2.values.tolist(),
+                [[1, 'A'], [1, 'B'], ['II', 'A'], ['II', 'B']])
+
+        # Simple rename at depth 1
+        ih3 = ih.relabel_at_depth(dict(A=1, B=2), depth_level=1)
+        self.assertEqual(ih3.values.tolist(),
+                [['I', 1], ['I', 2], ['II', 1], ['II', 2]])
+
+        # Simple rename using func
+        ih4 = ih.relabel_at_depth(lambda x: x*2, depth_level=1)
+        self.assertEqual(ih4.values.tolist(),
+                [['I', 'AA'], ['I', 'BB'], ['II', 'AA'], ['II', 'BB']])
+
+        # If the depth level is all levels, it's equivalent to a relabel for all input types
+        for mapper in (
+                {('I', 'A'): (0, 1)},      # Map
+                lambda x: [y*2 for y in x] # Func
+            ):
+            ihA = ih.relabel_at_depth(mapper, depth_level=(0, 1))
+            ihB = ih.relabel(mapper)
+            self.assertTrue(ihA.equals(ihB))
+
+        # The depth level is too big
+        with self.assertRaises(ValueError):
+            ih.relabel_at_depth(dict(A=1, B=2), depth_level=3)
+
+    def test_hierarchy_relabel_at_depth_b(self) -> None: # 3D
+
+        ih = IndexHierarchy.from_product(('I', 'II'), ('B', 'A'), (2, 1))
+
+        # Simple map relabel at outermost depth
+        ih2 = ih.relabel_at_depth(dict(II=99), depth_level=0)
+        self.assertTrue(ih2.equals(
+            IndexHierarchy.from_product(('I', 99), ('B', 'A'), (2, 1)))
+            )
+
+        # Simple map relabel at depth where no hits are found
+        ih3 = ih.relabel_at_depth(dict(III='doesnt exist'), depth_level=0)
+        self.assertTrue(ih3.equals(ih))
+
+        # Simple map relabel at an inner depth
+        ih4 = ih.relabel_at_depth({1: 100}, depth_level=2)
+        self.assertTrue(ih4.equals(
+            IndexHierarchy.from_product(('I', 'II'), ('B', 'A'), (2, 100)))
+            )
+
+        # Map on multiple levels
+        ih5 = ih.relabel_at_depth({("I", 'A'): ('A', "B")}, depth_level=(0, 1))
+        expected = IndexHierarchy.from_tree({
+            'I': {
+                'B': [2, 1]
+            },
+            'A': {
+                'B': [2, 1]
+            },
+            'II': {
+                'B': [2, 1],
+                'A': [2, 1]
+            }
+        })
+        self.assertTrue(expected.equals(ih5))
+
+        # Function on multiple levels
+        ih6 = ih.relabel_at_depth(lambda x: [y*2 for y in x], depth_level=(1, 2))
+        self.assertTrue(ih6.equals(IndexHierarchy.from_product(('I', 'II'), ('BB', 'AA'), (4, 2))))
 
     def test_hierarchy_rehierarch_a(self) -> None:
         ih1 = IndexHierarchy.from_product(('I', 'II'), ('B', 'A'), (2, 1))
