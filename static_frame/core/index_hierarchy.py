@@ -1088,9 +1088,11 @@ class IndexHierarchy(IndexBase):
             # if a mapper, it must support both __getitem__ and __contains__
             return mapper.get(array_items, array_items) # type: ignore
 
+        array_getter = itemgetter(*depth_level)
+
         def gen() -> tp.Iterator[np.ndarray]:
             for array in self._blocks.axis_values(axis=1):
-                array_items = itemgetter(*depth_level)(array)
+                array_items = array_getter(array)
                 modified_items = get_modified(array_items)
 
                 # Optimize for when the mapper is a dictionary, and our specific
