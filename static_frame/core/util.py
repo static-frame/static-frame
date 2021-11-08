@@ -2680,6 +2680,15 @@ def array_sample(
     post.flags.writeable = False
     return post
 
+#-------------------------------------------------------------------------------
+def list_to_tuple(value: tp.Any) -> tp.Any:
+    '''Recursively convert any observed lists into tuples; this is used as a post processor for objects coming back from JSON decoding.
+    '''
+    # Using `is` here deemed appropriate as objects coming back from json decoder.
+    if value.__class__ is not list:
+        return value
+    return tuple(list_to_tuple(v) for v in value)
+
 
 #-------------------------------------------------------------------------------
 

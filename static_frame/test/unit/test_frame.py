@@ -9176,6 +9176,13 @@ class TestUnit(TestCase):
             f2 = Frame.from_npz(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
+    def test_frame_to_npz_h(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename(((1, 2), (3, 4)))
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
 
     #---------------------------------------------------------------------------
