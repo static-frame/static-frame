@@ -1484,19 +1484,19 @@ class Archive:
     labels: tp.FrozenSet[str]
 
     def __init__(self, fp: PathSpecifier, writeable: bool):
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def read_array(self, name: str) -> np.ndarray:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def write_metadata(self, content: tp.Any) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def read_metadata(self) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
 class ArchiveZip(Archive):
 
@@ -1538,7 +1538,10 @@ class ArchiveDirectory(Archive):
 
         self._archive = fp
         if not os.path.exists(self._archive):
-            os.mkdir(fp)
+            if writeable:
+                os.mkdir(fp)
+            else:
+                raise RuntimeError(f'Atttempting to read from a non-existant directory: {fp}')
         elif not os.path.isdir(self._archive):
             raise RuntimeError(f'A directory must be provided, not {fp}')
 

@@ -1,5 +1,7 @@
 import unittest
 import datetime
+from tempfile import TemporaryDirectory
+import os
 
 import numpy as np
 from numpy.lib.format import write_array # type: ignore
@@ -20,6 +22,7 @@ from static_frame.core.container_util import apply_binary_operator_blocks_column
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
 from static_frame.core.container_util import NPYConverter
+from static_frame.core.container_util import ArchiveDirectory
 
 from static_frame.core.frame import FrameHE
 
@@ -838,6 +841,26 @@ class TestUnit(TestCase):
                 # invalid object dtype
                 with self.assertRaises(ErrorNPYDecode):
                     a2 = NPYConverter.from_npy(f)
+
+    #---------------------------------------------------------------------------
+    def test_archive_directory_a(self) -> None:
+        with temp_file('.npy') as fp:
+            with self.assertRaises(RuntimeError):
+                ArchiveDirectory(fp, writeable=False)
+
+    def test_archive_directory_b(self) -> None:
+        with TemporaryDirectory() as fp:
+            os.rmdir(fp)
+            # creates directory
+            ad = ArchiveDirectory(fp, writeable=True)
+
+    def test_archive_directory_c(self) -> None:
+        with TemporaryDirectory() as fp:
+            os.rmdir(fp)
+            # reading from a non-existant directory
+            with self.assertRaises(RuntimeError):
+                ad = ArchiveDirectory(fp, writeable=False)
+            os.mkdir(fp) # restore the directory for context manager
 
 
 
