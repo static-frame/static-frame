@@ -4,6 +4,8 @@ import pickle
 from io import StringIO
 from io import BytesIO
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import Future
+from static_frame.core.doc_str import F
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')
 
@@ -66,21 +68,34 @@ class _StoreZip(Store):
         raise NotImplementedError
 
     @classmethod
-    def _payload_to_frame(cls,
-            payload: tp.Optional[PayloadBytesToFrame],
-            ) -> tp.Optional[Frame]:
+    def _payload_to_frame(cls, payload: PayloadBytesToFrame) -> Frame:
         '''
         Single argument wrapper for _build_frame().
         '''
-        if payload is None:
-            return None
-
         return cls._build_frame(
                 src=payload.src,
                 name=payload.name,
                 config=payload.config,
                 constructor=payload.constructor,
-        )
+                )
+
+    @classmethod
+    def _payloads_to_frames(cls,
+            payloads: tp.List[PayloadBytesToFrame],
+            ) -> tp.List[Frame]:
+        '''
+        Single argument wrapper for _build_frame().
+        '''
+        return [cls._payload_to_frame(payload) for payload in payloads]
+
+    @staticmethod
+    def _set_container_type(frame: Frame, container_type: tp.Type[Frame]) -> Frame:
+        """
+        Helper method to coerce a frame to the expected type, or return it if the type is already correct
+        """
+        if frame.__class__ is not container_type:
+            return frame._to_frame(container_type)
+        return frame
 
     @store_coherent_non_write
     def labels(self, *,
@@ -98,6 +113,45 @@ class _StoreZip(Store):
                 yield config_map.default.label_decode(name)
 
     @store_coherent_non_write
+    def _read_many_single_thread(self,
+            labels: tp.Iterable[tp.Hashable],
+            *,
+            config_map: StoreConfigMap,
+            constructor: FrameConstructor,
+            container_type: tp.Type[Frame],
+            ) -> tp.Iterator[Frame]:
+        """
+        Simplified logic path for reading many frames in a single thread, using
+        the weak_cache when possible.
+        """
+        not_in_cache_sentinel = object()
+
+        with zipfile.ZipFile(self._fp) as zf:
+            for label in labels:
+                # Since the value can be deallocated between lookup & extraction,
+                # we have to handle it with `get`` & a sentinel to ensure we
+                # don't have a race condition
+                cache_lookup = self._weak_cache.get(label, not_in_cache_sentinel)
+                if cache_lookup is not not_in_cache_sentinel:
+                    yield self._set_container_type(cache_lookup, container_type)
+                    return
+
+                c: StoreConfig = config_map[label]
+
+                label_encoded: str = config_map.default.label_encode(label)
+                src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
+
+                frame = self._build_frame(
+                        src=src,
+                        name=label,
+                        config=c,
+                        constructor=constructor,
+                )
+                # Newly read frame, add it to our weak_cache
+                self._weak_cache[label] = frame
+                yield frame
+
+    @store_coherent_non_write
     def read_many(self,
             labels: tp.Iterable[tp.Hashable],
             *,
@@ -109,42 +163,23 @@ class _StoreZip(Store):
         multiprocess: bool = config_map.default.read_max_workers is not None
         constructor: FrameConstructor = self._container_type_to_constructor(container_type)
 
-        def get_from_weak_cache(label: tp.Hashable) -> Frame:
-            frame = self._weak_cache[label]
-            if frame.__class__ is not container_type:
-                return frame._to_frame(container_type)
-            return frame
+        if not multiprocess:
+            yield from self._read_many_single_thread(
+                    labels=labels,
+                    config_map=config_map,
+                    constructor=constructor,
+                    container_type=container_type,
+            )
+            return
 
-        def gen_single_process() -> tp.Iterator[Frame]:
-            assert not multiprocess
+        # To ensure race-conditions don't happen, and to simplifiy the code
+        # we lock in the state of our weak_cache for the rest of the function
+        strong_cache = dict(self._weak_cache)
 
+        def gen_multiprocess() -> tp.Iterator[PayloadBytesToFrame]:
             with zipfile.ZipFile(self._fp) as zf:
                 for label in labels:
-                    if label in self._weak_cache:
-                        yield get_from_weak_cache(label)
-                        continue
-
-                    c: StoreConfig = config_map[label]
-
-                    label_encoded: str = config_map.default.label_encode(label)
-                    src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
-
-                    frame = self._build_frame(
-                            src=src,
-                            name=label,
-                            config=c,
-                            constructor=constructor,
-                    )
-                    self._weak_cache[label] = frame
-                    yield frame
-
-        def gen_multiprocess() -> tp.Iterator[tp.Optional[PayloadBytesToFrame]]:
-            assert multiprocess
-
-            with zipfile.ZipFile(self._fp) as zf:
-                for label in labels:
-                    if label in self._weak_cache:
-                        yield None
+                    if label in strong_cache:
                         continue
 
                     c: StoreConfig = config_map[label]
@@ -159,28 +194,59 @@ class _StoreZip(Store):
                             constructor=constructor,
                     )
 
-        if multiprocess:
-            # Avoid spinning up a process pool if all requested labels have weakrefs
-            if all(label in self._weak_cache for label in labels):
-                for label in labels:
-                    yield get_from_weak_cache(label)
+        cache_hits = sum(label in strong_cache for label in labels)
 
-            chunksize = config_map.default.read_chunksize
+        # Avoid spinning up a process pool if all requested labels have weakrefs
+        if cache_hits == len(labels):
+            for label in labels:
+                yield self._set_container_type(strong_cache[label], container_type)
 
+        payload_iter = gen_multiprocess()
+        chunksize = config_map.default.read_chunksize
+
+        if not cache_hits:
+            # Simplify the logic for cases when nothing exists in our cache
             with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
-                for label, frame in zip(
-                        labels,
-                        executor.map(self._payload_to_frame, gen_multiprocess(), chunksize=chunksize)
-                        ):
-                    if label in self._weak_cache:
-                        assert frame is None
-                        yield get_from_weak_cache(label)
-                    else:
-                        assert frame is not None
-                        self._weak_cache[label] = frame
-                        yield frame
-        else:
-            yield from gen_single_process()
+                yield from executor.map(self._payload_to_frame, payload_iter, chunksize=chunksize)
+            return
+
+        # We have a case where there are some cache hits, and some cache misses
+        with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
+            futures: tp.List[Future[tp.List[Frame]]] = []
+
+            current_chunk: tp.List[PayloadBytesToFrame] = []
+            for label in labels:
+                if label in strong_cache:
+                    continue
+
+                current_chunk.append(next(payload_iter))
+
+                if len(current_chunk) == chunksize:
+                    futures.append(executor.submit(self._payloads_to_frames, current_chunk))
+                    current_chunk = []
+
+            if current_chunk:
+                futures.append(executor.submit(self._payloads_to_frames, current_chunk))
+                current_chunk = []
+
+            current_future = iter(futures[0].result())
+            future_idx = 1
+
+            for label in labels:
+                if label in strong_cache:
+                    yield self._set_container_type(strong_cache[label], container_type)
+                    continue
+
+                try:
+                    frame = next(current_future)
+                except StopIteration:
+                    current_future = iter(futures[future_idx].result())
+                    future_idx += 1
+                    frame = next(current_future)
+
+                # Newly read frame, add it to our weak_cache
+                self._weak_cache[label] = frame
+                yield frame
 
     # --------------------------------------------------------------------------
 
