@@ -1,5 +1,4 @@
 import typing as tp
-import weakref
 import zipfile
 import pickle
 from io import StringIO
@@ -112,7 +111,7 @@ class _StoreZip(Store):
 
         def get_from_weak_cache(label: tp.Hashable) -> Frame:
             frame = self._weak_cache[label]
-            if type(frame) is not container_type:
+            if frame.__class__ is not container_type:
                 return frame._to_frame(container_type)
             return frame
 
