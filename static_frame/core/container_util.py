@@ -1537,7 +1537,9 @@ class ArchiveDirectory(Archive):
     def __init__(self, fp: PathSpecifier, writeable: bool):
 
         self._archive = fp
-        if not os.path.isdir(self._archive):
+        if not os.path.exists(self._archive):
+            os.mkdir(fp)
+        elif not os.path.isdir(self._archive):
             raise RuntimeError(f'A directory must be provided, not {fp}')
 
         if not writeable:
@@ -1554,7 +1556,7 @@ class ArchiveDirectory(Archive):
     def read_array(self, name) -> np.ndarray:
         fp = os.path.join(self._archive, name)
         try:
-            f = open(fp)
+            f = open(fp, 'rb')
             array = NPYConverter.from_npy(f)
         finally:
             f.close()

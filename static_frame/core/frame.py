@@ -49,6 +49,7 @@ from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors_deferred
 from static_frame.core.container_util import df_slice_to_arrays
 from static_frame.core.container_util import NPZConverter
+from static_frame.core.container_util import NPYDirectoryConverter
 from static_frame.core.container_util import frame_to_frame
 
 from static_frame.core.display import Display
@@ -2244,6 +2245,18 @@ class Frame(ContainerOperand):
                 fp=fp,
                 )
 
+    @classmethod
+    def from_npy(cls,
+            fp: PathSpecifier,
+            ) -> 'Frame':
+        '''
+        Create a :obj:`Frame` from an directory of npy files.
+        '''
+        # TODO: expose memmap option
+        return NPYDirectoryConverter.from_npz(
+                constructor=cls,
+                fp=fp,
+                )
 
     #---------------------------------------------------------------------------
 
@@ -7488,6 +7501,21 @@ class Frame(ContainerOperand):
                 include_columns=include_columns,
                 )
 
+    def to_npy(self,
+            fp: PathSpecifier, # not sure file-like StringIO works
+            *,
+            include_index: bool = True,
+            include_columns: bool = True,
+            ) -> None:
+        '''
+        Write a :obj:`Frame` as a directory of npy file.
+        '''
+        NPYDirectoryConverter.to_npz(
+                frame=self,
+                fp=fp,
+                include_index=include_index,
+                include_columns=include_columns,
+                )
 
     #---------------------------------------------------------------------------
 
