@@ -1489,10 +1489,10 @@ class Archive:
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
         raise NotImplementedError()
 
-    def read_array(self, name) -> np.ndarray:
+    def read_array(self, name: str) -> np.ndarray:
         raise NotImplementedError()
 
-    def write_metadata(self, content: any) -> None:
+    def write_metadata(self, content: tp.Any) -> None:
         raise NotImplementedError()
 
     def read_metadata(self) -> tp.Any:
