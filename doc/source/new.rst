@@ -1,6 +1,10 @@
 What is New in Static Frame
 ===============================
 
+0.8.28
+----------
+
+Added ``Frame.to_npy()``, ``Frame.from_npy()``.
 
 
 0.8.27
