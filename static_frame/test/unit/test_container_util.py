@@ -23,6 +23,7 @@ from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
 from static_frame.core.container_util import NPYConverter
 from static_frame.core.container_util import ArchiveDirectory
+from static_frame.core.container_util import ArchiveZip
 
 from static_frame.core.frame import FrameHE
 
@@ -854,23 +855,29 @@ class TestUnit(TestCase):
                 self.assertEqual(a2.tolist(), [2, 3, 4])
 
     #---------------------------------------------------------------------------
+
+    # def test_archive_zip_a(self) -> None:
+    #     with temp_file('.zip') as fp:
+    #         _ = ArchiveZip(fp, writeable=False, memory_map=True)
+
+
     def test_archive_directory_a(self) -> None:
         with temp_file('.npy') as fp:
             with self.assertRaises(RuntimeError):
-                ArchiveDirectory(fp, writeable=False)
+                ArchiveDirectory(fp, writeable=False, memory_map=False)
 
     def test_archive_directory_b(self) -> None:
         with TemporaryDirectory() as fp:
             os.rmdir(fp)
             # creates directory
-            ad = ArchiveDirectory(fp, writeable=True)
+            ad = ArchiveDirectory(fp, writeable=True, memory_map=False)
 
     def test_archive_directory_c(self) -> None:
         with TemporaryDirectory() as fp:
             os.rmdir(fp)
             # reading from a non-existant directory
             with self.assertRaises(RuntimeError):
-                ad = ArchiveDirectory(fp, writeable=False)
+                ad = ArchiveDirectory(fp, writeable=False, memory_map=False)
             os.mkdir(fp) # restore the directory for context manager
 
 

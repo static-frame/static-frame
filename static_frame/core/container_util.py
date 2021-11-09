@@ -1517,7 +1517,7 @@ class Archive:
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
-    def read_array(self, name: str, memory_map: bool = False) -> np.ndarray:
+    def read_array(self, name: str) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
     def write_metadata(self, content: tp.Any) -> None:
@@ -1534,12 +1534,12 @@ class ArchiveZip(Archive):
             memory_map: bool,
             ):
 
-        if memory_map:
-            raise RuntimeError(f'Cannot memory_map with {self}')
         mode = 'w' if writeable else 'r'
         self._archive = zipfile.ZipFile(fp, mode, zipfile.ZIP_STORED)
         if not writeable:
             self.labels = frozenset(self._archive.namelist())
+        if memory_map:
+            raise RuntimeError(f'Cannot memory_map with {self}')
 
     def __del__(self) -> None:
         self._archive.close()
