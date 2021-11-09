@@ -1,4 +1,5 @@
 import typing as tp
+import weakref
 import zipfile
 import pickle
 from io import StringIO
@@ -67,11 +68,14 @@ class _StoreZip(Store):
 
     @classmethod
     def _payload_to_frame(cls,
-            payload: PayloadBytesToFrame,
-            ) -> Frame:
+            payload: tp.Optional[PayloadBytesToFrame],
+            ) -> tp.Optional[Frame]:
         '''
         Single argument wrapper for _build_frame().
         '''
+        if payload is None:
+            return None
+
         return cls._build_frame(
                 src=payload.src,
                 name=payload.name,
@@ -106,36 +110,78 @@ class _StoreZip(Store):
         multiprocess: bool = config_map.default.read_max_workers is not None
         constructor: FrameConstructor = self._container_type_to_constructor(container_type)
 
-        def gen() -> tp.Iterable[tp.Union[PayloadBytesToFrame, Frame]]:
+        def get_from_weak_cache(label: tp.Hashable) -> Frame:
+            frame = self._weak_cache[label]
+            if type(frame) is not container_type:
+                return frame._to_frame(container_type)
+            return frame
+
+        def gen_single_process() -> tp.Iterator[Frame]:
+            assert not multiprocess
+
             with zipfile.ZipFile(self._fp) as zf:
                 for label in labels:
+                    if label in self._weak_cache:
+                        yield get_from_weak_cache(label)
+                        continue
+
                     c: StoreConfig = config_map[label]
 
                     label_encoded: str = config_map.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
-                    if multiprocess:
-                        yield PayloadBytesToFrame( # pylint: disable=no-value-for-parameter
-                                src=src,
-                                name=label,
-                                config=c.to_store_config_he(),
-                                constructor=constructor,
-                        )
-                    else:
-                        yield self._build_frame(
-                                src=src,
-                                name=label,
-                                config=c,
-                                constructor=constructor,
-                        )
+                    frame = self._build_frame(
+                            src=src,
+                            name=label,
+                            config=c,
+                            constructor=constructor,
+                    )
+                    self._weak_cache[label] = frame
+                    yield frame
+
+        def gen_multiprocess() -> tp.Iterator[tp.Optional[PayloadBytesToFrame]]:
+            assert multiprocess
+
+            with zipfile.ZipFile(self._fp) as zf:
+                for label in labels:
+                    if label in self._weak_cache:
+                        yield None
+                        continue
+
+                    c: StoreConfig = config_map[label]
+
+                    label_encoded: str = config_map.default.label_encode(label)
+                    src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
+
+                    yield PayloadBytesToFrame( # pylint: disable=no-value-for-parameter
+                            src=src,
+                            name=label,
+                            config=c.to_store_config_he(),
+                            constructor=constructor,
+                    )
 
         if multiprocess:
+            # Avoid spinning up a process pool if all requested labels have weakrefs
+            if all(label in self._weak_cache for label in labels):
+                for label in labels:
+                    yield get_from_weak_cache(label)
+
             chunksize = config_map.default.read_chunksize
 
             with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
-                yield from executor.map(self._payload_to_frame, gen(), chunksize=chunksize)
+                for label, frame in zip(
+                        labels,
+                        executor.map(self._payload_to_frame, gen_multiprocess(), chunksize=chunksize)
+                        ):
+                    if label in self._weak_cache:
+                        assert frame is None
+                        yield get_from_weak_cache(label)
+                    else:
+                        assert frame is not None
+                        self._weak_cache[label] = frame
+                        yield frame
         else:
-            yield from gen() # type: ignore
+            yield from gen_single_process()
 
     # --------------------------------------------------------------------------
 

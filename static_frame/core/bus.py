@@ -1,4 +1,3 @@
-
 import typing as tp
 
 import numpy as np
@@ -227,7 +226,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 max_persist=max_persist,
                 own_data=True,
                 )
-
 
     @classmethod
     @doc_inject(selector='bus_constructor')
