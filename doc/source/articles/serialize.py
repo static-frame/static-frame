@@ -231,6 +231,6 @@ def run_test():
     # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
-    get_sizes()
+    # get_sizes()
     run_test()
 
