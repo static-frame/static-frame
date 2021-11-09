@@ -1447,7 +1447,7 @@ class NPYConverter:
         return np.dtype(dtype_str), fortran_order, shape
 
     @classmethod
-    def from_npy(cls, file: tp.IO[bytes]) -> np.ndarray:
+    def from_npy(cls, file: tp.IO[bytes], memory_map: bool = False) -> np.ndarray:
         '''Read an NPY 1.0 file.
         '''
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
@@ -1489,7 +1489,7 @@ class Archive:
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
-    def read_array(self, name: str) -> np.ndarray:
+    def read_array(self, name: str, memory_map: bool = False) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
     def write_metadata(self, content: tp.Any) -> None:
@@ -1516,7 +1516,7 @@ class ArchiveZip(Archive):
         finally:
             f.close()
 
-    def read_array(self, name: str) -> np.ndarray:
+    def read_array(self, name: str, memory_map: bool = False) -> np.ndarray:
         try:
             f = self._archive.open(name)
             array = NPYConverter.from_npy(f)
@@ -1556,11 +1556,11 @@ class ArchiveDirectory(Archive):
         finally:
             f.close()
 
-    def read_array(self, name: str) -> np.ndarray:
+    def read_array(self, name: str, memory_map: bool = False) -> np.ndarray:
         fp = os.path.join(self._archive, name)
         try:
             f = open(fp, 'rb')
-            array = NPYConverter.from_npy(f)
+            array = NPYConverter.from_npy(f, memory_map)
         finally:
             f.close()
         array.flags.writeable = False

@@ -9,19 +9,20 @@ import pickle
 import numpy as np
 import frame_fixtures as ff
 import static_frame as sf
+import pandas as pd
 from static_frame.core.display_color import HexColor
 
 
 
-FF_wide = 's(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
-FF_wide_col = 's(10,10_000)|v(int,bool,float)|i(I,str)|c(I,int)'
-FF_wide_ext = 's(1000,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
+FF_wide = 's(10,10_000)|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
+FF_wide_col = 's(10,10_000)|v(int,bool,float)|i(I,int)|c(I,str)'
+FF_wide_ext = 's(1000,10_000)|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
 
-FF_tall = 's(10_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
-FF_tall_col = 's(10_000,10)|v(int,bool,float)|i(I,str)|c(I,int)'
-FF_tall_ext = 's(10_000,1000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
+FF_tall = 's(10_000,10)|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
+FF_tall_col = 's(10_000,10)|v(int,bool,float)|i(I,int)|c(I,str)'
+FF_tall_ext = 's(10_000,1000)|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
 
-FF_square = 's(1_000,1_000)|v(float)|i(I,str)|c(I,int)'
+FF_square = 's(1_000,1_000)|v(float)|i(I,int)|c(I,str)'
 
 class FileIOTest:
     NUMBER = 4
@@ -39,7 +40,7 @@ class FileIOTest:
 
 
 
-class FileReadParquet(FileIOTest):
+class SFReadParquet(FileIOTest):
     SUFFIX = '.parquet'
 
     def __init__(self, fixture: str):
@@ -48,9 +49,9 @@ class FileReadParquet(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_parquet(self.fp, index_depth=1)
-        _ = f.loc['zkuW', '91301']
+        _ = f.loc[34715, 'zZbu']
 
-class FileWriteParquet(FileIOTest):
+class SFWriteParquet(FileIOTest):
     SUFFIX = '.parquet'
 
     def __call__(self):
@@ -58,7 +59,32 @@ class FileWriteParquet(FileIOTest):
 
 
 
-class FileReadNPZ(FileIOTest):
+class PDReadParquet(FileIOTest):
+    SUFFIX = '.parquet'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        df = self.fixture.to_pandas()
+        df.to_parquet(self.fp)
+
+    def __call__(self):
+        f = pd.read_parquet(self.fp)
+        _ = f.loc[34715, 'zZbu']
+
+class PDWriteParquet(FileIOTest):
+    SUFFIX = '.parquet'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.df = self.fixture.to_pandas()
+
+    def __call__(self):
+        self.df.to_parquet(self.fp)
+
+
+
+
+class SFReadNPZ(FileIOTest):
     SUFFIX = '.npz'
 
     def __init__(self, fixture: str):
@@ -67,10 +93,10 @@ class FileReadNPZ(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_npz(self.fp)
-        _ = f.loc['zkuW', 91301]
+        _ = f.loc[34715, 'zZbu']
 
 
-class FileWriteNPZ(FileIOTest):
+class SFWriteNPZ(FileIOTest):
     SUFFIX = '.npz'
 
     def __call__(self):
@@ -78,7 +104,7 @@ class FileWriteNPZ(FileIOTest):
 
 
 
-class FileReadPickle(FileIOTest):
+class SFReadPickle(FileIOTest):
     SUFFIX = '.pickle'
 
     def __init__(self, fixture):
@@ -90,7 +116,7 @@ class FileReadPickle(FileIOTest):
     def __call__(self):
         with open(self.fp, 'rb') as f:
             f = pickle.load(f)
-            _ = f.loc['zkuW', 91301]
+            _ = f.loc[34715, 'zZbu']
 
 
     def __del__(self) -> None:
@@ -98,7 +124,7 @@ class FileReadPickle(FileIOTest):
         os.unlink(self.fp)
 
 
-class FileWritePickle(FileIOTest):
+class SFWritePickle(FileIOTest):
     SUFFIX = '.pickle'
 
     def __init__(self, fixture):
@@ -209,13 +235,14 @@ def run_test():
             ):
     # for label, fixture in (('square', FF_square),):
         for cls in (
-                FileWriteParquet,
-                FileWriteNPZ,
-                # FileWriteNPZCompressed,
-                FileWritePickle,
-                FileReadParquet,
-                FileReadNPZ,
-                FileReadPickle,
+                PDWriteParquet,
+                SFWriteParquet,
+                SFWriteNPZ,
+                SFWritePickle,
+                PDReadParquet,
+                SFReadParquet,
+                SFReadNPZ,
+                SFReadPickle,
                 ):
             runner = cls(fixture)
             record = [cls.__name__, cls.NUMBER, label]
@@ -243,7 +270,7 @@ def run_test():
     # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
-    pandas_serialize()
+    # pandas_serialize()
     # get_sizes()
-    # run_test()
+    run_test()
 
