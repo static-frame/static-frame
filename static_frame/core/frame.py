@@ -2248,14 +2248,19 @@ class Frame(ContainerOperand):
     @classmethod
     def from_npy(cls,
             fp: PathSpecifier,
+            *,
+            memory_map: bool = True,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an directory of npy files.
+
+        Args:
+            memory_map: Use Python mmap objects to provide NumPy array buffers.
         '''
-        # TODO: expose memmap option
         return NPYDirectoryConverter.from_npz(
                 constructor=cls,
                 fp=fp,
+                memory_map=memory_map,
                 )
 
     #---------------------------------------------------------------------------

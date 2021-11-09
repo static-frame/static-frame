@@ -1479,6 +1479,7 @@ class NPYConverter:
                     access=mmap.ACCESS_READ,
                     offset=offset_mmap,
                     )
+            # print(mm, id(mm))
             # will always be immutable
             return np.ndarray(shape,
                     dtype=dtype,
@@ -1504,8 +1505,13 @@ class Archive:
     '''
     FILE_META = '__meta__.json'
     labels: tp.FrozenSet[str]
+    memory_map: bool
 
-    def __init__(self, fp: PathSpecifier, writeable: bool):
+    def __init__(self,
+            fp: PathSpecifier,
+            writeable: bool,
+            memory_map: bool,
+            ):
         raise NotImplementedError() #pragma: no cover
 
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
@@ -1522,7 +1528,14 @@ class Archive:
 
 class ArchiveZip(Archive):
 
-    def __init__(self, fp: PathSpecifier, writeable: bool):
+    def __init__(self,
+            fp: PathSpecifier,
+            writeable: bool,
+            memory_map: bool,
+            ):
+
+        if memory_map:
+            raise RuntimeError(f'Cannot memory_map with {self}')
         mode = 'w' if writeable else 'r'
         self._archive = zipfile.ZipFile(fp, mode, zipfile.ZIP_STORED)
         if not writeable:
@@ -1532,15 +1545,15 @@ class ArchiveZip(Archive):
         self._archive.close()
 
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
+        f = self._archive.open(name, 'w') # zip only was 'w' mode
         try:
-            f = self._archive.open(name, 'w') # zip only was 'w' mode
             NPYConverter.to_npy(f, array)
         finally:
             f.close()
 
-    def read_array(self, name: str, memory_map: bool = False) -> np.ndarray:
+    def read_array(self, name: str) -> np.ndarray:
+        f = self._archive.open(name)
         try:
-            f = self._archive.open(name)
             array = NPYConverter.from_npy(f)
         finally:
             f.close()
@@ -1556,7 +1569,11 @@ class ArchiveZip(Archive):
 
 class ArchiveDirectory(Archive):
 
-    def __init__(self, fp: PathSpecifier, writeable: bool):
+    def __init__(self,
+            fp: PathSpecifier,
+            writeable: bool,
+            memory_map: bool,
+            ):
 
         self._archive = fp
         if not os.path.exists(self._archive):
@@ -1570,19 +1587,26 @@ class ArchiveDirectory(Archive):
         if not writeable:
             self.labels = frozenset(f.name for f in os.scandir(self._archive))
 
+        self.memory_map = memory_map
+
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
         fp = os.path.join(self._archive, name)
+        f = open(fp, 'wb')
         try:
-            f = open(fp, 'wb')
             NPYConverter.to_npy(f, array)
         finally:
             f.close()
 
-    def read_array(self, name: str, memory_map: bool = False) -> np.ndarray:
+    def read_array(self, name: str) -> np.ndarray:
         fp = os.path.join(self._archive, name)
+        f = open(fp, 'rb')
+
+        if self.memory_map:
+            # NOTE: not sure how to close!
+            return NPYConverter.from_npy(f, self.memory_map)
+
         try:
-            f = open(fp, 'rb')
-            array = NPYConverter.from_npy(f, memory_map)
+            array = NPYConverter.from_npy(f, self.memory_map)
         finally:
             f.close()
         array.flags.writeable = False
@@ -1590,16 +1614,16 @@ class ArchiveDirectory(Archive):
 
     def write_metadata(self, content: tp.Any) -> None:
         fp = os.path.join(self._archive, self.FILE_META)
+        f = open(fp, 'w')
         try:
-            f = open(fp, 'w')
             f.write(json.dumps(content))
         finally:
             f.close()
 
     def read_metadata(self) -> tp.Any:
         fp = os.path.join(self._archive, self.FILE_META)
+        f = open(fp)
         try:
-            f = open(fp)
             post = json.loads(f.read())
         finally:
             f.close()
@@ -1678,7 +1702,10 @@ class NPYArchiveConverter:
                 depth_index,
                 depth_columns]
 
-        archive = cls.ARCHIVE_CLS(fp, writeable=True)
+        archive = cls.ARCHIVE_CLS(fp,
+                writeable=True,
+                memory_map=False,
+                )
 
         cls._index_encode(
                 metadata=metadata,
@@ -1743,13 +1770,17 @@ class NPYArchiveConverter:
             *,
             constructor: tp.Type['Frame'],
             fp: PathSpecifier,
+            memory_map: bool = False,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an npz file.
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-        archive = cls.ARCHIVE_CLS(fp, writeable=False)
+        archive = cls.ARCHIVE_CLS(fp,
+                writeable=False,
+                memory_map=memory_map,
+                )
         metadata = archive.read_metadata()
 
         # JSON will bring back tuple `name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
