@@ -13,6 +13,7 @@ import zipfile
 import json
 import struct
 from ast import literal_eval
+import os
 
 import numpy as np
 from numpy import char as npc
@@ -50,6 +51,7 @@ from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import DTYPE_OBJECT_KIND
+from static_frame.core.util import list_to_tuple
 
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorNPYDecode
@@ -1382,39 +1384,10 @@ class MessagePackElement:
 
 
 #-------------------------------------------------------------------------------
-# class JSONDecoder(json.JSONDecoder):
-#     def __init__(self, *args, **kwargs):
-#         json.JSONDecoder.__init__(self, *args, **kwargs)
-
-#         def post(func):
-#             def wrapper(*args, **kwargs):
-#                 return tuple(func(*args, **kwargs))
-#             return wrapper
-
-#         self.parse_array = post(self.parse_array)
-#         self.scan_once = json.scanner.make_scanner(self)
-
-    # def __init__(self, *, object_hook=None, parse_float=None,
-    #         parse_int=None, parse_constant=None, strict=True,
-    #         object_pairs_hook=None):
-
-    #     self.object_hook = object_hook
-    #     self.parse_float = parse_float or float
-    #     self.parse_int = parse_int or int
-    #     self.parse_constant = parse_constant or json._CONSTANTS.__getitem__
-    #     self.strict = strict
-    #     self.object_pairs_hook = object_pairs_hook
-    #     self.parse_object = json.JSONObject
-    #     self.parse_array = json.JSONArray
-    #     self.parse_string = json.scanstring
-    #     self.memo = {}
-    #     self.scan_once = json.scanner.make_scanner(self)
-
 
 class NPYConverter:
     '''Optimized implementation based on numpy/lib/format.py
     '''
-    # BUFFER_SIZE_NUMERATOR = 16 * 1024 ** 2
     MAGIC_PREFIX = b'\x93NUMPY' + bytes((1, 0)) # version 1.0
     MAGIC_LEN = len(MAGIC_PREFIX)
     ARRAY_ALIGN = 64
@@ -1444,13 +1417,10 @@ class NPYConverter:
         '''
         dtype = array.dtype
         if dtype.kind == DTYPE_OBJECT_KIND:
-            file.close()
             raise ErrorNPYEncode('no support for object dtypes')
         if dtype.names is not None:
-            file.close()
             raise ErrorNPYEncode('no support for structured arrays')
         if array.ndim == 0 or array.ndim > 2:
-            file.close()
             raise ErrorNPYEncode('no support for ndim == 0 or greater than two.')
 
         flags = array.flags
@@ -1481,12 +1451,10 @@ class NPYConverter:
         '''Read an NPY 1.0 file.
         '''
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
-            file.close()
             raise ErrorNPYDecode('Invalid NPY header found.')
 
         dtype, fortran_order, shape = cls._header_decode(file)
         if dtype.kind == DTYPE_OBJECT_KIND:
-            file.close() # COV_MISSING
             raise ErrorNPYDecode('no support for object dtypes')
 
         ndim = len(shape)
@@ -1495,7 +1463,6 @@ class NPYConverter:
         elif ndim == 2:
             size = shape[0] * shape[1]
         else:
-            file.close() # COV_MISSING
             raise ErrorNPYDecode(f'No support for {ndim}-dimensional arrays')
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
@@ -1510,8 +1477,111 @@ class NPYConverter:
         return array
 
 
-class NPZConverter:
+class Archive:
+    '''Abstraction of a directory or a zip archive.
+    '''
     FILE_META = '__meta__.json'
+    labels: tp.FrozenSet[str]
+
+    def __init__(self, fp: PathSpecifier, writeable: bool):
+        raise NotImplementedError()
+
+    def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
+        raise NotImplementedError()
+
+    def read_array(self, name: str) -> np.ndarray:
+        raise NotImplementedError()
+
+    def write_metadata(self, content: tp.Any) -> None:
+        raise NotImplementedError()
+
+    def read_metadata(self) -> tp.Any:
+        raise NotImplementedError()
+
+class ArchiveZip(Archive):
+
+    def __init__(self, fp: PathSpecifier, writeable: bool):
+        mode = 'w' if writeable else 'r'
+        self._archive = zipfile.ZipFile(fp, mode, zipfile.ZIP_STORED)
+        if not writeable:
+            self.labels = frozenset(self._archive.namelist())
+
+    def __del__(self) -> None:
+        self._archive.close()
+
+    def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
+        try:
+            f = self._archive.open(name, 'w') # zip only was 'w' mode
+            NPYConverter.to_npy(f, array)
+        finally:
+            f.close()
+
+    def read_array(self, name: str) -> np.ndarray:
+        try:
+            f = self._archive.open(name)
+            array = NPYConverter.from_npy(f)
+        finally:
+            f.close()
+        array.flags.writeable = False
+        return array
+
+    def write_metadata(self, content: tp.Any) -> None:
+        self._archive.writestr(self.FILE_META, json.dumps(content))
+
+    def read_metadata(self) -> tp.Any:
+        return json.loads(self._archive.read(self.FILE_META))
+
+
+class ArchiveDirectory(Archive):
+
+    def __init__(self, fp: PathSpecifier, writeable: bool):
+
+        self._archive = fp
+        if not os.path.exists(self._archive):
+            os.mkdir(fp)
+        elif not os.path.isdir(self._archive):
+            raise RuntimeError(f'A directory must be provided, not {fp}')
+
+        if not writeable:
+            self.labels = frozenset(f.name for f in os.scandir(self._archive))
+
+    def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
+        fp = os.path.join(self._archive, name)
+        try:
+            f = open(fp, 'wb')
+            NPYConverter.to_npy(f, array)
+        finally:
+            f.close()
+
+    def read_array(self, name: str) -> np.ndarray:
+        fp = os.path.join(self._archive, name)
+        try:
+            f = open(fp, 'rb')
+            array = NPYConverter.from_npy(f)
+        finally:
+            f.close()
+        array.flags.writeable = False
+        return array
+
+    def write_metadata(self, content: tp.Any) -> None:
+        fp = os.path.join(self._archive, self.FILE_META)
+        try:
+            f = open(fp, 'w')
+            f.write(json.dumps(content))
+        finally:
+            f.close()
+
+    def read_metadata(self) -> tp.Any:
+        fp = os.path.join(self._archive, self.FILE_META)
+        try:
+            f = open(fp)
+            post = json.loads(f.read())
+        finally:
+            f.close()
+        return post
+
+
+class NPYArchiveConverter:
     KEY_NAMES = '__names__'
     KEY_TYPES = '__types__'
     KEY_DEPTHS = '__depths__'
@@ -1521,11 +1591,13 @@ class NPZConverter:
     FILE_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__.npy'
     FILE_TEMPLATE_BLOCKS = '__blocks_{}__.npy'
 
+    ARCHIVE_CLS: tp.Type[Archive]
+
     @staticmethod
     def _index_encode(
             *,
-            payload_json: tp.Dict[str, tp.Hashable],
-            payload_npy: tp.Dict[str, np.ndarray],
+            metadata: tp.Dict[str, tp.Hashable],
+            archive: Archive,
             index: 'IndexBase',
             key_template_values: str,
             key_types: str,
@@ -1534,39 +1606,39 @@ class NPZConverter:
             ) -> None:
         '''
         Args:
-            payload_json: mutates in place with json components
-            payload_npy: mutates in place with npy components
+            metadata: mutates in place with json components
         '''
         if depth == 1 and index._map is None: #type: ignore
             pass # do not store anything
         elif include:
             if depth == 1:
-                payload_npy[key_template_values.format(0)] = index.values
+                archive.write_array(key_template_values.format(0), index.values)
+                # payload_npy[key_template_values.format(0)] = index.values
             else:
                 for i in range(depth):
-                    payload_npy[key_template_values.format(i)] = index.values_at_depth(i)
-                payload_json[key_types] = [cls.__name__ for cls in index.index_types.values] # type: ignore
+                    archive.write_array(key_template_values.format(i), index.values_at_depth(i))
+                    # payload_npy[key_template_values.format(i)] = index.values_at_depth(i)
+
+                metadata[key_types] = [cls.__name__ for cls in index.index_types.values] # type: ignore
 
     @classmethod
     def to_npz(cls,
             *,
             frame: 'Frame',
-            fp: PathSpecifier, # not sure file-like StringIO works
+            fp: PathSpecifier,
             include_index: bool = True,
             include_columns: bool = True,
             ) -> None:
         '''
         Write a :obj:`Frame` as an npz file.
         '''
-        payload_json: tp.Dict[str, tp.Any] = {}
-        payload_npy: tp.Dict[str, np.ndarray] = {}
-
-        payload_json[cls.KEY_NAMES] = [frame._name,
+        metadata: tp.Dict[str, tp.Any] = {}
+        metadata[cls.KEY_NAMES] = [frame._name,
                 frame._index._name,
                 frame._columns._name,
                 ]
         # do not store Frame class as caller will determine
-        payload_json[cls.KEY_TYPES] = [
+        metadata[cls.KEY_TYPES] = [
                 frame._index.__class__.__name__,
                 frame._columns.__class__.__name__,
                 ]
@@ -1574,15 +1646,18 @@ class NPZConverter:
         # store shape, index depths
         depth_index = frame._index.depth
         depth_columns = frame._columns.depth
+        blocks = frame._blocks._blocks
 
-        payload_json[cls.KEY_DEPTHS] = [
-                len(frame._blocks._blocks),
+        metadata[cls.KEY_DEPTHS] = [
+                len(blocks),
                 depth_index,
                 depth_columns]
 
+        archive = cls.ARCHIVE_CLS(fp, writeable=True)
+
         cls._index_encode(
-                payload_json=payload_json,
-                payload_npy=payload_npy,
+                metadata=metadata,
+                archive=archive,
                 index=frame._index,
                 key_template_values=cls.FILE_TEMPLATE_VALUES_INDEX,
                 key_types=cls.KEY_TYPES_INDEX,
@@ -1591,8 +1666,8 @@ class NPZConverter:
                 )
 
         cls._index_encode(
-                payload_json=payload_json,
-                payload_npy=payload_npy,
+                metadata=metadata,
+                archive=archive,
                 index=frame._columns,
                 key_template_values=cls.FILE_TEMPLATE_VALUES_COLUMNS,
                 key_types=cls.KEY_TYPES_COLUMNS,
@@ -1600,23 +1675,15 @@ class NPZConverter:
                 include=include_columns,
                 )
 
-        with zipfile.ZipFile(fp, 'w', zipfile.ZIP_STORED) as zf:
-            for label, array in payload_npy.items():
-                bio = zf.open(label, 'w')
-                NPYConverter.to_npy(bio, array)
-                bio.close()
-            for i, array in enumerate(frame._blocks._blocks):
-                label = cls.FILE_TEMPLATE_BLOCKS.format(i)
-                bio = zf.open(label, 'w')
-                NPYConverter.to_npy(bio, array)
-                bio.close()
-            zf.writestr(cls.FILE_META, json.dumps(payload_json))
+        for i, array in enumerate(blocks):
+            archive.write_array(cls.FILE_TEMPLATE_BLOCKS.format(i), array)
+
+        archive.write_metadata(metadata)
 
     @staticmethod
     def _index_decode(*,
-            zf: zipfile.ZipFile,
-            zf_labels: tp.FrozenSet[str],
-            payload_json: tp.Dict[str, tp.Any],
+            archive: Archive,
+            metadata: tp.Dict[str, tp.Any],
             key_template_values: str,
             key_types: str,
             depth: int,
@@ -1627,35 +1694,24 @@ class NPZConverter:
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-        if key_template_values.format(0) not in zf_labels:
+        if key_template_values.format(0) not in archive.labels:
             index = None
         elif depth == 1:
-            bio = zf.open(key_template_values.format(0))
-            values_index = NPYConverter.from_npy(bio)
-            values_index.flags.writeable = False
-            index = cls_index(values_index, name=name)
+            index = cls_index(archive.read_array(key_template_values.format(0)),
+                    name=name,
+                    )
         else:
-            def blocks() -> tp.Iterator[np.ndarray]:
-                for i in range(depth):
-                    bio = zf.open(key_template_values.format(i))
-                    array = NPYConverter.from_npy(bio)
-                    array.flags.writeable = False
-                    yield array
-
-            index_tb = TypeBlocks.from_blocks(blocks())
+            index_tb = TypeBlocks.from_blocks(
+                    archive.read_array(key_template_values.format(i))
+                    for i in range(depth)
+                    )
             index_constructors = [ContainerMap.str_to_cls(name)
-                    for name in payload_json[key_types]]
-
+                    for name in metadata[key_types]]
             index = cls_index._from_type_blocks(index_tb, #type: ignore
                     name=name,
                     index_constructors=index_constructors,
                     )
         return index
-
-    @staticmethod
-    def _list_filter(name: tp.Any) -> tp.Hashable:
-        # Using `is` here deemed appropriate as objects coming back from json decoder.
-        return tuple(name) if name.__class__ is list else name #type: ignore
 
     @classmethod
     def from_npz(cls,
@@ -1668,50 +1724,40 @@ class NPZConverter:
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-        with zipfile.ZipFile(fp) as zf:
-            zf_labels = frozenset(zf.namelist())
+        archive = cls.ARCHIVE_CLS(fp, writeable=False)
+        metadata = archive.read_metadata()
 
-            # payload_json = json.loads(zf.read(cls.FILE_META), cls=JSONDecoder)
-            payload_json = json.loads(zf.read(cls.FILE_META))
+        # JSON will bring back tuple `name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
+        name, name_index, name_columns = (list_to_tuple(n) for n in metadata[cls.KEY_NAMES])
 
-            # import ipdb; ipdb.set_trace()
-            # JSON will bring back tuples  name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
-            name, name_index, name_columns = (cls._list_filter(n) for n in payload_json[cls.KEY_NAMES])
+        block_count, depth_index, depth_columns = metadata[cls.KEY_DEPTHS]
+        cls_index, cls_columns = (ContainerMap.str_to_cls(name)
+                for name in metadata[cls.KEY_TYPES])
 
-            block_count, depth_index, depth_columns = payload_json[cls.KEY_DEPTHS]
-            cls_index, cls_columns = (ContainerMap.str_to_cls(name)
-                    for name in payload_json[cls.KEY_TYPES])
+        index = cls._index_decode(
+                archive=archive,
+                metadata=metadata,
+                key_template_values=cls.FILE_TEMPLATE_VALUES_INDEX,
+                key_types=cls.KEY_TYPES_INDEX,
+                depth=depth_index,
+                cls_index=cls_index,
+                name=name_index,
+                )
 
-            index = cls._index_decode(
-                    zf=zf,
-                    zf_labels=zf_labels,
-                    payload_json=payload_json,
-                    key_template_values=cls.FILE_TEMPLATE_VALUES_INDEX,
-                    key_types=cls.KEY_TYPES_INDEX,
-                    depth=depth_index,
-                    cls_index=cls_index,
-                    name=name_index,
-                    )
+        columns = cls._index_decode(
+                archive=archive,
+                metadata=metadata,
+                key_template_values=cls.FILE_TEMPLATE_VALUES_COLUMNS,
+                key_types=cls.KEY_TYPES_COLUMNS,
+                depth=depth_columns,
+                cls_index=cls_columns,
+                name=name_columns,
+                )
 
-            columns = cls._index_decode(
-                    zf=zf,
-                    zf_labels=zf_labels,
-                    payload_json=payload_json,
-                    key_template_values=cls.FILE_TEMPLATE_VALUES_COLUMNS,
-                    key_types=cls.KEY_TYPES_COLUMNS,
-                    depth=depth_columns,
-                    cls_index=cls_columns,
-                    name=name_columns,
-                    )
-
-            def blocks() -> tp.Iterator[np.ndarray]:
-                for i in range(block_count):
-                    bio = zf.open(cls.FILE_TEMPLATE_BLOCKS.format(i))
-                    array = NPYConverter.from_npy(bio)
-                    array.flags.writeable = False
-                    yield array
-
-            tb = TypeBlocks.from_blocks(blocks())
+        tb = TypeBlocks.from_blocks(
+                archive.read_array(cls.FILE_TEMPLATE_BLOCKS.format(i))
+                for i in range(block_count)
+                )
 
         return constructor(tb,
                 own_data=True,
@@ -1723,8 +1769,11 @@ class NPZConverter:
                 )
 
 
+class NPZConverter(NPYArchiveConverter):
+    ARCHIVE_CLS = ArchiveZip
 
-
+class NPYDirectoryConverter(NPYArchiveConverter):
+    ARCHIVE_CLS = ArchiveDirectory
 
 
 

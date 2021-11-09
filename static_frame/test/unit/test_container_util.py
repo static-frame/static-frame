@@ -815,11 +815,24 @@ class TestUnit(TestCase):
                     a2 = NPYConverter.from_npy(f)
 
     def test_from_npy_e(self) -> None:
-        a1 = np.array([None, 'foo', 3], dtype=object)
+        a1 = np.array([2, 3, 4])
 
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:
                 write_array(f, a1, version=(3, 0))
+
+            with open(fp, 'rb') as f:
+                # invlid header; only version 1,0 is supported
+                with self.assertRaises(ErrorNPYDecode):
+                    a2 = NPYConverter.from_npy(f)
+
+
+    def test_from_npy_f(self) -> None:
+        a1 = np.array([None, 'foo', 3], dtype=object)
+
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                write_array(f, a1, version=(1, 0))
 
             with open(fp, 'rb') as f:
                 # invalid object dtype

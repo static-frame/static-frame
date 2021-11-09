@@ -11,6 +11,7 @@ import typing as tp
 import unittest
 import os
 import io
+from tempfile import TemporaryDirectory
 
 import numpy as np
 import frame_fixtures as ff
@@ -9176,6 +9177,81 @@ class TestUnit(TestCase):
             f2 = Frame.from_npz(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
+    def test_frame_to_npz_h(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename(((1, 2), (3, 4)))
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_npy_a(self) -> None:
+        f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_b(self) -> None:
+        f1 = ff.parse('s(10_000,2)|v(int,str)|c((I, ID),(str,dtD))|i(ID,dtD)').rename('foo')
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_c(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_d(self) -> None:
+        f1 = ff.parse('s(10,100)|v(int,str,bool,bool,float,float)').rename(
+                'foo', index='bar', columns='baz')
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_e(self) -> None:
+        f1 = ff.parse('s(10,100)|v(bool,bool,float,float)|i(I,str)|c(I,int)').rename(
+                'foo', index='bar', columns='baz')
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_f(self) -> None:
+        f1 = ff.parse('s(10,100)|v(bool,bool,float,float)|i((ID,IY),(dtD,dtY))|c((IY,I),(dtY,str))').rename(
+                'foo', index=('a', 'b'), columns=('x', 'y')
+                )
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_g(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_h(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename(((1, 2), (3, 4)))
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
 
     #---------------------------------------------------------------------------

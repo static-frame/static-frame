@@ -1,0 +1,14 @@
+
+
+
+Using the NPY Format for Faster-than Parquet, Complete DataFrame Serialization
+
+
+Using the NPY Format for Faster-than Parquet, Complete DataFrame Serialization
+
+
+
+Not supported in Pandas.to_parquet()
+    Must have string column names
+
+

@@ -1,12 +1,18 @@
 What is New in Static Frame
 ===============================
 
+0.8.28
+----------
+
+Added ``Frame.to_npy()``, ``Frame.from_npy()``.
 
 
 0.8.27
 ----------
 
 Reimplemented ``Frame.to_npz()``, ``Frame.from_npz()``, removing support for object arrays (and pickles) and improving performance.
+
+Added ``Bus.to_zip_npz()``, ``Bus.from_zip_npz()``, ``Quilt.to_zip_npz()``, ``Quilt.from_zip_npz()``, ``Batch.to_zip_npz()``, ``Batch.from_zip_npz()`` and ``Yarn.to_zip_npz()``.
 
 Implemented ``Series.fillfalsy_forward()``, ``Series.fillfalsy_backward()``, ``Series.fillfalsy_leading()``, ``Series.fillfalsy_trailing()``.
 
