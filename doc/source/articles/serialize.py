@@ -163,6 +163,18 @@ def get_sizes():
     print(f)
 
 
+def pandas_serialize():
+    import pandas as pd
+    df = ff.parse('s(10,10)|v(int,int,bool,float,float)|i(I,int)|c(I,str)').rename('foo').to_pandas().set_index(['zZbu', 'ztsv'])
+    df = df.reindex(columns=pd.Index(df.columns, name='foo'))
+
+
+    import ipdb; ipdb.set_trace()
+
+
+#-------------------------------------------------------------------------------
+
+
 def get_format():
 
     name_root_last = None
@@ -231,6 +243,7 @@ def run_test():
     # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
+    pandas_serialize()
     # get_sizes()
-    run_test()
+    # run_test()
 
