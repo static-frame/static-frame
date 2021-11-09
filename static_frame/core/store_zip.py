@@ -5,7 +5,6 @@ from io import StringIO
 from io import BytesIO
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import Future
-from static_frame.core.doc_str import F
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')
 
