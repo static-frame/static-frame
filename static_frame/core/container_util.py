@@ -1483,7 +1483,7 @@ class Archive:
     FILE_META = '__meta__.json'
     labels: tp.FrozenSet[str]
 
-    def __init__(self, fp: PathSpecifier):
+    def __init__(self, fp: PathSpecifier, writeable: bool):
         raise NotImplementedError()
 
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
@@ -1506,7 +1506,7 @@ class ArchiveZip(Archive):
         if not writeable:
             self.labels = frozenset(self._archive.namelist())
 
-    def __del__(self):
+    def __del__(self) -> None:
         self._archive.close()
 
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
@@ -1516,7 +1516,7 @@ class ArchiveZip(Archive):
         finally:
             f.close()
 
-    def read_array(self, name) -> np.ndarray:
+    def read_array(self, name: str) -> np.ndarray:
         try:
             f = self._archive.open(name)
             array = NPYConverter.from_npy(f)
@@ -1553,7 +1553,7 @@ class ArchiveDirectory(Archive):
         finally:
             f.close()
 
-    def read_array(self, name) -> np.ndarray:
+    def read_array(self, name: str) -> np.ndarray:
         fp = os.path.join(self._archive, name)
         try:
             f = open(fp, 'rb')
@@ -1591,7 +1591,7 @@ class NPYArchiveConverter:
     FILE_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__.npy'
     FILE_TEMPLATE_BLOCKS = '__blocks_{}__.npy'
 
-    ARCHIVE_CLS: Archive
+    ARCHIVE_CLS: tp.Type[Archive]
 
     @staticmethod
     def _index_encode(
