@@ -14,6 +14,7 @@ import json
 import struct
 from ast import literal_eval
 import os
+import mmap
 
 import numpy as np
 from numpy import char as npc
@@ -1464,6 +1465,27 @@ class NPYConverter:
             size = shape[0] * shape[1]
         else:
             raise ErrorNPYDecode(f'No support for {ndim}-dimensional arrays')
+
+        if memory_map:
+            # offset calculations derived from numpy/core/memmap.py
+            offset_header = file.tell()
+            byte_count = offset_header + size * dtype.itemsize
+            # ALLOCATIONGRANULARITY is 4096 on linux, if offset_header is 64 (or less than 4096), this will return zero
+            offset_mmap = offset_header - offset_header % mmap.ALLOCATIONGRANULARITY
+            byte_count -= offset_mmap
+            offset_array = offset_header - offset_mmap
+            mm = mmap.mmap(file.fileno(),
+                    byte_count,
+                    access=mmap.ACCESS_READ,
+                    offset=offset_mmap,
+                    )
+            # will always be immutable
+            return np.ndarray(shape,
+                    dtype=dtype,
+                    buffer=mm,
+                    offset=offset_array,
+                    order='F' if fortran_order else 'C',
+                    )
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
         # NOTE: np.frombuffer produces a read-only view on the existing data

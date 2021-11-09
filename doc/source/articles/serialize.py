@@ -195,8 +195,8 @@ def pandas_serialize():
     df = df.reindex(columns=pd.Index(df.columns, name='foo'))
 
 
-    import ipdb; ipdb.set_trace()
 
+# This subclass of ndarray has some unpleasant interactions with some operations, because it doesn’t quite fit properly as a subclass. An alternative to using this subclass is to create the mmap object yourself, then create an ndarray with ndarray.__new__ directly, passing the object created in its ‘buffer=’ parameter.
 
 #-------------------------------------------------------------------------------
 

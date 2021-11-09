@@ -842,6 +842,17 @@ class TestUnit(TestCase):
                 with self.assertRaises(ErrorNPYDecode):
                     a2 = NPYConverter.from_npy(f)
 
+
+    def test_from_npy_g(self) -> None:
+        a1 = np.array([2, 3, 4])
+
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                NPYConverter.to_npy(f, a1)
+            with open(fp, 'rb') as f:
+                a2 = NPYConverter.from_npy(f, memory_map=True)
+                self.assertEqual(a2.tolist(), [2, 3, 4])
+
     #---------------------------------------------------------------------------
     def test_archive_directory_a(self) -> None:
         with temp_file('.npy') as fp:
