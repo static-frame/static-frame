@@ -23,6 +23,7 @@ from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
 from static_frame.core.container_util import NPYConverter
 from static_frame.core.container_util import ArchiveDirectory
+from static_frame.core.container_util import ArchiveZip
 
 from static_frame.core.frame import FrameHE
 
@@ -855,9 +856,10 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    # def test_archive_zip_a(self) -> None:
-    #     with temp_file('.zip') as fp:
-    #         _ = ArchiveZip(fp, writeable=False, memory_map=True)
+    def test_archive_zip_a(self) -> None:
+        with temp_file('.zip') as fp:
+            with self.assertRaises(RuntimeError):
+                _ = ArchiveZip(fp, writeable=True, memory_map=True)
 
 
     def test_archive_directory_a(self) -> None:

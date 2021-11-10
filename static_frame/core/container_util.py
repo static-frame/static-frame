@@ -9,7 +9,8 @@ import datetime
 from fractions import Fraction
 import typing as tp
 from enum import Enum
-import zipfile
+from zipfile import ZipFile
+from zipfile import ZIP_STORED
 import json
 import struct
 from ast import literal_eval
@@ -1491,7 +1492,8 @@ class NPYConverter:
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
         # NOTE: np.frombuffer produces a read-only view on the existing data
-        array = np.frombuffer(file.read(size * dtype.itemsize), dtype=dtype)
+        # array = np.frombuffer(file.read(size * dtype.itemsize), dtype=dtype)
+        array = np.frombuffer(file.read(), dtype=dtype)
 
         if fortran_order and ndim == 2:
             array.shape = (shape[1], shape[0])
@@ -1536,7 +1538,7 @@ class ArchiveZip(Archive):
             ):
 
         mode = 'w' if writeable else 'r'
-        self._archive = zipfile.ZipFile(fp, mode, zipfile.ZIP_STORED)
+        self._archive = ZipFile(fp, mode, ZIP_STORED)
         if not writeable:
             self.labels = frozenset(self._archive.namelist())
         if memory_map:
