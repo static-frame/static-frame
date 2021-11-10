@@ -4,7 +4,6 @@ import pickle
 from io import StringIO
 from io import BytesIO
 from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import Future
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')
 
