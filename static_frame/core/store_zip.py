@@ -202,53 +202,17 @@ class _StoreZip(Store):
                 yield self._set_container_type(strong_cache[label], container_type)
             return
 
-        payload_iter = gen_multiprocess()
         chunksize = config_map.default.read_chunksize
 
-        if not cache_hits:
-            # Simplify the logic for cases when nothing exists in our cache
-            with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
-                for label, frame in zip(
-                        labels,
-                        executor.map(self._payload_to_frame, payload_iter, chunksize=chunksize)
-                        ):
-                    # Newly read frame, add it to our weak_cache
-                    self._weak_cache[label] = frame
-                    yield frame
-                return
-
-        # We have a case where there are some cache hits, and some cache misses
         with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
-            futures: tp.List[Future[tp.List[Frame]]] = []
-
-            current_chunk: tp.List[PayloadBytesToFrame] = []
-            for label in labels:
-                if label in strong_cache:
-                    continue
-
-                current_chunk.append(next(payload_iter))
-
-                if len(current_chunk) == chunksize:
-                    futures.append(executor.submit(self._payloads_to_frames, current_chunk))
-                    current_chunk = []
-
-            if current_chunk:
-                futures.append(executor.submit(self._payloads_to_frames, current_chunk))
-                current_chunk = []
-
-            futures_iter = iter(futures)
-            current_future = iter(next(futures_iter).result())
+            frame_gen = executor.map(self._payload_to_frame, gen_multiprocess(), chunksize=chunksize)
 
             for label in labels:
                 if label in strong_cache:
                     yield self._set_container_type(strong_cache[label], container_type)
                     continue
 
-                try:
-                    frame = next(current_future)
-                except StopIteration:
-                    current_future = iter(next(futures_iter).result())
-                    frame = next(current_future)
+                frame = next(frame_gen)
 
                 # Newly read frame, add it to our weak_cache
                 self._weak_cache[label] = frame
