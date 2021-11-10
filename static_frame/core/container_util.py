@@ -14,6 +14,7 @@ import json
 import struct
 from ast import literal_eval
 import os
+import mmap
 
 import numpy as np
 from numpy import char as npc
@@ -1447,7 +1448,7 @@ class NPYConverter:
         return np.dtype(dtype_str), fortran_order, shape
 
     @classmethod
-    def from_npy(cls, file: tp.IO[bytes]) -> np.ndarray:
+    def from_npy(cls, file: tp.IO[bytes], memory_map: bool = False) -> np.ndarray:
         '''Read an NPY 1.0 file.
         '''
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
@@ -1464,6 +1465,28 @@ class NPYConverter:
             size = shape[0] * shape[1]
         else:
             raise ErrorNPYDecode(f'No support for {ndim}-dimensional arrays')
+
+        if memory_map:
+            # offset calculations derived from numpy/core/memmap.py
+            offset_header = file.tell()
+            byte_count = offset_header + size * dtype.itemsize
+            # ALLOCATIONGRANULARITY is 4096 on linux, if offset_header is 64 (or less than 4096), this will return zero
+            offset_mmap = offset_header - offset_header % mmap.ALLOCATIONGRANULARITY
+            byte_count -= offset_mmap
+            offset_array = offset_header - offset_mmap
+            mm = mmap.mmap(file.fileno(),
+                    byte_count,
+                    access=mmap.ACCESS_READ,
+                    offset=offset_mmap,
+                    )
+            # print(mm, id(mm))
+            # will always be immutable
+            return np.ndarray(shape,
+                    dtype=dtype,
+                    buffer=mm,
+                    offset=offset_array,
+                    order='F' if fortran_order else 'C',
+                    )
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
         # NOTE: np.frombuffer produces a read-only view on the existing data
@@ -1482,43 +1505,55 @@ class Archive:
     '''
     FILE_META = '__meta__.json'
     labels: tp.FrozenSet[str]
+    memory_map: bool
 
-    def __init__(self, fp: PathSpecifier, writeable: bool):
-        raise NotImplementedError()
+    def __init__(self,
+            fp: PathSpecifier,
+            writeable: bool,
+            memory_map: bool,
+            ):
+        raise NotImplementedError() #pragma: no cover
 
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def read_array(self, name: str) -> np.ndarray:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def write_metadata(self, content: tp.Any) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def read_metadata(self) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
 class ArchiveZip(Archive):
 
-    def __init__(self, fp: PathSpecifier, writeable: bool):
+    def __init__(self,
+            fp: PathSpecifier,
+            writeable: bool,
+            memory_map: bool,
+            ):
+
         mode = 'w' if writeable else 'r'
         self._archive = zipfile.ZipFile(fp, mode, zipfile.ZIP_STORED)
         if not writeable:
             self.labels = frozenset(self._archive.namelist())
+        if memory_map:
+            raise RuntimeError(f'Cannot memory_map with {self}')
 
     def __del__(self) -> None:
         self._archive.close()
 
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
+        f = self._archive.open(name, 'w') # zip only was 'w' mode
         try:
-            f = self._archive.open(name, 'w') # zip only was 'w' mode
             NPYConverter.to_npy(f, array)
         finally:
             f.close()
 
     def read_array(self, name: str) -> np.ndarray:
+        f = self._archive.open(name)
         try:
-            f = self._archive.open(name)
             array = NPYConverter.from_npy(f)
         finally:
             f.close()
@@ -1534,30 +1569,44 @@ class ArchiveZip(Archive):
 
 class ArchiveDirectory(Archive):
 
-    def __init__(self, fp: PathSpecifier, writeable: bool):
+    def __init__(self,
+            fp: PathSpecifier,
+            writeable: bool,
+            memory_map: bool,
+            ):
 
         self._archive = fp
         if not os.path.exists(self._archive):
-            os.mkdir(fp)
+            if writeable:
+                os.mkdir(fp)
+            else:
+                raise RuntimeError(f'Atttempting to read from a non-existant directory: {fp}')
         elif not os.path.isdir(self._archive):
             raise RuntimeError(f'A directory must be provided, not {fp}')
 
         if not writeable:
             self.labels = frozenset(f.name for f in os.scandir(self._archive))
 
+        self.memory_map = memory_map
+
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
         fp = os.path.join(self._archive, name)
+        f = open(fp, 'wb')
         try:
-            f = open(fp, 'wb')
             NPYConverter.to_npy(f, array)
         finally:
             f.close()
 
     def read_array(self, name: str) -> np.ndarray:
         fp = os.path.join(self._archive, name)
+        f = open(fp, 'rb')
+
+        if self.memory_map:
+            # NOTE: not sure how to close!
+            return NPYConverter.from_npy(f, self.memory_map)
+
         try:
-            f = open(fp, 'rb')
-            array = NPYConverter.from_npy(f)
+            array = NPYConverter.from_npy(f, self.memory_map)
         finally:
             f.close()
         array.flags.writeable = False
@@ -1565,16 +1614,16 @@ class ArchiveDirectory(Archive):
 
     def write_metadata(self, content: tp.Any) -> None:
         fp = os.path.join(self._archive, self.FILE_META)
+        f = open(fp, 'w')
         try:
-            f = open(fp, 'w')
             f.write(json.dumps(content))
         finally:
             f.close()
 
     def read_metadata(self) -> tp.Any:
         fp = os.path.join(self._archive, self.FILE_META)
+        f = open(fp)
         try:
-            f = open(fp)
             post = json.loads(f.read())
         finally:
             f.close()
@@ -1653,7 +1702,10 @@ class NPYArchiveConverter:
                 depth_index,
                 depth_columns]
 
-        archive = cls.ARCHIVE_CLS(fp, writeable=True)
+        archive = cls.ARCHIVE_CLS(fp,
+                writeable=True,
+                memory_map=False,
+                )
 
         cls._index_encode(
                 metadata=metadata,
@@ -1718,13 +1770,17 @@ class NPYArchiveConverter:
             *,
             constructor: tp.Type['Frame'],
             fp: PathSpecifier,
+            memory_map: bool = False,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an npz file.
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-        archive = cls.ARCHIVE_CLS(fp, writeable=False)
+        archive = cls.ARCHIVE_CLS(fp,
+                writeable=False,
+                memory_map=memory_map,
+                )
         metadata = archive.read_metadata()
 
         # JSON will bring back tuple `name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.

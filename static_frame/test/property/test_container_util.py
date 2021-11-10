@@ -47,6 +47,7 @@ class TestUnit(TestCase):
             with open(fp, 'wb') as f:
                 NPYConverter.to_npy(f, a1)
 
+            # check compatibility with built-in NPY reading
             a2 = np.load(fp)
             if a2.dtype.kind in DTYPE_INEXACT_KINDS:
                 self.assertAlmostEqualArray(a1, a2)
@@ -61,6 +62,20 @@ class TestUnit(TestCase):
                 else:
                     self.assertTrue((a1 == a3).all())
                 self.assertTrue(a1.shape == a3.shape)
+
+    @given(sfst.get_array_1d2d(dtype_group=sfst.DTGroup.ALL_NO_OBJECT))
+    def test_frame_to_npy_b(self, a1: Frame) -> None:
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                NPYConverter.to_npy(f, a1)
+
+            with open(fp, 'rb') as f:
+                a2 = NPYConverter.from_npy(f, memory_map=True)
+                if a2.dtype.kind in DTYPE_INEXACT_KINDS:
+                    self.assertAlmostEqualArray(a1, a2)
+                else:
+                    self.assertTrue((a1 == a2).all())
+                self.assertTrue(a1.shape == a2.shape)
 
 
 if __name__ == '__main__':
