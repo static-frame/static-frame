@@ -23,7 +23,6 @@ from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
 from static_frame.core.container_util import NPYConverter
 from static_frame.core.container_util import ArchiveDirectory
-from static_frame.core.container_util import ArchiveZip
 
 from static_frame.core.frame import FrameHE
 
