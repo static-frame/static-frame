@@ -842,24 +842,41 @@ class TestUnit(TestCase):
                 with self.assertRaises(ErrorNPYDecode):
                     a2 = NPYConverter.from_npy(f)
 
+
+    def test_from_npy_g(self) -> None:
+        a1 = np.array([2, 3, 4])
+
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                NPYConverter.to_npy(f, a1)
+            with open(fp, 'rb') as f:
+                a2 = NPYConverter.from_npy(f, memory_map=True)
+                self.assertEqual(a2.tolist(), [2, 3, 4])
+
     #---------------------------------------------------------------------------
+
+    # def test_archive_zip_a(self) -> None:
+    #     with temp_file('.zip') as fp:
+    #         _ = ArchiveZip(fp, writeable=False, memory_map=True)
+
+
     def test_archive_directory_a(self) -> None:
         with temp_file('.npy') as fp:
             with self.assertRaises(RuntimeError):
-                ArchiveDirectory(fp, writeable=False)
+                ArchiveDirectory(fp, writeable=False, memory_map=False)
 
     def test_archive_directory_b(self) -> None:
         with TemporaryDirectory() as fp:
             os.rmdir(fp)
             # creates directory
-            ad = ArchiveDirectory(fp, writeable=True)
+            ad = ArchiveDirectory(fp, writeable=True, memory_map=False)
 
     def test_archive_directory_c(self) -> None:
         with TemporaryDirectory() as fp:
             os.rmdir(fp)
             # reading from a non-existant directory
             with self.assertRaises(RuntimeError):
-                ad = ArchiveDirectory(fp, writeable=False)
+                ad = ArchiveDirectory(fp, writeable=False, memory_map=False)
             os.mkdir(fp) # restore the directory for context manager
 
 
