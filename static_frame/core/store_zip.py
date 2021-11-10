@@ -90,7 +90,8 @@ class _StoreZip(Store):
     @staticmethod
     def _set_container_type(frame: Frame, container_type: tp.Type[Frame]) -> Frame:
         """
-        Helper method to coerce a frame to the expected type, or return it if the type is already correct
+        Helper method to coerce a frame to the expected type, or return it as is
+        if the type is already correct
         """
         if frame.__class__ is not container_type:
             return frame._to_frame(container_type)
@@ -208,13 +209,9 @@ class _StoreZip(Store):
             # Simplify the logic for cases when nothing exists in our cache
             with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
                 for label, frame in zip(
-                            labels,
-                            executor.map(
-                                self._payload_to_frame,
-                                payload_iter,
-                                chunksize=chunksize
-                                )
-                            ):
+                        labels,
+                        executor.map(self._payload_to_frame, payload_iter, chunksize=chunksize)
+                        ):
                     # Newly read frame, add it to our weak_cache
                     self._weak_cache[label] = frame
                     yield frame
@@ -239,8 +236,8 @@ class _StoreZip(Store):
                 futures.append(executor.submit(self._payloads_to_frames, current_chunk))
                 current_chunk = []
 
-            current_future = iter(futures[0].result())
-            future_idx = 1
+            futures_iter = iter(futures)
+            current_future = iter(next(futures_iter).result())
 
             for label in labels:
                 if label in strong_cache:
@@ -250,8 +247,7 @@ class _StoreZip(Store):
                 try:
                     frame = next(current_future)
                 except StopIteration:
-                    current_future = iter(futures[future_idx].result())
-                    future_idx += 1
+                    current_future = iter(next(futures_iter).result())
                     frame = next(current_future)
 
                 # Newly read frame, add it to our weak_cache
