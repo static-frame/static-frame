@@ -77,15 +77,6 @@ class _StoreZip(Store):
                 constructor=payload.constructor,
                 )
 
-    @classmethod
-    def _payloads_to_frames(cls,
-            payloads: tp.List[PayloadBytesToFrame],
-            ) -> tp.List[Frame]:
-        '''
-        Single argument wrapper for _build_frame().
-        '''
-        return [cls._payload_to_frame(payload) for payload in payloads]
-
     @staticmethod
     def _set_container_type(frame: Frame, container_type: tp.Type[Frame]) -> Frame:
         """
