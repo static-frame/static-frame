@@ -11,7 +11,7 @@ from static_frame.core.frame import FrameHE
 from static_frame.core.index_datetime import IndexDate
 
 from static_frame.core.store import StoreConfig
-# from static_frame.core.store import StoreConfigMap
+from static_frame.core.store import StoreConfigMap
 
 from static_frame.core.store_zip import _StoreZip
 from static_frame.core.store_zip import StoreZipTSV
@@ -254,7 +254,6 @@ class TestUnit(TestCase):
             self.assertTrue(post[1].__class__ is Frame)
             self.assertTrue(post[2].__class__ is Frame)
 
-
     #---------------------------------------------------------------------------
 
     def test_store_zip_parquet_a(self) -> None:
@@ -341,6 +340,116 @@ class TestUnit(TestCase):
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
 
+    def test_store_read_many_single_thread_weak_cache(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='baz')
+
+        with temp_file('.zip') as fp:
+
+            st = StoreZipTSV(fp)
+            st.write((f.name, f) for f in (f1, f2, f3))
+
+            kwargs = dict(
+                    config_map=StoreConfigMap.from_initializer(StoreConfig(index_depth=1)),
+                    constructor=st._container_type_to_constructor(Frame),
+                    container_type=Frame
+                    )
+
+            labels = tuple(st.labels(strip_ext=False))
+            self.assertEqual(labels, ('foo.txt', 'bar.txt', 'baz.txt'))
+
+            self.assertEqual(0, len(list(st._weak_cache)))
+
+            # Result is not held onto!
+            next(st._read_many_single_thread(('foo',), **kwargs))
+
+            self.assertEqual(0, len(list(st._weak_cache)))
+
+            # Result IS held onto!
+            frame = next(st._read_many_single_thread(('foo',), **kwargs))
+
+            self.assertEqual(1, len(list(st._weak_cache)))
+
+            # Reference in our weak_cache _is_ `frame`
+            self.assertIs(frame, st._weak_cache['foo'])
+            del frame
+
+            # Reference is gone now!
+            self.assertEqual(0, len(list(st._weak_cache)))
+
+    def test_store_read_many_multiprocess_weak_cache_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='baz')
+
+        with temp_file('.zip') as fp:
+
+            st = StoreZipTSV(fp)
+            st.write((f.name, f) for f in (f1, f2, f3))
+
+            kwargs = dict(
+                    config=StoreConfig(index_depth=1, read_max_workers=1),
+                    container_type=Frame,
+                    )
+
+            labels = tuple(st.labels(strip_ext=True))
+            self.assertEqual(labels, ('foo', 'bar', 'baz'))
+
+            self.assertEqual(0, len(list(st._weak_cache)))
+
+            # Go through the pass where there are no cache hits!
+            # Don't hold onto the result!
+            list(st.read_many(labels, **kwargs))
+            self.assertEqual(0, len(list(st._weak_cache)))
+
+            # Hold onto all results
+            result = list(st.read_many(labels, **kwargs))
+            self.assertEqual(3, len(result))
+            self.assertEqual(3, len(list(st._weak_cache)))
+
+            del result
+            self.assertEqual(0, len(list(st._weak_cache)))
+
+            [frame] = list(st.read_many(("foo",), **kwargs))
+            self.assertIs(frame, st._weak_cache['foo'])
+
+            # Go through pass where there are some cache hits!
+            # Don't hold onto the result!
+            list(st.read_many(labels, **kwargs))
+            self.assertEqual(1, len(list(st._weak_cache)))
+
+            # Hold onto all results
+            result = list(st.read_many(labels, **kwargs))
+            self.assertEqual(3, len(result))
+            self.assertEqual(3, len(list(st._weak_cache)))
+
+            # Go through pass where all labels are in the cache
+            result2 = list(st.read_many(labels, **kwargs))
+            self.assertEqual(len(result), len(result2))
+            for f1, f2 in zip(result, result2):
+                self.assertIs(f1, f2)
+
 
 class TestUnitMultiProcess(TestCase):
 
@@ -389,6 +498,9 @@ class TestUnitMultiProcess(TestCase):
     def test_store_zip_parquet_mp(self) -> None:
         self.run_assertions(StoreZipParquet)
 
+    def test_store_zip_npz_mp(self) -> None:
+        self.run_assertions(StoreZipNPZ)
+
     #---------------------------------------------------------------------------
 
     def test_store_zip_npz_a(self) -> None:
@@ -409,6 +521,7 @@ class TestUnitMultiProcess(TestCase):
 
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -199,6 +199,7 @@ class _StoreZip(Store):
         if cache_hits == len(labels):
             for label in labels:
                 yield self._set_container_type(strong_cache[label], container_type)
+            return
 
         payload_iter = gen_multiprocess()
         chunksize = config_map.default.read_chunksize
@@ -206,8 +207,18 @@ class _StoreZip(Store):
         if not cache_hits:
             # Simplify the logic for cases when nothing exists in our cache
             with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
-                yield from executor.map(self._payload_to_frame, payload_iter, chunksize=chunksize)
-            return
+                for label, frame in zip(
+                            labels,
+                            executor.map(
+                                self._payload_to_frame,
+                                payload_iter,
+                                chunksize=chunksize
+                                )
+                            ):
+                    # Newly read frame, add it to our weak_cache
+                    self._weak_cache[label] = frame
+                    yield frame
+                return
 
         # We have a case where there are some cache hits, and some cache misses
         with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
