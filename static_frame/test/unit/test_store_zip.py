@@ -27,6 +27,28 @@ from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitStore
 # from static_frame.core.exception import ErrorInitStoreConfig
 
+def get_test_framesA(container_type: tp.Type[Frame] = Frame) -> tp.Tuple[Frame, Frame, Frame]:
+    return (
+            container_type.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo'),
+            container_type.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar'),
+            container_type.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='baz')
+            )
+
+def get_test_framesB() -> tp.Tuple[Frame, Frame]:
+    return (
+            ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a'),
+            ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('b'),
+            )
+
 
 class TestUnit(TestCase):
     #---------------------------------------------------------------------------
@@ -49,18 +71,7 @@ class TestUnit(TestCase):
 
     def test_store_zip_tsv_a(self) -> None:
 
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-        f2 = Frame.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='bar')
-        f3 = Frame.from_dict(
-                dict(a=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='baz')
+        f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
 
@@ -84,18 +95,7 @@ class TestUnit(TestCase):
 
     def test_store_zip_csv_a(self) -> None:
 
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-        f2 = Frame.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='bar')
-        f3 = Frame.from_dict(
-                dict(a=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='baz')
+        f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
 
@@ -115,10 +115,7 @@ class TestUnit(TestCase):
 
     def test_store_zip_csv_b(self) -> None:
 
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
+        f1, *_ = get_test_framesA()
 
         with temp_file('.zip') as fp:
 
@@ -132,18 +129,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_store_zip_pickle_a(self) -> None:
 
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-        f2 = Frame.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='bar')
-        f3 = Frame.from_dict(
-                dict(a=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='baz')
+        f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
 
@@ -169,13 +155,7 @@ class TestUnit(TestCase):
 
     def test_store_zip_pickle_b(self) -> None:
 
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-
-        # config = StoreConfig(index_depth=1, include_index=True)
-        # config_map = StoreConfigMap.from_config(config)
+        f1, *_ = get_test_framesA()
 
         with temp_file('.zip') as fp:
 
@@ -187,10 +167,7 @@ class TestUnit(TestCase):
 
     def test_store_zip_pickle_c(self) -> None:
 
-        f1 = FrameGO.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
+        f1, *_ = get_test_framesA(FrameGO)
 
         with temp_file('.zip') as fp:
             st = StoreZipPickle(fp)
@@ -202,10 +179,7 @@ class TestUnit(TestCase):
 
     def test_store_zip_pickle_d(self) -> None:
 
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
+        f1, *_ = get_test_framesA()
 
         with temp_file('.zip') as fp:
             for read_max_workers in (1, 2):
@@ -227,18 +201,7 @@ class TestUnit(TestCase):
 
     def test_store_zip_pickle_e(self) -> None:
 
-        f1 = FrameGO.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-        f2 = FrameGO.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='bar')
-        f3 = FrameGO.from_dict(
-                dict(a=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='baz')
+        f1, f2, f3 = get_test_framesA(FrameGO)
 
         with temp_file('.zip') as fp:
             st = StoreZipPickle(fp)
@@ -258,18 +221,7 @@ class TestUnit(TestCase):
 
     def test_store_zip_parquet_a(self) -> None:
 
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-        f2 = Frame.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='bar')
-        f3 = Frame.from_dict(
-                dict(a=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='baz')
+        f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
             for read_max_workers in (1, 2):
@@ -289,19 +241,7 @@ class TestUnit(TestCase):
 
     def test_store_zip_parquet_b(self) -> None:
 
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-        f2 = Frame.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='bar')
-        f3 = Frame.from_dict(
-                dict(a=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='baz')
-
+        f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
             for read_max_workers in (1, 2):
@@ -317,8 +257,7 @@ class TestUnit(TestCase):
 
     def test_store_zip_parquet_c(self) -> None:
 
-        f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a')
-        f2 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('b')
+        f1, f2 = get_test_framesB()
 
         config = StoreConfig(
                 index_depth=1,
@@ -342,18 +281,7 @@ class TestUnit(TestCase):
 
     def test_store_read_many_single_thread_weak_cache(self) -> None:
 
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-        f2 = Frame.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='bar')
-        f3 = Frame.from_dict(
-                dict(a=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='baz')
+        f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
 
@@ -390,18 +318,7 @@ class TestUnit(TestCase):
 
     def test_store_read_many_multiprocess_weak_cache_a(self) -> None:
 
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-        f2 = Frame.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='bar')
-        f3 = Frame.from_dict(
-                dict(a=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='baz')
+        f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
 
@@ -454,19 +371,7 @@ class TestUnit(TestCase):
 class TestUnitMultiProcess(TestCase):
 
     def run_assertions(self, klass: tp.Type[_StoreZip]) -> None:
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-        f2 = Frame.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='bar')
-        f3 = Frame.from_dict(
-                dict(a=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='baz')
-
+        f1, f2, f3 = get_test_framesA()
         with temp_file('.zip') as fp:
             for max_workers in range(1, 6):
                 for chunksize in (1, 2, 3):
@@ -505,8 +410,7 @@ class TestUnitMultiProcess(TestCase):
 
     def test_store_zip_npz_a(self) -> None:
 
-        f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a')
-        f2 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('b')
+        f1, f2 = get_test_framesB()
 
         config = StoreConfig()
 
