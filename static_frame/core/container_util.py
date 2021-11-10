@@ -1479,21 +1479,22 @@ class NPYConverter:
                     access=mmap.ACCESS_READ,
                     offset=offset_mmap,
                     )
-            # print(mm, id(mm))
             # will always be immutable
-            return np.ndarray(shape,
+            array = np.ndarray(shape,
                     dtype=dtype,
                     buffer=mm,
                     offset=offset_array,
                     order='F' if fortran_order else 'C',
                     )
+            assert array.flags.writeable == False
+            return array
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
         # NOTE: np.frombuffer produces a read-only view on the existing data
         array = np.frombuffer(file.read(size * dtype.itemsize), dtype=dtype)
 
         if fortran_order and ndim == 2:
-            array.shape = shape[::-1]
+            array.shape = (shape[1], shape[0])
             array = array.transpose()
         else:
             array.shape = shape
@@ -1591,42 +1592,29 @@ class ArchiveDirectory(Archive):
 
     def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
         fp = os.path.join(self._archive, name)
-        f = open(fp, 'wb')
-        try:
+        with open(fp, 'wb') as f:
             NPYConverter.to_npy(f, array)
-        finally:
-            f.close()
 
     def read_array(self, name: str) -> np.ndarray:
         fp = os.path.join(self._archive, name)
-        f = open(fp, 'rb')
-
         if self.memory_map:
-            # NOTE: not sure how to close!
+            f = open(fp, 'rb')
             return NPYConverter.from_npy(f, self.memory_map)
 
-        try:
+        with open(fp, 'rb') as f:
             array = NPYConverter.from_npy(f, self.memory_map)
-        finally:
-            f.close()
         array.flags.writeable = False
         return array
 
     def write_metadata(self, content: tp.Any) -> None:
         fp = os.path.join(self._archive, self.FILE_META)
-        f = open(fp, 'w')
-        try:
+        with open(fp, 'w') as f:
             f.write(json.dumps(content))
-        finally:
-            f.close()
 
     def read_metadata(self) -> tp.Any:
         fp = os.path.join(self._archive, self.FILE_META)
-        f = open(fp)
-        try:
+        with open(fp, 'r') as f:
             post = json.loads(f.read())
-        finally:
-            f.close()
         return post
 
 
