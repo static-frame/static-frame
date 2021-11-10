@@ -6,7 +6,6 @@ import os
 import numpy as np
 from numpy.lib.format import write_array # type: ignore
 
-
 from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import index_from_optional_constructor
@@ -45,7 +44,6 @@ from static_frame import IndexSecond
 from static_frame import Series
 
 class TestUnit(TestCase):
-
 
     def test_is_static_a(self) -> None:
         self.assertTrue(is_static(Index))
