@@ -9,7 +9,8 @@ import datetime
 from fractions import Fraction
 import typing as tp
 from enum import Enum
-import zipfile
+from zipfile import ZipFile
+from zipfile import ZIP_STORED
 import json
 import struct
 from ast import literal_eval
@@ -1479,24 +1480,27 @@ class NPYConverter:
                     access=mmap.ACCESS_READ,
                     offset=offset_mmap,
                     )
-            # print(mm, id(mm))
             # will always be immutable
-            return np.ndarray(shape,
+            array = np.ndarray(shape,
                     dtype=dtype,
                     buffer=mm,
                     offset=offset_array,
                     order='F' if fortran_order else 'C',
                     )
+            assert not array.flags.writeable
+            return array
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
         # NOTE: np.frombuffer produces a read-only view on the existing data
-        array = np.frombuffer(file.read(size * dtype.itemsize), dtype=dtype)
+        # array = np.frombuffer(file.read(size * dtype.itemsize), dtype=dtype)
+        array = np.frombuffer(file.read(), dtype=dtype)
 
         if fortran_order and ndim == 2:
-            array.shape = shape[::-1]
+            array.shape = (shape[1], shape[0])
             array = array.transpose()
         else:
             array.shape = shape
+        assert not array.flags.writeable
         return array
 
 
@@ -1504,6 +1508,13 @@ class Archive:
     '''Abstraction of a directory or a zip archive.
     '''
     FILE_META = '__meta__.json'
+
+    __slots__ = (
+            'labels',
+            'memory_map',
+            '_archive',
+            )
+
     labels: tp.FrozenSet[str]
     memory_map: bool
 
@@ -1514,7 +1525,7 @@ class Archive:
             ):
         raise NotImplementedError() #pragma: no cover
 
-    def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
+    def write_array(self, name: str, array: np.ndarray) -> None:
         raise NotImplementedError() #pragma: no cover
 
     def read_array(self, name: str) -> np.ndarray:
@@ -1535,16 +1546,18 @@ class ArchiveZip(Archive):
             ):
 
         mode = 'w' if writeable else 'r'
-        self._archive = zipfile.ZipFile(fp, mode, zipfile.ZIP_STORED)
+        self._archive = ZipFile(fp, mode, ZIP_STORED)
         if not writeable:
             self.labels = frozenset(self._archive.namelist())
         if memory_map:
             raise RuntimeError(f'Cannot memory_map with {self}')
 
+        self.memory_map = memory_map
+
     def __del__(self) -> None:
         self._archive.close()
 
-    def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
+    def write_array(self, name: str, array: np.ndarray) -> None:
         f = self._archive.open(name, 'w') # zip only was 'w' mode
         try:
             NPYConverter.to_npy(f, array)
@@ -1589,7 +1602,7 @@ class ArchiveDirectory(Archive):
 
         self.memory_map = memory_map
 
-    def write_array(self, name: str, array: np.ndarray) -> np.ndarray:
+    def write_array(self, name: str, array: np.ndarray) -> None:
         fp = os.path.join(self._archive, name)
         f = open(fp, 'wb')
         try:
@@ -1599,17 +1612,15 @@ class ArchiveDirectory(Archive):
 
     def read_array(self, name: str) -> np.ndarray:
         fp = os.path.join(self._archive, name)
-        f = open(fp, 'rb')
-
         if self.memory_map:
-            # NOTE: not sure how to close!
+            f = open(fp, 'rb')
             return NPYConverter.from_npy(f, self.memory_map)
 
+        f = open(fp, 'rb')
         try:
             array = NPYConverter.from_npy(f, self.memory_map)
         finally:
             f.close()
-        array.flags.writeable = False
         return array
 
     def write_metadata(self, content: tp.Any) -> None:
@@ -1622,7 +1633,7 @@ class ArchiveDirectory(Archive):
 
     def read_metadata(self) -> tp.Any:
         fp = os.path.join(self._archive, self.FILE_META)
-        f = open(fp)
+        f = open(fp, 'r')
         try:
             post = json.loads(f.read())
         finally:
@@ -1662,12 +1673,9 @@ class NPYArchiveConverter:
         elif include:
             if depth == 1:
                 archive.write_array(key_template_values.format(0), index.values)
-                # payload_npy[key_template_values.format(0)] = index.values
             else:
                 for i in range(depth):
                     archive.write_array(key_template_values.format(i), index.values_at_depth(i))
-                    # payload_npy[key_template_values.format(i)] = index.values_at_depth(i)
-
                 metadata[key_types] = [cls.__name__ for cls in index.index_types.values] # type: ignore
 
     @classmethod
