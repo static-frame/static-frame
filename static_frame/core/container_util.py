@@ -1513,6 +1513,7 @@ class Archive:
             'labels',
             'memory_map',
             '_archive',
+            '_closable'
             )
 
     labels: tp.FrozenSet[str]
@@ -1537,11 +1538,17 @@ class Archive:
     def read_metadata(self) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
+    def close(self) -> None:
+        if hasattr(self, '_closable'):
+            for f in self._closable:
+                f.close()
+
 class ArchiveZip(Archive):
     __slots__ = (
             'labels',
             'memory_map',
             '_archive',
+            '_closable'
             )
 
     def __init__(self,
@@ -1590,6 +1597,7 @@ class ArchiveDirectory(Archive):
             'labels',
             'memory_map',
             '_archive',
+            '_closable'
             )
 
     def __init__(self,
@@ -1623,7 +1631,10 @@ class ArchiveDirectory(Archive):
     def read_array(self, name: str) -> np.ndarray:
         fp = os.path.join(self._archive, name)
         if self.memory_map:
+            if not hasattr(self, '_closable'):
+                self._closable = []
             f = open(fp, 'rb')
+            self._closable.append(f)
             return NPYConverter.from_npy(f, self.memory_map)
 
         f = open(fp, 'rb')
@@ -1833,6 +1844,7 @@ class NPYArchiveConverter:
                 for i in range(block_count)
                 )
 
+        archive.close() # will only have effect if memory mapping
         return constructor(tb,
                 own_data=True,
                 index=index,
