@@ -1541,6 +1541,7 @@ class Archive:
     def close(self) -> None:
         if hasattr(self, '_closable'):
             for f in self._closable:
+                print('closing', f)
                 f.close()
 
 class ArchiveZip(Archive):
@@ -1597,7 +1598,7 @@ class ArchiveDirectory(Archive):
             'labels',
             'memory_map',
             '_archive',
-            '_closable'
+            '_closable',
             )
 
     def __init__(self,
