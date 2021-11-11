@@ -1031,12 +1031,14 @@ class IndexHierarchy(IndexBase):
         index_constructors = tuple(self._levels.index_types())
 
         if not callable(mapper):
+            getitem = getattr(mapper, 'get')
+
             # if a mapper, it must support both __getitem__ and __contains__
             def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
                 for array in self._blocks.axis_values(axis=1):
                     # as np.ndarray are not hashable, must tuplize
                     label = tuple(array)
-                    yield mapper.get(label, label) # type: ignore
+                    yield getitem(label, label)
 
             return self.__class__.from_labels(gen(),
                     name=self._name,
@@ -1063,7 +1065,7 @@ class IndexHierarchy(IndexBase):
         if isinstance(depth_level, INT_TYPES):
             # Single depth levels have an optimized path through IndexLevels
             return self.__class__(
-                    levels=self._levels.relabel_at_specific_depth(mapper, depth_level),
+                    levels=self._levels.relabel_at_single_depth(mapper, depth_level),
                     name=self._name,
                     )
 
@@ -1072,10 +1074,14 @@ class IndexHierarchy(IndexBase):
         if len(depth_level) == 1:
             # Optimized path for single depth level
             return self.__class__(
-                levels=self._levels.relabel_at_specific_depth(mapper, depth_level[0]),
+                levels=self._levels.relabel_at_single_depth(mapper, depth_level[0]),
                 name=self._name,
                 )
-        elif len(depth_level) == self.depth:
+
+        if len(set(depth_level)) != len(depth_level):
+            raise ValueError('depth_levels must be unique')
+
+        if len(depth_level) == self.depth:
             # Equivalent to relabel!
             return self.relabel(mapper)
 

@@ -27,11 +27,12 @@ from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import INT_TYPES
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import EMPTY_TUPLE
 # from static_frame.core.exception import LocInvalid
 
 
@@ -372,7 +373,7 @@ class IndexLevel:
                 next_depth = depth + 1
                 levels.extend((lvl, next_depth) for lvl in level.targets)
 
-    def relabel_at_specific_depth(self,
+    def relabel_at_single_depth(self,
             mapper: RelabelInput, depth_level: int
             ) -> 'IndexLevel':
         '''
@@ -394,7 +395,7 @@ class IndexLevel:
 
         new_targets = np.empty(len(self.targets), dtype=DTYPE_OBJECT)
         for i, target in enumerate(self.targets):
-            new_targets[i] =  target.relabel_at_specific_depth(mapper, depth_level - 1)
+            new_targets[i] =  target.relabel_at_single_depth(mapper, depth_level - 1)
 
         return self.__class__(
             index=self.index,
