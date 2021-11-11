@@ -9261,6 +9261,8 @@ class TestUnit(TestCase):
             f2 = Frame.from_npy(fp, memory_map=True)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
             del f1
+            import shutil
+            shutil.rmtree(fp)
 
     #---------------------------------------------------------------------------
 
