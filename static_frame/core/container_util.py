@@ -1538,6 +1538,11 @@ class Archive:
         raise NotImplementedError() #pragma: no cover
 
 class ArchiveZip(Archive):
+    __slots__ = (
+            'labels',
+            'memory_map',
+            '_archive',
+            )
 
     def __init__(self,
             fp: PathSpecifier,
@@ -1581,6 +1586,11 @@ class ArchiveZip(Archive):
 
 
 class ArchiveDirectory(Archive):
+    __slots__ = (
+            'labels',
+            'memory_map',
+            '_archive',
+            )
 
     def __init__(self,
             fp: PathSpecifier,

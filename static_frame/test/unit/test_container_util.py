@@ -879,7 +879,13 @@ class TestUnit(TestCase):
                 ad = ArchiveDirectory(fp, writeable=False, memory_map=False)
             os.mkdir(fp) # restore the directory for context manager
 
-
+    def test_archive_directory_d(self) -> None:
+        with TemporaryDirectory() as fp:
+            a1 = np.arange(10)
+            ad = ArchiveDirectory(fp, writeable=True, memory_map=False)
+            ad.write_array('a1.npy', a1)
+            a2 = ad.read_array('a1.npy')
+            self.assertTrue((a1 == a2).all())
 
 
 if __name__ == '__main__':
