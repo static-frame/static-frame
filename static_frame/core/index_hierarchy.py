@@ -1021,7 +1021,7 @@ class IndexHierarchy(IndexBase):
         return Series(self._levels.index_types(), index=labels, dtype=DTYPE_OBJECT)
 
     #---------------------------------------------------------------------------
-    def relabel(self, mapper: RelabelInput) -> "IndexHierarchy":
+    def relabel(self, mapper: RelabelInput) -> 'IndexHierarchy':
         '''
         Return a new IndexHierarchy with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
         '''
