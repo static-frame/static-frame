@@ -392,7 +392,7 @@ class IndexLevel:
         if self.targets is None:
             raise ValueError(f'cannot relabel at depth {depth_level}')
 
-        new_targets = np.empty(len(self.targets), dtype=object)
+        new_targets = np.empty(len(self.targets), dtype=DTYPE_OBJECT)
         for i, target in enumerate(self.targets):
             new_targets[i] =  target.relabel_at_specific_depth(mapper, depth_level - 1)
 
