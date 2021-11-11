@@ -9186,7 +9186,6 @@ class TestUnit(TestCase):
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
     #---------------------------------------------------------------------------
-#     @skip_win #type: ignore
     def test_frame_to_npy_a(self) -> None:
         f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
         with TemporaryDirectory() as fp:
@@ -9194,9 +9193,6 @@ class TestUnit(TestCase):
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
-
-
-    @skip_win #type: ignore
     def test_frame_to_npy_b(self) -> None:
         f1 = ff.parse('s(10_000,2)|v(int,str)|c((I, ID),(str,dtD))|i(ID,dtD)').rename('foo')
 
@@ -9205,7 +9201,6 @@ class TestUnit(TestCase):
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
-    @skip_win #type: ignore
     def test_frame_to_npy_c(self) -> None:
         f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
 
@@ -9214,7 +9209,6 @@ class TestUnit(TestCase):
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
-    @skip_win #type: ignore
     def test_frame_to_npy_d(self) -> None:
         f1 = ff.parse('s(10,100)|v(int,str,bool,bool,float,float)').rename(
                 'foo', index='bar', columns='baz')
@@ -9224,7 +9218,6 @@ class TestUnit(TestCase):
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
-    @skip_win #type: ignore
     def test_frame_to_npy_e(self) -> None:
         f1 = ff.parse('s(10,100)|v(bool,bool,float,float)|i(I,str)|c(I,int)').rename(
                 'foo', index='bar', columns='baz')
@@ -9234,7 +9227,6 @@ class TestUnit(TestCase):
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
-    @skip_win #type: ignore
     def test_frame_to_npy_f(self) -> None:
         f1 = ff.parse('s(10,100)|v(bool,bool,float,float)|i((ID,IY),(dtD,dtY))|c((IY,I),(dtY,str))').rename(
                 'foo', index=('a', 'b'), columns=('x', 'y')
@@ -9245,7 +9237,6 @@ class TestUnit(TestCase):
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
-    @skip_win #type: ignore
     def test_frame_to_npy_g(self) -> None:
         f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
 
@@ -9254,7 +9245,6 @@ class TestUnit(TestCase):
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
-    @skip_win #type: ignore
     def test_frame_to_npy_h(self) -> None:
         f1 = ff.parse('s(20,100)|v(int,str,bool)').rename(((1, 2), (3, 4)))
 
@@ -9264,8 +9254,7 @@ class TestUnit(TestCase):
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
     #---------------------------------------------------------------------------
-    @skip_win #type: ignore
-    def test_frame_from_npy_a(self) -> None:
+    def test_frame_from_npy_memory_map_a(self) -> None:
         f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
         with TemporaryDirectory() as fp:
             f1.to_npy(fp)
