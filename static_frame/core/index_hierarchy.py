@@ -1031,9 +1031,9 @@ class IndexHierarchy(IndexBase):
         index_constructors = tuple(self._levels.index_types())
 
         if not callable(mapper):
+            # if a mapper, it must support both __getitem__ and __contains__
             getitem = getattr(mapper, 'get')
 
-            # if a mapper, it must support both __getitem__ and __contains__
             def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
                 for array in self._blocks.axis_values(axis=1):
                     # as np.ndarray are not hashable, must tuplize
@@ -1086,8 +1086,11 @@ class IndexHierarchy(IndexBase):
             if len(target_depths) != len(depth_level):
                 raise ValueError('depth_levels must be unique')
 
-        if any(level < 0 or level >= self.depth for level in depth_level) or not depth_level:
-            raise ValueError(f'Invalid depth level found. Must be between 0 and {self.depth}')
+            if not depth_level:
+                raise ValueError('depth_level must be non-empty')
+
+        if any(level < 0 or level >= self.depth for level in depth_level):
+            raise ValueError(f'Invalid depth level found. Valid levels: [0-{self.depth - 1}]')
 
         if callable(mapper) or hasattr(mapper, 'get'):
             return self.__class__(
@@ -1107,10 +1110,8 @@ class IndexHierarchy(IndexBase):
                 else:
                     yield self._blocks._extract_array_column(depth_idx)
 
-        tb = TypeBlocks.from_blocks(gen())
-
         return self.__class__._from_type_blocks(
-                tb,
+                TypeBlocks.from_blocks(gen()),
                 name=self._name,
                 index_constructors=tuple(self._levels.index_types()),
                 own_blocks=True
