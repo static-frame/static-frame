@@ -9194,6 +9194,8 @@ class TestUnit(TestCase):
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
+
+
     @skip_win #type: ignore
     def test_frame_to_npy_b(self) -> None:
         f1 = ff.parse('s(10_000,2)|v(int,str)|c((I, ID),(str,dtD))|i(ID,dtD)').rename('foo')

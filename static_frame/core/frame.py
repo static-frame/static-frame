@@ -2249,7 +2249,7 @@ class Frame(ContainerOperand):
     def from_npy(cls,
             fp: PathSpecifier,
             *,
-            memory_map: bool = True,
+            memory_map: bool = False,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an directory of npy files.
