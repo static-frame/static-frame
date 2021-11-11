@@ -1471,7 +1471,7 @@ class NPYConverter:
             # offset calculations derived from numpy/core/memmap.py
             offset_header = file.tell()
             byte_count = offset_header + size * dtype.itemsize
-            # ALLOCATIONGRANULARITY is 4096 on linux, if offset_header is 64 (or less than 4096), this will return zero
+            # ALLOCATIONGRANULARITY is 4096 on linux, if offset_header is 64 (or less than 4096), this will set offset_mmap to zero
             offset_mmap = offset_header - offset_header % mmap.ALLOCATIONGRANULARITY
             byte_count -= offset_mmap
             offset_array = offset_header - offset_mmap
