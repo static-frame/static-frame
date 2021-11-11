@@ -14,11 +14,7 @@ from static_frame import IndexHierarchy
 # from static_frame import IndexHierarchyGO
 
 
-
-
 class TestUnit(TestCase):
-
-
 
     #---------------------------------------------------------------------------
     @given(get_index_hierarchy_any())
@@ -37,6 +33,7 @@ class TestUnit(TestCase):
     def test_index_to_frame(self, ih: IndexHierarchy) -> None:
         f1 = ih.to_frame()
         self.assertEqual(f1.shape, ih.shape)
+
 
 if __name__ == '__main__':
     unittest.main()

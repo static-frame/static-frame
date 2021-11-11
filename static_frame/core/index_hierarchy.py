@@ -2,7 +2,6 @@ import typing as tp
 from itertools import chain
 from ast import literal_eval
 from copy import deepcopy
-from operator import itemgetter
 
 import numpy as np
 from arraykit import name_filter
@@ -26,6 +25,7 @@ from static_frame.core.index import ILoc
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
+from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_base import IndexBase
@@ -1057,63 +1057,63 @@ class IndexHierarchy(IndexBase):
             depth_level: DepthLevelSpecifier = 0
             ) -> "IndexHierarchy":
         '''
-        Return a new :obj:`IndexHierarchy` after applying the the `mapper` to the depth level or levels specified by `depth_level`.
+        Return a new :obj:`IndexHierarchy` after applying `mapper` to a level or each individual level specified by `depth_level`.
+
+        `mapper` can be a callable, mapping, or iterable.
+            - If a callable, it must accept a single value, and return a single value.
+            - If a mapping, it must map a single value to a single value.
+            - If a iterable, it must be the same length as `self`.
+
+        This call:
+        >>> index.relabel_at_depth(mapper, depth_level=[0, 1, 2])
+
+        is equivalent to:
+        >>> for level in [0, 1, 2]:
+        >>>     index = index.relabel_at_depth(mapper, depth_level=level)
+
+        albeit more efficient.
         '''
         if self._recache:
             self._update_array_cache()
 
         if isinstance(depth_level, INT_TYPES):
-            # Single depth levels have an optimized path through IndexLevels
+            depth_level = [depth_level]
+            target_depths: tp.Container[int] = depth_level
+        else:
+            depth_level = sorted(depth_level)
+            target_depths = set(depth_level)
+
+            if len(target_depths) != len(depth_level):
+                raise ValueError('depth_levels must be unique')
+
+        if any(level < 0 or level >= self.depth for level in depth_level) or not depth_level:
+            raise ValueError(f'Invalid depth level found. Must be between 0 and {self.depth}')
+
+        if callable(mapper) or hasattr(mapper, 'get'):
             return self.__class__(
-                    levels=self._levels.relabel_at_single_depth(mapper, depth_level),
+                    levels=self._levels.relabel_at_depth(mapper, depth_level),
                     name=self._name,
                     )
 
-        depth_level = list(depth_level)
+        values, _ = iterable_to_array_1d(mapper, count=len(self))
 
-        if len(depth_level) == 1:
-            # Optimized path for single depth level
-            return self.__class__(
-                levels=self._levels.relabel_at_single_depth(mapper, depth_level[0]),
-                name=self._name,
-                )
-
-        if len(set(depth_level)) != len(depth_level):
-            raise ValueError('depth_levels must be unique')
-
-        if len(depth_level) == self.depth:
-            # Equivalent to relabel!
-            return self.relabel(mapper)
-
-        index_constructors = tuple(self._levels.index_types())
-
-        def get_modified(array_items: tuple) -> tp.Iterable[tp.Any]: # type: ignore
-            if callable(mapper):
-                return mapper(array_items) # type: ignore
-
-            # if a mapper, it must support both __getitem__ and __contains__
-            return mapper.get(array_items, array_items) # type: ignore
-
-        array_getter = itemgetter(*depth_level)
+        if len(values) != len(self):
+            raise ValueError('mapper must return a value for each label')
 
         def gen() -> tp.Iterator[np.ndarray]:
-            for array in self._blocks.axis_values(axis=1):
-                array_items = array_getter(array)
-                modified_items = get_modified(array_items)
+            for depth_idx in range(self.depth):
+                if depth_idx in target_depths:
+                    yield values
+                else:
+                    yield self._blocks._extract_array_column(depth_idx)
 
-                # Optimize for when the mapper is a dictionary, and our specific
-                # row was not found
-                if array_items is modified_items:
-                    yield array
-                    continue
+        tb = TypeBlocks.from_blocks(gen())
 
-                array_copy = array.copy()
-                array_copy[depth_level] = modified_items
-                yield array_copy
-
-        return self.__class__.from_labels(gen(),
+        return self.__class__._from_type_blocks(
+                tb,
                 name=self._name,
-                index_constructors=index_constructors,
+                index_constructors=tuple(self._levels.index_types()),
+                own_blocks=True
                 )
 
     def rehierarch(self: IH,

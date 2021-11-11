@@ -1,5 +1,3 @@
-
-
 import typing as tp
 from collections import deque
 from itertools import zip_longest
@@ -373,7 +371,7 @@ class IndexLevel:
                 next_depth = depth + 1
                 levels.extend((lvl, next_depth) for lvl in level.targets)
 
-    def relabel_at_single_depth(self,
+    def _relabel_at_single_depth(self,
             mapper: RelabelInput, depth_level: int
             ) -> 'IndexLevel':
         '''
@@ -395,10 +393,38 @@ class IndexLevel:
 
         new_targets = np.empty(len(self.targets), dtype=DTYPE_OBJECT)
         for i, target in enumerate(self.targets):
-            new_targets[i] =  target.relabel_at_single_depth(mapper, depth_level - 1)
+            new_targets[i] =  target._relabel_at_single_depth(mapper, depth_level - 1)
 
         return self.__class__(
             index=self.index,
+            targets=ArrayGO(new_targets, own_iterable=True),
+            offset=self.offset,
+            own_index=False,
+            depth_reference=self._depth
+        )
+
+    def relabel_at_depth(self, mapper: RelabelInput, depth_level: tp.List[int]) -> 'IndexLevel':
+        '''
+        Returns a new IndexLevel instance with relabeled indices at the specified `depth_level`s according to `mapper`, where `mapper` is a callable or a mapping.
+        '''
+        assert depth_level, "Invalid depth_levels should have already been sanitized"
+
+        if len(depth_level) == 1:
+            return self._relabel_at_single_depth(mapper, depth_level[0])
+
+        if depth_level[0] == 0:
+            index = self.index.relabel(mapper)
+            target_depths = [level - 1 for level in depth_level[1:]]
+        else:
+            index = self.index
+            target_depths = [level - 1 for level in depth_level]
+
+        new_targets = np.empty(len(self.targets), dtype=DTYPE_OBJECT)
+        for i, target in enumerate(self.targets):
+            new_targets[i] = target.relabel_at_depth(mapper, target_depths)
+
+        return self.__class__(
+            index=index,
             targets=ArrayGO(new_targets, own_iterable=True),
             offset=self.offset,
             own_index=False,
