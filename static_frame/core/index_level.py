@@ -388,7 +388,7 @@ class IndexLevel:
                 depth_reference=self._depth
             )
 
-        assert self.targets is not None, f"Invalid {depth_level=}"
+        assert self.targets is not None, f"Invalid depth_level={depth_level}"
 
         new_targets = np.empty(len(self.targets), dtype=DTYPE_OBJECT)
         for i, target in enumerate(self.targets):
