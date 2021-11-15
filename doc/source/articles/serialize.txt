@@ -4,7 +4,7 @@
 Using the NPY Format for Faster-than Parquet, Complete DataFrame Serialization
 
 
-Reviving the NPY Format for Faster-than Parquet DataFrame Serialization.
+Reviving the NPY File Format for Faster-than Parquet DataFrame Serialization & Memory Mapping
 
 
 
