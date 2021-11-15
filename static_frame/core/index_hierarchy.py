@@ -1101,7 +1101,7 @@ class IndexHierarchy(IndexBase):
         values, _ = iterable_to_array_1d(mapper, count=len(self))
 
         if len(values) != len(self):
-            raise ValueError('mapper must return a value for each label')
+            raise ValueError('Iterable must provide a value for each label')
 
         def gen() -> tp.Iterator[np.ndarray]:
             for depth_idx in range(self.depth):
