@@ -1065,9 +1065,11 @@ class IndexHierarchy(IndexBase):
             - If a iterable, it must be the same length as `self`.
 
         This call:
+
         >>> index.relabel_at_depth(mapper, depth_level=[0, 1, 2])
 
         is equivalent to:
+
         >>> for level in [0, 1, 2]:
         >>>     index = index.relabel_at_depth(mapper, depth_level=level)
 
