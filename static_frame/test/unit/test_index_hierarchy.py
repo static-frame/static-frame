@@ -29,14 +29,17 @@ from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
 
 
-def run_with_static_and_grow_only(func):
+SelfT = tp.TypeVar('SelfT')
+
+
+def run_with_static_and_grow_only(func: tp.Callable[[SelfT, tp.Type[IndexHierarchy]], None]) -> tp.Callable[[SelfT], None]:
     """
     Run a unit test using both `IndexHierarchy` and `IndexHierarchyGO`
     """
     @wraps(func)
-    def inner(self) -> None:
-        func(self, index_class=IndexHierarchy)
-        func(self, index_class=IndexHierarchyGO)
+    def inner(self: SelfT) -> None:
+        func(self, IndexHierarchy)
+        func(self, IndexHierarchyGO)
     return inner
 
 
