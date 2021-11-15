@@ -414,9 +414,11 @@ class IndexLevel:
         if depth_level[0] == 0:
             index = self.index.relabel(mapper)
             target_depths = [level - 1 for level in depth_level[1:]]
+            own_index = True
         else:
             index = self.index
             target_depths = [level - 1 for level in depth_level]
+            own_index = False
 
         new_targets = np.empty(len(self.targets), dtype=DTYPE_OBJECT)
         for i, target in enumerate(self.targets):
@@ -426,7 +428,7 @@ class IndexLevel:
             index=index,
             targets=ArrayGO(new_targets, own_iterable=True),
             offset=self.offset,
-            own_index=False,
+            own_index=own_index,
             depth_reference=self._depth
         )
 

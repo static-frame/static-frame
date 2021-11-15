@@ -1,3 +1,4 @@
+from functools import wraps
 import unittest
 import pickle
 import datetime
@@ -26,6 +27,17 @@ from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
+
+
+def run_with_static_and_grow_only(func):
+    """
+    Run a unit test using both `IndexHierarchy` and `IndexHierarchyGO`
+    """
+    @wraps(func)
+    def inner(self) -> None:
+        func(self, index_class=IndexHierarchy)
+        func(self, index_class=IndexHierarchyGO)
+    return inner
 
 
 class TestUnit(TestCase):
@@ -1283,7 +1295,10 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_hierarchy_relabel_a(self) -> None:
+    @run_with_static_and_grow_only
+    def test_hierarchy_relabel_a(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -1292,7 +1307,7 @@ class TestUnit(TestCase):
                 ('II', 'B'),
                 )
 
-        ih = IndexHierarchy.from_labels(labels)
+        ih = index_class.from_labels(labels)
 
         ih2 = ih.relabel({('I', 'B'): ('I', 'C')})
 
@@ -1308,9 +1323,12 @@ class TestUnit(TestCase):
                 ih3.values.tolist(),
                 [['i', 'a'], ['i', 'b'], ['ii', 'a'], ['ii', 'b']])
 
-    def test_hierarchy_relabel_at_depth_2d_single_depth(self) -> None:
+    @run_with_static_and_grow_only
+    def test_hierarchy_relabel_at_depth_2d_single_depth(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
 
-        ih = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+        ih = index_class.from_product(('I', 'II'), ('A', 'B'))
 
         # Mapping
         ih1 = ih.relabel_at_depth(dict(I=1), depth_level=0)
@@ -1327,9 +1345,12 @@ class TestUnit(TestCase):
         self.assertEqual(ih3.values.tolist(),
                 [['I', 0], ['I', 1], ['II', 2], ['II', 3]])
 
-    def test_hierarchy_relabel_at_depth_2d_all_depths(self) -> None:
+    @run_with_static_and_grow_only
+    def test_hierarchy_relabel_at_depth_2d_all_depths(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
 
-        ih = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+        ih = index_class.from_product(('I', 'II'), ('A', 'B'))
 
         # Mapping
         ih1 = ih.relabel_at_depth(dict(I=1, B=2), depth_level=(0, 1))
@@ -1346,20 +1367,23 @@ class TestUnit(TestCase):
         self.assertEqual(ih3.values.tolist(),
                 [['a', 'a'], ['b', 'b'], ['c', 'c'], ['d', 'd']])
 
-    def test_hierarchy_relabel_at_depth_3d_single_depth(self) -> None:
+    @run_with_static_and_grow_only
+    def test_hierarchy_relabel_at_depth_3d_single_depth(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
 
-        ih = IndexHierarchy.from_product(('I', 'II'), ('B', 'A'), (2, 1))
+        ih = index_class.from_product(('I', 'II'), ('B', 'A'), (2, 1))
 
         # Mapping
         ih1 = ih.relabel_at_depth(dict(II=99), depth_level=0)
         self.assertTrue(ih1.equals(
-            IndexHierarchy.from_product(('I', 99), ('B', 'A'), (2, 1)))
+            index_class.from_product(('I', 99), ('B', 'A'), (2, 1)))
             )
 
         # Function
         ih2 = ih.relabel_at_depth(lambda x: x.lower(), depth_level=1)
         self.assertTrue(ih2.equals(
-            IndexHierarchy.from_product(('I', 'II'), ('b', 'a'), (2, 1)))
+            index_class.from_product(('I', 'II'), ('b', 'a'), (2, 1)))
             )
 
         # Sequence
@@ -1374,20 +1398,23 @@ class TestUnit(TestCase):
                  ['II', 'A', 6],
                  ['II', 'A', 7]])
 
-    def test_hierarchy_relabel_at_depth_3d_multiple_depths(self) -> None:
+    @run_with_static_and_grow_only
+    def test_hierarchy_relabel_at_depth_3d_multiple_depths(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
 
-        ih = IndexHierarchy.from_product(('I', 'II'), ('B', 'A'), (2, 1))
+        ih = index_class.from_product(('I', 'II'), ('B', 'A'), (2, 1))
 
         # Mapping
         ih1 = ih.relabel_at_depth({'II': 99, 1: 101}, depth_level=iter((0, 2)))
         self.assertTrue(ih1.equals(
-            IndexHierarchy.from_product(('I', 99), ('B', 'A'), (2, 101)))
+            index_class.from_product(('I', 99), ('B', 'A'), (2, 101)))
             )
 
         # Function
         ih2 = ih.relabel_at_depth(lambda x: x*3, depth_level={2, 0})
         self.assertTrue(ih2.equals(
-            IndexHierarchy.from_product(('III', 'IIIIII'), ('B', 'A'), (6, 3)))
+            index_class.from_product(('III', 'IIIIII'), ('B', 'A'), (6, 3)))
             )
 
         # Sequence
@@ -1402,9 +1429,12 @@ class TestUnit(TestCase):
                  [3, 3, 2],
                  [2, 2, 1]])
 
-    def test_hierarchy_relabel_at_depth_3d_all_depths(self) -> None:
+    @run_with_static_and_grow_only
+    def test_hierarchy_relabel_at_depth_3d_all_depths(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
 
-        ih = IndexHierarchy.from_product(('I', 'II'), ('B', 'A'), (2, 1))
+        ih = index_class.from_product(('I', 'II'), ('B', 'A'), (2, 1))
 
         # Mapping
         series_map = Series([0, True, None, '13'], index=['I', 'II', 'B', 2])
@@ -1447,8 +1477,11 @@ class TestUnit(TestCase):
                  [6, 6, 6],
                  [7, 7, 7]])
 
-    def test_hierarchy_relabel_at_depth_bad_input(self) -> None:
-        ih = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+    @run_with_static_and_grow_only
+    def test_hierarchy_relabel_at_depth_bad_input(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
+        ih = index_class.from_product(('I', 'II'), ('A', 'B'))
 
         # Iterable is not long enough!
         with self.assertRaises(ValueError):
@@ -1478,7 +1511,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             ih.relabel_at_depth(lambda:None, depth_level=[])
 
-    def test_hierarchy_relabel_at_depth_properties(self) -> None:
+    def test_hierarchy_relabel_at_depth_properties_a(self) -> None:
         ih = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
 
         # Remapping preserves all indices it doesn't touch
@@ -1506,6 +1539,45 @@ class TestUnit(TestCase):
         self.assertIs(ih._levels.targets[1].targets[0], ih1._levels.targets[1].targets[0])
         self.assertIs(ih._levels.targets[1].targets[1], ih1._levels.targets[1].targets[1])
 
+    def test_hierarchy_relabel_at_depth_properties_b(self) -> None:
+        ih = IndexHierarchyGO.from_product(('I', 'II'), ('A', 'B'), (1, 2))
+
+        # No levels can be re-used, as `STATIC=False` forces a deepcopy on init.
+        # This makes sense, otherwise the original GO index could change the
+        # returned index behind the user's back
+
+        # Remapping preserves all indices it doesn't touch
+        ih1 = ih.relabel_at_depth(dict(A='AA'), depth_level=1)
+
+        # Outer level (index) is also not reused, as the GOness forces a copy
+        # via `mutable_immutable_index_filter`
+        self.assertIsNot(ih._levels.index, ih1._levels.index)
+        self.assertIsNot(ih._levels.targets, ih1._levels.targets)
+
+        # Middle level (index) was modified! Targets are reused
+        assert ih._levels.targets is not None # mypy
+        assert ih1._levels.targets is not None # mypy
+        self.assertIsNot(ih._levels.targets[0].index, ih1._levels.targets[0].index)
+        self.assertIsNot(ih._levels.targets[1].index, ih1._levels.targets[1].index)
+        self.assertIsNot(ih._levels.targets[0].targets, ih1._levels.targets[0].targets)
+        self.assertIsNot(ih._levels.targets[1].targets, ih1._levels.targets[1].targets)
+
+        # Inner level is reused entirely!
+        assert ih._levels.targets[0].targets is not None # mypy
+        assert ih._levels.targets[1].targets is not None # mypy
+        assert ih1._levels.targets[0].targets is not None # mypy
+        assert ih1._levels.targets[1].targets is not None # mypy
+        self.assertIsNot(ih._levels.targets[0].targets[0], ih1._levels.targets[0].targets[0])
+        self.assertIsNot(ih._levels.targets[0].targets[1], ih1._levels.targets[0].targets[1])
+        self.assertIsNot(ih._levels.targets[1].targets[0], ih1._levels.targets[1].targets[0])
+        self.assertIsNot(ih._levels.targets[1].targets[1], ih1._levels.targets[1].targets[1])
+
+    @run_with_static_and_grow_only
+    def test_hierarchy_relabel_at_depth_properties_c(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
+        ih = index_class.from_product(('I', 'II'), ('A', 'B'), (1, 2))
+
         # Identity function relabel
         ih1 = ih.relabel_at_depth(lambda x: x, depth_level=0)
         self.assertTrue(ih1.equals(ih))
@@ -1515,7 +1587,6 @@ class TestUnit(TestCase):
         self.assertTrue(ih2.equals(ih))
 
         # Repeat column
-        arr = ih._blocks._extract_array_column(0)
         ih3 = ih.relabel_at_depth(ih._blocks._extract_array_column(0), depth_level=0)
         self.assertTrue(ih3.equals(ih))
 
