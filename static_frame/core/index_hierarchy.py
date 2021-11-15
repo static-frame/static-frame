@@ -1094,7 +1094,7 @@ class IndexHierarchy(IndexBase):
 
         if callable(mapper) or hasattr(mapper, 'get'):
             return self.__class__(
-                    levels=self._levels.relabel_at_depth(mapper, depth_level),
+                    levels=self._levels._relabel_at_depth(mapper, depth_level),
                     name=self._name,
                     )
 

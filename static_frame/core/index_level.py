@@ -402,9 +402,11 @@ class IndexLevel:
             depth_reference=self._depth
         )
 
-    def relabel_at_depth(self, mapper: RelabelInput, depth_level: tp.List[int]) -> 'IndexLevel':
+    def _relabel_at_depth(self, mapper: RelabelInput, depth_level: tp.List[int]) -> 'IndexLevel':
         '''
         Returns a new IndexLevel instance with relabeled indices at the specified `depth_level`s according to `mapper`, where `mapper` is a callable or a mapping.
+
+        Note: There is a strong expectation that depth_level is sorted.
         '''
         assert depth_level, "Invalid depth_levels should have already been sanitized"
 
@@ -422,7 +424,7 @@ class IndexLevel:
 
         new_targets = np.empty(len(self.targets), dtype=DTYPE_OBJECT)
         for i, target in enumerate(self.targets):
-            new_targets[i] = target.relabel_at_depth(mapper, target_depths)
+            new_targets[i] = target._relabel_at_depth(mapper, target_depths)
 
         return self.__class__(
             index=index,
