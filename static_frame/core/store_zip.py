@@ -179,8 +179,8 @@ class _StoreZip(Store):
             results_items = lambda: yield from zip(labels, repeat(None))
 
         # Avoid spinning up a process pool if all requested labels had weakrefs
-        if cache_hits == len(results):
-            for frame in results.values():
+        if count_cache and count_cache == count_labels:
+            for _, frame in results_items():
                 assert frame is not None  # mypy
                 yield frame
             return
