@@ -16,6 +16,7 @@ from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigHE
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import NOT_IN_CACHE_SENTINEL
 from static_frame.core.container_util import container_to_exporter_attr
 
 
@@ -114,17 +115,15 @@ class _StoreZip(Store):
         Simplified logic path for reading many frames in a single thread, using
         the weak_cache when possible.
         """
-        not_in_cache_sentinel = object()
-
         with zipfile.ZipFile(self._fp) as zf:
             for label in labels:
                 # Since the value can be deallocated between lookup & extraction,
                 # we have to handle it with `get`` & a sentinel to ensure we
                 # don't have a race condition
-                cache_lookup = self._weak_cache.get(label, not_in_cache_sentinel)
-                if cache_lookup is not not_in_cache_sentinel:
+                cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
+                if cache_lookup is not NOT_IN_CACHE_SENTINEL:
                     yield self._set_container_type(cache_lookup, container_type)
-                    return
+                    continue
 
                 c: StoreConfig = config_map[label]
 
@@ -167,6 +166,10 @@ class _StoreZip(Store):
         strong_cache = dict(self._weak_cache)
 
         def gen_multiprocess() -> tp.Iterator[PayloadBytesToFrame]:
+            """
+            This method is synchronized with every other `for label in labels`
+            loop, as they all share the same necessary &initial condition: `if label in strong_cache`.
+            """
             with zipfile.ZipFile(self._fp) as zf:
                 for label in labels:
                     if label in strong_cache:
