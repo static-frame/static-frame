@@ -56,6 +56,7 @@ class MMapTest:
         print(self, 'del complete')
 
 
+
 class CopyThread(MMapTest):
 
     @staticmethod
@@ -94,8 +95,6 @@ class CopySpawn(MMapTest):
             post = tuple(executor.map(self.func, args, chunksize=CHUNK_SIZE))
             assert self.fixture.shape[0] == post[0]
             assert len(post) == len(self.selections)
-
-
 
 
 
