@@ -173,10 +173,15 @@ class _StoreZip(Store):
                     count_cache += 1
                 else:
                     results[label] = None
-            results_items = lambda: yield from results.items()
+
+            def results_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[Frame]]]:
+                yield from results.items()
         else:
             labels = list(labels)
-            results_items = lambda: yield from zip(labels, repeat(None))
+
+            def results_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[Frame]]]:
+                for label in labels:
+                    yield label, None
 
         # Avoid spinning up a process pool if all requested labels had weakrefs
         if count_cache and count_cache == count_labels:
@@ -187,7 +192,7 @@ class _StoreZip(Store):
 
         def gen_multiprocess() -> tp.Iterator[PayloadBytesToFrame]:
             """
-            This method is synchronized with the following `for label in results`
+            This method is synchronized with the following `for label in results_items`
             loop, as they both share the same necessary & initial condition: `if cached_frame is not None`.
             """
             with zipfile.ZipFile(self._fp) as zf:
@@ -212,7 +217,7 @@ class _StoreZip(Store):
         with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
             frame_gen = executor.map(self._payload_to_frame, gen_multiprocess(), chunksize=chunksize)
 
-            for label, cached_frame in results.items():
+            for label, cached_frame in results_items():
                 if cached_frame is not None:
                     yield cached_frame
                 else:
