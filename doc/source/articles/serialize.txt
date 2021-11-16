@@ -3,20 +3,25 @@
 
 Using the NPY Format for Faster-than Parquet, Complete DataFrame Serialization
 
-
-Reviving the NPY File Format for Faster-than Parquet DataFrame Serialization & Memory Mapping
+Reviving the NPY File Format for Faster-than Parquet DataFrame Serialization & Multi-process Memory Mapping
 
 
 
 Not supported in Pandas.to_parquet()
     Must have string column names
-
+    Name attributes on Frames
 
 Abstract:
 You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. Please write at most 300 words.
 
+
+
 Description:
 You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. This section is also used on the schedule for attendees to view. Be clear and precise when describing your presentation. Please write at most 300 words.
+
+
+
+
 
 Notes:
 Let us know if you have specific needs or special requests — for example, requests that involve accessibility, audio, or restrictions on when your talk can be scheduled. We will accommodate accessibility-related needs whenever possible, and the merit of your tutorial will be judged independently from any request made here. These notes are meant for the organizer and won't be made public.
