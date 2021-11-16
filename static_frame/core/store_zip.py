@@ -161,19 +161,22 @@ class _StoreZip(Store):
             )
             return
 
-        results: tp.Dict[tp.Hashable, tp.Optional[Frame]] = {}
-        cache_hits: int = 0
-
+        count_cache: int = 0
         if self._weak_cache:
+            count_labels: int = 0
+            results: tp.Dict[tp.Hashable, tp.Optional[Frame]] = {}
             for label in labels:
+                count_labels += 1
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
                     results[label] = self._set_container_type(cache_lookup, container_type)
-                    cache_hits += 1
+                    count_cache += 1
                 else:
                     results[label] = None
+            results_items = lambda: yield from results.items()
         else:
-            results = {label: None for label in labels}
+            labels = list(labels)
+            results_items = lambda: yield from zip(labels, repeat(None))
 
         # Avoid spinning up a process pool if all requested labels had weakrefs
         if cache_hits == len(results):
