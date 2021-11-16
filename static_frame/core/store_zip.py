@@ -161,18 +161,35 @@ class _StoreZip(Store):
             )
             return
 
-        # To ensure race-conditions don't happen, and to simplifiy the code
-        # we lock in the state of our weak_cache for the rest of the function
-        strong_cache = dict(self._weak_cache)
+        results: tp.Dict[tp.Hashable, tp.Optional[Frame]] = {}
+        cache_hits: int = 0
+
+        if self._weak_cache:
+            for label in labels:
+                cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
+                if cache_lookup is not NOT_IN_CACHE_SENTINEL:
+                    results[label] = self._set_container_type(cache_lookup, container_type)
+                    cache_hits += 1
+                else:
+                    results[label] = None
+        else:
+            results = {label: None for label in labels}
+
+        # Avoid spinning up a process pool if all requested labels had weakrefs
+        if cache_hits == len(results):
+            for frame in results.values():
+                assert frame is not None  # mypy
+                yield frame
+            return
 
         def gen_multiprocess() -> tp.Iterator[PayloadBytesToFrame]:
             """
-            This method is synchronized with every other `for label in labels`
-            loop, as they all share the same necessary &initial condition: `if label in strong_cache`.
+            This method is synchronized with the following `for label in results`
+            loop, as they both share the same necessary & initial condition: `if cached_frame is not None`.
             """
             with zipfile.ZipFile(self._fp) as zf:
-                for label in labels:
-                    if label in strong_cache:
+                for label, cached_frame in results.items():
+                    if cached_frame is not None:
                         continue
 
                     c: StoreConfig = config_map[label]
@@ -187,29 +204,20 @@ class _StoreZip(Store):
                             constructor=constructor,
                     )
 
-        cache_hits = sum(label in strong_cache for label in labels)
-
-        # Avoid spinning up a process pool if all requested labels have weakrefs
-        if cache_hits == len(labels):
-            for label in labels:
-                yield self._set_container_type(strong_cache[label], container_type)
-            return
-
         chunksize = config_map.default.read_chunksize
 
         with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
             frame_gen = executor.map(self._payload_to_frame, gen_multiprocess(), chunksize=chunksize)
 
-            for label in labels:
-                if label in strong_cache:
-                    yield self._set_container_type(strong_cache[label], container_type)
-                    continue
+            for label, cached_frame in results.items():
+                if cached_frame is not None:
+                    yield cached_frame
+                else:
+                    frame = next(frame_gen)
 
-                frame = next(frame_gen)
-
-                # Newly read frame, add it to our weak_cache
-                self._weak_cache[label] = frame
-                yield frame
+                    # Newly read frame, add it to our weak_cache
+                    self._weak_cache[label] = frame
+                    yield frame
 
     # --------------------------------------------------------------------------
 
