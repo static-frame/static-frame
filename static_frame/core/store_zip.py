@@ -191,7 +191,7 @@ class _StoreZip(Store):
             loop, as they both share the same necessary & initial condition: `if cached_frame is not None`.
             """
             with zipfile.ZipFile(self._fp) as zf:
-                for label, cached_frame in results.items():
+                for label, cached_frame in results_items():
                     if cached_frame is not None:
                         continue
 
