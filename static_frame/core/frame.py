@@ -2240,7 +2240,7 @@ class Frame(ContainerOperand):
         '''
         Create a :obj:`Frame` from an npz file.
         '''
-        return NPZConverter.from_npz(
+        return NPZConverter.from_archive(
                 constructor=cls,
                 fp=fp,
                 )
@@ -2257,7 +2257,7 @@ class Frame(ContainerOperand):
         Args:
             memory_map: Use Python mmap objects to provide NumPy array buffers.
         '''
-        return NPYDirectoryConverter.from_npz(
+        return NPYDirectoryConverter.from_archive(
                 constructor=cls,
                 fp=fp,
                 memory_map=memory_map,
@@ -7499,7 +7499,7 @@ class Frame(ContainerOperand):
         '''
         Write a :obj:`Frame` as an npz file.
         '''
-        NPZConverter.to_npz(
+        NPZConverter.to_archive(
                 frame=self,
                 fp=fp,
                 include_index=include_index,
@@ -7515,7 +7515,7 @@ class Frame(ContainerOperand):
         '''
         Write a :obj:`Frame` as a directory of npy file.
         '''
-        NPYDirectoryConverter.to_npz(
+        NPYDirectoryConverter.to_archive(
                 frame=self,
                 fp=fp,
                 include_index=include_index,

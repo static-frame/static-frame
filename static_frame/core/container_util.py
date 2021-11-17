@@ -1449,7 +1449,10 @@ class NPYConverter:
         return np.dtype(dtype_str), fortran_order, shape
 
     @classmethod
-    def from_npy(cls, file: tp.IO[bytes], memory_map: bool = False) -> np.ndarray:
+    def from_npy(cls,
+            file: tp.IO[bytes],
+            memory_map: bool = False,
+            ) -> tp.Tuple[np.ndarray, tp.Optional[mmap.mmap]]:
         '''Read an NPY 1.0 file.
         '''
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
@@ -1488,7 +1491,7 @@ class NPYConverter:
                     order='F' if fortran_order else 'C',
                     )
             assert not array.flags.writeable
-            return array
+            return array, mm
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
         # NOTE: np.frombuffer produces a read-only view on the existing data
@@ -1501,7 +1504,7 @@ class NPYConverter:
         else:
             array.shape = shape
         assert not array.flags.writeable
-        return array
+        return array, None
 
 
 class Archive:
@@ -1580,7 +1583,7 @@ class ArchiveZip(Archive):
     def read_array(self, name: str) -> np.ndarray:
         f = self._archive.open(name)
         try:
-            array = NPYConverter.from_npy(f)
+            array, _ = NPYConverter.from_npy(f)
         finally:
             f.close()
         array.flags.writeable = False
@@ -1636,11 +1639,13 @@ class ArchiveDirectory(Archive):
                 self._closable = []
             f = open(fp, 'rb')
             self._closable.append(f)
-            return NPYConverter.from_npy(f, self.memory_map)
+            array, mm = NPYConverter.from_npy(f, self.memory_map)
+            self._closable.append(mm)
+            return array
 
         f = open(fp, 'rb')
         try:
-            array = NPYConverter.from_npy(f, self.memory_map)
+            array, _ = NPYConverter.from_npy(f, self.memory_map)
         finally:
             f.close()
         return array
@@ -1701,7 +1706,7 @@ class NPYArchiveConverter:
                 metadata[key_types] = [cls.__name__ for cls in index.index_types.values] # type: ignore
 
     @classmethod
-    def to_npz(cls,
+    def to_archive(cls,
             *,
             frame: 'Frame',
             fp: PathSpecifier,
@@ -1796,7 +1801,7 @@ class NPYArchiveConverter:
         return index
 
     @classmethod
-    def from_npz(cls,
+    def from_archive(cls,
             *,
             constructor: tp.Type['Frame'],
             fp: PathSpecifier,
@@ -1845,7 +1850,7 @@ class NPYArchiveConverter:
                 for i in range(block_count)
                 )
 
-        archive.close() # will only have effect if memory mapping
+        # archive.close() # will only have effect if memory mapping
         return constructor(tb,
                 own_data=True,
                 index=index,
