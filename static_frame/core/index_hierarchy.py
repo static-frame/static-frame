@@ -25,6 +25,7 @@ from static_frame.core.index import ILoc
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
+from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_base import IndexBase
@@ -1051,14 +1052,72 @@ class IndexHierarchy(IndexBase):
                 )
 
 
-    # def relabel_at_depth(self: IH,
-    #         mapper: RelabelInput,
-    #         depth_level: DepthLevelSpecifier = 0
-    #         ) -> IH:
-    #     '''
-    #     Return a new :obj:`IndexHierarchy` after applying the hte `mapper` to the depth level or levels specified by `depth_level`.
-    #     '''
-    #     pass
+    def relabel_at_depth(self,
+            mapper: RelabelInput,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> "IndexHierarchy":
+        '''
+        Return a new :obj:`IndexHierarchy` after applying `mapper` to a level or each individual level specified by `depth_level`.
+
+        `mapper` can be a callable, mapping, or iterable.
+            - If a callable, it must accept a single value, and return a single value.
+            - If a mapping, it must map a single value to a single value.
+            - If a iterable, it must be the same length as `self`.
+
+        This call:
+
+        >>> index.relabel_at_depth(mapper, depth_level=[0, 1, 2])
+
+        is equivalent to:
+
+        >>> for level in [0, 1, 2]:
+        >>>     index = index.relabel_at_depth(mapper, depth_level=level)
+
+        albeit more efficient.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if isinstance(depth_level, INT_TYPES):
+            depth_level = [depth_level]
+            target_depths: tp.Container[int] = depth_level
+        else:
+            depth_level = sorted(depth_level)
+            target_depths = set(depth_level)
+
+            if len(target_depths) != len(depth_level):
+                raise ValueError('depth_levels must be unique')
+
+            if not depth_level:
+                raise ValueError('depth_level must be non-empty')
+
+        if any(level < 0 or level >= self.depth for level in depth_level):
+            raise ValueError(f'Invalid depth level found. Valid levels: [0-{self.depth - 1}]')
+
+        if callable(mapper) or hasattr(mapper, 'get'):
+            return self.__class__(
+                    levels=self._levels._relabel_at_depth(mapper, depth_level),
+                    name=self._name,
+                    )
+
+        values, _ = iterable_to_array_1d(mapper, count=len(self))
+
+        if len(values) != len(self):
+            raise ValueError('Iterable must provide a value for each label')
+
+        def gen() -> tp.Iterator[np.ndarray]:
+            for depth_idx in range(self.depth):
+                if depth_idx in target_depths:
+                    yield values
+                else:
+                    yield self._blocks._extract_array_column(depth_idx)
+
+        return self.__class__._from_type_blocks(
+                TypeBlocks.from_blocks(gen()),
+                name=self._name,
+                index_constructors=tuple(self._levels.index_types()),
+                own_blocks=True
+                )
 
     def rehierarch(self: IH,
             depth_map: tp.Sequence[int]

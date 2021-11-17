@@ -1,5 +1,3 @@
-
-
 import typing as tp
 from collections import deque
 from itertools import zip_longest
@@ -8,7 +6,6 @@ from copy import deepcopy
 
 import numpy as np
 from arraykit import resolve_dtype_iter
-
 
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.container_util import index_from_optional_constructor
@@ -20,6 +17,7 @@ from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import LocMap
 from static_frame.core.index import mutable_immutable_index_filter
+from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import GetItemKeyType
@@ -27,11 +25,12 @@ from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import INT_TYPES
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import EMPTY_TUPLE
 # from static_frame.core.exception import LocInvalid
 
 
@@ -372,6 +371,68 @@ class IndexLevel:
                 next_depth = depth + 1
                 levels.extend((lvl, next_depth) for lvl in level.targets)
 
+    def _relabel_at_single_depth(self,
+            mapper: RelabelInput, depth_level: int
+            ) -> 'IndexLevel':
+        '''
+        Returns a new IndexLevel instance with relabeled indices at the specified `depth_level` according to `mapper`.
+
+        It will recursive through the internal index levels to apply a `relabel` to all the appropriate indices.
+        '''
+        if depth_level == 0:
+            return self.__class__(
+                index=self.index.relabel(mapper),
+                targets=self.targets,
+                offset=self.offset,
+                own_index=True,
+                depth_reference=self._depth
+            )
+
+        assert self.targets is not None, f"Invalid depth_level={depth_level}"
+
+        new_targets = np.empty(len(self.targets), dtype=DTYPE_OBJECT)
+        for i, target in enumerate(self.targets):
+            new_targets[i] =  target._relabel_at_single_depth(mapper, depth_level - 1)
+
+        return self.__class__(
+            index=self.index,
+            targets=ArrayGO(new_targets, own_iterable=True),
+            offset=self.offset,
+            own_index=False,
+            depth_reference=self._depth
+        )
+
+    def _relabel_at_depth(self, mapper: RelabelInput, depth_level: tp.List[int]) -> 'IndexLevel':
+        '''
+        Returns a new IndexLevel instance with relabeled indices at the specified `depth_level`s according to `mapper`, where `mapper` is a callable or a mapping.
+
+        Note: There is a strong expectation that depth_level is sorted.
+        '''
+        assert depth_level, "Invalid depth_levels should have already been sanitized"
+
+        if len(depth_level) == 1:
+            return self._relabel_at_single_depth(mapper, depth_level[0])
+
+        if depth_level[0] == 0:
+            index = self.index.relabel(mapper)
+            target_depths = [level - 1 for level in depth_level[1:]]
+            own_index = True
+        else:
+            index = self.index
+            target_depths = [level - 1 for level in depth_level]
+            own_index = False
+
+        new_targets = np.empty(len(self.targets), dtype=DTYPE_OBJECT)
+        for i, target in enumerate(self.targets):
+            new_targets[i] = target._relabel_at_depth(mapper, target_depths)
+
+        return self.__class__(
+            index=index,
+            targets=ArrayGO(new_targets, own_iterable=True),
+            offset=self.offset,
+            own_index=own_index,
+            depth_reference=self._depth
+        )
 
     def index_array_at_depth(self,
             depth_level: int = 0
