@@ -27,6 +27,7 @@ from static_frame.core.container_util import container_to_exporter_attr
 FrameExporter = AnyCallable # Protocol not supported yet...
 FrameConstructor = tp.Callable[[tp.Any], Frame]
 LabelAndBytes = tp.Tuple[tp.Hashable, tp.Union[str, bytes]]
+IteratorItemsLabelOptionalFrame = tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[Frame]]]
 
 class PayloadBytesToFrame(tp.NamedTuple):
     '''
@@ -174,12 +175,12 @@ class _StoreZip(Store):
                 else:
                     results[label] = None
 
-            def results_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[Frame]]]:
+            def results_items() -> IteratorItemsLabelOptionalFrame:
                 yield from results.items()
         else:
             labels = list(labels)
 
-            def results_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[Frame]]]:
+            def results_items() -> IteratorItemsLabelOptionalFrame:
                 for label in labels:
                     yield label, None
 
@@ -190,11 +191,10 @@ class _StoreZip(Store):
                 yield frame
             return
 
-        def gen_multiprocess() -> tp.Iterator[PayloadBytesToFrame]:
-            """
-            This method is synchronized with the following `for label in results_items`
-            loop, as they both share the same necessary & initial condition: `if cached_frame is not None`.
-            """
+        def gen() -> tp.Iterator[PayloadBytesToFrame]:
+            '''
+            This method is synchronized with the following `for label in results_items` loop, as they both share the same necessary & initial condition: `if cached_frame is not None`.
+            '''
             with zipfile.ZipFile(self._fp) as zf:
                 for label, cached_frame in results_items():
                     if cached_frame is not None:
@@ -215,7 +215,7 @@ class _StoreZip(Store):
         chunksize = config_map.default.read_chunksize
 
         with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
-            frame_gen = executor.map(self._payload_to_frame, gen_multiprocess(), chunksize=chunksize)
+            frame_gen = executor.map(self._payload_to_frame, gen(), chunksize=chunksize)
 
             for label, cached_frame in results_items():
                 if cached_frame is not None:

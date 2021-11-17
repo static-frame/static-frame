@@ -5,6 +5,7 @@ import timeit
 import tempfile
 import typing as tp
 import pickle
+import shutil
 
 import numpy as np
 import frame_fixtures as ff
@@ -31,9 +32,12 @@ class FileIOTest:
     def __init__(self, fixture: str):
         self.fixture = ff.parse(fixture)
         _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
+        self.fp_dir = '/tmp/npy'
 
-    def __del__(self) -> None:
+    def clear(self) -> None:
         os.unlink(self.fp)
+        if os.path.exists(self.fp_dir):
+            shutil.rmtree(self.fp_dir)
 
     def __call__(self):
         raise NotImplementedError()
@@ -119,7 +123,7 @@ class SFReadPickle(FileIOTest):
             _ = f.loc[34715, 'zZbu']
 
 
-    def __del__(self) -> None:
+    def clear(self) -> None:
         self.file.close()
         os.unlink(self.fp)
 
@@ -134,9 +138,47 @@ class SFWritePickle(FileIOTest):
     def __call__(self):
         pickle.dump(self.fixture, self.file)
 
-    def __del__(self) -> None:
+    def clear(self) -> None:
         self.file.close()
         os.unlink(self.fp)
+
+
+
+class SFReadNPY(FileIOTest):
+    SUFFIX = '.npy'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.fixture.to_npy(self.fp_dir)
+
+    def __call__(self):
+        # import ipdb; ipdb.set_trace()
+        f = sf.Frame.from_npy(self.fp_dir)
+        _ = f.loc[34715, 'zZbu']
+
+
+class SFWriteNPY(FileIOTest):
+    SUFFIX = '.npy'
+
+    def __call__(self):
+        self.fixture.to_npy(self.fp_dir)
+
+
+
+
+class SFReadNPYMM(FileIOTest):
+    SUFFIX = '.npy'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.fixture.to_npy(self.fp_dir)
+
+    def __call__(self):
+        # import ipdb; ipdb.set_trace()
+        f = sf.Frame.from_npy(self.fp_dir, memory_map=True)
+        _ = f.loc[34715, 'zZbu']
+
+
 
 
 
@@ -239,17 +281,25 @@ def run_test():
                 SFWriteParquet,
                 SFWriteNPZ,
                 SFWritePickle,
+                SFWriteNPY,
                 PDReadParquet,
                 SFReadParquet,
                 SFReadNPZ,
                 SFReadPickle,
+                SFReadNPY,
+                SFReadNPYMM,
                 ):
             runner = cls(fixture)
             record = [cls.__name__, cls.NUMBER, label]
-            result = timeit.timeit(
-                    f'runner()',
-                    globals=locals(),
-                    number=cls.NUMBER)
+            try:
+                result = timeit.timeit(
+                        f'runner()',
+                        globals=locals(),
+                        number=cls.NUMBER)
+            except OSError:
+                result = np.nan
+            finally:
+                runner.clear()
             record.append(result)
             records.append(record)
 

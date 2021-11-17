@@ -6,6 +6,12 @@ What is New in Static Frame
 
 Added ``Frame.to_npy()``, ``Frame.from_npy()``.
 
+Performance enhancements to all ``_StoreZip`` subclasses through usage of ``WeakValueDictionary`` caching.
+
+Added ``IndexHiearchy.relabel_at_depth()``.
+
+Added support for string slicing and selection with ``Series.via_str[]`` and ``Frame.via_str[]``.
+
 
 0.8.27
 ----------

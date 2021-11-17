@@ -19,7 +19,11 @@ from static_frame.core.display_color import HexColor
 CHUNK_SIZE = 20
 
 
-FF_wide = 's(10_000,1_000)|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
+FF_100kx1k = 's(100_000,1_000)|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
+FF_10kx1k = 's(10_000,1_000)|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
+FF_100kx1k_auto = 's(100_000,1_000)|v(int,int,bool,float,float)'
+FF_10kx1k_auto = 's(10_000,1_000)|v(int,int,bool,float,float)'
+
 # FF_wide_col = 's(100,1_000)|v(int,bool,float)|i(I,int)|c(I,str)'
 # FF_wide_ext = 's(1000,10_000)|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
 
@@ -57,28 +61,30 @@ class MMapTest:
 
 
 
-class CopyThread(MMapTest):
+# class CopyThread(MMapTest):
 
-    @staticmethod
-    def func(frame):
-        return work(frame)
+#     @staticmethod
+#     def func(args):
+#         frame, sel = args
+#         return work(frame[sel])
 
-    def __call__(self):
-        with ThreadPoolExecutor() as executor:
-            args = (self.fixture[sel] for sel in self.selections)
-            post = tuple(executor.map(self.func, args, chunksize=CHUNK_SIZE))
-            assert self.fixture.shape[0] == post[0]
-            assert len(post) == len(self.selections)
+#     def __call__(self):
+#         with ThreadPoolExecutor() as executor:
+#             args = ((self.fixture, sel) for sel in self.selections)
+#             post = tuple(executor.map(self.func, args, chunksize=CHUNK_SIZE))
+#             assert self.fixture.shape[0] == post[0]
+#             assert len(post) == len(self.selections)
 
 class CopyFork(MMapTest):
 
     @staticmethod
-    def func(frame):
-        return work(frame)
+    def func(args):
+        frame, sel = args
+        return work(frame[sel])
 
     def __call__(self):
         with ProcessPoolExecutor(mp_context=get_mp_context('fork')) as executor:
-            args = (self.fixture[sel] for sel in self.selections)
+            args = ((self.fixture, sel) for sel in self.selections)
             post = tuple(executor.map(self.func, args, chunksize=CHUNK_SIZE))
             assert self.fixture.shape[0] == post[0]
             assert len(post) == len(self.selections)
@@ -86,32 +92,33 @@ class CopyFork(MMapTest):
 class CopySpawn(MMapTest):
 
     @staticmethod
-    def func(frame):
-        return work(frame)
+    def func(args):
+        frame, sel = args
+        return work(frame[sel])
 
     def __call__(self):
         with ProcessPoolExecutor(mp_context=get_mp_context('spawn')) as executor:
-            args = (self.fixture[sel] for sel in self.selections)
+            args = ((self.fixture, sel) for sel in self.selections)
             post = tuple(executor.map(self.func, args, chunksize=CHUNK_SIZE))
             assert self.fixture.shape[0] == post[0]
             assert len(post) == len(self.selections)
 
 
 
-class MMapThread(MMapTest):
+# class MMapThread(MMapTest):
 
-    @staticmethod
-    def func(fp: str, cols=np.ndarray):
-        return work(sf.Frame.from_npy(fp)[cols])
+#     @staticmethod
+#     def func(fp: str, cols=np.ndarray):
+#         return work(sf.Frame.from_npy(fp)[cols])
 
-    def __call__(self):
-        fp = self.fp_dir
-        func = partial(self.func, fp)
+#     def __call__(self):
+#         fp = self.fp_dir
+#         func = partial(self.func, fp)
 
-        with ThreadPoolExecutor() as executor:
-            post = tuple(executor.map(func, self.selections, chunksize=CHUNK_SIZE))
-            assert self.fixture.shape[0] == post[0]
-            assert len(post) == len(self.selections)
+#         with ThreadPoolExecutor() as executor:
+#             post = tuple(executor.map(func, self.selections, chunksize=CHUNK_SIZE))
+#             assert self.fixture.shape[0] == post[0]
+#             assert len(post) == len(self.selections)
 
 class MMapFork(MMapTest):
 
@@ -174,17 +181,17 @@ def get_format():
 def run_test():
     records = []
     for label, fixture in (
-            ('wide', FF_wide),
-            # ('wide_ext', FF_wide_ext),
-            ):
+            ('100kx1k', FF_100kx1k),
+            ('10kx1k', FF_10kx1k),
+            ('100kx1k_auto', FF_100kx1k_auto),
+            ('10kx1k_auto', FF_10kx1k_auto),            ):
         for cls in (
-                CopyThread,
+                # CopyThread,
                 CopyFork,
-                CopySpawn,
-
+                # CopySpawn,
                 # MMapThread,
                 MMapFork,
-                MMapSpawn,
+                # MMapSpawn,
                 ):
             runner = cls(fixture)
             record = [cls.__name__, cls.NUMBER, label]

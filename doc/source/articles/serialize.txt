@@ -7,12 +7,18 @@ Reviving the NPY File Format for Faster-than Parquet DataFrame Serialization & M
 
 
 
+
+
 Not supported in Pandas.to_parquet()
     Must have string column names
     Name attributes on Frames
 
 Abstract:
 You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. Please write at most 300 words.
+
+
+Serializing a DataFrame to disk generally involves compromises: depending on the format (e.g., CSV, XLSX, Parquet) type information, metadata, or hierarchical indices or columns might not be captured or fully restorable from the format.
+
 
 
 
@@ -25,3 +31,11 @@ You can use Markdown here. Please do not include any personally identifiable inf
 
 Notes:
 Let us know if you have specific needs or special requests — for example, requests that involve accessibility, audio, or restrictions on when your talk can be scheduled. We will accommodate accessibility-related needs whenever possible, and the merit of your tutorial will be judged independently from any request made here. These notes are meant for the organizer and won't be made public.
+
+
+
+
+# notes on changing limit on file descriptors
+https://wilsonmar.github.io/maximum-limits/
+# PROTIP: On MacOS, the maximum number that can be specified is 12288.
+# ulimit -n
