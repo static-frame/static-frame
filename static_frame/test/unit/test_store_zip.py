@@ -316,56 +316,59 @@ class TestUnit(TestCase):
             # Reference is gone now!
             self.assertEqual(0, len(list(st._weak_cache)))
 
-    def test_store_read_many_multiprocess_weak_cache_a(self) -> None:
+    def test_store_read_many_weak_cache_a(self) -> None:
 
-        f1, f2, f3 = get_test_framesA()
+        def gen_test_frames() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            f1, f2, f3 = get_test_framesA()
+            yield from ((f.name, f) for f in (f1, f2, f3))
 
-        with temp_file('.zip') as fp:
+        for read_max_workers in (None, 1):
+            with temp_file('.zip') as fp:
 
-            st = StoreZipTSV(fp)
-            st.write((f.name, f) for f in (f1, f2, f3))
+                st = StoreZipTSV(fp)
+                st.write(gen_test_frames())
 
-            kwargs = dict(
-                    config=StoreConfig(index_depth=1, read_max_workers=1),
-                    container_type=Frame,
-                    )
+                kwargs = dict(
+                        config=StoreConfig(index_depth=1, read_max_workers=read_max_workers),
+                        container_type=Frame,
+                        )
 
-            labels = tuple(st.labels(strip_ext=True))
-            self.assertEqual(labels, ('foo', 'bar', 'baz'))
+                labels = tuple(st.labels(strip_ext=True))
+                self.assertEqual(labels, ('foo', 'bar', 'baz'))
 
-            self.assertEqual(0, len(list(st._weak_cache)))
+                self.assertEqual(0, len(list(st._weak_cache)))
 
-            # Go through the pass where there are no cache hits!
-            # Don't hold onto the result!
-            list(st.read_many(labels, **kwargs))
-            self.assertEqual(0, len(list(st._weak_cache)))
+                # Go through the pass where there are no cache hits!
+                # Don't hold onto the result!
+                list(st.read_many(labels, **kwargs))
+                self.assertEqual(0, len(list(st._weak_cache)))
 
-            # Hold onto all results
-            result = list(st.read_many(labels, **kwargs))
-            self.assertEqual(3, len(result))
-            self.assertEqual(3, len(list(st._weak_cache)))
+                # Hold onto all results
+                result = list(st.read_many(labels, **kwargs))
+                self.assertEqual(3, len(result))
+                self.assertEqual(3, len(list(st._weak_cache)))
 
-            del result
-            self.assertEqual(0, len(list(st._weak_cache)))
+                del result
+                self.assertEqual(0, len(list(st._weak_cache)))
 
-            [frame] = list(st.read_many(("foo",), **kwargs))
-            self.assertIs(frame, st._weak_cache['foo'])
+                [frame] = list(st.read_many(("foo",), **kwargs))
+                self.assertIs(frame, st._weak_cache['foo'])
 
-            # Go through pass where there are some cache hits!
-            # Don't hold onto the result!
-            list(st.read_many(labels, **kwargs))
-            self.assertEqual(1, len(list(st._weak_cache)))
+                # Go through pass where there are some cache hits!
+                # Don't hold onto the result!
+                list(st.read_many(labels, **kwargs))
+                self.assertEqual(1, len(list(st._weak_cache)))
 
-            # Hold onto all results
-            result = list(st.read_many(labels, **kwargs))
-            self.assertEqual(3, len(result))
-            self.assertEqual(3, len(list(st._weak_cache)))
+                # Hold onto all results
+                result = list(st.read_many(labels, **kwargs))
+                self.assertEqual(3, len(result))
+                self.assertEqual(3, len(list(st._weak_cache)))
 
-            # Go through pass where all labels are in the cache
-            result2 = list(st.read_many(labels, **kwargs))
-            self.assertEqual(len(result), len(result2))
-            for f1, f2 in zip(result, result2):
-                self.assertIs(f1, f2)
+                # Go through pass where all labels are in the cache
+                result2 = list(st.read_many(labels, **kwargs))
+                self.assertEqual(len(result), len(result2))
+                for f1, f2 in zip(result, result2):
+                    self.assertIs(f1, f2)
 
 
 class TestUnitMultiProcess(TestCase):
