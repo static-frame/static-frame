@@ -12,6 +12,7 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import UFunc
 from static_frame.core.util import OPERATORS
+from static_frame.core.util import GetItemKeyType
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -34,6 +35,7 @@ class InterfaceString(Interface[TContainer]):
             '_blocks_to_container',
             )
     INTERFACE = (
+            '__getitem__',
             'capitalize',
             'center',
             'count',
@@ -123,7 +125,43 @@ class InterfaceString(Interface[TContainer]):
                     )
             yield array
 
+    @staticmethod
+    def _process_element_blocks(*,
+            blocks: BlocksType,
+            method_name: str,
+            dtype: np.dtype,
+            args: tp.Tuple[tp.Any, ...] = EMPTY_TUPLE,
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
+        '''
+        for block in blocks:
+            if block.dtype not in DTYPE_STR_KINDS:
+                block = block.astype(DTYPE_STR)
+
+            # resultant array is immutable
+            array = array_from_element_method(
+                    array=block,
+                    method_name=method_name,
+                    args=args,
+                    dtype=dtype,
+                    )
+            yield array
+
+
     #---------------------------------------------------------------------------
+    def __getitem__(self,  key: GetItemKeyType) -> TContainer:
+        '''
+        Return a container with the provided selection or slice of each element.
+        '''
+        block_gen = self._process_element_blocks(
+                blocks=self._blocks,
+                method_name='__getitem__',
+                args=(key,),
+                dtype=DTYPE_STR,
+                )
+        return self._blocks_to_container(block_gen)
+
     def capitalize(self) -> TContainer:
         '''
         Return a container with only the first character of each element capitalized.

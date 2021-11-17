@@ -3891,7 +3891,17 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 (('x', ('f*o', '*', 'o')), ('y', ('b*a', '*', 'r'))))
 
-        # import ipdb; ipdb.set_trace()
+
+    def test_series_str_getitem_a(self) -> None:
+        s1 = Series(["ab_asldkj", "cd_LKSJ", "df_foooooo"])
+        self.assertEqual(s1.via_str[:2].to_pairs(),
+                ((0, 'ab'), (1, 'cd'), (2, 'df'))
+                )
+        self.assertEqual(s1.via_str[0].to_pairs(),
+                ((0, 'a'), (1, 'c'), (2, 'd'))
+                )
+
+
     #---------------------------------------------------------------------------
     def test_series_via_dt_year_a(self) -> None:
         dt64 = np.datetime64

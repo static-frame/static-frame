@@ -2561,7 +2561,7 @@ def array_from_element_method(*,
         pre_insert: tp.Optional[AnyCallable] = None,
         ) -> np.array:
     '''
-    Handle element-wise method calling on arrays of Python date/datetime objects.
+    Handle element-wise method calling on arrays of Python objects.
 
     Args:
         pre_insert:
