@@ -301,6 +301,9 @@ NAME_DEFAULT = object()
 STORE_LABEL_DEFAULT = object()
 
 #-------------------------------------------------------------------------------
+NOT_IN_CACHE_SENTINEL = object()
+
+#-------------------------------------------------------------------------------
 # operator mod does not have r methods; create complete method reference
 OPERATORS: tp.Dict[str, UFunc] = {
     '__pos__': operator.__pos__,
