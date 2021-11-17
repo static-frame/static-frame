@@ -10,6 +10,8 @@ Performance enhancements to all ``_StoreZip`` subclasses through usage of ``Weak
 
 Added ``IndexHiearchy.relabel_at_depth()``.
 
+Added support for string slicing and selection with ``Series.via_str[]`` and ``Frame.via_str[]``.
+
 
 0.8.27
 ----------
