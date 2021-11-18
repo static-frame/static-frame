@@ -54,6 +54,7 @@ from static_frame.core.rank import RankMethod
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import list_to_tuple
+from static_frame.core.util import EMPTY_TUPLE
 
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorNPYDecode
@@ -1542,10 +1543,9 @@ class Archive:
         raise NotImplementedError() #pragma: no cover
 
     def close(self) -> None:
-        if hasattr(self, '_closable'):
-            for f in self._closable:
-                print('closing', f)
-                f.close()
+        for f in getattr(self, '_closable', EMPTY_TUPLE):
+            # print('closing', f)
+            f.close()
 
 class ArchiveZip(Archive):
     __slots__ = (
@@ -1850,7 +1850,15 @@ class NPYArchiveConverter:
                 for i in range(block_count)
                 )
 
-        # archive.close() # will only have effect if memory mapping
+        if not memory_map:
+            return constructor(tb,
+                    own_data=True,
+                    index=index,
+                    own_index = False if index is None else True,
+                    columns=columns,
+                    own_columns = False if columns is None else True,
+                    name=name,
+                    )
         return constructor(tb,
                 own_data=True,
                 index=index,
@@ -1858,6 +1866,7 @@ class NPYArchiveConverter:
                 columns=columns,
                 own_columns = False if columns is None else True,
                 name=name,
+                del_callback=archive.close,
                 )
 
 

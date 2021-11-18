@@ -220,6 +220,7 @@ class Features:
         '__class_getitem__',
         '__annotations__',
         '__doc__',
+        '__del__',
         '__delattr__',
         '__dir__',
         '__dict__',

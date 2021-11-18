@@ -189,7 +189,8 @@ class Frame(ContainerOperand):
             '_blocks',
             '_columns',
             '_index',
-            '_name'
+            '_name',
+            '_del_callback',
             )
 
     _blocks: TypeBlocks
@@ -2695,7 +2696,8 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_data: bool = False,
             own_index: bool = False,
-            own_columns: bool = False
+            own_columns: bool = False,
+            del_callback=None,
             ) -> None:
         '''
         Initializer.
@@ -2760,7 +2762,7 @@ class Frame(ContainerOperand):
                 if not blocks_constructor else (None, None))
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
-
+        self._del_callback = del_callback
         #-----------------------------------------------------------------------
         # columns assignment
 
@@ -2850,6 +2852,14 @@ class Frame(ContainerOperand):
     #     Return shallow copy of this Frame.
     #     '''
     #     return self.__copy__() #type: ignore
+
+    #---------------------------------------------------------------------------
+    def __del__(self) -> None:
+        if getattr(self, '_del_callback', None):
+            del self._index
+            del self._columns
+            del self._blocks
+            self._del_callback()
 
     #---------------------------------------------------------------------------
     # name interface
