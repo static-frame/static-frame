@@ -56,7 +56,7 @@ class TestUnit(TestCase):
             self.assertTrue(a1.shape == a2.shape)
 
             with open(fp, 'rb') as f:
-                a3 = NPYConverter.from_npy(f)
+                a3, _ = NPYConverter.from_npy(f)
                 if a3.dtype.kind in DTYPE_INEXACT_KINDS:
                     self.assertAlmostEqualArray(a1, a3)
                 else:
@@ -70,7 +70,7 @@ class TestUnit(TestCase):
                 NPYConverter.to_npy(f, a1)
 
             with open(fp, 'rb') as f:
-                a2 = NPYConverter.from_npy(f, memory_map=True)
+                a2, mm = NPYConverter.from_npy(f, memory_map=True)
                 if a2.dtype.kind in DTYPE_INEXACT_KINDS:
                     self.assertAlmostEqualArray(a1, a2)
                 else:

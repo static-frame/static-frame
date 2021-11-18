@@ -189,13 +189,15 @@ class Frame(ContainerOperand):
             '_blocks',
             '_columns',
             '_index',
-            '_name'
+            '_name',
+            '_finalizer',
             )
 
     _blocks: TypeBlocks
     _columns: IndexBase
     _index: IndexBase
     _name: tp.Hashable
+    _finalizer: tp.Optional[tp.Callable[[], None]]
 
     _COLUMNS_CONSTRUCTOR = Index
     _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchy
@@ -2240,7 +2242,7 @@ class Frame(ContainerOperand):
         '''
         Create a :obj:`Frame` from an npz file.
         '''
-        return NPZConverter.from_npz(
+        return NPZConverter.from_archive(
                 constructor=cls,
                 fp=fp,
                 )
@@ -2249,7 +2251,7 @@ class Frame(ContainerOperand):
     def from_npy(cls,
             fp: PathSpecifier,
             *,
-            memory_map: bool = True,
+            memory_map: bool = False,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an directory of npy files.
@@ -2257,7 +2259,7 @@ class Frame(ContainerOperand):
         Args:
             memory_map: Use Python mmap objects to provide NumPy array buffers.
         '''
-        return NPYDirectoryConverter.from_npz(
+        return NPYDirectoryConverter.from_archive(
                 constructor=cls,
                 fp=fp,
                 memory_map=memory_map,
@@ -2695,7 +2697,8 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_data: bool = False,
             own_index: bool = False,
-            own_columns: bool = False
+            own_columns: bool = False,
+            finalizer: tp.Optional[tp.Callable[[], None]] = None,
             ) -> None:
         '''
         Initializer.
@@ -2760,6 +2763,7 @@ class Frame(ContainerOperand):
                 if not blocks_constructor else (None, None))
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
+        self._finalizer = finalizer
 
         #-----------------------------------------------------------------------
         # columns assignment
@@ -2850,6 +2854,14 @@ class Frame(ContainerOperand):
     #     Return shallow copy of this Frame.
     #     '''
     #     return self.__copy__() #type: ignore
+
+    #---------------------------------------------------------------------------
+    def __del__(self) -> None:
+        if getattr(self, '_finalizer', None):
+            del self._index
+            del self._columns
+            del self._blocks
+            self._finalizer()
 
     #---------------------------------------------------------------------------
     # name interface
@@ -7058,6 +7070,7 @@ class Frame(ContainerOperand):
                 own_data=True,
                 own_index=True,
                 own_columns=constructor is FrameHE,
+                finalizer=self._finalizer,
                 )
 
     def to_frame_he(self) -> 'FrameHE':
@@ -7499,7 +7512,7 @@ class Frame(ContainerOperand):
         '''
         Write a :obj:`Frame` as an npz file.
         '''
-        NPZConverter.to_npz(
+        NPZConverter.to_archive(
                 frame=self,
                 fp=fp,
                 include_index=include_index,
@@ -7515,7 +7528,7 @@ class Frame(ContainerOperand):
         '''
         Write a :obj:`Frame` as a directory of npy file.
         '''
-        NPYDirectoryConverter.to_npz(
+        NPYDirectoryConverter.to_archive(
                 frame=self,
                 fp=fp,
                 include_index=include_index,

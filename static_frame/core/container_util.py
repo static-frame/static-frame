@@ -54,6 +54,7 @@ from static_frame.core.rank import RankMethod
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import list_to_tuple
+from static_frame.core.util import EMPTY_TUPLE
 
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorNPYDecode
@@ -1449,7 +1450,10 @@ class NPYConverter:
         return np.dtype(dtype_str), fortran_order, shape
 
     @classmethod
-    def from_npy(cls, file: tp.IO[bytes], memory_map: bool = False) -> np.ndarray:
+    def from_npy(cls,
+            file: tp.IO[bytes],
+            memory_map: bool = False,
+            ) -> tp.Tuple[np.ndarray, tp.Optional[mmap.mmap]]:
         '''Read an NPY 1.0 file.
         '''
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
@@ -1471,7 +1475,7 @@ class NPYConverter:
             # offset calculations derived from numpy/core/memmap.py
             offset_header = file.tell()
             byte_count = offset_header + size * dtype.itemsize
-            # ALLOCATIONGRANULARITY is 4096 on linux, if offset_header is 64 (or less than 4096), this will return zero
+            # ALLOCATIONGRANULARITY is 4096 on linux, if offset_header is 64 (or less than 4096), this will set offset_mmap to zero
             offset_mmap = offset_header - offset_header % mmap.ALLOCATIONGRANULARITY
             byte_count -= offset_mmap
             offset_array = offset_header - offset_mmap
@@ -1488,7 +1492,7 @@ class NPYConverter:
                     order='F' if fortran_order else 'C',
                     )
             assert not array.flags.writeable
-            return array
+            return array, mm
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
         # NOTE: np.frombuffer produces a read-only view on the existing data
@@ -1501,7 +1505,7 @@ class NPYConverter:
         else:
             array.shape = shape
         assert not array.flags.writeable
-        return array
+        return array, None
 
 
 class Archive:
@@ -1513,6 +1517,7 @@ class Archive:
             'labels',
             'memory_map',
             '_archive',
+            '_closable'
             )
 
     labels: tp.FrozenSet[str]
@@ -1537,7 +1542,18 @@ class Archive:
     def read_metadata(self) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
+    def close(self) -> None:
+        for f in getattr(self, '_closable', EMPTY_TUPLE):
+            # print('closing', f)
+            f.close()
+
 class ArchiveZip(Archive):
+    __slots__ = (
+            'labels',
+            'memory_map',
+            '_archive',
+            '_closable'
+            )
 
     def __init__(self,
             fp: PathSpecifier,
@@ -1567,7 +1583,7 @@ class ArchiveZip(Archive):
     def read_array(self, name: str) -> np.ndarray:
         f = self._archive.open(name)
         try:
-            array = NPYConverter.from_npy(f)
+            array, _ = NPYConverter.from_npy(f)
         finally:
             f.close()
         array.flags.writeable = False
@@ -1581,6 +1597,12 @@ class ArchiveZip(Archive):
 
 
 class ArchiveDirectory(Archive):
+    __slots__ = (
+            'labels',
+            'memory_map',
+            '_archive',
+            '_closable',
+            )
 
     def __init__(self,
             fp: PathSpecifier,
@@ -1613,12 +1635,19 @@ class ArchiveDirectory(Archive):
     def read_array(self, name: str) -> np.ndarray:
         fp = os.path.join(self._archive, name)
         if self.memory_map:
+            if not hasattr(self, '_closable'):
+                self._closable = []
+
             f = open(fp, 'rb')
-            return NPYConverter.from_npy(f, self.memory_map)
+            array, mm = NPYConverter.from_npy(f, self.memory_map)
+
+            self._closable.append(f)
+            self._closable.append(mm)
+            return array
 
         f = open(fp, 'rb')
         try:
-            array = NPYConverter.from_npy(f, self.memory_map)
+            array, _ = NPYConverter.from_npy(f, self.memory_map)
         finally:
             f.close()
         return array
@@ -1679,7 +1708,7 @@ class NPYArchiveConverter:
                 metadata[key_types] = [cls.__name__ for cls in index.index_types.values] # type: ignore
 
     @classmethod
-    def to_npz(cls,
+    def to_archive(cls,
             *,
             frame: 'Frame',
             fp: PathSpecifier,
@@ -1774,7 +1803,7 @@ class NPYArchiveConverter:
         return index
 
     @classmethod
-    def from_npz(cls,
+    def from_archive(cls,
             *,
             constructor: tp.Type['Frame'],
             fp: PathSpecifier,
@@ -1823,6 +1852,15 @@ class NPYArchiveConverter:
                 for i in range(block_count)
                 )
 
+        if not memory_map:
+            return constructor(tb,
+                    own_data=True,
+                    index=index,
+                    own_index = False if index is None else True,
+                    columns=columns,
+                    own_columns = False if columns is None else True,
+                    name=name,
+                    )
         return constructor(tb,
                 own_data=True,
                 index=index,
@@ -1830,6 +1868,7 @@ class NPYArchiveConverter:
                 columns=columns,
                 own_columns = False if columns is None else True,
                 name=name,
+                finalizer=archive.close,
                 )
 
 
