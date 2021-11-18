@@ -11367,6 +11367,22 @@ class TestUnit(TestCase):
         f2 = f1.via_str.len()
         self.assertEqual(f2.to_pairs(0), (('x', (('a', 1), ('b', 3))), ('y', (('a', 2), ('b', 4)))))
 
+    #---------------------------------------------------------------------------
+    def test_frame_str_getitem_a(self) -> None:
+
+        f1 = Frame(np.array([['foo', 'bar'], ['baz', 'baz']]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = f1.via_str[-1]
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('a', 'o'), ('b', 'z'))), ('y', (('a', 'r'), ('b', 'z'))))
+                )
+
+        f3 = f1.via_str[-2:]
+        self.assertEqual(f3.to_pairs(),
+                (('x', (('a', 'oo'), ('b', 'az'))), ('y', (('a', 'ar'), ('b', 'az'))))
+                )
 
     #---------------------------------------------------------------------------
     def test_frame_via_dt_year_a(self) -> None:

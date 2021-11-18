@@ -301,6 +301,9 @@ NAME_DEFAULT = object()
 STORE_LABEL_DEFAULT = object()
 
 #-------------------------------------------------------------------------------
+NOT_IN_CACHE_SENTINEL = object()
+
+#-------------------------------------------------------------------------------
 # operator mod does not have r methods; create complete method reference
 OPERATORS: tp.Dict[str, UFunc] = {
     '__pos__': operator.__pos__,
@@ -2558,7 +2561,7 @@ def array_from_element_method(*,
         pre_insert: tp.Optional[AnyCallable] = None,
         ) -> np.array:
     '''
-    Handle element-wise method calling on arrays of Python date/datetime objects.
+    Handle element-wise method calling on arrays of Python objects.
 
     Args:
         pre_insert:
