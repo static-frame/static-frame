@@ -2858,9 +2858,10 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     def __del__(self) -> None:
         if getattr(self, '_finalizer', None):
-            del self._index
-            del self._columns
-            del self._blocks
+            # for component in ('_index', '_columns', '_blocks'):
+            #     attr = getattr(self, component, None)
+            #     if attr is not None:
+            #         del attr
             self._finalizer()
 
     #---------------------------------------------------------------------------

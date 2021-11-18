@@ -1638,9 +1638,11 @@ class ArchiveDirectory(Archive):
                 self._closable = []
 
             f = open(fp, 'rb')
-            array, mm = NPYConverter.from_npy(f, self.memory_map)
-
-            self._closable.append(f) # NOTE: might be able to close file at this point
+            try:
+                array, mm = NPYConverter.from_npy(f, self.memory_map)
+            finally:
+                f.close() # NOTE: can close the file after creating memory map
+            # self._closable.append(f)
             self._closable.append(mm)
             return array
 

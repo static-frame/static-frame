@@ -9260,7 +9260,20 @@ class TestUnit(TestCase):
             f1.to_npy(fp)
             f2 = Frame.from_npy(fp, memory_map=True)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
-            f2.__del__()
+            f2.__del__() # must explicitly call for testing on windows
+
+    # def test_frame_from_npy_memory_map_b(self) -> None:
+    #     f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
+    #     with TemporaryDirectory() as fp:
+    #         f1.to_npy(fp)
+    #         f2 = Frame.from_npy(fp, memory_map=True)
+    #         f3 = f2.to_frame()
+    #         import ipdb; ipdb.set_trace()
+    #         pass
+    #         f2.__del__()
+    #         # del f2
+
+
 
     #---------------------------------------------------------------------------
 
