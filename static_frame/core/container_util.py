@@ -1544,7 +1544,6 @@ class Archive:
 
     def close(self) -> None:
         for f in getattr(self, '_closable', EMPTY_TUPLE):
-            # print('closing', f)
             f.close()
 
 class ArchiveZip(Archive):
@@ -1641,7 +1640,7 @@ class ArchiveDirectory(Archive):
             f = open(fp, 'rb')
             array, mm = NPYConverter.from_npy(f, self.memory_map)
 
-            self._closable.append(f)
+            self._closable.append(f) # NOTE: might be able to close file at this point
             self._closable.append(mm)
             return array
 
