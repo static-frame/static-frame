@@ -190,13 +190,14 @@ class Frame(ContainerOperand):
             '_columns',
             '_index',
             '_name',
-            '_del_callback',
+            '_finalizer',
             )
 
     _blocks: TypeBlocks
     _columns: IndexBase
     _index: IndexBase
     _name: tp.Hashable
+    _finalizer: tp.Optional[tp.Callable[[], None]]
 
     _COLUMNS_CONSTRUCTOR = Index
     _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchy
@@ -2697,7 +2698,7 @@ class Frame(ContainerOperand):
             own_data: bool = False,
             own_index: bool = False,
             own_columns: bool = False,
-            del_callback=None,
+            finalizer: tp.Optional[tp.Callable[[], None]] = None,
             ) -> None:
         '''
         Initializer.
@@ -2762,7 +2763,8 @@ class Frame(ContainerOperand):
                 if not blocks_constructor else (None, None))
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
-        self._del_callback = del_callback
+        self._finalizer = finalizer
+
         #-----------------------------------------------------------------------
         # columns assignment
 
@@ -2855,11 +2857,11 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def __del__(self) -> None:
-        if getattr(self, '_del_callback', None):
+        if getattr(self, '_finalizer', None):
             del self._index
             del self._columns
             del self._blocks
-            self._del_callback()
+            self._finalizer()
 
     #---------------------------------------------------------------------------
     # name interface
@@ -7068,6 +7070,7 @@ class Frame(ContainerOperand):
                 own_data=True,
                 own_index=True,
                 own_columns=constructor is FrameHE,
+                finalizer=self._finalizer,
                 )
 
     def to_frame_he(self) -> 'FrameHE':

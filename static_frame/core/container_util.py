@@ -1544,7 +1544,7 @@ class Archive:
 
     def close(self) -> None:
         for f in getattr(self, '_closable', EMPTY_TUPLE):
-            print('closing', f)
+            # print('closing', f)
             f.close()
 
 class ArchiveZip(Archive):
@@ -1637,9 +1637,11 @@ class ArchiveDirectory(Archive):
         if self.memory_map:
             if not hasattr(self, '_closable'):
                 self._closable = []
+
             f = open(fp, 'rb')
-            self._closable.append(f)
             array, mm = NPYConverter.from_npy(f, self.memory_map)
+
+            self._closable.append(f)
             self._closable.append(mm)
             return array
 
@@ -1866,7 +1868,7 @@ class NPYArchiveConverter:
                 columns=columns,
                 own_columns = False if columns is None else True,
                 name=name,
-                del_callback=archive.close,
+                finalizer=archive.close,
                 )
 
 
