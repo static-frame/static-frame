@@ -346,10 +346,9 @@ class IndexLevel:
                         zip_longest(index, targets[1:], fillvalue=None)
                         ):
                     if level_next is not None:
-                        if level_next.offset > 0:
-                            delta = level_next.offset - transversed
-                        else:
-                            delta = len(targets[i]) # COV_MISSING
+                        # offset will always be > 0, as we skip the first
+                        assert level_next.offset > 0
+                        delta = level_next.offset - transversed
                         yield from repeat(label, delta)
                         transversed += delta
                     else:
@@ -484,7 +483,7 @@ class IndexLevel:
             if depth_level in range(self.depth):
                 yield self.index.dtype
             else:
-                raise RuntimeError(f'invalid depth: {depth_level}') # COV_MISSING
+                raise RuntimeError(f'invalid depth: {depth_level}')
         else:
             levels = deque(((self, 0),))
             while levels:
@@ -884,11 +883,9 @@ class IndexLevel:
         '''
         Provide a correctly typed TypeBlocks representation.
         '''
-        try:
-            depth_count = self.depth
-        except StopIteration: # COV_MISSING
-            # assume we have no depth or length
-            return TypeBlocks.from_zero_size_shape() # COV_MISSING
+        depth_count = self.depth
+        if depth_count == 0:
+            return TypeBlocks.from_zero_size_shape()
 
         return TypeBlocks.from_blocks(
                 self.values_at_depth(d) for d in range(depth_count)

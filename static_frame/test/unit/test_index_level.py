@@ -677,11 +677,21 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     def test_index_levels_to_type_blocks_a(self) -> None:
-
         levels1 = IndexLevel(Index(()), targets=None, depth_reference=3)
         tb = levels1.to_type_blocks()
         # NOTE: this will be updated to (0, 0) with IndexLevel support for zero size
         self.assertEqual(tb.shape, (0, 3))
+
+    def test_index_levels_to_type_blocks_b(self) -> None:
+        levels1 = IndexLevel(Index(()), targets=None, depth_reference=0)
+        tb = levels1.to_type_blocks()
+        self.assertEqual(tb.shape, (0, 0))
+
+    def test_index_levels_to_type_blocks_c(self) -> None:
+        levels1 = IndexLevel(Index(()), targets=None, depth_reference=3)
+        tb = levels1.to_type_blocks()
+        self.assertEqual(tb.shape, (0, 3))
+
 
     #---------------------------------------------------------------------------
 
@@ -813,8 +823,6 @@ class TestUnit(TestCase):
         self.assertTrue(tree["II"]["D"].equals(lvl.targets[1].targets[0].index)) # type: ignore
         self.assertTrue(tree["II"]["E"].equals(lvl.targets[1].targets[1].index)) # type: ignore
 
-
-
     #---------------------------------------------------------------------------
 
     def test_index_level_repr(self) -> None:
@@ -825,6 +833,16 @@ class TestUnit(TestCase):
         lvl = IndexLevel.from_tree(tree)
         msg = repr(lvl)
         self.assertEqual(len(msg.split()), 52)
+
+    #---------------------------------------------------------------------------
+
+    def test_index_level_dtypes_at_depth_a(self) -> None:
+
+        levels1 = IndexLevel(Index(()), targets=None, depth_reference=3)
+        with self.assertRaises(RuntimeError):
+            _ = tuple(levels1.dtypes_at_depth(10))
+
+
 
 
 if __name__ == '__main__':
