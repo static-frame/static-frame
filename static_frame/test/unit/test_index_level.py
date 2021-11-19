@@ -524,6 +524,26 @@ class TestUnit(TestCase):
                 ((1, 1), (2, 1), (3, 1), (3, 1), (4, 1))
         )
 
+    def test_index_level_label_widths_at_depth_e(self) -> None:
+        tree = {
+            "I": {"A": (1, 2), "B": (1, 2, 3), "C": (2, 3)},
+            "II": {"D": (1, 2, 3), "E": (1,)},
+        }
+        lvl = IndexLevel.from_tree(tree)
+        widths = tuple(lvl.label_widths_at_depth(1))
+        self.assertEqual(widths, (('A', 2), ('B', 3), ('C', 2), ('D', 3), ('E', 1)))
+
+    def test_index_level_label_widths_at_depth_f(self) -> None:
+        tree = {
+            "I": {"A": (1, 2), "B": (1, 2, 3),},
+            "II": {"D": (1, 2, 3), "E": (1,)},
+        }
+        lvl = IndexLevel.from_tree(tree)
+        widths = tuple(lvl.label_widths_at_depth(0))
+        self.assertEqual(widths, (('I', 5), ('II', 4)))
+
+
+    #---------------------------------------------------------------------------
     def test_index_levels_with_tuple_a(self) -> None:
         OD = OrderedDict
         tree = OD([

@@ -309,11 +309,9 @@ class IndexLevel:
                         zip_longest(index, targets[1:], fillvalue=None)
                         ):
                     if level_next is not None:
-                        # if the next offset is zero, we are moving to a component that is under a fresh hierarchy
-                        if level_next.offset > 0:
-                            delta = level_next.offset - transversed
-                        else:
-                            delta = len(targets[i]) # COV_MISSING
+                        # offset will always be > 0, as we skip the first
+                        assert level_next.offset > 0
+                        delta = level_next.offset - transversed
                         yield label, delta
                         # get only the incremental addition for this label
                         transversed += delta
