@@ -2,6 +2,8 @@
 import unittest
 from collections import OrderedDict
 import copy
+import datetime
+
 
 import numpy as np
 
@@ -12,6 +14,7 @@ from static_frame import Index
 from static_frame import IndexDate
 from static_frame import IndexDateGO
 from static_frame import IndexYearMonthGO
+from static_frame import IndexSecond
 from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexLevel
@@ -679,11 +682,45 @@ class TestUnit(TestCase):
         self.assertEqual(tb.shape, (0, 3))
 
     #---------------------------------------------------------------------------
+
+    def test_index_level_depth_a(self) -> None:
+        levels1 = IndexLevel(Index(()), targets=None, depth_reference=3)
+        self.assertEqual(levels1.depth, 3)
+
+        levels1 = IndexLevel(Index(()), targets=None, depth_reference=1)
+        self.assertEqual(levels1.depth, 1)
+
+        levels1 = IndexLevel(Index((3, 4)), targets=None)
+        self.assertEqual(levels1.depth, 1)
+
+    #---------------------------------------------------------------------------
     def test_index_level_from_depth_a(self) -> None:
 
         lvl1 = IndexLevel.from_depth(4)
         self.assertEqual(lvl1.depth, 4)
         self.assertEqual(len(lvl1), 0)
+
+
+    #---------------------------------------------------------------------------
+    def test_index_level_from_tree_a(self) -> None:
+
+        OD = OrderedDict
+        tree = OD([
+                (0, OD([
+                        (8, (1, 2)), (9, (1, 2, 3)), (10, (2, 3))
+                        ])
+                ),
+                (1, OD([
+                        (3, (1,)), (5, (1, 2))
+                        ])
+                ),
+                ])
+        levels = IndexLevel.from_tree(tree, index_constructors=IndexSecond)
+        dt = datetime.datetime
+
+        self.assertEqual(levels.to_type_blocks().values.tolist(),
+                [[dt(1970, 1, 1, 0, 0), dt(1970, 1, 1, 0, 0, 8), dt(1970, 1, 1, 0, 0, 1)], [dt(1970, 1, 1, 0, 0), dt(1970, 1, 1, 0, 0, 8), dt(1970, 1, 1, 0, 0, 2)], [dt(1970, 1, 1, 0, 0), dt(1970, 1, 1, 0, 0, 9), dt(1970, 1, 1, 0, 0, 1)], [dt(1970, 1, 1, 0, 0), dt(1970, 1, 1, 0, 0, 9), dt(1970, 1, 1, 0, 0, 2)], [dt(1970, 1, 1, 0, 0), dt(1970, 1, 1, 0, 0, 9), dt(1970, 1, 1, 0, 0, 3)], [dt(1970, 1, 1, 0, 0), dt(1970, 1, 1, 0, 0, 10), dt(1970, 1, 1, 0, 0, 2)], [dt(1970, 1, 1, 0, 0), dt(1970, 1, 1, 0, 0, 10), dt(1970, 1, 1, 0, 0, 3)], [dt(1970, 1, 1, 0, 0, 1), dt(1970, 1, 1, 0, 0, 3), dt(1970, 1, 1, 0, 0, 1)], [dt(1970, 1, 1, 0, 0, 1), dt(1970, 1, 1, 0, 0, 5), dt(1970, 1, 1, 0, 0, 1)], [dt(1970, 1, 1, 0, 0, 1), dt(1970, 1, 1, 0, 0, 5), dt(1970, 1, 1, 0, 0, 2)]]
+        )
 
     #---------------------------------------------------------------------------
     def test_index_level_labels_at_depth_a(self) -> None:

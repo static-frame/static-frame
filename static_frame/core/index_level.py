@@ -112,7 +112,7 @@ class IndexLevel:
             if index_constructors is None:
                 explicit_constructor = None
             elif callable(index_constructors):
-                explicit_constructor = index_constructors # it is a single value  # COV_MISSING
+                explicit_constructor = index_constructors # it is a single callable
             else: # it is a sequence
                 explicit_constructor = index_constructors[depth]
 
@@ -249,11 +249,7 @@ class IndexLevel:
         '''
         Called once over the life of an instance to set self._depth; this is not re-evaluated over the life of the instance.
         '''
-        if not len(self.index):
-            raise AssertionError('zero-length indices should have depth set through depth_reference') # COV_MISSING
-
-        if self.targets is None: # this may not need to be here
-            return 1 # COV_MISSING
+        assert len(self.index), 'zero-length indices should have depth set through depth_reference'
 
         # if we need to recurse to the max depth
         level, depth = self, 1
