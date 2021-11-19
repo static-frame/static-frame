@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Added ``Frame.to_npy()``, ``Frame.from_npy()`` with a `memory_map` option.
 
+Improvements ``Frame.to_npz()`` to support large files and buffered writes.
+
 Performance enhancements to all ``_StoreZip`` subclasses through usage of ``WeakValueDictionary`` caching.
 
 Added ``IndexHiearchy.relabel_at_depth()``.
