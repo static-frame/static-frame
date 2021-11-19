@@ -64,7 +64,7 @@ class SFWriteParquet(FileIOTest):
 
 
 
-class PDReadParquet(FileIOTest):
+class PDReadParquetArrow(FileIOTest):
     SUFFIX = '.parquet'
 
     def __init__(self, fixture: str):
@@ -76,7 +76,7 @@ class PDReadParquet(FileIOTest):
         f = pd.read_parquet(self.fp)
         _ = f.loc[34715, 'zZbu']
 
-class PDWriteParquet(FileIOTest):
+class PDWriteParquetArrow(FileIOTest):
     SUFFIX = '.parquet'
 
     def __init__(self, fixture: str):
@@ -85,6 +85,30 @@ class PDWriteParquet(FileIOTest):
 
     def __call__(self):
         self.df.to_parquet(self.fp)
+
+
+class PDReadParquetFast(FileIOTest):
+    SUFFIX = '.parquet'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        df = self.fixture.to_pandas()
+        df.to_parquet(self.fp, engine='fastparquet')
+
+    def __call__(self):
+        f = pd.read_parquet(self.fp, engine='fastparquet')
+        _ = f.loc[34715, 'zZbu']
+
+class PDWriteParquetFast(FileIOTest):
+    SUFFIX = '.parquet'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.df = self.fixture.to_pandas()
+
+    def __call__(self):
+        self.df.to_parquet(self.fp, engine='fastparquet')
+
 
 
 
@@ -209,6 +233,7 @@ def plot(frame: sf.Frame):
     # ax.set_ylabel('Scores')
     # ax.set_title('Scores by group and gender')
     ax.set_xticks(x, labels)
+    ax.set_yscale('log')
     ax.legend()
     fig.tight_layout()
 
@@ -310,17 +335,19 @@ def run_test():
             ):
     # for label, fixture in (('square', FF_square),):
         for cls in (
-                PDWriteParquet,
+                PDWriteParquetArrow,
+                # PDWriteParquetFast, # not faster!
                 SFWriteParquet,
                 SFWriteNPZ,
-                SFWritePickle,
                 SFWriteNPY,
-                PDReadParquet,
+                SFWritePickle,
+                PDReadParquetArrow,
+                # PDReadParquetFast, # not faster!
                 SFReadParquet,
                 SFReadNPZ,
-                SFReadPickle,
                 SFReadNPY,
-                SFReadNPYMM,
+                SFReadPickle,
+                # SFReadNPYMM,
                 ):
             runner = cls(fixture)
             record = [cls.__name__, cls.NUMBER, label]

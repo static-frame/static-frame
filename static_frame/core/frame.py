@@ -6865,8 +6865,11 @@ class Frame(ContainerOperand):
             df = pandas.DataFrame(index=self._index.to_pandas())
             # use integer columns for initial loading, then replace
             # NOTE: alternative approach of trying to assign blocks (wrapped in a DF) is not faster than single column assignment
-            for i, array in enumerate(self._blocks.axis_values(0)):
-                df[i] = array
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                # Pandas issues: PerformanceWarning: DataFrame is highly fragmented.
+                for i, array in enumerate(self._blocks.axis_values(0)):
+                    df[i] = array
 
             df.columns = self._columns.to_pandas()
 
