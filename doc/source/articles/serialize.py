@@ -7,6 +7,7 @@ import typing as tp
 import pickle
 import shutil
 
+import matplotlib.pyplot as plt
 import numpy as np
 import frame_fixtures as ff
 import static_frame as sf
@@ -180,6 +181,38 @@ class SFReadNPYMM(FileIOTest):
 
 
 
+def plot(frame: sf.Frame):
+    from collections import defaultdict
+    labels = [] # by fixture
+    results = defaultdict(list)
+
+    components = 0
+    for label, sub in frame.iter_group_items('fixture'):
+        labels.append(label)
+        components = max(components, len(sub))
+        for row in sub.iter_series(axis=1):
+            results[row['name']].append(row['time'])
+
+    # import ipdb; ipdb.set_trace()
+    width = 0.85  # the width of each group
+    x = np.arange(len(labels))
+
+    fig, ax = plt.subplots()
+    count = 0
+    segment = width / components
+    start = -width / 2
+    for i, (label, values) in enumerate(results.items()):
+        r = ax.bar(x + (start + (segment * i)), values, segment, label=label)
+        # ax.bar_label(r, padding=3)
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    # ax.set_ylabel('Scores')
+    # ax.set_title('Scores by group and gender')
+    ax.set_xticks(x, labels)
+    ax.legend()
+    fig.tight_layout()
+
+    plt.show()
 
 
 #-------------------------------------------------------------------------------
@@ -270,9 +303,9 @@ def run_test():
     records = []
     for label, fixture in (
             ('wide', FF_wide),
-            ('wide_col', FF_wide_col),
+            # ('wide_col', FF_wide_col),
             ('tall', FF_tall),
-            ('tall_col', FF_tall_col),
+            # ('tall_col', FF_tall_col),
             ('square', FF_square),
             ):
     # for label, fixture in (('square', FF_square),):
@@ -317,6 +350,8 @@ def run_test():
             include_index=False,
             )
     print(display.display(config))
+
+    plot(f)
     # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
