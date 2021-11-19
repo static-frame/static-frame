@@ -1397,6 +1397,8 @@ class NPYConverter:
     STRUCT_FMT = '<H' # version 1.0
     STRUCT_FMT_SIZE = struct.calcsize(STRUCT_FMT)
     ENCODING = 'latin1' # version 1.0
+    BUFFERSIZE_NUMERATOR = 16 * 1024 ** 2
+    NDITER_FLAGS = ('external_loop', 'buffered', 'zerosize_ok')
 
     @classmethod
     def _header_encode(cls, header: str) -> bytes:
@@ -1427,15 +1429,41 @@ class NPYConverter:
             raise ErrorNPYEncode('no support for ndim == 0 or greater than two.')
 
         flags = array.flags
-        fortran_order = True if flags.f_contiguous else False
+        fortran_order = flags.f_contiguous
+
+        if array.itemsize == 0:
+            buffersize = 0
+        else: # NOTE: derived numpy configuration
+            buffersize = max(cls.BUFFERSIZE_NUMERATOR // array.itemsize, 1)
 
         header = f'{{"descr":"{dtype.str}","fortran_order":{fortran_order},"shape":{array.shape}}}'
         file.write(cls._header_encode(header))
 
-        if flags.f_contiguous and not flags.c_contiguous:
-            file.write(array.T.tobytes())
+        # this works but forces loading everything in memory
+        # if flags.f_contiguous and not flags.c_contiguous:
+        #     file.write(array.T.tobytes())
+        # else:
+        #     file.write(array.tobytes())
+
+        # NOTE: this might be made more efficient by creating an ArrayKit function that extracts bytes directly, avoiding creating an array for each chunk.
+        if fortran_order and not flags.c_contiguous:
+            for chunk in np.nditer(
+                    array,
+                    flags=cls.NDITER_FLAGS,
+                    buffersize=buffersize,
+                    order='F',
+                    ):
+                file.write(chunk.tobytes('C'))
         else:
-            file.write(array.tobytes())
+            for chunk in np.nditer(
+                    array,
+                    flags=cls.NDITER_FLAGS,
+                    buffersize=buffersize,
+                    order='C',
+                    ):
+                file.write(chunk.tobytes('C'))
+
+
 
     @classmethod
     def _header_decode(cls,
@@ -1561,7 +1589,11 @@ class ArchiveZip(Archive):
             ):
 
         mode = 'w' if writeable else 'r'
-        self._archive = ZipFile(fp, mode, ZIP_STORED)
+        self._archive = ZipFile(fp,
+                mode=mode,
+                compression=ZIP_STORED,
+                allowZip64=True,
+                )
         if not writeable:
             self.labels = frozenset(self._archive.namelist())
         if memory_map:
@@ -1573,7 +1605,9 @@ class ArchiveZip(Archive):
         self._archive.close()
 
     def write_array(self, name: str, array: np.ndarray) -> None:
-        f = self._archive.open(name, 'w') # zip only was 'w' mode
+        # NOTE: zip only was 'w' mode, not 'wb'
+        # NOTE: force_zip64 required for large files; might make dynamic
+        f = self._archive.open(name, 'w', force_zip64=True)
         try:
             NPYConverter.to_npy(f, array)
         finally:

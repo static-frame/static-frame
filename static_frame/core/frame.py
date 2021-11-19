@@ -2858,10 +2858,6 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     def __del__(self) -> None:
         if getattr(self, '_finalizer', None):
-            # for component in ('_index', '_columns', '_blocks'):
-            #     attr = getattr(self, component, None)
-            #     if attr is not None:
-            #         del attr
             self._finalizer()
 
     #---------------------------------------------------------------------------
@@ -7063,6 +7059,7 @@ class Frame(ContainerOperand):
     def _to_frame(self,
             constructor: tp.Type['Frame']
             ) -> 'Frame':
+        # NOTE: we do not delegate finalizer, which means that this Frame must persist and be the last Frame deleted.
         return constructor(
                 self._blocks.copy(),
                 index=self.index,
@@ -7071,7 +7068,7 @@ class Frame(ContainerOperand):
                 own_data=True,
                 own_index=True,
                 own_columns=constructor is FrameHE,
-                finalizer=self._finalizer,
+                # finalizer=self._finalizer,
                 )
 
     def to_frame_he(self) -> 'FrameHE':

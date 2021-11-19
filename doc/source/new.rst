@@ -4,7 +4,7 @@ What is New in Static Frame
 0.8.28
 ----------
 
-Added ``Frame.to_npy()``, ``Frame.from_npy()``.
+Added ``Frame.to_npy()``, ``Frame.from_npy()`` with a `memory_map` option.
 
 Performance enhancements to all ``_StoreZip`` subclasses through usage of ``WeakValueDictionary`` caching.
 
