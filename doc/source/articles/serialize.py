@@ -207,37 +207,43 @@ class SFReadNPYMM(FileIOTest):
 
 def plot(frame: sf.Frame):
     from collections import defaultdict
-    labels = [] # by fixture
-    results = defaultdict(list)
+    fig, axes = plt.subplots(2, 1)
 
-    components = 0
-    for label, sub in frame.iter_group_items('fixture'):
-        labels.append(label)
-        components = max(components, len(sub))
-        for row in sub.iter_series(axis=1):
-            results[row['name']].append(row['time'])
+    for axes_count, cat in enumerate(frame.iter_group('category')):
+        ax = axes[axes_count]
 
-    # import ipdb; ipdb.set_trace()
-    width = 0.85  # the width of each group
-    x = np.arange(len(labels))
+        labels = [] # by fixture
+        results = defaultdict(list)
 
-    fig, ax = plt.subplots()
-    count = 0
-    segment = width / components
-    start = -width / 2
-    for i, (label, values) in enumerate(results.items()):
-        r = ax.bar(x + (start + (segment * i)), values, segment, label=label)
-        # ax.bar_label(r, padding=3)
+        components = 0
+        for label, sub in cat.iter_group_items('fixture'):
+            labels.append(label)
+            components = max(components, len(sub))
+            for row in sub.iter_series(axis=1):
+                results[row['name']].append(row['time'])
 
-    # Add some text for labels, title and custom x-axis tick labels, etc.
-    # ax.set_ylabel('Scores')
-    # ax.set_title('Scores by group and gender')
-    ax.set_xticks(x, labels)
-    ax.set_yscale('log')
-    ax.legend()
+        width = 0.85  # the width of each group
+        x = np.arange(len(labels))
+
+        segment = width / components
+        start = -width / 2
+        for i, (label, values) in enumerate(results.items()):
+            r = ax.bar(x + (start + (segment * i)), values, segment, label=label)
+            # ax.bar_label(r, padding=3)
+
+        # Add some text for labels, title and custom x-axis tick labels, etc.
+        # ax.set_ylabel('Scores')
+        # ax.set_title('Scores by group and gender')
+        ax.set_xticks(x, labels)
+        ax.set_yscale('log')
+        ax.legend()
+
+
     fig.tight_layout()
-
-    plt.show()
+    fp = '/tmp/serialize.png'
+    plt.savefig(fp, dpi=300)
+    import os
+    os.system(f'eog {fp}')
 
 
 #-------------------------------------------------------------------------------
@@ -323,34 +329,42 @@ def get_format():
 
     return format
 
+from itertools import repeat
+from itertools import chain
 
 def run_test():
     records = []
     for label, fixture in (
             ('wide', FF_wide),
-            # ('wide_col', FF_wide_col),
+            ('wide_col', FF_wide_col),
             ('tall', FF_tall),
-            # ('tall_col', FF_tall_col),
+            ('tall_col', FF_tall_col),
             ('square', FF_square),
             ):
-    # for label, fixture in (('square', FF_square),):
-        for cls in (
-                PDWriteParquetArrow,
-                # PDWriteParquetFast, # not faster!
-                SFWriteParquet,
-                SFWriteNPZ,
-                SFWriteNPY,
-                SFWritePickle,
-                PDReadParquetArrow,
-                # PDReadParquetFast, # not faster!
-                SFReadParquet,
-                SFReadNPZ,
-                SFReadNPY,
-                SFReadPickle,
-                # SFReadNPYMM,
+        cls_read = (
+            PDReadParquetArrow,
+            # PDReadParquetFast, # not faster!
+            SFReadParquet,
+            SFReadNPZ,
+            SFReadNPY,
+            SFReadPickle,
+            # SFReadNPYMM,
+            )
+        cls_write = (
+            PDWriteParquetArrow,
+            # PDWriteParquetFast, # not faster!
+            SFWriteParquet,
+            SFWriteNPZ,
+            SFWriteNPY,
+            SFWritePickle,
+            )
+
+        for cls, category in chain(
+                zip(cls_read, repeat('read')),
+                zip(cls_write, repeat('write')),
                 ):
             runner = cls(fixture)
-            record = [cls.__name__, cls.NUMBER, label]
+            record = [cls.__name__, cls.NUMBER, category, label]
             try:
                 result = timeit.timeit(
                         f'runner()',
@@ -364,7 +378,7 @@ def run_test():
             records.append(record)
 
     f = sf.FrameGO.from_records(records,
-            columns=('name', 'number', 'fixture', 'time')
+            columns=('name', 'number', 'category', 'fixture', 'time')
             )
 
     display = f.iter_element_items().apply(get_format())
