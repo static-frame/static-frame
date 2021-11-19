@@ -48,9 +48,10 @@ from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors_deferred
 from static_frame.core.container_util import df_slice_to_arrays
-from static_frame.core.container_util import NPZConverter
-from static_frame.core.container_util import NPYDirectoryConverter
 from static_frame.core.container_util import frame_to_frame
+
+from static_frame.core.archive_npy import NPZConverter
+from static_frame.core.archive_npy import NPYDirectoryConverter
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
