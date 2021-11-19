@@ -112,7 +112,7 @@ class IndexLevel:
             if index_constructors is None:
                 explicit_constructor = None
             elif callable(index_constructors):
-                explicit_constructor = index_constructors # it is a single value
+                explicit_constructor = index_constructors # it is a single value  # COV_MISSING
             else: # it is a sequence
                 explicit_constructor = index_constructors[depth]
 
@@ -250,10 +250,10 @@ class IndexLevel:
         Called once over the life of an instance to set self._depth; this is not re-evaluated over the life of the instance.
         '''
         if not len(self.index):
-            raise AssertionError('zero-length indices should have depth set through depth_reference')
+            raise AssertionError('zero-length indices should have depth set through depth_reference') # COV_MISSING
 
         if self.targets is None: # this may not need to be here
-            return 1
+            return 1 # COV_MISSING
 
         # if we need to recurse to the max depth
         level, depth = self, 1
@@ -317,7 +317,7 @@ class IndexLevel:
                         if level_next.offset > 0:
                             delta = level_next.offset - transversed
                         else:
-                            delta = len(targets[i])
+                            delta = len(targets[i]) # COV_MISSING
                         yield label, delta
                         # get only the incremental addition for this label
                         transversed += delta
@@ -355,7 +355,7 @@ class IndexLevel:
                         if level_next.offset > 0:
                             delta = level_next.offset - transversed
                         else:
-                            delta = len(targets[i])
+                            delta = len(targets[i]) # COV_MISSING
                         yield from repeat(label, delta)
                         transversed += delta
                     else:
@@ -490,7 +490,7 @@ class IndexLevel:
             if depth_level in range(self.depth):
                 yield self.index.dtype
             else:
-                raise RuntimeError(f'invalid depth: {depth_level}')
+                raise RuntimeError(f'invalid depth: {depth_level}') # COV_MISSING
         else:
             levels = deque(((self, 0),))
             while levels:
@@ -849,7 +849,7 @@ class IndexLevel:
                 continue
             if level_self.targets is None or level_other.targets is None:
                 # at least one is at a terminus
-                return False
+                return False # COV_MISSING
 
         if not levels_self and not levels_other:
             return True # both exhausted
@@ -892,9 +892,9 @@ class IndexLevel:
         '''
         try:
             depth_count = self.depth
-        except StopIteration:
+        except StopIteration: # COV_MISSING
             # assume we have no depth or length
-            return TypeBlocks.from_zero_size_shape()
+            return TypeBlocks.from_zero_size_shape() # COV_MISSING
 
         return TypeBlocks.from_blocks(
                 self.values_at_depth(d) for d in range(depth_count)
@@ -931,7 +931,7 @@ class IndexLevelGO(IndexLevel):
         for type_self, type_other in zip(self.index_types(), level.index_types()):
             # self type should be a GO; if other is non-GO, or GO, we can accept it
             if not issubclass(type_self, type_other):
-                raise RuntimeError(f'level for extension does not have corresponding types: {type_self}, {type_other}')
+                raise RuntimeError(f'level for extension does not have corresponding types: {type_self}, {type_other}') # COV_MISSING
 
         # this will raise for duplicates
         self.index.extend(level.index.values)
@@ -945,7 +945,7 @@ class IndexLevelGO(IndexLevel):
                 yield target
 
         if self.targets is None:
-            raise RuntimeError('found IndexLevel with None as targets')
+            raise RuntimeError('found IndexLevel with None as targets') # COV_MISSING
 
         self.targets.extend(target_gen())
 

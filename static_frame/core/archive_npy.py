@@ -73,7 +73,7 @@ class NPYConverter:
         fortran_order = flags.f_contiguous
 
         if array.itemsize == 0:
-            buffersize = 0
+            buffersize = 0 # COV_MISSING
         else: # NOTE: derived numpy configuration
             buffersize = max(cls.BUFFERSIZE_NUMERATOR // array.itemsize, 1)
 
