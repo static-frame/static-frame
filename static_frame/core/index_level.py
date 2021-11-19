@@ -112,7 +112,7 @@ class IndexLevel:
             if index_constructors is None:
                 explicit_constructor = None
             elif callable(index_constructors):
-                explicit_constructor = index_constructors # it is a single value  # COV_MISSING
+                explicit_constructor = index_constructors # it is a single callable
             else: # it is a sequence
                 explicit_constructor = index_constructors[depth]
 
