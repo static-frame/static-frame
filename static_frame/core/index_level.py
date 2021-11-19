@@ -931,7 +931,7 @@ class IndexLevelGO(IndexLevel):
         for type_self, type_other in zip(self.index_types(), level.index_types()):
             # self type should be a GO; if other is non-GO, or GO, we can accept it
             if not issubclass(type_self, type_other):
-                raise RuntimeError(f'level for extension does not have corresponding types: {type_self}, {type_other}') # COV_MISSING
+                raise RuntimeError(f'level for extension does not have corresponding types: {type_self}, {type_other}')
 
         # this will raise for duplicates
         self.index.extend(level.index.values)
