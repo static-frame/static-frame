@@ -10,6 +10,8 @@ from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index
 from static_frame import IndexDate
+from static_frame import IndexDateGO
+from static_frame import IndexYearMonthGO
 from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexLevel
@@ -152,8 +154,34 @@ class TestUnit(TestCase):
 
     def test_index_level_extend_a(self) -> None:
         level0 = IndexLevelGO(index=IndexGO(('a', 'b')), targets=None)
+        # RuntimeError: found IndexLevel with None as targets
         with self.assertRaises(RuntimeError):
             level0.extend(level0)
+
+
+    def test_index_level_extend_b(self) -> None:
+        level0 = IndexLevelGO(index=IndexGO(('a', 'b')), targets=None)
+        level1 = IndexLevelGO(index=IndexGO(('c', 'd')), targets=None)
+        # RuntimeError: found IndexLevel with None as targets
+        with self.assertRaises(RuntimeError):
+            level0.extend(level1)
+
+
+    def test_index_level_extend_c(self) -> None:
+        observations0 = IndexGO(('x', 'y'))
+        targets0 = ArrayGO(
+                (IndexLevelGO(index=observations0),
+                IndexLevelGO(observations0, offset=2)))
+        level0 = IndexLevelGO(index=IndexDateGO(('2021', '2022')), targets=targets0)
+
+        observations1 = IndexGO(('x', 'y'))
+        targets1 = ArrayGO(
+                (IndexLevelGO(index=observations1),
+                IndexLevelGO(observations1, offset=2)))
+        level1 = IndexLevelGO(index=IndexYearMonthGO(('1853-03', '1873-12')), targets=targets1)
+        # RuntimeError: level for extension does not have corresponding types: <class 'static_frame.core.index_datetime.IndexDateGO'>, <class 'static_frame.core.index_datetime.IndexYearMonthGO'>
+        with self.assertRaises(RuntimeError):
+            level0.extend(level1)
 
     #---------------------------------------------------------------------------
 

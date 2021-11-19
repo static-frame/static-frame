@@ -945,7 +945,7 @@ class IndexLevelGO(IndexLevel):
                 yield target
 
         if self.targets is None:
-            raise RuntimeError('found IndexLevel with None as targets') # COV_MISSING
+            raise RuntimeError('found IndexLevel with None as targets')
 
         self.targets.extend(target_gen())
 
