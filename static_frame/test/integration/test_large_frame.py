@@ -1,5 +1,6 @@
-import numpy as np
 import unittest
+
+import numpy as np
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.frame import Frame
