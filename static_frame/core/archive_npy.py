@@ -19,6 +19,12 @@ from static_frame.core.container_util import ContainerMap
 from static_frame.core.exception import ErrorNPYDecode
 from static_frame.core.exception import ErrorNPYEncode
 
+if tp.TYPE_CHECKING:
+    import pandas as pd #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_base import IndexBase #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
+
+
 
 
 #-------------------------------------------------------------------------------
@@ -367,7 +373,7 @@ class NPYArchiveConverter:
         Args:
             metadata: mutates in place with json components
         '''
-        if depth == 1 and index._map is None: #type: ignore
+        if depth == 1 and index._map is None: # type: ignore
             pass # do not store anything
         elif include:
             if depth == 1:
@@ -466,7 +472,7 @@ class NPYArchiveConverter:
                     )
             index_constructors = [ContainerMap.str_to_cls(name)
                     for name in metadata[key_types]]
-            index = cls_index._from_type_blocks(index_tb, #type: ignore
+            index = cls_index._from_type_blocks(index_tb, # type: ignore
                     name=name,
                     index_constructors=index_constructors,
                     )
