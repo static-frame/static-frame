@@ -72,10 +72,9 @@ class NPYConverter:
         flags = array.flags
         fortran_order = flags.f_contiguous
 
-        if array.itemsize == 0:
-            buffersize = 0 # COV_MISSING
-        else: # NOTE: derived numpy configuration
-            buffersize = max(cls.BUFFERSIZE_NUMERATOR // array.itemsize, 1)
+        # NOTE: do not know how to create array with itmesize 0, assume array.itemsize > 0
+        # NOTE: derived numpy configuration
+        buffersize = max(cls.BUFFERSIZE_NUMERATOR // array.itemsize, 1)
 
         header = f'{{"descr":"{dtype.str}","fortran_order":{fortran_order},"shape":{array.shape}}}'
         file.write(cls._header_encode(header))
