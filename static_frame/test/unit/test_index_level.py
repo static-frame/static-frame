@@ -654,6 +654,12 @@ class TestUnit(TestCase):
         self.assertEqual(tb.shape, (0, 3))
 
     #---------------------------------------------------------------------------
+
+    def test_index_level_depth_a(self) -> None:
+        levels1 = IndexLevel(Index(()), targets=None)
+        import ipdb; ipdb.set_trace()
+
+    #---------------------------------------------------------------------------
     def test_index_level_from_depth_a(self) -> None:
 
         lvl1 = IndexLevel.from_depth(4)
