@@ -656,8 +656,14 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     def test_index_level_depth_a(self) -> None:
-        levels1 = IndexLevel(Index(()), targets=None)
-        import ipdb; ipdb.set_trace()
+        levels1 = IndexLevel(Index(()), targets=None, depth_reference=3)
+        self.assertEqual(levels1.depth, 3)
+
+        levels1 = IndexLevel(Index(()), targets=None, depth_reference=1)
+        self.assertEqual(levels1.depth, 1)
+
+        levels1 = IndexLevel(Index((3, 4)), targets=None)
+        self.assertEqual(levels1.depth, 1)
 
     #---------------------------------------------------------------------------
     def test_index_level_from_depth_a(self) -> None:
