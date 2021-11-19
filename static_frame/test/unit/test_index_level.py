@@ -674,6 +674,21 @@ class TestUnit(TestCase):
 
         self.assertTrue(levels1.equals(levels2))
 
+    def test_index_levels_equals_e(self) -> None:
+        tree1 = {
+            "I": {"A": (1, 2), "B": (1, 2, 3)},
+            "II": {"D": (1, 2, 3), "E": (1,)},
+        }
+        lvl1 = IndexLevel.from_tree(tree1)
+
+        tree2 = {
+            "I": {"A": (1, 2), "B": (1, 2, 3)},
+            "II": (1, 2, 3),
+        }
+        lvl2 = IndexLevel.from_tree(tree2)
+
+        self.assertFalse(lvl1.equals(lvl2))
+
     #---------------------------------------------------------------------------
 
     def test_index_levels_to_type_blocks_a(self) -> None:

@@ -838,11 +838,9 @@ class IndexLevel:
             if level_self.targets is not None and level_other.targets is not None: # not terminus
                 levels_self.extend(level_self.targets)
                 levels_other.extend(level_other.targets)
-            if level_self.targets is None and level_other.targets is None: # terminus
+            elif level_self.targets is None and level_other.targets is None: # terminus
                 continue
-            if level_self.targets is None or level_other.targets is None:
-                # at least one is at a terminus
-                return False # COV_MISSING
+            # if targets is None for one and not the other, the depths are not equal
 
         if not levels_self and not levels_other:
             return True # both exhausted
