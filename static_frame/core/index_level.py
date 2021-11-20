@@ -910,11 +910,9 @@ class IndexLevelGO(IndexLevel):
     def extend(self, level: IndexLevel) -> None:
         '''Extend this IndexLevel with another IndexLevel, assuming that it has compatible depth and Index types.
         '''
-        depth = self.depth
-
         if level.targets is None:
             raise RuntimeError('found IndexLevel with None as targets')
-        if depth != level.depth:
+        if self.depth != level.depth:
             raise RuntimeError('level for extension does not have necessary levels.')
 
         for type_self, type_other in zip(self.index_types(), level.index_types()):

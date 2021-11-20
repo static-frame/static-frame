@@ -186,6 +186,18 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             level0.extend(level1)
 
+    def test_index_level_extend_d(self) -> None:
+        tree = {
+            "I": {"A": (1, 2), "B": (1, 2, 3), "C": (2, 3)},
+            "II": {"D": (1, 2, 3), "E": (1,)},
+        }
+        lvl0 = IndexLevelGO.from_tree(tree)
+        lvl1 = IndexLevelGO(index=IndexGO(()), targets=None, depth_reference=3)
+        # RuntimeError: found IndexLevel with None as targets
+        with self.assertRaises(RuntimeError):
+            lvl1.extend(lvl0)
+
+
     #---------------------------------------------------------------------------
 
     def test_index_level_get_labels_a(self) -> None:
