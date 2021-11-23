@@ -6,7 +6,6 @@ from ast import literal_eval
 import os
 import mmap
 import typing as tp
-import io
 
 
 import numpy as np
