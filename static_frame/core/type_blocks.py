@@ -1122,7 +1122,7 @@ class TypeBlocks(ContainerOperand):
             else:
                 # Combine columns, end with block length shape and then call func again, for final result
                 if b.size == 1 and size_one_unity and not skipna:
-                    out[:, idx] = b # COV_MISSING
+                    out[:, idx] = b
                 elif b.ndim == 1:
                     # if this is a composable, numeric single columns we just copy it and process it later; but if this is a logical application (and, or) then it is already Boolean
                     if out.dtype == DTYPE_BOOL and b.dtype != DTYPE_BOOL:
@@ -1140,7 +1140,6 @@ class TypeBlocks(ContainerOperand):
         result = func(array=out, axis=1)
         result.flags.writeable = False
         return result
-
 
     #---------------------------------------------------------------------------
     def __round__(self, decimals: int = 0) -> 'TypeBlocks':
@@ -2050,7 +2049,7 @@ class TypeBlocks(ContainerOperand):
             target = bloc_key[NULL_SLICE, target_slice]
 
             if not target.any():
-                yield block # COV_MISSING
+                yield block
             else:
                 assigned_dtype = resolve_dtype(value_dtype, block.dtype)
                 if block.dtype == assigned_dtype:
@@ -2127,7 +2126,7 @@ class TypeBlocks(ContainerOperand):
                         if block.dtype == assigned_dtype:
                             assigned = block[NULL_SLICE, a_slice].copy()
                         else:
-                            assigned = block[NULL_SLICE, a_slice].astype(assigned_dtype) # COV_MISSING
+                            assigned = block[NULL_SLICE, a_slice].astype(assigned_dtype)
 
                         assigned[target_part] = value_part[target_part]
 
@@ -2800,7 +2799,7 @@ class TypeBlocks(ContainerOperand):
                     source.append(block[NULL_SLICE, trim:])
                     return concat_resolved(parts, axis=1)
                 # width < width_target
-                parts.append(block) # COV_MISSING
+                parts.append(block)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             start = end = 0
@@ -2867,7 +2866,7 @@ class TypeBlocks(ContainerOperand):
                 if b.dtype == assignable_dtype:
                     assigned = b.copy()
                 else:
-                    assigned = b.astype(assignable_dtype) # COV_MISSING
+                    assigned = b.astype(assignable_dtype)
 
                 # because np.nonzero is easier / faster to parse if applied on a 1D array, w can make 2d look like 1D here
                 if ndim == 1:

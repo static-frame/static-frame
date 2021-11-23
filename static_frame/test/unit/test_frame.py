@@ -3205,6 +3205,22 @@ class TestUnit(TestCase):
                 ((0, ((0, -1), (1, 1), (2, 1), (3, 13448))), (1, ((0, 1), (1, -1), (2, 1), (3, -1))), (2, ((0, True), (1, False), (2, False), (3, True))), (3, ((0, False), (1, False), (2, True), (3, True))), (4, ((0, 58768), (1, 146284), (2, 170440), (3, 1))), (5, ((0, False), (1, True), (2, False), (3, True))), (6, ((0, 146284), (1, 170440), (2, 1), (3, 1))), (7, ((0, 1), (1, -62964), (2, 172142), (3, -154686))))
                 )
 
+    def test_frame_assign_bloc_j(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int,bool)')
+        f2 = f1.assign.bloc[f1 < 0](0)
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, 0), (1, 92867))), (1, ((0, False), (1, False))), (2, ((0, 0), (1, 91301))), (3, ((0, False), (1, False))))
+                )
+
+    def test_frame_assign_bloc_k(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int,int,bool)')
+        f2 = ff.parse('s(2,4)|v(str)')
+
+        f3 = f1.assign.bloc[f1 < 0](f2)
+
+        self.assertEqual(f3.to_pairs(),
+                ((0, ((0, 'zjZQ'), (1, 92867))), (1, ((0, 162197), (1, 'zJnC'))), (2, ((0, True), (1, False))), (3, ((0, 129017), (1, 35021)))))
+
     #---------------------------------------------------------------------------
     def test_frame_mask_loc_a(self) -> None:
 
@@ -3668,7 +3684,12 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             f1.sum(skipna=False)
 
+    def test_frame_sum_e(self) -> None:
+        f1 = ff.parse('s(1,4)|v(int,float)')
+        post = f1.min(axis=1, skipna=False)
+        self.assertEqual(post.to_pairs(), ((0, -88017.0),))
 
+    #---------------------------------------------------------------------------
     def test_frame_mean_a(self) -> None:
 
         a1 = np.array([
@@ -9980,6 +10001,13 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('a', (('x', 20), ('y', 20), ('z', 30))), ('b', (('x', 40), ('y', 20), ('z', 30))), ('c', (('x', 20), ('y', 20), ('z', 20))), ('d', (('x', 20), ('y', 20), ('z', 20)))))
 
+    def test_frame_clip_l(self) -> None:
+        f1 = ff.parse('s(2,6)|v(int,int,int,float,float,float)')
+        f2 = ff.parse('s(2,6)|v(int,float)') * 0
+        f3 = f1.clip(lower=f2)
+        self.assertEqual(round(f3).to_pairs(),
+                ((0, ((0, 0.0), (1, 92867.0))), (1, ((0, 162197.0), (1, 0.0))), (2, ((0, 0.0), (1, 91301.0))), (3, ((0, 1080.0), (1, 2580.0))), (4, ((0, 3512.0), (1, 1175.0))), (5, ((0, 1857.0), (1, 1699.0))))
+                )
 
     #---------------------------------------------------------------------------
 
