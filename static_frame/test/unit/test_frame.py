@@ -10005,7 +10005,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,6)|v(int,int,int,float,float,float)')
         f2 = ff.parse('s(2,6)|v(int,float)') * 0
         f3 = f1.clip(lower=f2)
-        self.assertEqual(round(f3).to_pairs(),
+        self.assertEqual(round(f3).to_pairs(), #type: ignore
                 ((0, ((0, 0.0), (1, 92867.0))), (1, ((0, 162197.0), (1, 0.0))), (2, ((0, 0.0), (1, 91301.0))), (3, ((0, 1080.0), (1, 2580.0))), (4, ((0, 3512.0), (1, 1175.0))), (5, ((0, 1857.0), (1, 1699.0))))
                 )
 
