@@ -6,6 +6,8 @@ from ast import literal_eval
 import os
 import mmap
 import typing as tp
+import io
+
 
 import numpy as np
 
@@ -84,6 +86,13 @@ class NPYConverter:
         #     file.write(array.T.tobytes())
         # else:
         #     file.write(array.tobytes())
+
+        # NOTE: this approach works with normal open files but is not materially faster than using buffering
+        # if isinstance(file, io.BufferedWriter):
+        #     if fortran_order and not flags.c_contiguous:
+        #         array.T.tofile(file)
+        #     else:
+        #         array.tofile(file)
 
         # NOTE: this might be made more efficient by creating an ArrayKit function that extracts bytes directly, avoiding creating an array for each chunk.
         if fortran_order and not flags.c_contiguous:

@@ -336,9 +336,9 @@ def run_test():
     records = []
     for label, fixture in (
             ('wide', FF_wide),
-            ('wide_col', FF_wide_col),
+            # ('wide_col', FF_wide_col),
             ('tall', FF_tall),
-            ('tall_col', FF_tall_col),
+            # ('tall_col', FF_tall_col),
             ('square', FF_square),
             ):
         cls_read = (
