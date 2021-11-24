@@ -39,7 +39,7 @@ class NPYConverter:
     STRUCT_FMT = '<H' # version 1.0
     STRUCT_FMT_SIZE = struct.calcsize(STRUCT_FMT)
     ENCODING = 'latin1' # version 1.0
-    BUFFERSIZE_NUMERATOR = 16 * 1024 ** 2
+    BUFFERSIZE_NUMERATOR = 16 * 1024 ** 2 # ~16 MB
     NDITER_FLAGS = ('external_loop', 'buffered', 'zerosize_ok')
 
     @classmethod
