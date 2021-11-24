@@ -9206,6 +9206,16 @@ class TestUnit(TestCase):
             f2 = Frame.from_npz(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
+    def test_frame_to_npz_i(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str)').rename(((1, 2), (3, 4)))
+        f2 = f1[f1.dtypes == int] # force maximally partitioned
+
+        with temp_file('.npz') as fp:
+
+            f2.to_npz(fp, consolidate_blocks=True)
+            f3 = Frame.from_npz(fp)
+            f2.equals(f3, compare_dtype=True, compare_class=True, compare_name=True)
+            self.assertEqual(f3._blocks.shapes.tolist(), [(20, 50)])
 
     #---------------------------------------------------------------------------
     def test_frame_to_npy_a(self) -> None:
@@ -9274,6 +9284,16 @@ class TestUnit(TestCase):
             f1.to_npy(fp)
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_i(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str)').rename(((1, 2), (3, 4)))
+        f2 = f1[f1.dtypes == int] # force maximally partitioned
+
+        with TemporaryDirectory() as fp:
+            f2.to_npy(fp, consolidate_blocks=True)
+            f3 = Frame.from_npy(fp)
+            f2.equals(f3, compare_dtype=True, compare_class=True, compare_name=True)
+            self.assertEqual(f3._blocks.shapes.tolist(), [(20, 50)])
 
     #---------------------------------------------------------------------------
     def test_frame_from_npy_memory_map_a(self) -> None:

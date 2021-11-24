@@ -111,8 +111,6 @@ class NPYConverter:
                     ):
                 file.write(chunk.tobytes('C'))
 
-
-
     @classmethod
     def _header_decode(cls,
             file: tp.IO[bytes],
@@ -276,7 +274,6 @@ class ArchiveZip(Archive):
     def read_metadata(self) -> tp.Any:
         return json.loads(self._archive.read(self.FILE_META))
 
-
 class ArchiveDirectory(Archive):
     __slots__ = (
             'labels',
@@ -397,6 +394,7 @@ class NPYArchiveConverter:
             fp: PathSpecifier,
             include_index: bool = True,
             include_columns: bool = True,
+            consolidate_blocks: bool = False,
             ) -> None:
         '''
         Write a :obj:`Frame` as an npz file.
@@ -415,12 +413,12 @@ class NPYArchiveConverter:
         # store shape, index depths
         depth_index = frame._index.depth
         depth_columns = frame._columns.depth
-        blocks = frame._blocks._blocks
 
-        metadata[cls.KEY_DEPTHS] = [
-                len(blocks),
-                depth_index,
-                depth_columns]
+        if consolidate_blocks:
+            # NOTE: by taking iter, can avoid 2x memory in some circumstances
+            block_iter = frame._blocks._reblock()
+        else:
+            block_iter = iter(frame._blocks._blocks)
 
         archive = cls.ARCHIVE_CLS(fp,
                 writeable=True,
@@ -447,8 +445,13 @@ class NPYArchiveConverter:
                 include=include_columns,
                 )
 
-        for i, array in enumerate(blocks):
+        for i, array in enumerate(block_iter):
             archive.write_array(cls.FILE_TEMPLATE_BLOCKS.format(i), array)
+
+        metadata[cls.KEY_DEPTHS] = [
+                i + 1, # block count
+                depth_index,
+                depth_columns]
 
         archive.write_metadata(metadata)
 

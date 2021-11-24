@@ -7510,6 +7510,7 @@ class Frame(ContainerOperand):
             *,
             include_index: bool = True,
             include_columns: bool = True,
+            consolidate_blocks: bool = False,
             ) -> None:
         '''
         Write a :obj:`Frame` as an npz file.
@@ -7519,6 +7520,7 @@ class Frame(ContainerOperand):
                 fp=fp,
                 include_index=include_index,
                 include_columns=include_columns,
+                consolidate_blocks=consolidate_blocks,
                 )
 
     def to_npy(self,
@@ -7526,6 +7528,7 @@ class Frame(ContainerOperand):
             *,
             include_index: bool = True,
             include_columns: bool = True,
+            consolidate_blocks: bool = False,
             ) -> None:
         '''
         Write a :obj:`Frame` as a directory of npy file.
@@ -7535,6 +7538,7 @@ class Frame(ContainerOperand):
                 fp=fp,
                 include_index=include_index,
                 include_columns=include_columns,
+                consolidate_blocks=consolidate_blocks,
                 )
 
     #---------------------------------------------------------------------------

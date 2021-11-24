@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.29
+----------
+
+Added ``consolidate_blocks`` Boolean parameter to ``Frame.to_npz()`` and ``Frame.to_npy``.
+
+
 0.8.28
 ----------
 
