@@ -1001,12 +1001,12 @@ class FrameFromNPZ(Perf):
         os.unlink(self.fp_npz)
         os.unlink(self.fp_parquet)
 
-class FrameToNPZ_N(FrameFromNPZ, Native):
+class FrameFromNPZ_N(FrameFromNPZ, Native):
 
     def wide_mixed_index_str(self) -> None:
         sf.Frame.from_npz(self.fp_npz)
 
-class FrameToNPZ_R(FrameFromNPZ, Reference):
+class FrameFromNPZ_R(FrameFromNPZ, Reference):
 
     # NOTE: benchmark is SF to_parquet
     def wide_mixed_index_str(self) -> None:

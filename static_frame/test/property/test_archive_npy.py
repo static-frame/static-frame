@@ -7,6 +7,7 @@ from hypothesis import given
 from static_frame.core.frame import Frame
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.archive_npy import NPYConverter
+from static_frame.core.archive_npy import HeaderDecodeCacheType
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.test.property import strategies as sfst
 
@@ -44,7 +45,7 @@ class TestUnit(TestCase):
     @given(sfst.get_array_1d2d(dtype_group=sfst.DTGroup.ALL_NO_OBJECT))
     def test_frame_to_npy_a(self, a1: Frame) -> None:
 
-        header_decode_cache = {}
+        header_decode_cache: HeaderDecodeCacheType = {}
 
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:
@@ -69,7 +70,7 @@ class TestUnit(TestCase):
     @given(sfst.get_array_1d2d(dtype_group=sfst.DTGroup.ALL_NO_OBJECT))
     def test_frame_to_npy_b(self, a1: Frame) -> None:
 
-        header_decode_cache = {}
+        header_decode_cache: HeaderDecodeCacheType = {}
 
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:

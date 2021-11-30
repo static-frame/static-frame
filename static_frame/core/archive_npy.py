@@ -28,6 +28,7 @@ if tp.TYPE_CHECKING:
 
 
 HeaderType = tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]
+HeaderDecodeCacheType = tp.Dict[str, HeaderType]
 
 #-------------------------------------------------------------------------------
 
@@ -217,6 +218,7 @@ class Archive:
 
     labels: tp.FrozenSet[str]
     memory_map: bool
+    _header_decode_cache: HeaderDecodeCacheType
 
     def __init__(self,
             fp: PathSpecifier,
