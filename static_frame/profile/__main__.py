@@ -1008,7 +1008,7 @@ class FrameFromNPZ_N(FrameFromNPZ, Native):
 
 class FrameFromNPZ_R(FrameFromNPZ, Reference):
 
-    # NOTE: benchmark is SF to_parquet
+    # NOTE: benchmark is SF from_parquet
     def wide_mixed_index_str(self) -> None:
         sf.Frame.from_parquet(self.fp_parquet)
 
