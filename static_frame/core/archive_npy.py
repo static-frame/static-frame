@@ -6,8 +6,6 @@ from ast import literal_eval
 import os
 import mmap
 import typing as tp
-from functools import lru_cache
-
 
 import numpy as np
 
