@@ -108,4 +108,4 @@ from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFil
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 
 
-__version__ = '0.8.29' # use -dev for new version in development
+__version__ = '0.8.30' # use -dev for new version in development

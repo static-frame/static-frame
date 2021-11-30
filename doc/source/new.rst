@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.8.30
+----------
+
+Performance enhancements to ``Frame.from_npy`` and ``Frame.from_npz``.
+
+
 0.8.29
 ----------
 
