@@ -6,8 +6,10 @@ import tempfile
 import typing as tp
 import pickle
 import shutil
+import sys
+import os
 
-import matplotlib
+
 import matplotlib.pyplot as plt
 import numpy as np
 import frame_fixtures as ff
@@ -364,8 +366,10 @@ def plot(frame: sf.Frame):
     # plt.rcParams.update({'font.size': 22})
     plt.savefig(fp, dpi=300)
 
-    import os
-    os.system(f'open {fp}')
+    if sys.platform.startswith('linux'):
+        os.system(f'eog {fp}')
+    else:
+        os.system(f'open {fp}')
 
 #-------------------------------------------------------------------------------
 def convert_size(size_bytes):

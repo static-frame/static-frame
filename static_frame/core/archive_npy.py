@@ -6,6 +6,7 @@ from ast import literal_eval
 import os
 import mmap
 import typing as tp
+from functools import lru_cache
 
 
 import numpy as np
@@ -26,7 +27,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
 
 
-
+HeaderType = tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]
 
 #-------------------------------------------------------------------------------
 
@@ -80,13 +81,14 @@ class NPYConverter:
         header = f'{{"descr":"{dtype.str}","fortran_order":{fortran_order},"shape":{array.shape}}}'
         file.write(cls._header_encode(header))
 
-        # this works but forces loading everything in memory
+        # NOTE: this works but forces copying everything in memory
+
         # if flags.f_contiguous and not flags.c_contiguous:
         #     file.write(array.T.tobytes())
         # else:
         #     file.write(array.tobytes())
 
-        # NOTE: this approach works with normal open files but is not materially faster than using buffering
+        # NOTE: this approach works with normal open files (but not zip files) and is not materially faster than using buffering
         # if isinstance(file, io.BufferedWriter):
         #     if fortran_order and not flags.c_contiguous:
         #         array.T.tofile(file)
@@ -111,21 +113,39 @@ class NPYConverter:
                     ):
                 file.write(chunk.tobytes('C'))
 
+
+
+    # @classmethod
+    # def _header_decode(cls,
+    #         file: tp.IO[bytes],
+    #         ) -> tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]:
+    #     '''Extract and decode the header.
+    #     '''
+    #     length_size = file.read(cls.STRUCT_FMT_SIZE)
+    #     length_header = struct.unpack(cls.STRUCT_FMT, length_size)[0]
+    #     header = file.read(length_header).decode(cls.ENCODING)
+    #     dtype_str, fortran_order, shape = literal_eval(header).values()
+    #     return np.dtype(dtype_str), fortran_order, shape
+
     @classmethod
     def _header_decode(cls,
             file: tp.IO[bytes],
-            ) -> tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]:
+            header_decode_cache: tp.Dict[str, HeaderType]
+            ) -> HeaderType:
         '''Extract and decode the header.
         '''
         length_size = file.read(cls.STRUCT_FMT_SIZE)
         length_header = struct.unpack(cls.STRUCT_FMT, length_size)[0]
         header = file.read(length_header).decode(cls.ENCODING)
-        dtype_str, fortran_order, shape = literal_eval(header).values()
-        return np.dtype(dtype_str), fortran_order, shape
+        if header not in header_decode_cache:
+            dtype_str, fortran_order, shape = literal_eval(header).values()
+            header_decode_cache[header] = np.dtype(dtype_str), fortran_order, shape
+        return header_decode_cache[header]
 
     @classmethod
     def from_npy(cls,
             file: tp.IO[bytes],
+            header_decode_cache: tp.Dict[str, HeaderType],
             memory_map: bool = False,
             ) -> tp.Tuple[np.ndarray, tp.Optional[mmap.mmap]]:
         '''Read an NPY 1.0 file.
@@ -133,7 +153,7 @@ class NPYConverter:
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
             raise ErrorNPYDecode('Invalid NPY header found.')
 
-        dtype, fortran_order, shape = cls._header_decode(file)
+        dtype, fortran_order, shape = cls._header_decode(file, header_decode_cache)
         if dtype.kind == DTYPE_OBJECT_KIND:
             raise ErrorNPYDecode('no support for object dtypes')
 
@@ -191,7 +211,8 @@ class Archive:
             'labels',
             'memory_map',
             '_archive',
-            '_closable'
+            '_closable',
+            '_header_decode_cache',
             )
 
     labels: tp.FrozenSet[str]
@@ -225,7 +246,8 @@ class ArchiveZip(Archive):
             'labels',
             'memory_map',
             '_archive',
-            '_closable'
+            '_closable',
+            '_header_decode_cache',
             )
 
     def __init__(self,
@@ -242,6 +264,7 @@ class ArchiveZip(Archive):
                 )
         if not writeable:
             self.labels = frozenset(self._archive.namelist())
+            self._header_decode_cache = {}
         if memory_map:
             raise RuntimeError(f'Cannot memory_map with {self}')
 
@@ -262,7 +285,7 @@ class ArchiveZip(Archive):
     def read_array(self, name: str) -> np.ndarray:
         f = self._archive.open(name)
         try:
-            array, _ = NPYConverter.from_npy(f)
+            array, _ = NPYConverter.from_npy(f, self._header_decode_cache)
         finally:
             f.close()
         array.flags.writeable = False
@@ -280,6 +303,7 @@ class ArchiveDirectory(Archive):
             'memory_map',
             '_archive',
             '_closable',
+            '_header_decode_cache',
             )
 
     def __init__(self,
@@ -298,6 +322,7 @@ class ArchiveDirectory(Archive):
             raise RuntimeError(f'A directory must be provided, not {fp}')
 
         if not writeable:
+            self._header_decode_cache = {}
             self.labels = frozenset(f.name for f in os.scandir(self._archive))
 
         self.memory_map = memory_map
@@ -318,7 +343,10 @@ class ArchiveDirectory(Archive):
 
             f = open(fp, 'rb')
             try:
-                array, mm = NPYConverter.from_npy(f, self.memory_map)
+                array, mm = NPYConverter.from_npy(f,
+                        self._header_decode_cache,
+                        self.memory_map,
+                        )
             finally:
                 f.close() # NOTE: can close the file after creating memory map
             # self._closable.append(f)
@@ -327,7 +355,10 @@ class ArchiveDirectory(Archive):
 
         f = open(fp, 'rb')
         try:
-            array, _ = NPYConverter.from_npy(f, self.memory_map)
+            array, _ = NPYConverter.from_npy(f,
+                    self._header_decode_cache,
+                    self.memory_map,
+                    )
         finally:
             f.close()
         return array

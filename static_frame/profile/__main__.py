@@ -11,6 +11,8 @@ import sys
 import datetime
 import tempfile
 from enum import Enum
+import shutil
+
 
 from pyinstrument import Profiler #type: ignore
 from line_profiler import LineProfiler #type: ignore
@@ -951,9 +953,7 @@ class FrameToNPZ(Perf):
         super().__init__()
         _, self.fp = tempfile.mkstemp(suffix='.zip')
 
-        self.sff1 = ff.parse('s(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,str)')
-        self.pdf1 = self.sff1.to_pandas()
-
+        self.sff1 = ff.parse('s(10,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
 
         # self.meta = {
         #     'int_index_str_double': FunctionMetaData(
@@ -975,6 +975,43 @@ class FrameToNPZ_R(FrameToNPZ, Reference):
     # NOTE: benchmark is SF to_parquet
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_parquet(self.fp)
+
+
+class FrameFromNPZ(Perf):
+    NUMBER = 1
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff1 = ff.parse('s(10,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
+        _, self.fp_npz = tempfile.mkstemp(suffix='.zip')
+        self.sff1.to_npz(self.fp_npz)
+
+        _, self.fp_parquet = tempfile.mkstemp(suffix='.parquet')
+        self.sff1.to_parquet(self.fp_parquet)
+
+        # self.meta = {
+        #     'int_index_str_double': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         None
+        #         ),
+        #     }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp_npz)
+        os.unlink(self.fp_parquet)
+
+class FrameToNPZ_N(FrameFromNPZ, Native):
+
+    def wide_mixed_index_str(self) -> None:
+        sf.Frame.from_npz(self.fp_npz)
+
+class FrameToNPZ_R(FrameFromNPZ, Reference):
+
+    # NOTE: benchmark is SF to_parquet
+    def wide_mixed_index_str(self) -> None:
+        sf.Frame.from_parquet(self.fp_parquet)
+
 
 #-------------------------------------------------------------------------------
 class Group(Perf):

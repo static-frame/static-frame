@@ -53,7 +53,7 @@ class TestUnit(TestCase):
             with open(fp, 'wb') as f:
                 NPYConverter.to_npy(f, a1)
             with open(fp, 'rb') as f:
-                a2, _ = NPYConverter.from_npy(f)
+                a2, _ = NPYConverter.from_npy(f, {})
 
             self.assertTrue((a1 == a2).all())
 
@@ -86,7 +86,7 @@ class TestUnit(TestCase):
             with open(fp, 'wb') as f:
                 NPYConverter.to_npy(f, a1)
             with open(fp, 'rb') as f:
-                a2, _ = NPYConverter.from_npy(f)
+                a2, _ = NPYConverter.from_npy(f, {})
             self.assertTrue((a1 == a2).all())
 
     def test_from_npy_b(self) -> None:
@@ -96,7 +96,7 @@ class TestUnit(TestCase):
             with open(fp, 'wb') as f:
                 NPYConverter.to_npy(f, a1)
             with open(fp, 'rb') as f:
-                a2, _ = NPYConverter.from_npy(f)
+                a2, _ = NPYConverter.from_npy(f, {})
 
             self.assertTrue(a1.shape == a2.shape)
             self.assertTrue((a1 == a2).all())
@@ -110,7 +110,7 @@ class TestUnit(TestCase):
             with open(fp, 'rb') as f:
                 # invaliud header raises
                 with self.assertRaises(ErrorNPYDecode):
-                    a2, _ = NPYConverter.from_npy(f)
+                    a2, _ = NPYConverter.from_npy(f, {})
 
 
     def test_from_npy_d(self) -> None:
@@ -123,7 +123,7 @@ class TestUnit(TestCase):
             with open(fp, 'rb') as f:
                 # invalid shape
                 with self.assertRaises(ErrorNPYDecode):
-                    a2, _ = NPYConverter.from_npy(f)
+                    a2, _ = NPYConverter.from_npy(f, {})
 
     def test_from_npy_e(self) -> None:
         a1 = np.array([2, 3, 4])
@@ -135,7 +135,7 @@ class TestUnit(TestCase):
             with open(fp, 'rb') as f:
                 # invlid header; only version 1,0 is supported
                 with self.assertRaises(ErrorNPYDecode):
-                    a2, _ = NPYConverter.from_npy(f)
+                    a2, _ = NPYConverter.from_npy(f, {})
 
 
     def test_from_npy_f(self) -> None:
@@ -148,7 +148,7 @@ class TestUnit(TestCase):
             with open(fp, 'rb') as f:
                 # invalid object dtype
                 with self.assertRaises(ErrorNPYDecode):
-                    a2, _ = NPYConverter.from_npy(f)
+                    a2, _ = NPYConverter.from_npy(f, {})
 
 
     def test_from_npy_g(self) -> None:
@@ -158,7 +158,7 @@ class TestUnit(TestCase):
             with open(fp, 'wb') as f:
                 NPYConverter.to_npy(f, a1)
             with open(fp, 'rb') as f:
-                a2, _ = NPYConverter.from_npy(f, memory_map=True)
+                a2, _ = NPYConverter.from_npy(f, {}, memory_map=True)
                 self.assertEqual(a2.tolist(), [2, 3, 4])
 
     #---------------------------------------------------------------------------
@@ -191,9 +191,11 @@ class TestUnit(TestCase):
     def test_archive_directory_d(self) -> None:
         with TemporaryDirectory() as fp:
             a1 = np.arange(10)
-            ad = ArchiveDirectory(fp, writeable=True, memory_map=False)
-            ad.write_array('a1.npy', a1)
-            a2 = ad.read_array('a1.npy')
+            ad1 = ArchiveDirectory(fp, writeable=True, memory_map=False)
+            ad1.write_array('a1.npy', a1)
+
+            ad2 = ArchiveDirectory(fp, writeable=False, memory_map=False)
+            a2 = ad2.read_array('a1.npy')
             self.assertTrue((a1 == a2).all())
 
 if __name__ == '__main__':

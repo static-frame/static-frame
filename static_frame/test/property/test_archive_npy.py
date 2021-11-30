@@ -43,6 +43,9 @@ class TestUnit(TestCase):
 
     @given(sfst.get_array_1d2d(dtype_group=sfst.DTGroup.ALL_NO_OBJECT))
     def test_frame_to_npy_a(self, a1: Frame) -> None:
+
+        header_decode_cache = {}
+
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:
                 NPYConverter.to_npy(f, a1)
@@ -56,7 +59,7 @@ class TestUnit(TestCase):
             self.assertTrue(a1.shape == a2.shape)
 
             with open(fp, 'rb') as f:
-                a3, _ = NPYConverter.from_npy(f)
+                a3, _ = NPYConverter.from_npy(f, header_decode_cache)
                 if a3.dtype.kind in DTYPE_INEXACT_KINDS:
                     self.assertAlmostEqualArray(a1, a3)
                 else:
@@ -65,12 +68,18 @@ class TestUnit(TestCase):
 
     @given(sfst.get_array_1d2d(dtype_group=sfst.DTGroup.ALL_NO_OBJECT))
     def test_frame_to_npy_b(self, a1: Frame) -> None:
+
+        header_decode_cache = {}
+
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:
                 NPYConverter.to_npy(f, a1)
 
             with open(fp, 'rb') as f:
-                a2, mm = NPYConverter.from_npy(f, memory_map=True)
+                a2, mm = NPYConverter.from_npy(f,
+                        header_decode_cache,
+                        memory_map=True,
+                        )
                 if a2.dtype.kind in DTYPE_INEXACT_KINDS:
                     self.assertAlmostEqualArray(a1, a2)
                 else:
