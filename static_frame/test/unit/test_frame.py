@@ -9328,8 +9328,8 @@ class TestUnit(TestCase):
             class C:
                 def __init__(self) -> None:
                     ff.parse("s(3,3)").to_npy(fp)
-                    self.finalizer = None
-                    self.frame = None
+                    self.finalizer: tp.Optional[tp.Callable[[], None]] = None
+                    self.frame: tp.Optional[sf.Frame] = None
 
                 def __del__(self) -> None:
                     self.finalizer()
@@ -9338,14 +9338,14 @@ class TestUnit(TestCase):
                 def mmap_frame(self) -> sf.Frame:
                     if not self.finalizer:
                         self.frame, self.finalizer = Frame.from_npy_mmap(fp)
-                    return self.frame
+                    return self.frame #type: ignore
 
             c = C()
             f1 = c.mmap_frame
             self.assertEqual(f1.shape, (3, 3))
 
             s1 = c.mmap_frame.iloc[0]
-            self.assertEqual(round(s1, 1).to_pairs(),
+            self.assertEqual(round(s1, 1).to_pairs(), #type: ignore
                 ((0, 1930.4), (1, -610.8), (2, 694.3))
                 )
             c.__del__()
