@@ -4,7 +4,6 @@ import json
 import struct
 from ast import literal_eval
 import os
-import sys
 import mmap
 import typing as tp
 

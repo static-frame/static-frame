@@ -8,7 +8,6 @@ from itertools import zip_longest
 from copy import deepcopy
 from operator import itemgetter
 from collections.abc import Set
-from sys import getrefcount
 import csv
 import json
 import sqlite3
