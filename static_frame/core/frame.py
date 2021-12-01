@@ -8,6 +8,7 @@ from itertools import zip_longest
 from copy import deepcopy
 from operator import itemgetter
 from collections.abc import Set
+from sys import getrefcount
 import csv
 import json
 import sqlite3
@@ -2859,7 +2860,9 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     def __del__(self) -> None:
         if getattr(self, '_finalizer', None):
-            self._finalizer()
+            if getrefcount(self._finalizer) <= 2:
+                print('Frame.__del__', getrefcount(self._finalizer))
+                self._finalizer()
 
     #---------------------------------------------------------------------------
     # name interface
@@ -5378,7 +5381,8 @@ class Frame(ContainerOperand):
                 own_data=own_data,
                 own_columns=own_columns,
                 own_index=True,
-                name=self._name
+                name=self._name,
+                finalizer=self._finalizer,
                 )
 
     def set_index_hierarchy(self,
@@ -7063,7 +7067,6 @@ class Frame(ContainerOperand):
     def _to_frame(self,
             constructor: tp.Type['Frame']
             ) -> 'Frame':
-        # NOTE: we do not delegate finalizer, which means that this Frame must persist and be the last Frame deleted.
         return constructor(
                 self._blocks.copy(),
                 index=self.index,
@@ -7072,7 +7075,7 @@ class Frame(ContainerOperand):
                 own_data=True,
                 own_index=True,
                 own_columns=constructor is FrameHE,
-                # finalizer=self._finalizer,
+                finalizer=self._finalizer,
                 )
 
     def to_frame_he(self) -> 'FrameHE':

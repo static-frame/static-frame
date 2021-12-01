@@ -9316,6 +9316,30 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_from_npy_memory_map_c(self) -> None:
+        f1 = ff.parse("s(3,3)")
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f1 = sf.Frame.from_npy(fp, memory_map=True)
+            f1 = f1.set_index(0)
+            post = str(f1)
+            # f1.__del__()
+
+    def test_frame_from_npy_memory_map_d(self) -> None:
+
+        with TemporaryDirectory() as fp:
+            class C:
+                def __init__(self):
+                    ff.parse("s(3,3)").to_npy(fp)
+
+                @property
+                def mmap_frame(self) -> sf.Frame:
+                    return sf.Frame.from_npy(fp, memory_map=True)
+
+            c = C()
+            f1 = c.mmap_frame
+            s1 = c.mmap_frame.iloc[0]
+
 
     #---------------------------------------------------------------------------
 

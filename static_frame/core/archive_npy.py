@@ -4,6 +4,7 @@ import json
 import struct
 from ast import literal_eval
 import os
+import sys
 import mmap
 import typing as tp
 
@@ -202,7 +203,7 @@ class NPYConverter:
 
 
 class Archive:
-    '''Abstraction of a directory or a zip archive.
+    '''Abstraction of a directory or a zip archive. Holds state over the life writing / reading a Frame.
     '''
     FILE_META = '__meta__.json'
 
@@ -239,6 +240,7 @@ class Archive:
 
     def close(self) -> None:
         for f in getattr(self, '_closable', EMPTY_TUPLE):
+            print(f'closing {f}')
             f.close()
 
 class ArchiveZip(Archive):
@@ -274,8 +276,8 @@ class ArchiveZip(Archive):
         self._archive.close()
 
     def write_array(self, name: str, array: np.ndarray) -> None:
-        # NOTE: zip only was 'w' mode, not 'wb'
-        # NOTE: force_zip64 required for large files; might make dynamic
+        # NOTE: zip only has 'w' mode, not 'wb'
+        # NOTE: force_zip64 required for large files
         f = self._archive.open(name, 'w', force_zip64=True)
         try:
             NPYConverter.to_npy(f, array)
