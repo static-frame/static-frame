@@ -37,6 +37,8 @@ from static_frame import IndexDefaultFactory
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorNPYEncode
+
 from static_frame.core.frame import FrameAssignILoc
 from static_frame.core.frame import FrameAssignBLoc
 from static_frame.core.store import StoreConfig
@@ -9216,6 +9218,17 @@ class TestUnit(TestCase):
             f3 = Frame.from_npz(fp)
             f2.equals(f3, compare_dtype=True, compare_class=True, compare_name=True)
             self.assertEqual(f3._blocks.shapes.tolist(), [(20, 50)])
+
+
+    def test_frame_to_npz_j(self) -> None:
+        f1 = ff.parse('s(100,2)|v(int,object)')
+
+        with temp_file('.npz') as fp:
+            try:
+                f1.to_npz(fp)
+            except ErrorNPYEncode:
+                pass
+
 
     #---------------------------------------------------------------------------
     def test_frame_to_npy_a(self) -> None:

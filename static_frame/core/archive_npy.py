@@ -239,7 +239,6 @@ class Archive:
 
     def close(self) -> None:
         for f in getattr(self, '_closable', EMPTY_TUPLE):
-            print(f'closing {f}')
             f.close()
 
 class ArchiveZip(Archive):
