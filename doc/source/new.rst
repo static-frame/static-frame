@@ -1,6 +1,11 @@
 What is New in Static Frame
 ===============================
 
+0.8.31
+----------
+
+Added ``Frame.from_npy_mmap``; removed ``memory_map`` option from ``Frame.from_npy``.
+
 
 0.8.30
 ----------
@@ -17,7 +22,7 @@ Added ``consolidate_blocks`` Boolean parameter to ``Frame.to_npz()`` and ``Frame
 0.8.28
 ----------
 
-Added ``Frame.to_npy()``, ``Frame.from_npy()`` with a `memory_map` option.
+Added ``Frame.to_npy()``, ``Frame.from_npy()`` with a ``memory_map`` option.
 
 Improvements to ``Frame.to_npz()`` to support large files and buffered writes.
 
