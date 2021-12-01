@@ -192,14 +192,12 @@ class Frame(ContainerOperand):
             '_columns',
             '_index',
             '_name',
-            '_finalizer',
             )
 
     _blocks: TypeBlocks
     _columns: IndexBase
     _index: IndexBase
     _name: tp.Hashable
-    _finalizer: tp.Optional[tp.Callable[[], None]]
 
     _COLUMNS_CONSTRUCTOR = Index
     _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchy
@@ -2252,19 +2250,35 @@ class Frame(ContainerOperand):
     @classmethod
     def from_npy(cls,
             fp: PathSpecifier,
-            *,
-            memory_map: bool = False,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an directory of npy files.
 
         Args:
-            memory_map: Use Python mmap objects to provide NumPy array buffers.
+            fp: The path to the NPY directory.
         '''
         return NPYDirectoryConverter.from_archive(
                 constructor=cls,
                 fp=fp,
-                memory_map=memory_map,
+                )
+
+
+    @classmethod
+    def from_npy_mmap(cls,
+            fp: PathSpecifier,
+            ) -> tp.Tuple['Frame', tp.Callable[[], None]]:
+        '''
+        Create a :obj:`Frame` from an directory of npy files using memory maps.
+
+        Args:
+            fp: The path to the NPY directory.
+
+        Returns:
+            A tuple of :obj:`Frame` and the callable needed to close the open memory map objects. On some platforms this must be called before the process exits.
+        '''
+        return NPYDirectoryConverter.from_archive_mmap(
+                constructor=cls,
+                fp=fp,
                 )
 
     #---------------------------------------------------------------------------
@@ -2700,7 +2714,6 @@ class Frame(ContainerOperand):
             own_data: bool = False,
             own_index: bool = False,
             own_columns: bool = False,
-            finalizer: tp.Optional[tp.Callable[[], None]] = None,
             ) -> None:
         '''
         Initializer.
@@ -2765,7 +2778,6 @@ class Frame(ContainerOperand):
                 if not blocks_constructor else (None, None))
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
-        self._finalizer = finalizer
 
         #-----------------------------------------------------------------------
         # columns assignment
@@ -2856,13 +2868,6 @@ class Frame(ContainerOperand):
     #     Return shallow copy of this Frame.
     #     '''
     #     return self.__copy__() #type: ignore
-
-    #---------------------------------------------------------------------------
-    def __del__(self) -> None:
-        if getattr(self, '_finalizer', None):
-            if getrefcount(self._finalizer) <= 2:
-                print('Frame.__del__', getrefcount(self._finalizer))
-                self._finalizer()
 
     #---------------------------------------------------------------------------
     # name interface
@@ -5382,7 +5387,6 @@ class Frame(ContainerOperand):
                 own_columns=own_columns,
                 own_index=True,
                 name=self._name,
-                finalizer=self._finalizer,
                 )
 
     def set_index_hierarchy(self,
@@ -7075,7 +7079,6 @@ class Frame(ContainerOperand):
                 own_data=True,
                 own_index=True,
                 own_columns=constructor is FrameHE,
-                finalizer=self._finalizer,
                 )
 
     def to_frame_he(self) -> 'FrameHE':

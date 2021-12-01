@@ -522,12 +522,12 @@ class NPYArchiveConverter:
         return index
 
     @classmethod
-    def from_archive(cls,
+    def _from_archive(cls,
             *,
             constructor: tp.Type['Frame'],
             fp: PathSpecifier,
             memory_map: bool = False,
-            ) -> 'Frame':
+            ) -> tp.Tuple['Frame', Archive]:
         '''
         Create a :obj:`Frame` from an npz file.
         '''
@@ -571,24 +571,48 @@ class NPYArchiveConverter:
                 for i in range(block_count)
                 )
 
-        if not memory_map:
-            return constructor(tb,
-                    own_data=True,
-                    index=index,
-                    own_index = False if index is None else True,
-                    columns=columns,
-                    own_columns = False if columns is None else True,
-                    name=name,
-                    )
-        return constructor(tb,
+        f = constructor(tb,
                 own_data=True,
                 index=index,
                 own_index = False if index is None else True,
                 columns=columns,
                 own_columns = False if columns is None else True,
                 name=name,
-                finalizer=archive.close,
                 )
+
+        return f, archive
+
+
+    @classmethod
+    def from_archive(cls,
+            *,
+            constructor: tp.Type['Frame'],
+            fp: PathSpecifier,
+            ) -> 'Frame':
+        '''
+        Create a :obj:`Frame` from an npz file.
+        '''
+        f, _ = cls._from_archive(constructor=constructor,
+                fp=fp,
+                memory_map=False,
+                )
+        return f
+
+
+    @classmethod
+    def from_archive_mmap(cls,
+            *,
+            constructor: tp.Type['Frame'],
+            fp: PathSpecifier,
+            ) -> tp.Tuple['Frame', tp.Callable[[], None]]:
+        '''
+        Create a :obj:`Frame` from an npz file.
+        '''
+        f, archive = cls._from_archive(constructor=constructor,
+                fp=fp,
+                memory_map=True,
+                )
+        return f, archive.close
 
 
 class NPZConverter(NPYArchiveConverter):

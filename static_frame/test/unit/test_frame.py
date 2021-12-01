@@ -9300,45 +9300,56 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
         with TemporaryDirectory() as fp:
             f1.to_npy(fp)
-            f2 = Frame.from_npy(fp, memory_map=True)
+            f2, finalizer = Frame.from_npy_mmap(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
-            f2.__del__() # must explicitly call for testing on windows
+            finalizer()
 
     def test_frame_from_npy_memory_map_b(self) -> None:
         f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
         with TemporaryDirectory() as fp:
             f1.to_npy(fp)
-            f2 = Frame.from_npy(fp, memory_map=True)
-            # this will had a reference to to the finalizer
+            f2, finalizer = Frame.from_npy_mmap(fp)
             f3 = f2.to_frame()
-            f2.__del__()
-            f3.__del__()
-
-
+            finalizer()
 
     def test_frame_from_npy_memory_map_c(self) -> None:
         f1 = ff.parse("s(3,3)")
         with TemporaryDirectory() as fp:
             f1.to_npy(fp)
-            f1 = sf.Frame.from_npy(fp, memory_map=True)
+            f1, finalizer = sf.Frame.from_npy_mmap(fp)
             f1 = f1.set_index(0)
             post = str(f1)
-            # f1.__del__()
+            finalizer()
 
     def test_frame_from_npy_memory_map_d(self) -> None:
 
         with TemporaryDirectory() as fp:
+
             class C:
-                def __init__(self):
+                def __init__(self) -> None:
                     ff.parse("s(3,3)").to_npy(fp)
+                    self.finalizer = None
+                    self.frame = None
+
+                def __del__(self) -> None:
+                    self.finalizer()
 
                 @property
                 def mmap_frame(self) -> sf.Frame:
-                    return sf.Frame.from_npy(fp, memory_map=True)
+                    if not self.finalizer:
+                        self.frame, self.finalizer = Frame.from_npy_mmap(fp)
+                    return self.frame
 
             c = C()
             f1 = c.mmap_frame
+            self.assertEqual(f1.shape, (3, 3))
+
             s1 = c.mmap_frame.iloc[0]
+            self.assertEqual(round(s1, 1).to_pairs(),
+                ((0, 1930.4), (1, -610.8), (2, 694.3))
+                )
+            c.__del__()
+
 
 
     #---------------------------------------------------------------------------
