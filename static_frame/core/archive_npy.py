@@ -202,7 +202,7 @@ class NPYConverter:
 
 
 class Archive:
-    '''Abstraction of a directory or a zip archive.
+    '''Abstraction of a directory or a zip archive. Holds state over the life writing / reading a Frame.
     '''
     FILE_META = '__meta__.json'
 
@@ -239,6 +239,7 @@ class Archive:
 
     def close(self) -> None:
         for f in getattr(self, '_closable', EMPTY_TUPLE):
+            print(f'closing {f}')
             f.close()
 
 class ArchiveZip(Archive):
@@ -274,8 +275,8 @@ class ArchiveZip(Archive):
         self._archive.close()
 
     def write_array(self, name: str, array: np.ndarray) -> None:
-        # NOTE: zip only was 'w' mode, not 'wb'
-        # NOTE: force_zip64 required for large files; might make dynamic
+        # NOTE: zip only has 'w' mode, not 'wb'
+        # NOTE: force_zip64 required for large files
         f = self._archive.open(name, 'w', force_zip64=True)
         try:
             NPYConverter.to_npy(f, array)
@@ -520,12 +521,12 @@ class NPYArchiveConverter:
         return index
 
     @classmethod
-    def from_archive(cls,
+    def _from_archive(cls,
             *,
             constructor: tp.Type['Frame'],
             fp: PathSpecifier,
             memory_map: bool = False,
-            ) -> 'Frame':
+            ) -> tp.Tuple['Frame', Archive]:
         '''
         Create a :obj:`Frame` from an npz file.
         '''
@@ -569,24 +570,48 @@ class NPYArchiveConverter:
                 for i in range(block_count)
                 )
 
-        if not memory_map:
-            return constructor(tb,
-                    own_data=True,
-                    index=index,
-                    own_index = False if index is None else True,
-                    columns=columns,
-                    own_columns = False if columns is None else True,
-                    name=name,
-                    )
-        return constructor(tb,
+        f = constructor(tb,
                 own_data=True,
                 index=index,
                 own_index = False if index is None else True,
                 columns=columns,
                 own_columns = False if columns is None else True,
                 name=name,
-                finalizer=archive.close,
                 )
+
+        return f, archive
+
+
+    @classmethod
+    def from_archive(cls,
+            *,
+            constructor: tp.Type['Frame'],
+            fp: PathSpecifier,
+            ) -> 'Frame':
+        '''
+        Create a :obj:`Frame` from an npz file.
+        '''
+        f, _ = cls._from_archive(constructor=constructor,
+                fp=fp,
+                memory_map=False,
+                )
+        return f
+
+
+    @classmethod
+    def from_archive_mmap(cls,
+            *,
+            constructor: tp.Type['Frame'],
+            fp: PathSpecifier,
+            ) -> tp.Tuple['Frame', tp.Callable[[], None]]:
+        '''
+        Create a :obj:`Frame` from an npz file.
+        '''
+        f, archive = cls._from_archive(constructor=constructor,
+                fp=fp,
+                memory_map=True,
+                )
+        return f, archive.close
 
 
 class NPZConverter(NPYArchiveConverter):
