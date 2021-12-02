@@ -8,6 +8,7 @@ from functools import partial
 import datetime
 from fractions import Fraction
 import typing as tp
+from enum import Enum
 
 import numpy as np
 from numpy import char as npc
@@ -43,10 +44,9 @@ from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
-from static_frame.core.util import PathSpecifier
-from static_frame.core.util import DTYPE_INT_DEFAULT
 
 from static_frame.core.exception import AxisInvalid
+
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
@@ -58,7 +58,53 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
 
+
+
+class ContainerMap:
+
+    _map: tp.Optional[tp.Dict[str, tp.Type['ContainerOperand']]] = None
+
+    @classmethod
+    def _update_map(cls) -> None:
+        from static_frame.core.frame import Frame
+        from static_frame.core.frame import FrameGO
+        from static_frame.core.frame import FrameHE
+        from static_frame.core.series import Series
+        from static_frame.core.series import SeriesHE
+        from static_frame.core.index import Index
+        from static_frame.core.index import IndexGO
+        from static_frame.core.index_hierarchy import IndexHierarchy
+        from static_frame.core.index_hierarchy import IndexHierarchyGO
+        from static_frame.core.index_datetime import IndexDate
+        from static_frame.core.index_datetime import IndexDateGO
+        from static_frame.core.index_datetime import IndexYear
+        from static_frame.core.index_datetime import IndexYearGO
+        from static_frame.core.index_datetime import IndexYearMonth
+        from static_frame.core.index_datetime import IndexYearMonthGO
+        from static_frame.core.index_datetime import IndexMinute
+        from static_frame.core.index_datetime import IndexMinuteGO
+        from static_frame.core.index_datetime import IndexSecond
+        from static_frame.core.index_datetime import IndexSecondGO
+        from static_frame.core.index_datetime import IndexMillisecond
+        from static_frame.core.index_datetime import IndexMillisecondGO
+        from static_frame.core.index_datetime import IndexMicrosecond
+        from static_frame.core.index_datetime import IndexMicrosecondGO
+        from static_frame.core.index_datetime import IndexNanosecond
+        from static_frame.core.index_datetime import IndexNanosecondGO
+
+        cls._map = {k: v for k, v in locals().items() if v is not cls}
+
+    # @staticmethod
+    # def cls_to_str(cls: tp.Type['ContainerOperand']) -> str:
+    #     return
+
+    @classmethod
+    def str_to_cls(cls, name: str) -> tp.Type['ContainerOperand']:
+        if cls._map is None:
+            cls._update_map()
+        return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
 
 
 def get_col_dtype_factory(
@@ -998,11 +1044,16 @@ def key_from_container_key(
 
 
 #---------------------------------------------------------------------------
+class ManyToOneType(Enum):
+    CONCAT = 0
+    UNION = 1
+    INTERSECT = 2
+
 
 def _index_many_to_one(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
-        array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
+        many_to_one_type: ManyToOneType,
         ) -> IndexBase:
     '''
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
@@ -1011,6 +1062,21 @@ def _index_many_to_one(
         indices: can be a generator
         cls_default: Default Index class to be used if no alignment of classes; also used to determine if result Index should be static or mutable.
     '''
+    from static_frame.core.index_auto import IndexAutoFactory
+
+    array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
+
+    if many_to_one_type is ManyToOneType.UNION:
+        array_processor = partial(ufunc_set_iter,
+                union=True,
+                assume_unique=True)
+    elif many_to_one_type is ManyToOneType.INTERSECT:
+        array_processor = partial(ufunc_set_iter,
+                union=False,
+                assume_unique=True)
+    elif many_to_one_type is ManyToOneType.CONCAT:
+        array_processor = concat_resolved
+
     indices_iter = iter(indices)
     try:
         index = next(indices_iter)
@@ -1025,12 +1091,18 @@ def _index_many_to_one(
     cls_first = index.__class__
     cls_aligned = True
 
+    # if we are unioning we can give back an index_auto_aligned
+    index_auto_aligned = (many_to_one_type is not ManyToOneType.CONCAT
+            and index.ndim == 1
+            and index._map is None #type: ignore
+            )
+
     # if IndexHierarchy, collect index_types generators
     if index.ndim == 2:
         depth_first = index.depth
         index_types_gen = [index._levels.index_types()] #type: ignore
         index_types_aligned = True
-    else:
+    else: # for 1D we ignore this
         index_types_aligned = False
 
     for index in indices_iter:
@@ -1039,11 +1111,21 @@ def _index_many_to_one(
             name_aligned = False
         if cls_aligned and index.__class__ != cls_first:
             cls_aligned = False
+        if index_auto_aligned and (index.ndim != 1 or index._map is not None): #type: ignore
+            index_auto_aligned = False
 
         if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
             index_types_gen.append(index._levels.index_types()) #type: ignore
         else:
             index_types_aligned = False
+
+    name = name_first if name_aligned else None
+    if index_auto_aligned:
+        if many_to_one_type is ManyToOneType.UNION:
+            size = max(a.size for a in arrays)
+        elif many_to_one_type is ManyToOneType.INTERSECT:
+            size = min(a.size for a in arrays)
+        return IndexAutoFactory(size, name=name).to_index(default_constructor=cls_default)
 
     if index_types_aligned:
         # all depths are already aligned
@@ -1066,8 +1148,6 @@ def _index_many_to_one(
     else:
         constructor = cls_default.from_labels
 
-    name = name_first if name_aligned else None
-
     # returns an immutable array
     array = array_processor(arrays)
 
@@ -1079,7 +1159,7 @@ def index_many_concat(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
         ) -> tp.Optional[IndexBase]:
-    return _index_many_to_one(indices, cls_default, concat_resolved)
+    return _index_many_to_one(indices, cls_default, ManyToOneType.CONCAT)
 
 def index_many_set(
         indices: tp.Iterable[IndexBase],
@@ -1087,12 +1167,12 @@ def index_many_set(
         union: bool,
         ) -> tp.Optional[IndexBase]:
     '''
-    Given multiple Index objects, concatenate them in order. Preserve name and index type if aligned.
+    Given multiple Index objects, union them. Preserve name and index type if aligned.
     '''
-    array_processor = partial(ufunc_set_iter,
-            union=union,
-            assume_unique=True)
-    return _index_many_to_one(indices, cls_default, array_processor)
+    return _index_many_to_one(indices,
+            cls_default,
+            ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
+            )
 
 
 #-------------------------------------------------------------------------------
@@ -1292,187 +1372,6 @@ class MessagePackElement:
         elif typ == 'A': #recursion not covered by msgpack-numpy
             return unpackb(d) #recurse unpackb
         return d
-
-
-#-------------------------------------------------------------------------------
-
-class NPZConverter:
-    KEY_NAMES = '__names__'
-    KEY_TYPES = '__types__'
-    KEY_DEPTHS = '__depths__'
-    KEY_TYPES_INDEX = '__types_index__'
-    KEY_TYPES_COLUMNS = '__types_columns__'
-
-    KEY_TEMPLATE_VALUES_INDEX = '__values_index_{}__'
-    KEY_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__'
-    KEY_TEMPLATE_BLOCKS = '__blocks_{}__'
-
-    @staticmethod
-    def _index_encode(
-            *,
-            index: 'IndexBase',
-            key_template_values: str,
-            key_types: str,
-            depth: int,
-            include: bool,
-            ) -> tp.Dict[str, np.ndarray]:
-        d = {}
-        if depth == 1 and index._map is None: #type: ignore
-            pass # do not store anything
-        elif include:
-            if depth == 1:
-                d[key_template_values.format(0)] = index.values
-            else:
-                for i in range(index.depth):
-                    d[key_template_values.format(i)] = index.values_at_depth(i)
-                d[key_types] = index.index_types.values
-        return d
-
-    @classmethod
-    def to_npz(cls,
-            *,
-            frame: 'Frame',
-            fp: PathSpecifier, # not sure file-like StringIO works
-            include_index: bool = True,
-            include_columns: bool = True,
-            compress: bool = False,
-            ) -> None:
-        '''
-        Write a :obj:`Frame` as an npz file.
-        '''
-        d = {}
-        d[cls.KEY_NAMES] = np.array(
-                [frame._name, frame._index._name, frame._columns._name],
-                dtype=DTYPE_OBJECT,
-                )
-        # do not store Frame class as caller will determine
-        d[cls.KEY_TYPES] = np.array(
-                [frame._index.__class__, frame._columns.__class__],
-                dtype=DTYPE_OBJECT,
-                )
-
-        # store shape, index depths
-        depth_index = frame._index.depth
-        depth_columns = frame._columns.depth
-
-        d[cls.KEY_DEPTHS] = np.array(
-                [len(frame._blocks._blocks), depth_index, depth_columns],
-                dtype=DTYPE_INT_DEFAULT,
-                )
-
-        d.update(cls._index_encode(
-                index=frame._index,
-                key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
-                key_types=cls.KEY_TYPES_INDEX,
-                depth=depth_index,
-                include=include_index,
-                ))
-
-        d.update(cls._index_encode(
-                index=frame._columns,
-                key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
-                key_types=cls.KEY_TYPES_COLUMNS,
-                depth=depth_columns,
-                include=include_columns,
-                ))
-
-        for i, b in enumerate(frame._blocks._blocks):
-            d[cls.KEY_TEMPLATE_BLOCKS.format(i)] = b
-
-        if compress:
-            np.savez_compressed(fp, **d)
-        else:
-            np.savez(fp, **d)
-
-    @staticmethod
-    def _index_decode(*,
-            npz_file: np.lib.npyio.NpzFile,
-            key_template_values: str,
-            key_types: str,
-            depth: int,
-            cls_index: tp.Type['IndexBase'],
-            name: NameType,
-            ) -> tp.Optional['IndexBase']:
-        '''Build index or columns.
-        '''
-        from static_frame.core.type_blocks import TypeBlocks
-
-        if key_template_values.format(0) not in npz_file:
-            index = None
-        elif depth == 1:
-            values_index = npz_file[key_template_values.format(0)]
-            values_index.flags.writeable = False
-            index = cls_index(values_index, name=name)
-        else:
-            def blocks() -> tp.Iterator[np.ndarray]:
-                for i in range(depth):
-                    array = npz_file[key_template_values.format(i)]
-                    array.flags.writeable = False
-                    yield array
-
-            index_tb = TypeBlocks.from_blocks(blocks())
-            index = cls_index._from_type_blocks(index_tb, #type: ignore
-                    name=name,
-                    index_constructors=npz_file[key_types],
-                    )
-        return index
-
-    @classmethod
-    def from_npz(cls,
-            *,
-            constructor: tp.Type['Frame'],
-            fp: PathSpecifier,
-            allow_pickle: bool = True,
-            mmap_mode: tp.Optional[str] = None,
-            ) -> 'Frame':
-        '''
-        Create a :obj:`Frame` from an npz file.
-        '''
-        from static_frame.core.type_blocks import TypeBlocks
-
-        with np.load(fp, allow_pickle=allow_pickle, mmap_mode=mmap_mode) as npz_file:
-            name, name_index, name_columns = npz_file[cls.KEY_NAMES]
-            cls_index, cls_columns = npz_file[cls.KEY_TYPES]
-            block_count, depth_index, depth_columns = npz_file[cls.KEY_DEPTHS]
-
-            index = cls._index_decode(
-                    npz_file=npz_file,
-                    key_template_values=cls.KEY_TEMPLATE_VALUES_INDEX,
-                    key_types=cls.KEY_TYPES_INDEX,
-                    depth=depth_index,
-                    cls_index=cls_index,
-                    name=name_index,
-                    )
-
-            columns = cls._index_decode(
-                    npz_file=npz_file,
-                    key_template_values=cls.KEY_TEMPLATE_VALUES_COLUMNS,
-                    key_types=cls.KEY_TYPES_COLUMNS,
-                    depth=depth_columns,
-                    cls_index=cls_columns,
-                    name=name_columns,
-                    )
-
-            def blocks() -> tp.Iterator[np.ndarray]:
-                for i in range(block_count):
-                    array = npz_file[cls.KEY_TEMPLATE_BLOCKS.format(i)]
-                    array.flags.writeable = False
-                    yield array
-
-            tb = TypeBlocks.from_blocks(blocks())
-
-        return constructor(tb,
-                own_data=True,
-                index=index,
-                own_index = False if index is None else True,
-                columns=columns,
-                own_columns = False if columns is None else True,
-                name=name,
-                )
-
-
-
-
 
 
 

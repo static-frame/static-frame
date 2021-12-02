@@ -11,6 +11,8 @@ import sys
 import datetime
 import tempfile
 from enum import Enum
+import shutil
+
 
 from pyinstrument import Profiler #type: ignore
 from line_profiler import LineProfiler #type: ignore
@@ -765,7 +767,6 @@ class FrameIterGroupApply(Perf):
         self.meta = {
             'int_index_str_double': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=TypeBlocks._all_block_slices
                 ),
             }
 
@@ -863,7 +864,7 @@ class Pivot_R(Pivot, Reference):
 
 #-------------------------------------------------------------------------------
 class BusItemsZipPickle(Perf):
-    NUMBER = 2
+    NUMBER = 1
 
     def __init__(self) -> None:
         super().__init__()
@@ -881,7 +882,7 @@ class BusItemsZipPickle(Perf):
         # self.meta = {
         #     'int_index_str_double': FunctionMetaData(
         #         perf_status=PerfStatus.EXPLAINED_LOSS,
-        #         line_target=TypeBlocks._all_block_slices
+        #         None
         #         ),
         #     }
 
@@ -899,6 +900,117 @@ class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
 
     def int_index_str(self) -> None:
         pass
+
+#-------------------------------------------------------------------------------
+class FrameToParquet(Perf):
+    NUMBER = 4
+
+    def __init__(self) -> None:
+        super().__init__()
+        _, self.fp = tempfile.mkstemp(suffix='.zip')
+
+        self.sff1 = ff.parse('s(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,str)')
+        self.pdf1 = self.sff1.to_pandas()
+
+        self.sff2 = ff.parse('s(10_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,str)')
+        self.pdf2 = self.sff2.to_pandas()
+
+
+        # self.meta = {
+        #     'int_index_str_double': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         None
+        #         ),
+        #     }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp)
+
+class FrameToParquet_N(FrameToParquet, Native):
+
+    def write_wide_mixed_index_str(self) -> None:
+        self.sff1.to_parquet(self.fp)
+
+    def write_tall_mixed_index_str(self) -> None:
+        self.sff2.to_parquet(self.fp)
+
+
+class FrameToParquet_R(FrameToParquet, Reference):
+
+    def write_wide_mixed_index_str(self) -> None:
+        self.pdf1.to_parquet(self.fp)
+
+    def write_tall_mixed_index_str(self) -> None:
+        self.pdf2.to_parquet(self.fp)
+
+
+
+#-------------------------------------------------------------------------------
+class FrameToNPZ(Perf):
+    NUMBER = 1
+
+    def __init__(self) -> None:
+        super().__init__()
+        _, self.fp = tempfile.mkstemp(suffix='.zip')
+
+        self.sff1 = ff.parse('s(10,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
+
+        # self.meta = {
+        #     'int_index_str_double': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         None
+        #         ),
+        #     }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp)
+
+class FrameToNPZ_N(FrameToNPZ, Native):
+
+    def wide_mixed_index_str(self) -> None:
+        self.sff1.to_npz(self.fp)
+
+class FrameToNPZ_R(FrameToNPZ, Reference):
+
+    # NOTE: benchmark is SF to_parquet
+    def wide_mixed_index_str(self) -> None:
+        self.sff1.to_parquet(self.fp)
+
+
+class FrameFromNPZ(Perf):
+    NUMBER = 1
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff1 = ff.parse('s(10,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
+        _, self.fp_npz = tempfile.mkstemp(suffix='.zip')
+        self.sff1.to_npz(self.fp_npz)
+
+        _, self.fp_parquet = tempfile.mkstemp(suffix='.parquet')
+        self.sff1.to_parquet(self.fp_parquet)
+
+        # self.meta = {
+        #     'int_index_str_double': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         None
+        #         ),
+        #     }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp_npz)
+        os.unlink(self.fp_parquet)
+
+class FrameFromNPZ_N(FrameFromNPZ, Native):
+
+    def wide_mixed_index_str(self) -> None:
+        sf.Frame.from_npz(self.fp_npz)
+
+class FrameFromNPZ_R(FrameFromNPZ, Reference):
+
+    # NOTE: benchmark is SF from_parquet
+    def wide_mixed_index_str(self) -> None:
+        sf.Frame.from_parquet(self.fp_parquet)
 
 
 #-------------------------------------------------------------------------------
@@ -954,6 +1066,59 @@ class Group_R(Group, Reference):
         post = tuple(self.pdf2.groupby(1))
         assert len(post) == 100
 
+
+
+
+#-------------------------------------------------------------------------------
+class FrameFromConcat(Perf):
+    NUMBER = 50
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.tall_mixed_sff1 = [
+            ff.parse('s(10_000,10)|v(int,str,int,bool)')
+            for _ in range(20)
+            ]
+        self.tall_mixed_pdf1 = [f.to_pandas() for f in self.tall_mixed_sff1]
+
+
+        self.tall_uniform_sff1 = [
+            ff.parse('s(10_000,10)|v(float)')
+            for _ in range(20)
+            ]
+        self.tall_uniform_pdf1 = [f.to_pandas() for f in self.tall_uniform_sff1]
+
+
+        from static_frame import Frame
+        # from static_frame import TypeBlocks
+        # from static_frame.core.util import array_to_groups_and_locations
+        # self.meta = {
+        #     'tall_uniform_20': FunctionMetaData(
+        #         # perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=Frame.from_concat,
+        #         # explanation='nearly identical, favoring slower'
+        #         ),
+        #     }
+
+class FrameFromConcat_N(FrameFromConcat, Native):
+
+    def tall_mixed_20(self) -> None:
+        f = sf.Frame.from_concat(self.tall_mixed_sff1, index=sf.IndexAutoFactory)
+        assert f.shape == (200_000, 10)
+
+    def tall_uniform_20(self) -> None:
+        f = sf.Frame.from_concat(self.tall_uniform_sff1, index=sf.IndexAutoFactory)
+        assert f.shape == (200_000, 10)
+
+class FrameFromConcat_R(FrameFromConcat, Reference):
+
+    def tall_mixed_20(self) -> None:
+        df = pd.concat(self.tall_mixed_pdf1)
+        assert df.shape == (200_000, 10)
+
+    def tall_uniform_20(self) -> None:
+        df = pd.concat(self.tall_uniform_pdf1)
+        assert df.shape == (200_000, 10)
 
 
 #-------------------------------------------------------------------------------

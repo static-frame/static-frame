@@ -1531,4 +1531,101 @@ class TestUnit(TestCase):
         self.assertEqual(q1.sample(index=4).shape, (4, 40))
         self.assertEqual(q1.sample(columns=4).shape, (20, 4))
 
+    #---------------------------------------------------------------------------
+    def test_quilt_to_zip_npz_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)|c(I,str)').rename('f3')
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True, axis=1)
+
+        with temp_file('.zip') as fp:
+            q1.to_zip_npz(fp)
+            q2 = Quilt.from_zip_npz(fp, retain_labels=True, axis=1)
+
+            self.assertTrue(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+
+
+    #---------------------------------------------------------------------------
+    def test_quilt_equals_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        q1 = Quilt.from_frames((f1, f2), retain_labels=True, axis=1)
+
+        self.assertTrue(q1.equals(q1, compare_class=True, compare_dtype=True, compare_name=True))
+
+        self.assertFalse(q1.equals(None, compare_class=True))
+        self.assertFalse(q1.equals(None))
+
+    def test_quilt_equals_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        q1 = Quilt.from_frames((f1, f2), retain_labels=True, axis=1, name='foo')
+        q2 = Quilt.from_frames((f1, f2), retain_labels=True, axis=1, name='bar')
+
+        self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+
+    def test_quilt_equals_c(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        q1 = Quilt.from_frames((f1, f2), retain_labels=True, axis=1)
+        q2 = Quilt.from_frames((f1, f2), retain_labels=True, axis=0)
+
+        self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+
+    def test_quilt_equals_d(self) -> None:
+
+        f1 = ff.parse('s(3,4)|v(int,float)|c(I,str)').rename('f1').reindex((1, 2, 3))
+        f2 = ff.parse('s(3,4)|v(str)|c(I,str)').rename('f2').reindex((4, 5, 6))
+        q1 = Quilt.from_frames((f1, f2), retain_labels=True)
+        q2 = Quilt.from_frames((f1, f2), retain_labels=False)
+
+        self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+
+    def test_quilt_equals_e(self) -> None:
+
+        f1 = ff.parse('s(3,4)|v(int,float)|c(I,str)').rename('f1').reindex((1, 2, 3))
+        f2 = ff.parse('s(3,4)|v(str)|c(I,str)').rename('f2').reindex((4, 5, 6))
+        q1 = Quilt.from_frames((f1, f2), retain_labels=True)
+
+        f3 = ff.parse('s(3,4)|v(int,float)|c(I,str)').rename('f1').reindex((1, 2, 5))
+        f4 = ff.parse('s(3,4)|v(str)|c(I,str)').rename('f2').reindex((4, 8, 6))
+        q2 = Quilt.from_frames((f3, f4), retain_labels=True)
+
+        self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+
+    def test_quilt_equals_f(self) -> None:
+
+        f1 = ff.parse('s(3,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(3,4)|v(str)|c(I,str)').rename('f2')
+        q1 = Quilt.from_frames((f1, f2), retain_labels=True)
+
+        f3 = ff.parse('s(3,4)|v(int,float)|c(I,str)').rename('f1').relabel(
+                columns=lambda x: x.upper())
+        f4 = ff.parse('s(3,4)|v(str)|c(I,str)').rename('f2').relabel(
+                columns=lambda x: x.upper())
+        q2 = Quilt.from_frames((f3, f4), retain_labels=True)
+
+        self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+
+    def test_quilt_equals_g(self) -> None:
+
+        f1 = ff.parse('s(3,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(3,4)|v(str)|c(I,str)').rename('f2')
+        q1 = Quilt.from_frames((f1, f2), retain_labels=True)
+
+        f3 = ff.parse('s(3,4)|v(str,bool)|c(I,str)').rename('f2')
+        q2 = Quilt.from_frames((f1, f3), retain_labels=True)
+
+        self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
 

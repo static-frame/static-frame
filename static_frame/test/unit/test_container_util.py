@@ -3,7 +3,6 @@ import datetime
 
 import numpy as np
 
-
 from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import index_from_optional_constructor
@@ -19,12 +18,12 @@ from static_frame.core.container_util import apply_binary_operator_blocks_column
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
 
+
 from static_frame.core.frame import FrameHE
 
-
 from static_frame.test.test_case import TestCase
-
 from static_frame.core.exception import AxisInvalid
+
 
 from static_frame import Frame
 from static_frame import Index
@@ -37,7 +36,6 @@ from static_frame import IndexSecond
 from static_frame import Series
 
 class TestUnit(TestCase):
-
 
     def test_is_static_a(self) -> None:
         self.assertTrue(is_static(Index))
@@ -504,6 +502,37 @@ class TestUnit(TestCase):
         post2 = index_many_set((), Index, union=True)
         self.assertEqual(len(post2), 0) #type: ignore
 
+
+    def test_index_many_set_d(self) -> None:
+        idx1 = Index(range(3), loc_is_iloc=True)
+        idx2 = Index(range(3), loc_is_iloc=True)
+        idx3 = index_many_set((idx1, idx2), Index, union=True)
+        self.assertTrue(idx3._map is None) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1, 2]) #type: ignore
+
+    def test_index_many_set_e(self) -> None:
+        idx1 = Index(range(2), loc_is_iloc=True)
+        idx2 = Index(range(4), loc_is_iloc=True)
+        idx3 = index_many_set((idx1, idx2), Index, union=True)
+        self.assertTrue(idx3._map is None) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1, 2, 3]) #type: ignore
+
+    def test_index_many_set_f(self) -> None:
+        idx1 = Index(range(2), loc_is_iloc=True)
+        idx2 = Index(range(4), loc_is_iloc=True)
+        idx3 = index_many_set((idx1, idx2), Index, union=False)
+        self.assertTrue(idx3._map is None) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1]) #type: ignore
+
+    def test_index_many_set_g(self) -> None:
+        idx1 = Index(range(2), loc_is_iloc=True)
+        idx2 = Index([3, 2, 1, 0])
+        idx3 = index_many_set((idx1, idx2), Index, union=False)
+        self.assertTrue(idx3._map is not None) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1]) #type: ignore
+
+
+
     #---------------------------------------------------------------------------
     def test_get_col_dtype_factory_a(self) -> None:
 
@@ -673,8 +702,6 @@ class TestUnit(TestCase):
                 [(2, 3), (2,), (2, 1)])
         self.assertEqual([a.shape for a in stack],
                 [(2, 1)])
-
-
 
 if __name__ == '__main__':
     unittest.main()

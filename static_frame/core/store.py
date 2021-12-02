@@ -6,6 +6,7 @@ import os
 from itertools import chain
 from functools import partial
 from functools import wraps
+from weakref import WeakValueDictionary
 import numpy as np
 
 from static_frame.core.interface_meta import InterfaceMeta
@@ -440,7 +441,8 @@ class Store:
 
     __slots__ = (
             '_fp',
-            '_last_modified'
+            '_last_modified',
+            '_weak_cache',
             )
 
     def __init__(self, fp: PathSpecifier):
@@ -454,6 +456,7 @@ class Store:
         self._fp: str = fp
         self._last_modified = np.nan
         self._mtime_update()
+        self._weak_cache: tp.MutableMapping[tp.Hashable, Frame] = WeakValueDictionary()
 
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):

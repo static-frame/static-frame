@@ -362,6 +362,7 @@ class Series(ContainerOperand):
         if container_first.index.equals(index):
             post = cls(container_first.values, index=index, own_index=True, name=name)
         else:
+            # if the indices are not equal, we have to reindex, and we need to provide a fill_value that does minimal type corcion to the original
             fill_value = dtype_kind_to_na(container_first.dtype.kind)
             post = container_first.reindex(index, fill_value=fill_value).rename(name)
 
@@ -1173,16 +1174,20 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @staticmethod
-    def _fillna_directional(
+    def _fill_missing_directional(
             array: np.ndarray,
             directional_forward: bool,
-            limit: int = 0) -> np.ndarray:
+            func_target: UFunc,
+            limit: int = 0,
+            ) -> np.ndarray:
         '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
             count: Set the limit of nan values to be filled per nan region. A value of 0 is equivalent to no limit.
+            func_target: the function to use to identify fill targets
         '''
-        sel = isna_array(array)
+        # sel = isna_array(array)
+        sel = func_target(array)
         if not np.any(sel):
             return array
 
@@ -1216,9 +1221,10 @@ class Series(ContainerOperand):
         Args:
             {limit}
         '''
-        return self.__class__(self._fillna_directional(
+        return self.__class__(self._fill_missing_directional(
                     array=self.values,
                     directional_forward=True,
+                    func_target=isna_array,
                     limit=limit),
                 index=self._index,
                 name=self._name)
@@ -1230,23 +1236,58 @@ class Series(ContainerOperand):
         Args:
             {limit}
         '''
-        return self.__class__(self._fillna_directional(
+        return self.__class__(self._fill_missing_directional(
                     array=self.values,
                     directional_forward=False,
+                    func_target=isna_array,
                     limit=limit),
                 index=self._index,
                 name=self._name)
 
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_forward(self, limit: int = 0) -> 'Series':
+        '''Return a new :obj:`Series` after feeding forward the last non-falsy observation across contiguous falsy values.
+
+        Args:
+            {limit}
+        '''
+        return self.__class__(self._fill_missing_directional(
+                    array=self.values,
+                    directional_forward=True,
+                    func_target=isfalsy_array,
+                    limit=limit),
+                index=self._index,
+                name=self._name)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_backward(self, limit: int = 0) -> 'Series':
+        '''Return a new :obj:`Series` after feeding backward the last non-falsy observation across contiguous falsy values.
+
+        Args:
+            {limit}
+        '''
+        return self.__class__(self._fill_missing_directional(
+                    array=self.values,
+                    directional_forward=False,
+                    func_target=isfalsy_array,
+                    limit=limit),
+                index=self._index,
+                name=self._name)
+
+
+
     @staticmethod
-    def _fillna_sided(array: np.ndarray,
+    def _fill_missing_sided(array: np.ndarray,
             value: tp.Any,
             sided_leading: bool,
+            func_target: UFunc,
             ) -> np.ndarray:
         '''
         Args:
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
         '''
-        sel = isna_array(array)
+        sel = func_target(array)
 
         if not np.any(sel):
             return array
@@ -1289,9 +1330,10 @@ class Series(ContainerOperand):
         Args:
             {value}
         '''
-        return self.__class__(self._fillna_sided(
+        return self.__class__(self._fill_missing_sided(
                     array=self.values,
                     value=value,
+                    func_target=isna_array,
                     sided_leading=True),
                 index=self._index,
                 name=self._name)
@@ -1303,12 +1345,45 @@ class Series(ContainerOperand):
         Args:
             {value}
         '''
-        return self.__class__(self._fillna_sided(
+        return self.__class__(self._fill_missing_sided(
                     array=self.values,
                     value=value,
+                    func_target=isna_array,
                     sided_leading=False),
                 index=self._index,
                 name=self._name)
+
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_leading(self, value: tp.Any) -> 'Series':
+        '''Return a new :obj:`Series` after filling leading (and only leading) falsy values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self.__class__(self._fill_missing_sided(
+                    array=self.values,
+                    value=value,
+                    func_target=isfalsy_array,
+                    sided_leading=True),
+                index=self._index,
+                name=self._name)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_trailing(self, value: tp.Any) -> 'Series':
+        '''Return a new :obj:`Series` after filling trailing (and only trailing) falsy values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self.__class__(self._fill_missing_sided(
+                    array=self.values,
+                    value=value,
+                    func_target=isfalsy_array,
+                    sided_leading=False),
+                index=self._index,
+                name=self._name)
+
 
     #---------------------------------------------------------------------------
     # operators
@@ -1561,8 +1636,10 @@ class Series(ContainerOperand):
         # iterable selection should be handled by NP
         values = self.values[key]
 
-        if not values.__class__ is np.ndarray: # if we have a single element
+        if isinstance(key, INT_TYPES): # if we have a single element
+            # NOTE: cannot check if we have an array as an array might be an element
             return values #type: ignore
+
         return self.__class__(
                 values,
                 index=self._index.iloc[key],
@@ -1576,7 +1653,8 @@ class Series(ContainerOperand):
         iloc_key = self._index._loc_to_iloc(key)
         values = self.values[iloc_key]
 
-        if not values.__class__ is np.ndarray: # if we have a single element
+        if isinstance(iloc_key, INT_TYPES): # if we have a single element
+            # NOTE: cannot check if we have an array as an array might be an element
             # NOTE: this branch is not encountered and may not be necessary
             # if isinstance(key, HLoc) and key.has_key_multiple():
             #     # must return a Series, even though we do not have an array

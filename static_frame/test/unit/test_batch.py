@@ -1246,6 +1246,21 @@ class TestUnit(TestCase):
                 (('A', 1.0), ('B', 2.0), ('C', 7.0))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_batch_to_npz(self) -> None:
+        # assure processing of same named Frame
+        f1 = ff.parse('s(3,2)|v(bool)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,5)|v(bool)|c(I,str)|i(I,int)').rename('b')
+
+        b1 = Batch.from_frames((f1, f2))
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Batch.from_zip_npz(fp)
+            frames = dict(b2.items())
+
+            self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
+
+
 if __name__ == '__main__':
     unittest.main()
 

@@ -16,6 +16,10 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import isna_array
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase
+from static_frame.core.type_blocks import group_match
+from static_frame.core.type_blocks import group_sort
+from static_frame.core.display_config import DisplayConfig
+
 
 nan = np.nan
 
@@ -140,6 +144,7 @@ class TestUnit(TestCase):
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
 
         row1 = tb1.iloc[2]
+        # import ipdb; ipdb.set_trace()
 
         self.assertEqual(tb1.shape, (3, 4))
 
@@ -185,7 +190,7 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
         self.assertEqual(list(tb1._key_to_block_slices(None)),
-                [(0, slice(0, 1, None)), (1, slice(0, 2, None))]
+                [(0, NULL_SLICE), (1, NULL_SLICE)]
                 )
 
         with self.assertRaises(NotImplementedError):
@@ -1410,6 +1415,28 @@ class TestUnit(TestCase):
                 [[3, True, -5.0, 'df', 500, 'er'], [4, False, 2.5, 'fd', 700, False]]
                 )
 
+    def test_type_blocks_assign_blocks_value_arrays_d(self) -> None:
+
+        a1 = np.array([[3, 20, -5], [4, 80, -20],])
+        a2 = np.array([['df', 'er', 'er'], ['fd', 'ij', 'we'],])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        targets = (np.array([[False, True, False], [False, True, True]]),)
+
+        values = (np.array([None, None]),
+                np.array([True, False]),
+                np.array([1.5, 2.5]),
+                np.array([100, 200]),
+                np.array([500, 700]),
+                np.array([None, False]),
+                )
+        with self.assertRaises(RuntimeError):
+            _ = TypeBlocks.from_blocks(
+                    tb1._assign_from_boolean_blocks_by_blocks(
+                           targets=targets,
+                           values=values
+                           ))
+
     #--------------------------------------------------------------------------
     def test_type_blocks_group_a(self) -> None:
 
@@ -1476,7 +1503,6 @@ class TestUnit(TestCase):
         self.assertEqual(subtb.values.tolist(),
                 [[0, 0, 1, 2, True, False, True], [0, 0, 1, 1, True, False, True]])
 
-
     def test_type_blocks_group_c(self) -> None:
 
         a1 = np.array([
@@ -1498,6 +1524,13 @@ class TestUnit(TestCase):
                 [(2, 6), (1, 6), (1, 6)]
                 )
 
+    def test_type_blocks_group_d(self) -> None:
+        tb1 = ff.parse('s(6,2)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+        post = tuple(tb1.group(axis=1, key=0))
+        self.assertEqual([x.shape for _, _, x in post],
+                [(6, 1), (6, 1)]
+                )
+
 
     #---------------------------------------------------------------------------
 
@@ -1516,7 +1549,7 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.transpose().transpose().values.tolist(),
                 tb1.values.tolist())
 
-
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_display_a(self) -> None:
 
@@ -1528,6 +1561,10 @@ class TestUnit(TestCase):
         disp = tb.display()
         self.assertEqual(len(disp), 5)
 
+    def test_type_blocks_display_b(self) -> None:
+        tb = TypeBlocks.from_blocks(np.array(()).reshape(2,0))
+        disp = tb.display(config=DisplayConfig(type_color=False))
+        self.assertEqual(repr(disp), '<TypeBlocks>')
 
     #---------------------------------------------------------------------------
 
@@ -1920,6 +1957,26 @@ class TestUnit(TestCase):
                 [5.0, 0.0, 0.0, 0.0]])
 
 
+    def test_type_blocks_clip_g(self) -> None:
+
+        a1 = np.array([[10, 2, 10, 2], [10, 2, 10, 2], [10, 2, 10, 2]], dtype=float)
+        tb1 = TypeBlocks.from_blocks((a1,))
+
+        arrays = (
+                np.array([[10, 12], [10, -2], [10, 14]], dtype=float),
+                np.array((2, 20, 2)),
+                np.array((20, 1, 0)))
+
+        tb1 = TypeBlocks.from_blocks(arrays)
+
+        ub = (
+                np.array([[6, 2, 6], [6, 2, 6], [6, 2, 6]], dtype=float),
+                np.array((1, 0, 1)),
+                )
+        tb2 = tb1.clip(None, ub)
+        self.assertEqual(tb2.values.tolist(),
+                [[6.0, 2.0, 2.0, 1.0], [6.0, -2.0, 6.0, 0.0], [6.0, 2.0, 2.0, 0.0]])
+
 
     #---------------------------------------------------------------------------
 
@@ -2052,10 +2109,10 @@ class TestUnit(TestCase):
 
         a1 = np.array([None, None, None], dtype=object)
         tb1 = TypeBlocks.from_blocks((a1,))
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(AxisInvalid):
             tb1.fillna_trailing(value=3, axis=2)
 
-
+    #---------------------------------------------------------------------------
     def test_type_blocks_fillna_leading_a(self) -> None:
 
         for axis in (0, 1):
@@ -2080,7 +2137,6 @@ class TestUnit(TestCase):
 
         self.assertAlmostEqualValues(list(tb2.values.flat),
                 [0.0, 0.0, 3.0, 4.0, 0, 0.0, 0.0, 6.0, nan, 0, 5.0, 0.0, nan, nan, 0])
-
 
 
     def test_type_blocks_fillna_leading_c(self) -> None:
@@ -2142,7 +2198,7 @@ class TestUnit(TestCase):
 
         a1 = np.array([None, None, None], dtype=object)
         tb1 = TypeBlocks.from_blocks((a1,))
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(AxisInvalid):
             tb1.fillna_leading(value=3, axis=2)
 
 
@@ -2154,6 +2210,45 @@ class TestUnit(TestCase):
             tb1.fillna_leading(value=np.array((3, 4)), axis=1)
         with self.assertRaises(RuntimeError):
             tb1.fillna_leading(value=np.array((3, 4)), axis=0)
+
+
+
+    def test_type_blocks_fillna_leading_h(self) -> None:
+
+        a1 = np.array(['foo', None, None], dtype=object)
+        a2 = np.array([None, None, 'bar'], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        tb2 = tb1.fillna_leading(value=3, axis=0)
+        self.assertEqual(tb2.values.tolist(),
+                [['foo', 3], [None, 3], [None, 'bar']])
+
+
+    def test_type_blocks_fillna_leading_i(self) -> None:
+
+        a1 = np.array([np.nan, 10, np.nan], dtype=float)
+        a2 = np.array([np.nan, np.nan, 20], dtype=float)
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        tb2 = tb1.fillna_leading(value=None, axis=0)
+        self.assertEqual(tb2.values[:2,:].tolist(),
+                [[None, None], [10.0, None]])
+
+
+
+    def test_type_blocks_fillna_leading_j(self) -> None:
+
+        a1 = np.array([[np.nan, 10, 0],
+                       [np.nan, np.nan, 20]], dtype=float)
+
+        tb1 = TypeBlocks.from_blocks((a1,))
+        tb2 = tb1.fillna_leading(value=None, axis=1)
+        self.assertEqual(tb2.dtypes.tolist(),
+                [np.dtype('O'), np.dtype('O'), np.dtype('O')]
+                )
+
+        self.assertEqual(tb2.values.tolist(),
+                [[None, 10.0, 0.0], [None, None, 20.0]]
+                )
+
 
 
     #---------------------------------------------------------------------------
@@ -3041,6 +3136,11 @@ class TestUnit(TestCase):
         self.assertEqual(len(tb.shapes), 4)
 
 
+    def test_type_blocks_from_blocks_e(self) -> None:
+        with self.assertRaises(ErrorInitTypeBlocks):
+            _ = TypeBlocks.from_blocks([])
+
+    #---------------------------------------------------------------------------
     def test_type_blocks_append_a(self) -> None:
         a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
@@ -3319,8 +3419,6 @@ class TestUnit(TestCase):
         self.assertFalse(tb1.equals(tb2))
 
 
-
-
     #---------------------------------------------------------------------------
     def test_type_blocks_ufunc_binary_operator_a(self) -> None:
         a1 = np.array([10, 20, 30])
@@ -3381,7 +3479,7 @@ class TestUnit(TestCase):
         self.assertTrue(tb1.shape == tb2.shape)
         self.assertTrue(id(tb1._blocks[2]) != id(tb2._blocks[2]))
 
-
+    #---------------------------------------------------------------------------
     def test_type_blocks_sort_a(self) -> None:
         tb1 = ff.parse('s(10,4)|v(str,int,bool,float)')._blocks
 
@@ -3414,7 +3512,33 @@ class TestUnit(TestCase):
                 [False, False, False, True],
                 [False, True, False, False]])
 
+    def test_type_blocks_sort_d(self) -> None:
+        tb1 = ff.parse('s(5,4)|v(int)')._blocks
 
+        tb2, _ = tb1.sort(axis=0, key=[2])
+        self.assertEqual(tb2.shape, (5, 4))
+        self.assertEqual(tb2.iloc[2].values.tolist(),
+                [[5729, 30205, 84967, 166924]])
+
+    def test_type_blocks_sort_e(self) -> None:
+        tb1 = ff.parse('s(5,4)|v(int)')._blocks
+        tb2, _ = tb1.sort(axis=1, key=1)
+        self.assertEqual(tb2.shape, (5, 4))
+        self.assertEqual(tb2[1].values.tolist(),
+                [[-168387], [-41157], [5729], [140627], [162197]])
+
+    def test_type_blocks_sort_f(self) -> None:
+        tb1 = ff.parse('s(5,4)|v(int)')._blocks
+        with self.assertRaises(AxisInvalid):
+            _ = tb1.sort(axis=3, key=1)
+
+    def test_type_blocks_sort_g(self) -> None:
+        tb1 = ff.parse('s(5,4)|v(int)')._blocks
+        post, sel = tb1.sort(axis=1, key=[1])
+        self.assertEqual(sel.tolist(), [3, 1, 2, 4, 0])
+
+
+    #---------------------------------------------------------------------------
     def test_type_blocks_group_sort_a(self) -> None:
 
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
@@ -3423,7 +3547,123 @@ class TestUnit(TestCase):
         self.assertEqual([(x[0], x[2].shape) for x in post],
                 [(0, (5, 3)), (2, (1, 3)), (3, (6, 3))]
                 )
+    def test_type_blocks_group_sort_b(self) -> None:
+        tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+        with self.assertRaises(RuntimeError):
+            _ = tuple(group_sort(tb1, axis=3, key=0))
 
+    #---------------------------------------------------------------------------
+    def test_type_blocks_group_match_a(self) -> None:
+        tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+        with self.assertRaises(RuntimeError):
+            _ = tuple(group_match(tb1, axis=3, key=0))
+
+    def test_type_blocks_group_match_b(self) -> None:
+        tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+        post = tuple(group_match(tb1, axis=0, key=0, drop=True))
+        self.assertEqual([x.shape for _, _, x in post],
+                [(5, 2), (1, 2), (6, 2)])
+
+    #---------------------------------------------------------------------------
+    def test_type_blocks_ufunc_axis_skipna_a(self) -> None:
+        tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
+
+        with self.assertRaises(AxisInvalid):
+            _ = tb1.ufunc_axis_skipna(
+                skipna=True,
+                axis=3,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+
+        post = tb1.ufunc_axis_skipna(
+                skipna=True,
+                axis=0,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+
+        self.assertEqual(post.tolist(),
+                [20, -24968, 1241716])
+
+    def test_type_blocks_ufunc_axis_skipna_b(self) -> None:
+        tb1 = ff.parse('s(5,3)|v(int,bool)')._blocks
+
+        post = tb1.ufunc_axis_skipna(
+                skipna=True,
+                axis=0,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+        self.assertEqual(post.dtype, np.dtype(np.int64))
+        self.assertEqual(post.tolist(), [278844, 0, 300895])
+
+    def test_type_blocks_ufunc_axis_skipna_c(self) -> None:
+        tb1 = ff.parse('s(5,3)|v(int,str)')._blocks
+
+        post = tb1.ufunc_axis_skipna(
+                skipna=True,
+                axis=0,
+                ufunc=np.min,
+                ufunc_skipna=np.nanmin,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+        self.assertEqual(post.dtype, np.dtype(object))
+        self.assertEqual(post.tolist(), [-88017, 'zDdR', -3648])
+
+    def test_type_blocks_ufunc_axis_skipna_d(self) -> None:
+        tb1 = ff.parse('s(5,3)|v(int,object)')._blocks
+
+        # this error exercises a dtype resolution that happens before function application
+        with self.assertRaises(TypeError):
+            post = tb1.ufunc_axis_skipna(
+                skipna=True,
+                axis=0,
+                ufunc=np.min,
+                ufunc_skipna=np.nanmin,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+
+    def test_type_blocks_ufunc_axis_skipna_e(self) -> None:
+        tb1 = ff.parse('s(1,2)|v(int,float)')._blocks
+
+        post = tb1.ufunc_axis_skipna(
+                skipna=False,
+                axis=0,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum,
+                composable=True,
+                dtypes=(),
+                size_one_unity=True,
+                )
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual(post.dtype, np.dtype(float))
+        self.assertEqual(post.tolist(), [-88017.0, -610.8])
+
+
+    #---------------------------------------------------------------------------
+    def test_type_blocks_slice_blocks_a(self) -> None:
+        tb1 = ff.parse('s(3,6)|v(int,int,bool,bool)')._blocks
+        tb2 = tb1[slice(1, 3)]
+        post = tuple(tb2._slice_blocks(column_key=slice(0, 1)))
+        self.assertEqual([a.shape for a in post], [(3,)])
 
 if __name__ == '__main__':
     unittest.main()
+    # t = TestUnit()
+    # t.test_type_blocks_c()
+
+

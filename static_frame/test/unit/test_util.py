@@ -65,6 +65,7 @@ from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import UFUNC_MAP
+from static_frame.core.util import list_to_tuple
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -2546,7 +2547,19 @@ class TestUnit(TestCase):
         a3, _ = unique1d_array_mask(np.array([10, 40, 50, 50, 10], dtype=object))
         self.assertEqual(a3.tolist(), [10, 40, 50])
 
-        # import ipdb; ipdb.set_trace()
+
+    #---------------------------------------------------------------------------
+    def test_list_to_tuple_a(self) -> None:
+        self.assertEqual(list_to_tuple(
+                [3, 4, [None, (10, 20), 'foo']]),
+                (3, 4, (None, (10, 20), 'foo'))
+                )
+
+        self.assertEqual(list_to_tuple(
+                [[[2,], 3, 4], [[[1, 2], [3, 4]], [5, 6]]]),
+                (((2,), 3, 4), (((1, 2), (3, 4)), (5, 6)))
+                )
+
 
 if __name__ == '__main__':
     unittest.main()

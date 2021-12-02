@@ -301,6 +301,9 @@ NAME_DEFAULT = object()
 STORE_LABEL_DEFAULT = object()
 
 #-------------------------------------------------------------------------------
+NOT_IN_CACHE_SENTINEL = object()
+
+#-------------------------------------------------------------------------------
 # operator mod does not have r methods; create complete method reference
 OPERATORS: tp.Dict[str, UFunc] = {
     '__pos__': operator.__pos__,
@@ -2275,10 +2278,15 @@ def ufunc_set_iter(
         ufunc = union2d if union else intersect2d
         ndim = 2
 
+    # skip processing for the same array instance
+    array_id = id(result)
     for array in arrays:
         if array.ndim != ndim:
             raise RuntimeError('arrays do not all have the same ndim')
-
+        if array_id:
+            if id(array) == array_id:
+                continue
+            array_id = 0
         # to retain order on identity, assume_unique must be True
         result = ufunc(result, array, assume_unique=assume_unique)
 
@@ -2553,7 +2561,7 @@ def array_from_element_method(*,
         pre_insert: tp.Optional[AnyCallable] = None,
         ) -> np.array:
     '''
-    Handle element-wise method calling on arrays of Python date/datetime objects.
+    Handle element-wise method calling on arrays of Python objects.
 
     Args:
         pre_insert:
@@ -2674,6 +2682,15 @@ def array_sample(
 
     post.flags.writeable = False
     return post
+
+#-------------------------------------------------------------------------------
+def list_to_tuple(value: tp.Any) -> tp.Any:
+    '''Recursively convert any observed lists into tuples; this is used as a post processor for objects coming back from JSON decoding.
+    '''
+    # Using `is` here deemed appropriate as objects coming back from json decoder.
+    if value.__class__ is not list:
+        return value
+    return tuple(list_to_tuple(v) for v in value)
 
 
 #-------------------------------------------------------------------------------

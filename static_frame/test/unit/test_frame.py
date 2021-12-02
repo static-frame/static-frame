@@ -11,6 +11,7 @@ import typing as tp
 import unittest
 import os
 import io
+from tempfile import TemporaryDirectory
 
 import numpy as np
 import frame_fixtures as ff
@@ -36,6 +37,8 @@ from static_frame import IndexDefaultFactory
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorNPYEncode
+
 from static_frame.core.frame import FrameAssignILoc
 from static_frame.core.frame import FrameAssignBLoc
 from static_frame.core.store import StoreConfig
@@ -933,7 +936,6 @@ class TestUnit(TestCase):
 
         df = f.to_pandas()
         self.assertEqual(df.shape, (100, 20))
-
 
     #---------------------------------------------------------------------------
 
@@ -3205,6 +3207,22 @@ class TestUnit(TestCase):
                 ((0, ((0, -1), (1, 1), (2, 1), (3, 13448))), (1, ((0, 1), (1, -1), (2, 1), (3, -1))), (2, ((0, True), (1, False), (2, False), (3, True))), (3, ((0, False), (1, False), (2, True), (3, True))), (4, ((0, 58768), (1, 146284), (2, 170440), (3, 1))), (5, ((0, False), (1, True), (2, False), (3, True))), (6, ((0, 146284), (1, 170440), (2, 1), (3, 1))), (7, ((0, 1), (1, -62964), (2, 172142), (3, -154686))))
                 )
 
+    def test_frame_assign_bloc_j(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int,bool)')
+        f2 = f1.assign.bloc[f1 < 0](0)
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, 0), (1, 92867))), (1, ((0, False), (1, False))), (2, ((0, 0), (1, 91301))), (3, ((0, False), (1, False))))
+                )
+
+    def test_frame_assign_bloc_k(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int,int,bool)')
+        f2 = ff.parse('s(2,4)|v(str)')
+
+        f3 = f1.assign.bloc[f1 < 0](f2)
+
+        self.assertEqual(f3.to_pairs(),
+                ((0, ((0, 'zjZQ'), (1, 92867))), (1, ((0, 162197), (1, 'zJnC'))), (2, ((0, True), (1, False))), (3, ((0, 129017), (1, 35021)))))
+
     #---------------------------------------------------------------------------
     def test_frame_mask_loc_a(self) -> None:
 
@@ -3668,7 +3686,12 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             f1.sum(skipna=False)
 
+    def test_frame_sum_e(self) -> None:
+        f1 = ff.parse('s(1,4)|v(int,float)')
+        post = f1.min(axis=1, skipna=False)
+        self.assertEqual(post.to_pairs(), ((0, -88017.0),))
 
+    #---------------------------------------------------------------------------
     def test_frame_mean_a(self) -> None:
 
         a1 = np.array([
@@ -4362,6 +4385,24 @@ class TestUnit(TestCase):
                 columns=f1.columns,
                 axis=0,
                 )
+
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_from_element_items_a(self) -> None:
+        items = (
+                ((0,1), 'g'),
+                ((1,0), 'q'),
+                ((1,1), 'a'),
+                ((0,0), 'b'),
+                )
+        with self.assertRaises(ErrorInitFrame):
+            _ = Frame.from_element_items(items,
+                    index=range(2),
+                    columns=range(2),
+                    axis=None,
+                    dtype=(int, float),
+                    )
 
     #---------------------------------------------------------------------------
     def test_frame_from_items_a(self) -> None:
@@ -5527,6 +5568,35 @@ class TestUnit(TestCase):
                 (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', 0), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', None), ('c', None))), ('x', (('a', 0), ('b', 6), ('c', None))), ('y', (('a', 0), ('b', None), ('c', None))), ('z', (('a', 4), ('b', 1), ('c', 5)))))
 
 
+    def test_frame_fillfalsy_leading_a(self) -> None:
+        a2 = np.array([
+                ['', '', '', ''],
+                ['', 1, '', 6],
+                ['', 5, '', '']
+                ], dtype=object)
+        a1 = np.array(['', '', ''], dtype=object)
+        a3 = np.array([
+                ['', 4],
+                ['', 1],
+                ['', 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=self.get_letters(-tb1.shape[1], None)
+                )
+
+        self.assertEqual(f1.fillfalsy_leading(0, axis=0).to_pairs(0),
+                (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', 0), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', 0), ('c', 0))), ('x', (('a', 0), ('b', 6), ('c', ''))), ('y', (('a', 0), ('b', 0), ('c', 0))), ('z', (('a', 4), ('b', 1), ('c', 5)))))
+
+        self.assertEqual(f1.fillfalsy_leading(0, axis=1).to_pairs(0),
+                (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', 0), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', ''), ('c', ''))), ('x', (('a', 0), ('b', 6), ('c', ''))), ('y', (('a', 0), ('b', ''), ('c', ''))), ('z', (('a', 4), ('b', 1), ('c', 5)))))
+
+        with self.assertRaises(AxisInvalid):
+            _ = f1.fillfalsy_leading(0, axis=-1)
+
+
     def test_frame_fillna_trailing_a(self) -> None:
         a2 = np.array([
                 [None, None, None, None],
@@ -5553,6 +5623,37 @@ class TestUnit(TestCase):
         self.assertEqual(f1.fillna_trailing(0, axis=1).to_pairs(0),
                 (('t', (('a', None), ('b', None), ('c', None))), ('u', (('a', None), ('b', None), ('c', None))), ('v', (('a', None), ('b', 1), ('c', 5))), ('w', (('a', None), ('b', None), ('c', None))), ('x', (('a', None), ('b', 6), ('c', None))), ('y', (('a', None), ('b', None), ('c', None))), ('z', (('a', 4), ('b', 1), ('c', 5))))
                 )
+
+
+    def test_frame_fillfalsy_trailing_a(self) -> None:
+        a2 = np.array([
+                ['', '', '', ''],
+                ['', 1, '', 6],
+                ['', 5, '', '']
+                ], dtype=object)
+        a1 = np.array(['', '', ''], dtype=object)
+        a3 = np.array([
+                ['', 4],
+                ['', 1],
+                ['', 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=self.get_letters(-tb1.shape[1], None)
+                )
+
+        self.assertEqual(f1.fillfalsy_trailing(0, axis=0).to_pairs(0),
+                (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', ''), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', 0), ('c', 0))), ('x', (('a', ''), ('b', 6), ('c', 0))), ('y', (('a', 0), ('b', 0), ('c', 0))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
+        self.assertEqual(f1.fillfalsy_trailing(0, axis=1).to_pairs(0),
+                (('t', (('a', ''), ('b', ''), ('c', ''))), ('u', (('a', ''), ('b', ''), ('c', ''))), ('v', (('a', ''), ('b', 1), ('c', 5))), ('w', (('a', ''), ('b', ''), ('c', ''))), ('x', (('a', ''), ('b', 6), ('c', ''))), ('y', (('a', ''), ('b', ''), ('c', ''))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
+        with self.assertRaises(AxisInvalid):
+            _ = f1.fillfalsy_trailing(0, axis=-1)
 
 
 
@@ -5647,6 +5748,69 @@ class TestUnit(TestCase):
         self.assertEqual(f1.fillna_backward(axis=1, limit=2).to_pairs(0),
                 (('t', (('a', 8), ('b', 3), ('c', 0))), ('u', (('a', 8), ('b', 1), ('c', 0))), ('v', (('a', None), ('b', 1), ('c', 5))), ('w', (('a', None), ('b', 6), ('c', None))), ('x', (('a', 4), ('b', 6), ('c', 5))), ('y', (('a', 4), ('b', None), ('c', 5))), ('z', (('a', 4), ('b', None), ('c', 5))))
                 )
+
+    def test_frame_fillfalsy_forward_a(self) -> None:
+        a2 = np.array([
+                [8, '', '', ''],
+                ['', 1, '', 6],
+                [1, 5, '', '']
+                ], dtype=object)
+        a1 = np.array(['', 3, ''], dtype=object)
+        a3 = np.array([
+                ['', 4],
+                ['', 1],
+                ['', 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=self.get_letters(-tb1.shape[1], None)
+                )
+
+        self.assertEqual(
+                f1.fillfalsy_forward().to_pairs(0),
+                (('t', (('a', ''), ('b', 3), ('c', 3))), ('u', (('a', 8), ('b', 8), ('c', 1))), ('v', (('a', ''), ('b', 1), ('c', 5))), ('w', (('a', ''), ('b', ''), ('c', ''))), ('x', (('a', ''), ('b', 6), ('c', 6))), ('y', (('a', ''), ('b', ''), ('c', ''))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
+        with self.assertRaises(AxisInvalid):
+            f1.fillfalsy_forward(axis=-1)
+
+        self.assertEqual(
+                f1.fillfalsy_backward().to_pairs(0),
+                (('t', (('a', 3), ('b', 3), ('c', ''))), ('u', (('a', 8), ('b', 1), ('c', 1))), ('v', (('a', 1), ('b', 1), ('c', 5))), ('w', (('a', ''), ('b', ''), ('c', ''))), ('x', (('a', 6), ('b', 6), ('c', ''))), ('y', (('a', ''), ('b', ''), ('c', ''))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
+        with self.assertRaises(AxisInvalid):
+            f1.fillfalsy_backward(axis=-1)
+
+
+    def test_frame_fillfalsy_forward_b(self) -> None:
+        a2 = np.array([
+                [8, '', '', ''],
+                ['', 1, '', 6],
+                [1, 5, '', '']
+                ], dtype=object)
+        a1 = np.array(['', 3, ''], dtype=object)
+        a3 = np.array([
+                ['', 4],
+                ['', 1],
+                ['', 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=self.get_letters(-tb1.shape[1], None)
+                )
+        self.assertEqual(f1.fillfalsy_forward(axis=1).to_pairs(),
+                (('t', (('a', ''), ('b', 3), ('c', ''))), ('u', (('a', 8), ('b', 3), ('c', 1))), ('v', (('a', 8), ('b', 1), ('c', 5))), ('w', (('a', 8), ('b', 1), ('c', 5))), ('x', (('a', 8), ('b', 6), ('c', 5))), ('y', (('a', 8), ('b', 6), ('c', 5))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
+        self.assertEqual(f1.fillfalsy_backward(2, axis=1).to_pairs(),
+                (('t', (('a', 8), ('b', 3), ('c', 1))), ('u', (('a', 8), ('b', 1), ('c', 1))), ('v', (('a', ''), ('b', 1), ('c', 5))), ('w', (('a', ''), ('b', 6), ('c', ''))), ('x', (('a', 4), ('b', 6), ('c', 5))), ('y', (('a', 4), ('b', 1), ('c', 5))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
 
 
     def test_frame_empty_a(self) -> None:
@@ -8314,6 +8478,10 @@ class TestUnit(TestCase):
                 ((0, ((('ztsv', 'z2Oo', 'zDVQ'), 'zjZQ'), (('zUvW', 'z5l6', 'z5hI'), 'zO5l'), (('zkuW', 'zCE3', 'zyT8'), 'zEdH'))), (1, ((('ztsv', 'z2Oo', 'zDVQ'), 'zaji'), (('zUvW', 'z5l6', 'z5hI'), 'zJnC'), (('zkuW', 'zCE3', 'zyT8'), 'zDdR'))))
                 )
 
+    def test_frame_set_index_f(self) -> None:
+        f1 = Frame.from_records([(1,2,3)])
+        f2 = f1.set_index(None, drop=True)
+        self.assertTrue(f1.equals(f2))
 
     #---------------------------------------------------------------------------
     def test_frame_head_tail_a(self) -> None:
@@ -8814,6 +8982,7 @@ class TestUnit(TestCase):
                 ((('II', 'a'), ((('I', 'x'), 1), (('I', 'y'), 30), (('I', 'z'), 54))), (('II', 'b'), ((('I', 'x'), 2), (('I', 'y'), 34), (('I', 'z'), 95))), (('II', 'c'), ((('I', 'x'), 'a'), (('I', 'y'), 'b'), (('I', 'z'), 'c'))), (('II', 'd'), ((('I', 'x'), False), (('I', 'y'), True), (('I', 'z'), False))), (('II', 'e'), ((('I', 'x'), True), (('I', 'y'), False), (('I', 'z'), False))))
                 )
 
+    #---------------------------------------------------------------------------
 
     def test_frame_from_from_pandas_a(self) -> None:
         import pandas as pd
@@ -8827,6 +8996,11 @@ class TestUnit(TestCase):
 
         sff = Frame.from_pandas(pdf)
         self.assertTrue((pdf.dtypes.values == sff.dtypes.values).all())
+
+    def test_frame_from_from_pandas_b(self) -> None:
+        import pandas as pd
+        f = Frame.from_pandas(pd.DataFrame())
+        self.assertEqual(f.shape, (0, 0))
 
     #---------------------------------------------------------------------------
 
@@ -9010,7 +9184,8 @@ class TestUnit(TestCase):
 
     def test_frame_to_npz_f(self) -> None:
         f1 = ff.parse('s(10,100)|v(bool,bool,float,float)|i((ID,IY),(dtD,dtY))|c((IY,I),(dtY,str))').rename(
-                'foo', index='bar', columns='baz')
+                'foo', index=('a', 'b'), columns=('x', 'y')
+                )
 
         with temp_file('.npz') as fp:
             f1.to_npz(fp)
@@ -9021,9 +9196,172 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
 
         with temp_file('.npz') as fp:
-            f1.to_npz(fp, compress=True)
+            f1.to_npz(fp)
             f2 = Frame.from_npz(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npz_h(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename(((1, 2), (3, 4)))
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npz_i(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str)').rename(((1, 2), (3, 4)))
+        f2 = f1[f1.dtypes == int] # force maximally partitioned
+
+        with temp_file('.npz') as fp:
+
+            f2.to_npz(fp, consolidate_blocks=True)
+            f3 = Frame.from_npz(fp)
+            f2.equals(f3, compare_dtype=True, compare_class=True, compare_name=True)
+            self.assertEqual(f3._blocks.shapes.tolist(), [(20, 50)])
+
+
+    def test_frame_to_npz_j(self) -> None:
+        f1 = ff.parse('s(100,2)|v(int,object)')
+
+        with temp_file('.npz') as fp:
+            try:
+                f1.to_npz(fp)
+            except ErrorNPYEncode:
+                pass
+
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_npy_a(self) -> None:
+        f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_b(self) -> None:
+        f1 = ff.parse('s(10_000,2)|v(int,str)|c((I, ID),(str,dtD))|i(ID,dtD)').rename('foo')
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_c(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_d(self) -> None:
+        f1 = ff.parse('s(10,100)|v(int,str,bool,bool,float,float)').rename(
+                'foo', index='bar', columns='baz')
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_e(self) -> None:
+        f1 = ff.parse('s(10,100)|v(bool,bool,float,float)|i(I,str)|c(I,int)').rename(
+                'foo', index='bar', columns='baz')
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_f(self) -> None:
+        f1 = ff.parse('s(10,100)|v(bool,bool,float,float)|i((ID,IY),(dtD,dtY))|c((IY,I),(dtY,str))').rename(
+                'foo', index=('a', 'b'), columns=('x', 'y')
+                )
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_g(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_h(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str,bool)').rename(((1, 2), (3, 4)))
+
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2 = Frame.from_npy(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_npy_i(self) -> None:
+        f1 = ff.parse('s(20,100)|v(int,str)').rename(((1, 2), (3, 4)))
+        f2 = f1[f1.dtypes == int] # force maximally partitioned
+
+        with TemporaryDirectory() as fp:
+            f2.to_npy(fp, consolidate_blocks=True)
+            f3 = Frame.from_npy(fp)
+            f2.equals(f3, compare_dtype=True, compare_class=True, compare_name=True)
+            self.assertEqual(f3._blocks.shapes.tolist(), [(20, 50)])
+
+    #---------------------------------------------------------------------------
+    def test_frame_from_npy_memory_map_a(self) -> None:
+        f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2, finalizer = Frame.from_npy_mmap(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+            finalizer()
+
+    def test_frame_from_npy_memory_map_b(self) -> None:
+        f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f2, finalizer = Frame.from_npy_mmap(fp)
+            f3 = f2.to_frame()
+            finalizer()
+
+    def test_frame_from_npy_memory_map_c(self) -> None:
+        f1 = ff.parse("s(3,3)")
+        with TemporaryDirectory() as fp:
+            f1.to_npy(fp)
+            f1, finalizer = sf.Frame.from_npy_mmap(fp)
+            f1 = f1.set_index(0)
+            post = str(f1)
+            finalizer()
+
+    def test_frame_from_npy_memory_map_d(self) -> None:
+
+        with TemporaryDirectory() as fp:
+
+            class C:
+                def __init__(self) -> None:
+                    ff.parse("s(3,3)").to_npy(fp)
+                    self.finalizer: tp.Optional[tp.Callable[[], None]] = None
+                    self.frame: tp.Optional[sf.Frame] = None
+
+                def __del__(self) -> None:
+                    self.finalizer()
+
+                @property
+                def mmap_frame(self) -> sf.Frame:
+                    if not self.finalizer:
+                        self.frame, self.finalizer = Frame.from_npy_mmap(fp)
+                    return self.frame #type: ignore
+
+            c = C()
+            f1 = c.mmap_frame
+            self.assertEqual(f1.shape, (3, 3))
+
+            s1 = c.mmap_frame.iloc[0]
+            self.assertEqual(round(s1, 1).to_pairs(), #type: ignore
+                ((0, 1930.4), (1, -610.8), (2, 694.3))
+                )
+            c.__del__()
 
 
 
@@ -9731,6 +10069,13 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('a', (('x', 20), ('y', 20), ('z', 30))), ('b', (('x', 40), ('y', 20), ('z', 30))), ('c', (('x', 20), ('y', 20), ('z', 20))), ('d', (('x', 20), ('y', 20), ('z', 20)))))
 
+    def test_frame_clip_l(self) -> None:
+        f1 = ff.parse('s(2,6)|v(int,int,int,float,float,float)')
+        f2 = ff.parse('s(2,6)|v(int,float)') * 0
+        f3 = f1.clip(lower=f2)
+        self.assertEqual(round(f3).to_pairs(), #type: ignore
+                ((0, ((0, 0.0), (1, 92867.0))), (1, ((0, 162197.0), (1, 0.0))), (2, ((0, 0.0), (1, 91301.0))), (3, ((0, 1080.0), (1, 2580.0))), (4, ((0, 3512.0), (1, 1175.0))), (5, ((0, 1857.0), (1, 1699.0))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -11132,6 +11477,22 @@ class TestUnit(TestCase):
         f2 = f1.via_str.len()
         self.assertEqual(f2.to_pairs(0), (('x', (('a', 1), ('b', 3))), ('y', (('a', 2), ('b', 4)))))
 
+    #---------------------------------------------------------------------------
+    def test_frame_str_getitem_a(self) -> None:
+
+        f1 = Frame(np.array([['foo', 'bar'], ['baz', 'baz']]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = f1.via_str[-1]
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('a', 'o'), ('b', 'z'))), ('y', (('a', 'r'), ('b', 'z'))))
+                )
+
+        f3 = f1.via_str[-2:]
+        self.assertEqual(f3.to_pairs(),
+                (('x', (('a', 'oo'), ('b', 'az'))), ('y', (('a', 'ar'), ('b', 'az'))))
+                )
 
     #---------------------------------------------------------------------------
     def test_frame_via_dt_year_a(self) -> None:

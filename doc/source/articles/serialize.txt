@@ -1,0 +1,53 @@
+
+
+
+Using the NPY Format for Faster-Than Parquet, Memory-Mappable, Complete DataFrame Serialization
+
+Reviving the NPY File Format for Faster-than Parquet DataFrame Serialization & Multi-process Memory Mapping
+
+
+
+----
+
+Not supported in Pandas.to_parquet()
+    Must have string column names
+    Name attributes on Frames
+
+From: https://ursalabs.org/blog/2020-feather-v2/
+Parquet format has become one of the “gold standard” binary file formats for data warehousing
+
+Parquet docs
+https://arrow.apache.org/docs/python/parquet.html
+
+
+----
+
+Abstract:
+    You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. Please write at most 300 words.
+
+
+Over 14 years ago the very first NumPy Enhancement Proposal (NEP) proposed the NPY format (a binary representation of an array) and the NPZ format (zipped bundles of NPY files). While effective and efficient, usage of NPY was eclipsed in the era of Pandas, where heterogenous columnar types are common and axis have labeled indices. Formats such as CSV, XLSX, and HDF5, while limited in fully serializing a DataFrame, tended to be more commonly used. More recently, Parquet has offered an efficient alternative. While Parquet has been called a "gold standard" binary file format, it was designed for encoding Arrow tables, not data frames. As such, common characteristics of data frames, such as non-string column labels, multi-column unified data, and the full range of NumPy dtypes, are not supported.
+
+This talk demonstrates a novel application of NPY files to serialize not just arrays, but complete DataFrames, and introduces a custom NPZ format that bundles heterogenous NPY files with JSON-encoded metadata to offer a format that fully encodes all DataFrame characteristics and the full range of NumPy dtypes. Better, while sometimes larger on disk, it is faster than Parquet in nearly all read / write scenarios.
+
+This talk will introduce the NPY format, discuss the implementation of new, performance optimized NPY encoders and decoders, and define a custom NPZ format that captures complete DataFrame configuration and metadata. Comprehensive performance evaluations will be examined to show material benefit in DataFrames with multi-column unified data. In addition, it will be shown how the NPY format can be used for efficient memory maping. While these formats are implemented in StaticFrame, they are potentially applicable to any package using NumPy for underlying data stores.
+
+
+
+Description:
+    You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. This section is also used on the schedule for attendees to view. Be clear and precise when describing your presentation. Please write at most 300 words.
+
+
+
+
+
+Notes:
+Let us know if you have specific needs or special requests — for example, requests that involve accessibility, audio, or restrictions on when your talk can be scheduled. We will accommodate accessibility-related needs whenever possible, and the merit of your tutorial will be judged independently from any request made here. These notes are meant for the organizer and won't be made public.
+
+
+
+
+# notes on changing limit on file descriptors
+https://wilsonmar.github.io/maximum-limits/
+# PROTIP: On MacOS, the maximum number that can be specified is 12288.
+# ulimit -n

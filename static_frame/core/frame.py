@@ -48,8 +48,10 @@ from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors_deferred
 from static_frame.core.container_util import df_slice_to_arrays
-from static_frame.core.container_util import NPZConverter
 from static_frame.core.container_util import frame_to_frame
+
+from static_frame.core.archive_npy import NPZConverter
+from static_frame.core.archive_npy import NPYDirectoryConverter
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -188,7 +190,7 @@ class Frame(ContainerOperand):
             '_blocks',
             '_columns',
             '_index',
-            '_name'
+            '_name',
             )
 
     _blocks: TypeBlocks
@@ -452,6 +454,7 @@ class Frame(ContainerOperand):
                         cls._COLUMNS_CONSTRUCTOR,
                         union=union,
                         )
+                # columns = frames[0]._columns
                 own_columns = True
 
             def blocks() -> tp.Iterator[np.ndarray]:
@@ -2234,20 +2237,48 @@ class Frame(ContainerOperand):
     @classmethod
     def from_npz(cls,
             fp: PathSpecifier,
-            *,
-            allow_pickle: bool = True,
-            mmap_mode: tp.Optional[str] = None,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an npz file.
         '''
-        return NPZConverter.from_npz(
+        return NPZConverter.from_archive(
                 constructor=cls,
                 fp=fp,
-                allow_pickle=allow_pickle,
-                mmap_mode=mmap_mode,
                 )
 
+    @classmethod
+    def from_npy(cls,
+            fp: PathSpecifier,
+            ) -> 'Frame':
+        '''
+        Create a :obj:`Frame` from an directory of npy files.
+
+        Args:
+            fp: The path to the NPY directory.
+        '''
+        return NPYDirectoryConverter.from_archive(
+                constructor=cls,
+                fp=fp,
+                )
+
+
+    @classmethod
+    def from_npy_mmap(cls,
+            fp: PathSpecifier,
+            ) -> tp.Tuple['Frame', tp.Callable[[], None]]:
+        '''
+        Create a :obj:`Frame` from an directory of npy files using memory maps.
+
+        Args:
+            fp: The path to the NPY directory.
+
+        Returns:
+            A tuple of :obj:`Frame` and the callable needed to close the open memory map objects. On some platforms this must be called before the process exits.
+        '''
+        return NPYDirectoryConverter.from_archive_mmap(
+                constructor=cls,
+                fp=fp,
+                )
 
     #---------------------------------------------------------------------------
 
@@ -2329,7 +2360,9 @@ class Frame(ContainerOperand):
                     own_data=own_data,
                     )
 
-        if consolidate_blocks:
+        if value.size == 0:
+            blocks = TypeBlocks.from_zero_size_shape(value.shape)
+        elif consolidate_blocks:
             blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
         else:
             blocks = TypeBlocks.from_blocks(blocks())
@@ -2679,7 +2712,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_data: bool = False,
             own_index: bool = False,
-            own_columns: bool = False
+            own_columns: bool = False,
             ) -> None:
         '''
         Initializer.
@@ -3908,6 +3941,43 @@ class Frame(ContainerOperand):
                 own_data=True)
 
     @doc_inject(selector='fillna')
+    def fillfalsy_leading(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'Frame':
+        '''
+        Return a new ``Frame`` after filling leading (and only leading) falsy values with the first observed value.
+
+        Args:
+            {value}
+            {axis}
+        '''
+        return self.__class__(self._blocks.fillfalsy_leading(value, axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_trailing(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'Frame':
+        '''
+        Return a new ``Frame`` after filling trailing (and only trailing) falsy values with the last observed value.
+
+        Args:
+            {value}
+            {axis}
+        '''
+        return self.__class__(self._blocks.fillfalsy_trailing(value, axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+
+    @doc_inject(selector='fillna')
     def fillna_forward(self,
             limit: int = 0,
             *,
@@ -3938,6 +4008,43 @@ class Frame(ContainerOperand):
             {axis}
         '''
         return self.__class__(self._blocks.fillna_backward(limit=limit, axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_forward(self,
+            limit: int = 0,
+            *,
+            axis: int = 0) -> 'Frame':
+        '''
+        Return a new ``Frame`` after filling forward falsy values with the last observed value.
+
+        Args:
+            {limit}
+            {axis}
+        '''
+        return self.__class__(self._blocks.fillfalsy_forward(limit=limit, axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy_backward(self,
+            limit: int = 0,
+            *,
+            axis: int = 0) -> 'Frame':
+        '''
+        Return a new ``Frame`` after filling backward falsy values with the first observed value.
+
+        Args:
+            {limit}
+            {axis}
+        '''
+        return self.__class__(self._blocks.fillfalsy_backward(limit=limit, axis=axis),
                 index=self._index,
                 columns=self._columns,
                 name=self._name,
@@ -5238,9 +5345,17 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = Index,
             ) -> 'Frame':
         '''
-        Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
+        Return a new :obj:`Frame` produced by setting the given column as the index, optionally removing that column from the new :obj:`Frame`.
+
+        Args:
+            column:
+            *,
+            drop:
+            index_constructor:
         '''
         column_iloc = self._columns._loc_to_iloc(column)
+        if column_iloc is None: # if None was a key it would have an iloc
+            return self if self.STATIC else self.__class__(self)
 
         if drop:
             blocks = TypeBlocks.from_blocks(
@@ -5270,7 +5385,7 @@ class Frame(ContainerOperand):
                 own_data=own_data,
                 own_columns=own_columns,
                 own_index=True,
-                name=self._name
+                name=self._name,
                 )
 
     def set_index_hierarchy(self,
@@ -6758,8 +6873,11 @@ class Frame(ContainerOperand):
             df = pandas.DataFrame(index=self._index.to_pandas())
             # use integer columns for initial loading, then replace
             # NOTE: alternative approach of trying to assign blocks (wrapped in a DF) is not faster than single column assignment
-            for i, array in enumerate(self._blocks.axis_values(0)):
-                df[i] = array
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                # Pandas issues: PerformanceWarning: DataFrame is highly fragmented.
+                for i, array in enumerate(self._blocks.axis_values(0)):
+                    df[i] = array
 
             df.columns = self._columns.to_pandas()
 
@@ -6824,6 +6942,7 @@ class Frame(ContainerOperand):
                 include_columns_name=include_columns_name,
                 )
         fp = path_filter(fp)
+        # NOTE:  compression='none' shown to not provide a clear performance improvement over the assumed default, 'snappy'
         pq.write_table(table, fp)
 
 
@@ -7396,19 +7515,36 @@ class Frame(ContainerOperand):
             *,
             include_index: bool = True,
             include_columns: bool = True,
-            compress: bool = False,
+            consolidate_blocks: bool = False,
             ) -> None:
         '''
         Write a :obj:`Frame` as an npz file.
         '''
-        NPZConverter.to_npz(
+        NPZConverter.to_archive(
                 frame=self,
                 fp=fp,
                 include_index=include_index,
                 include_columns=include_columns,
-                compress=compress,
+                consolidate_blocks=consolidate_blocks,
                 )
 
+    def to_npy(self,
+            fp: PathSpecifier, # not sure file-like StringIO works
+            *,
+            include_index: bool = True,
+            include_columns: bool = True,
+            consolidate_blocks: bool = False,
+            ) -> None:
+        '''
+        Write a :obj:`Frame` as a directory of npy file.
+        '''
+        NPYDirectoryConverter.to_archive(
+                frame=self,
+                fp=fp,
+                include_index=include_index,
+                include_columns=include_columns,
+                consolidate_blocks=consolidate_blocks,
+                )
 
     #---------------------------------------------------------------------------
 

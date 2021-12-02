@@ -36,6 +36,7 @@ from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import GetItemKeyType
@@ -244,6 +245,30 @@ class Quilt(ContainerBase, StoreClientMixin):
                 max_persist=max_persist,
                 )
 
+    @classmethod
+    @doc_inject(selector='quilt_constructor')
+    def from_zip_npz(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to zipped parquet :obj:`Quilt` store, return a :obj:`Quilt` instance.
+
+        {args}
+        '''
+        store = StoreZipNPZ(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
 
     @classmethod
     @doc_inject(selector='quilt_constructor')
@@ -269,7 +294,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 deepcopy_from_bus=deepcopy_from_bus,
                 max_persist=max_persist,
                 )
-
 
     @classmethod
     @doc_inject(selector='quilt_constructor')
@@ -1287,6 +1311,76 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         return self.iloc[-count:]
 
+    #---------------------------------------------------------------------------
+    @doc_inject()
+    def equals(self,
+            other: tp.Any,
+            *,
+            compare_name: bool = False,
+            compare_dtype: bool = False,
+            compare_class: bool = False,
+            skipna: bool = True,
+            ) -> bool:
+        '''
+        {doc}
+
+        Note: this will attempt to load and compare all Frame managed by the Bus stored within this Quilt.
+
+        Args:
+            {compare_name}
+            {compare_dtype}
+            {compare_class}
+            {skipna}
+        '''
+        if id(other) == id(self):
+            return True
+
+        if compare_class and self.__class__ != other.__class__:
+            return False
+        elif not isinstance(other, Quilt):
+            return False
+
+        if self._axis != other._axis:
+            return False
+
+        if self._retain_labels != other._retain_labels:
+            return False
+
+        if compare_name and self.name != other.name:
+            return False
+
+        if self._assign_axis:
+            self._update_axis_labels()
+        if other._assign_axis:
+            other._update_axis_labels()
+
+        if not self._axis_hierarchy.equals( # type: ignore
+                other._axis_hierarchy,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                ):
+            return False
+
+        if not self._axis_opposite.equals( # type: ignore
+                other._axis_opposite,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                ):
+            return False
+
+        if not self._bus.equals(other._bus,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                ):
+            return False
+
+        return True
 
     #---------------------------------------------------------------------------
     def to_frame(self) -> Frame:

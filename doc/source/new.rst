@@ -2,6 +2,78 @@ What is New in Static Frame
 ===============================
 
 
+0.8.31
+----------
+
+Added ``Frame.from_npy_mmap``; removed ``memory_map`` option from ``Frame.from_npy``.
+
+
+0.8.30
+----------
+
+Performance enhancements to ``Frame.from_npy`` and ``Frame.from_npz``.
+
+
+0.8.29
+----------
+
+Added ``consolidate_blocks`` Boolean parameter to ``Frame.to_npz()`` and ``Frame.to_npy``.
+
+
+0.8.28
+----------
+
+Added ``Frame.to_npy()``, ``Frame.from_npy()`` with a ``memory_map`` option.
+
+Improvements to ``Frame.to_npz()`` to support large files and buffered writes.
+
+Performance enhancements to all ``_StoreZip`` subclasses through usage of ``WeakValueDictionary`` caching.
+
+Added ``IndexHiearchy.relabel_at_depth()``.
+
+Added support for string slicing and selection with ``Series.via_str[]`` and ``Frame.via_str[]``.
+
+
+0.8.27
+----------
+
+Reimplemented ``Frame.to_npz()``, ``Frame.from_npz()``, removing support for object arrays (and pickles) and improving performance.
+
+Added ``Bus.to_zip_npz()``, ``Bus.from_zip_npz()``, ``Quilt.to_zip_npz()``, ``Quilt.from_zip_npz()``, ``Batch.to_zip_npz()``, ``Batch.from_zip_npz()`` and ``Yarn.to_zip_npz()``.
+
+Implemented ``Series.fillfalsy_forward()``, ``Series.fillfalsy_backward()``, ``Series.fillfalsy_leading()``, ``Series.fillfalsy_trailing()``.
+
+Implemented ``Frame.fillfalsy_forward()``, ``Frame.fillfalsy_backward()``, ``Frame.fillfalsy_leading()``, ``Frame.fillfalsy_trailing()``.
+
+Added ``Quilt.equals()``.
+
+``Frame.from_pandas()`` now supports zero-sized DataFrame.
+
+Fixed issue in ``Frame.set_index()`` where ``column`` is passed as ``None``.
+
+Removed ``TypeBlocks._block_slices``.
+
+
+0.8.26
+----------
+
+``Frame.to_pandas()`` now creates ``pd.RangeIndex`` for ``IndexAutoFactory``-created indices.
+
+Performance enhancements to ``Frame.from_concat()``.
+
+
+0.8.25
+----------
+
+Corrected issue extracting containers stored in ``Series``.
+
+
+0.8.24
+----------
+
+Improved dtype resoltion on ``Frame`` methods that reduce dimensionality.
+
+
 0.8.23
 ----------
 
@@ -17,7 +89,7 @@ Performance enhancements to ``Frame.iter_group()`` and ``Frame.iter_group_items(
 0.8.21
 ----------
 
-Added ``Frame.to_npz()``, ``Frame.from_npz()``
+Added ``Frame.to_npz()``, ``Frame.from_npz()``.
 
 Performance enhancements to ``Frame.iter_group()`` and ``Frame.iter_group_items()``.
 

@@ -145,7 +145,7 @@ def get_labels(
         min_size: int = 0,
         max_size: int = MAX_ROWS) -> st.SearchStrategy:
     '''
-    Labels are suitable for creating non-date Indices (though they might include dates)
+    Labels are suitable for creating non-date Indices (though they might include dates); these labels might force an object array result.
     '''
     def gen() -> tp.Iterator[st.SearchStrategy]:
 
@@ -169,8 +169,8 @@ def get_labels(
 
 
 class DTGroup(Enum):
-    # strategy constantly generating object dtype
-    # NOTE: we branch on this type in get_array_from_dtype_group
+    # NOTE: we branch on these enums in get_array_from_dtype_group to add object dtypes when appropriate
+
     OBJECT = (partial(st.just, DTYPE_OBJECT),)
     ALL = (hypo_np.scalar_dtypes,)
 
@@ -214,6 +214,14 @@ class DTGroup(Enum):
     # NOTE: duplicate non-datetime to produce more balanced distribution
     CORE = tuple(chain(
             # OBJECT, # object has to be handled with get_array_from_dtype_group
+            NUMERIC, NUMERIC, NUMERIC,
+            BOOL, BOOL, BOOL,
+            STRING, STRING, STRING,
+            DATETIME,
+            ))
+
+    ALL_NO_OBJECT = tuple(chain(
+            ALL, ALL, ALL,
             NUMERIC, NUMERIC, NUMERIC,
             BOOL, BOOL, BOOL,
             STRING, STRING, STRING,
@@ -299,9 +307,10 @@ def get_array_object(
 
 
 def get_array_from_dtype_group(
-        dtype_group: DTGroup = DTGroup.ALL,
+        dtype_group: DTGroup,
         shape: tp.Tuple[int, ...] = (MAX_ROWS, MAX_COLUMNS),
-        unique: bool = True) -> st.SearchStrategy:
+        unique: bool = True,
+        ) -> st.SearchStrategy:
     '''
     Given a dtype group and shape, get array. Handles manually creating and filling object arrays when dtype group is object or ALL.
     '''
@@ -327,9 +336,9 @@ def get_array_from_dtype_group(
             unique=unique
             )
 
-    if dtype_group == DTGroup.OBJECT:
+    if dtype_group is DTGroup.OBJECT:
         return array_object
-    if dtype_group in (DTGroup.ALL, DTGroup.CORE):
+    if dtype_group is DTGroup.ALL or dtype_group is DTGroup.CORE:
         return st.one_of(array_non_object, array_non_object, array_object)
     return array_non_object
 
@@ -578,44 +587,7 @@ def get_type_blocks_aligned_type_blocks(
 #-------------------------------------------------------------------------------
 # index objects
 
-def get_index(
-        min_size: int = 0,
-        max_size: int = MAX_ROWS,
-        dtype_group: tp.Optional[DTGroup] = None,
-        cls: tp.Type[Index] = Index
-        ) -> st.SearchStrategy:
-    # NOTE: have observed cases where a non-unqiue index is returned: with float/int 0, or two NaNs. Need to filter
-    # using get_labels here forces Index construction from lists, rather than from arrays
-    if dtype_group is not None:
-        return st.builds(cls, get_array_1d(
-                min_size=min_size,
-                max_size=max_size,
-                unique=True,
-                dtype_group=dtype_group
-                ))
-    return st.builds(cls, get_labels(min_size=min_size, max_size=max_size))
-
-get_index_date: tp.Callable[..., st.SearchStrategy] = partial(get_index,
-        cls=IndexDate,
-        dtype_group=DTGroup.DATE)
-get_index_date.__name__ = 'get_index_date'
-
-get_index_year: tp.Callable[..., st.SearchStrategy] = partial(get_index,
-        cls=IndexYear,
-        dtype_group=DTGroup.YEAR)
-get_index_year.__name__ = 'get_index_year'
-
-
-get_index_go: tp.Callable[..., st.SearchStrategy] = partial(get_index, cls=IndexGO)
-get_index_go.__name__ = 'get_index_go'
-
-def get_index_any(
-        min_size: int = 0,
-        max_size: int = MAX_ROWS,
-        ) -> st.SearchStrategy:
-
-    strategies = []
-    for cls, dtype_group in (
+_INDEX_CLS_TO_DEFAULT_DT_GROUP = dict((
             (Index, DTGroup.CORE),
             (IndexGO, DTGroup.CORE),
             (IndexYear, DTGroup.YEAR),
@@ -634,7 +606,47 @@ def get_index_any(
             (IndexMicrosecondGO, DTGroup.MICROSECOND),
             (IndexNanosecond, DTGroup.NANOSECOND),
             (IndexNanosecondGO, DTGroup.NANOSECOND),
-            ):
+            ))
+
+def get_index(
+        min_size: int = 0,
+        max_size: int = MAX_ROWS,
+        dtype_group: tp.Optional[DTGroup] = None,
+        cls: tp.Type[Index] = Index
+        ) -> st.SearchStrategy:
+    # NOTE: have observed cases where a non-unqiue index is returned: with float/int 0, or two NaNs. Need to filter
+    # using get_labels here forces Index construction from lists, rather than from arrays
+    if dtype_group is not None:
+        # NOTE: we cannot product if the dtype we get will align with a datetime64 type
+        return st.builds(cls, get_array_1d(
+                min_size=min_size,
+                max_size=max_size,
+                unique=True,
+                dtype_group=dtype_group
+                ))
+    return st.builds(cls, get_labels(min_size=min_size, max_size=max_size))
+
+get_index_date: tp.Callable[..., st.SearchStrategy] = partial(get_index,
+        cls=IndexDate,
+        dtype_group=DTGroup.DATE)
+get_index_date.__name__ = 'get_index_date'
+
+get_index_year: tp.Callable[..., st.SearchStrategy] = partial(get_index,
+        cls=IndexYear,
+        dtype_group=DTGroup.YEAR)
+get_index_year.__name__ = 'get_index_year'
+
+get_index_go: tp.Callable[..., st.SearchStrategy] = partial(get_index, cls=IndexGO)
+get_index_go.__name__ = 'get_index_go'
+
+
+def get_index_any(
+        min_size: int = 0,
+        max_size: int = MAX_ROWS,
+        ) -> st.SearchStrategy:
+
+    strategies = []
+    for cls, dtype_group in _INDEX_CLS_TO_DEFAULT_DT_GROUP.items():
         st_index = get_index(
                 min_size=min_size,
                 max_size=max_size,
