@@ -1,9 +1,8 @@
-
+import re
 import unittest
 from collections import OrderedDict
 import copy
 import datetime
-
 
 import numpy as np
 
@@ -852,14 +851,46 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_index_level_repr(self) -> None:
+    def test_index_level_repr_a(self) -> None:
+        """Small tree"""
         tree = {
-            "I": {"A": (1, 2), "B": (1, 2, 3), "C": (2, 3)},
-            "II": {"D": (1, 2, 3), "E": (1,)},
+                "I": {"A": (1, 2), "B": (1, 2, 3), "C": (2, 3)},
+                "II": {"D": (1, 2, 3), "E": (1,)},
         }
         lvl = IndexLevel.from_tree(tree)
         msg = repr(lvl)
         self.assertEqual(len(msg.split()), 52)
+
+        num_ellipsis = re.findall(r"\.\.\.", msg)
+        num_labels = re.findall(r"IndexLevel", msg)
+        self.assertEqual(len(num_ellipsis), 0)
+        self.assertEqual(len(num_labels), 8)
+
+    def test_index_level_repr_b(self) -> None:
+        """Very deep tree"""
+
+        index = IndexHierarchy.from_product(*(range(i, i+2) for i in range(0, 20, 2)))
+
+        msg = repr(index._levels)
+        self.assertEqual(len(msg.split()), 67)
+
+        num_ellipsis = re.findall(r"\.\.\.", msg)
+        num_labels = re.findall(r"IndexLevel", msg)
+        self.assertEqual(len(num_ellipsis), 8)
+        self.assertEqual(len(num_labels), 15)
+
+    def test_index_level_repr_b(self) -> None:
+        """Very wide tree"""
+
+        index = IndexHierarchy.from_product(range(10), range(10, 20))
+
+        msg = repr(index._levels)
+        self.assertEqual(len(msg.split()), 70)
+
+        num_ellipsis = re.findall(r"\.\.\.", msg)
+        num_labels = re.findall(r"IndexLevel", msg)
+        self.assertEqual(len(num_ellipsis), 1)
+        self.assertEqual(len(num_labels), 5)
 
     #---------------------------------------------------------------------------
 
