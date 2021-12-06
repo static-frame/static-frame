@@ -161,14 +161,12 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             level0.extend(level0)
 
-
     def test_index_level_extend_b(self) -> None:
         level0 = IndexLevelGO(index=IndexGO(('a', 'b')), targets=None)
         level1 = IndexLevelGO(index=IndexGO(('c', 'd')), targets=None)
         # RuntimeError: found IndexLevel with None as targets
         with self.assertRaises(RuntimeError):
             level0.extend(level1)
-
 
     def test_index_level_extend_c(self) -> None:
         observations0 = IndexGO(('x', 'y'))
@@ -196,7 +194,6 @@ class TestUnit(TestCase):
         # RuntimeError: found IndexLevel with None as targets
         with self.assertRaises(RuntimeError):
             lvl1.extend(lvl0)
-
 
     #---------------------------------------------------------------------------
 
@@ -554,7 +551,6 @@ class TestUnit(TestCase):
         widths = tuple(lvl.label_widths_at_depth(0))
         self.assertEqual(widths, (('I', 5), ('II', 4)))
 
-
     #---------------------------------------------------------------------------
     def test_index_levels_with_tuple_a(self) -> None:
         OD = OrderedDict
@@ -678,7 +674,6 @@ class TestUnit(TestCase):
         # differeing depth
         self.assertFalse(levels2.equals(levels3))
 
-
     def test_index_levels_equals_d(self) -> None:
 
         levels1 = IndexLevel(Index(('a', 'b', 'c')), targets=None)
@@ -719,7 +714,6 @@ class TestUnit(TestCase):
         tb = levels1.to_type_blocks()
         self.assertEqual(tb.shape, (0, 3))
 
-
     #---------------------------------------------------------------------------
 
     def test_index_level_depth_reference_a(self) -> None:
@@ -756,7 +750,6 @@ class TestUnit(TestCase):
         lvl1 = IndexLevel.from_depth(4)
         self.assertEqual(lvl1.depth, 4)
         self.assertEqual(len(lvl1), 0)
-
 
     #---------------------------------------------------------------------------
     def test_index_level_from_tree_a(self) -> None:
@@ -870,8 +863,5 @@ class TestUnit(TestCase):
             _ = tuple(levels1.dtypes_at_depth(10))
 
 
-
-
 if __name__ == '__main__':
     unittest.main()
-
