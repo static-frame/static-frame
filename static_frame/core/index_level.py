@@ -229,7 +229,7 @@ class IndexLevel:
             forward_index_iter = iter(self.index.values)
             reverse_index_iter = reversed(self.index)
             forward_targets_iter = iter(self.targets)
-            reverse_targets_iter = reversed(self.targets)
+            reverse_targets_iter = reversed(self.targets) # type: ignore
 
             def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, "IndexLevel"]]:
                 yield next(forward_index_iter), next(forward_targets_iter)

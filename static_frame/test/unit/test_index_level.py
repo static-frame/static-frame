@@ -872,7 +872,7 @@ class TestUnit(TestCase):
         self.assertEqual(len(num_ellipsis), 8)
         self.assertEqual(len(num_labels), 15)
 
-    def test_index_level_repr_b(self) -> None:
+    def test_index_level_repr_c(self) -> None:
         """Very wide tree"""
 
         index = IndexHierarchy.from_product(range(10), range(10, 20))
