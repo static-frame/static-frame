@@ -3,8 +3,7 @@
 
 Using the NPY Format for Faster-Than Parquet, Memory-Mappable, Complete DataFrame Serialization
 
-Reviving the NPY File Format for Faster-than Parquet DataFrame Serialization & Multi-process Memory Mapping
-
+Employing NPY & NPZ File Formats for Faster-than Parquet, Memory-Mappable, Complete DataFrame Serialization
 
 
 ----
@@ -18,6 +17,25 @@ Parquet format has become one of the “gold standard” binary file formats for
 
 Parquet docs
 https://arrow.apache.org/docs/python/parquet.html
+
+
+# notes on changing limit on file descriptors
+https://wilsonmar.github.io/maximum-limits/
+# PROTIP: On MacOS, the maximum number that can be specified is 12288.
+# ulimit -n
+
+https://numpy.org/neps/nep-0001-npy-format.html
+
+https://blog.openbridge.com/how-to-be-a-hero-with-powerful-parquet-google-and-amazon-f2ae0f35ee04
+
+https://towardsdatascience.com/how-fast-is-reading-parquet-file-with-arrow-vs-csv-with-pandas-2f8095722e94
+
+Parquet is based on Dremel from 2010
+https://storage.googleapis.com/pub-tools-public-publication-data/pdf/36632.pdf
+
+Record shredding: is it important?
+https://www.joekearney.co.uk/posts/understanding-record-shredding
+
 
 
 ----
@@ -39,6 +57,77 @@ Description:
 
 
 
+The challenge of serializing DataFrames
+    DataFrames are more than just a table
+        Index and columns have types, hierarchies, and name attributes
+        Tables themseves might have name attributes or other metadata
+    Common formats leave out information
+        XLSX: no place for name of index and name of columns
+        Database tables: no place for non-string column headers
+    Pickling a DataFrame is always fastest
+        Pickles not suitable for long-term storage
+        Not secure for sharing
+    DataFrame enciding and decoding performance is critical to common workflows
+
+The Rise of Parquet
+    Parquet developed out of the Arrow project
+    Parquet offers columnar encoding scheme
+    Designed for more than tables, including nested structures
+    Designed for multi-language support
+    Provides one of the fastest formats for serializing DataFrames
+    Limitations
+        Columns labels can only be strings
+        Indices and columns cannot be hierarchical
+        No support for additional table metadata
+        Not a one-to-one mapping to NumPy dtypes
+
+NPY & NPZ
+    NPY Proposed as part of NEP 1 in 2007
+    NPY simple binary format
+        array metadata encoded in binary
+        array data as contiguous bytes
+    NPZ bundles multiple NPZ in a zipped
+    NumPy provides bulit-in support: np.save, np.savez, np.load
+    NPY supports Structured Arrays for differene columnar types
+    NPY support object dtypes through pickling
+        Pickles introduce compatibility and security issues
+        Can pickle an array directly, to no advantage of NPY
+    NPY & NPZ in era of DataFrames
+        Despite performance, little widespread use
+        CSV, XLSX more commonly used
+        No support in Pandas
+        Parquet becomes the "gold standard" format
+            AWS Glue, Athena, Redshift
+
+Using NPY & NPZ to completely encode a
+    Extending the NPZ format
+        Store all Frame and Index components as array NPY files
+            Use common naming templates for file names
+            Retain block structure
+        Store metadata in a JSON file
+    DataFrames can store 1D columns and 2D arrays of same-typed columns
+        Pandas collects 2D arrays independent of column order
+        StaticFrame permits adjacent columns of the same type to be 2D arrays
+        By encoding larger 2D arrays, we can gain a performance advantage
+    Encding metadata in JSON
+        number of blocks
+        index and columns depth
+        name attributes
+        index and columns types
+    Encoding values
+        Store each block as an NPY
+        Store each underlying Index array for index and columns
+    Encoding columns and index
+
+
+
+
+Getting NPY to be faster than Parquet
+    NumPy's save / load routines emphasize compatibility
+
+
+
+
 
 
 Notes:
@@ -46,8 +135,3 @@ Let us know if you have specific needs or special requests — for example, requ
 
 
 
-
-# notes on changing limit on file descriptors
-https://wilsonmar.github.io/maximum-limits/
-# PROTIP: On MacOS, the maximum number that can be specified is 12288.
-# ulimit -n

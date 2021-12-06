@@ -79,6 +79,29 @@ class PDWriteParquetArrow(FileIOTest):
         self.df.to_parquet(self.fp)
 
 
+class PDReadParquetArrowNoComp(FileIOTest):
+    SUFFIX = '.parquet'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        df = self.fixture.to_pandas()
+        df.to_parquet(self.fp, compression=None)
+
+    def __call__(self):
+        f = pd.read_parquet(self.fp)
+        _ = f.loc[34715, 'zZbu']
+
+class PDWriteParquetArrowNoComp(FileIOTest):
+    SUFFIX = '.parquet'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.df = self.fixture.to_pandas()
+
+    def __call__(self):
+        self.df.to_parquet(self.fp, compression=None)
+
+
 class PDReadParquetFast(FileIOTest):
     SUFFIX = '.parquet'
 
@@ -194,7 +217,7 @@ class SFReadNPYMM(FileIOTest):
 
 #-------------------------------------------------------------------------------
 def scale(v):
-    return int(v * 1)
+    return int(v * .1)
 
 FF_wide = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
@@ -289,8 +312,10 @@ def plot(frame: sf.Frame):
 
     # for legend
     name_replace = {
-        PDReadParquetArrow.__name__: 'Parquet (pd)',
-        PDWriteParquetArrow.__name__: 'Parquet (pd)',
+        PDReadParquetArrow.__name__: 'Parquet (pd, snappy)',
+        PDWriteParquetArrow.__name__: 'Parquet (pd, snappy)',
+        PDReadParquetArrowNoComp.__name__: 'Parquet\n(pd, no compression)',
+        PDWriteParquetArrowNoComp.__name__: 'Parquet\n(pd, no compression)',
         SFReadPickle.__name__: 'Pickle (sf)',
         SFWritePickle.__name__: 'Pickle (sf)',
         SFReadParquet.__name__: 'Parquet (sf)',
@@ -304,14 +329,16 @@ def plot(frame: sf.Frame):
     name_order = {
         PDReadParquetArrow.__name__: 0,
         PDWriteParquetArrow.__name__: 0,
-        SFReadParquet.__name__: 1,
-        SFWriteParquet.__name__: 1,
-        SFReadNPY.__name__: 2,
-        SFWriteNPY.__name__: 2,
-        SFReadNPZ.__name__: 3,
-        SFWriteNPZ.__name__: 3,
-        SFReadPickle.__name__: 4,
-        SFWritePickle.__name__: 4,
+        PDReadParquetArrowNoComp.__name__: 1,
+        PDWriteParquetArrowNoComp.__name__: 1,
+        SFReadParquet.__name__: 2,
+        SFWriteParquet.__name__: 2,
+        SFReadNPY.__name__: 3,
+        SFWriteNPY.__name__: 3,
+        SFReadNPZ.__name__: 4,
+        SFWriteNPZ.__name__: 4,
+        SFReadPickle.__name__: 5,
+        SFWritePickle.__name__: 5,
     }
 
     cmap = plt.get_cmap('terrain')
@@ -356,9 +383,10 @@ def plot(frame: sf.Frame):
     fig.set_size_inches(6, 6) # width, height
     fig.legend(post, names_display, loc='center right', fontsize=8)
     fp = '/tmp/serialize.png'
-    plt.subplots_adjust(left=0.05,
+    plt.subplots_adjust(
+            left=0.05,
             bottom=0.05,
-            right=0.85,
+            right=0.75,
             top=0.90,
             wspace=-0.2, # width
             hspace=0.9,
@@ -479,8 +507,9 @@ def run_test():
             ):
         cls_read = (
             PDReadParquetArrow,
+            PDReadParquetArrowNoComp,
             # PDReadParquetFast, # not faster!
-            SFReadParquet,
+            # SFReadParquet,
             SFReadNPZ,
             SFReadNPY,
             SFReadPickle,
@@ -488,8 +517,9 @@ def run_test():
             )
         cls_write = (
             PDWriteParquetArrow,
+            PDWriteParquetArrowNoComp,
             # PDWriteParquetFast, # not faster!
-            SFWriteParquet,
+            # SFWriteParquet,
             SFWriteNPZ,
             SFWriteNPY,
             SFWritePickle,
