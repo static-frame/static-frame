@@ -417,6 +417,8 @@ class IndexLevel:
                 depth_reference=self._depth
             )
 
+        # This will only happen if `relabel_at_depth` was not given a sorted
+        # `depth_level` argument.
         assert self.targets is not None, f"Invalid depth_level={depth_level}"
 
         new_targets = np.empty(len(self.targets), dtype=DTYPE_OBJECT)

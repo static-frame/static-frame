@@ -1327,6 +1327,22 @@ class TestUnit(TestCase):
                 [['i', 'a'], ['i', 'b'], ['ii', 'a'], ['ii', 'b']])
 
     @run_with_static_and_grow_only
+    def test_hierarchy_relabel_at_depth_a(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
+
+        idx1 = Index((True, False))
+        idx2 = Index(tuple("abcde"))
+        idx3 = Index(range(10))
+
+        ih = index_class.from_product(idx1, idx2, idx3)
+
+        actual = ih.relabel_at_depth(lambda x: x*2, [1, 2])
+        expected = index_class.from_product(idx1, idx2 * 2, idx3 * 2)
+
+        self.assertTrue(actual.equals(expected))
+
+    @run_with_static_and_grow_only
     def test_hierarchy_relabel_at_depth_2d_single_depth(self,
             index_class: tp.Type[IndexHierarchy]
             ) -> None:
