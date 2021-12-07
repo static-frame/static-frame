@@ -3,7 +3,9 @@
 
 Using the NPY Format for Faster-Than Parquet, Memory-Mappable, Complete DataFrame Serialization
 
-Employing NPY & NPZ File Formats for Faster-than Parquet, Memory-Mappable, Complete DataFrame Serialization
+Employing NumPy's NPY & NPZ File Formats for Faster-than Parquet, Memory-Mappable, Complete DataFrame Serialization
+
+Employing NumPy's NPY Format for Faster-Than Parquet DataFrame Serialization
 
 
 ----
@@ -44,7 +46,12 @@ Abstract:
     You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. Please write at most 300 words.
 
 
-Over 14 years ago the very first NumPy Enhancement Proposal (NEP) proposed the NPY format (a binary representation of an array) and the NPZ format (zipped bundles of NPY files). While effective and efficient, usage of NPY was eclipsed in the era of Pandas, where heterogenous columnar types are common and axis have labeled indices. Formats such as CSV, XLSX, and HDF5, while limited in fully serializing a DataFrame, tended to be more commonly used. More recently, Parquet has offered an efficient alternative. While Parquet has been called a "gold standard" binary file format, it was designed for encoding Arrow tables, not data frames. As such, common characteristics of data frames, such as non-string column labels, multi-column unified data, and the full range of NumPy dtypes, are not supported.
+Over 14 years ago the very first NumPy Enhancement Proposal (NEP) defined the NPY format (a binary encoding of array data and metadata) and the NPZ format (zipped bundles of NPY files). That same format, combined with some custom packaging and metadata in a ZIP, can be used to create a stable columnar data storage format that can materially out-perform Parquet read/write times in wide array of contexts.
+
+With an optimized implementation of NPY, combined with a formalized naming scheme for bundling DataFrame components in ZIP, that same format
+
+
+While effective and efficient, usage of NPY was eclipsed in the era of Pandas, where heterogenous columnar types are common and axis have labeled indices. Formats such as CSV, XLSX, and HDF5, while limited in fully serializing a DataFrame, tended to be more commonly used. More recently, Parquet has offered an efficient alternative. While Parquet has been called a "gold standard" binary file format, it was designed for encoding Arrow tables, not data frames. As such, common characteristics of data frames, such as non-string column labels, multi-column unified data, and the full range of NumPy dtypes, are not supported.
 
 This talk demonstrates a novel application of NPY files to serialize not just arrays, but complete DataFrames, and introduces a custom NPZ format that bundles heterogenous NPY files with JSON-encoded metadata to offer a format that fully encodes all DataFrame characteristics and the full range of NumPy dtypes. Better, while sometimes larger on disk, it is faster than Parquet in nearly all read / write scenarios.
 
