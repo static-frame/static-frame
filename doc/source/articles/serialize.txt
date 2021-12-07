@@ -48,7 +48,7 @@ Abstract:
     You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. Please write at most 300 words.
 
 
-Over 14 years ago the first NumPy Enhancement Proposal (NEP) defined the NPY format (a binary encoding of array data and metadata) and the NPZ format (zipped bundles of NPY files). Those same formats, extended in a custom NPZ packaged with JSON metadata, can be used to create a stable DataFrame storage format that can materially out-perform Parquet read / write times in a wide range of contexts. Unlike Parquet, all characteristics of a DataFrame can be encoded and all NumPy dtypes are supported. Implemented in StaticFrame, this format can take advantage of an immutable data model to memory-map full DataFrames from un-zipped directories of NPY. This talk will review the specification, implementation, and performance characteristics of this format.
+Over 14 years ago the first NumPy Enhancement Proposal (NEP) defined the NPY format (a binary encoding of array data and metadata) and the NPZ format (zipped bundles of NPY files). Those same formats, extended in a custom NPZ packaged with JSON metadata, can be used in Python to create a stable DataFrame storage format of similar disk size that can materially out-perform Parquet read / write times in a wide range of contexts. Unlike Parquet, all characteristics of a DataFrame can be encoded and all NumPy dtypes are supported. Implemented in StaticFrame, this format can take advantage of an immutable data model to memory-map full DataFrames from un-zipped directories of NPY. Given wide-spread use of Parquet files in data science workflows and AWS services such as Glue, a faster-than-parquet file format can significantly reduce compute costs. This talk will review the specification, implementation, and performance characteristics of this format.
 
 
 
@@ -56,7 +56,7 @@ Description:
     You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. This section is also used on the schedule for attendees to view. Be clear and precise when describing your presentation. Please write at most 300 words.
 
 
-I will begin this talk by introducing the challenge of serializing DataFrames, illustrating how nearly all stable encoding formats lack full support for all features. While the Parquet format has grown to be called a "gold standard" binary file format, its strict columnar representation will be shown to have limitations when used for encoding DataFrames.
+I will begin this talk by introducing the challenge of serializing DataFrames, illustrating how nearly all stable encoding formats lack full support for all features. While the broadly-used Parquet format has been called a "gold standard" binary file format, its columnar representation will be shown to have limitations when used for encoding DataFrames.
 
 I will show how the NPY format, combined with JSON metadata, can be used to create a custom NPZ file with significant performance and compatibility advantages compared to Parquet. The details of this encoding scheme will be explained.
 

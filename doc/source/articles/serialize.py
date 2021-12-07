@@ -217,21 +217,18 @@ class SFReadNPYMM(FileIOTest):
 
 #-------------------------------------------------------------------------------
 def scale(v):
-    return int(v * .1)
+    return int(v * 1)
 
-FF_wide = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
 FF_wide_columnar   = f's({scale(100)},{scale(10_000)})|v(int,bool,float)|i(I,int)|c(I,str)'
 
 
-FF_tall = f's({scale(10_000)},{scale(100)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
 FF_tall_uniform = f's({scale(10_000)},{scale(100)})|v(float)|i(I,int)|c(I,str)'
 FF_tall_mixed   = f's({scale(10_000)},{scale(100)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
 FF_tall_columnar   = f's({scale(10_000)},{scale(100)})|v(int,bool,float)|i(I,int)|c(I,str)'
 
-FF_square = f's({scale(1_000)},{scale(1_000)})|v(float)|i(I,int)|c(I,str)'
-FF_square_unifrom = f's({scale(1_000)},{scale(1_000)})|v(float)|i(I,int)|c(I,str)'
+FF_square_uniform = f's({scale(1_000)},{scale(1_000)})|v(float)|i(I,int)|c(I,str)'
 FF_square_mixed   = f's({scale(1_000)},{scale(1_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
 FF_square_columnar   = f's({scale(1_000)},{scale(1_000)})|v(int,bool,float)|i(I,int)|c(I,str)'
 
@@ -413,39 +410,66 @@ def convert_size(size_bytes):
 def get_sizes():
     records = []
     for label, fixture in (
-            ('wide', FF_wide),
-            ('wide_ext', FF_wide_ext),
-            ('tall', FF_tall),
-            ('tall_ext', FF_tall_ext),
-            ('square', FF_square),
+            ('wide_uniform', FF_wide_uniform),
+            ('wide_mixed', FF_wide_mixed),
+            ('wide_columnar', FF_wide_columnar),
+
+            ('tall_uniform', FF_tall_uniform),
+            ('tall_mixed', FF_tall_mixed),
+            ('tall_columnar', FF_tall_columnar),
+
+            ('square_uniform', FF_square_uniform),
+            ('square_mixed', FF_square_mixed),
+            ('square_columnar', FF_square_columnar),
+
             ):
         f = ff.parse(fixture)
+        df = f.to_pandas()
         record = [label, f.shape]
 
         _, fp = tempfile.mkstemp(suffix='.parquet')
-        f.to_parquet(fp, include_index=True)
-        size = os.path.getsize(fp)
+        df.to_parquet(fp)
+        size_parquet = os.path.getsize(fp)
         os.unlink(fp)
-        record.append(convert_size(size))
+        record.append(convert_size(size_parquet))
+
+        _, fp = tempfile.mkstemp(suffix='.parquet')
+        df.to_parquet(fp, compression=None)
+        size_parquet_noc = os.path.getsize(fp)
+        os.unlink(fp)
+        record.append(convert_size(size_parquet_noc))
 
         _, fp = tempfile.mkstemp(suffix='.npz')
         f.to_npz(fp, include_columns=True)
-        size = os.path.getsize(fp)
+        size_npz = os.path.getsize(fp)
         os.unlink(fp)
-        record.append(convert_size(size))
+        record.append(convert_size(size_npz))
 
         _, fp = tempfile.mkstemp(suffix='.pickle')
         file = open(fp, 'wb')
         pickle.dump(f, file)
         file.close()
-        size = os.path.getsize(fp)
+        size_pickle = os.path.getsize(fp)
         os.unlink(fp)
-        record.append(convert_size(size))
+        record.append(convert_size(size_pickle))
+
+        record.append(round(size_npz / size_parquet, 3))
+        record.append(round(size_npz / size_parquet_noc, 3))
 
         records.append(record)
 
-    f = sf.Frame.from_records(records, columns=('fixture', 'shape', 'parquet', 'npz', 'pickle')).set_index('fixture', drop=True)
-    print(f)
+    f = sf.Frame.from_records(records,
+            columns=('fixture',
+            'shape',
+            'parquet',
+            'parquet_noc',
+            'npz',
+            'pickle',
+            'npz/parquet',
+            'npz/parquet_noc'
+            )).set_index('fixture', drop=True)
+
+    print(f.display_wide())
 
 
 def pandas_serialize_test():
@@ -501,7 +525,7 @@ def run_test():
             fixture_to_pair('mixed', FF_tall_mixed),
             fixture_to_pair('columnar', FF_tall_columnar),
 
-            fixture_to_pair('uniform', FF_square_unifrom),
+            fixture_to_pair('uniform', FF_square_uniform),
             fixture_to_pair('mixed', FF_square_mixed),
             fixture_to_pair('columnar', FF_square_columnar),
             ):
