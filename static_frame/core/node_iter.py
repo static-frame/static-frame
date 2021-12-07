@@ -150,7 +150,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
 
         if not callable(func): # NOTE: when is func not a callable?
-            func = getattr(func, '__getitem__')
+            func = getattr(func, '__getitem__') # COV_MISSING
 
         # use side effect list population to create keys when iterating over values
         arg_gen = (self._func_values if self._yield_type is IterNodeType.VALUES
@@ -192,7 +192,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         if self._yield_type is IterNodeType.VALUES:
             yield from (get(v, v) for v in self._func_values())
         else:
-            yield from (get((k,  v), v) for k, v in self._func_items())
+            yield from (get((k,  v), v) for k, v in self._func_items()) # COV_MISSING
 
     @doc_inject(selector='map_any')
     def map_any(self,
@@ -260,7 +260,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         if self._yield_type is IterNodeType.VALUES:
             yield from (get(v, fill_value) for v in self._func_values())
         else:
-            yield from (get((k,  v), fill_value) for k, v in self._func_items())
+            yield from (get((k,  v), fill_value) for k, v in self._func_items()) # COV_MISSING
 
     @doc_inject(selector='map_fill')
     def map_fill(self,
@@ -280,7 +280,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {dtype}
         '''
         if IterNodeApplyType.is_items(self._apply_type):
-            return self._apply_constructor(
+            return self._apply_constructor( # COV_MISSING
                     self.map_fill_iter_items(mapping, fill_value=fill_value),
                     dtype=dtype,
                     name=name,
@@ -326,7 +326,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         if self._yield_type is IterNodeType.VALUES:
             yield from (func(v) for v in self._func_values())
         else:
-            yield from (func((k,  v)) for k, v in self._func_items())
+            yield from (func((k,  v)) for k, v in self._func_items()) # COV_MISSING
 
     @doc_inject(selector='map_all')
     def map_all(self,
@@ -530,7 +530,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             own_index = True
 
         if index_constructor is not None:
-            index = index_constructor(index)
+            index = index_constructor(index) # COV_MISSING
 
         # PERF: passing count here permits faster generator realization
         values, _ = iterable_to_array_1d(
@@ -638,7 +638,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             ) -> np.ndarray:
         # NOTE: name argument is for common interface
         if index_constructor is not None:
-            raise RuntimeError('index_constructor not supported with this interface')
+            raise RuntimeError('index_constructor not supported with this interface') # COV_MISSING
         # PERF: passing count here permits faster generator realization
         shape = self._container.shape
         array, _ = iterable_to_array_1d(values, count=shape[0], dtype=dtype)

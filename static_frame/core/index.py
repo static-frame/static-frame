@@ -43,6 +43,7 @@ from static_frame.core.node_re import InterfaceRe
 
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_sample
+from static_frame.core.util import arrays_equal
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import CallableOrMapping
@@ -147,7 +148,7 @@ class LocMap:
                             # if same type, and that atter is not in labels, we fail, just as we do in then non-datetime64 case. Only when datetimes are given in a different unit are we "loose" about matching.
                             raise LocInvalid('Invalid loc given in a slice', attr, field)
                     else: # step
-                        pos = attr # should be an integer
+                        pos = attr # should be an integer # COV_MISSING
 
                     if field == SLICE_STOP_ATTR:
                         pos += 1 #type: ignore  # stop is inclusive
@@ -172,11 +173,11 @@ class LocMap:
                     else:
                         raise LocEmpty()
 
-                elif field == SLICE_STEP_ATTR:
-                    pos = attr
+                elif field == SLICE_STEP_ATTR: # COV_MISSING
+                    pos = attr # COV_MISSING
 
                 if offset_apply and field != SLICE_STEP_ATTR:
-                    pos += offset #type: ignore
+                    pos += offset #type: ignore # COV_MISSING
 
                 yield pos
 
@@ -277,7 +278,7 @@ class LocMap:
                     return [label_to_pos[k] + offset for k in key if k in label_to_pos] #type: ignore
                 return [label_to_pos[k] for k in key if k in label_to_pos]
             if offset_apply:
-                return [label_to_pos[k] + offset for k in key] #type: ignore
+                return [label_to_pos[k] + offset for k in key] #type: ignore # COV_MISSING
             return [label_to_pos[k] for k in key]
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
@@ -532,7 +533,7 @@ class Index(IndexBase):
 
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # COV_MISSING
 
         obj = self.__new__(self.__class__)
         obj._map = deepcopy(self._map, memo) #type: ignore
@@ -1008,7 +1009,7 @@ class Index(IndexBase):
             if key.__class__ is np.ndarray:
                 # PERF: isolate for usage of _positions
                 if self._recache:
-                    self._update_array_cache()
+                    self._update_array_cache() # COV_MISSING
 
                 if key.dtype == DTYPE_BOOL: #type: ignore
                     return self._positions[key] + offset
@@ -1063,7 +1064,7 @@ class Index(IndexBase):
 
             if isinstance(key, slice):
                 if key == NULL_SLICE:
-                    return slice(0, self.__len__())
+                    return slice(0, self.__len__()) # COV_MISSING # NOTE: can this just be a NULL slice?
                 if key.stop >= len(self):
                     # while a valid slice of positions, loc lookups do not permit over-stating boundaries
                     raise LocInvalid(f'Invalid loc: {key}')
@@ -1149,7 +1150,7 @@ class Index(IndexBase):
             self._update_array_cache()
 
         if isinstance(other, (Series, Frame)):
-            raise ValueError('cannot use labelled container as an operand.')
+            raise ValueError('cannot use labelled container as an operand.') # COV_MISSING
 
         values = self._labels
         other_is_array = False
@@ -1278,7 +1279,7 @@ class Index(IndexBase):
 
         # defer updating cache
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # COV_MISSING
 
         # same type from here
         if len(self) != len(other):
@@ -1287,23 +1288,8 @@ class Index(IndexBase):
             return False
         if compare_dtype and self.dtype != other.dtype:
             return False
-        from static_frame.core.util import arrays_equal
         return arrays_equal(self.values, other.values, skipna=skipna)
 
-        # eq = self.values == other.values
-
-        # # NOTE: will only be False, or an array
-        # if eq is False:
-        #     return eq
-
-        # if skipna:
-        #     isna_both = (isna_array(self.values, include_none=False)
-        #             & isna_array(other.values, include_none=False))
-        #     eq[isna_both] = True
-
-        # if not eq.all(): # avoid returning a NumPy Bool
-        #     return False
-        # return True
 
     @doc_inject(selector='sort')
     def sort(self,
