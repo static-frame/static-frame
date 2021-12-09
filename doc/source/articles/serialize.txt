@@ -56,11 +56,11 @@ Description:
     You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. This section is also used on the schedule for attendees to view. Be clear and precise when describing your presentation. Please write at most 300 words.
 
 
-I will begin this talk by introducing the challenge of serializing DataFrames, illustrating how nearly all stable encoding formats lack full support for all features. While the broadly-used Parquet format has been called a "gold standard" binary file format, its columnar representation will be shown to have limitations when used for encoding DataFrames.
+I will begin this talk by introducing the challenge of serializing DataFrames, illustrating how nearly all stable encoding formats lack full support for all DataFrame characteristics. While the broadly-used Parquet format has been called a "gold standard" binary file format, its columnar representation will be shown to have limitations when used for encoding DataFrames.
 
 I will show how the NPY format, combined with JSON metadata, can be used to create a custom NPZ file with significant performance and compatibility advantages compared to Parquet. The details of this encoding scheme will be explained.
 
-The talk will close by looking at techniques used for improving NPY performance as well as evaluating numerous performance results measured from a wide variety of DataFrame shapes and dtype compositions.
+I will close the talk by evaluating numerous performance results measured from a wide variety of DataFrame shapes and dtype compositions. I will share techniques used in implementing optimized Python routines for reading and writing NPY files, and demonstrate applications for memory-mapping complete DataFrames via the same NPY representation.
 
 
 
