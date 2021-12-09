@@ -2,6 +2,12 @@ What is New in Static Frame
 ===============================
 
 
+0.8.32
+----------
+
+Added ``Frame.to_pickle()``, ``Frame.from_pickle()``.
+
+
 0.8.31
 ----------
 

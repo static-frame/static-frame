@@ -13,6 +13,7 @@ import json
 import sqlite3
 import typing as tp
 import warnings
+import pickle
 
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
@@ -2279,6 +2280,23 @@ class Frame(ContainerOperand):
                 constructor=cls,
                 fp=fp,
                 )
+
+    @classmethod
+    def from_pickle(cls,
+            fp: PathSpecifier,
+            ) -> 'Frame':
+        '''
+        Create a :obj:`Frame` from a pickle file.
+
+        The pickle module is not secure. Only unpickle data you trust.
+
+        Args:
+            fp: The path to the pickle file.
+        '''
+        with open(fp, 'rb')as file:
+            f = pickle.load(file)
+        return frame_to_frame(f, cls)
+
 
     #---------------------------------------------------------------------------
 
@@ -7510,6 +7528,7 @@ class Frame(ContainerOperand):
                 # store_filter=store_filter,
                 )
 
+    #---------------------------------------------------------------------------
     def to_npz(self,
             fp: PathSpecifier, # not sure file-like StringIO works
             *,
@@ -7545,6 +7564,23 @@ class Frame(ContainerOperand):
                 include_columns=include_columns,
                 consolidate_blocks=consolidate_blocks,
                 )
+
+    def to_pickle(self,
+            fp: PathSpecifier,
+            *,
+            protocol: tp.Optional[int] = None,
+            ) -> None:
+        '''
+        Write a :obj:`Frame` as a Python pickle.
+
+        The pickle module is not secure. Only unpickle data you trust.
+
+        Args:
+            fp: file path to write.
+            protocol: Pickle protocol to use.
+        '''
+        with open(fp, 'wb') as file:
+            pickle.dump(self, file, protocol=protocol)
 
     #---------------------------------------------------------------------------
 

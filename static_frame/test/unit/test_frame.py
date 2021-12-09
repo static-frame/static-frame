@@ -19,6 +19,7 @@ import frame_fixtures as ff
 from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import FrameGO
+from static_frame import FrameHE
 from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index
@@ -9466,6 +9467,34 @@ class TestUnit(TestCase):
         self.assertEqual([b.flags.writeable for b in f2._blocks._blocks],
                 [False, False, False, False, False])
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_pickle_a(self) -> None:
+        f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
+
+        with temp_file('.pickle') as fp:
+            f1.to_pickle(fp)
+            f2 = Frame.from_pickle(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+    def test_frame_to_pickle_b(self) -> None:
+        f1 = ff.parse('s(10,2_000)|v(int,str,bool)|i((I, ID),(str,dtD))|c(ID,dtD)')
+
+        with temp_file('.pickle') as fp:
+            f1.to_pickle(fp)
+            f2 = Frame.from_pickle(fp)
+            f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+            f3 = FrameGO.from_pickle(fp)
+            f1.equals(f3, compare_dtype=True, compare_class=False, compare_name=True)
+            self.assertIs(f3.__class__, FrameGO)
+
+            f4 = FrameHE.from_pickle(fp)
+            f1.equals(f4, compare_dtype=True, compare_class=False, compare_name=True)
+            self.assertIs(f4.__class__, FrameHE)
+
+
+    #---------------------------------------------------------------------------
     def test_frame_set_index_hierarchy_a(self) -> None:
 
         records = (

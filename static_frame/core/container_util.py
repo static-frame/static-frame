@@ -1239,8 +1239,8 @@ def frame_to_frame(
         ) -> 'Frame':
     if frame.__class__ is container_type:
         return frame
-    f = getattr(frame, container_to_exporter_attr(container_type))
-    return f() # type: ignore
+    func = getattr(frame, container_to_exporter_attr(container_type))
+    return func() # type: ignore
 
 def prepare_values_for_lex(
         *,
