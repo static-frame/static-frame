@@ -112,20 +112,6 @@ class NPYConverter:
                     ):
                 file.write(chunk.tobytes('C'))
 
-
-
-    # @classmethod
-    # def _header_decode(cls,
-    #         file: tp.IO[bytes],
-    #         ) -> tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]:
-    #     '''Extract and decode the header.
-    #     '''
-    #     length_size = file.read(cls.STRUCT_FMT_SIZE)
-    #     length_header = struct.unpack(cls.STRUCT_FMT, length_size)[0]
-    #     header = file.read(length_header).decode(cls.ENCODING)
-    #     dtype_str, fortran_order, shape = literal_eval(header).values()
-    #     return np.dtype(dtype_str), fortran_order, shape
-
     @classmethod
     def _header_decode(cls,
             file: tp.IO[bytes],
@@ -197,12 +183,12 @@ class NPYConverter:
             array = array.transpose()
         else:
             array.shape = shape
-        assert not array.flags.writeable
+        # assert not array.flags.writeable
         return array, None
 
-
+#-------------------------------------------------------------------------------
 class Archive:
-    '''Abstraction of a directory or a zip archive. Holds state over the life writing / reading a Frame.
+    '''Abstraction of a read/write archive, such as a directory or a zip archive. Holds state over the life of writing / reading a Frame.
     '''
     FILE_META = '__meta__.json'
 
@@ -380,8 +366,8 @@ class ArchiveDirectory(Archive):
             f.close()
         return post
 
-
-class NPYArchiveConverter:
+#-------------------------------------------------------------------------------
+class ArchiveFrameConverter:
     KEY_NAMES = '__names__'
     KEY_TYPES = '__types__'
     KEY_DEPTHS = '__depths__'
@@ -613,9 +599,25 @@ class NPYArchiveConverter:
         return f, archive.close
 
 
-class NPZConverter(NPYArchiveConverter):
+class NPZFrameConverter(ArchiveFrameConverter):
     ARCHIVE_CLS = ArchiveZip
 
-class NPYDirectoryConverter(NPYArchiveConverter):
+class NPYFrameConverter(ArchiveFrameConverter):
+    ARCHIVE_CLS = ArchiveDirectory
+
+
+
+
+# for converting from components, unstructured Frames
+
+
+class ArchiveComponentsConverter:
+    pass
+
+
+class NPZComponentsConverter(ArchiveComponentsConverter):
+    ARCHIVE_CLS = ArchiveZip
+
+class NPYComponentsConverter(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveDirectory
 

@@ -51,8 +51,8 @@ from static_frame.core.container_util import index_from_optional_constructors_de
 from static_frame.core.container_util import df_slice_to_arrays
 from static_frame.core.container_util import frame_to_frame
 
-from static_frame.core.archive_npy import NPZConverter
-from static_frame.core.archive_npy import NPYDirectoryConverter
+from static_frame.core.archive_npy import NPZFrameConverter
+from static_frame.core.archive_npy import NPYFrameConverter
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -2242,7 +2242,7 @@ class Frame(ContainerOperand):
         '''
         Create a :obj:`Frame` from an npz file.
         '''
-        return NPZConverter.from_archive(
+        return NPZFrameConverter.from_archive(
                 constructor=cls,
                 fp=fp,
                 )
@@ -2257,7 +2257,7 @@ class Frame(ContainerOperand):
         Args:
             fp: The path to the NPY directory.
         '''
-        return NPYDirectoryConverter.from_archive(
+        return NPYFrameConverter.from_archive(
                 constructor=cls,
                 fp=fp,
                 )
@@ -2276,7 +2276,7 @@ class Frame(ContainerOperand):
         Returns:
             A tuple of :obj:`Frame` and the callable needed to close the open memory map objects. On some platforms this must be called before the process exits.
         '''
-        return NPYDirectoryConverter.from_archive_mmap(
+        return NPYFrameConverter.from_archive_mmap(
                 constructor=cls,
                 fp=fp,
                 )
@@ -7539,7 +7539,7 @@ class Frame(ContainerOperand):
         '''
         Write a :obj:`Frame` as an npz file.
         '''
-        NPZConverter.to_archive(
+        NPZFrameConverter.to_archive(
                 frame=self,
                 fp=fp,
                 include_index=include_index,
@@ -7557,7 +7557,7 @@ class Frame(ContainerOperand):
         '''
         Write a :obj:`Frame` as a directory of npy file.
         '''
-        NPYDirectoryConverter.to_archive(
+        NPYFrameConverter.to_archive(
                 frame=self,
                 fp=fp,
                 include_index=include_index,
