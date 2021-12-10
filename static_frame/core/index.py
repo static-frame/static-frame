@@ -405,7 +405,7 @@ class Index(IndexBase):
     def _error_init_index_non_unique(labels: tp.Iterable[tp.Hashable]) -> ErrorInitIndexNonUnique:
         labels_counter = Counter(labels)
         if len(labels_counter) == 0: # generator consumed
-            msg = 'Labels have non-unique values. Details from iterators not available.'
+            msg = 'Labels have non-unique values. Details from iterators not available.' # COV_MISSING
         else:
             labels_all = sum(labels_counter.values())
             labels_duplicated = [repr(p[0]) for p in labels_counter.most_common(10) if p[1] > 1]
@@ -593,7 +593,7 @@ class Index(IndexBase):
     def _iter_label_items(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None
             ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
-        yield from zip(self._positions, self._labels)
+        yield from zip(self._positions, self._labels) # COV_MISSING
 
     @property
     def iter_label(self) -> IterNodeDepthLevel[tp.Any]:
@@ -1345,7 +1345,7 @@ class Index(IndexBase):
         if values.dtype == assignable_dtype:
             assigned = values.copy()
         else:
-            assigned = values.astype(assignable_dtype)
+            assigned = values.astype(assignable_dtype) # COV_MISSING
 
         assigned[sel] = value
         assigned.flags.writeable = False

@@ -1160,7 +1160,7 @@ class Frame(ContainerOperand):
 
                 if v.__class__ is np.ndarray:
                     if column_type is not None:
-                        yield v.astype(column_type)
+                        yield v.astype(column_type) # COV_MISSING
                     else:
                         yield v
                 elif isinstance(v, Series):
@@ -1282,7 +1282,7 @@ class Frame(ContainerOperand):
                 # do StoreFilter conversions before dtype
                 if array_final.ndim == 0:
                     # some structured arrays give 0 ndim arrays by name
-                    array_final = np.reshape(array_final, (1,))
+                    array_final = np.reshape(array_final, (1,)) # COV_MISSING
 
                 if store_filter is not None:
                     array_final = store_filter.to_type_filter_array(array_final)
@@ -1898,7 +1898,7 @@ class Frame(ContainerOperand):
                             fillvalue=columns_continuation_token,
                             )
                 else:
-                    labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
+                    labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays)) # COV_MISSING
 
                 columns_constructor = partial(cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                         name=columns_name,
@@ -2359,9 +2359,9 @@ class Frame(ContainerOperand):
                 try:
                     if dtype != dtype_current:
                         yield_block = True
-                except TypeError:
+                except TypeError: # COV_MISSING
                     # data type not understood, happens with pd datatypes to np dtypes in pd >= 1
-                    yield_block = True
+                    yield_block = True # COV_MISSING
 
                 if yield_block:
                     column_end = column_last + 1
@@ -3326,7 +3326,7 @@ class Frame(ContainerOperand):
         if isinstance(iloc_key, tuple):
             row_key, column_key = iloc_key
         else:
-            row_key, column_key = iloc_key, None
+            row_key, column_key = iloc_key, None # COV_MISSING
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys
         nm_row, nm_column = self._extract_axis_not_multi(row_key, column_key)
@@ -3670,7 +3670,7 @@ class Frame(ContainerOperand):
                 # get iterable off arrays
                 add_blocks = add_blocks._blocks
             else:
-                add_blocks = (add_blocks,)
+                add_blocks = (add_blocks,) # COV_MISSING
             # this might fail if nothing left
             remain_blocks = TypeBlocks.from_blocks(
                     target_tb._drop_blocks(column_key=depth_level),
@@ -3683,7 +3683,7 @@ class Frame(ContainerOperand):
                         column_1d_filter(remain_blocks._blocks[0]),
                         name=remain_labels[0])
             else:
-                new_target = target_hctor._from_type_blocks(
+                new_target = target_hctor._from_type_blocks( # COV_MISSING
                         remain_blocks,
                         name=remain_labels
                         )
@@ -4616,7 +4616,8 @@ class Frame(ContainerOperand):
                         own_index=True,
                         )
             else:
-                raise AxisInvalid(f'invalid axis: {axis}')
+                raise AxisInvalid(f'invalid axis: {axis}') # COV_MISSING
+
         elif other.__class__ is np.ndarray:
             name = None
         elif other.__class__ is InterfaceFillValue:
@@ -5132,7 +5133,7 @@ class Frame(ContainerOperand):
             elif isinstance(cfs, Frame):
                 cfs = cfs._blocks
                 if cfs.shape[0] == 1:
-                    values_for_sort = cfs._extract_array(row_key=0)
+                    values_for_sort = cfs._extract_array(row_key=0) # COV_MISSING
                 else:
                     values_for_lex = [cfs._extract_array(row_key=i)
                             for i in range(cfs.shape[0]-1, -1, -1)]
@@ -5152,7 +5153,7 @@ class Frame(ContainerOperand):
                 if cfs.ndim == 1:
                     values_for_sort = cfs
                 elif cfs.ndim == 2 and cfs.shape[1] == 1:
-                    values_for_sort = cfs[:, 0]
+                    values_for_sort = cfs[:, 0] # COV_MISSING
                 else:
                     values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
             elif cfs.ndim == 1: # Series
@@ -5178,7 +5179,7 @@ class Frame(ContainerOperand):
         elif values_for_sort is not None:
             order = np.argsort(values_for_sort, kind=kind)
         else:
-            raise RuntimeError('unable to resovle sort type')
+            raise RuntimeError('unable to resovle sort type') # COV_MISSING
 
         if asc_is_element and not ascending:
             # NOTE: if asc is not an element, then ascending Booleans have already been applied to values_for_lex
@@ -6506,7 +6507,7 @@ class Frame(ContainerOperand):
                     else: # is this case needed?
                         values.append(other.loc[loc_right, col])
                 else:
-                    values.append(fill_value)
+                    values.append(fill_value) # COV_MISSING
             final[right_template.format(col)] = values
         return final.to_frame()
 

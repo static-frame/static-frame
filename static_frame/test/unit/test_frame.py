@@ -4316,7 +4316,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_from_element_iloc_items_a(self) -> None:
+    def test_frame_from_element_items_a(self) -> None:
         items = (((0,1), 'g'), ((1,0), 'q'))
 
         f1 = Frame.from_element_items(items,
@@ -4336,7 +4336,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.columns.name, 'baz')
 
 
-    def test_frame_from_element_iloc_items_b(self) -> None:
+    def test_frame_from_element_items_b(self) -> None:
 
         items = (((0,1), .5), ((1,0), 1.5))
 
@@ -4351,6 +4351,17 @@ class TestUnit(TestCase):
 
         self.assertAlmostEqualItems(tuple(f2[1].items()),
                 ((0, 0.5), (1, nan)))
+
+    def test_frame_from_element_items_c(self) -> None:
+        items = (((0,1), 'g'), ((1,0), 'q'))
+
+        with self.assertRaises(AxisInvalid):
+            f1 = Frame.from_element_items(items,
+                    index=range(2),
+                    columns=range(2),
+                    dtype=str,
+                    axis=3,
+                    )
 
     #---------------------------------------------------------------------------
     def test_frame_from_element_loc_items_a(self) -> None:
