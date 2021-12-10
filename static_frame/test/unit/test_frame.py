@@ -8194,6 +8194,18 @@ class TestUnit(TestCase):
         dtype_diffs = sf.Frame.from_concat((f1_dtypes, f2_dtypes), axis=1, name='dtype_diffs')
         self.assertEqual(dtype_diffs.to_pairs(0), (('a', ()), ('b', ())))
 
+
+    def test_frame_from_concat_bb(self) -> None:
+        dt = np.datetime64
+        s1 = sf.Series((1, 3), name=dt('2021-01-01'))
+        s2 = sf.Series((2, 0), name=dt('1543-10-31'))
+
+        f = Frame.from_concat((s1, s2), index_constructor=IndexDate)
+        self.assertIs(f.index.__class__, IndexDate)
+        self.assertEqual(f.to_pairs(),
+                ((0, ((dt('2021-01-01'), 1), (dt('1543-10-31'), 2))), (1, ((dt('2021-01-01'), 3), (dt('1543-10-31'), 0))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_concat_error_init_a(self) -> None:

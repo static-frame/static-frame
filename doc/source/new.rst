@@ -6,6 +6,7 @@ What is New in Static Frame
 ----------
 
 Added ``Frame.to_pickle()``, ``Frame.from_pickle()``.
+Added ``index_constructor``, ``columns_constructor`` to ``Frame.from_concat``.
 
 
 0.8.31

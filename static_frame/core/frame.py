@@ -368,9 +368,11 @@ class Frame(ContainerOperand):
             union: bool = True,
             index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            index_constructor: tp.Optional[IndexConstructor] = None,
+            columns_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = None,
             fill_value: object = np.nan,
-            consolidate_blocks: bool = False
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''
         Concatenate multiple Frames into a new Frame. If index or columns are provided and appropriately sized, the resulting Frame will use those indices. If the axis along concatenation (index for axis 0, columns for axis 1) is unique after concatenation, it will be preserved; otherwise, a new index or an :obj:`IndexAutoFactory` must be supplied.
@@ -381,7 +383,9 @@ class Frame(ContainerOperand):
             union: If True, the union of the aligned indices is used; if False, the intersection is used.
             index: Optionally specify a new index.
             columns: Optionally specify new columns.
-            {name}f
+            index_constructor: Optionally apply a constructor to the derived or passed labels.
+            columns_constructor: Optionally apply a constructor to the derived or passed labels.
+            {name}
             {consolidate_blocks}
 
         Returns:
@@ -392,8 +396,8 @@ class Frame(ContainerOperand):
         # NOTE: might check for Series that do not have names
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
 
-        own_columns = False
         own_index = False
+        own_columns = False
 
         if not frames:
             return cls(
@@ -401,10 +405,10 @@ class Frame(ContainerOperand):
                     columns=columns,
                     name=name,
                     own_columns=own_columns,
-                    own_index=own_index)
-
-        own_index = False
-        own_columns = False
+                    own_index=own_index,
+                    index_constructor=index_constructor,
+                    columns_constructor=columns_constructor,
+                    )
 
         if axis == 1: # stacks columns (extends rows horizontally)
             # index can be the same, columns must be redefined if not unique
@@ -493,13 +497,20 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
+        # if a consturctor is given, we have to set own to False
+        own_index = own_index if not index_constructor else False
+        own_columns = own_columns if not columns_constructor else False
+
         return cls(TypeBlocks.from_blocks(block_gen()),
                 index=index,
                 columns=columns,
                 name=name,
                 own_data=True,
                 own_columns=own_columns,
-                own_index=own_index)
+                own_index=own_index,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
 
     @classmethod
     def from_concat_items(cls,
@@ -2739,6 +2750,8 @@ class Frame(ContainerOperand):
             data: Default Frame initialization requires typed data such as a NumPy array. All other initialization should use specialized constructors.
             {index}
             {columns}
+            index_constructor:
+            columns_constructor:
             {own_data}
             {own_index}
             {own_columns}
