@@ -8206,6 +8206,18 @@ class TestUnit(TestCase):
                 ((0, ((dt('2021-01-01'), 1), (dt('1543-10-31'), 2))), (1, ((dt('2021-01-01'), 3), (dt('1543-10-31'), 0))))
                 )
 
+    def test_frame_from_concat_cc(self) -> None:
+        dt = np.datetime64
+        s1 = sf.Series((1, 3), name=dt('2021-01-01'))
+        s2 = sf.Series((2, 0), name=dt('1543-10-31'))
+
+        f = Frame.from_concat((s1, s2), axis=1, columns_constructor=IndexDate)
+        self.assertIs(f.columns.__class__, IndexDate)
+        self.assertEqual(f.to_pairs(),
+                ((dt('2021-01-01'), ((0, 1), (1, 3))),
+                (dt('1543-10-31'), ((0, 2), (1, 0)))))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_concat_error_init_a(self) -> None:
