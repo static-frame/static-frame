@@ -36,6 +36,8 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import isna_array
 
 from static_frame import HLoc
+from static_frame import ILoc
+
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 
@@ -4434,6 +4436,34 @@ class TestUnit(TestCase):
             s1.insert_before(slice('a', 'c'), s2)
         with self.assertRaises(RuntimeError):
             s1.insert_after(slice('a', 'c'), s2)
+
+
+    def test_series_insert_d(self) -> None:
+
+        s1 = Series((1, 2, 5), index=('a', 'b', 'c'))
+        s2 = Series((1, 3), index=('d', 'e'))
+        s3 = s1.insert_after(ILoc[-1], s2)
+        self.assertEqual(s3.to_pairs(),
+                (('a', 1), ('b', 2), ('c', 5), ('d', 1), ('e', 3))
+                )
+
+        s4 = s1.insert_before(ILoc[-1], s2)
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1), ('b', 2), ('d', 1), ('e', 3), ('c', 5))
+                )
+
+    def test_series_insert_e(self) -> None:
+
+        s1 = Series((1, 2, 5), index=('a', 'b', 'c'))
+        s2 = Series((1, 3), index=('d', 'e'))
+        with self.assertRaises(IndexError):
+            _ = s1.insert_after(ILoc[-4], s2)
+        with self.assertRaises(IndexError):
+            _ = s1.insert_before(ILoc[-4], s2)
+        with self.assertRaises(IndexError):
+            _ = s1.insert_after(ILoc[3], s2)
+        with self.assertRaises(IndexError):
+            _ = s1.insert_before(ILoc[3], s2)
 
     #---------------------------------------------------------------------------
 

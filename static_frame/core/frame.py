@@ -6701,8 +6701,6 @@ class Frame(ContainerOperand):
 
         NOTE: At this time we do not accept elements or unlabelled iterables, as our interface does not permit supplying the required new column names with those arguments.
         '''
-        assert key >= 0, 'keys must be normalized to greater than 0'
-
         if not isinstance(container, (Series, Frame)):
             raise NotImplementedError(
                     f'No support for inserting with {type(container)}')

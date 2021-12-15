@@ -98,6 +98,7 @@ from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import arrays_equal
+from static_frame.core.util import iloc_to_insertion_iloc
 
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
@@ -2647,6 +2648,7 @@ class Series(ContainerOperand):
         iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
+        iloc_key = iloc_to_insertion_iloc(iloc_key, self.values.__len__()) # normalize for ILoc
         return self._insert(iloc_key, container)
 
     @doc_inject(selector='insert')
@@ -2667,6 +2669,7 @@ class Series(ContainerOperand):
         iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
+        iloc_key = iloc_to_insertion_iloc(iloc_key, self.values.__len__()) # normalize for ILoc
         return self._insert(iloc_key + 1, container)
 
     #---------------------------------------------------------------------------
