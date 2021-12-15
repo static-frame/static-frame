@@ -6769,6 +6769,8 @@ class Frame(ContainerOperand):
         iloc_key = self._columns._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
+        if iloc_key < 0:
+            iloc_key %= self.shape[1]
         return self._insert(iloc_key, container, fill_value=fill_value)
 
     @doc_inject(selector='insert')
@@ -6792,6 +6794,8 @@ class Frame(ContainerOperand):
         iloc_key = self._columns._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
+        if iloc_key < 0:
+            iloc_key %= self.shape[1]
         return self._insert(iloc_key + 1, container, fill_value=fill_value)
 
     #---------------------------------------------------------------------------

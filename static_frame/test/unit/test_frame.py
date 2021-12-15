@@ -2405,6 +2405,19 @@ class TestUnit(TestCase):
             f1.insert_after(slice('q', 'r'), s1)
 
 
+    def test_frame_insert_g(self) -> None:
+        f = ff.parse("s(3,3)|v(str)")
+        f = f.insert_after(sf.ILoc[-1], sf.Series.from_element(1, index=f.index, name='a'))
+
+        self.assertEqual(f.to_pairs(),
+                ((0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), ('a', ((0, 1), (1, 1), (2, 1))))
+                )
+
+        f = f.insert_after(sf.ILoc[-1], sf.Series.from_element(2, index=f.index, name='b'))
+        self.assertEqual(f.to_pairs(),
+                ((0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), ('a', ((0, 1), (1, 1), (2, 1))), ('b', ((0, 2), (1, 2), (2, 2))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_extract_a(self) -> None:
