@@ -168,6 +168,7 @@ from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import iloc_to_insertion_iloc
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -6700,6 +6701,8 @@ class Frame(ContainerOperand):
 
         NOTE: At this time we do not accept elements or unlabelled iterables, as our interface does not permit supplying the required new column names with those arguments.
         '''
+        assert key >= 0, 'keys must be normalized to greater than 0'
+
         if not isinstance(container, (Series, Frame)):
             raise NotImplementedError(
                     f'No support for inserting with {type(container)}')
@@ -6770,8 +6773,8 @@ class Frame(ContainerOperand):
         iloc_key = self._columns._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
-        if iloc_key < 0:
-            iloc_key %= self.shape[1]
+        # this filter is needed to handle possible invalid ILoc values passed through
+        iloc_key = iloc_to_insertion_iloc(iloc_key, self.shape[1])
         return self._insert(iloc_key, container, fill_value=fill_value)
 
     @doc_inject(selector='insert')
@@ -6795,8 +6798,8 @@ class Frame(ContainerOperand):
         iloc_key = self._columns._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
-        if iloc_key < 0:
-            iloc_key %= self.shape[1]
+        # this filter is needed to handle possible invalid ILoc values passed through
+        iloc_key = iloc_to_insertion_iloc(iloc_key, self.shape[1])
         return self._insert(iloc_key + 1, container, fill_value=fill_value)
 
     #---------------------------------------------------------------------------

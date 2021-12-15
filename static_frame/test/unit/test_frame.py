@@ -46,6 +46,8 @@ from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import iloc_to_insertion_iloc
+
 from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
@@ -1169,7 +1171,6 @@ class TestUnit(TestCase):
             f3.to_parquet(fp, include_index=False, include_columns=True)
             f4 = Frame.from_parquet(fp, columns_depth=1)
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(f4.to_pairs(0),
                 (('0', ((0, np.datetime64('2017-12-01T00:00:00.000000000')), (1, np.datetime64('2017-12-01T00:00:00.000000000')))), ('1', ((0, np.datetime64('2017-12-01T00:00:00.000000000')), (1, np.datetime64('2017-12-01T00:00:00.000000000'))))))
 
@@ -2332,7 +2333,7 @@ class TestUnit(TestCase):
                 (('s', (('x', -3), ('y', 200))), ('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('r', (('x', True), ('y', False))))
                 )
 
-        f3 = f1._insert(-1, s1)
+        f3 = f1._insert(iloc_to_insertion_iloc(-1, len(f1.columns)), s1)
         self.assertEqual(f3.to_pairs(0),
                 (('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('s', (('x', -3), ('y', 200))), ('r', (('x', True), ('y', False))))
                 )
@@ -2417,6 +2418,33 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(),
                 ((0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), ('a', ((0, 1), (1, 1), (2, 1))), ('b', ((0, 2), (1, 2), (2, 2))))
                 )
+
+    def test_frame_insert_h(self) -> None:
+        f = ff.parse("s(2,3)|v(str)")
+        f = f.insert_after(sf.ILoc[-2], sf.Series.from_element(1, index=f.index, name='a'))
+        self.assertEqual(f.to_pairs(),
+                ((0, ((0, 'zjZQ'), (1, 'zO5l'))), (1, ((0, 'zaji'), (1, 'zJnC'))), ('a', ((0, 1), (1, 1))), (2, ((0, 'ztsv'), (1, 'zUvW'))))
+                )
+
+    def test_frame_insert_i(self) -> None:
+        f = ff.parse("s(2,3)|v(str)")
+        f = f.insert_before(sf.ILoc[-2], sf.Series.from_element(1, index=f.index, name='a'))
+        f = f.insert_before(sf.ILoc[-2], sf.Series.from_element(2, index=f.index, name='b'))
+        self.assertEqual(f.to_pairs(),
+                ((0, ((0, 'zjZQ'), (1, 'zO5l'))), ('a', ((0, 1), (1, 1))), ('b', ((0, 2), (1, 2))), (1, ((0, 'zaji'), (1, 'zJnC'))), (2, ((0, 'ztsv'), (1, 'zUvW'))))
+                )
+
+    def test_frame_insert_j(self) -> None:
+        f = ff.parse("s(2,3)|v(str)")
+        with self.assertRaises(IndexError):
+            _ = f.insert_after(sf.ILoc[3], sf.Series.from_element(1, index=f.index, name='a'))
+        with self.assertRaises(IndexError):
+            _ = f.insert_before(sf.ILoc[3], sf.Series.from_element(1, index=f.index, name='a'))
+        with self.assertRaises(IndexError):
+            _ = f.insert_after(sf.ILoc[-4], sf.Series.from_element(1, index=f.index, name='a'))
+        with self.assertRaises(IndexError):
+            _ = f.insert_before(sf.ILoc[-4], sf.Series.from_element(1, index=f.index, name='a'))
+
 
     #---------------------------------------------------------------------------
 

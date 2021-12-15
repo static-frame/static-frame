@@ -2861,3 +2861,12 @@ def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
     if isinstance(key, str) or not hasattr(key, '__len__'):
         return [key]
     return key if isinstance(key, list) else list(key) # type: ignore
+
+
+def iloc_to_insertion_iloc(key: int, size: int) -> int:
+    '''
+    Given an iloc (possibly bipolar), return the appropriate insertion iloc (always positive)
+    '''
+    if key < -size or key >= size:
+        raise IndexError(f'index {key} out of range for length {size} container.')
+    return key % size
