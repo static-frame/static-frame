@@ -6694,10 +6694,11 @@ class Frame(ContainerOperand):
             key: int, # iloc positions
             container: tp.Union['Frame', Series],
             *,
+            after: bool,
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
         '''
-        Return a new Frame with the provided container inserted at the position determined by the column key; values existing at that key come after the inserted container.
+        Return a new Frame with the provided container inserted at the position (or after the position) determined by the column key.
 
         NOTE: At this time we do not accept elements or unlabelled iterables, as our interface does not permit supplying the required new column names with those arguments.
         '''
@@ -6707,6 +6708,9 @@ class Frame(ContainerOperand):
 
         if not len(container.index): # must be empty data, empty index container
             return self if self.STATIC else self.__class__(self)
+
+        # this filter is needed to handle possible invalid ILoc values passed through
+        key = iloc_to_insertion_iloc(key, self.shape[1]) + after
 
         # self's index will never change; we only take what aligns in the passed container
         if not self._index.equals(container._index):
@@ -6771,9 +6775,7 @@ class Frame(ContainerOperand):
         iloc_key = self._columns._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
-        # this filter is needed to handle possible invalid ILoc values passed through
-        iloc_key = iloc_to_insertion_iloc(iloc_key, self.shape[1])
-        return self._insert(iloc_key, container, fill_value=fill_value)
+        return self._insert(iloc_key, container, after=False, fill_value=fill_value)
 
     @doc_inject(selector='insert')
     def insert_after(self,
@@ -6796,9 +6798,7 @@ class Frame(ContainerOperand):
         iloc_key = self._columns._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
-        # this filter is needed to handle possible invalid ILoc values passed through
-        iloc_key = iloc_to_insertion_iloc(iloc_key, self.shape[1])
-        return self._insert(iloc_key + 1, container, fill_value=fill_value)
+        return self._insert(iloc_key, container, after=True, fill_value=fill_value)
 
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types
