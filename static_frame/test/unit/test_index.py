@@ -127,6 +127,9 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndexNonUnique):
             idx1 = Index(list(chain(range(100), range(50, 200))))
 
+    def test_index_init_k(self) -> None:
+        with self.assertRaises(ErrorInitIndexNonUnique):
+            _ = Index((x for x in (3, 5, 3)))
 
 
     #---------------------------------------------------------------------------
@@ -1437,7 +1440,11 @@ class TestUnit(TestCase):
 
         self.assertFalse(arrays_equal(a, b, skipna=True))
 
-
+    def test_index_equals_h(self) -> None:
+        a = IndexGO([1, 2, 3])
+        a.append(4)
+        b = IndexGO([1, 2, 3])
+        self.assertFalse(a.equals(b))
 
     #---------------------------------------------------------------------------
     def test_index_sample_a(self) -> None:

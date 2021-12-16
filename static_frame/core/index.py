@@ -405,7 +405,7 @@ class Index(IndexBase):
     def _error_init_index_non_unique(labels: tp.Iterable[tp.Hashable]) -> ErrorInitIndexNonUnique:
         labels_counter = Counter(labels)
         if len(labels_counter) == 0: # generator consumed
-            msg = 'Labels have non-unique values. Details from iterators not available.' # COV_MISSING
+            msg = 'Labels have non-unique values. Details from iterators not available.'
         else:
             labels_all = sum(labels_counter.values())
             labels_duplicated = [repr(p[0]) for p in labels_counter.most_common(10) if p[1] > 1]
@@ -1279,7 +1279,7 @@ class Index(IndexBase):
 
         # defer updating cache
         if self._recache:
-            self._update_array_cache() # COV_MISSING
+            self._update_array_cache()
 
         # same type from here
         if len(self) != len(other):
