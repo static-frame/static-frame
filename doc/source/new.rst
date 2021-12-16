@@ -9,7 +9,7 @@ Added ``Frame.to_pickle()``, ``Frame.from_pickle()``.
 
 Added ``index_constructor``, ``columns_constructor`` to ``Frame.from_concat``.
 
-Fixed issue in ``Frame.insert_after()`` and ``Frame.insert_before()`` with negative ``ILoc`` labels.
+Fixed issue in ``Frame.insert_after()``, ``Frame.insert_before()``,  ``Series.insert_after()``, ``Series.insert_before()`` with negative ``ILoc`` labels.
 
 
 0.8.31
