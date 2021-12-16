@@ -1008,6 +1008,17 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), ['A', 'B', 'C', 'D'])
 
 
+    def test_index_iter_label_b(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
+        post = tuple(idx1.iter_label().apply_iter_items(
+            lambda x: x.upper()
+            ))
+        self.assertEqual(post,
+            ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D')),
+            )
+
+
     #---------------------------------------------------------------------------
     def test_index_intersection_a(self) -> None:
 

@@ -369,7 +369,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         Args:
             {func}
         '''
-        # depend on yield type, we determine what the passed in function expects to take
+        # depend on yield type, we determine what the passed in function expects to
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, func(v)) for k, v in self._func_items())
         else:
