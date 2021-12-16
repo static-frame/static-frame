@@ -1475,6 +1475,14 @@ class TestUnit(TestCase):
         self.assertTrue(id(idx1._labels) != id(idx2._labels))
         self.assertTrue(idx2._map is None)
 
+
+    def test_index_deepcopy_c(self) -> None:
+        idx1 = IndexGO(range(3))
+        idx1.append(100)
+        idx2 = copy.deepcopy(idx1)
+        idx1.append(200)
+        self.assertEqual(idx2.values.tolist(), [0, 1, 2, 100])
+
     #---------------------------------------------------------------------------
     def test_index_iloc_searchsorted_a(self) -> None:
 
