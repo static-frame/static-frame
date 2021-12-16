@@ -110,3 +110,4 @@ from static_frame.core.util import SeriesInitializer as SeriesInitializer
 
 __version__ = '0.8.32' # use -dev for new version in development
 
+
