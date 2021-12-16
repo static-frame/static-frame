@@ -121,9 +121,11 @@ class NPYConverter:
         '''
         length_size = file.read(cls.STRUCT_FMT_SIZE)
         length_header = struct.unpack(cls.STRUCT_FMT, length_size)[0]
-        header = file.read(length_header).decode(cls.ENCODING)
+        header = file.read(length_header)
         if header not in header_decode_cache:
-            dtype_str, fortran_order, shape = literal_eval(header).values()
+            dtype_str, fortran_order, shape = literal_eval(
+                    header.decode(cls.ENCODING)
+                    ).values()
             header_decode_cache[header] = np.dtype(dtype_str), fortran_order, shape
         return header_decode_cache[header]
 
