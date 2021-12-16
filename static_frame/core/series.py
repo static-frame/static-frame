@@ -2597,6 +2597,8 @@ class Series(ContainerOperand):
     def _insert(self,
             key: int, # iloc positions
             container: 'Series',
+            *,
+            after: bool,
             ) -> 'Series':
         if not isinstance(container, Series):
             raise NotImplementedError(
@@ -2604,6 +2606,9 @@ class Series(ContainerOperand):
 
         if not len(container.index): # must be empty data, empty index container
             return self
+
+        # this filter is needed to handle possible invalid ILoc values passed through
+        key = iloc_to_insertion_iloc(key, self.values.__len__()) + after
 
         dtype = resolve_dtype(self.values.dtype, container.dtype)
         values = np.empty(len(self) + len(container), dtype=dtype)
@@ -2648,8 +2653,7 @@ class Series(ContainerOperand):
         iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
-        iloc_key = iloc_to_insertion_iloc(iloc_key, self.values.__len__()) # normalize for ILoc
-        return self._insert(iloc_key, container)
+        return self._insert(iloc_key, container, after=False)
 
     @doc_inject(selector='insert')
     def insert_after(self,
@@ -2669,8 +2673,7 @@ class Series(ContainerOperand):
         iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
-        iloc_key = iloc_to_insertion_iloc(iloc_key, self.values.__len__()) # normalize for ILoc
-        return self._insert(iloc_key + 1, container)
+        return self._insert(iloc_key, container, after=True)
 
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types
