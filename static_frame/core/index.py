@@ -532,9 +532,7 @@ class Index(IndexBase):
         self._labels.flags.writeable = False
 
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
-        if self._recache:
-            self._update_array_cache() # COV_MISSING
-
+        assert not self._recache # __deepcopy__ is implemented on derived GO class
         obj = self.__new__(self.__class__)
         obj._map = deepcopy(self._map, memo) #type: ignore
         obj._labels = array_deepcopy(self._labels, memo) #type: ignore
@@ -593,7 +591,7 @@ class Index(IndexBase):
     def _iter_label_items(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None
             ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
-        yield from zip(self._positions, self._labels) # COV_MISSING
+        yield from zip(self._positions, self._labels)
 
     @property
     def iter_label(self) -> IterNodeDepthLevel[tp.Any]:

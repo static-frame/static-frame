@@ -4395,15 +4395,15 @@ class TestUnit(TestCase):
         s2 = Series((1, 3.4, 5), index=('d', 'e', 'f'))
 
         with self.assertRaises(NotImplementedError):
-            _ = s1._insert(1, (3, 4)) #type: ignore
+            _ = s1._insert(1, (3, 4), after=True) #type: ignore
 
-        s3 = s1._insert(1, s2)
+        s3 = s1._insert(1, s2, after=False)
 
         self.assertEqual(s3.to_pairs(),
                 (('a', 1), ('d', 1.0), ('e', 3.4), ('f', 5.0), ('b', None), ('c', 5))
                 )
 
-        s4 = s1._insert(3, s2)
+        s4 = s1._insert(2, s2, after=True)
 
         self.assertEqual(s4.to_pairs(),
                 (('a', 1), ('b', None), ('c', 5), ('d', 1.0), ('e', 3.4), ('f', 5.0))
