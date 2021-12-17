@@ -18,10 +18,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import NULL_SLICE
 
-
-
 from static_frame.core.exception import LocEmpty
-
 
 class LocMap:
 
