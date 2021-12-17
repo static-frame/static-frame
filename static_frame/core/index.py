@@ -120,7 +120,7 @@ class ILoc(metaclass=ILocMeta):
 class LocMap:
 
     @staticmethod
-    def map_slice_args(
+    def _map_slice_args(
             label_to_pos: tp.Callable[[tp.Iterable[tp.Hashable]], int],
             key: slice,
             labels: tp.Optional[np.ndarray] = None,
@@ -225,7 +225,7 @@ class LocMap:
                 # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explicit slice relative to the offset
                 return slice(offset, len(positions) + offset) #type: ignore
             try:
-                return slice(*cls.map_slice_args(
+                return slice(*cls._map_slice_args(
                         label_to_pos.get, #type: ignore
                         key,
                         labels,
