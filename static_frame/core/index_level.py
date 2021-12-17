@@ -15,11 +15,11 @@ from static_frame.core.hloc import HLoc
 from static_frame.core.index import ILoc
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.index import LocMap
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.loc_map import LocMap
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexConstructor
