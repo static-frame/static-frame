@@ -26,7 +26,7 @@ if tp.TYPE_CHECKING:
 
 
 HeaderType = tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]
-HeaderDecodeCacheType = tp.Dict[str, HeaderType]
+HeaderDecodeCacheType = tp.Dict[bytes, HeaderType]
 
 #-------------------------------------------------------------------------------
 
@@ -115,7 +115,7 @@ class NPYConverter:
     @classmethod
     def _header_decode(cls,
             file: tp.IO[bytes],
-            header_decode_cache: tp.Dict[str, HeaderType]
+            header_decode_cache: HeaderDecodeCacheType,
             ) -> HeaderType:
         '''Extract and decode the header.
         '''
@@ -132,7 +132,7 @@ class NPYConverter:
     @classmethod
     def from_npy(cls,
             file: tp.IO[bytes],
-            header_decode_cache: tp.Dict[str, HeaderType],
+            header_decode_cache: HeaderDecodeCacheType,
             memory_map: bool = False,
             ) -> tp.Tuple[np.ndarray, tp.Optional[mmap.mmap]]:
         '''Read an NPY 1.0 file.
