@@ -172,7 +172,7 @@ class NPYConverter:
                     offset=offset_array,
                     order='F' if fortran_order else 'C',
                     )
-            assert not array.flags.writeable
+            # assert not array.flags.writeable
             return array, mm
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
