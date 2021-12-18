@@ -20,6 +20,9 @@ from static_frame.core.util import NULL_SLICE
 
 from static_frame.core.exception import LocEmpty
 
+TypePos = tp.Optional[int]
+LocEmptyInstance = LocEmpty()
+
 class LocMap:
 
     @staticmethod
@@ -34,6 +37,7 @@ class LocMap:
         Args:
             label_to_pos: callable into mapping (can be a get() method from a dictionary)
         '''
+        # NOTE: it is expected that NULL_SLICE is alreayd identified
         offset_apply = not offset is None
 
         for field in SLICE_ATTRS:
@@ -42,46 +46,36 @@ class LocMap:
                 yield None
 
             elif isinstance(attr, np.datetime64):
-                assert labels is not None
-                # if a datetime, we assume that the labels are ordered;
-                if attr.dtype == labels.dtype:
-                    if field != SLICE_STEP_ATTR:
-                        pos: tp.Optional[int] = label_to_pos(attr)
-                        if pos is None:
-                            # if same type, and that atter is not in labels, we fail, just as we do in then non-datetime64 case. Only when datetimes are given in a different unit are we "loose" about matching.
-                            raise LocInvalid('Invalid loc given in a slice', attr, field)
-                    else: # step
-                        pos = attr # should be an integer # COV_MISSING
+                if field == SLICE_STEP_ATTR:
+                    raise RuntimeError(f'Step cannot be {attr}')
 
+                # if we match the same dt64 unit, simply use label_to_pos, increment stop
+                if attr.dtype == labels.dtype:
+                    pos: TypePos = label_to_pos(attr)
+                    if pos is None:
+                        # if same type, and that atter is not in labels, we fail, just as we do in then non-datetime64 case. Only when datetimes are given in a different unit are we "loose" about matching.
+                        raise LocInvalid('Invalid loc given in a slice', attr, field)
                     if field == SLICE_STOP_ATTR:
                         pos += 1 #type: ignore  # stop is inclusive
-
                 elif field == SLICE_START_ATTR:
-                    # convert to the type of the atrs; this should get the relevant start
-                    pos: tp.Optional[int] = label_to_pos(attr.astype(labels.dtype)) #type: ignore
+                    # NOTE: as an optimization only for the start attr, we can try to convert attr to labels unit and see if there is a match; this avoids astyping the entire labels array
+                    pos: TypePos = label_to_pos(attr.astype(labels.dtype)) #type: ignore
                     if pos is None: # we did not find a start position
                         matches = np.flatnonzero(labels.astype(attr.dtype) == attr)
                         if len(matches):
                             pos = matches[0]
                         else:
-                            raise LocEmpty()
-
+                            raise LocEmptyInstance
                 elif field == SLICE_STOP_ATTR:
-                    # convert labels to the slice attr value, compare, then get last
-                    # add one, as this is an inclusive stop
-                    # pos = np.flatnonzero(labels.astype(attr.dtype) == attr)[-1] + 1
+                    # NOTE: we do not want to convert attr to labels dtype and take the match as we want to get the last of all possible matches of labels at the attr unit
                     matches = np.flatnonzero(labels.astype(attr.dtype) == attr)
                     if len(matches):
                         pos = matches[-1] + 1
                     else:
-                        raise LocEmpty()
+                        raise LocEmptyInstance
 
-                elif field == SLICE_STEP_ATTR: # COV_MISSING
-                    pos = attr # COV_MISSING
-
-                if offset_apply and field != SLICE_STEP_ATTR:
-                    pos += offset #type: ignore # COV_MISSING
-
+                if offset_apply:
+                    pos += offset #type: ignore
                 yield pos
 
             else:
@@ -94,11 +88,9 @@ class LocMap:
                         pos += offset #type: ignore
                 else: # step
                     pos = attr # should be an integer
-
                 if field == SLICE_STOP_ATTR:
                     # loc selections are inclusive, so iloc gets one more
                     pos += 1 #type: ignore
-
                 yield pos
 
     @classmethod
@@ -119,14 +111,16 @@ class LocMap:
         Returns:
             An integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
+        # NOTE: ILoc is handled prior to this call, in the Index._loc_to_iloc method
         offset_apply = not offset is None
 
-        # ILoc is handled prior to this call, in the Index._loc_to_iloc method
-
-        if isinstance(key, slice):
-            if offset_apply and key == NULL_SLICE:
-                # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explicit slice relative to the offset
-                return slice(offset, len(positions) + offset) #type: ignore
+        if key.__class__ is slice:
+            if key == NULL_SLICE:
+                if offset_apply:
+                    # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explicit slice relative to the offset
+                    return slice(offset, len(positions) + offset) #type: ignore
+                else:
+                    return NULL_SLICE
             try:
                 return slice(*cls.map_slice_args(
                         label_to_pos.get, #type: ignore
