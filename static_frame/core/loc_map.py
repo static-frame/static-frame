@@ -39,6 +39,7 @@ class LocMap:
         '''
         # NOTE: it is expected that NULL_SLICE is alreayd identified
         offset_apply = not offset is None
+        labels_astype: tp.Optional[np.ndarray] = None
 
         for field in SLICE_ATTRS:
             attr = getattr(key, field)
@@ -48,7 +49,6 @@ class LocMap:
             elif isinstance(attr, np.datetime64):
                 if field == SLICE_STEP_ATTR:
                     raise RuntimeError(f'Step cannot be {attr}')
-
                 # if we match the same dt64 unit, simply use label_to_pos, increment stop
                 if attr.dtype == labels.dtype:
                     pos: TypePos = label_to_pos(attr)
@@ -61,14 +61,18 @@ class LocMap:
                     # NOTE: as an optimization only for the start attr, we can try to convert attr to labels unit and see if there is a match; this avoids astyping the entire labels array
                     pos: TypePos = label_to_pos(attr.astype(labels.dtype)) #type: ignore
                     if pos is None: # we did not find a start position
-                        matches = np.flatnonzero(labels.astype(attr.dtype) == attr)
+                        labels_astype = labels.astype(attr.dtype)
+                        matches = np.flatnonzero(labels_astype == attr)
                         if len(matches):
                             pos = matches[0]
                         else:
                             raise LocEmptyInstance
                 elif field == SLICE_STOP_ATTR:
                     # NOTE: we do not want to convert attr to labels dtype and take the match as we want to get the last of all possible matches of labels at the attr unit
-                    matches = np.flatnonzero(labels.astype(attr.dtype) == attr)
+                    # NOTE: try to re-use labels_astype if possible
+                    if labels_astype is None or labels_astype.dtype != attr.dtype:
+                        labels_astype = labels.astype(attr.dtype)
+                    matches = np.flatnonzero(labels_astype == attr)
                     if len(matches):
                         pos = matches[-1] + 1
                     else:

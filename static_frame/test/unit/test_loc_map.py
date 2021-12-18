@@ -95,6 +95,20 @@ class TestUnit(TestCase):
 
 
 
+    def test_loc_map_slice_d(self) -> None:
+        dt64 = np.datetime64
+        idx = IndexDate.from_date_range('1985-01-06', '1985-04-08')
+
+        post1 = LocMap.loc_to_iloc(
+                label_to_pos=idx._map,
+                labels=idx._labels,
+                positions=idx._positions,
+                key=slice(dt64('1985-01'), dt64('1985-03')),
+                offset=None,
+                partial_selection=False,
+                )
+        self.assertEqual(post1, slice(0, 85, None))
+
 if __name__ == '__main__':
     unittest.main()
 
