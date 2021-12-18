@@ -17,7 +17,6 @@ class TestUnit(TestCase):
 
 
     def test_loc_map_a(self) -> None:
-
         idx = Index(['a', 'b', 'c'])
         post1 = LocMap.loc_to_iloc(
                 label_to_pos=idx._map,
@@ -38,6 +37,31 @@ class TestUnit(TestCase):
                 partial_selection=False,
                 )
         self.assertEqual(post2, NULL_SLICE)
+
+    def test_loc_map_b(self) -> None:
+        idx = Index(['a', 'b', 'c', 'd', 'e'])
+        post1 = LocMap.loc_to_iloc(
+                label_to_pos=idx._map,
+                labels=idx._labels,
+                positions=idx._positions,
+                key=['b', 'd'],
+                offset=None,
+                partial_selection=False,
+                )
+        self.assertEqual(post1, [1, 3])
+
+        post2 = LocMap.loc_to_iloc(
+                label_to_pos=idx._map,
+                labels=idx._labels,
+                positions=idx._positions,
+                key=['b', 'd'],
+                offset=10,
+                partial_selection=False,
+                )
+        self.assertEqual(post2, [11, 13])
+
+
+
 
     def test_loc_map_slice_a(self) -> None:
         dt64 = np.datetime64

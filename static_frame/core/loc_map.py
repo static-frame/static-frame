@@ -46,7 +46,7 @@ class LocMap:
             if attr is None:
                 yield None
 
-            elif isinstance(attr, np.datetime64):
+            elif attr.__class__ is np.datetime64:
                 if field == SLICE_STEP_ATTR:
                     raise RuntimeError(f'Step cannot be {attr}')
                 # if we match the same dt64 unit, simply use label_to_pos, increment stop
@@ -137,7 +137,7 @@ class LocMap:
 
         labels_is_dt64 = labels.dtype.kind == DTYPE_DATETIME_KIND
 
-        if isinstance(key, np.datetime64):
+        if key.__class__ is np.datetime64:
             # if we have a single dt64, convert this to the key's unit and do a Boolean selection if the key is a less-granular unit
             if (labels.dtype == DTYPE_OBJECT
                     and np.datetime_data(key.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS):
@@ -179,7 +179,7 @@ class LocMap:
                     return [label_to_pos[k] + offset for k in key if k in label_to_pos] #type: ignore
                 return [label_to_pos[k] for k in key if k in label_to_pos]
             if offset_apply:
-                return [label_to_pos[k] + offset for k in key] #type: ignore # COV_MISSING
+                return [label_to_pos[k] + offset for k in key] #type: ignore
             return [label_to_pos[k] for k in key]
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
