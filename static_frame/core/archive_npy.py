@@ -14,6 +14,7 @@ from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import list_to_tuple
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import NameType
+from static_frame.core.util import IndexInitializer
 from static_frame.core.container_util import ContainerMap
 
 from static_frame.core.exception import ErrorNPYDecode
@@ -614,12 +615,44 @@ class NPYFrameConverter(ArchiveFrameConverter):
 
 
 class ArchiveComponentsConverter:
-    pass
+    '''
+    A family of methods to write NPY/NPZ from things other than a Frame, or multi-frame collections like a Bus/Yarn/Quilt but with the intention of production a consolidate Frame, not just a zip of Frames.
+    '''
+    @classmethod
+    def from_blocks(cls,
+            blocks: tp.Iterable[Frame],
+            *,
+            index: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[IndexInitializer] = None,
+            axis: int = 0,
+            ) -> None:
+        '''
+        If axis is 0, blocks are stacked vertically, if axis is 1, blocks are stacked horizontally.
+        '''
+
+    @classmethod
+    def from_frames(cls,
+            frames: tp.Iterable[Frame],
+            *,
+            include_index: bool = True,
+            include_columns: bool = True,
+            axis: int = 0,
+            ) -> None:
+        '''Given an iterable of Frames, write out an NPZ or NPY directly, without building up an intermediary Frame. If axis 0, the Frames must be block compatible; if axis 1, the Frames must have the same number of rows. For both axis, indices must be unique or aligned.
+        '''
+        pass
 
 
-class NPZComponentsConverter(ArchiveComponentsConverter):
+
+class NPZ(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveZip
 
-class NPYComponentsConverter(ArchiveComponentsConverter):
+class NPY(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveDirectory
+
+
+# possible interfaces
+
+# NPZ(fp).from_blocks()
+# NPZ.from_blocks().write(fp)
 
