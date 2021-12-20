@@ -620,7 +620,7 @@ class ArchiveComponentsConverter:
     '''
     @classmethod
     def from_blocks(cls,
-            blocks: tp.Iterable[Frame],
+            blocks: tp.Iterable['Frame'],
             *,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
@@ -632,7 +632,7 @@ class ArchiveComponentsConverter:
 
     @classmethod
     def from_frames(cls,
-            frames: tp.Iterable[Frame],
+            frames: tp.Iterable['Frame'],
             *,
             include_index: bool = True,
             include_columns: bool = True,

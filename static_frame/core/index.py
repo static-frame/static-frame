@@ -1164,7 +1164,7 @@ class Index(IndexBase):
         if values.dtype == assignable_dtype:
             assigned = values.copy()
         else:
-            assigned = values.astype(assignable_dtype) # COV_MISSING
+            assigned = values.astype(assignable_dtype)
 
         assigned[sel] = value
         assigned.flags.writeable = False

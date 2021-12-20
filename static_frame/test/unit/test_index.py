@@ -847,6 +847,15 @@ class TestUnit(TestCase):
         self.assertNotEqual(id(idx3), id(idx4))
 
 
+    def test_index_fillna_c(self) -> None:
+
+        idx1 = Index((3.0, 2.0, np.nan))
+        idx2 = idx1.fillna('foo')
+        self.assertEqual(idx2.values.tolist(),
+                [3.0, 2.0, 'foo'],
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_index_attributes_a(self) -> None:
