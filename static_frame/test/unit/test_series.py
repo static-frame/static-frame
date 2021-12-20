@@ -1666,6 +1666,13 @@ class TestUnit(TestCase):
         self.assertEqual(s1['c'].tolist(), [3, 4])
 
 
+    def test_series_loc_extract_j(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'))
+        s2 = s1.loc[:]
+        self.assertEqual(s2.to_pairs(),
+            ((0, 'a'), (1, 'b'), (2, 'c')))
+
     #---------------------------------------------------------------------------
 
     def test_series_group_a(self) -> None:

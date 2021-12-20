@@ -17,6 +17,7 @@ from static_frame import Series
 from static_frame import IndexYear
 from static_frame import Frame
 from static_frame import ILoc
+from static_frame import IndexAutoFactory
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.exception import ErrorInitIndex
@@ -25,6 +26,7 @@ from static_frame.core.exception import ErrorInitIndexNonUnique
 
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import arrays_equal
+from static_frame.core.util import NULL_SLICE
 
 
 class TestUnit(TestCase):
@@ -260,6 +262,12 @@ class TestUnit(TestCase):
         idx2 = idx1[:]
         self.assertTrue(idx2._map is None) #type: ignore
 
+
+    def test_index_loc_to_iloc_j(self) -> None:
+        idx1 = IndexAutoFactory.from_optional_constructor(10,
+                default_constructor=Index)
+        post = idx1.loc_to_iloc(NULL_SLICE)
+        self.assertEqual(post, NULL_SLICE)
 
     #---------------------------------------------------------------------------
     def test_index_mloc_a(self) -> None:

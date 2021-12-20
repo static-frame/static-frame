@@ -883,7 +883,7 @@ class Index(IndexBase):
 
             if isinstance(key, slice):
                 if key == NULL_SLICE:
-                    return slice(0, self.__len__()) # COV_MISSING # NOTE: can this just be a NULL slice?
+                    return NULL_SLICE
                 if key.stop >= len(self):
                     # while a valid slice of positions, loc lookups do not permit over-stating boundaries
                     raise LocInvalid(f'Invalid loc: {key}')
