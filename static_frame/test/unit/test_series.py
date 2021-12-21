@@ -1571,6 +1571,17 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 1), ('c', -2), ('d', -3), ('e', -4)))
 
 
+    def test_series_assign_i(self) -> None:
+        s1 = Series(range(6))
+        s2 = s1 * 3
+        s3 = s1.iter_element().apply_pool(s2,
+                max_workers=2,
+                use_threads=True,
+                )
+        self.assertEqual(s3.to_pairs(),
+            ((0, 0), (1, 3), (2, 6), (3, 9), (4, 12), (5, 15))
+            )
+
     #---------------------------------------------------------------------------
     def test_series_iloc_extract_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
@@ -1816,8 +1827,17 @@ class TestUnit(TestCase):
 
         self.assertEqual(tuple(s2.iter_element().map_any_iter(s2)),
             (100, 101))
-        self.assertEqual(tuple(s2.iter_element().map_any_iter_items(s2)),
-            ((3, 100), (21, 101)))
+        self.assertEqual(tuple(s2.iter_element().map_any_iter_items(s2)),            ((3, 100), (21, 101)))
+
+
+    def test_series_iter_element_map_any_d(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+        mapping = {('b', 3): 300, ('d', 21): 200}
+        post = tuple(s1.iter_element_items().map_any_iter(mapping))
+        self.assertEqual(post, (10, 300, 15, 200, 28))
 
 
     def test_series_iter_element_map_all_a(self) -> None:

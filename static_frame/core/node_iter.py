@@ -117,7 +117,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
 
-        if not callable(func): # NOTE: when is func not a callable?
+        if not callable(func): # support array, Series mapping
             func = getattr(func, '__getitem__')
 
         # use side effect list population to create keys when iterating over values
@@ -148,9 +148,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             ) -> tp.Iterator[tp.Any]:
 
         pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
-
-        if not callable(func): # NOTE: when is func not a callable?
-            func = getattr(func, '__getitem__') # COV_MISSING
+        if not callable(func): # support array, Series mapping
+            func = getattr(func, '__getitem__')
 
         # use side effect list population to create keys when iterating over values
         arg_gen = (self._func_values if self._yield_type is IterNodeType.VALUES
@@ -192,7 +191,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         if self._yield_type is IterNodeType.VALUES:
             yield from (get(v, v) for v in self._func_values())
         else:
-            yield from (get((k,  v), v) for k, v in self._func_items()) # COV_MISSING
+            yield from (get((k,  v), v) for k, v in self._func_items())
 
     @doc_inject(selector='map_any')
     def map_any(self,
