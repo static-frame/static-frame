@@ -325,6 +325,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         if self._yield_type is IterNodeType.VALUES:
             yield from (func(v) for v in self._func_values())
         else:
+            import ipdb; ipdb.set_trace()
             yield from (func((k,  v)) for k, v in self._func_items()) # COV_MISSING
 
     @doc_inject(selector='map_all')
