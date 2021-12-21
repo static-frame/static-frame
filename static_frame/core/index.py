@@ -828,7 +828,7 @@ class Index(IndexBase):
             if key.__class__ is np.ndarray:
                 # PERF: isolate for usage of _positions
                 if self._recache:
-                    self._update_array_cache() # COV_MISSING
+                    self._update_array_cache()
 
                 if key.dtype == DTYPE_BOOL: #type: ignore
                     return self._positions[key] + offset
@@ -969,7 +969,7 @@ class Index(IndexBase):
             self._update_array_cache()
 
         if isinstance(other, (Series, Frame)):
-            raise ValueError('cannot use labelled container as an operand.') # COV_MISSING
+            raise ValueError('cannot use labelled container as an operand.')
 
         values = self._labels
         other_is_array = False

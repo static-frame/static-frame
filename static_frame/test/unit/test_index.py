@@ -464,7 +464,11 @@ class TestUnit(TestCase):
         self.assertEqual(('_' + idx1).tolist(), ['_a', '_b', '_c'])
         self.assertEqual((idx1 * 3).tolist(), ['aaa', 'bbb', 'ccc'])
 
-
+    def test_index_binary_operators_g(self) -> None:
+        idx1 = Index((1, 2, 3))
+        s1 = Series(('a', 'b', 'c'))
+        with self.assertRaises(ValueError):
+            self.assertEqual(idx1 * s1)
 
 
     #---------------------------------------------------------------------------
@@ -570,7 +574,6 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             index.append((2, 5))
 
-
     def test_index_go_d(self) -> None:
 
         index = IndexGO((), loc_is_iloc=True)
@@ -586,8 +589,6 @@ class TestUnit(TestCase):
         self.assertFalse(index._map is None)
         self.assertTrue('a' in index)
         self.assertTrue(1 in index)
-
-
 
     def test_index_go_e(self) -> None:
 
@@ -605,11 +606,15 @@ class TestUnit(TestCase):
         self.assertTrue(-1 in index)
         self.assertTrue(1 in index)
 
+    def test_index_go_f(self) -> None:
 
-
+        idx1 = IndexAutoFactory.from_optional_constructor(3,
+                default_constructor=IndexGO)
+        idx1.append(3)
+        post = idx1._loc_to_iloc(np.array([True, False, True, False]), 2)
+        self.assertEqual(post.tolist(), [2, 4])
 
     #---------------------------------------------------------------------------
-
 
     def test_index_sort_a(self) -> None:
 
@@ -620,8 +625,6 @@ class TestUnit(TestCase):
         self.assertEqual(
                 [index.sort(ascending=False)._loc_to_iloc(x) for x in sorted(index.values)],
                 [4, 3, 2, 1, 0])
-
-
 
     def test_index_sort_b(self) -> None:
 
