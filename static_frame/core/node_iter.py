@@ -259,7 +259,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         if self._yield_type is IterNodeType.VALUES:
             yield from (get(v, fill_value) for v in self._func_values())
         else:
-            yield from (get((k,  v), fill_value) for k, v in self._func_items()) # COV_MISSING
+            yield from (get((k,  v), fill_value) for k, v in self._func_items())
 
     @doc_inject(selector='map_fill')
     def map_fill(self,
