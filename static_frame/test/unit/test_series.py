@@ -1889,12 +1889,12 @@ class TestUnit(TestCase):
 
     def test_series_iter_element_map_all_d(self) -> None:
 
-        s1 = Series((10, 3, 15, 21, 28),
-                index=('a', 'b', 'c', 'd', 'e'),
+        s1 = Series((3, 15, 21),
+                index=('b', 'c', 'd'),
                 )
-        mapping = {('b', 3): 300, ('d', 21): 200}
+        mapping = {('b', 3): 300, ('c', 15): 100, ('d', 21): 200}
         post = tuple(s1.iter_element_items().map_all_iter(mapping))
-        self.assertEqual(post, (None, 300, None, 200, None))
+        self.assertEqual(post, (300, 100, 200))
 
 
 
