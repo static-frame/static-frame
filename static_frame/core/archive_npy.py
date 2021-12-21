@@ -640,7 +640,6 @@ class ArchiveComponentsConverter:
             ) -> None:
         '''Given an iterable of Frames, write out an NPZ or NPY directly, without building up an intermediary Frame. If axis 0, the Frames must be block compatible; if axis 1, the Frames must have the same number of rows. For both axis, indices must be unique or aligned.
         '''
-        pass
 
 
 
