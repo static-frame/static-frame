@@ -30,6 +30,7 @@ from static_frame import IndexHierarchyGO
 from static_frame import IndexDate
 from static_frame import IndexSecond
 from static_frame import IndexYearMonth
+from static_frame import IndexYear
 from static_frame import IndexAutoFactory
 from static_frame import IndexDefaultFactory
 from static_frame.core.util import DTYPE_INT_DEFAULT
@@ -1730,6 +1731,17 @@ class TestUnit(TestCase):
                 ((10, [100, 100, 100]), (20, [400, 400])))
 
 
+    def test_series_group_d(self) -> None:
+        from static_frame import SeriesHE
+        s1 = SeriesHE((10, 10, 10, 20, 20),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+        mapping = {s1.iloc[:3]: 100}
+        groups = s1.iter_group().map_fill(mapping, fill_value=None)
+        self.assertEqual(groups.to_pairs(),
+                ((10, 100), (20, None)),
+                )
+
     #---------------------------------------------------------------------------
 
     def test_series_iter_element_a(self) -> None:
@@ -1785,6 +1797,22 @@ class TestUnit(TestCase):
                 {(k, v): v * 10 for k, v in s1.items()}))
         self.assertEqual(post3,
                 (('a', 100), ('b', 30), ('c', 150), ('d', 210), ('e', 280)))
+
+
+    def test_series_iter_element_d(self) -> None:
+
+        s1 = Series((10, 3, 15, 21),
+                index=('2021', '1564', '1876', '2067'),
+                )
+        post = s1.iter_element().apply(
+                lambda x: x*2,
+                index_constructor=IndexYear,
+                )
+        self.assertTrue(
+                (post.index.values == np.array(['2021', '1564', '1876', '2067'], dtype='datetime64[Y]')).all()
+                )
+
+
 
 
     #---------------------------------------------------------------------------
@@ -1921,7 +1949,6 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('a', -1), ('b', -1), ('c', -1), ('d', 100), ('e', 101))
                 )
-
 
     def test_series_iter_element_map_fill_c(self) -> None:
 

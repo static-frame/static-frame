@@ -279,7 +279,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {dtype}
         '''
         if IterNodeApplyType.is_items(self._apply_type):
-            return self._apply_constructor( # COV_MISSING
+            return self._apply_constructor(
                     self.map_fill_iter_items(mapping, fill_value=fill_value),
                     dtype=dtype,
                     name=name,
@@ -325,7 +325,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         if self._yield_type is IterNodeType.VALUES:
             yield from (func(v) for v in self._func_values())
         else:
-            yield from (func((k,  v)) for k, v in self._func_items()) # COV_MISSING
+            yield from (func((k,  v)) for k, v in self._func_items())
 
     @doc_inject(selector='map_all')
     def map_all(self,
@@ -529,7 +529,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             own_index = True
 
         if index_constructor is not None:
-            index = index_constructor(index) # COV_MISSING
+            index = index_constructor(index)
 
         # PERF: passing count here permits faster generator realization
         values, _ = iterable_to_array_1d(
