@@ -636,7 +636,6 @@ class TestUnit(TestCase):
                 ['cb', 'eb', 'dg', 'bq', 'ax']
                 )
 
-
     def test_index_sort_c(self) -> None:
         index = Index(('a', 'c', 'd', 'e', 'b'))
         with self.assertRaises(RuntimeError):
@@ -1037,6 +1036,16 @@ class TestUnit(TestCase):
         self.assertEqual(post,
             ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D')),
             )
+
+
+    def test_index_iter_label_c(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
+        with self.assertRaises(RuntimeError):
+            _ = tuple(idx1.iter_label().apply(
+                    lambda x: x.upper(),
+                    index_constructor=IndexDate,
+                    ))
 
 
     #---------------------------------------------------------------------------
