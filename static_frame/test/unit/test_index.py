@@ -468,7 +468,7 @@ class TestUnit(TestCase):
         idx1 = Index((1, 2, 3))
         s1 = Series(('a', 'b', 'c'))
         with self.assertRaises(ValueError):
-            self.assertEqual(idx1 * s1)
+            _ = idx1 * s1
 
 
     #---------------------------------------------------------------------------
@@ -610,9 +610,9 @@ class TestUnit(TestCase):
 
         idx1 = IndexAutoFactory.from_optional_constructor(3,
                 default_constructor=IndexGO)
-        idx1.append(3)
-        post = idx1._loc_to_iloc(np.array([True, False, True, False]), 2)
-        self.assertEqual(post.tolist(), [2, 4])
+        idx1.append(3) # type: ignore
+        post = idx1._loc_to_iloc(np.array([True, False, True, False]), 2) #type: ignore
+        self.assertEqual(post.tolist(), [2, 4]) #type: ignore
 
     #---------------------------------------------------------------------------
 
