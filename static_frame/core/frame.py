@@ -2360,9 +2360,9 @@ class Frame(ContainerOperand):
                 try:
                     if dtype != dtype_current:
                         yield_block = True
-                except TypeError: # COV_MISSING
-                    # data type not understood, happens with pd datatypes to np dtypes in pd >= 1
-                    yield_block = True # COV_MISSING
+                except TypeError: #pragma: no cover
+                    # NOTE: raises data type not understood, happens with pd datatypes to np dtypes in pd >= 1, but fixed in later versions of pd and presently not reproducible
+                    yield_block = True #pragma: no cover
 
                 if yield_block:
                     column_end = column_last + 1
