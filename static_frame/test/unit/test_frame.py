@@ -12775,6 +12775,13 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitFrame):
             f = Frame.from_fields((ff.parse('s(2,2)'), ff.parse('s(2,4)')))
 
+    def test_frame_from_fields_e(self) -> None:
+        f1 = sf.Frame.from_fields((np.array([3, 4]), np.array([3, 7])), dtypes=float)
+        self.assertEqual(f1.dtypes.values.tolist(),
+                [np.dtype('float64'), np.dtype('float64')]
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((0, 3.0), (1, 4.0))), (1, ((0, 3.0), (1, 7.0)))))
 
 
     #---------------------------------------------------------------------------

@@ -1161,7 +1161,7 @@ class Frame(ContainerOperand):
 
                 if v.__class__ is np.ndarray:
                     if column_type is not None:
-                        yield v.astype(column_type) # COV_MISSING
+                        yield v.astype(column_type)
                     else:
                         yield v
                 elif isinstance(v, Series):
@@ -5924,7 +5924,7 @@ class Frame(ContainerOperand):
                     valid = ~isna_array(values)
 
                 if unique and valid is None:
-                    array[i] = len(ufunc_unique(values))
+                    array[i] = len(ufunc_unique(values)) # COV_MISSING
                 elif unique and valid is not None: # valid is a Boolean array
                     array[i] = len(ufunc_unique(values[valid]))
                 elif not unique and valid is not None:
