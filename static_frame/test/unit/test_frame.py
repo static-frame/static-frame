@@ -2929,9 +2929,6 @@ class TestUnit(TestCase):
                 f1.assign.loc['y'](list(range(5))).values.tolist(),
                 [[1, 2, 'a', False, True], [0, 1, 2, 3, 4]])
 
-
-
-
     def test_frame_assign_loc_c(self) -> None:
 
         records = (
@@ -3075,6 +3072,13 @@ class TestUnit(TestCase):
         f3 = f1.assign.loc[1, [4, 2, 0, 1]](Series(tuple('abcd'), index=(0,1,2,4)))
         self.assertEqual(f3.to_pairs(),
                 ((0, ((0, -88017), (1, 'a'))), (1, ((0, 162197), (1, 'b'))), (2, ((0, -3648), (1, 'c'))), (3, ((0, 129017), (1, 35021))), (4, ((0, 58768), (1, 'd'))), (5, ((0, 84967), (1, 13448))))
+                )
+
+    def test_frame_assign_loc_l(self) -> None:
+        f1 = ff.parse('s(2,4)|c(I,int)|v(int)').relabel(columns=range(4))
+        f2 = f1.assign.loc[1](Series(('a', 'b'), index=(2, 1)), fill_value='')
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, -88017), (1, ''))), (1, ((0, 162197), (1, 'b'))), (2, ((0, -3648), (1, 'a'))), (3, ((0, 129017), (1, ''))))
                 )
 
 
@@ -3328,7 +3332,11 @@ class TestUnit(TestCase):
 
         value1 = Series((100, 200, 300), index=('s', 'u', 't'))
         iloc_key1 = (0, slice(2, None))
-        v1 = f1._reindex_other_like_iloc(value1, iloc_key1)
+        v1 = f1._reindex_other_like_iloc(value1,
+                iloc_key1,
+                is_series=True,
+                is_frame=False,
+                )
 
         self.assertAlmostEqualItems(v1.items(),
                 [('r', nan), ('s', 100), ('t', 300)])
@@ -3336,7 +3344,11 @@ class TestUnit(TestCase):
 
         value2 = Series((100, 200), index=('y', 'x'))
         iloc_key2 = (slice(0, None), 2)
-        v2 = f1._reindex_other_like_iloc(value2, iloc_key2)
+        v2 = f1._reindex_other_like_iloc(value2,
+                iloc_key2,
+                is_series=True,
+                is_frame=False,
+                )
 
         self.assertAlmostEqualItems(v2.items(),
                 [('x', 200), ('y', 100)])
@@ -3357,7 +3369,12 @@ class TestUnit(TestCase):
                 columns=('s', 't', 'w'))
 
         iloc_key1 = (slice(0, None), slice(3, None))
-        v1 = f1._reindex_other_like_iloc(value1, iloc_key1)
+        v1 = f1._reindex_other_like_iloc(
+                value1,
+                iloc_key1,
+                is_series=False,
+                is_frame=True,
+                )
 
         self.assertEqual(v1.to_pairs(0),
                 (('s', (('x', 20), ('y', 23))), ('t', (('x', 21), ('y', 24)))))
@@ -3376,7 +3393,12 @@ class TestUnit(TestCase):
         iloc_key1 = (slice(0, None), slice(3, None))
 
         with self.assertRaises(RuntimeError):
-            _ = f1._reindex_other_like_iloc([3, 4, 5], iloc_key1)
+            _ = f1._reindex_other_like_iloc(
+                        Series([3, 4, 5]),
+                        iloc_key1,
+                        is_series=True,
+                        is_frame=False,
+                        )
 
 
 

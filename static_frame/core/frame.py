@@ -3320,14 +3320,16 @@ class Frame(ContainerOperand):
     def _reindex_other_like_iloc(self,
             value: tp.Union[Series, 'Frame'],
             iloc_key: GetItemKeyTypeCompound,
-            fill_value: object = np.nan
+            is_series: bool,
+            is_frame: bool,
+            fill_value: object = np.nan,
             ) -> tp.Union[Series, 'Frame']:
         '''Given a value that is a Series or Frame, reindex it to the index components, drawn from this Frame, that are specified by the iloc_key.
         '''
-        if isinstance(iloc_key, tuple):
-            row_key, column_key = iloc_key
-        else:
-            row_key, column_key = iloc_key, None # COV_MISSING
+        # assert iloc_key.__class__ is tuple # must already be normalized
+        assert is_series ^ is_frame # one must be True
+
+        row_key, column_key = iloc_key
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys
         nm_row, nm_column = self._extract_axis_not_multi(row_key, column_key)
@@ -3335,17 +3337,17 @@ class Frame(ContainerOperand):
 
         if nm_row and not nm_column:
             # only column is multi selection, reindex by column
-            if isinstance(value, Series):
+            if is_series:
                 v = value.reindex(self._columns._extract_iloc(column_key),
                         fill_value=fill_value)
         elif not nm_row and nm_column:
             # only row is multi selection, reindex by index
-            if isinstance(value, Series):
+            if is_series:
                 v = value.reindex(self._index._extract_iloc(row_key),
                         fill_value=fill_value)
         elif not nm_row and not nm_column:
             # both multi, must be a Frame
-            if isinstance(value, Frame):
+            if is_frame:
                 target_column_index = self._columns._extract_iloc(column_key)
                 target_row_index = self._index._extract_iloc(row_key)
                 # this will use the default fillna type, which may or may not be what is wanted
@@ -7917,6 +7919,8 @@ class FrameAssignILoc(FrameAssign):
         if is_series:
             assigned = self.container._reindex_other_like_iloc(value,
                     key,
+                    is_series=is_series,
+                    is_frame=is_frame,
                     fill_value=fill_value).values
             blocks = self.container._blocks.extract_iloc_assign_by_unit(
                     key,
@@ -7925,6 +7929,8 @@ class FrameAssignILoc(FrameAssign):
         elif is_frame:
             assigned = self.container._reindex_other_like_iloc(value, #type: ignore [union-attr]
                     key,
+                    is_series=is_series,
+                    is_frame=is_frame,
                     fill_value=fill_value)._blocks._blocks
             blocks = self.container._blocks.extract_iloc_assign_by_blocks(
                     key,
