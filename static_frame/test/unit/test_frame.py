@@ -13202,6 +13202,17 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(),
                 ((0, ((('x', 'y'), 0), (0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((('x', 'y'), 1), (0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((('x', 'y'), 2), (0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), (3, ((('x', 'y'), 3), (0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3')))))
 
+
+    def test_frame_relabel_shift_out_d(self) -> None:
+
+        f1 = ff.parse('s(3,4)|i(IH,(int,str,int,str))|c(I,str)|v(str)').rename(
+                index=('a', 'b'), columns=('x', 'y'))
+        f2 = f1.relabel_shift_out([0, 1], axis=0)
+        self.assertEqual(f2.index.depth, 2)
+        self.assertEqual(f2.to_pairs(),
+                (('__index0__', (((58768, 'zoUj'), 34715), ((58768, 'zjDm'), 34715), ((146284, 'zFB6'), 34715))), ('__index1__', (((58768, 'zoUj'), 'zOyq'), ((58768, 'zjDm'), 'zOyq'), ((146284, 'zFB6'), 'zOyq'))), ('zZbu', (((58768, 'zoUj'), 'zjZQ'), ((58768, 'zjDm'), 'zO5l'), ((146284, 'zFB6'), 'zEdH'))), ('ztsv', (((58768, 'zoUj'), 'zaji'), ((58768, 'zjDm'), 'zJnC'), ((146284, 'zFB6'), 'zDdR'))), ('zUvW', (((58768, 'zoUj'), 'ztsv'), ((58768, 'zjDm'), 'zUvW'), ((146284, 'zFB6'), 'zkuW'))), ('zkuW', (((58768, 'zoUj'), 'z2Oo'), ((58768, 'zjDm'), 'z5l6'), ((146284, 'zFB6'), 'zCE3'))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_rank_a(self) -> None:

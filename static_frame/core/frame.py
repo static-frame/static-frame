@@ -3639,12 +3639,12 @@ class Frame(ContainerOperand):
 
         if axis == 0: # select from index, remove from index
             index_target = self._index
-            index_opposite = self._columns
+            # index_opposite = self._columns
             target_ctor = Index
             target_hctor = IndexHierarchy
         elif axis == 1:
             index_target = self._columns
-            index_opposite = self._index
+            # index_opposite = self._index
             target_ctor = self._COLUMNS_CONSTRUCTOR
             target_hctor = self._COLUMNS_HIERARCHY_CONSTRUCTOR
         else:
@@ -3668,25 +3668,29 @@ class Frame(ContainerOperand):
                 remain_labels = tuple(label for i, label in enumerate(label_src) if i not in depth_level)
 
             target_tb = index_target._blocks
-            add_blocks = target_tb._extract(column_key=depth_level)
-            if not add_blocks.__class__ is np.ndarray:
-                # get iterable off arrays
-                add_blocks = add_blocks._blocks
-            else:
-                add_blocks = (add_blocks,) # COV_MISSING
+            add_blocks = target_tb._slice_blocks(column_key=depth_level)
+
+            # add_blocks = target_tb._extract(column_key=depth_level)
+            # if not add_blocks.__class__ is np.ndarray:
+            #     # get iterable of arrays
+            #     add_blocks = add_blocks._blocks
+            # else:
+            #     add_blocks = (add_blocks,) # COV_MISSING
+
             # this might fail if nothing left
             remain_blocks = TypeBlocks.from_blocks(
                     target_tb._drop_blocks(column_key=depth_level),
                     shape_reference=(len(index_target), 0))
 
-            if remain_blocks.shape[1] == 0:
+            remain_columns = remain_blocks.shape[1]
+            if remain_columns == 0:
                 new_target = IndexAutoFactory
-            elif remain_blocks.shape[1] == 1:
+            elif remain_columns == 1:
                 new_target = target_ctor(
                         column_1d_filter(remain_blocks._blocks[0]),
                         name=remain_labels[0])
             else:
-                new_target = target_hctor._from_type_blocks( # COV_MISSING
+                new_target = target_hctor._from_type_blocks(
                         remain_blocks,
                         name=remain_labels
                         )
