@@ -3562,7 +3562,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             ) -> 'Frame':
         '''
-        Create, or augment, an :obj:`IndexHierarchy` by providing one or more selections via axis-appropriate ``loc`` selections.
+        Create, or augment, an :obj:`IndexHierarchy` by providing one or more selections from the Frame (via axis-appropriate ``loc`` selections) to move into the :obj:`Index`.
 
         Args:
             key: a loc-style selection on the opposite axis.
@@ -3633,8 +3633,8 @@ class Frame(ContainerOperand):
         Shift values from an index on an axis to the Frame by providing one or more depth level selections.
 
         Args:
-            key: an iloc-style selection on the axis.
-            axis: 0 modifies the index by selecting columns with ``key``; 1 modifies the columns by selecting rows with ``key``.
+            dpeth_level: an iloc-style selection on the :obj:`Index` of the specified axis.
+            axis: 0 modifies the index by selecting columns with ``depth_level``; 1 modifies the columns by selecting rows with ``depth_level``.
         '''
 
         if axis == 0: # select from index, remove from index
@@ -3669,13 +3669,6 @@ class Frame(ContainerOperand):
 
             target_tb = index_target._blocks
             add_blocks = target_tb._slice_blocks(column_key=depth_level)
-
-            # add_blocks = target_tb._extract(column_key=depth_level)
-            # if not add_blocks.__class__ is np.ndarray:
-            #     # get iterable of arrays
-            #     add_blocks = add_blocks._blocks
-            # else:
-            #     add_blocks = (add_blocks,) # COV_MISSING
 
             # this might fail if nothing left
             remain_blocks = TypeBlocks.from_blocks(
@@ -3738,6 +3731,10 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         '''
         Produce a new `Frame` with index and/or columns constructed with a transformed hierarchy.
+
+        Args:
+            index: Depth level specifier
+            columns: Depth level specifier
         '''
         if index and self.index.depth == 1:
             raise RuntimeError('cannot rehierarch on index when there is no hierarchy')
@@ -4623,7 +4620,8 @@ class Frame(ContainerOperand):
                         own_index=True,
                         )
             else:
-                raise AxisInvalid(f'invalid axis: {axis}') # COV_MISSING
+                # NOTE: axis always internally supplied
+                raise AxisInvalid(f'invalid axis: {axis}') #pragma: no cover
 
         elif other.__class__ is np.ndarray:
             name = None
@@ -5124,7 +5122,7 @@ class Frame(ContainerOperand):
                 cfs_is_array = cfs.__class__ is np.ndarray
                 if (cfs.ndim == 1 and len(cfs) != self.shape[1]) or (cfs.ndim == 2 and cfs.shape[1] != self.shape[1]):
                     raise RuntimeError('key function returned a container of invalid length')
-            else: # go straigt to array as, since this is row-wise, have to find a consolidated
+            else: # go straight to array as, since this is row-wise, have to find a consolidated
                 cfs = self._blocks._extract_array(row_key=iloc_key)
                 cfs_is_array = True
 
@@ -5140,7 +5138,7 @@ class Frame(ContainerOperand):
             elif isinstance(cfs, Frame):
                 cfs = cfs._blocks
                 if cfs.shape[0] == 1:
-                    values_for_sort = cfs._extract_array(row_key=0) # COV_MISSING
+                    values_for_sort = cfs._extract_array(row_key=0)
                 else:
                     values_for_lex = [cfs._extract_array(row_key=i)
                             for i in range(cfs.shape[0]-1, -1, -1)]
@@ -5160,7 +5158,7 @@ class Frame(ContainerOperand):
                 if cfs.ndim == 1:
                     values_for_sort = cfs
                 elif cfs.ndim == 2 and cfs.shape[1] == 1:
-                    values_for_sort = cfs[:, 0] # COV_MISSING
+                    values_for_sort = cfs[:, 0]
                 else:
                     values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)]
             elif cfs.ndim == 1: # Series
@@ -5185,8 +5183,6 @@ class Frame(ContainerOperand):
             order = np.lexsort(values_for_lex)
         elif values_for_sort is not None:
             order = np.argsort(values_for_sort, kind=kind)
-        else:
-            raise RuntimeError('unable to resovle sort type') # COV_MISSING
 
         if asc_is_element and not ascending:
             # NOTE: if asc is not an element, then ascending Booleans have already been applied to values_for_lex

@@ -4842,7 +4842,6 @@ class TestUnit(TestCase):
                 (('p', (('z', 2), ('w', 2), ('y', 30), ('x', 30))), ('r', (('z', 2), ('w', 95), ('y', 73), ('x', 34))), ('q', (('z', 'c'), ('w', 'a'), ('y', 'b'), ('x', 'd'))), ('t', (('z', False), ('w', True), ('y', False), ('x', True))), ('s', (('z', False), ('w', False), ('y', True), ('x', False)))))
 
 
-
     def test_frame_sort_values_c(self) -> None:
 
         records = (
@@ -4861,7 +4860,6 @@ class TestUnit(TestCase):
                 (('r', (('w', 3.5), ('x', 60.2), ('y', 1.2), ('z', 50.2))), ('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73)))))
 
         self.assertEqual(f2.name, 'foo')
-
 
 
     def test_frame_sort_values_d(self) -> None:
@@ -5096,6 +5094,27 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_sort_values_n(self) -> None:
+        # Ensure index sorting works on internally homogenous frames
+        data = np.array([[3, 7, 3],
+                         [8, 1, 4],
+                         [2, 9, 6]])
+        f1 = sf.Frame(data, columns=tuple('abc'), index=tuple('xyz'))
+        f2 = f1.sort_values(slice('z', None), axis=0, key=lambda f: -f)
+        self.assertEqual(f2.to_pairs(),
+                (('b', (('x', 7), ('y', 1), ('z', 9))), ('c', (('x', 3), ('y', 4), ('z', 6))), ('a', (('x', 3), ('y', 8), ('z', 2))))
+                )
+
+
+    def test_frame_sort_values_o(self) -> None:
+        # Ensure index sorting works on internally homogenous frames
+        data = np.array([[3, 7, 3],
+                         [8, 1, 4],
+                         [2, 9, 6]])
+        f1 = sf.Frame(data, columns=tuple('abc'), index=tuple('xyz'))
+        f2 = f1.sort_values(slice(None, 'a'), axis=1, key=lambda f: -f.values)
+        self.assertEqual(f2.to_pairs(),
+                (('a', (('y', 8), ('x', 3), ('z', 2))), ('b', (('y', 1), ('x', 7), ('z', 9))), ('c', (('y', 4), ('x', 3), ('z', 6)))))
 
     #---------------------------------------------------------------------------
     def test_frame_relabel_a(self) -> None:
