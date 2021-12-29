@@ -1274,17 +1274,16 @@ class Frame(ContainerOperand):
                     # append here as we iterate for usage in get_col_dtype
                     columns_by_col_idx.append(name)
 
-                # this is not expected to make a copy
                 if is_structured_array:
+                    # expect a 1D array with selection, not a copy
                     array_final = array[name]
-                else: # a 2D array, name is integer for column
+                    if array_final.ndim == 0:
+                        # NOTE: observed with some version of NumPy some structured arrays give 0 ndim arrays when selected by name, but cannot reproduce with newer NumPy
+                        array_final = np.reshape(array_final, (1,)) #pragma: no cover
+                else: # alyways a 2D array, name is integer for column, slice a 1D array
                     array_final = array[NULL_SLICE, name]
 
                 # do StoreFilter conversions before dtype
-                if array_final.ndim == 0:
-                    # some structured arrays give 0 ndim arrays by name
-                    array_final = np.reshape(array_final, (1,)) # COV_MISSING
-
                 if store_filter is not None:
                     array_final = store_filter.to_type_filter_array(array_final)
 
@@ -5129,8 +5128,7 @@ class Frame(ContainerOperand):
                 if cfs.ndim == 1:
                     values_for_sort = cfs
                 elif cfs.ndim == 2 and cfs.shape[0] == 1:
-                    # import ipdb; ipdb.set_trace()
-                    values_for_sort = cfs[0] # COV_MISSING
+                    values_for_sort = cfs[0]
                 else:
                     values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
             elif cfs.ndim == 1: # Series

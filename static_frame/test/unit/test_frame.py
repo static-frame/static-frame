@@ -5116,6 +5116,17 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('a', (('y', 8), ('x', 3), ('z', 2))), ('b', (('y', 1), ('x', 7), ('z', 9))), ('c', (('y', 4), ('x', 3), ('z', 6)))))
 
+    def test_frame_sort_values_p(self) -> None:
+        data = np.array([[3, 7, 3],
+                         [8, 1, 4],
+                         [2, 9, 6]])
+        f1 = sf.Frame(data, columns=tuple('abc'), index=tuple('xyz'))
+        f2 = f1.sort_values(slice(None, 'x'), axis=0)
+        self.assertEqual(f2.to_pairs(),
+                (('a', (('x', 3), ('y', 8), ('z', 2))), ('c', (('x', 3), ('y', 4), ('z', 6))), ('b', (('x', 7), ('y', 1), ('z', 9))))
+                )
+
+
     #---------------------------------------------------------------------------
     def test_frame_relabel_a(self) -> None:
         # reindex both axis
@@ -6146,6 +6157,17 @@ class TestUnit(TestCase):
                     dtypes=[np.int64, str, str, str],
                     consolidate_blocks=True,
                     )
+
+    def test_structured_array_to_d_ia_cl_d(self) -> None:
+
+        a1 = np.array([(3,)],
+                dtype=[('a', int),],
+                )
+        post, _, _ = Frame._structured_array_to_d_ia_cl(
+                a1,
+                )
+        self.assertEqual(post.shape, (1, 1))
+
 
     #---------------------------------------------------------------------------
     def test_from_data_index_arrays_column_labels_a(self) -> None:
