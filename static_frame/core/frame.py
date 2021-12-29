@@ -5129,7 +5129,8 @@ class Frame(ContainerOperand):
                 if cfs.ndim == 1:
                     values_for_sort = cfs
                 elif cfs.ndim == 2 and cfs.shape[0] == 1:
-                    values_for_sort = cfs[0]
+                    # import ipdb; ipdb.set_trace()
+                    values_for_sort = cfs[0] # COV_MISSING
                 else:
                     values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
             elif cfs.ndim == 1: # Series

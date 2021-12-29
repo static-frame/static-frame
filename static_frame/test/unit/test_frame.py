@@ -9261,6 +9261,21 @@ class TestUnit(TestCase):
                 (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('s', (('w', None), ('x', None))))
                 )
 
+    def test_frame_to_frame_he_b(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+        f2 = f1.to_frame_he()
+        self.assertIs(f2.__class__, FrameHE)
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))))
+                )
+
+
     #---------------------------------------------------------------------------
     def test_frame_to_npz_a(self) -> None:
         f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
