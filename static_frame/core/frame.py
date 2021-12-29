@@ -1885,7 +1885,6 @@ class Frame(ContainerOperand):
                     axis_depth=columns_depth)
 
             if columns_depth == 1:
-                # columns = cls._COLUMNS_CONSTRUCTOR(columns_arrays[0], name=columns_name)
                 columns, own_columns = index_from_optional_constructors(
                         columns_arrays[0],
                         depth=columns_depth,
@@ -1893,13 +1892,13 @@ class Frame(ContainerOperand):
                         explicit_constructors=columns_constructors, # cannot supply name
                         )
             else:
-                if columns_continuation_token:
+                if columns_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
                     labels = zip_longest(
                             *(store_filter.to_type_filter_iterable(x) for x in columns_arrays),
                             fillvalue=columns_continuation_token,
                             )
                 else:
-                    labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays)) # COV_MISSING
+                    labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
 
                 columns_constructor = partial(cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                         name=columns_name,

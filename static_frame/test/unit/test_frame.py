@@ -6202,8 +6202,6 @@ class TestUnit(TestCase):
             self.assertEqual(f1.to_pairs(0),
                     (('A', ((False, False), (True, True))), ('B', ((False, True), (True, False)))))
 
-
-
     def test_frame_from_delimited_c(self) -> None:
         msg = 'a|b|c|d\n1940|2021-04-03|3|5\n1492|1743-04-03|-4|9\n'
         self.assertEqual(Frame.from_delimited(msg.split('\n'), delimiter='|').to_pairs(),
@@ -6226,8 +6224,6 @@ class TestUnit(TestCase):
         self.assertEqual(f3.index.depth, 2)
         self.assertEqual(f3.index.index_types.values.tolist(), [IndexYear, IndexDate])
 
-
-
     def test_frame_from_delimited_d(self) -> None:
         msg = '1930|1931\n2021-01-01|2022-04-03\n3|5\n-4|9\n'
 
@@ -6246,6 +6242,17 @@ class TestUnit(TestCase):
                 columns_constructors=(IndexYear, IndexDate), columns_depth=2)
         self.assertEqual(f3.columns.index_types.values.tolist(), [IndexYear, IndexDate])
 
+    def test_frame_from_delimited_e(self) -> None:
+        msg = 'a|a|b|b\n0|1|0|1\nw|x|y|z\n'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=2,
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((('a', 0), ((0, 'w'),)), (('a', 1), ((0, 'x'),)), (('b', 0), ((0, 'y'),)), (('b', 1), ((0, 'z'),)))
+                )
 
     #---------------------------------------------------------------------------
     def test_frame_from_tsv_a(self) -> None:
