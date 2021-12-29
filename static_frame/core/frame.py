@@ -5926,7 +5926,7 @@ class Frame(ContainerOperand):
                     valid = ~isna_array(values)
 
                 if unique and valid is None:
-                    array[i] = len(ufunc_unique(values)) # COV_MISSING
+                    array[i] = len(ufunc_unique(values))
                 elif unique and valid is not None: # valid is a Boolean array
                     array[i] = len(ufunc_unique(values[valid]))
                 elif not unique and valid is not None:

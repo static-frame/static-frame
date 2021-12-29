@@ -10585,6 +10585,21 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_count_e(self) -> None:
+        records = (
+                (2, 2),
+                (2, 34),
+                (2, -95),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+        f2 = f1.count(axis=0, unique=True, skipna=False, skipfalsy=False)
+        self.assertEqual(f2.to_pairs(),
+                (('a', 1), ('b', 3))
+                )
+
     #---------------------------------------------------------------------------
     def test_frame_loc_min_a(self) -> None:
 
