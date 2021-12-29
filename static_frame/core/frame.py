@@ -6414,6 +6414,9 @@ class Frame(ContainerOperand):
                 many_loc.extend(Pair(p) for p in product((left_loc_element,), right_loc_part))
                 many_iloc.extend(Pair(p) for p in product((k,), v))
 
+        #-----------------------------------------------------------------------
+        # get final_index; if is_many is True, many_loc (and Pair instances) will be used
+
         if join_type is Join.INNER:
             if is_many:
                 final_index = Index(many_loc)
@@ -6496,20 +6499,22 @@ class Frame(ContainerOperand):
             final = final.reindex(final_index, fill_value=fill_value)
 
         # populate from right columns
+        # NOTE: find optimized path to avoid final_index iteration per column in all scenarios
+
         for idx_col, col in enumerate(other.columns):
             values = []
             for pair in final_index:
-                if isinstance(pair, Pair):
-                    loc_left, loc_right = pair
-                    if pair.__class__ is PairRight: # get from right
-                        values.append(other.loc[loc_right, col])
-                    elif pair.__class__ is PairLeft:
-                        # get from left, but we do not have col, so fill value
-                        values.append(fill_value)
-                    else: # is this case needed?
-                        values.append(other.loc[loc_right, col])
-                else:
-                    values.append(fill_value) # COV_MISSING
+                # NOTE: we used to support pair being something other than a Pair subclass (which would append fill_value to values), but it appears that if is_many is True, each value in final_index will be a Pair instance
+                # assert isinstance(pair, Pair)
+                loc_left, loc_right = pair
+                if pair.__class__ is PairRight: # get from right
+                    values.append(other.loc[loc_right, col])
+                elif pair.__class__ is PairLeft:
+                    # get from left, but we do not have col, so fill value
+                    values.append(fill_value)
+                else: # is this case needed?
+                    values.append(other.loc[loc_right, col])
+
             final[right_template.format(col)] = values
         return final.to_frame()
 

@@ -12452,6 +12452,19 @@ class TestUnit(TestCase):
             f1._join(f2, join_type=None, left_depth_level=0, right_depth_level=0)
 
 
+    def test_frame_join_l(self) -> None:
+        f1 = sf.Frame.from_dict(dict(a=(10, 20), b=('y','z')))
+        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
+
+        f2 = f1.join_inner(f2,
+                left_columns='a',
+                right_columns='d',
+                composite_index=False,
+                )
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 10), (1, 20))), ('b', ((0, 'y'), (1, 'z'))), ('c', ((0, 'foo'), (1, 'bar'))), ('d', ((0, 10), (1, 20))))
+                )
+
     #---------------------------------------------------------------------------
     def test_frame_append_a(self) -> None:
 
