@@ -21,7 +21,7 @@ from static_frame.core.store import StoreConfigMap
 
 class StoreClientMixin:
     '''
-    Mixin class for multi-table IO via Store interfaces.
+    Mixin class for multi-table exporting via Store interfaces.
     '''
     # NOTE: assignment of metaclass above is only needed for Python 3.6
 

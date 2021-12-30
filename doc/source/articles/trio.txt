@@ -3,7 +3,7 @@
 Efficiently Working with 7,163 (or More) DataFrames
 ============================================================================================
 
-DataFrame processing routines commonly work with collections of tables. Examples of such collections include a multi-year dataset with a single table per year, historical stock data with a table per stock, or data from multiple sheets in an XLSX file. This presentation introduces three novel containers for working with such collections of DataFrames: the Bus, Batch, and Quilt.
+DataFrame processing routines commonly work with collections of tables. Examples of such collections include a multi-year dataset with a single table per year, historical stock data with a table per stock, or data from multiple sheets in an XLSX file. This presentation introduces three novel "higher-order" containers for working with such collections of DataFrames: the Bus, Batch, and Quilt. A fourth container, the Yarn, will be briefly introduced.
 
 While hierarchical indices can be used to manage multiple tables in a single DataFrame, this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
 
@@ -127,6 +127,13 @@ z        4.0
 <<U1>    <float64>
 
 
+Yarn
+--------------
+
+The Yarn, only briefly mentioned here, permits a "virtual concatentation" of one or more Bus. As with the Quilt, the larger container is not eargerly concatenated. Unlike the two-dimensional presentation of the Quit, the Yarn is a one-demensional container with a Bus-line interface. Unlike a Bus or Quilt, the index can be arbitrarily relabelled. This container permits many, hetergenous Bus to be made available in a single container under (if needed) new labels.
+
+
+
 Common & Distinguishing Characteristics
 -------------------------------------------------
 
@@ -158,18 +165,20 @@ File-Based Constructors & Exporters
 
 These containers can be distinguished by dimensionality, shape, and interface. The Bus and Batch are one-dimensional collections of Frames; the Quilt presents a two-dimensional Frame. While the shape of the Bus is equal to the number of Frames, the shape of the Quilt depends on its contained Frames and its axis of orientation. Like a generator, the length (or shape) of a Batch is not known until iteration. Finally, while the Bus exposes a Series-like interface, the Batch and Quilt expose a Frame-like interface, operating on individual Frames or the virtually concatenated Frame, respectively.
 
-As shown the following table, these three containers populate a spectrum of dimensionality and interfaces.
+As shown in the following table, these containers populate a spectrum of dimensionality and interfaces.
 
-For n Frame of shape (x, y)
-+----------------------+-------+------+------------------+
-|                      |Bus    |Batch |Quilt             |
-+======================+=======+======+==================+
-|ndim                  |1      |1     |2                 |
-+----------------------+-------+------+------------------+
-|shape                 |(n,)   |      |(xn, y) or (x, yn)|
-+----------------------+-------+------+------------------+
-|Approximate Interface |Series |Frame |Frame             |
-+----------------------+-------+------+------------------+
+For m Bus of n Frame of shape (x, y)
++----------------------+--------+------+-------------------+----------------+
+|                      |Bus     |Batch |Quilt              |Yarn            |
++======================+========+======+===================+================+
+|Presented ndim        |1       |2     |2                  |1               |
++----------------------+--------+------+-------------------+----------------+
+|Approximate Interface |Series  |Frame |Frame              |Bus          |
++----------------------+--------+------+-------------------+----------------+
+|Composes              |n Frame |      |1 Bus of n Frame   |m Bus of n Frame|
++----------------------+--------+------+-------------------+----------------+
+|Presented shape       |(n,)    |      |(xn, y) or (x, yn) |(mn,)           |
++----------------------+--------+------+-------------------+----------------+
 
 
 Sample Data

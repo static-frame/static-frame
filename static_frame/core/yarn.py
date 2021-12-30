@@ -107,7 +107,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             deepcopy_from_bus: bool = False,
             ) -> 'Yarn':
         '''
-        Concatenate multiple :obj:`Bus` into a new :obj:`Yarn`. Loaded status of :obj:`Frame` within each :obj:`Bus` will not be altered.
+        Concatenate multiple :obj:`Yarn` into a new :obj:`Yarn`. Loaded status of :obj:`Frame` within each :obj:`Bus` will not be altered.
 
         Args:
             containers:

@@ -441,19 +441,19 @@ def main() -> None:
 
 def tables() -> None:
     name = 'Higher-Order Containers'
-    columns = ('Bus', 'Batch', 'Yarn', 'Quilt')
+    columns = ('Bus', 'Batch', 'Quilt', 'Yarn')
     records_items = (
-    ('Presented ndim',        (1,         2,        1,                  2)),
-    ('Approximate Interface', ('Series',  'Frame', 'Series',           'Frame')),
-    ('Composes',              ('n Frame', '',      'm Bus of n Frame', '1 Bus of n Frame of shape (x, y)')),
-    ('Presented shape',       ('(n,)',    '',      '(mn,)',            '(xn, y) or (x, yn)' )),
+    ('Presented ndim',        (1,         2,       2,                   1,                  )),
+    ('Approximate Interface', ('Series',  'Frame', 'Frame',             'Series',           )),
+    ('Composes',              ('n Frame', '',      '1 Bus of n Frame',  'm Bus of n Frame', )),
+    ('Presented shape',       ('(n,)',    '',      '(xn, y) or (x, yn)','(mn,)',            )),
     )
 
     f = sf.Frame.from_records_items(records_items, columns=columns, name=name)
     # print(f)
     config = sf.DisplayConfig(cell_max_width=200, type_show=False)
     print(f.name)
-    print(f.to_markdown(config=config))
+    print(f.to_rst(config=config))
 
     # name = 'Constructors & Exporters'
     # columns = ('Constructor', 'Exporter') #type: ignore
