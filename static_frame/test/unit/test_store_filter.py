@@ -124,6 +124,10 @@ class TestUnit(TestCase):
         self.assertEqual(sf1.from_type_filter_element(3.1), '3.10e+00')
         self.assertEqual(sf1.from_type_filter_element(0.0000011193), '1.12e-06')
 
+    def test_store_from_type_filter_element_d(self) -> None:
+        sfd = STORE_FILTER_DEFAULT
+        self.assertEqual(sfd.from_type_filter_element(np.datetime64('nat')), '')
+        self.assertEqual(sfd.from_type_filter_element(np.datetime64('1971')), '1971')
 
 
     #---------------------------------------------------------------------------
