@@ -192,14 +192,14 @@ class StoreFilter(metaclass=InterfaceMeta):
                 return self.value_format_float_scientific.format(value)
             elif self.value_format_float_positional is not None:
                 return self.value_format_float_positional.format(value)
-            return value # COV_MISSING
+            return value
 
         # is_complex
         if self.value_format_complex_scientific is not None and is_scientific:
             return self.value_format_complex_scientific.format(value)
         elif self.value_format_complex_positional is not None:
             return self.value_format_complex_positional.format(value)
-        return value # COV_MISSING
+        return value
 
 
     def _format_inexact_array(self,
@@ -259,7 +259,7 @@ class StoreFilter(metaclass=InterfaceMeta):
 
             array_final = post if post is not None else array
             if self._value_format_active:
-                return self._format_inexact_array(array_final, post) # COV_MISSING
+                return self._format_inexact_array(array_final, post)
             return array_final
 
         if kind in DTYPE_NAT_KINDS:
