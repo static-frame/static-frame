@@ -278,7 +278,126 @@ class TestUnit(TestCase):
                 f_src = frames[i]
                 self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
 
+    def test_store_xlsx_read_many_b(self) -> None:
+        records = (
+                (2, 2, 'a', False, None),
+                (30, 73, 'd', True, None),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'))
 
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, label='f1', include_index=False, include_columns=False)
+
+            st1 = StoreXLSX(fp)
+            c = StoreConfig(
+                    index_depth=1, # force coverage
+                    columns_depth=0,
+                    trim_nadir=True,
+                    )
+            f2 = next(st1.read_many(('f1',), config=c))
+            self.assertEqual(f2.shape, (2, 3))
+
+    def test_store_xlsx_read_many_c(self) -> None:
+        records = (
+                (2, 2, 'a', False, None),
+                (30, 73, 'd', True, None),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', None))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, label='f1', include_index=False, include_columns=True)
+
+            st1 = StoreXLSX(fp)
+            c = StoreConfig(
+                    index_depth=0,
+                    columns_depth=1,
+                    trim_nadir=True,
+                    )
+            f2 = next(st1.read_many(('f1',), config=c))
+            self.assertEqual(f2.shape, (2, 4))
+
+
+    def test_store_xlsx_read_many_d(self) -> None:
+        records = (
+                (2, 2, 'a', False, None),
+                (30, 73, 'd', True, None),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                )
+        columns = IndexHierarchy.from_labels((
+                ('a', 1), ('a', 2), ('b', 1), ('b', 2), (None, None)
+                ))
+        f1 = Frame.from_records(records, columns=columns)
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, label='f1', include_index=False, include_columns=True)
+
+            st1 = StoreXLSX(fp)
+            c = StoreConfig(
+                    index_depth=0,
+                    columns_depth=2,
+                    trim_nadir=True,
+                    )
+            f2 = next(st1.read_many(('f1',), config=c))
+            self.assertEqual(f2.shape, (2, 4))
+            self.assertEqual(f2.to_pairs(),
+                    ((('a', 1), ((0, 2), (1, 30))), (('a', 2), ((0, 2), (1, 73))), (('b', 1), ((0, 'a'), (1, 'd'))), (('b', 2), ((0, False), (1, True)))))
+
+
+    def test_store_xlsx_read_many_e(self) -> None:
+        records = (
+                (2, 2, 'a', False, None),
+                (30, 73, 'd', True, None),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', None))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, label='f1', include_index=False, include_columns=True)
+
+            st1 = StoreXLSX(fp)
+            c = StoreConfig(
+                    index_depth=0,
+                    columns_depth=1,
+                    trim_nadir=True,
+                    )
+            # NOTE: if store_filter is None, None is not properly identified as a nadir-area entity and trim_nadir does not drop any rows or columns here
+            f2 = next(st1.read_many(('f1',), store_filter=None, config=c))
+            self.assertEqual(f2.shape, (4, 5))
+
+
+    def test_store_xlsx_read_many_f(self) -> None:
+        records = (
+                (2, 2, 'a', False, None),
+                (30, 73, 'd', True, None),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, label='f1', include_index=False, include_columns=False)
+
+            st1 = StoreXLSX(fp)
+            c = StoreConfig(
+                    index_depth=3, # force coverage
+                    columns_depth=0,
+                    trim_nadir=True,
+                    )
+            f2 = next(st1.read_many(('f1',), config=c))
+            self.assertEqual(f2.shape, (2, 1))
+            self.assertEqual(f2.to_pairs(),
+                        ((0, (((2, 2, 'a'), False), ((30, 73, 'd'), True))),)
+                        )
 
     #---------------------------------------------------------------------------
 
