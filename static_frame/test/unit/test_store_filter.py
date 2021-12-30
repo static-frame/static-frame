@@ -141,6 +141,13 @@ class TestUnit(TestCase):
         self.assertEqual(sfd.from_type_filter_element(np.datetime64('nat')), '')
         self.assertEqual(sfd.from_type_filter_element(np.datetime64('1971')), '1971')
 
+    def test_store_from_type_filter_element_e(self) -> None:
+        sf1 = StoreFilter(
+                value_format_complex_positional='{:.2e}',
+                value_format_complex_scientific='{:.2e}',
+                )
+        self.assertEqual(sf1.from_type_filter_element(1+4j), '1.00e+00+4.00e+00j')
+
 
     #---------------------------------------------------------------------------
 
