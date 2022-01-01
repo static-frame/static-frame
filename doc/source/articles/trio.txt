@@ -1,19 +1,27 @@
 
 
 Efficiently Working with 7,163 (or More) DataFrames
+
+
+Using Higher-Order Containers to Efficiently Processing 7,163 (or More) DataFrames
+
+Efficiently Processing 7,163 (or More) DataFrames with StaticFrame's Higher-Order Containers
+
+
+
 ============================================================================================
 
-DataFrame processing routines commonly work with collections of tables. Examples of such collections include a multi-year dataset with a single table per year, historical stock data with a table per stock, or data from multiple sheets in an XLSX file. This presentation introduces three novel "higher-order" containers for working with such collections of DataFrames: the Bus, Batch, and Quilt. A fourth container, the Yarn, will be briefly introduced.
+DataFrame processing routines commonly work with collections of tables. Examples of such collections include a multi-year dataset with a single table per year, historical stock data with a table per stock, or data from multiple sheets in an XLSX file. This presentation introduces novel "higher-order" containers for working with such collections of DataFrames, implemented in the Python StaticFrame package (a Pandas alternative that offers immutable DataFrames). The three core containers are the Bus, Batch, and Quilt. A fourth container, the Yarn, will be briefly introduced.
 
-While hierarchical indices can be used to manage multiple tables in a single DataFrame, this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
+Few DataFrame libraries have explored such higher-order containers. While hierarchical indices can be used to manage multiple tables in a single DataFrame, this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogenous schemas may not permit any reasonable combination into a single table.
 
-This article introduces three abstractions for working with large collections of DataFrames. The first, the Bus (named after buses used in circuits), provides a dictionary-like interface for lazily loading (and forgetting) tables in a collection; collections can be stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, pickle, or delimited text files. The second, the Batch (named after batch processing), is a deferred  processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The third, the Quilt (named after textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operations on partitioned data as if it was a unified, single table.
+This article introduces abstractions for working with large collections of DataFrames designed for efficent memory usage through lazy loading (and, optionally, eager unloading). The Bus (named after buses used in circuits), provides a dictionary-like interface for lazily loading (and forgetting) tables in a collection; collections can be stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, NPZ, pickle, or delimited text files. The Batch (named after batch processing), is a deferred processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The Quilt (named after textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operations on partitioned data as if it was a unified, single table.
 
-All three containers provide identical interfaces for reading from, and writing to, the multi-table storage formats mentioned above (SQLite, HDF5, XLSX, or zipped archives of Parquet, pickle, or delimited text files). This uniformity permits reusing the same data store for different contexts.
+All three containers provide identical interfaces for reading from, and writing to, the multi-table storage formats mentioned above (SQLite, HDF5, XLSX, or zipped archives of Parquet, NPZ, pickle, or delimited text files). This uniformity permits reusing the same data store in different contexts.
 
 These tools evolved from the context of my work: processing financial data and modelling investment systems. There, data sets are naturally partitioned by date or characteristic. For historical simulations, the data needed can be large. The Bus, Batch, and Quilt have provided convenient and efficient tools for this domain. Out-of-core solutions like Vaex and Dask offer related approaches to dealing with large collections of data, though with different tradeoffs.
 
-While these containers are implemented in the Python StaticFrame package (a Pandas alternative that offers immutable DataFrames), the abstractions are useful for application in any DataFrame or table-processing library. StaticFrame calls DataFrames simply "Frames," and that convention will be used here.
+While these containers are implemented in StaticFrame, the abstractions are useful for application in any DataFrame or table-processing library. StaticFrame calls a DataFrame simply a "Frame," and that convention will be used herein.
 
 
 Initialization & Relation to Other Containers
