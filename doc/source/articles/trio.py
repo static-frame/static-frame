@@ -443,10 +443,10 @@ def tables() -> None:
     name = 'Higher-Order Containers'
     columns = ('Bus', 'Batch', 'Quilt', 'Yarn')
     records_items = (
-    ('Presented ndim',        (1,         2,       2,                   1,                  )),
-    ('Approximate Interface', ('Series',  'Frame', 'Frame',             'Series',           )),
-    ('Composes',              ('n Frame', '',      '1 Bus of n Frame',  'm Bus of n Frame', )),
-    ('Presented shape',       ('(n,)',    '',      '(xn, y) or (x, yn)','(mn,)',            )),
+    ('Presented ndim',        (1,         2,       2,                       1,                  )),
+    ('Approximate Interface', ('Series',  'Frame', 'Frame',                 'Series',           )),
+    ('Composes',              ('n Frame', '',      '1 Bus/Yarn of n Frame', 'm Bus of n Frame', )),
+    ('Presented shape',       ('(n,)',    '',      '(xn, y) or (x, yn)',    '(mn,)',            )),
     )
 
     f = sf.Frame.from_records_items(records_items, columns=columns, name=name)

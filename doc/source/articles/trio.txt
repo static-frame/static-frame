@@ -8,15 +8,15 @@ Efficiently Processing 7,163 (or More) DataFrames with StaticFrame's Higher-Orde
 Using Higher-Order Containers to Efficiently Process 7,163 (or More) DataFrames
 ====================================================================================
 
-DataFrame processing routines commonly work with collections of tables. Examples of such collections include a multi-year dataset with a single table per year, historical stock data with a table per stock, or data from multiple sheets in an XLSX file. This presentation introduces novel "higher-order" containers for working with such collections of DataFrames, implemented in the Python StaticFrame package (a Pandas alternative that offers immutable DataFrames). The three core containers are the ``Bus``, ``Batch``, and ``Quilt``. A fourth container, the ``Yarn``, will be briefly introduced.
+DataFrame processing routines commonly work with collections of tables. Examples of such collections include a multi-year dataset with a single table per year, historical stock data with a table per ticker, or data from multiple sheets in an XLSX file. This article introduces novel "higher-order" containers for working with such collections of DataFrames, implemented in the Python StaticFrame package (a Pandas alternative that offers immutable DataFrames). The three core containers are the ``Bus``, ``Batch``, and ``Quilt``. A fourth container, the ``Yarn``, will be briefly introduced.
 
-While hierarchical indices can be used to manage multiple tables in a single DataFrame, this may not be practical for performance: efficient data handling may require having only a few tables loaded at a time, and hierarchical indices incur overhead. In other situations, heterogeneous schemas may not permit any reasonable combination into a single table.
+An alternative to these higher-order containers is using one large table with a hierarchical index. For example, time-series data for multiple stocks might be encoded in a single table with a two-depth hierarchical index, the outer level being the ticker, the inner level being the date. Such an approach is often inefficient, as the entire table must be loaded in memory even if only a small number of stocks are being processed.
 
-This article introduces abstractions for working with large collections of DataFrames designed for efficient memory usage through lazy loading (and, optionally, eager unloading). The ``Bus`` (named after buses used in circuits), provides a dictionary-like interface for lazily loading tables in a collection; collections can be stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, NPZ, pickle, or delimited text files. The ``Batch`` (named after batch processing), is a deferred processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The ``Quilt`` (named after textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operations on partitioned data as if it was a unified, single table.
+This article introduces containers for working with large collections of tables, from thousands to hundreds of thousands of tables. Efficient memory usage is provided through lazy loading and, optionally, eager unloading. The ``Bus`` (named after buses used in circuits), provides a dictionary-like interface for lazily loading collections of tables stored on disk; collections can be stored in SQLite, HDF5, XLSX, or in zipped archives of Parquet, NPZ, pickle, or delimited text files. The ``Batch`` (named after batch processing), is a deferred processor of tables, providing a concise interface to lazily define operations to be applied to all tables. The ``Quilt`` (named after textiles formed from a patchwork), is a lazy, virtual concatenation of all tables, permitting operations on partitioned data as if it was a unified, single table.
 
 All three containers provide identical interfaces for reading from, and writing to, the multi-table storage formats mentioned above (SQLite, HDF5, XLSX, or zipped archives of Parquet, NPZ, pickle, or delimited text files). This uniformity permits reusing the same data store in different contexts.
 
-These tools evolved from the context of my work: processing financial data and modelling investment systems. There, data sets are naturally partitioned by date or characteristic. For historical simulations, the data needed can be large. The ``Bus``, ``Batch``, and ``Quilt`` have provided convenient and efficient tools for this domain. Out-of-core solutions like Vaex and Dask offer related approaches to dealing with large collections of data, though with different tradeoffs.
+These tools evolved from the context of my work: processing financial data and modelling investment systems. There, data sets are naturally partitioned by date or characteristic. For historical simulations, the data needed can be large. The ``Bus``, ``Batch``, ``Quilt``, and ``Yarn`` have provided convenient and efficient tools in this domain. Out-of-core solutions like Vaex and Dask offer related approaches to dealing with large collections of data, though with different tradeoffs.
 
 While these containers are implemented in StaticFrame, the abstractions are useful for application in any DataFrame or table-processing library. StaticFrame calls a DataFrame simply a "Frame," and that convention will be used herein.
 
@@ -24,12 +24,12 @@ While these containers are implemented in StaticFrame, the abstractions are usef
 Container Overview
 _______________________________________________________
 
-Before demonstrating the utility of using these containers to process thousands of DataFrames, I will start with just two DataFrames. After creating a ``Bus`` with two ``Frame``s, I will use that same ``Bus`` to initialize a ``Batch``, ``Quilt``, and ``Yarn``. With this introduction we can summarize common and distinguishing characteristics.
+Before demonstrating the utility of using these containers to process thousands of DataFrames, we will start with processing just two DataFrames. After creating a ``Bus`` with two ``Frame``s, we will use that same ``Bus`` to initialize a ``Batch``, ``Quilt``, and ``Yarn``. With this introduction, common and distinguishing characteristics can be observed.
 
 Bus
 ------
 
-I will use Two simple ``Frame``s to demonstrate initializing a Bus. The ``Bus.from_items()`` method takes pairs of label and ``Frame``.
+Two simple ``Frame``s can be used to demonstrate initializing a ``Bus``. The ``Bus.from_items()`` method takes pairs of label and ``Frame``; items can be provided in a tuple (as shown below) or via an ``items()`` method on a Python dictionary or related container.
 
 >>> f1 = sf.Frame.from_element(0.5, index=('w', 'x'), columns=('a', 'b'))
 >>> f2 = sf.Frame.from_element(2, index=('y', 'z'), columns=('a', 'b'))
@@ -41,7 +41,7 @@ f1      Frame
 f2      Frame
 <<U2>   <object>
 
-The ``Bus`` can be thought of as a ``Series`` (or an ordered dictionary) of ``Frame``s, permitting random access to a ``Frame`` with its label.
+The ``Bus`` can be thought of as a ``Series`` (or an ordered dictionary) of ``Frame``s, permitting access to a ``Frame`` given its label.
 
 >>> bus.loc['f2']
 <Frame: f2>
@@ -51,18 +51,18 @@ y           2       2
 z           2       2
 <<U1>       <int64> <int64>
 
-A key feature of the ``Bus`` is that, when reading from a file store, ``Frame``s are loaded lazily: a ``Frame`` is loaded into memory only when accessed, and (with the ``max_persist`` argument) the ``Bus`` can be configured to only hold strong references to a limited number of Frames. This permits examining all frames while limiting the total memory loaded by the ``Bus``.
+A key feature of the ``Bus`` is that, when reading from disk, ``Frame``s are loaded lazily: a ``Frame`` is loaded into memory only when accessed, and (with the ``max_persist`` argument) the ``Bus`` can be configured to only hold strong references to a limited number of ``Frame``s, eagerly unloading the least-recently used beyond that limit. This permits examining all ``Frame``s while limiting the total memory loaded by the ``Bus``.
 
-As the ``Bus`` supports reading from, and writing to, XLSX and HDF5 (as well as many other formats), it provides the functionality of the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but with a more general and consistent interface. The same ``Bus`` can be used to write an XLSX workbook (where each Frame is a sheet) or an HDF5 datastore, simply be using ``Bus.to_xlsx()`` or ``Bus.to_hdf5()``, respectively.
+As the ``Bus`` supports reading from, and writing to, XLSX and HDF5 (as well as many other formats), it provides the functionality of the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but with a more general and consistent interface. The same ``Bus`` can be used to write an XLSX workbook (where each Frame is a sheet) or an HDF5 datastore, simply by using ``Bus.to_xlsx()`` or ``Bus.to_hdf5()``, respectively.
 
- Additionally, a ``Bus`` serves as a convenient resource for creating a ``Batch`` or a ``Quilt``.
+ Additionally, a ``Bus`` serves as a convenient resource for creating a ``Batch``, ``Quilt``, or ``Yarn``.
 
 Batch
 --------
 
-The ``Batch`` can be thought of as a iterator of pairs of label and ``Frame``. Beyond just an iterator, the ``Batch`` is a tool for composing deferred operations on each contained ``Frame``. The Batch exposes nearly the entire Frame interface; method calls and operator applications are deferred in a newly returned Batch, composing operations upon the stored iterator. Operations are executed, and pairs are iterated, only when creating a composite Frame with the ``Batch.to_frame()`` method, or using dictionary-like methods such as ``Batch.keys()``, ``Batch.items()``, or ``Batch.values``.
+The ``Batch`` can be thought of as an iterator of pairs of label and ``Frame``. Beyond just an iterator, the ``Batch`` is a tool for composing deferred operations on each contained ``Frame``. The ``Batch`` exposes nearly the entire Frame interface; method calls and operator applications, when invoked, are deferred in a newly returned ``Batch``, composing lazy executions upon the stored iterator. Operations are executed, and pairs are iterated, only when creating a composite ``Frame`` with the ``Batch.to_frame()`` method, or using dictionary-like iterators such as ``Batch.keys()``, ``Batch.items()``, or ``Batch.values``.
 
-I can initialize a ``Batch`` with items from a ``Bus``, or any iterator of pairs of label, ``Frame``:
+A ``Batch`` can be initialized with items from a ``Bus``, or any iterator of pairs of label, ``Frame``. Methods called from, or operators invoked on, a ``Batch`` simply return a new ``Batch``. Calling ``Batch.to_frame()``, as shown below, is necessary to eagerly execute the composed ``sum()`` operation.
 
 >>> sf.Batch(bus.items()).sum()
 <Batch at 0x7fabd09779a0>
@@ -75,7 +75,7 @@ f2      4.0       4.0
 <<U2>   <float64> <float64>
 
 
-In addition to ``Frame`` methods, the ``Batch`` supports usage of ``Frame`` selection methods and operators. Here, each ``Frame`` is taken to the second power, the 'b' column is selected from each ``Frame``, and a new ``Frame`` (combing both) is returned:
+In addition to ``Frame`` methods, the ``Batch`` supports usage of ``Frame`` selection methods and operators. Below, each ``Frame`` is taken to the second power, the 'b' column is selected, and a new ``Frame`` (combining both selections) is returned:
 
 >>> (sf.Batch(bus.items()) ** 2)['b'].to_frame()
 <Frame>
@@ -92,7 +92,7 @@ The ``Batch`` is related to the Pandas ``DataFrameGroupBy`` and ``Rolling`` obje
 Quilt
 --------------
 
-A ``Quilt`` is initialized with a ``Bus`` (or ``Yarn``), and requires specification of which axis to orient on, either vertically (axis 0) or horizontally (axis 1). Additionally, a ``Quilt`` must define a Boolean value for ``retain_labels``: if True, ``Frame`` labels are retained as the outer labels in a hierarchical index along the axis of virtual concatenation. If ``retain_labels`` is False, all labels along the axis of orientation of all contained ``Frame``s must be unique. The following examples use the previously created ``Bus`` to demonstrate the ``retain_labels`` parameter. As a  ``Quilt`` might cover massive amounts of data, the default representation abbreviates data; to get a realized representation we can use ``Quilt.to_frame()``.
+A ``Quilt`` is initialized with a ``Bus`` (or ``Yarn``), and requires specification of which axis to virtually concatenate on, either vertically (axis 0) or horizontally (axis 1). Additionally, a ``Quilt`` must define a Boolean for ``retain_labels``: if True, ``Frame`` labels are retained as the outer labels in a hierarchical index along the axis of concatenation. If ``retain_labels`` is False, all labels along the axis of concatenation of all contained ``Frame``s must be unique. The following examples use the previously created ``Bus`` to demonstrate the ``retain_labels`` parameter. As a ``Quilt`` might be built from thousands of tables, the default representation abbreviates data; ``Quilt.to_frame()`` can be used to provide a fully realized representation.
 
 >>> quilt = sf.Quilt(bus, axis=0, retain_labels=False)
 >>> quilt
@@ -114,7 +114,6 @@ y       2.0       2.0
 z       2.0       2.0
 <<U1>   <float64> <float64>
 
-
 >>> quilt = sf.Quilt(bus, axis=0, retain_labels=True)
 >>> quilt.to_frame()
 <Frame>
@@ -127,9 +126,11 @@ f2               z     2.0       2.0
 <<U2>            <<U1> <float64> <float64>
 
 
-The ``Quilt`` can be thought of as a Frame built from many smaller ``Frame``s, and aligned either vertically or horizontally. This larger ``Frame`` is not eagerly concatenated; rather, ``Frame``s are accessed from a contained Bus as needed, providing a lazy, "virtual concatenation" of tables along an axis. The ``Bus`` can be configured with the ``max_persist`` argument to limit the total number of ``Frame``s held in memory. Such explicit memory management permits doing operations on a virtual ``Frame`` that might not be possible to load into memory.
+The ``Quilt`` can be thought of as a ``Frame`` built from many smaller ``Frame``s, aligned either vertically or horizontally. Importantly, this larger ``Frame`` is not eagerly concatenated; rather, ``Frame``s are accessed from a contained ``Bus`` as needed, providing a lazy concatenation of tables along an axis.
 
-The ``Quilt`` permits selections, iterations, and operations on this virtually concatenated ``Frame`` using a subset of common ``Frame`` interfaces. For example, a ``Quilt`` can be used for iterating columns and applying functions:
+A ``Bus`` within a ``Quilt`` can be configured with the ``max_persist`` argument to limit the total number of ``Frame``s held in memory. Such explicit memory management permits doing operations on a virtual ``Frame`` that might be too large to load into memory.
+
+The ``Quilt`` permits selections, iterations, and operations on this virtually concatenated ``Frame`` using a subset of common ``Frame`` interfaces. For example, a ``Quilt`` can be used for iterating rows and applying functions:
 
 >>> quilt.iter_array(axis=1).apply(lambda a: a.sum())
 <Series>
@@ -144,9 +145,9 @@ z        4.0
 Yarn
 --------------
 
-The ``Yarn``, only briefly mentioned here, provides a "virtual concatentation" of one or more ``Bus``. As with the ``Quilt``, the larger container is not eargerly concatenated. Unlike the two-dimensional, single-``Frame`` presentation of the Quilt, the ``Yarn`` is a one-demensional container of many ``Frame``s with a ``Bus``-like interface. Unlike a ``Bus`` or ``Quilt``, the index of a ``Yarn`` can be arbitrarily relabelled. This container permits heterogeneous ``Bus`` to be made available in a single container under (if needed) new labels.
+The ``Yarn``, only briefly described here, provides a "virtual concatentation" of one or more ``Bus``. As with the ``Quilt``, the larger container is not eagerly concatenated. Unlike the two-dimensional, single-``Frame`` presentation of the Quilt, the ``Yarn`` presents a one-demensional container of many ``Frame``s with a ``Bus``-like interface. Unlike a ``Bus`` or ``Quilt``, the index of a ``Yarn`` can be arbitrarily relabelled. These features permit heterogeneous ``Bus`` to be made available in a single container under (if needed) new labels.
 
-The ``Yarn``, as an even higher-order container, can only be initialized with one or more ``Bus`` or ``Yarn``. We can even create a ``Yarn`` from the same ``Bus`` if each is given a unique ``name``:
+The ``Yarn``, as an even higher-order container, can only be initialized with one or more ``Bus`` or ``Yarn``. A ``Yarn`` can even be created from multiple instances of the same ``Bus`` if each is given a unique ``name``:
 
 >>> sf.Yarn.from_buses((bus.rename('a'), bus.rename('b')), retain_labels=True)
 <Yarn>
@@ -164,7 +165,7 @@ Common & Distinguishing Characteristics
 
 A common characteristic shared by the ``Bus``, ``Batch``, and ``Quilt`` is that they all support instantiation from an iterator of pairs of labels and ``Frame``s. When that iterator is from a ``Bus``, the lazy-loading of the ``Bus`` can be used to minimize memory overhead.
 
-These containers all share the same file-based constructors, such as ``from_zip_csv()`` or ``from_xlsx()``; each constructor has a corresponding exporter, e.g., ``to_zip_csv()`` or ``to_xlsx()``, respectively, permitting round-trip reading and writing, or conversion from one format to another. The following table summarize the file-based constructors and exporters available on all three containers. (The ``Yarn``, as an aggregation of ``Bus``, only supports exporters.)
+These containers all share the same file-based constructors, such as ``from_zip_csv()`` or ``from_xlsx()``; each constructor has a corresponding exporter, e.g., ``to_zip_csv()`` or ``to_xlsx()``, respectively, permitting round-trip reading and writing, or conversion from one format to another. The following table summarize the file-based constructors and exporters available on all three containers. (The ``Yarn``, as an aggregation of ``Bus``, only supports the exporters.)
 
 File-Based Constructors & Exporters
 +-----------------+--------------+
@@ -192,26 +193,26 @@ These containers can be distinguished by dimensionality, shape, and interface. T
 As shown in the following table, these containers populate a spectrum of dimensionality and interfaces.
 
 For m ``Bus`` of n Frame of shape (x, y)
-+----------------------+--------+------+-------------------+----------------+
-|                      |Bus     |Batch |Quilt              |Yarn            |
-+======================+========+======+===================+================+
-|Presented ndim        |1       |2     |2                  |1               |
-+----------------------+--------+------+-------------------+----------------+
-|Approximate Interface |Series  |Frame |Frame              |Bus          |
-+----------------------+--------+------+-------------------+----------------+
-|Composes              |n Frame |      |1 Bus of n Frame   |m Bus of n Frame|
-+----------------------+--------+------+-------------------+----------------+
-|Presented shape       |(n,)    |      |(xn, y) or (x, yn) |(mn,)           |
-+----------------------+--------+------+-------------------+----------------+
++----------------------+--------+------+----------------------+----------------+
+|                      |Bus     |Batch |Quilt                 |Yarn            |
++======================+========+======+======================+================+
+|Presented ndim        |1       |2     |2                     |1               |
++----------------------+--------+------+----------------------+----------------+
+|Approximate Interface |Series  |Frame |Frame                 |Series          |
++----------------------+--------+------+----------------------+----------------+
+|Composes              |n Frame |      |1 Bus/Yarn of n Frame |m Bus of n Frame|
++----------------------+--------+------+----------------------+----------------+
+|Presented shape       |(n,)    |      |(xn, y) or (x, yn)    |(mn,)           |
++----------------------+--------+------+----------------------+----------------+
+
 
 
 Sample Data
 ___________________________
 
+The "Huge Stock Market Dataset" contains a collection of 7,163 CSV tables, each table a time series of characteristics for a US stock. The file "archive.zip" is available at https://www.kaggle.com/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
 
-The "Huge Stock Market Dataset" dataset is a collection of 7,163 tables, each table a time series of characteristics for a US stock. The file "archive.zip" is available at https://www.kaggle.com/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
-
-This zip archive contains subdirectories and thus cannot be directly read from a Bus. After opening the archive, we can read from the contained "Stocks" directory and use a Batch to create a zip pickle of the stock data, labelled by ticker, for fast reading in subsequent examples. As some files are empty, we must also filter out files with no size. Depending on hardware, this initial transformation may take some time.
+After opening the archive, we can read from the contained "Stocks" directory and use a ``Batch`` to create a zip pickle of the stock data, labelled by ticker, for fast reading in subsequent examples. As some files are empty, we must also filter out files with no size. Depending on hardware, this initial transformation may take some time.
 
 >>> import os
 >>> d = 'archive/Stocks'
@@ -219,7 +220,7 @@ This zip archive contains subdirectories and thus cannot be directly read from a
 >>> items = ((fn.replace('.us.txt', ''), sf.Frame.from_csv(fp, index_depth=1)) for fn, fp in fps if os.path.getsize(fp))
 >>> sf.Batch(items).to_zip_pickle('stocks.zip')
 
-As the ``Bus`` is lazy, initialization from this new zip archive loads zero ``Frame``s into memory. Fast access to a subset of the data is provided without loading anything more than what is requested. While the ``shape`` attribute shows 7,163 contained ``Frame``s in the zip archive, the ``status`` attribute shows zero loaded Frames.
+As the ``Bus`` is lazy, initialization from this new zip archive loads zero ``Frame``s into memory. Fast access to the data is provided only when explicitly requested. Thus, while the ``Bus.shape`` attribute shows 7,163 contained ``Frame``s, the ``status`` attribute shows zero loaded Frames.
 
 >>> bus = sf.Bus.from_zip_pickle('stocks.zip')
 >>> bus.shape
@@ -261,14 +262,13 @@ msft    1780638040.5600002 1626767764.8700001
 goog    1283539710.3       740903319.18
 <<U4>   <float64>          <float64>
 
-
-To make observations across the entire data set, we can pass the ``Bus`` to a ``Quilt``. Here, a null slice is used to force loading all ``Frame``s at once to improve ``Quilt`` performance. The shape shows a ``Quilt`` of almost 15 million rows.
+To make observations across the entire data set, we can pass the ``Bus`` to a ``Quilt``. Below, a null slice is used to force loading all ``Frame``s at once to optimize ``Quilt`` performance. The shape shows a ``Quilt`` of almost 15 million rows.
 
 >>> quilt = sf.Quilt(bus[:], retain_labels=True)
 >>> quilt.shape
 (14887665, 6)
 
-With the Quilt we can calculate the total volume of seven thousand securities for a single day without explicitly concatenating all ``Frame``s. The StaticFrame ``HLoc`` selector, used below, permits per-depth-level selection within a hierarchical index. Here we select all security records for November 10, 2017, across all tickers, and sum the volume.
+Using the ``Quilt`` we can calculate the total volume of seven thousand securities on a single day without explicitly concatenating all ``Frame``s. The StaticFrame ``HLoc`` selector, used below, permits per-depth-level selection within a hierarchical index. Here we select all security records for 2017-11-10, across all tickers, and sum the volume.
 
 >>> quilt.loc[sf.HLoc[:, '2017-11-10'], 'Volume'].sum()
 5520175355
@@ -287,11 +287,10 @@ OpenInt                         0.0
 <<U7>                           <float64>
 
 
-
 Cross-Container Comparisons: Same Method, Different Selections
 __________________________________________________________________________
 
-The previous examples demonstrated loading, processing, and examining the "Huge Stock Market Dataset" with the ``Bus``, ``Batch``, and ``Quilt``. Cross-container comparisons can be used to further illustrate the characteristics of these three containers. First, we can observe how three different selections are returned by applying the same method to each container. Second, we can observe how three approaches can be used with each container to return the same selection.
+The previous examples demonstrated loading, processing, and examining the "Huge Stock Market Dataset" with the ``Bus``, ``Batch``, and ``Quilt``. Cross-container comparisons can be used to further illustrate the characteristics of these containers. First, we can observe how three different selections are returned by applying the same method to each container. Second, we can observe how three approaches can be used with each container to return the same selection.
 
 The ``head(2)`` method returns the first two rows (or elements) from any container. Understanding how the method's output differs between the ``Bus``, ``Batch``, and ``Quilt`` helps illustrate their nature.
 
@@ -305,7 +304,7 @@ bgt     Frame
 <<U9>   <object>
 
 
-As the ``Batch`` operates on each ``Frame`` in a ``Bus``, calling ``head(2)`` extracts the top two rows from every ``Frame`` in the "Huge Stock Market Dataset." Calling ``to_frame()`` concatenates these extractions into a new ``Frame`` for display.
+As the ``Batch`` operates on each ``Frame`` in a ``Bus``, calling ``head(2)`` extracts the top two rows from each ``Frame`` in the "Huge Stock Market Dataset." Calling ``to_frame()`` concatenates these extractions into a new ``Frame`` for display.
 
 >>> sf.Batch(bus.items()).head(2).to_frame().shape
 (14316, 6)
@@ -365,7 +364,7 @@ fljh             2017-11-08 26.359    26.39     26.349    26.3875   3600    0
 Cross-Container Comparisons: Same Selections, Different Methods
 __________________________________________________________________________
 
-Next, we will show how three approaches can be used with each container to return the same selection. While the ``head()`` method, used above, is a type of pre-configured selector, the full range of ``loc`` and ``iloc`` selection interfaces are supported in all containers. The following examples extract all "Open" and "Close" records from January 2, 1962.
+Next, we will show how three approaches can be used with each container to return the same selection. While the ``head()`` method, used above, is a type of pre-configured selector, the full range of ``loc`` and ``iloc`` selection interfaces are supported by all containers. The following examples extract all "Open" and "Close" records from 1962-01-02.
 
 To perform this selection with a ``Bus``, we can iterate through each Frame and select the targeted records.
 
@@ -385,7 +384,7 @@ Close         6.3378
 <<U7>         <float64>
 
 
-The ``Batch`` offers a more compact interface to achieve this selection than possible with the ``Bus``. Without writing a loop, the ``Batch.apply_except()`` method can select row and column values from within each contained ``Frame`` while ignoring ``KeyError``s raised from ``Frame``s missing the selected date. Calling ``to_frame()`` brings the results together with their ``Frame`` labels.
+The ``Batch`` offers a more compact interface to achieve this selection than possible with the ``Bus``. Without writing a loop, the ``Batch.apply_except()`` method can select row and column values from within each contained ``Frame`` while ignoring ``KeyError``s raised from ``Frame``s without the selected date. Calling ``to_frame()`` concatenates the results together with their ``Frame`` labels.
 
 >>> sf.Batch(bus.items()).apply_except(lambda f: f.loc['1962-01-02', ['Open', 'Close']], KeyError).to_frame()
 <Frame>
@@ -396,7 +395,7 @@ ibm     6.413     6.3378
 <<U3>   <float64> <float64>
 
 
-Finally, as a virtual concatenation of ``Frame``s, the ``Quilt`` permits selection as if from a single ``Frame``. As shown below, a hierarchical selection on the inner label "1962-01-02" brings together any records for that date across all companies.
+Finally, as a virtual concatenation of ``Frame``s, the ``Quilt`` permits selection as if from a single ``Frame``. As shown below, a hierarchical selection on the inner label "1962-01-02" brings together any records for that date across all tickers.
 
 >>> quilt.loc[sf.HLoc[:, '1962-01-02'], ['Open', 'Close']]
 <Frame>
@@ -410,9 +409,9 @@ ibm              1962-01-02 6.413     6.3378
 Minimizing Memory Usage
 _____________________________________________
 
-In previous examples the ``Bus`` was shown to lazily load data as it was accessed. While this permits only loading what is needed, strong references to loaded ``Frame``s are retained in the ``Bus``, keeping them in memory. For large collections of data this can result in retaining unnecessary data.
+In previous examples, the ``Bus`` was shown to lazily load data as it was accessed. While this permits only loading what is needed, strong references to loaded ``Frame``s are retained in the ``Bus``, keeping them in memory. For large collections of data this can result in undesirable data retention.
 
-By using the ``max_persist`` argument on ``Bus`` initialization, we can fix the maximum number of ``Frame``s retained in the ``Bus``. As shown below, after setting ``max_persist`` to one, after loading each ``Frame``, the number of loaded ``Frame``s remains one:
+By using the ``max_persist`` argument on ``Bus`` initialization, we can fix the maximum number of ``Frame``s retained in the ``Bus``. As shown below, by setting ``max_persist`` to one, after loading each ``Frame``, the number of loaded ``Frame``s remains one:
 
 >>> bus = sf.Bus.from_zip_pickle('stocks.zip', max_persist=1)
 >>> bus['aapl'].shape
@@ -428,7 +427,9 @@ By using the ``max_persist`` argument on ``Bus`` initialization, we can fix the 
 >>> bus.status['loaded'].sum()
 1
 
-With this configuration, a process could iterate through all 7,163 ``Frame``s, doing work on each ``Frame``, but only incurring the memory overhead of a single ``Frame``. This approach explicitly favors conserving memory over performance time.
+With this configuration, a process could iterate through all 7,163 ``Frame``s, doing work on each ``Frame``, but only incurring the memory overhead of a single ``Frame``. This approach explicitly favors conserving memory over performance time. The example below demonstrates such an approach, finding the maximum close quote per stock accross all stocks.
+
+# TODO: find max span per stock
 
 >>> max_close = 0
 >>> for label in bus.index:
@@ -442,20 +443,18 @@ With this configuration, a process could iterate through all 7,163 ``Frame``s, d
 As a ``Bus`` can be provided as input to a ``Batch``, ``Quilt``, and ``Yarn``, the entire family of containers can benefit from this approach to reducing memory overhead.
 
 
-
 Parallel Reading, Writing, and Processing
 _______________________________________________________
 
-These containers provide configurable options to multi-process (or multi-thread) both  input and output as well as processing.
+Independently processing large numbers of ``Frame``s is an embarrasssignly parallel problem. As such, these higher-order containers provide opportunities for parallel processing.
 
-All constructors and exporters of zipped archives, such as ``from_zip_parquet()`` or ``to_zip_npz()``, support a ``config`` argument that permits specifying, within a  ``StoreConfig`` instance, numbers of workers and chunksize for multiprocessing ``Frame`` serialization from disk-based storage. The relevant parameters of the ``StoreConfig`` are ``read_max_workers``, ``read_chunksize``, ``write_max_workers``, and ``write_chunksize``.
+All constructors and exporters of zipped archives, such as ``from_zip_parquet()`` or ``to_zip_npz()``, support a ``config`` argument that permits specifying, within a  ``StoreConfig`` instance, numbers of workers and chunksize for multiprocessing ``Frame`` deserialization or serialization. The relevant parameters of the ``StoreConfig`` are ``read_max_workers``, ``read_chunksize``, ``write_max_workers``, and ``write_chunksize``.
 
-All ``Batch`` constructors expose ``max_workers``, ``chunk_size``, and ``use_threads`` parameters to permit executing the processing of each ``Frame`` given to the ``Batch`` in a process pool. While using threads for CPU-bound processing is generally inefficient in Python, some NumPy-based operations executed with thread pools can out-perform process pools.
-
+Similarly, all ``Batch`` constructors expose ``max_workers``, ``chunk_size``, and ``use_threads`` parameters to permit processing operations on ``Frame``s in parallel. While using threads for CPU-bound processing is generally inefficient in Python, some NumPy-based operations (outside the global interpreter lock) executed with thread pools can out-perform process pools.
 
 
 Conclusion
 _______________________
 
-While related tools for working with collections of ``Frame``s exist, the ``Bus``, ``Batch``, ``Quilt``, and ``Yarn`` provide well-defined abstractions that cover common needs in working with potentially huge collections of tables. Combined with lazy loading and lazy execution, as well as support for a variety of multi-table storage formats, these tools provide valuable resources for DataFrame processing.
+While related tools for working with collections of ``Frame``s exist, the ``Bus``, ``Batch``, ``Quilt``, and ``Yarn`` provide well-defined abstractions that cover common needs in working with potentially huge collections of tables. Combined with lazy loading, eager unloading, and lazy execution, as well as support for a variety of multi-table storage formats, these tools provide valuable resources for DataFrame processing.
 
