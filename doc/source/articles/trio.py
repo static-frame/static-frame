@@ -455,22 +455,23 @@ def tables() -> None:
     print(f.name)
     print(f.to_rst(config=config))
 
-    # name = 'Constructors & Exporters'
-    # columns = ('Constructor', 'Exporter') #type: ignore
-    # records = (
-    #     ('from_zip_tsv', 'to_zip_tsv',),
-    #     ('from_zip_csv', 'to_zip_csv',),
-    #     ('from_zip_pickle', 'to_zip_pickle',),
-    #     ('from_zip_parquet', 'to_zip_parquet',),
-    #     ('from_xlsx',  'to_xlsx'),
-    #     ('from_sqlite',  'to_sqlite'),
-    #     ('from_hdf5',  'to_hdf5'),
-    #     )
+    name = 'Constructors & Exporters'
+    columns = ('Constructor', 'Exporter') #type: ignore
+    records = (
+        ('from_hdf5',  'to_hdf5'),
+        ('from_sqlite',  'to_sqlite'),
+        ('from_zip_csv', 'to_zip_csv',),
+        ('from_zip_npz', 'to_zip_npz',),
+        ('from_zip_pickle', 'to_zip_pickle',),
+        ('from_zip_parquet', 'to_zip_parquet',),
+        ('from_zip_tsv', 'to_zip_tsv',),
+        ('from_xlsx',  'to_xlsx'),
+        )
 
-    # f = sf.Frame.from_records(records, columns=columns, name=name)
-    # # print(f)
-    # print(f.name)
-    # print(f.to_markdown(sf.DisplayConfig(include_index=False, type_show=False)))
+    f = sf.Frame.from_records(records, columns=columns, name=name)
+    # print(f)
+    print(f.name)
+    print(f.to_rst(sf.DisplayConfig(include_index=False, type_show=False)))
 
 
 
