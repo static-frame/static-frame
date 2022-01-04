@@ -15,14 +15,16 @@ from static_frame.core.util import list_to_tuple
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import NameType
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import iterable_to_array_1d
+
 from static_frame.core.container_util import ContainerMap
+from static_frame.core.index_base import IndexBase
 
 from static_frame.core.exception import ErrorNPYDecode
 from static_frame.core.exception import ErrorNPYEncode
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_base import IndexBase #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
 
 
@@ -370,7 +372,7 @@ class ArchiveDirectory(Archive):
         return post
 
 #-------------------------------------------------------------------------------
-class ArchiveFrameConverter:
+class Label:
     KEY_NAMES = '__names__'
     KEY_TYPES = '__types__'
     KEY_DEPTHS = '__depths__'
@@ -380,10 +382,13 @@ class ArchiveFrameConverter:
     FILE_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__.npy'
     FILE_TEMPLATE_BLOCKS = '__blocks_{}__.npy'
 
-    ARCHIVE_CLS: tp.Type[Archive]
+
+class ArchiveIndexConverter:
+    '''Utility methods for converting Index or index components.
+    '''
 
     @staticmethod
-    def _index_encode(
+    def index_encode(
             *,
             metadata: tp.Dict[str, tp.Hashable],
             archive: Archive,
@@ -407,73 +412,23 @@ class ArchiveFrameConverter:
                     archive.write_array(key_template_values.format(i), index.values_at_depth(i))
                 metadata[key_types] = [cls.__name__ for cls in index.index_types.values] # type: ignore
 
-    @classmethod
-    def to_archive(cls,
+    @staticmethod
+    def component_encode(
             *,
-            frame: 'Frame',
-            fp: PathSpecifier,
-            include_index: bool = True,
-            include_columns: bool = True,
-            consolidate_blocks: bool = False,
+            metadata: tp.Dict[str, tp.Hashable],
+            archive: Archive,
+            values: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            key_template_values: str,
             ) -> None:
         '''
-        Write a :obj:`Frame` as an npz file.
+        Args:
+            metadata: mutates in place with json components
         '''
-        metadata: tp.Dict[str, tp.Any] = {}
-        metadata[cls.KEY_NAMES] = [frame._name,
-                frame._index._name,
-                frame._columns._name,
-                ]
-        # do not store Frame class as caller will determine
-        metadata[cls.KEY_TYPES] = [
-                frame._index.__class__.__name__,
-                frame._columns.__class__.__name__,
-                ]
-
-        # store shape, index depths
-        depth_index = frame._index.depth
-        depth_columns = frame._columns.depth
-
-        if consolidate_blocks:
-            # NOTE: by taking iter, can avoid 2x memory in some circumstances
-            block_iter = frame._blocks._reblock()
-        else:
-            block_iter = iter(frame._blocks._blocks)
-
-        archive = cls.ARCHIVE_CLS(fp,
-                writeable=True,
-                memory_map=False,
-                )
-
-        cls._index_encode(
-                metadata=metadata,
-                archive=archive,
-                index=frame._index,
-                key_template_values=cls.FILE_TEMPLATE_VALUES_INDEX,
-                key_types=cls.KEY_TYPES_INDEX,
-                depth=depth_index,
-                include=include_index,
-                )
-
-        cls._index_encode(
-                metadata=metadata,
-                archive=archive,
-                index=frame._columns,
-                key_template_values=cls.FILE_TEMPLATE_VALUES_COLUMNS,
-                key_types=cls.KEY_TYPES_COLUMNS,
-                depth=depth_columns,
-                include=include_columns,
-                )
-
-        for i, array in enumerate(block_iter):
-            archive.write_array(cls.FILE_TEMPLATE_BLOCKS.format(i), array)
-
-        metadata[cls.KEY_DEPTHS] = [
-                i + 1, # block count
-                depth_index,
-                depth_columns]
-
-        archive.write_metadata(metadata)
+        # NOTE: might support TypeBlocks?
+        if values.__class__ is not np.ndarray:
+            values, _ = iterable_to_array_1d(values)
+        assert values.ndim == 1 # support other ndim
+        archive.write_array(key_template_values.format(0), values)
 
     @staticmethod
     def _index_decode(*,
@@ -508,6 +463,78 @@ class ArchiveFrameConverter:
                     )
         return index
 
+
+class ArchiveFrameConverter:
+    ARCHIVE_CLS: tp.Type[Archive]
+
+    @classmethod
+    def to_archive(cls,
+            *,
+            frame: 'Frame',
+            fp: PathSpecifier,
+            include_index: bool = True,
+            include_columns: bool = True,
+            consolidate_blocks: bool = False,
+            ) -> None:
+        '''
+        Write a :obj:`Frame` as an npz file.
+        '''
+        metadata: tp.Dict[str, tp.Any] = {}
+        metadata[Label.KEY_NAMES] = [frame._name,
+                frame._index._name,
+                frame._columns._name,
+                ]
+        # do not store Frame class as caller will determine
+        metadata[Label.KEY_TYPES] = [
+                frame._index.__class__.__name__,
+                frame._columns.__class__.__name__,
+                ]
+
+        # store shape, index depths
+        depth_index = frame._index.depth
+        depth_columns = frame._columns.depth
+
+        if consolidate_blocks:
+            # NOTE: by taking iter, can avoid 2x memory in some circumstances
+            block_iter = frame._blocks._reblock()
+        else:
+            block_iter = iter(frame._blocks._blocks)
+
+        archive = cls.ARCHIVE_CLS(fp,
+                writeable=True,
+                memory_map=False,
+                )
+
+        ArchiveIndexConverter.index_encode(
+                metadata=metadata,
+                archive=archive,
+                index=frame._index,
+                key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
+                key_types=Label.KEY_TYPES_INDEX,
+                depth=depth_index,
+                include=include_index,
+                )
+
+        ArchiveIndexConverter.index_encode(
+                metadata=metadata,
+                archive=archive,
+                index=frame._columns,
+                key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
+                key_types=Label.KEY_TYPES_COLUMNS,
+                depth=depth_columns,
+                include=include_columns,
+                )
+
+        for i, array in enumerate(block_iter):
+            archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i), array)
+
+        metadata[Label.KEY_DEPTHS] = [
+                i + 1, # block count
+                depth_index,
+                depth_columns]
+
+        archive.write_metadata(metadata)
+
     @classmethod
     def _from_archive(cls,
             *,
@@ -527,34 +554,35 @@ class ArchiveFrameConverter:
         metadata = archive.read_metadata()
 
         # JSON will bring back tuple `name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
-        name, name_index, name_columns = (list_to_tuple(n) for n in metadata[cls.KEY_NAMES])
+        name, name_index, name_columns = (list_to_tuple(n)
+                for n in metadata[Label.KEY_NAMES])
 
-        block_count, depth_index, depth_columns = metadata[cls.KEY_DEPTHS]
+        block_count, depth_index, depth_columns = metadata[Label.KEY_DEPTHS]
         cls_index, cls_columns = (ContainerMap.str_to_cls(name)
-                for name in metadata[cls.KEY_TYPES])
+                for name in metadata[Label.KEY_TYPES])
 
-        index = cls._index_decode(
+        index = ArchiveIndexConverter._index_decode(
                 archive=archive,
                 metadata=metadata,
-                key_template_values=cls.FILE_TEMPLATE_VALUES_INDEX,
-                key_types=cls.KEY_TYPES_INDEX,
+                key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
+                key_types=Label.KEY_TYPES_INDEX,
                 depth=depth_index,
                 cls_index=cls_index,
                 name=name_index,
                 )
 
-        columns = cls._index_decode(
+        columns = ArchiveIndexConverter._index_decode(
                 archive=archive,
                 metadata=metadata,
-                key_template_values=cls.FILE_TEMPLATE_VALUES_COLUMNS,
-                key_types=cls.KEY_TYPES_COLUMNS,
+                key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
+                key_types=Label.KEY_TYPES_COLUMNS,
                 depth=depth_columns,
                 cls_index=cls_columns,
                 name=name_columns,
                 )
 
         tb = TypeBlocks.from_blocks(
-                archive.read_array(cls.FILE_TEMPLATE_BLOCKS.format(i))
+                archive.read_array(Label.FILE_TEMPLATE_BLOCKS.format(i))
                 for i in range(block_count)
                 )
 
@@ -618,28 +646,73 @@ class ArchiveComponentsConverter:
     '''
     A family of methods to write NPY/NPZ from things other than a Frame, or multi-frame collections like a Bus/Yarn/Quilt but with the intention of production a consolidate Frame, not just a zip of Frames.
     '''
+
     @classmethod
     def from_blocks(cls,
-            blocks: tp.Iterable['Frame'],
+            fp: PathSpecifier,
             *,
+            blocks: tp.Iterable[np.ndarray],
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
-            axis: int = 0,
+            name: NameType = None,
+            axis: int = 1,
             ) -> None:
         '''
         If axis is 0, blocks are stacked vertically, if axis is 1, blocks are stacked horizontally.
         '''
+        archive = cls.ARCHIVE_CLS(fp, writeable=True, memory_map=False)
+        metadata: tp.Dict[str, tp.Any] = {}
+
+        if isinstance(index, IndexBase):
+            depth_index = index.depth
+            ArchiveIndexConverter.index_encode(
+                    metadata=metadata,
+                    archive=archive,
+                    index=index,
+                    key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
+                    key_types=Label.KEY_TYPES_INDEX,
+                    depth=depth_index,
+                    include=True,
+                    )
+        elif index is not None:
+            ArchiveIndexConverter.component_encode(
+                    metadata=metadata,
+                    archive=archive,
+                    values=index,
+                    key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
+                    )
+
+        if isinstance(columns, IndexBase):
+            depth_columns = columns.depth
+            ArchiveIndexConverter.index_encode(
+                    metadata=metadata,
+                    archive=archive,
+                    index=columns,
+                    key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
+                    key_types=Label.KEY_TYPES_COLUMNS,
+                    depth=depth_columns,
+                    include=True,
+                    )
+        elif columns is not None:
+            ArchiveIndexConverter.component_encode(
+                    metadata=metadata,
+                    archive=archive,
+                    values=columns,
+                    key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
+                    )
 
     @classmethod
     def from_frames(cls,
-            frames: tp.Iterable['Frame'],
+            fp: PathSpecifier,
             *,
+            frames: tp.Iterable['Frame'],
             include_index: bool = True,
             include_columns: bool = True,
             axis: int = 0,
             ) -> None:
         '''Given an iterable of Frames, write out an NPZ or NPY directly, without building up an intermediary Frame. If axis 0, the Frames must be block compatible; if axis 1, the Frames must have the same number of rows. For both axis, indices must be unique or aligned.
         '''
+        archive = cls.ARCHIVE_CLS(fp, writeable=True, memory_map=False)
 
 
 
