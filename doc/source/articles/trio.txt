@@ -1,9 +1,5 @@
 
 
-Efficiently Working with 7,163 (or More) DataFrames
-Efficiently Processing 7,163 (or More) DataFrames with StaticFrame's Higher-Order Containers
-
-
 
 Using Higher-Order Containers to Efficiently Process 7,163 (or More) DataFrames
 ====================================================================================
@@ -18,7 +14,9 @@ All three containers provide identical interfaces for reading from, and writing 
 
 These tools evolved from the context of my work: processing financial data and modelling investment systems. There, data sets are naturally partitioned by date or characteristic. For historical simulations, the data needed can be large. The ``Bus``, ``Batch``, ``Quilt``, and ``Yarn`` have provided convenient and efficient tools in this domain. Out-of-core solutions like Vaex and Dask offer related approaches to dealing with large collections of data, though with different tradeoffs.
 
-While these containers are implemented in StaticFrame, the abstractions are useful for application in any DataFrame or table-processing library. StaticFrame calls a DataFrame simply a "Frame," and that convention will be used herein.
+While these containers are implemented in StaticFrame, the abstractions are useful for application in any DataFrame or table-processing library. StaticFrame calls a DataFrame simply a "Frame," and that convention will be used herein. StaticFrame is imported with the following convention:
+
+>>> import static_frame as sf
 
 
 Container Overview
@@ -60,7 +58,7 @@ As the ``Bus`` supports reading from, and writing to, XLSX and HDF5 (as well as 
 Batch
 --------
 
-The ``Batch`` can be thought of as an iterator of pairs of label and ``Frame``. Beyond just an iterator, the ``Batch`` is a tool for composing deferred operations on each contained ``Frame``. The ``Batch`` exposes nearly the entire Frame interface; method calls and operator applications, when invoked, are deferred in a newly returned ``Batch``, composing lazy executions upon the stored iterator. Operations are executed, and pairs are iterated, only when creating a composite ``Frame`` with the ``Batch.to_frame()`` method, or using dictionary-like iterators such as ``Batch.keys()``, ``Batch.items()``, or ``Batch.values``.
+The ``Batch`` can be thought of as an iterator of pairs of label and ``Frame``. Beyond just an iterator, the ``Batch`` is a tool for composing deferred operations on each contained ``Frame``. The ``Batch`` exposes nearly the entire ``Frame`` interface; method calls and operator applications, when invoked, are deferred in a newly returned ``Batch``, composing lazy executions upon the stored iterator. Operations are executed, and pairs are iterated, only when creating a composite ``Frame`` with the ``Batch.to_frame()`` method, or using dictionary-like iterators such as ``Batch.keys()``, ``Batch.items()``, or ``Batch.values``.
 
 A ``Batch`` can be initialized with items from a ``Bus``, or any iterator of pairs of label, ``Frame``. Methods called from, or operators invoked on, a ``Batch`` simply return a new ``Batch``. Calling ``Batch.to_frame()``, as shown below, is necessary to eagerly execute the composed ``sum()`` operation.
 
@@ -75,7 +73,7 @@ f2      4.0       4.0
 <<U2>   <float64> <float64>
 
 
-In addition to ``Frame`` methods, the ``Batch`` supports usage of ``Frame`` selection methods and operators. Below, each ``Frame`` is taken to the second power, the 'b' column is selected, and a new ``Frame`` (combining both selections) is returned:
+In addition to ``Frame`` methods, the ``Batch`` supports usage of ``Frame`` selection interfaces and operators. Below, each ``Frame`` is taken to the second power, the "b" column is selected, and a new ``Frame`` (combining both selections) is returned:
 
 >>> (sf.Batch(bus.items()) ** 2)['b'].to_frame()
 <Frame>
@@ -145,7 +143,7 @@ z        4.0
 Yarn
 --------------
 
-The ``Yarn``, only briefly described here, provides a "virtual concatentation" of one or more ``Bus``. As with the ``Quilt``, the larger container is not eagerly concatenated. Unlike the two-dimensional, single-``Frame`` presentation of the Quilt, the ``Yarn`` presents a one-demensional container of many ``Frame``s with a ``Bus``-like interface. Unlike a ``Bus`` or ``Quilt``, the index of a ``Yarn`` can be arbitrarily relabelled. These features permit heterogeneous ``Bus`` to be made available in a single container under (if needed) new labels.
+The ``Yarn``, only briefly described here, provides a "virtual concatenation" of one or more ``Bus``. As with the ``Quilt``, the larger container is not eagerly concatenated. Unlike the two-dimensional, single-``Frame`` presentation of the ``Quilt``, the ``Yarn`` presents a one-dimensional container of many ``Frame``s with a ``Bus``-like interface. Unlike a ``Bus`` or ``Quilt``, the index of a ``Yarn`` can be arbitrarily relabeled. These features permit heterogeneous ``Bus`` to be made available in a single container under (if needed) new labels.
 
 The ``Yarn``, as an even higher-order container, can only be initialized with one or more ``Bus`` or ``Yarn``. A ``Yarn`` can even be created from multiple instances of the same ``Bus`` if each is given a unique ``name``:
 
@@ -207,7 +205,7 @@ For m ``Bus`` of n Frame of shape (x, y)
 
 
 
-Sample Data
+Processing 7,163 DataFrames
 ___________________________
 
 The "Huge Stock Market Dataset" contains a collection of 7,163 CSV tables, each table a time series of characteristics for a US stock. The file "archive.zip" is available at https://www.kaggle.com/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
@@ -220,7 +218,7 @@ After opening the archive, we can read from the contained "Stocks" directory and
 >>> items = ((fn.replace('.us.txt', ''), sf.Frame.from_csv(fp, index_depth=1)) for fn, fp in fps if os.path.getsize(fp))
 >>> sf.Batch(items).to_zip_pickle('stocks.zip')
 
-As the ``Bus`` is lazy, initialization from this new zip archive loads zero ``Frame``s into memory. Fast access to the data is provided only when explicitly requested. Thus, while the ``Bus.shape`` attribute shows 7,163 contained ``Frame``s, the ``status`` attribute shows zero loaded Frames.
+As the ``Bus`` is lazy, initialization from this new zip archive loads zero ``Frame``s into memory. Fast access to the data is provided only when explicitly requested. Thus, while the ``Bus.shape`` attribute shows 7,163 contained ``Frame``s, the ``status`` attribute shows zero loaded ``Frame``s.
 
 >>> bus = sf.Bus.from_zip_pickle('stocks.zip')
 >>> bus.shape
@@ -230,14 +228,17 @@ As the ``Bus`` is lazy, initialization from this new zip archive loads zero ``Fr
 
 Accessing a single ``Frame`` loads only that one ``Frame``.
 
->>> bus['ibm'].tail(2)
-<Frame>
-<Index>    Open      High      Low       Close     Volume  OpenInt <<U7>
+>>> bus['ibm'].shape
+(14059, 6)
+>>> bus['ibm'].columns
 <Index>
-2017-11-09 149.93    151.8     149.86    150.3     4776388 0
-2017-11-10 150.65    150.89    149.14    149.16    4306433 0
-<<U10>     <float64> <float64> <float64> <float64> <int64> <int64>
-
+Open
+High
+Low
+Close
+Volume
+OpenInt
+<<U7>
 
 Extracting multiple ``Frame``s produces a new ``Bus`` that reads from the same store.
 
@@ -251,7 +252,7 @@ goog    Frame
 >>> bus.status['loaded'].sum()
 4
 
-With a ``Batch`` we can perform operations on the ``Frame``s contained in the ``Bus``. The ``apply()`` method can be used to multiply two columns (volume and close price) of each ``Frame``; we then extract the most recent two values with ``iloc`` and produce a composite ``Frame``:
+With a ``Batch`` we can perform operations on the ``Frame``s contained in the ``Bus``. The ``Bus.apply()`` method can be used to multiply two columns (volume and close price) of each ``Frame``; we then extract the most recent two values with ``iloc`` and produce a composite ``Frame``:
 
 >>> sf.Batch(bus[['aapl', 'msft', 'goog']].items()).apply(lambda f: f['Close'] * f['Volume']).iloc[-2:].to_frame()
 <Frame>
@@ -304,61 +305,60 @@ bgt     Frame
 <<U9>   <object>
 
 
-As the ``Batch`` operates on each ``Frame`` in a ``Bus``, calling ``head(2)`` extracts the top two rows from each ``Frame`` in the "Huge Stock Market Dataset." Calling ``to_frame()`` concatenates these extractions into a new ``Frame`` for display.
+As the ``Batch`` operates on each ``Frame`` in a ``Bus``, calling ``head(2)`` extracts the top two rows from each ``Frame`` in the "Huge Stock Market Dataset." Calling ``to_frame()`` concatenates these extractions into a new ``Frame``, from which only two columns are then selected:
 
 >>> sf.Batch(bus.items()).head(2).to_frame().shape
 (14316, 6)
->>> sf.Batch(bus.items()).head(2).to_frame()
+>>> sf.Batch(bus.items()).head(2).to_frame()[['Close', 'Volume']]
 <Frame>
-<Index>                     Open      High      Low       Close     Volume  OpenInt <<U7>
+<Index>                     Close     Volume  <<U7>
 <IndexHierarchy>
-fljh             2017-11-07 26.199    26.199    26.177    26.189    1300    0
-fljh             2017-11-08 26.359    26.39     26.349    26.3875   3600    0
-bgt              2005-02-25 11.605    11.649    11.527    11.618    97637   0
-bgt              2005-02-28 11.594    11.683    11.594    11.683    90037   0
-angi             2011-11-21 15.15     15.75     14.31     15.4      469578  0
-angi             2011-11-22 15.01     16.79     15.01     16.12     202970  0
-ccj              2005-02-25 20.099    20.92     20.021    20.235    3830399 0
-ccj              2005-02-28 20.696    20.696    19.245    19.501    3911079 0
-uhs              2005-02-25 21.629    23.016    21.377    22.822    4700749 0
-uhs              2005-02-28 22.783    23.134    22.656    23.056    1739084 0
-eqfn             2015-07-09 8.57      8.7       8.5       8.68      489900  0
-eqfn             2015-07-10 8.58      8.61      8.58      8.58      44100   0
-ivfgc            2016-12-02 99.97     99.97     99.97     99.97     5005    0
-ivfgc            2016-12-05 99.97     99.97     99.97     99.97     6002    0
-achn             2006-10-25 11.5      11.5      11.5      11.5      0       0
-achn             2006-10-26 11.6      12.75     11.6      12.39     361420  0
-eurz             2015-08-19 24.75     24.75     24.75     24.75     200     0
-...              ...        ...       ...       ...       ...       ...     ...
-cai              2007-05-16 15.02     15.32     14.5      15.0      3960000 0
-desc             2016-07-26 27.131    27.131    27.062    27.062    1015    0
-desc             2016-07-27 27.15     27.15     27.15     27.15     193     0
-swks             2005-02-25 7.0421    7.1476    6.975     7.0997    1838285 0
-swks             2005-02-28 7.0421    7.2819    6.9462    6.9653    2737207 0
-hair             2017-10-12 8.55      11.95     8.55      9.92      2818561 0
-hair             2017-10-13 9.93      10.1948   9.19      9.6       294724  0
-jnj              1970-01-02 0.6104    0.6104    0.5941    0.5941    1468563 0
-jnj              1970-01-05 0.5941    0.5941    0.5776    0.5776    1185461 0
-rosg             2011-08-05 198.0     216.0     180.0     181.8     183     0
-rosg             2011-08-08 189.0     189.0     163.8     169.2     79      0
-wbbw             2013-04-12 13.54     14.0      13.5      13.8      162747  0
-wbbw             2013-04-15 13.63     13.785    13.45     13.67     126845  0
-twow             2017-10-23 16.7      16.7      16.66     16.7      10045   0
-twow             2017-10-24 16.75     16.75     16.682    16.682    850     0
-gsjy             2016-03-07 25.238    25.238    25.208    25.238    14501   0
-gsjy             2016-03-08 25.081    25.194    25.071    25.158    12457   0
-<<U9>            <<U10>     <float64> <float64> <float64> <float64> <int64> <int64>
+fljh             2017-11-07 26.189    1300
+fljh             2017-11-08 26.3875   3600
+bgt              2005-02-25 11.618    97637
+bgt              2005-02-28 11.683    90037
+angi             2011-11-21 15.4      469578
+angi             2011-11-22 16.12     202970
+ccj              2005-02-25 20.235    3830399
+ccj              2005-02-28 19.501    3911079
+uhs              2005-02-25 22.822    4700749
+uhs              2005-02-28 23.056    1739084
+eqfn             2015-07-09 8.68      489900
+eqfn             2015-07-10 8.58      44100
+ivfgc            2016-12-02 99.97     5005
+ivfgc            2016-12-05 99.97     6002
+achn             2006-10-25 11.5      0
+achn             2006-10-26 12.39     361420
+eurz             2015-08-19 24.75     200
+...              ...        ...       ...
+cai              2007-05-16 15.0      3960000
+desc             2016-07-26 27.062    1015
+desc             2016-07-27 27.15     193
+swks             2005-02-25 7.0997    1838285
+swks             2005-02-28 6.9653    2737207
+hair             2017-10-12 9.92      2818561
+hair             2017-10-13 9.6       294724
+jnj              1970-01-02 0.5941    1468563
+jnj              1970-01-05 0.5776    1185461
+rosg             2011-08-05 181.8     183
+rosg             2011-08-08 169.2     79
+wbbw             2013-04-12 13.8      162747
+wbbw             2013-04-15 13.67     126845
+twow             2017-10-23 16.7      10045
+twow             2017-10-24 16.682    850
+gsjy             2016-03-07 25.238    14501
+gsjy             2016-03-08 25.158    12457
+<<U9>            <<U10>     <float64> <int64>
 
+Finally, the ``Quilt`` represents the contained ``Frame``s as if they were a single, contiguous ``Frame``. Calling ``head(2)`` returns the first two rows of that virtual ``Frame``, labelled with a hierarchical index whose outer label is the ``Frame``'s label (i.e., the ticker).
 
-Finally, the ``Quilt`` represents the contained ``Frame``s as if they were a single, contiguous ``Frame``. Calling ``head(2)`` returns the first two rows of that virtual ``Frame``, labelled with a hierarchical index whose outer label is the ``Frame``'s label.
-
->>> quilt.head(2)
+>>> quilt.head(2)[['Close', 'Volume']]
 <Frame>
-<Index>                     Open      High      Low       Close     Volume  OpenInt <<U7>
+<Index>                     Close     Volume  <<U7>
 <IndexHierarchy>
-fljh             2017-11-07 26.199    26.199    26.177    26.189    1300    0
-fljh             2017-11-08 26.359    26.39     26.349    26.3875   3600    0
-<<U4>            <<U10>     <float64> <float64> <float64> <float64> <int64> <int64>
+fljh             2017-11-07 26.189    1300
+fljh             2017-11-08 26.3875   3600
+<<U4>            <<U10>     <float64> <int64>
 
 
 Cross-Container Comparisons: Same Selections, Different Methods
@@ -366,7 +366,7 @@ __________________________________________________________________________
 
 Next, we will show how three approaches can be used with each container to return the same selection. While the ``head()`` method, used above, is a type of pre-configured selector, the full range of ``loc`` and ``iloc`` selection interfaces are supported by all containers. The following examples extract all "Open" and "Close" records from 1962-01-02.
 
-To perform this selection with a ``Bus``, we can iterate through each Frame and select the targeted records.
+To perform this selection with a ``Bus``, we can iterate through each ``Frame`` and select the targeted records.
 
 >>> for label, f in bus.items():
 ...     if '1962-01-02' in f.index:
@@ -427,26 +427,24 @@ By using the ``max_persist`` argument on ``Bus`` initialization, we can fix the 
 >>> bus.status['loaded'].sum()
 1
 
-With this configuration, a process could iterate through all 7,163 ``Frame``s, doing work on each ``Frame``, but only incurring the memory overhead of a single ``Frame``. This approach explicitly favors conserving memory over performance time. The example below demonstrates such an approach, finding the maximum close quote per stock accross all stocks.
+With this configuration, a process could iterate through all 7,163 ``Frame``s, doing work on each ``Frame``, but only incurring the memory overhead of a single ``Frame``. While the same routine could be performed with a group-by on a single ``Frame``, this approach explicitly favors minimizing memory usage over compute time. The example below demonstrates such an approach, finding the maximum span between close quotes per stock across all stocks.
 
-# TODO: find max span per stock
-
->>> max_close = 0
+>>> max_span = 0
 >>> for label in bus.index:
-...     max_close = max(bus[label]['Close'].max(), max_close)
+...     max_span = max(bus[label]['Close'].max() - bus[label]['Close'].min(), max_span)
 ...
->>> max_close
-1437986240.44
+>>> max_span
+1437986239.4042
 >>> bus.status['loaded'].sum()
 1
 
 As a ``Bus`` can be provided as input to a ``Batch``, ``Quilt``, and ``Yarn``, the entire family of containers can benefit from this approach to reducing memory overhead.
 
 
-Parallel Reading, Writing, and Processing
+Parallel Processing
 _______________________________________________________
 
-Independently processing large numbers of ``Frame``s is an embarrasssignly parallel problem. As such, these higher-order containers provide opportunities for parallel processing.
+Independently processing large numbers of ``Frame``s is an embarrassingly parallel problem. As such, these higher-order containers provide opportunities for parallel processing.
 
 All constructors and exporters of zipped archives, such as ``from_zip_parquet()`` or ``to_zip_npz()``, support a ``config`` argument that permits specifying, within a  ``StoreConfig`` instance, numbers of workers and chunksize for multiprocessing ``Frame`` deserialization or serialization. The relevant parameters of the ``StoreConfig`` are ``read_max_workers``, ``read_chunksize``, ``write_max_workers``, and ``write_chunksize``.
 
