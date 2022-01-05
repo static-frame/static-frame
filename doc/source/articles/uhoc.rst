@@ -53,7 +53,7 @@ A key feature of the ``Bus`` is that, when reading from disk, ``Frames`` are loa
 
 As the ``Bus`` supports reading from, and writing to, XLSX and HDF5 (as well as many other formats), it provides the functionality of the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but with a more general and consistent interface. The same ``Bus`` can be used to write an XLSX workbook (where each Frame is a sheet) or an HDF5 datastore, simply by using ``Bus.to_xlsx()`` or ``Bus.to_hdf5()``, respectively.
 
- Additionally, a ``Bus`` serves as a convenient resource for creating a ``Batch``, ``Quilt``, or ``Yarn``.
+Additionally, a ``Bus`` serves as a convenient resource for creating a ``Batch``, ``Quilt``, or ``Yarn``.
 
 Batch
 --------
