@@ -427,7 +427,7 @@ class ArchiveIndexConverter:
         # NOTE: might support TypeBlocks?
         if values.__class__ is not np.ndarray:
             values, _ = iterable_to_array_1d(values)
-        assert values.ndim == 1 # support other ndim
+        assert values.ndim == 1 # type: ignore
         archive.write_array(key_template_values.format(0), values)
 
     @staticmethod
@@ -646,6 +646,7 @@ class ArchiveComponentsConverter:
     '''
     A family of methods to write NPY/NPZ from things other than a Frame, or multi-frame collections like a Bus/Yarn/Quilt but with the intention of production a consolidate Frame, not just a zip of Frames.
     '''
+    ARCHIVE_CLS: tp.Type[Archive]
 
     @classmethod
     def from_blocks(cls,
@@ -729,3 +730,7 @@ class NPY(ArchiveComponentsConverter):
 
 
 
+# if as an instance would do
+# NPY(fp_dst).from_blocks()
+# NPZ(fp_dst).from_frames()
+# NPZ(fp_dst).from_npy(fp_src)

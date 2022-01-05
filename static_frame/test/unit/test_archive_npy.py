@@ -5,13 +5,14 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 from numpy.lib.format import write_array # type: ignore
+import frame_fixtures as ff
 
 from static_frame.core.index import Index
 from static_frame.core.archive_npy import NPYConverter
 from static_frame.core.archive_npy import ArchiveDirectory
 from static_frame.core.archive_npy import ArchiveZip
 from static_frame.core.archive_npy import NPZ
-# from static_frame.core.archive_npy import NPY
+from static_frame.core.archive_npy import NPY
 
 from static_frame.core.exception import ErrorNPYDecode
 from static_frame.core.exception import ErrorNPYEncode
@@ -203,7 +204,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_archive_components_npz_from_blocks(self) -> None:
+    def test_archive_components_npz_from_blocks_a(self) -> None:
         with temp_file('.zip') as fp:
 
             a1 = np.arange(12).reshape(3, 4)
@@ -214,6 +215,17 @@ class TestUnit(TestCase):
 
             NPZ.from_blocks(fp, blocks=(a1,), columns=('a', 'b', 'c'))
             NPZ.from_blocks(fp, blocks=(a1,), columns=Index(('a', 'b', 'c'), name='b'))
+
+
+    def test_archive_components_npz_from_frames_a(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)')
+        f2 = ff.parse('s(2,2)|v(int)')
+
+        with TemporaryDirectory() as fp:
+            NPY.from_frames(fp, frames=(f1, f2))
+
+
+
 
 
 if __name__ == '__main__':
