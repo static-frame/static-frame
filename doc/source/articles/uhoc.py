@@ -443,9 +443,9 @@ def tables() -> None:
     name = 'Higher-Order Containers'
     columns = ('Bus', 'Batch', 'Quilt', 'Yarn')
     records_items = (
-    ('Presented ndim',        (1,         2,       2,                       1,                  )),
+    ('Presented Dimensions',  (1,         2,       2,                       1,                  )),
     ('Approximate Interface', ('Series',  'Frame', 'Frame',                 'Series',           )),
-    ('Composes',              ('n Frame', '',      '1 Bus/Yarn of n Frame', 'm Bus of n Frame', )),
+    ('Composes',              ('n Frame', '',      '1 Bus or Yarn of n Frame', 'm Bus of n Frame', )),
     ('Presented shape',       ('(n,)',    '',      '(xn, y) or (x, yn)',    '(mn,)',            )),
     )
 
