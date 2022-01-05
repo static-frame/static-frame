@@ -719,12 +719,13 @@ class ArchiveComponentsConverter:
 class NPZ(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveZip
 
+
+# def from_npy(): # writes an NPZ from an NPY
+
 class NPY(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveDirectory
 
+# def from_npz(): # writes an NPY from an NPZ
 
-# possible interfaces
 
-# NPZ(fp).from_blocks()
-# NPZ.from_blocks().write(fp)
 
