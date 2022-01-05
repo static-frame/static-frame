@@ -53,7 +53,7 @@ A key feature of the ``Bus`` is that, when reading from disk, ``Frames`` are loa
 
 As the ``Bus`` supports reading from, and writing to, XLSX and HDF5 (as well as many other formats), it provides the functionality of the Pandas ``ExcelWriter`` and ``HDFStore`` interfaces, but with a more general and consistent interface. The same ``Bus`` can be used to write an XLSX workbook (where each Frame is a sheet) or an HDF5 datastore, simply by using ``Bus.to_xlsx()`` or ``Bus.to_hdf5()``, respectively.
 
- Additionally, a ``Bus`` serves as a convenient resource for creating a ``Batch``, ``Quilt``, or ``Yarn``.
+Additionally, a ``Bus`` serves as a convenient resource for creating a ``Batch``, ``Quilt``, or ``Yarn``.
 
 Batch
 --------
@@ -250,7 +250,7 @@ goog    Frame
 >>> bus.status['loaded'].sum()
 4
 
-With a ``Batch`` we can perform operations on the ``Frames`` contained in the ``Bus``. The ``Bus.apply()`` method can be used to multiply two columns (volume and close price) of each ``Frame``; we then extract the most recent two values with ``iloc`` and produce a composite ``Frame``:
+With a ``Batch`` we can perform operations on the ``Frames`` contained in the ``Bus``, returning labeled results. The ``Batch.apply()`` method can be used with a ``lambda`` to multiply two columns ("Volume" and "Close") of each ``Frame``; we then extract the most recent two values with ``iloc`` and produce a composite ``Frame``, the index derived from the original ``Bus`` labels:
 
 >>> sf.Batch(bus[['aapl', 'msft', 'goog']].items()).apply(lambda f: f['Close'] * f['Volume']).iloc[-2:].to_frame()
 <Frame>
@@ -381,8 +381,7 @@ Open          6.413
 Close         6.3378
 <<U7>         <float64>
 
-
-The ``Batch`` offers a more compact interface to achieve this selection than possible with the ``Bus``. Without writing a loop, the ``Batch.apply_except()`` method can select row and column values from within each contained ``Frame`` while ignoring any ``KeyError`` raised from ``Frames`` without the selected date. Calling ``to_frame()`` concatenates the results together with their ``Frame`` labels.
+The ``Batch`` offers a more compact interface to achieve this selection than possible with the ``Bus``. Without writing a loop, the ``Batch.apply_except()`` method can select row and column values from within each contained ``Frame`` while ignoring any ``KeyErrors`` raised from ``Frames`` without the selected date. Calling ``to_frame()`` concatenates the results together with their ``Frame`` labels.
 
 >>> sf.Batch(bus.items()).apply_except(lambda f: f.loc['1962-01-02', ['Open', 'Close']], KeyError).to_frame()
 <Frame>
@@ -446,7 +445,7 @@ Independently processing large numbers of ``Frames`` is an embarrassingly parall
 
 All constructors and exporters of zipped archives, such as ``from_zip_parquet()`` or ``to_zip_npz()``, support a ``config`` argument that permits specifying, within a  ``StoreConfig`` instance, numbers of workers and chunksize for multiprocessing ``Frame`` deserialization or serialization. The relevant parameters of the ``StoreConfig`` are ``read_max_workers``, ``read_chunksize``, ``write_max_workers``, and ``write_chunksize``.
 
-Similarly, all ``Batch`` constructors expose ``max_workers``, ``chunk_size``, and ``use_threads`` parameters to permit processing operations on ``Frames`` in parallel. While using threads for CPU-bound processing is generally inefficient in Python, some NumPy-based operations (outside the global interpreter lock) executed with thread pools can out-perform process pools.
+Similarly, all ``Batch`` constructors expose ``max_workers``, ``chunk_size``, and ``use_threads`` parameters to permit processing ``Frames`` in parallel. Simply by enabling these parameters, operations on vast numbers of ``Frames`` can be multi-processed or multi-threaded, potentially delivering significant performance improvements. While using threads for CPU-bound processing is generally inefficient in Python, some NumPy-based operations (outside the global interpreter lock) executed with thread pools can out-perform process pools.
 
 
 Conclusion
