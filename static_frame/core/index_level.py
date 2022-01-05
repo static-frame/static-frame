@@ -198,22 +198,58 @@ class IndexLevel:
     @classmethod
     def _format(cls, body: str, name: str = "") -> str:
         if name:
-            name = " " + name
-        return f"{cls.__name__}:{name} {{\n{body}\n}},"
+            name = ": " + name
 
-    def _repr(self, name: str = "") -> str:
+        if not body.strip():
+            return f"{cls.__name__}{name} {{ ... }},"
+
+        return f"{cls.__name__}{name} {{\n{body}\n}},"
+
+    def _repr(self, *, name: str, depth: int) -> str:
+        """
+        Since this is recursive, we can quickly (and easily) attempt to display
+        massive trees. To prevent this, we truncate the two following cases:
+
+        1. Levels that are 5+ levels deep
+        2. Only display the first & last 2 levels of any given level
+        """
+        if depth >= 4:
+            return ""
+
         if self.targets is None:
             # NOTE: str(self.index) does not permit passing a DisplayConfig
             return self._format(self._pad(str(self.index)), name=name)
 
+        if len(self.index) <= 3:
+            def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, "IndexLevel"]]:
+                yield from zip(self.index, self.targets)
+
+        else:
+
+            forward_index_iter = iter(self.index.values)
+            reverse_index_iter = reversed(self.index)
+            forward_targets_iter = iter(self.targets)
+            reverse_targets_iter = reversed(self.targets) # type: ignore
+
+            def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, "IndexLevel"]]:
+                yield next(forward_index_iter), next(forward_targets_iter)
+                yield next(forward_index_iter), next(forward_targets_iter)
+
+                last = next(reverse_index_iter), next(reverse_targets_iter)
+                yield next(reverse_index_iter), next(reverse_targets_iter)
+                yield last
+
         results: tp.List[str] = []
-        for label, target in zip(self.index, self.targets):
-            results.append(target._repr(name=repr(label)))
+        for label, target in gen():
+            results.append(target._repr(name=repr(label), depth=depth + 1))
+
+        if len(results) == 4 and any(results):
+            results = results[:2] + ["{ ... },"] + results[-2:]
 
         return self._format(self._pad("\n".join(results)), name=name)
 
     def __repr__(self) -> str:
-        return self._repr().rstrip(',')
+        return self._repr(name="", depth=0).rstrip(',')
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'IndexLevel':
         obj = self.__new__(self.__class__)
