@@ -719,7 +719,7 @@ class ArchiveComponentsConverter:
 
             depth_columns = 1 # only support 1D
             name_columns = None
-            cls_columns = dtype_to_index_cls(True, index.dtype)
+            cls_columns = dtype_to_index_cls(True, columns.dtype)
             ArchiveIndexConverter.array_encode(
                     metadata=metadata,
                     archive=archive,
@@ -806,7 +806,7 @@ class ArchiveComponentsConverter:
                         union=union,
                         )
             else:
-                index = None
+                raise RuntimeError('Must include index for horizontal alignment.')
 
             def blocks() -> tp.Iterator[np.ndarray]:
                 for f in frames:
@@ -831,7 +831,7 @@ class ArchiveComponentsConverter:
                         union=union,
                         )
             else:
-                columns = None
+                raise RuntimeError('Must include columns for vertical alignment.')
 
             def blocks() -> tp.Iterator[np.ndarray]:
                 type_blocks = []

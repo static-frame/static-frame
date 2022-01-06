@@ -330,8 +330,32 @@ class TestUnit(TestCase):
             self.assertEqual(f.name, 'bar')
             self.assertEqual(f.columns.name, 'foo')
 
+    def test_archive_components_npy_write_arrays_i(self) -> None:
+
+        a1 = np.arange(12).reshape(3, 4)
+        a2 = np.array(['a', 'b', 'c'])
+        a3 = np.array([True, False, True])
+
+        with TemporaryDirectory() as fp:
+            columns=('a', 'b', 'c', 'd', 'e', 'f')
+            with self.assertRaises(RuntimeError):
+                NPY.write_arrays(fp, blocks=(a1, a2, a3), columns=columns, name='bar')
 
 
+    def test_archive_components_npy_write_arrays_i(self) -> None:
+
+        a1 = np.arange(12).reshape(3, 4)
+        a2 = np.array(['a', 'b', 'c'])
+        a3 = np.array([True, False, True])
+
+        with TemporaryDirectory() as fp:
+            columns=np.arange(6).astype('datetime64[D]')
+            NPY.write_arrays(fp, blocks=(a1, a2, a3), columns=columns, name='bar')
+            f = Frame.from_npy(fp)
+            dt64 = np.datetime64
+            self.assertEqual(f.to_pairs(),
+                    ((dt64('1970-01-01'), ((0, 0), (1, 4), (2, 8))), (dt64('1970-01-02'), ((0, 1), (1, 5), (2, 9))), (dt64('1970-01-03'), ((0, 2), (1, 6), (2, 10))), (dt64('1970-01-04'), ((0, 3), (1, 7), (2, 11))), (dt64('1970-01-05'), ((0, 'a'), (1, 'b'), (2, 'c'))), (dt64('1970-01-06'), ((0, True), (1, False), (2, True))))
+                    )
 
     #-----------------------------------------------------------------------------
     def test_archive_components_npz_from_frames_a(self) -> None:
@@ -370,7 +394,6 @@ class TestUnit(TestCase):
                     (('a', ((0, -88017), (1, 92867))), ('b', ((0, 162197), (1, -41157))), ('c', ((0, -88017), (1, 92867))), ('d', ((0, 162197), (1, -41157))))
                     )
 
-
     def test_archive_components_npz_from_frames_d(self) -> None:
         f1 = ff.parse('s(2,2)|v(int)').relabel(columns=('a', 'b'))
         f2 = ff.parse('s(2,2)|v(int)').relabel(columns=('c', 'd'))
@@ -383,6 +406,59 @@ class TestUnit(TestCase):
                     ((0, ((0, -88017), (1, 92867))), (1, ((0, 162197), (1, -41157))), (2, ((0, -88017), (1, 92867))), (3, ((0, 162197), (1, -41157))))
                     )
 
+    def test_archive_components_npz_from_frames_e(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)')
+        f2 = ff.parse('s(2,2)|v(int)')
+
+        with TemporaryDirectory() as fp:
+            with self.assertRaises(RuntimeError):
+                NPY.write_frames(fp, frames=(f1, f2), axis=0)
+
+    def test_archive_components_npz_from_frames_f(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)')
+        f2 = ff.parse('s(2,2)|v(int)')
+
+        with TemporaryDirectory() as fp:
+            with self.assertRaises(RuntimeError):
+                NPY.write_frames(fp, frames=(f1, f2), axis=1)
+
+    def test_archive_components_npz_from_frames_g(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').relabel(columns=('a', 'b'))
+        f2 = ff.parse('s(2,2)|v(int)').relabel(columns=('c', 'd'))
+
+        with TemporaryDirectory() as fp:
+            with self.assertRaises(RuntimeError):
+                NPY.write_frames(fp, frames=(f1, f2), axis=1, include_index=False)
+
+    def test_archive_components_npz_from_frames_h(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').relabel(index=('a', 'b'))
+        f2 = ff.parse('s(2,2)|v(int)').relabel(index=('c', 'd'))
+
+        with TemporaryDirectory() as fp:
+            with self.assertRaises(RuntimeError):
+                NPY.write_frames(fp, frames=(f1, f2), axis=0, include_columns=False)
+
+    def test_archive_components_npz_from_frames_h(self) -> None:
+        f1 = ff.parse('s(2,2)|v(float)').relabel(index=('a', 'b'))
+        f2 = ff.parse('s(2,2)|v(float)').relabel(index=('b', 'c'))
+
+        with TemporaryDirectory() as fp:
+            NPY.write_frames(fp, frames=(f1, f2), axis=1, include_columns=False)
+            f = Frame.from_npy(fp).fillna(0)
+            self.assertEqual(f.to_pairs(),
+                    ((0, (('a', 1930.4), ('b', -1760.34), ('c', 0))), (1, (('a', -610.8), ('b', 3243.94), ('c', 0))), (2, (('a', 0), ('b', 1930.4), ('c', -1760.34))), (3, (('a', 0), ('b', -610.8), ('c', 3243.94))))
+                    )
+
+    def test_archive_components_npz_from_frames_i(self) -> None:
+        f1 = ff.parse('s(2,2)|v(float)').relabel(columns=('a', 'b'))
+        f2 = ff.parse('s(2,2)|v(float)').relabel(columns=('b', 'c'))
+
+        with TemporaryDirectory() as fp:
+            NPY.write_frames(fp, frames=(f1, f2), axis=0, include_index=False)
+            f = Frame.from_npy(fp).fillna(0)
+            self.assertEqual(f.to_pairs(),
+                    (('a', ((0, 1930.4), (1, -1760.34), (2, 0.0), (3, 0.0))), ('b', ((0, -610.8), (1, 3243.94), (2, 1930.4), (3, -1760.34))), ('c', ((0, 0.0), (1, 0.0), (2, -610.8), (3, 3243.94))))
+                    )
 
 
 if __name__ == '__main__':
