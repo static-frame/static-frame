@@ -2272,7 +2272,6 @@ class Frame(ContainerOperand):
                 fp=fp,
                 )
 
-
     @classmethod
     def from_npy_mmap(cls,
             fp: PathSpecifier,

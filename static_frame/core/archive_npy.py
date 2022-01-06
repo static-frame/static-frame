@@ -19,9 +19,11 @@ from static_frame.core.util import iterable_to_array_1d
 
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index import Index
 
 from static_frame.core.exception import ErrorNPYDecode
 from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.exception import AxisInvalid
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
@@ -649,7 +651,7 @@ class ArchiveComponentsConverter:
     ARCHIVE_CLS: tp.Type[Archive]
 
     @classmethod
-    def from_blocks(cls,
+    def write_blocks(cls,
             fp: PathSpecifier,
             *,
             blocks: tp.Iterable[np.ndarray],
@@ -666,6 +668,8 @@ class ArchiveComponentsConverter:
 
         if isinstance(index, IndexBase):
             depth_index = index.depth
+            name_index = index.name
+            cls_index = index.__class__
             ArchiveIndexConverter.index_encode(
                     metadata=metadata,
                     archive=archive,
@@ -676,15 +680,24 @@ class ArchiveComponentsConverter:
                     include=True,
                     )
         elif index is not None:
+            depth_index = 1
+            name_index = None
+            cls_index = Index
             ArchiveIndexConverter.component_encode(
                     metadata=metadata,
                     archive=archive,
                     values=index,
                     key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
                     )
+        else:
+            depth_index = 1
+            name_index = None
+            cls_index = Index
 
         if isinstance(columns, IndexBase):
             depth_columns = columns.depth
+            name_columns = columns.name
+            cls_columns = columns.__class__
             ArchiveIndexConverter.index_encode(
                     metadata=metadata,
                     archive=archive,
@@ -695,15 +708,55 @@ class ArchiveComponentsConverter:
                     include=True,
                     )
         elif columns is not None:
+            depth_columns = 1 # only support 1D
+            name_columns = None
+            cls_columns = Index
             ArchiveIndexConverter.component_encode(
                     metadata=metadata,
                     archive=archive,
                     values=columns,
                     key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
                     )
+        else:
+            depth_columns = 1 # only support 1D
+            name_columns = None
+            cls_columns = Index
+
+        metadata[Label.KEY_NAMES] = [name,
+                name_index,
+                name_columns,
+                ]
+        # do not store Frame class as caller will determine
+        metadata[Label.KEY_TYPES] = [
+                cls_index.__name__,
+                cls_columns.__name__,
+                ]
+
+        if axis == 1:
+            rows = 0
+            for i, array in enumerate(blocks):
+                if not rows:
+                    rows = array.shape[0]
+                else:
+                    if array.shape[0] != rows:
+                        raise RuntimeError('incompatible block shapes')
+                archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i), array)
+        elif axis == 0:
+            raise NotImplementedError()
+        else:
+            raise AxisInvalid(f'invalid axis {axis}')
+
+
+        metadata[Label.KEY_DEPTHS] = [
+                i + 1, # block count
+                depth_index,
+                depth_columns]
+        archive.write_metadata(metadata)
+
+
 
     @classmethod
-    def from_frames(cls,
+    def write_frames(cls,
             fp: PathSpecifier,
             *,
             frames: tp.Iterable['Frame'],
@@ -721,7 +774,7 @@ class NPZ(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveZip
 
 
-# def from_npy(): # writes an NPZ from an NPY
+# def write_npy(): # writes an NPZ from an NPY
 
 class NPY(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveDirectory
@@ -730,10 +783,9 @@ class NPY(ArchiveComponentsConverter):
 
 
 
-# if as an instance would do
-# NPY(fp_dst).from_blocks()
-# NPZ(fp_dst).from_frames()
-# NPZ(fp_dst).from_npy(fp_src)
+#
+
+
 
 
 

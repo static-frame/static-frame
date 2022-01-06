@@ -7,6 +7,7 @@ import numpy as np
 from numpy.lib.format import write_array # type: ignore
 import frame_fixtures as ff
 
+from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.archive_npy import NPYConverter
 from static_frame.core.archive_npy import ArchiveDirectory
@@ -204,17 +205,37 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_archive_components_npz_from_blocks_a(self) -> None:
+    def test_archive_components_npz_write_blocks_a(self) -> None:
         with temp_file('.zip') as fp:
 
             a1 = np.arange(12).reshape(3, 4)
-            NPZ.from_blocks(fp, blocks=(a1,))
+            NPZ.write_blocks(fp, blocks=(a1,))
 
-            NPZ.from_blocks(fp, blocks=(a1,), index=(10, 20, 30))
-            NPZ.from_blocks(fp, blocks=(a1,), index=Index((10, 20, 30), name='a'))
+            f = Frame.from_npz(fp)
+            self.assertEqual(f.values.tolist(), a1.tolist())
+            self.assertIs(f.index._map, None)
+            self.assertIs(f.columns._map, None)
 
-            NPZ.from_blocks(fp, blocks=(a1,), columns=('a', 'b', 'c'))
-            NPZ.from_blocks(fp, blocks=(a1,), columns=Index(('a', 'b', 'c'), name='b'))
+
+    def test_archive_components_npz_write_blocks_b(self) -> None:
+        with temp_file('.zip') as fp:
+
+            with self.assertRaises(RuntimeError):
+                a1 = np.arange(12).reshape(3, 4)
+                a2 = np.array([3, 4])
+                NPZ.write_blocks(fp, blocks=(a1, a2))
+
+
+
+    def test_archive_components_npz_write_blocks_d(self) -> None:
+        with temp_file('.zip') as fp:
+            a1 = np.arange(12).reshape(3, 4)
+
+            NPZ.write_blocks(fp, blocks=(a1,), index=(10, 20, 30))
+            NPZ.write_blocks(fp, blocks=(a1,), index=Index((10, 20, 30), name='a'))
+
+            NPZ.write_blocks(fp, blocks=(a1,), columns=('a', 'b', 'c'))
+            NPZ.write_blocks(fp, blocks=(a1,), columns=Index(('a', 'b', 'c'), name='b'))
 
 
     def test_archive_components_npz_from_frames_a(self) -> None:
@@ -222,7 +243,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(int)')
 
         with TemporaryDirectory() as fp:
-            NPY.from_frames(fp, frames=(f1, f2))
+            NPY.write_frames(fp, frames=(f1, f2))
 
 
 
