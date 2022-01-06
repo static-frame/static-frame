@@ -588,9 +588,9 @@ class Index(IndexBase):
         Args:
             {dtype}
         '''
-        from static_frame.core.index_datetime import _dtype_to_index_cls
+        from static_frame.core.index_datetime import dtype_to_index_cls
         array = self.values.astype(dtype)
-        cls = _dtype_to_index_cls(self.STATIC, array.dtype)
+        cls = dtype_to_index_cls(self.STATIC, array.dtype)
         return cls(
                 array,
                 name=self._name

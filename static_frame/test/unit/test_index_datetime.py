@@ -43,7 +43,7 @@ from static_frame import IndexNanosecondGO
 # from static_frame import ILoc
 from static_frame.core.index import _INDEX_SLOTS
 from static_frame.core.index import _INDEX_GO_SLOTS
-from static_frame.core.index_datetime import _dtype_to_index_cls
+from static_frame.core.index_datetime import dtype_to_index_cls
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.exception import LocInvalid
@@ -698,35 +698,35 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_dtype_to_index_cls_a(self) -> None:
-        t1 = _dtype_to_index_cls(True, np.dtype('datetime64[D]'))
+        t1 = dtype_to_index_cls(True, np.dtype('datetime64[D]'))
         self.assertEqual(t1, IndexDate)
 
-        t2 = _dtype_to_index_cls(False, np.dtype('datetime64[D]'))
+        t2 = dtype_to_index_cls(False, np.dtype('datetime64[D]'))
         self.assertEqual(t2, IndexDateGO)
 
-        t3 = _dtype_to_index_cls(True, np.dtype('datetime64[s]'))
+        t3 = dtype_to_index_cls(True, np.dtype('datetime64[s]'))
         self.assertEqual(t3, IndexSecond)
 
-        t4 = _dtype_to_index_cls(False, np.dtype('datetime64[s]'))
+        t4 = dtype_to_index_cls(False, np.dtype('datetime64[s]'))
         self.assertEqual(t4, IndexSecondGO)
 
-        t5 = _dtype_to_index_cls(True, np.dtype('datetime64[Y]'))
+        t5 = dtype_to_index_cls(True, np.dtype('datetime64[Y]'))
         self.assertEqual(t5, IndexYear)
 
-        t6 = _dtype_to_index_cls(False, np.dtype('datetime64[Y]'))
+        t6 = dtype_to_index_cls(False, np.dtype('datetime64[Y]'))
         self.assertEqual(t6, IndexYearGO)
 
     def test_dtype_to_index_cls_b(self) -> None:
-        t1 = _dtype_to_index_cls(True, np.dtype(str))
+        t1 = dtype_to_index_cls(True, np.dtype(str))
         self.assertEqual(t1, Index)
 
-        t2 = _dtype_to_index_cls(False, np.dtype(str))
+        t2 = dtype_to_index_cls(False, np.dtype(str))
         self.assertEqual(t2, IndexGO)
 
-        t3 = _dtype_to_index_cls(True, np.dtype(float))
+        t3 = dtype_to_index_cls(True, np.dtype(float))
         self.assertEqual(t3, Index)
 
-        t4 = _dtype_to_index_cls(False, np.dtype(float))
+        t4 = dtype_to_index_cls(False, np.dtype(float))
         self.assertEqual(t4, IndexGO)
 
 

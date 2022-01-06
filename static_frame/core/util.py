@@ -656,7 +656,8 @@ def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
 
 def concat_resolved(
         arrays: tp.Iterable[np.ndarray],
-        axis: int = 0) -> np.ndarray:
+        axis: int = 0,
+        ) -> np.ndarray:
     '''
     Concatenation of 2D arrays that uses resolved dtypes to avoid truncation.
 

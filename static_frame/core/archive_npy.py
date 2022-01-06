@@ -16,14 +16,21 @@ from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import NameType
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import concat_resolved
 
+from static_frame.core.container_util import index_many_concat
+from static_frame.core.container_util import index_many_set
 from static_frame.core.container_util import ContainerMap
+
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
+from static_frame.core.index_datetime import dtype_to_index_cls
 
 from static_frame.core.exception import ErrorNPYDecode
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitIndexNonUnique
+
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
@@ -415,22 +422,19 @@ class ArchiveIndexConverter:
                 metadata[key_types] = [cls.__name__ for cls in index.index_types.values] # type: ignore
 
     @staticmethod
-    def component_encode(
+    def array_encode(
             *,
             metadata: tp.Dict[str, tp.Hashable],
             archive: Archive,
-            values: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            array: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
             key_template_values: str,
             ) -> None:
         '''
         Args:
             metadata: mutates in place with json components
         '''
-        # NOTE: might support TypeBlocks?
-        if values.__class__ is not np.ndarray:
-            values, _ = iterable_to_array_1d(values)
-        assert values.ndim == 1 # type: ignore
-        archive.write_array(key_template_values.format(0), values)
+        assert array.ndim == 1 # type: ignore
+        archive.write_array(key_template_values.format(0), array)
 
     @staticmethod
     def _index_decode(*,
@@ -640,9 +644,8 @@ class NPYFrameConverter(ArchiveFrameConverter):
 
 
 
-
+#-------------------------------------------------------------------------------
 # for converting from components, unstructured Frames
-
 
 class ArchiveComponentsConverter:
     '''
@@ -651,7 +654,7 @@ class ArchiveComponentsConverter:
     ARCHIVE_CLS: tp.Type[Archive]
 
     @classmethod
-    def write_blocks(cls,
+    def write_arrays(cls,
             fp: PathSpecifier,
             *,
             blocks: tp.Iterable[np.ndarray],
@@ -680,13 +683,16 @@ class ArchiveComponentsConverter:
                     include=True,
                     )
         elif index is not None:
+            if index.__class__ is not np.ndarray:
+                raise RuntimeError('index argument must be an Index, IndexHierarchy, or 1D np.ndarray')
+
             depth_index = 1
             name_index = None
-            cls_index = Index
-            ArchiveIndexConverter.component_encode(
+            cls_index = dtype_to_index_cls(True, index.dtype)
+            ArchiveIndexConverter.array_encode(
                     metadata=metadata,
                     archive=archive,
-                    values=index,
+                    array=index,
                     key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
                     )
         else:
@@ -708,13 +714,16 @@ class ArchiveComponentsConverter:
                     include=True,
                     )
         elif columns is not None:
+            if columns.__class__ is not np.ndarray:
+                raise RuntimeError('index argument must be an Index, IndexHierarchy, or 1D np.ndarray')
+
             depth_columns = 1 # only support 1D
             name_columns = None
-            cls_columns = Index
-            ArchiveIndexConverter.component_encode(
+            cls_columns = dtype_to_index_cls(True, index.dtype)
+            ArchiveIndexConverter.array_encode(
                     metadata=metadata,
                     archive=archive,
-                    values=columns,
+                    array=columns,
                     key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
                     )
         else:
@@ -742,18 +751,19 @@ class ArchiveComponentsConverter:
                         raise RuntimeError('incompatible block shapes')
                 archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i), array)
         elif axis == 0:
-            raise NotImplementedError()
+            # for now, just vertically concat and write, though this has a 2X memory requirement
+            resolved = concat_resolved(blocks, axis=0)
+            # if this results in an obect array, an exception will be raised
+            archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(0), resolved)
+            i = 0
         else:
             raise AxisInvalid(f'invalid axis {axis}')
-
 
         metadata[Label.KEY_DEPTHS] = [
                 i + 1, # block count
                 depth_index,
                 depth_columns]
         archive.write_metadata(metadata)
-
-
 
     @classmethod
     def write_frames(cls,
@@ -762,13 +772,104 @@ class ArchiveComponentsConverter:
             frames: tp.Iterable['Frame'],
             include_index: bool = True,
             include_columns: bool = True,
-            axis: int = 0,
+            axis: int = 1,
+            union: bool = True,
+            name: NameType = None,
+            fill_value: object = np.nan,
             ) -> None:
         '''Given an iterable of Frames, write out an NPZ or NPY directly, without building up an intermediary Frame. If axis 0, the Frames must be block compatible; if axis 1, the Frames must have the same number of rows. For both axis, indices must be unique or aligned.
         '''
+        from static_frame.core.type_blocks import TypeBlocks
+        from static_frame.core.frame import Frame
+
         archive = cls.ARCHIVE_CLS(fp, writeable=True, memory_map=False)
 
+        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
 
+        # NOTE: based on Frame.from_concat
+        if axis == 1: # stacks columns (extends rows horizontally)
+            if include_columns:
+                try:
+                    columns = index_many_concat(
+                            (f._columns for f in frames),
+                            Index,
+                            )
+                except ErrorInitIndexNonUnique:
+                    raise RuntimeError('Column names after horizontal concatenation are not unique; set include_columns to None to ignore.')
+            else:
+                columns = None
+
+            if include_index:
+                index = index_many_set(
+                        (f._index for f in frames),
+                        Index,
+                        union=union,
+                        )
+            else:
+                index = None
+
+            def blocks() -> tp.Iterator[np.ndarray]:
+                for f in frames:
+                    if len(f.index) != len(index) or (f.index != index).any():
+                        f = f.reindex(index=index, fill_value=fill_value)
+                    for block in f._blocks._blocks:
+                        yield block
+
+        elif axis == 0: # stacks rows (extends columns vertically)
+            if include_index:
+                try:
+                    index = index_many_concat((f._index for f in frames), Index)
+                except ErrorInitIndexNonUnique:
+                    raise RuntimeError('Index names after vertical concatenation are not unique; set include_index to None to ignore')
+            else:
+                index = None
+
+            if include_columns:
+                columns = index_many_set(
+                        (f._columns for f in frames),
+                        Index,
+                        union=union,
+                        )
+            else:
+                columns = None
+
+            def blocks() -> tp.Iterator[np.ndarray]:
+                type_blocks = []
+                previous_f = None
+                block_compatible = True
+                reblock_compatible = True
+
+                for f in frames:
+                    if len(f.columns) != len(columns) or (f.columns != columns).any():
+                        f = f.reindex(columns=columns, fill_value=fill_value)
+
+                    type_blocks.append(f._blocks)
+                    # column size is all the same by this point
+                    if previous_f is not None: # after the first
+                        if block_compatible:
+                            block_compatible &= f._blocks.block_compatible(
+                                    previous_f._blocks,
+                                    axis=1) # only compare columns
+                        if reblock_compatible:
+                            reblock_compatible &= f._blocks.reblock_compatible(
+                                    previous_f._blocks)
+                    previous_f = f
+
+                yield from TypeBlocks.vstack_blocks_to_blocks(
+                        type_blocks=type_blocks,
+                        block_compatible=block_compatible,
+                        reblock_compatible=reblock_compatible,
+                        )
+        else:
+            raise AxisInvalid(f'no support for {axis}')
+
+        cls.write_arrays(fp,
+                blocks=blocks(),
+                index=index,
+                columns=columns,
+                name=name,
+                axis=1, # blocks are normalized for horizontal concat
+                )
 
 class NPZ(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveZip
@@ -780,6 +881,12 @@ class NPY(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveDirectory
 
 # def from_npz(): # writes an NPY from an NPZ
+
+
+# NPZ(fp).write_arrays
+# NPZ(fp).to_npy()
+
+
 
 
 

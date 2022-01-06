@@ -1815,7 +1815,7 @@ class IndexHierarchyAsType:
 
     def __call__(self, dtype: DtypeSpecifier) -> IndexHierarchy:
 
-        from static_frame.core.index_datetime import _dtype_to_index_cls
+        from static_frame.core.index_datetime import dtype_to_index_cls
         container = self.container
 
         if container._recache:
@@ -1831,12 +1831,12 @@ class IndexHierarchyAsType:
 
         dtype_post = blocks.dtypes[self.key] # can select element or array
         if isinstance(dtype_post, np.dtype):
-            index_constructors[self.key] = _dtype_to_index_cls(
+            index_constructors[self.key] = dtype_to_index_cls(
                     container.STATIC,
                     dtype_post)
         else: # assign iterable
             index_constructors[self.key] = [
-                    _dtype_to_index_cls(container.STATIC, dt)
+                    dtype_to_index_cls(container.STATIC, dt)
                     for dt in dtype_post]
 
         return container.__class__._from_type_blocks(
