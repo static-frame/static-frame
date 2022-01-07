@@ -342,7 +342,7 @@ class TestUnit(TestCase):
                 NPY.write_arrays(fp, blocks=(a1, a2, a3), columns=columns, name='bar')
 
 
-    def test_archive_components_npy_write_arrays_i(self) -> None:
+    def test_archive_components_npy_write_arrays_j(self) -> None:
 
         a1 = np.arange(12).reshape(3, 4)
         a2 = np.array(['a', 'b', 'c'])
@@ -438,7 +438,7 @@ class TestUnit(TestCase):
             with self.assertRaises(RuntimeError):
                 NPY.write_frames(fp, frames=(f1, f2), axis=0, include_columns=False)
 
-    def test_archive_components_npz_from_frames_h(self) -> None:
+    def test_archive_components_npz_from_frames_i(self) -> None:
         f1 = ff.parse('s(2,2)|v(float)').relabel(index=('a', 'b'))
         f2 = ff.parse('s(2,2)|v(float)').relabel(index=('b', 'c'))
 
@@ -449,7 +449,7 @@ class TestUnit(TestCase):
                     ((0, (('a', 1930.4), ('b', -1760.34), ('c', 0))), (1, (('a', -610.8), ('b', 3243.94), ('c', 0))), (2, (('a', 0), ('b', 1930.4), ('c', -1760.34))), (3, (('a', 0), ('b', -610.8), ('c', 3243.94))))
                     )
 
-    def test_archive_components_npz_from_frames_i(self) -> None:
+    def test_archive_components_npz_from_frames_j(self) -> None:
         f1 = ff.parse('s(2,2)|v(float)').relabel(columns=('a', 'b'))
         f2 = ff.parse('s(2,2)|v(float)').relabel(columns=('b', 'c'))
 

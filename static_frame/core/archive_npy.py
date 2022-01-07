@@ -688,7 +688,7 @@ class ArchiveComponentsConverter:
 
             depth_index = 1
             name_index = None
-            cls_index = dtype_to_index_cls(True, index.dtype)
+            cls_index = dtype_to_index_cls(True, index.dtype) #type: ignore
             ArchiveIndexConverter.array_encode(
                     metadata=metadata,
                     archive=archive,
@@ -719,7 +719,7 @@ class ArchiveComponentsConverter:
 
             depth_columns = 1 # only support 1D
             name_columns = None
-            cls_columns = dtype_to_index_cls(True, columns.dtype)
+            cls_columns = dtype_to_index_cls(True, columns.dtype) #type: ignore
             ArchiveIndexConverter.array_encode(
                     metadata=metadata,
                     archive=archive,
@@ -784,7 +784,7 @@ class ArchiveComponentsConverter:
 
         archive = cls.ARCHIVE_CLS(fp, writeable=True, memory_map=False)
 
-        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
+        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames] # type: ignore
 
         # NOTE: based on Frame.from_concat
         if axis == 1: # stacks columns (extends rows horizontally)
@@ -835,7 +835,7 @@ class ArchiveComponentsConverter:
 
             def blocks() -> tp.Iterator[np.ndarray]:
                 type_blocks = []
-                previous_f = None
+                previous_f: tp.Optional[Frame] = None
                 block_compatible = True
                 reblock_compatible = True
 
