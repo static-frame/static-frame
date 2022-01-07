@@ -15,7 +15,6 @@ from static_frame.core.util import list_to_tuple
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import NameType
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import concat_resolved
 
 from static_frame.core.container_util import index_many_concat
