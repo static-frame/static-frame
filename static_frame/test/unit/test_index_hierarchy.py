@@ -729,6 +729,34 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             IndexHierarchy.from_product((1, 2))
 
+    def test_hierarchy_from_product_c(self) -> None:
+
+        groups = ('A', 'B', 'C')
+        dates = ('2018-01-01', '2018-01-04')
+
+        with self.assertRaises(ErrorInitIndex):
+            # mis-matched length
+            _ = IndexHierarchy.from_product(groups, dates, index_constructors=(Index,))
+
+        ih = IndexHierarchy.from_product(groups, dates, index_constructors=(Index, IndexDate))
+
+        self.assertEqual(ih.index_types.values.tolist(), [Index, IndexDate])
+        self.assertEqual(ih.values.tolist(),
+                [['A', datetime.date(2018, 1, 1)], ['A', datetime.date(2018, 1, 4)], ['B', datetime.date(2018, 1, 1)], ['B', datetime.date(2018, 1, 4)], ['C', datetime.date(2018, 1, 1)], ['C', datetime.date(2018, 1, 4)]])
+
+
+    def test_hierarchy_from_product_d(self) -> None:
+
+        groups = ('2021-01-01', '2021-01-02')
+        dates = ('2018-01-01', '2018-01-04')
+
+        ih = IndexHierarchy.from_product(groups, dates, index_constructors=IndexDate)
+        self.assertEqual(ih.index_types.values.tolist(), [IndexDate, IndexDate])
+        self.assertEqual(ih.values.tolist(),
+                [[datetime.date(2021, 1, 1), datetime.date(2018, 1, 1)], [datetime.date(2021, 1, 1), datetime.date(2018, 1, 4)], [datetime.date(2021, 1, 2), datetime.date(2018, 1, 1)], [datetime.date(2021, 1, 2), datetime.date(2018, 1, 4)]])
+        # import ipdb; ipdb.set_trace()
+
+
     #--------------------------------------------------------------------------
 
     def test_hierarchy_from_tree_a(self) -> None:
