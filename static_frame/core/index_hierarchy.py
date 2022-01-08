@@ -2,6 +2,8 @@ import typing as tp
 from itertools import chain
 from ast import literal_eval
 from copy import deepcopy
+from itertools import zip_longest
+from itertools import repeat
 
 import numpy as np
 from arraykit import name_filter
@@ -123,23 +125,41 @@ class IndexHierarchy(IndexBase):
     @classmethod
     def from_product(cls: tp.Type[IH],
             *levels: IndexInitializer,
-            name: NameType = None
+            name: NameType = None,
+            index_constructors: tp.Optional[IndexConstructors] = None,
             ) -> IH:
         '''
         Given groups of iterables, return an ``IndexHierarchy`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
+
+        Args:
+            *levels: index initializers (or Index instances) for each level
+            name:
+            index_consructors:
 
         Returns:
             :obj:`static_frame.IndexHierarchy`
 
         '''
         indices = [] # store in a list, where index is depth
-        for lvl in levels:
-            if not isinstance(lvl, Index): # Index, not IndexBase
-                lvl = cls._INDEX_CONSTRUCTOR(lvl)
-            indices.append(lvl)
+        if index_constructors is None:
+            for lvl in levels:
+                if not isinstance(lvl, Index): # Index, not IndexBase
+                    lvl = cls._INDEX_CONSTRUCTOR(lvl)
+                indices.append(lvl)
+        else:
+            if callable(index_constructors): # support a single constrctor
+                pair_iter = zip(levels, repeat(index_constructors))
+            else:
+                pair_iter = zip_longest(levels, index_constructors)
+
+            for lvl, constructor in pair_iter:
+                if constructor is None:
+                    raise ErrorInitIndex(f'Levels and index_constructors must be the same length.')
+                # we call the constructor on all lvl, even if it is already an Index
+                indices.append(constructor(lvl))
 
         if len(indices) == 1:
-            raise RuntimeError('only one level given')
+            raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
         # build name from index names, assuming they are all specified
         if name is None:
@@ -202,7 +222,11 @@ class IndexHierarchy(IndexBase):
 
         Args:
             labels: an iterator or generator of tuples.
+            *,
+            name:
             reorder_for_hierarchy: reorder the labels to produce a hierarchable Index, assuming hierarchability is possible.
+            index_constructors:
+            depth_reference:
             continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
         Returns:
