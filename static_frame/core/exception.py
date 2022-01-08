@@ -67,6 +67,11 @@ class BatchIterableInvalid(RuntimeError):
     def __init__(self) -> None:
         super().__init__('Batch iterable does not yield expected pair of label, Frame.')
 
+class InvalidDatetime64Comparison(RuntimeError):
+    def __init__(self) -> None:
+        super().__init__('Cannot perform set operations on datetime64 of different units; use astype to align units before comparison.')
+
+
 #-------------------------------------------------------------------------------
 
 class StoreFileMutation(RuntimeError):
