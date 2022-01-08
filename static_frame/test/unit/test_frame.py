@@ -490,6 +490,13 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_from_element_f(self) -> None:
+        # not an error to create 0-sized frames
+        with self.assertRaises(ErrorInitIndex):
+            f1 = sf.Frame.from_element(1, index=range(5), columns='bar')
+
+
+
     #---------------------------------------------------------------------------
     def test_frame_from_elements_a(self) -> None:
         f1 = Frame.from_elements(['a', 3, 'b'])
@@ -8228,7 +8235,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_concat([])
         self.assertEqual((0,0), f1.shape)
 
-        f2 = Frame.from_concat([], columns='a')
+        f2 = Frame.from_concat([], columns=('a',))
         self.assertEqual((0,1), f2.shape)
         self.assertEqual((1,),  f2.columns.shape)
 
@@ -8240,7 +8247,7 @@ class TestUnit(TestCase):
         self.assertEqual((0,0), f4.shape)
         self.assertEqual('f4',  f4.name)
 
-        f5 = Frame.from_concat([], columns='a', index=[], name='f5')
+        f5 = Frame.from_concat([], columns=('a',), index=[], name='f5')
         self.assertEqual((0,1), f5.shape)
         self.assertEqual((1,),  f5.columns.shape)
         self.assertEqual((0,),  f5.index.shape)

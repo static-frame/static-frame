@@ -291,7 +291,7 @@ class Index(IndexBase):
                 labels = array
             else:
                 labels = array2d_to_tuples(array)
-        # else: assume an iterable suitable for labels usage
+        # else: assume an iterable suitable for labels usage, we will identify strings later
 
         #-----------------------------------------------------------------------
         if is_typed:
@@ -310,8 +310,14 @@ class Index(IndexBase):
         if self._map is None: # if _map not shared from another Index
             if not loc_is_iloc:
                 # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
-                if not is_typed and labels.__class__ is np.ndarray and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore
-                    labels_for_automap = labels.tolist() #type: ignore
+                if not is_typed:
+                    if labels.__class__ is np.ndarray and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore
+                        labels_for_automap = labels.tolist() #type: ignore
+                    elif isinstance(labels, str):
+                        # NOTE: this is necessary as otherwise a malformed Index will be created, whereby the _map will treat the string as an iterable of chars, while the labels will not and have a single string value. This is consisten as other elements (ints, Booleans) are rejected on instantiation of the AutoMap
+                        raise ErrorInitIndex('Cannot create an Index from a single string; provide an iterable of strings.')
+                    else:
+                        labels_for_automap = labels
                 else:
                     labels_for_automap = labels
                 try:
@@ -332,7 +338,7 @@ class Index(IndexBase):
         self._positions = self._extract_positions(size, positions)
 
         if self._DTYPE and self._labels.dtype != self._DTYPE:
-            raise ErrorInitIndex('invalid label dtype for this Index', #pragma: no cover
+            raise ErrorInitIndex('Invalid label dtype for this Index', #pragma: no cover
                     self._labels.dtype, self._DTYPE)
 
         # NOTE: to implement GH # 374; do this after final self._labels creation as user may pass a dtype argument

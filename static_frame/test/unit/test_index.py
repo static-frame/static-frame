@@ -134,6 +134,10 @@ class TestUnit(TestCase):
             _ = Index((x for x in (3, 5, 3)))
 
 
+    def test_index_init_l(self) -> None:
+        with self.assertRaises(ErrorInitIndex):
+            idx = Index('bar')
+
     #---------------------------------------------------------------------------
 
     def test_index_loc_to_iloc_a(self) -> None:
