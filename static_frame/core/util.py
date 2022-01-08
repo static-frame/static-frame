@@ -1966,6 +1966,14 @@ def _ufunc_set_1d(
             post.flags.writeable = False
             return post
 
+    # np.intersect1d will not handle different dt64 units correctly, but rather "downcast" to the lowest unit, which is not what we want; so, only use np.intersect1d if the units are the same
+    array_is_dt64 = array.dtype.kind == DTYPE_DATETIME_KIND
+    other_is_dt64 = other.dtype.kind == DTYPE_DATETIME_KIND
+
+    if array_is_dt64 and other_is_dt64:
+        if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
+            raise RuntimeError('Cannot perform set operations on datetime64 of different units; use astype to align units first.')
+
     if assume_unique:
         # can only return arguments, and use length to determine unique comparison condition, if arguments are assumed to already be unique
         if is_union:
@@ -1978,6 +1986,7 @@ def _ufunc_set_1d(
                 return array
 
         if len(array) == len(other):
+            # NOTE: if these are both dt64 of different units but "aligned" they will return equal
             compare = array == other
             # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it will always be False
             if compare.__class__ is np.ndarray and compare.all(axis=None):
@@ -1990,16 +1999,8 @@ def _ufunc_set_1d(
     array_is_str = array.dtype.kind in DTYPE_STR_KINDS
     other_is_str = other.dtype.kind in DTYPE_STR_KINDS
 
-    # np.intersect1d will not handle different dt64 units correctly, but rather "downcast" to the lowest unit, which is not what we want; so, only use np.intersect1d if the units are the same
-    array_is_dt64 = array.dtype.kind == DTYPE_DATETIME_KIND
-    other_is_dt64 = other.dtype.kind == DTYPE_DATETIME_KIND
-
-    if array_is_dt64 and other_is_dt64:
-        # if units are the same, no need for set compare
-        if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
-            set_compare = True
-        else: # can compare directly, dtype will be same
-            set_compare = False
+    if array_is_dt64 and other_is_dt64: # if units are the same by this point
+        set_compare = False
     else:
         set_compare = array_is_str ^ other_is_str
 

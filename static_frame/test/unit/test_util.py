@@ -578,8 +578,12 @@ class TestUnit(TestCase):
         a1 = np.array(('2020-12', '2021-01'), dtype='datetime64[M]')
         a2 = np.array(['2020-12-31', '2021-01-01', '2021-01-15'], dtype='datetime64[D]')
 
-        post = intersect1d(a1, a2)
-        self.assertEqual(post.tolist(), [])
+        # NOTE: TODO: evaluate
+        with self.assertRaises(RuntimeError):
+            _ = intersect1d(a1, a2)
+
+        post = intersect1d(a1.astype('datetime64[D]'), a2)
+        self.assertEqual(post.tolist(), [datetime.date(2021, 1, 1)])
         self.assertEqual(post.dtype, np.dtype('datetime64[D]'))
 
     def test_intersect1d_e(self) -> None:

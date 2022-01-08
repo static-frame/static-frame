@@ -870,7 +870,8 @@ class TestUnit(TestCase):
         # NOTE: pending resolution of behavior: should probably raise.
         index_ym = IndexYearMonth.from_year_month_range('2021-01', '2021-05')
         index_date = IndexDate(index_ym)
-        post = index_ym.intersection(index_date)
+        with self.assertRaises(RuntimeError):
+            post = index_ym.intersection(index_date)
 
 if __name__ == '__main__':
     unittest.main()
