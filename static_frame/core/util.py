@@ -1420,7 +1420,7 @@ def datetime64_not_aligned(array: np.ndarray, other: np.ndarray) -> bool:
     array_is_dt64 = array.dtype.kind == DTYPE_DATETIME_KIND
     other_is_dt64 = other.dtype.kind == DTYPE_DATETIME_KIND
     if array_is_dt64 and other_is_dt64:
-        return np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]
+        return np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0] #type: ignore
     return False
 
 
