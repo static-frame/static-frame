@@ -1,6 +1,16 @@
 What is New in Static Frame
 ===============================
 
+0.8.34
+----------
+
+Added ``index_constructors`` argument to ``IndexHierarchy.from_product()``
+
+Improvement to ``Index`` initialization to raise ``ErrorInitIndex`` if given a single string as ``labels``.
+
+Set operations on labels of different ``datetime64`` units now raise an ``Exception``.
+
+
 0.8.33
 ----------
 
