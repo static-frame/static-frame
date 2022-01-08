@@ -1,7 +1,7 @@
 import typing as tp
-from itertools import chain
 from ast import literal_eval
 from copy import deepcopy
+from itertools import chain
 from itertools import zip_longest
 from itertools import repeat
 
