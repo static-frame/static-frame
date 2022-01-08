@@ -300,9 +300,13 @@ class TestUnit(TestCase):
                     if wrap:
                         self.assertTrue(array.dtype == post.dtype)
 
-
+    #---------------------------------------------------------------------------
     @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_union1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
+        # skip comparisons to dt64
+        if arrays[0].dtype.kind == 'M':
+            return
+
         post = util.union1d(
                 arrays[0],
                 arrays[1],
@@ -320,6 +324,10 @@ class TestUnit(TestCase):
 
     @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_intersect1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
+        # skip comparisons to dt64
+        if arrays[0].dtype.kind == 'M':
+            return
+
         post = util.intersect1d(
                 arrays[0],
                 arrays[1],
@@ -335,6 +343,10 @@ class TestUnit(TestCase):
 
     @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_setdiff1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
+        # skip comparisons to dt64
+        if arrays[0].dtype.kind == 'M':
+            return
+
         post = util.setdiff1d(
                 arrays[0],
                 arrays[1],
@@ -356,6 +368,10 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_union2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
+        # skip comparisons to dt64
+        if arrays[0].dtype.kind == 'M':
+            return
+
         post = util.union2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
 
@@ -369,6 +385,10 @@ class TestUnit(TestCase):
 
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_intersect2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
+        # skip comparisons to dt64
+        if arrays[0].dtype.kind == 'M':
+            return
+
         post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
@@ -378,6 +398,9 @@ class TestUnit(TestCase):
 
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_setdiff2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
+        # skip comparisons to dt64
+        if arrays[0].dtype.kind == 'M':
+            return
 
         for array in arrays:
             if array.dtype.kind in ('f', 'c') and np.isnan(array).any():
@@ -392,6 +415,9 @@ class TestUnit(TestCase):
 
     @given(get_arrays_2d_aligned_columns())
     def test_array_set_ufunc_many(self, arrays: tp.Sequence[np.ndarray]) -> None:
+        # skip comparisons to dt64
+        if arrays[0].dtype.kind == 'M':
+            return
 
         for union in (True, False):
             post = util.ufunc_set_iter(arrays, union=union)
