@@ -148,7 +148,7 @@ class NPYConverter:
         '''Utility method to just read the header.
         '''
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
-            raise ErrorNPYDecode('Invalid NPY header found.')
+            raise ErrorNPYDecode('Invalid NPY header found.') # COV_MISSING
         return cls._header_decode(file, header_decode_cache)
 
     @classmethod
