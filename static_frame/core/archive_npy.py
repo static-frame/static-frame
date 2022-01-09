@@ -141,6 +141,17 @@ class NPYConverter:
         return header_decode_cache[header]
 
     @classmethod
+    def header_from_npy(cls,
+            file: tp.IO[bytes],
+            header_decode_cache: HeaderDecodeCacheType,
+            ) -> HeaderType:
+        '''Utility method to just read the header.
+        '''
+        if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
+            raise ErrorNPYDecode('Invalid NPY header found.')
+        return cls._header_decode(file, header_decode_cache)
+
+    @classmethod
     def from_npy(cls,
             file: tp.IO[bytes],
             header_decode_cache: HeaderDecodeCacheType,
@@ -230,10 +241,19 @@ class Archive:
     def read_array(self, name: str) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
+    def read_array_header(self, name: str) -> HeaderType:
+        raise NotImplementedError() #pragma: no cover
+
+    def size_array(self, name: str) -> int:
+        raise NotImplementedError() #pragma: no cover
+
     def write_metadata(self, content: tp.Any) -> None:
         raise NotImplementedError() #pragma: no cover
 
     def read_metadata(self) -> tp.Any:
+        raise NotImplementedError() #pragma: no cover
+
+    def size_metadata(self) -> int:
         raise NotImplementedError() #pragma: no cover
 
     def close(self) -> None:
@@ -290,11 +310,29 @@ class ArchiveZip(Archive):
         array.flags.writeable = False
         return array
 
+    def read_array_header(self, name: str) -> HeaderType:
+        '''Alternate reader for status displays.
+        '''
+        f = self._archive.open(name)
+        try:
+            header = NPYConverter.header_from_npy(f, self._header_decode_cache)
+        finally:
+            f.close()
+        return header
+
+    def size_array(self, name: str) -> int:
+        return self._archive.getinfo(name).file_size
+
     def write_metadata(self, content: tp.Any) -> None:
         self._archive.writestr(self.FILE_META, json.dumps(content))
 
     def read_metadata(self) -> tp.Any:
         return json.loads(self._archive.read(self.FILE_META))
+
+    def size_metadata(self) -> int:
+        return self._archive.getinfo(self.FILE_META).file_size
+
+
 
 class ArchiveDirectory(Archive):
     __slots__ = (
@@ -362,6 +400,21 @@ class ArchiveDirectory(Archive):
             f.close()
         return array
 
+    def read_array_header(self, name: str) -> HeaderType:
+        '''Alternate reader for status displays.
+        '''
+        fp = os.path.join(self._archive, name)
+        f = open(fp, 'rb')
+        try:
+            header = NPYConverter.header_from_npy(f, self._header_decode_cache)
+        finally:
+            f.close()
+        return header
+
+    def size_array(self, name: str) -> int:
+        fp = os.path.join(self._archive, name)
+        return os.path.getsize(fp)
+
     def write_metadata(self, content: tp.Any) -> None:
         fp = os.path.join(self._archive, self.FILE_META)
         f = open(fp, 'w')
@@ -378,6 +431,10 @@ class ArchiveDirectory(Archive):
         finally:
             f.close()
         return post
+
+    def size_metadata(self) -> int:
+        fp = os.path.join(self._archive, self.FILE_META)
+        return os.path.getsize(fp)
 
 #-------------------------------------------------------------------------------
 class Label:
@@ -652,9 +709,52 @@ class ArchiveComponentsConverter:
     '''
     ARCHIVE_CLS: tp.Type[Archive]
 
-    @classmethod
-    def write_arrays(cls,
-            fp: PathSpecifier,
+    __slots__ = (
+            '_archvie',
+            '_writeable',
+            )
+
+    def __init__(self, fp: PathSpecifier, mode: str = 'r') -> None:
+        if mode == 'w':
+            writeable = True
+        elif mode == 'r':
+            writeable = False
+        else:
+            raise RuntimeError('Invalid value for mode; use "W" or "r"')
+
+        self._writeable = writeable # not explicitly stored in Archive instance
+        self._archive = self.ARCHIVE_CLS(fp,
+                writeable=self._writeable,
+                memory_map=False,
+                )
+
+    @property
+    def status(self) -> 'Frame':
+        '''
+        Return a :obj:`Frame` indicating name, dtype, shape, and bytes, of Archive components.
+        '''
+        if self._writeable:
+            raise RuntimeError('Open with mode "r" to get status.')
+        from static_frame.core.frame import Frame
+        def gen():
+            # metadata is in labels; sort by extension first to put at top
+            for name in sorted(
+                    self._archive.labels,
+                    key=lambda fn: tuple(reversed(fn.split('.')))
+                    ):
+                if name == self._archive.FILE_META:
+                    yield (name, self._archive.size_metadata()) + ('', '', '')
+                else:
+                    header = self._archive.read_array_header(name)
+                    yield (name, self._archive.size_array(name)) + header
+
+        f = Frame.from_records(gen(),
+                columns=('name', 'size', 'dtype', 'fortran', 'shape'),
+                name=str(self._archive._archive),
+                )
+        return f.set_index('name', drop=True)
+
+    def from_arrays(self,
             *,
             blocks: tp.Iterable[np.ndarray],
             index: tp.Optional[IndexInitializer] = None,
@@ -665,7 +765,6 @@ class ArchiveComponentsConverter:
         '''
         If axis is 0, blocks are stacked vertically, if axis is 1, blocks are stacked horizontally.
         '''
-        archive = cls.ARCHIVE_CLS(fp, writeable=True, memory_map=False)
         metadata: tp.Dict[str, tp.Any] = {}
 
         if isinstance(index, IndexBase):
@@ -674,7 +773,7 @@ class ArchiveComponentsConverter:
             cls_index = index.__class__
             ArchiveIndexConverter.index_encode(
                     metadata=metadata,
-                    archive=archive,
+                    archive=self._archive,
                     index=index,
                     key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
                     key_types=Label.KEY_TYPES_INDEX,
@@ -690,7 +789,7 @@ class ArchiveComponentsConverter:
             cls_index = dtype_to_index_cls(True, index.dtype) #type: ignore
             ArchiveIndexConverter.array_encode(
                     metadata=metadata,
-                    archive=archive,
+                    archive=self._archive,
                     array=index,
                     key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
                     )
@@ -705,7 +804,7 @@ class ArchiveComponentsConverter:
             cls_columns = columns.__class__
             ArchiveIndexConverter.index_encode(
                     metadata=metadata,
-                    archive=archive,
+                    archive=self._archive,
                     index=columns,
                     key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
                     key_types=Label.KEY_TYPES_COLUMNS,
@@ -721,7 +820,7 @@ class ArchiveComponentsConverter:
             cls_columns = dtype_to_index_cls(True, columns.dtype) #type: ignore
             ArchiveIndexConverter.array_encode(
                     metadata=metadata,
-                    archive=archive,
+                    archive=self._archive,
                     array=columns,
                     key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
                     )
@@ -748,12 +847,12 @@ class ArchiveComponentsConverter:
                 else:
                     if array.shape[0] != rows:
                         raise RuntimeError('incompatible block shapes')
-                archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i), array)
+                self._archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i), array)
         elif axis == 0:
             # for now, just vertically concat and write, though this has a 2X memory requirement
             resolved = concat_resolved(blocks, axis=0)
             # if this results in an obect array, an exception will be raised
-            archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(0), resolved)
+            self._archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(0), resolved)
             i = 0
         else:
             raise AxisInvalid(f'invalid axis {axis}')
@@ -762,11 +861,9 @@ class ArchiveComponentsConverter:
                 i + 1, # block count
                 depth_index,
                 depth_columns]
-        archive.write_metadata(metadata)
+        self._archive.write_metadata(metadata)
 
-    @classmethod
-    def write_frames(cls,
-            fp: PathSpecifier,
+    def from_frames(self,
             *,
             frames: tp.Iterable['Frame'],
             include_index: bool = True,
@@ -780,8 +877,6 @@ class ArchiveComponentsConverter:
         '''
         from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.frame import Frame
-
-        archive = cls.ARCHIVE_CLS(fp, writeable=True, memory_map=False)
 
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames] # type: ignore
 
@@ -862,7 +957,7 @@ class ArchiveComponentsConverter:
         else:
             raise AxisInvalid(f'no support for {axis}')
 
-        cls.write_arrays(fp,
+        self.from_arrays(
                 blocks=blocks(),
                 index=index,
                 columns=columns,
