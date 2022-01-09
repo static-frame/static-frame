@@ -485,34 +485,33 @@ class TestUnit(TestCase):
                 NPY(fp, 'w').from_frames(frames=(f1, f2), axis=3)
 
     #-----------------------------------------------------------------------------
-    def test_archive_components_npy_status_a(self) -> None:
+    def test_archive_components_npy_contents_a(self) -> None:
         f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
 
         with TemporaryDirectory() as fp:
             f1.to_npy(fp)
 
-            post = NPY(fp, 'r').status
+            post = NPY(fp, 'r').contents
             self.assertEquals(post.shape, (5, 4))
             self.assertTrue(post['size'].sum() > 0)
-            # print(post)
 
-    def test_archive_components_npy_status_b(self) -> None:
+
+    def test_archive_components_npy_contents_b(self) -> None:
         f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
 
         with TemporaryDirectory() as fp:
             f1.to_npy(fp)
             with self.assertRaises(RuntimeError):
-                _ = NPY(fp, 'w').status
+                _ = NPY(fp, 'w').contents
 
-    def test_archive_components_npz_status_a(self) -> None:
+    def test_archive_components_npz_contents_a(self) -> None:
         f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
 
         with temp_file('.zip') as fp:
             f1.to_npz(fp)
-            post = NPZ(fp).status
+            post = NPZ(fp).contents
             self.assertEquals(post.shape, (5, 4))
             self.assertTrue(post['size'].sum() > 0)
-            # print(post)
 
 
 if __name__ == '__main__':

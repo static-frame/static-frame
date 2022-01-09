@@ -332,8 +332,6 @@ class ArchiveZip(Archive):
     def size_metadata(self) -> int:
         return self._archive.getinfo(self.FILE_META).file_size
 
-
-
 class ArchiveDirectory(Archive):
     __slots__ = (
             'labels',
@@ -729,7 +727,7 @@ class ArchiveComponentsConverter:
                 )
 
     @property
-    def status(self) -> 'Frame':
+    def contents(self) -> 'Frame':
         '''
         Return a :obj:`Frame` indicating name, dtype, shape, and bytes, of Archive components.
         '''
