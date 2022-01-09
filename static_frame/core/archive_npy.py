@@ -227,6 +227,8 @@ class Archive:
     labels: tp.FrozenSet[str]
     memory_map: bool
     _header_decode_cache: HeaderDecodeCacheType
+    _archive: tp.Union[ZipFile, PathSpecifier]
+
 
     def __init__(self,
             fp: PathSpecifier,
@@ -268,6 +270,8 @@ class ArchiveZip(Archive):
             '_closable',
             '_header_decode_cache',
             )
+
+    _archive: ZipFile
 
     def __init__(self,
             fp: PathSpecifier,
@@ -340,6 +344,8 @@ class ArchiveDirectory(Archive):
             '_closable',
             '_header_decode_cache',
             )
+
+    _archive: PathSpecifier
 
     def __init__(self,
             fp: PathSpecifier,
@@ -734,8 +740,8 @@ class ArchiveComponentsConverter:
         if self._writeable:
             raise RuntimeError('Open with mode "r" to get status.')
         from static_frame.core.frame import Frame
-        def gen():
-            # metadata is in labels; sort by extension first to put at top
+        def gen() -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
+            # metadata is in labels; sort by ext,ension first to put at top
             for name in sorted(
                     self._archive.labels,
                     key=lambda fn: tuple(reversed(fn.split('.')))
@@ -750,7 +756,7 @@ class ArchiveComponentsConverter:
                 columns=('name', 'size', 'dtype', 'fortran', 'shape'),
                 name=str(self._archive._archive),
                 )
-        return f.set_index('name', drop=True)
+        return f.set_index('name', drop=True) #type: ignore
 
     def from_arrays(self,
             *,
@@ -967,7 +973,7 @@ class NPZ(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveZip
 
 
-# def write_npy(): # writes an NPZ from an NPY
+# def from_npy(): # writes an NPZ from an NPY
 
 class NPY(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveDirectory
