@@ -882,8 +882,9 @@ class NPY(ArchiveComponentsConverter):
 # def from_npz(): # writes an NPY from an NPZ
 
 
-# NPZ(fp).write_arrays
-# NPZ(fp).to_npy()
+# NPZ(fp).from_arrays()
+# NPZ(fp).from_npy()
+# NPZ(fp).fron_blocks()
 
 
 
