@@ -738,7 +738,7 @@ class ArchiveComponentsConverter:
         Return a :obj:`Frame` indicating name, dtype, shape, and bytes, of Archive components.
         '''
         if self._writeable:
-            raise RuntimeError('Open with mode "r" to get status.')
+            raise RuntimeError('Open with mode "r" to get contents.')
         from static_frame.core.frame import Frame
         def gen() -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
             # metadata is in labels; sort by ext,ension first to put at top
@@ -757,6 +757,24 @@ class ArchiveComponentsConverter:
                 name=str(self._archive._archive),
                 )
         return f.set_index('name', drop=True) #type: ignore
+
+
+    @property
+    def nbytes(self) -> int:
+        '''
+        Return a bytes stored in this archive.
+        '''
+        if self._writeable:
+            raise RuntimeError('Open with mode "r" to get contents.')
+
+        def gen() -> tp.Iterator[int]:
+            # metadata is in labels; sort by ext,ension first to put at top
+            for name in self._archive.labels:
+                if name == self._archive.FILE_META:
+                    yield self._archive.size_metadata()
+                else:
+                    yield self._archive.size_array(name)
+        return sum(gen())
 
     def from_arrays(self,
             *,

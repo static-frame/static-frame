@@ -491,10 +491,10 @@ class TestUnit(TestCase):
         with TemporaryDirectory() as fp:
             f1.to_npy(fp)
 
-            post = NPY(fp, 'r').contents
+            npy = NPY(fp, 'r')
+            post = npy.contents
             self.assertEquals(post.shape, (5, 4))
-            self.assertTrue(post['size'].sum() > 0)
-
+            self.assertEqual(post['size'].sum(), npy.nbytes)
 
     def test_archive_components_npy_contents_b(self) -> None:
         f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
