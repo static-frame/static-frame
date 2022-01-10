@@ -6,6 +6,7 @@ from ast import literal_eval
 import os
 import mmap
 import typing as tp
+from types import TracebackType
 
 import numpy as np
 
@@ -738,7 +739,7 @@ class ArchiveComponentsConverter:
     def __enter__(self) -> 'ArchiveComponentsConverter':
         return self
 
-    def __exit__(self, type, value, traceback) -> None:
+    def __exit__(self, type: tp.Type[BaseException], value: BaseException, traceback: TracebackType) -> None:
         self._archive.close()
         self._archive.__del__() # force closing resources
 
@@ -999,13 +1000,13 @@ class ArchiveComponentsConverter:
 class NPZ(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveZip
 
-    def from_npy(fp: PathSpecifier): # writes an NPZ from an NPY
+    def from_npy(fp: PathSpecifier) -> None: # writes an NPZ from an NPY
         pass
 
 class NPY(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveDirectory
 
-    def from_npz(fp: PathSpecifier): # writes an NPZ from an NPY
+    def from_npz(fp: PathSpecifier) -> None: # writes an NPZ from an NPY
         pass
 
 
