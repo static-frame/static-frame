@@ -1011,17 +1011,6 @@ class NPY(ArchiveComponentsConverter):
 
 
 
-# NPZ(fp).from_arrays()
-# NPZ(fp).from_npy()
-# NPZ(fp).fron_blocks()
-
-
-
-
-
-#
-
-
 
 
 
