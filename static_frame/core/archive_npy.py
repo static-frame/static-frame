@@ -237,6 +237,9 @@ class Archive:
             ):
         raise NotImplementedError() #pragma: no cover
 
+    def __del__(self) -> None:
+        pass
+
     def write_array(self, name: str, array: np.ndarray) -> None:
         raise NotImplementedError() #pragma: no cover
 
@@ -732,6 +735,13 @@ class ArchiveComponentsConverter:
                 memory_map=False,
                 )
 
+    def __enter__(self) -> 'ArchiveComponentsConverter':
+        return self
+
+    def __exit__(self, type, value, traceback) -> None:
+        self._archive.close()
+        self._archive.__del__() # force closing resources
+
     @property
     def contents(self) -> 'Frame':
         '''
@@ -757,7 +767,6 @@ class ArchiveComponentsConverter:
                 name=str(self._archive._archive),
                 )
         return f.set_index('name', drop=True) #type: ignore
-
 
     @property
     def nbytes(self) -> int:
@@ -990,13 +999,15 @@ class ArchiveComponentsConverter:
 class NPZ(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveZip
 
-
-# def from_npy(): # writes an NPZ from an NPY
+    def from_npy(fp: PathSpecifier): # writes an NPZ from an NPY
+        pass
 
 class NPY(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveDirectory
 
-# def from_npz(): # writes an NPY from an NPZ
+    def from_npz(fp: PathSpecifier): # writes an NPZ from an NPY
+        pass
+
 
 
 # NPZ(fp).from_arrays()

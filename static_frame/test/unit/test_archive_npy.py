@@ -484,6 +484,18 @@ class TestUnit(TestCase):
             with self.assertRaises(RuntimeError):
                 NPY(fp, 'w').from_frames(frames=(f1, f2), axis=3)
 
+    def test_archive_components_npz_from_frames_l(self) -> None:
+        f1 = ff.parse('s(2,2)|v(float)').relabel(columns=('a', 'b'))
+        f2 = ff.parse('s(2,2)|v(float)').relabel(columns=('b', 'c'))
+
+        with TemporaryDirectory() as fp:
+            with NPY(fp, 'w') as npy:
+                npy.from_frames(frames=(f1, f2), axis=0, include_index=False)
+                f = Frame.from_npy(fp).fillna(0)
+                self.assertEqual(f.to_pairs(),
+                        (('a', ((0, 1930.4), (1, -1760.34), (2, 0.0), (3, 0.0))), ('b', ((0, -610.8), (1, 3243.94), (2, 1930.4), (3, -1760.34))), ('c', ((0, 0.0), (1, 0.0), (2, -610.8), (3, 3243.94))))
+                        )
+
     #-----------------------------------------------------------------------------
     def test_archive_components_npy_contents_a(self) -> None:
         f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
