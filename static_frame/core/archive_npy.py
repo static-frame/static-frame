@@ -718,7 +718,7 @@ class ArchiveComponentsConverter:
     ARCHIVE_CLS: tp.Type[Archive]
 
     __slots__ = (
-            '_archvie',
+            '_archive',
             '_writeable',
             )
 
@@ -1000,15 +1000,14 @@ class ArchiveComponentsConverter:
 class NPZ(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveZip
 
-    def from_npy(fp: PathSpecifier) -> None: # writes an NPZ from an NPY
+    def from_npy(self, fp: PathSpecifier) -> None: # writes an NPZ from an NPY
         pass
 
 class NPY(ArchiveComponentsConverter):
     ARCHIVE_CLS = ArchiveDirectory
 
-    def from_npz(fp: PathSpecifier) -> None: # writes an NPZ from an NPY
+    def from_npz(self, fp: PathSpecifier) -> None: # writes an NPZ from an NPY
         pass
-
 
 
 
