@@ -106,7 +106,8 @@ from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
-
+from static_frame.core.archive_npy import NPY as NPY
+from static_frame.core.archive_npy import NPZ as NPZ
 
 __version__ = '0.8.33' # use -dev for new version in development
 
