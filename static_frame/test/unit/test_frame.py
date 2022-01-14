@@ -23,6 +23,7 @@ from static_frame import FrameHE
 from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index
+from static_frame import IndexGO
 from static_frame import IndexAutoFactory
 from static_frame import IndexDate
 from static_frame import IndexDateGO
@@ -9063,6 +9064,18 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_relabel_add_level_b(self) -> None:
+        f1 = sf.FrameGO.from_element(1, index=[1, 2, 3], columns=['a'])
+        f2 = f1.relabel_level_add(
+                columns='1542',
+                index='2050',
+                index_constructor=IndexYear,
+                columns_constructor=IndexYear,
+                )
+        self.assertEqual(f2.index.index_types.values.tolist(), [IndexYear, Index])
+        self.assertEqual(f2.columns.index_types.values.tolist(), [IndexYearGO, IndexGO])
+
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 

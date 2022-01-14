@@ -3505,7 +3505,10 @@ class Frame(ContainerOperand):
     @doc_inject(selector='relabel_level_add', class_name='Frame')
     def relabel_level_add(self,
             index: tp.Hashable = None,
-            columns: tp.Hashable = None
+            columns: tp.Hashable = None,
+            *,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
         {doc}
@@ -3513,11 +3516,19 @@ class Frame(ContainerOperand):
         Args:
             index: {level}
             columns: {level}
+            *,
+            index_constructor:
+            columns_constructor:
         '''
 
-        index = self._index.level_add(index) if index else self._index
-        columns = self._columns.level_add(columns) if columns else self._columns.copy()
-
+        index = (self._index.level_add(
+                index, index_constructor=index_constructor)
+                if index is not None else self._index
+                )
+        columns = (self._columns.level_add(
+                columns, index_constructor=columns_constructor)
+                if columns is not None else self._columns
+                )
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
