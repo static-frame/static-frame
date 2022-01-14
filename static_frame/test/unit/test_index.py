@@ -1568,6 +1568,19 @@ class TestUnit(TestCase):
         idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
         self.assertEqual(idx1.index_types.to_pairs(), (('foo', IndexGO),))
 
+
+    #---------------------------------------------------------------------------
+    def test_index_level_add_a(self) -> None:
+        idx1 = Index(('a', 'b', 'c'), name='foo')
+        idx2 = idx1.level_add('2012', index_constructor=IndexYear)
+        self.assertEqual(idx2.name, 'foo')
+        self.assertEqual(idx1.index_types.values.tolist(), [Index])
+        self.assertEqual(idx2.index_types.values.tolist(), [IndexYear, Index])
+
+        self.assertTrue(
+            (idx2.values_at_depth(0) == np.array(['2012', '2012', '2012'], dtype='datetime64[Y]')).all()
+            )
+
 if __name__ == '__main__':
     unittest.main()
 

@@ -75,6 +75,7 @@ from static_frame.core.util import union1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import IndexConstructor
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.loc_map import LocMap
 
@@ -1203,14 +1204,37 @@ class Index(IndexBase):
         return Series(self.values, name=self._name)
 
 
-    def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
+    def level_add(self,
+            level: tp.Hashable,
+            *,
+            index_constructor: IndexConstructor = None,
+            ) -> 'IndexHierarchy':
         '''Return an IndexHierarchy with an added root level.
+
+        Args:
+            level: A hashable to used as the new root.
+            *,
+            index_constructor:
         '''
         from static_frame import IndexHierarchy
         from static_frame import IndexHierarchyGO
+        from static_frame import Index
+        from static_frame import IndexGO
 
         cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
-        return cls.from_tree({level: self.values}, name=self._name)
+        cls_depth = Index if self.STATIC else IndexGO
+
+        if index_constructor is None:
+            # cannot assume new depth is the same index subclass
+            index_constructors = (cls_depth, self.__class__)
+        else:
+            index_constructors = (index_constructor, self.__class__)
+
+        return cls.from_tree(
+                {level: self.values},
+                name=self._name,
+                index_constructors=index_constructors,
+                )
 
 
     def to_pandas(self) -> 'pandas.Index':

@@ -197,7 +197,8 @@ class IndexHierarchy(IndexBase):
     def from_tree(cls: tp.Type[IH],
             tree: TreeNodeT,
             *,
-            name: NameType = None
+            name: NameType = None,
+            index_constructors: tp.Optional[IndexConstructors] = None,
             ) -> IH:
         '''
         Convert into a ``IndexHierarchy`` a dictionary defining keys to either iterables or nested dictionaries of the same.
@@ -205,7 +206,13 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`static_frame.IndexHierarchy`
         '''
-        return cls(cls._LEVEL_CONSTRUCTOR.from_tree(tree), name=name)
+        return cls(
+                cls._LEVEL_CONSTRUCTOR.from_tree(
+                        tree,
+                        index_constructors
+                        ),
+                name=name,
+                )
 
     @classmethod
     def from_labels(cls: tp.Type[IH],
