@@ -778,7 +778,7 @@ class ArchiveComponentsConverter:
     @property
     def nbytes(self) -> int:
         '''
-        Return a bytes stored in this archive.
+        Return numer of bytes stored in this archive.
         '''
         if self._writeable:
             raise UnsupportedOperation('Open with mode "r" to get nbytes.')
@@ -801,7 +801,15 @@ class ArchiveComponentsConverter:
             axis: int = 0,
             ) -> None:
         '''
-        If axis is 0, blocks are stacked vertically, if axis is 1, blocks are stacked horizontally.
+        Given an iterable of arrays, write out an NPZ or NPY directly, without building up intermediary :obj:`Frame`. If axis 0, the arrays are vertically stacked; if axis 1, they are horizontally stacked. For both axis, if included, indices must be of appropriate length.
+
+        Args:
+            blocks:
+            *,
+            index: An array, :obj:`Index`, or :obj:`IndexHierarchy`.
+            columns: An array, :obj:`Index`, or :obj:`IndexHierarchy`.
+            name:
+            axis:
         '''
         if not self._writeable:
             raise UnsupportedOperation('Open with mode "w" to write.')
@@ -914,7 +922,18 @@ class ArchiveComponentsConverter:
             name: NameType = None,
             fill_value: object = np.nan,
             ) -> None:
-        '''Given an iterable of Frames, write out an NPZ or NPY directly, without building up an intermediary Frame. If axis 0, the Frames must be block compatible; if axis 1, the Frames must have the same number of rows. For both axis, indices must be unique or aligned.
+        '''Given an iterable of Frames, write out an NPZ or NPY directly, without building up an intermediary Frame. If axis 0, the Frames must be block compatible; if axis 1, the Frames must have the same number of rows. For both axis, if included, concatenated indices must be unique or aligned.
+
+        Args:
+            frames:
+            *
+            include_index:
+            include_columns:
+            axis:
+            union:
+            name:
+            fill_value:
+
         '''
         if not self._writeable:
             raise UnsupportedOperation('Open with mode "w" to write.')
@@ -1010,7 +1029,7 @@ class ArchiveComponentsConverter:
                 )
 
 class NPZ(ArchiveComponentsConverter):
-    '''Utility object for reading characteristics from, or writing new, NPZ files.
+    '''Utility object for reading characteristics from, or writing new, NPZ files from arrays or :obj:`Frame`.
     '''
     ARCHIVE_CLS = ArchiveZip
 
@@ -1018,7 +1037,7 @@ class NPZ(ArchiveComponentsConverter):
     #     pass
 
 class NPY(ArchiveComponentsConverter):
-    '''Utility object for reading characteristics from, or writing new, NPY directories.
+    '''Utility object for reading characteristics from, or writing new, NPY directories from arrays or :obj:`Frame`.
     '''
     ARCHIVE_CLS = ArchiveDirectory
 
