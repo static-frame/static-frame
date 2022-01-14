@@ -119,7 +119,6 @@ class TestUnit(TestCase):
                 with self.assertRaises(ErrorNPYDecode):
                     a2, _ = NPYConverter.from_npy(f, {})
 
-
     def test_from_npy_d(self) -> None:
         a1 = np.arange(12).reshape(2, 3, 2)
 
@@ -167,6 +166,18 @@ class TestUnit(TestCase):
             with open(fp, 'rb') as f:
                 a2, _ = NPYConverter.from_npy(f, {}, memory_map=True)
                 self.assertEqual(a2.tolist(), [2, 3, 4])
+
+
+    def test_from_npy_h(self) -> None:
+        with temp_file('.npy') as fp:
+            with open(fp, 'wb') as f:
+                f.write(b'foo')
+
+            with open(fp, 'rb') as f:
+                # invaliud header raises
+                with self.assertRaises(ErrorNPYDecode):
+                    a2, _ = NPYConverter.header_from_npy(f, {})
+
 
     #---------------------------------------------------------------------------
 
