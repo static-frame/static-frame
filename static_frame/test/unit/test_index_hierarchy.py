@@ -14,11 +14,13 @@ from static_frame import FrameGO
 from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index
+from static_frame import IndexGO
 from static_frame import IndexDate
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
 from static_frame import IndexYearMonth
+from static_frame import IndexYearMonthGO
 from static_frame import Series
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
@@ -2246,6 +2248,26 @@ class TestUnit(TestCase):
         ih2 = ih1.level_add('x')
         # proove we reused the underlying block arrays
         self.assertEqual(ih1._blocks.mloc.tolist(), ih2._blocks.mloc[1:].tolist())
+
+
+    def test_hierarchy_add_level_d(self) -> None:
+        labels = (
+                (1, 'A'),
+                (1, 'B'),
+                (2, 'A'),
+                (2, 'B'),
+                )
+        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih2 = ih1.level_add('1542-02', index_constructor=IndexYearMonth)
+
+        self.assertEqual(ih2.index_types.values.tolist(),
+                [IndexYearMonthGO, IndexGO, IndexGO],
+                )
+        self.assertTrue(
+                (ih2.values_at_depth(0) == np.array(['1542-02', '1542-02', '1542-02', '1542-02'], dtype='datetime64[M]')).all()
+                )
+
+
 
     #---------------------------------------------------------------------------
 

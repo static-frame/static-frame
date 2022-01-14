@@ -1677,7 +1677,11 @@ class IndexHierarchy(IndexBase):
         '''
         return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name)
 
-    def level_add(self: IH, level: tp.Hashable) -> IH:
+    def level_add(self: IH,
+            level: tp.Hashable,
+            *,
+            index_constructor: IndexConstructor = None,
+            ) -> IH:
         '''Return an IndexHierarchy with a new root (outer) level added.
         '''
         if self.STATIC: # can reuse levels
@@ -1685,8 +1689,10 @@ class IndexHierarchy(IndexBase):
         else:
             levels_src = self._levels.to_index_level()
 
+        index_cls = self._INDEX_CONSTRUCTOR if index_constructor is None else index_constructor
+
         levels = self._LEVEL_CONSTRUCTOR(
-                index=self._INDEX_CONSTRUCTOR((level,)),
+                index=index_cls((level,)),
                 targets=ArrayGO([levels_src], own_iterable=True),
                 offset=0,
                 own_index=True
