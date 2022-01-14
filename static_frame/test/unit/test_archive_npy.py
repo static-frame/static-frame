@@ -546,14 +546,6 @@ class TestUnit(TestCase):
 
         with TemporaryDirectory() as fp:
             f1.to_npy(fp)
-            with self.assertRaises(RuntimeError):
-                _ = NPY(fp, 'w').contents
-
-    def test_archive_components_npy_contents_b(self) -> None:
-        f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
-
-        with TemporaryDirectory() as fp:
-            f1.to_npy(fp)
             with self.assertRaises(UnsupportedOperation):
                 _ = NPY(fp, 'w').contents
 
