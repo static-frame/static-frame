@@ -7,6 +7,7 @@ import os
 import mmap
 import typing as tp
 from types import TracebackType
+from io import UnsupportedOperation
 
 import numpy as np
 
@@ -739,7 +740,11 @@ class ArchiveComponentsConverter:
     def __enter__(self) -> 'ArchiveComponentsConverter':
         return self
 
-    def __exit__(self, type: tp.Type[BaseException], value: BaseException, traceback: TracebackType) -> None:
+    def __exit__(self,
+            type: tp.Type[BaseException],
+            value: BaseException,
+            traceback: TracebackType,
+            ) -> None:
         self._archive.close()
         self._archive.__del__() # force closing resources
 
@@ -749,7 +754,8 @@ class ArchiveComponentsConverter:
         Return a :obj:`Frame` indicating name, dtype, shape, and bytes, of Archive components.
         '''
         if self._writeable:
-            raise RuntimeError('Open with mode "r" to get contents.')
+            raise UnsupportedOperation('Open with mode "r" to get contents.')
+
         from static_frame.core.frame import Frame
         def gen() -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
             # metadata is in labels; sort by ext,ension first to put at top
@@ -775,7 +781,7 @@ class ArchiveComponentsConverter:
         Return a bytes stored in this archive.
         '''
         if self._writeable:
-            raise RuntimeError('Open with mode "r" to get contents.')
+            raise UnsupportedOperation('Open with mode "r" to get nbytes.')
 
         def gen() -> tp.Iterator[int]:
             # metadata is in labels; sort by ext,ension first to put at top
@@ -787,16 +793,19 @@ class ArchiveComponentsConverter:
         return sum(gen())
 
     def from_arrays(self,
-            *,
             blocks: tp.Iterable[np.ndarray],
+            *,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
             name: NameType = None,
-            axis: int = 1,
+            axis: int = 0,
             ) -> None:
         '''
         If axis is 0, blocks are stacked vertically, if axis is 1, blocks are stacked horizontally.
         '''
+        if not self._writeable:
+            raise UnsupportedOperation('Open with mode "w" to write.')
+
         metadata: tp.Dict[str, tp.Any] = {}
 
         if isinstance(index, IndexBase):
@@ -896,17 +905,20 @@ class ArchiveComponentsConverter:
         self._archive.write_metadata(metadata)
 
     def from_frames(self,
-            *,
             frames: tp.Iterable['Frame'],
+            *,
             include_index: bool = True,
             include_columns: bool = True,
-            axis: int = 1,
+            axis: int = 0,
             union: bool = True,
             name: NameType = None,
             fill_value: object = np.nan,
             ) -> None:
         '''Given an iterable of Frames, write out an NPZ or NPY directly, without building up an intermediary Frame. If axis 0, the Frames must be block compatible; if axis 1, the Frames must have the same number of rows. For both axis, indices must be unique or aligned.
         '''
+        if not self._writeable:
+            raise UnsupportedOperation('Open with mode "w" to write.')
+
         from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.frame import Frame
 
@@ -998,16 +1010,20 @@ class ArchiveComponentsConverter:
                 )
 
 class NPZ(ArchiveComponentsConverter):
+    '''Utility object for reading characteristics from, or writing new, NPZ files.
+    '''
     ARCHIVE_CLS = ArchiveZip
 
-    def from_npy(self, fp: PathSpecifier) -> None: # writes an NPZ from an NPY
-        pass
+    # def from_npy(self, fp: PathSpecifier) -> None: # writes an NPZ from an NPY
+    #     pass
 
 class NPY(ArchiveComponentsConverter):
+    '''Utility object for reading characteristics from, or writing new, NPY directories.
+    '''
     ARCHIVE_CLS = ArchiveDirectory
 
-    def from_npz(self, fp: PathSpecifier) -> None: # writes an NPZ from an NPY
-        pass
+    # def from_npz(self, fp: PathSpecifier) -> None: # writes an NPZ from an NPY
+    #     pass
 
 
 
