@@ -93,6 +93,8 @@ DOCUMENTED_COMPONENTS = (
         sf.DisplayConfig,
         sf.StoreConfig,
         sf.StoreFilter,
+        sf.NPZ,
+        sf.NPY,
         )
 
 

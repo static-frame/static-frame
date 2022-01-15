@@ -15,6 +15,8 @@ from static_frame.core.series import Series
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.test.test_case import TestCase
+from static_frame import NPZ
+from static_frame import NPY
 
 class TestUnit(TestCase):
 
@@ -99,7 +101,9 @@ class TestUnit(TestCase):
     def test_interface_get_instance(self) -> None:
         for component in DOCUMENTED_COMPONENTS:
             post = InterfaceSummary.get_instance(component)
-            if not isinstance(post, ContainerBase):
+            if post is NPY or post is NPZ: #type: ignore
+                continue
+            elif not isinstance(post, ContainerBase):
                 self.assertTrue(isinstance(post, ( # type: ignore
                     DisplayConfig,
                     StoreConfig,
