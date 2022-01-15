@@ -1,7 +1,7 @@
 import os
+import sys
 # import typing as tp
 
-from doc.source.conf import get_jinja_contexts
 
 
 HEADER = '.. NOTE: auto-generated file, do not edit'
@@ -14,7 +14,7 @@ def get_rst_import(group: str, name: str) -> str:
     return f'''
 .. jinja:: ctx
 
-    {{% import 'doc/source/macros.jinja' as macros %}}
+    {{% import 'macros.jinja' as macros %}}
 
     {{{{ macros.{group}(examples_defined=examples_defined, *interface['{name}']) }}}}
 
@@ -45,6 +45,8 @@ def get_rst_embed(group: str, name: str) -> str:
 
 
 def source_build() -> None:
+    from doc.source.conf import get_jinja_contexts
+
 
     doc_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -74,8 +76,8 @@ def source_build() -> None:
                 raise RuntimeError(f'must create and add RST file {fp}')
 
             print(fp)
-            rst = get_rst_embed(group, name)
-            # rst = get_rst_import(group, name)
+            # rst = get_rst_embed(group, name)
+            rst = get_rst_import(group, name)
 
             # print(rst)
             with open(fp, 'w') as f:
@@ -84,5 +86,9 @@ def source_build() -> None:
 
 
 if __name__ == '__main__':
-
+    doc_dir = os.path.abspath(os.path.dirname(__file__))
+    sys.path.append(os.path.join(os.path.dirname(doc_dir)))
+    # import ipdb; ipdb.set_trace()
     source_build()
+
+

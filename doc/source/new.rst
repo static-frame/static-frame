@@ -4,7 +4,11 @@ What is New in Static Frame
 0.8.34
 ----------
 
+Added ``NPY`` and ``NPZ`` interfaces for creating NPY and NPZ archvies from arrays and ``Frame`` components.
+
 Added ``index_constructors`` argument to ``IndexHierarchy.from_product()``
+
+Added ``index_constructor`` argument to ``Index.level_add()``, ``IndexHierarchy.level_add()``, and  ``Frame.relabel_level_add()``.
 
 Improvement to ``Index`` initialization to raise ``ErrorInitIndex`` if given a single string as ``labels``.
 

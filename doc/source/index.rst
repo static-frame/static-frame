@@ -79,6 +79,8 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/display_config
    api_overview/store_config
    api_overview/store_filter
+   api_overview/npz
+   api_overview/npy
 
 .. toctree::
    :maxdepth: 1
@@ -118,5 +120,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/display_config
    api_detail/store_config
    api_detail/store_filter
+   api_detail/npz
+   api_detail/npy
 
 :ref:`genindex`

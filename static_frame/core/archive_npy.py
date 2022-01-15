@@ -11,6 +11,8 @@ from io import UnsupportedOperation
 
 import numpy as np
 
+from static_frame.core.interface_meta import InterfaceMeta
+
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import list_to_tuple
@@ -536,7 +538,7 @@ class ArchiveIndexConverter:
 
 
 class ArchiveFrameConverter:
-    ARCHIVE_CLS: tp.Type[Archive]
+    _ARCHIVE_CLS: tp.Type[Archive]
 
     @classmethod
     def to_archive(cls,
@@ -571,7 +573,7 @@ class ArchiveFrameConverter:
         else:
             block_iter = iter(frame._blocks._blocks)
 
-        archive = cls.ARCHIVE_CLS(fp,
+        archive = cls._ARCHIVE_CLS(fp,
                 writeable=True,
                 memory_map=False,
                 )
@@ -618,7 +620,7 @@ class ArchiveFrameConverter:
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-        archive = cls.ARCHIVE_CLS(fp,
+        archive = cls._ARCHIVE_CLS(fp,
                 writeable=False,
                 memory_map=memory_map,
                 )
@@ -702,21 +704,21 @@ class ArchiveFrameConverter:
 
 
 class NPZFrameConverter(ArchiveFrameConverter):
-    ARCHIVE_CLS = ArchiveZip
+    _ARCHIVE_CLS = ArchiveZip
 
 class NPYFrameConverter(ArchiveFrameConverter):
-    ARCHIVE_CLS = ArchiveDirectory
+    _ARCHIVE_CLS = ArchiveDirectory
 
 
 
 #-------------------------------------------------------------------------------
 # for converting from components, unstructured Frames
 
-class ArchiveComponentsConverter:
+class ArchiveComponentsConverter(metaclass=InterfaceMeta):
     '''
     A family of methods to write NPY/NPZ from things other than a Frame, or multi-frame collections like a Bus/Yarn/Quilt but with the intention of production a consolidate Frame, not just a zip of Frames.
     '''
-    ARCHIVE_CLS: tp.Type[Archive]
+    _ARCHIVE_CLS: tp.Type[Archive]
 
     __slots__ = (
             '_archive',
@@ -729,10 +731,10 @@ class ArchiveComponentsConverter:
         elif mode == 'r':
             writeable = False
         else:
-            raise RuntimeError('Invalid value for mode; use "W" or "r"')
+            raise RuntimeError('Invalid value for mode; use "w" or "r"')
 
         self._writeable = writeable # not explicitly stored in Archive instance
-        self._archive = self.ARCHIVE_CLS(fp,
+        self._archive = self._ARCHIVE_CLS(fp,
                 writeable=self._writeable,
                 memory_map=False,
                 )
@@ -1031,7 +1033,7 @@ class ArchiveComponentsConverter:
 class NPZ(ArchiveComponentsConverter):
     '''Utility object for reading characteristics from, or writing new, NPZ files from arrays or :obj:`Frame`.
     '''
-    ARCHIVE_CLS = ArchiveZip
+    _ARCHIVE_CLS = ArchiveZip
 
     # def from_npy(self, fp: PathSpecifier) -> None: # writes an NPZ from an NPY
     #     pass
@@ -1039,7 +1041,7 @@ class NPZ(ArchiveComponentsConverter):
 class NPY(ArchiveComponentsConverter):
     '''Utility object for reading characteristics from, or writing new, NPY directories from arrays or :obj:`Frame`.
     '''
-    ARCHIVE_CLS = ArchiveDirectory
+    _ARCHIVE_CLS = ArchiveDirectory
 
     # def from_npz(self, fp: PathSpecifier) -> None: # writes an NPZ from an NPY
     #     pass

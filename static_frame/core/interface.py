@@ -42,7 +42,8 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DT64_S
 from static_frame.core.quilt import Quilt
 from static_frame.core.yarn import Yarn
-
+from static_frame.core.archive_npy import NPY
+from static_frame.core.archive_npy import NPZ
 
 #-------------------------------------------------------------------------------
 
@@ -829,6 +830,10 @@ class InterfaceSummary(Features):
                 instance = target(bus, retain_labels=False) #type: ignore
             elif target is Batch:
                 instance = Batch(iter(()))
+            elif target is NPY:
+                instance = target
+            elif target is NPZ:
+                instance = target
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):
