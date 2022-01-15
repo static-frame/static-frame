@@ -738,6 +738,8 @@ class ArchiveComponentsConverter:
                 )
 
     def __enter__(self) -> 'ArchiveComponentsConverter':
+        '''When entering a context manager, a handle to this instance is returned.
+        '''
         return self
 
     def __exit__(self,
@@ -745,6 +747,8 @@ class ArchiveComponentsConverter:
             value: BaseException,
             traceback: TracebackType,
             ) -> None:
+        '''When exiting a context manager, resources are closed as necessary.
+        '''
         self._archive.close()
         self._archive.__del__() # force closing resources
 
