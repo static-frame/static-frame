@@ -830,9 +830,7 @@ class InterfaceSummary(Features):
                 instance = target(bus, retain_labels=False) #type: ignore
             elif target is Batch:
                 instance = Batch(iter(()))
-            elif target is NPY:
-                instance = target
-            elif target is NPZ:
+            elif target is NPY or target is NPZ: #type: ignore
                 instance = target
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))

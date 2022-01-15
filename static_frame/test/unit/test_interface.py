@@ -101,7 +101,7 @@ class TestUnit(TestCase):
     def test_interface_get_instance(self) -> None:
         for component in DOCUMENTED_COMPONENTS:
             post = InterfaceSummary.get_instance(component)
-            if post is NPY or post is NPZ:
+            if post is NPY or post is NPZ: #type: ignore
                 continue
             elif not isinstance(post, ContainerBase):
                 self.assertTrue(isinstance(post, ( # type: ignore

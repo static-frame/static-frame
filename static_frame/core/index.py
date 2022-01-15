@@ -1228,7 +1228,7 @@ class Index(IndexBase):
             # cannot assume new depth is the same index subclass
             index_constructors = (cls_depth, self.__class__)
         else:
-            index_constructors = (index_constructor, self.__class__)
+            index_constructors = (index_constructor, self.__class__) #type: ignore
 
         return cls.from_tree(
                 {level: self.values},
