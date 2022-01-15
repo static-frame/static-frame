@@ -2182,13 +2182,11 @@ class TestUnit(TestCase):
                 ((0, 0), (1, 1), (2, 2), (3, 3))
                 )
 
-
     def test_series_relabel_f(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
         # reuse the same instance
         s2 = s1.relabel(None)
         self.assertEqual(id(s1.index), id(s2.index))
-
 
     def test_series_relabel_g(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
@@ -2196,7 +2194,10 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             s1.relabel({'d', 'c', 'b', 'a'})
 
-
+    def test_series_relabel_h(self) -> None:
+        s1 = Series(range(2), index=('a', 'b'))
+        s2 = s1.relabel(('2021-04', '1999-12-31'), index_constructor=IndexYearMonth)
+        self.assertIs(s2.index.__class__, IndexYearMonth)
 
     #---------------------------------------------------------------------------
 
@@ -3164,6 +3165,17 @@ class TestUnit(TestCase):
 
         s = Series.from_concat((s1, s2, s3))
         self.assertEqual(s.name, None)
+
+
+    def test_series_from_concat_j(self) -> None:
+        s1 = Series((2, 3,), index=('1991-03', '1992-04'))
+        s2 = Series((10, 20), index=('1995-08', '1999-04'))
+        s3 = Series.from_concat((s1, s2), index_constructor=IndexYearMonth)
+        self.assertIs(s3.index.__class__, IndexYearMonth)
+        self.assertTrue(
+            (s3.index.values == np.array(['1991-03', '1992-04', '1995-08', '1999-04'], dtype='datetime64[M]')).all()
+        )
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 

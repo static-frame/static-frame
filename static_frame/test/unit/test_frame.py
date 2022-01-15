@@ -5251,9 +5251,10 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r'),
                 index=('w', 'x'))
-
-        with self.assertRaises(RuntimeError):
-            _ = f1.relabel()
+        # will get new instance but reuse index
+        f2 = f1.relabel()
+        self.assertEqual(id(f2.index), id(f1.index))
+        self.assertEqual(id(f2.columns), id(f1.columns))
 
     def test_frame_relabel_g(self) -> None:
 
@@ -5272,6 +5273,20 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             f1.relabel(index={'a', 'c'})
+
+    def test_frame_relabel_i(self) -> None:
+
+        f1 = ff.parse('s(2,2)')
+        f2 = f1.relabel(index=('1982-01', '1994-05'), index_constructor=IndexYearMonth)
+        self.assertEqual(f2.index.__class__, IndexYearMonth)
+
+
+    def test_frame_relabel_j(self) -> None:
+
+        f1 = ff.parse('s(2,2)').relabel(columns=('1982-01', '1994-05'))
+        f2 = f1.relabel(columns_constructor=IndexYearMonth)
+        self.assertEqual(f2.columns.__class__, IndexYearMonth)
+
 
     #---------------------------------------------------------------------------
     def test_frame_rehierarch_a(self) -> None:

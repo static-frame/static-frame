@@ -3431,7 +3431,10 @@ class Frame(ContainerOperand):
     @doc_inject(selector='relabel', class_name='Frame')
     def relabel(self,
             index: tp.Optional[RelabelInput] = None,
-            columns: tp.Optional[RelabelInput] = None
+            columns: tp.Optional[RelabelInput] = None,
+            *,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
         {doc}
@@ -3440,18 +3443,16 @@ class Frame(ContainerOperand):
             index: {relabel_input}
             columns: {relabel_input}
         '''
-        # create new index objects in both cases so as to call with own*
-        if index is None and columns is None:
-            raise RuntimeError('must specify one of index or columns')
-
         own_index = False
         if index is IndexAutoFactory:
             index = None
         elif is_callable_or_mapping(index):
             index = self._index.relabel(index)
-            own_index = True
+            # can only own if index_constructor is None
+            own_index = index_constructor is None
         elif index is None:
             index = self._index
+            own_index = index_constructor is None
         elif isinstance(index, Set):
             raise RelabelInvalid()
 
@@ -3460,9 +3461,11 @@ class Frame(ContainerOperand):
             columns = None
         elif is_callable_or_mapping(columns):
             columns = self._columns.relabel(columns)
-            own_columns = True
+            # can only own if columns_constructor is None
+            own_columns = columns_constructor is None
         elif columns is None:
             columns = self._columns
+            own_columns = columns_constructor is None and self.STATIC
         elif isinstance(columns, Set):
             raise RelabelInvalid()
 
@@ -3471,9 +3474,12 @@ class Frame(ContainerOperand):
                 index=index,
                 columns=columns,
                 name=self._name,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
                 own_data=True,
                 own_index=own_index,
-                own_columns=own_columns)
+                own_columns=own_columns,
+                )
 
     @doc_inject(selector='relabel_flat', class_name='Frame')
     def relabel_flat(self,

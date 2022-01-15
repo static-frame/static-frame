@@ -10,6 +10,12 @@ Added ``index_constructors`` argument to ``IndexHierarchy.from_product()``
 
 Added ``index_constructor`` argument to ``Index.level_add()``, ``IndexHierarchy.level_add()``, and  ``Frame.relabel_level_add()``.
 
+Added ``index_constructor``, ``columns_constructor`` arguments to ``Frame.relabel()``.
+
+Added ``index_constructor`` argument to ``Series.relabel()``.
+
+Added ``index_constructor`` argument to ``Series.from_concat()``.
+
 Improvement to ``Index`` initialization to raise ``ErrorInitIndex`` if given a single string as ``labels``.
 
 Set operations on labels of different ``datetime64`` units now raise an ``Exception``.

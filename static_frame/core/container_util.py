@@ -42,6 +42,8 @@ from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
+from static_frame.core.util import EMPTY_TUPLE
+
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 
@@ -1054,6 +1056,7 @@ def _index_many_to_one(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
         many_to_one_type: ManyToOneType,
+        explicit_constructor: tp.Optional[IndexInitializer] = None,
         ) -> IndexBase:
     '''
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
@@ -1061,6 +1064,7 @@ def _index_many_to_one(
     Args:
         indices: can be a generator
         cls_default: Default Index class to be used if no alignment of classes; also used to determine if result Index should be static or mutable.
+        explicit_constructor: Alternative constructor that will override normal evaluation.
     '''
     from static_frame.core.index_auto import IndexAutoFactory
 
@@ -1081,7 +1085,9 @@ def _index_many_to_one(
     try:
         index = next(indices_iter)
     except StopIteration:
-        return cls_default.from_labels(())
+        if explicit_constructor is not None:
+            return explicit_constructor(EMPTY_TUPLE)
+        return cls_default.from_labels(EMPTY_TUPLE)
 
     arrays = [index.values]
 
@@ -1125,9 +1131,12 @@ def _index_many_to_one(
             size = max(a.size for a in arrays)
         elif many_to_one_type is ManyToOneType.INTERSECT:
             size = min(a.size for a in arrays)
-        return IndexAutoFactory(size, name=name).to_index(default_constructor=cls_default)
+        return IndexAutoFactory(size, name=name).to_index(
+                default_constructor=cls_default,
+                explicit_constructor=explicit_constructor,
+                )
 
-    if index_types_aligned:
+    if index_types_aligned: # for IndexHierarchy
         # all depths are already aligned
         index_constructors = []
         for types in zip(*index_types_gen):
@@ -1136,7 +1145,7 @@ def _index_many_to_one(
             else: # assume this is always a 1D index
                 index_constructors.append(cls_default)
 
-    if cls_aligned:
+    if cls_aligned and explicit_constructor is None:
         if cls_default.STATIC and not cls_first.STATIC:
             # default is static but aligned is mutable
             constructor = cls_first._IMMUTABLE_CONSTRUCTOR.from_labels #type: ignore
@@ -1145,26 +1154,37 @@ def _index_many_to_one(
             constructor = cls_first._MUTABLE_CONSTRUCTOR.from_labels #type: ignore
         else:
             constructor = cls_first.from_labels
+    elif explicit_constructor is not None:
+        constructor = explicit_constructor
     else:
         constructor = cls_default.from_labels
 
     # returns an immutable array
     array = array_processor(arrays)
 
-    if index_types_aligned:
-        return constructor(array, name=name, index_constructors=index_constructors) #type: ignore
+    if index_types_aligned: # IndexHierarchy
+        return constructor(array, #type: ignore
+                name=name,
+                index_constructors=index_constructors,
+                )
     return constructor(array, name=name) #type: ignore
 
 def index_many_concat(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
+        explicit_constructor: tp.Optional[IndexInitializer] = None,
         ) -> tp.Optional[IndexBase]:
-    return _index_many_to_one(indices, cls_default, ManyToOneType.CONCAT)
+    return _index_many_to_one(indices,
+            cls_default,
+            ManyToOneType.CONCAT,
+            explicit_constructor,
+            )
 
 def index_many_set(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
         union: bool,
+        explicit_constructor: tp.Optional[IndexInitializer] = None,
         ) -> tp.Optional[IndexBase]:
     '''
     Given multiple Index objects, union them. Preserve name and index type if aligned.
@@ -1172,6 +1192,7 @@ def index_many_set(
     return _index_many_to_one(indices,
             cls_default,
             ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
+            explicit_constructor,
             )
 
 

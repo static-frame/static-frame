@@ -234,6 +234,7 @@ class Series(ContainerOperand):
             containers: tp.Iterable[tp.Union['Series', 'Bus']],
             *,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            index_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = NAME_DEFAULT,
             ) -> 'Series':
         '''
@@ -242,6 +243,8 @@ class Series(ContainerOperand):
         Args:
             containers: Iterable of ``Series`` from which values in the new ``Series`` are drawn.
             index: If None, the resultant index will be the concatenation of all indices (assuming they are unique in combination). If ``IndexAutoFactory``, the resultant index is a auto-incremented integer index. Otherwise, the value is used as a index initializer.
+            index_constructor:
+            name:
 
         Returns:
             :obj:`static_frame.Series`
@@ -270,17 +273,28 @@ class Series(ContainerOperand):
         # returns immutable arrays
         values = concat_resolved(array_values)
 
+        own_index = False
         if index is None:
-            index = index_many_concat(indices, cls_default=Index)
+            index = index_many_concat(indices,
+                    cls_default=Index,
+                    explicit_constructor=index_constructor,
+                    )
+            own_index = True
         elif index is IndexAutoFactory:
             # set index arg to None to force IndexAutoFactory usage in creation
             index = None
+        # else, index was supplied as an iterable, above
 
         if name == NAME_DEFAULT:
             # only derive if not explicitly set
             name = name_first if name_aligned else None
 
-        return cls(values, index=index, name=name)
+        return cls(values,
+                index=index,
+                name=name,
+                index_constructor=index_constructor,
+                own_index=own_index,
+                )
 
     @classmethod
     def from_concat_items(cls,
@@ -913,7 +927,9 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='relabel', class_name='Series')
     def relabel(self,
-            index: tp.Optional[RelabelInput]
+            index: tp.Optional[RelabelInput],
+            *,
+            index_constructor: IndexConstructor = None,
             ) -> 'Series':
         '''
         {doc}
@@ -921,15 +937,15 @@ class Series(ContainerOperand):
         Args:
             index: {relabel_input}
         '''
-        #NOTE: we name the parameter index for alignment with the corresponding Frame method
         own_index = False
         if index is IndexAutoFactory:
             index_init = None
         elif index is None:
             index_init = self._index
+            own_index = index_constructor is None
         elif is_callable_or_mapping(index): #type: ignore
             index_init = self._index.relabel(index)
-            own_index = True
+            own_index = index_constructor is None
         elif isinstance(index, Set):
             raise RelabelInvalid()
         else:
@@ -937,8 +953,10 @@ class Series(ContainerOperand):
 
         return self.__class__(self.values,
                 index=index_init,
+                index_constructor=index_constructor,
                 own_index=own_index,
-                name=self._name)
+                name=self._name,
+                )
 
     @doc_inject(selector='relabel_flat', class_name='Series')
     def relabel_flat(self) -> 'Series':
