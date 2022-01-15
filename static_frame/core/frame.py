@@ -420,6 +420,7 @@ class Frame(ContainerOperand):
                     columns = index_many_concat(
                             (f._columns for f in frames),
                             cls._COLUMNS_CONSTRUCTOR,
+                            columns_constructor,
                             )
                 except ErrorInitIndexNonUnique:
                     raise ErrorInitFrame('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.')
@@ -431,7 +432,8 @@ class Frame(ContainerOperand):
                 index = index_many_set(
                         (f._index for f in frames),
                         Index,
-                        union=union,
+                        union,
+                        index_constructor,
                         )
                 own_index = True
 
@@ -447,7 +449,11 @@ class Frame(ContainerOperand):
                 index = None # let default creation happen
             elif index is None:
                 try:
-                    index = index_many_concat((f._index for f in frames), Index)
+                    index = index_many_concat(
+                            (f._index for f in frames),
+                            Index,
+                            index_constructor,
+                            )
                 except ErrorInitIndexNonUnique:
                     raise ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
                 own_index = True
@@ -458,9 +464,9 @@ class Frame(ContainerOperand):
                 columns = index_many_set(
                         (f._columns for f in frames),
                         cls._COLUMNS_CONSTRUCTOR,
-                        union=union,
+                        union,
+                        columns_constructor,
                         )
-                # columns = frames[0]._columns
                 own_columns = True
 
             def blocks() -> tp.Iterator[np.ndarray]:
@@ -499,8 +505,8 @@ class Frame(ContainerOperand):
             block_gen = blocks
 
         # if a consturctor is given, we have to set own to False
-        own_index = own_index if not index_constructor else False
-        own_columns = own_columns if not columns_constructor else False
+        # own_index = own_index if not index_constructor else False
+        # own_columns = own_columns if not columns_constructor else False
 
         return cls(TypeBlocks.from_blocks(block_gen()),
                 index=index,
