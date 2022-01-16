@@ -2783,8 +2783,11 @@ class Series(ContainerOperand):
 
 
     def _to_frame(self,
+            *,
             constructor: tp.Type['Frame'],
-            axis: int = 1
+            axis: int = 1,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
         Common Frame construction utilities.
@@ -2798,19 +2801,42 @@ class Series(ContainerOperand):
             def block_gen() -> tp.Iterator[np.ndarray]:
                 yield self.values
 
-            index = self._index
-            own_index = True
-            columns = None if self._name is None else (self._name,)
+            if index_constructor is IndexAutoFactory:
+                index = None
+                own_index = False
+                index_constructor = None
+            else:
+                index = self._index
+                own_index = index_constructor is None
+
+            if self._name is None or columns_constructor is IndexAutoFactory:
+                columns = None
+                columns_constructor = None
+            else:
+                columns = (self._name,)
             own_columns = False
+
         elif axis == 0:
             def block_gen() -> tp.Iterator[np.ndarray]:
-                yield self.values.reshape((1, self.values.shape[0]))
+                array = self.values
+                yield array.reshape(1, array.shape[0])
 
-            index = None if self._name is None else (self._name,)
+            if self._name is None or index_constructor is IndexAutoFactory:
+                index = None
+                index_constructor = None
+            else:
+                index = (self._name,)
             own_index = False
-            columns = self._index
+
             # if column constuctor is static, we can own the static index
-            own_columns = constructor._COLUMNS_CONSTRUCTOR.STATIC
+            if columns_constructor is IndexAutoFactory:
+                columns = None
+                columns_constructor = None
+                own_columns = None
+            else:
+                columns = self._index
+                own_columns = (constructor._COLUMNS_CONSTRUCTOR.STATIC
+                        and (columns_constructor is None))
         else:
             raise NotImplementedError(f'no handling for axis {axis}')
 
@@ -2818,31 +2844,87 @@ class Series(ContainerOperand):
                 TypeBlocks.from_blocks(block_gen()),
                 index=index,
                 columns=columns,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
                 own_data=True,
                 own_index=own_index,
                 own_columns=own_columns,
                 )
 
 
-    def to_frame(self, axis: int = 1) -> 'Frame':
+    def to_frame(self,
+            axis: int = 1,
+            *,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
         '''
         Return a :obj:`Frame` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
+
+        Args:
+            axis: Axis 1 (default) creates a single-column :obj:`Frame` with the same index: axis 0 creates a single-row :obj:`Frame` with the index as columns.
+            *,
+            index_constructor:
+            columns_constructor:
 
         Returns:
             :obj:`Frame`
         '''
         from static_frame import Frame
-        return self._to_frame(constructor=Frame, axis=axis)
+        return self._to_frame(constructor=Frame,
+                axis=axis,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
 
-    def to_frame_go(self, axis: int = 1) -> 'FrameGO':
+    def to_frame_go(self,
+            axis: int = 1,
+            *,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'FrameGO':
         '''
         Return :obj:`FrameGO` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
 
+        Args:
+            axis:
+            *,
+            index_constructor:
+            columns_constructor:
         Returns:
             :obj:`FrameGO`
         '''
         from static_frame import FrameGO
-        return self._to_frame(constructor=FrameGO, axis=axis) #type: ignore
+        return self._to_frame(constructor=FrameGO, #type: ignore
+                axis=axis,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
+    def to_frame_he(self,
+            axis: int = 1,
+            *,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'FrameHE':
+        '''
+        Return :obj:`FrameHE` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
+
+        Args:
+            axis:
+            *,
+            index_constructor:
+            columns_constructor:
+        Returns:
+            :obj:`FrameHE`
+        '''
+        from static_frame import FrameHE
+        return self._to_frame(constructor=FrameHE, #type: ignore
+                axis=axis,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
 
     def to_series_he(self) -> 'SeriesHE':
         '''

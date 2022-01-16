@@ -392,10 +392,23 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
+        # TODO: but this in a branch in the loop
+        if axis == 0 and index is not None:
+            # vstack, Series will be row, if index is provided, do not evaluate name as an index
+            index_ctr_to_frame = IndexAutoFactory
+        else:
+            index_ctr_to_frame = index_constructor
+        if axis == 1 and columns is not None:
+            # elif axis == 1 # hstack, Series will be col
+            columns_ctr_to_frame = IndexAutoFactory
+        else:
+            columns_ctr_to_frame = columns_constructor
 
-        # when doing axis 1 concat (growin horizontally) Series need to be presented as rows (axis 0)
-        # NOTE: might check for Series that do not have names
-        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
+        frames = [f if isinstance(f, Frame)
+                else f.to_frame(axis,
+                index_constructor=index_ctr_to_frame,
+                columns_constructor=columns_ctr_to_frame,
+                ) for f in frames]
 
         own_index = False
         own_columns = False
@@ -439,8 +452,11 @@ class Frame(ContainerOperand):
 
             def blocks() -> tp.Iterator[np.ndarray]:
                 for frame in frames:
-                    if len(frame.index) != len(index) or (frame.index != index).any():
-                        frame = frame.reindex(index=index, fill_value=fill_value)
+                    if not frame.index.equals(index):
+                        frame = frame.reindex(index=index,
+                                fill_value=fill_value,
+                                check_equals=False,
+                                )
                     for block in frame._blocks._blocks:
                         yield block
 
@@ -448,6 +464,7 @@ class Frame(ContainerOperand):
             if index is IndexAutoFactory:
                 index = None # let default creation happen
             elif index is None:
+                # import ipdb; ipdb.set_trace()
                 try:
                     index = index_many_concat(
                             (f._index for f in frames),
@@ -476,9 +493,11 @@ class Frame(ContainerOperand):
                 reblock_compatible = True
 
                 for frame in frames:
-                    if len(frame.columns) != len(columns) or (frame.columns != columns).any():
-                        frame = frame.reindex(columns=columns, fill_value=fill_value)
-
+                    if not frame.columns.equals(columns):
+                        frame = frame.reindex(columns=columns,
+                                fill_value=fill_value,
+                                check_equals=False,
+                                )
                     type_blocks.append(frame._blocks)
                     # column size is all the same by this point
                     if previous_frame is not None: # after the first
@@ -503,10 +522,6 @@ class Frame(ContainerOperand):
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
         else:
             block_gen = blocks
-
-        # if a consturctor is given, we have to set own to False
-        # own_index = own_index if not index_constructor else False
-        # own_columns = own_columns if not columns_constructor else False
 
         return cls(TypeBlocks.from_blocks(block_gen()),
                 index=index,

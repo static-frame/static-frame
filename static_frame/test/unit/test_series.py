@@ -23,6 +23,7 @@ from static_frame import Series
 # from static_frame import SeriesHE
 from static_frame import Frame
 from static_frame import FrameGO
+from static_frame import FrameHE
 from static_frame import mloc
 from static_frame import DisplayConfig
 from static_frame import IndexHierarchy
@@ -3052,6 +3053,16 @@ class TestUnit(TestCase):
             s1.to_frame(axis=None)  # type: ignore
 
 
+    def test_series_to_frame_e(self) -> None:
+        s1 = Series((2, 3), index=list('ab'), name='alt')
+        f1 = s1.to_frame(axis=1,
+                index_constructor=IndexAutoFactory,
+                columns_constructor=IndexAutoFactory,
+                )
+        self.assertTrue(f1.index._map is None)
+        self.assertTrue(f1.columns._map is None)
+
+
     def test_series_to_frame_go_a(self) -> None:
         a = sf.Series((1, 2, 3), name='a')
         f = a.to_frame_go(axis=0)
@@ -3060,6 +3071,11 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(0),
                 ((0, (('a', 1),)), (1, (('a', 2),)), (2, (('a', 3),)), ('b', (('a', 'b'),)))
                 )
+
+    def test_series_to_frame_he_a(self) -> None:
+        a = Series((1, 2, 3), name='a')
+        f = a.to_frame_he(axis=0)
+        self.assertIs(f.__class__, FrameHE)
 
 
     def test_series_from_concat_a(self) -> None:

@@ -12,6 +12,10 @@ Added ``index_constructor`` argument to ``Index.level_add()``, ``IndexHierarchy.
 
 Added ``index_constructor``, ``columns_constructor`` arguments to ``Frame.relabel()``.
 
+Added ``Series.to_frame_he()``
+
+Added ``index_constructor``, ``columns_constructor`` arguments to ``Series.to_frame()``, ``Series.to_frame_go()``, ``Series.to_frame_he()``.
+
 Added ``index_constructor`` argument to ``Series.relabel()``.
 
 Added ``index_constructor`` argument to ``Series.from_concat()``.

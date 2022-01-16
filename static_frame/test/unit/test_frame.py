@@ -8360,6 +8360,24 @@ class TestUnit(TestCase):
                 (dt('1543-10-31'), ((0, 2), (1, 0)))))
 
 
+    def test_frame_from_concat_dd(self) -> None:
+        a = sf.Series([1], name=np.datetime64("2000-01-01"))
+        b = sf.Series([2], name=np.datetime64("2000-01-02"))
+        # this catches a complexity of having a name on Series that becomes an index; in this case, since we are passing an index we want to ignore the name on the Series
+        f1 = sf.Frame.from_concat((a, b), index=["A", "B"])
+        self.assertEqual(f1.shape, (2, 1))
+        self.assertEqual(f1.to_pairs(),
+                ((0, (('A', 1), ('B', 2))),)
+                )
+
+    def test_frame_from_concat_ee(self) -> None:
+        a = sf.Series([1], name=np.datetime64("2000-01-01"))
+        b = sf.Series([2], name=np.datetime64("2000-01-02"))
+        f1 = sf.Frame.from_concat((a, b), axis=1, columns_constructor=IndexDate)
+        self.assertEqual(f1.shape, (1, 2))
+        self.assertIs(f1.columns.__class__, IndexDate)
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_concat_error_init_a(self) -> None:
