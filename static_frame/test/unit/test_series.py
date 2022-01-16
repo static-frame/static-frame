@@ -3056,12 +3056,21 @@ class TestUnit(TestCase):
     def test_series_to_frame_e(self) -> None:
         s1 = Series((2, 3), index=list('ab'), name='alt')
         f1 = s1.to_frame(axis=1,
-                index_constructor=IndexAutoFactory,
-                columns_constructor=IndexAutoFactory,
+                index=IndexAutoFactory,
+                columns=IndexAutoFactory,
                 )
         self.assertTrue(f1.index._map is None)
         self.assertTrue(f1.columns._map is None)
 
+
+    def test_series_to_frame_f(self) -> None:
+        s1 = Series((2, 3), index=list('ab'), name='alt')
+        f1 = s1.to_frame(axis=0,
+                index=(30,),
+                columns=('x', 'y'),
+                )
+        self.assertEqual(f1.index.values.tolist(), [30,])
+        self.assertEqual(f1.columns.values.tolist(), ['x', 'y'])
 
     def test_series_to_frame_go_a(self) -> None:
         a = sf.Series((1, 2, 3), name='a')

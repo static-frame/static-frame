@@ -392,23 +392,25 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        # TODO: but this in a branch in the loop
-        if axis == 0 and index is not None:
-            # vstack, Series will be row, if index is provided, do not evaluate name as an index
-            index_ctr_to_frame = IndexAutoFactory
-        else:
-            index_ctr_to_frame = index_constructor
-        if axis == 1 and columns is not None:
-            # elif axis == 1 # hstack, Series will be col
-            columns_ctr_to_frame = IndexAutoFactory
-        else:
-            columns_ctr_to_frame = columns_constructor
-
-        frames = [f if isinstance(f, Frame)
-                else f.to_frame(axis,
-                index_constructor=index_ctr_to_frame,
-                columns_constructor=columns_ctr_to_frame,
-                ) for f in frames]
+        normalized = []
+        for f in frames:
+            if isinstance(f, Frame):
+                normalized.append(f)
+            else:
+                # vstack, Series will be row, if index provided, do not evaluate name as an index
+                index_to_frame = (IndexAutoFactory if
+                        (axis == 0 and index is not None) else None)
+                # hstack, Series will be col, if columns provided, do not evaluate name as columns
+                columns_to_frame = (IndexAutoFactory if
+                        (axis == 1 and columns is not None) else None)
+                normalized.append(
+                        f.to_frame(axis,
+                        index = index_to_frame,
+                        index_constructor=index_constructor,
+                        columns=columns_to_frame,
+                        columns_constructor=columns_constructor,
+                        ))
+        frames = normalized
 
         own_index = False
         own_columns = False

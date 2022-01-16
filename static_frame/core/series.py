@@ -38,6 +38,9 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_auto import IndexDefaultFactory
+from static_frame.core.index_auto import IndexCtrOrAutoType
+from static_frame.core.index_auto import IndexInitOrAutoType
+
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -233,7 +236,7 @@ class Series(ContainerOperand):
     def from_concat(cls,
             containers: tp.Iterable[tp.Union['Series', 'Bus']],
             *,
-            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            index: tp.Optional[IndexInitOrAutoType] = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = NAME_DEFAULT,
             ) -> 'Series':
@@ -392,15 +395,17 @@ class Series(ContainerOperand):
     def from_pandas(cls,
             value: 'pandas.Series',
             *,
-            index_constructor: tp.Optional[tp.Union[IndexConstructor, IndexAutoFactoryType]] = None,
+            index_constructor: IndexCtrOrAutoType = None,
             name: NameType = NAME_DEFAULT,
             own_data: bool = False) -> 'Series':
         '''Given a Pandas Series, return a Series.
 
         Args:
             value: Pandas Series.
+            *
+            index_constructor:
+            name:
             {own_data}
-            {own_index}
 
         Returns:
             :obj:`static_frame.Series`
@@ -2786,11 +2791,13 @@ class Series(ContainerOperand):
             *,
             constructor: tp.Type['Frame'],
             axis: int = 1,
+            index: IndexInitOrAutoType = None,
             index_constructor: IndexConstructor = None,
+            columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
-        Common Frame construction utilities.
+        Common function for creating :obj:`Frame` from :obj:`Series`.
         '''
         from static_frame import TypeBlocks
         columns: tp.Optional[IndexInitializer]
@@ -2801,17 +2808,21 @@ class Series(ContainerOperand):
             def block_gen() -> tp.Iterator[np.ndarray]:
                 yield self.values
 
-            if index_constructor is IndexAutoFactory:
+            if index is IndexAutoFactory:
                 index = None
                 own_index = False
-                index_constructor = None
+            elif index is not None:
+                own_index = False
             else:
                 index = self._index
                 own_index = index_constructor is None
 
-            if self._name is None or columns_constructor is IndexAutoFactory:
+            if columns is IndexAutoFactory:
                 columns = None
-                columns_constructor = None
+            elif columns is not None:
+                pass # precedent
+            elif self._name is None:
+                columns = None
             else:
                 columns = (self._name,)
             own_columns = False
@@ -2821,18 +2832,21 @@ class Series(ContainerOperand):
                 array = self.values
                 yield array.reshape(1, array.shape[0])
 
-            if self._name is None or index_constructor is IndexAutoFactory:
+            if index is IndexAutoFactory:
                 index = None
-                index_constructor = None
+            elif index is not None:
+                pass
+            elif self._name is None:
+                index = None
             else:
                 index = (self._name,)
             own_index = False
 
             # if column constuctor is static, we can own the static index
-            if columns_constructor is IndexAutoFactory:
+            if columns is IndexAutoFactory:
                 columns = None
-                columns_constructor = None
-                own_columns = None
+            elif columns is not None:
+                own_columns = False
             else:
                 columns = self._index
                 own_columns = (constructor._COLUMNS_CONSTRUCTOR.STATIC
@@ -2851,11 +2865,12 @@ class Series(ContainerOperand):
                 own_columns=own_columns,
                 )
 
-
     def to_frame(self,
             axis: int = 1,
             *,
+            index: IndexInitOrAutoType = None,
             index_constructor: IndexConstructor = None,
+            columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
@@ -2873,14 +2888,18 @@ class Series(ContainerOperand):
         from static_frame import Frame
         return self._to_frame(constructor=Frame,
                 axis=axis,
+                index=index,
                 index_constructor=index_constructor,
+                columns=columns,
                 columns_constructor=columns_constructor,
                 )
 
     def to_frame_go(self,
             axis: int = 1,
             *,
+            index: IndexInitOrAutoType = None,
             index_constructor: IndexConstructor = None,
+            columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
             ) -> 'FrameGO':
         '''
@@ -2897,14 +2916,18 @@ class Series(ContainerOperand):
         from static_frame import FrameGO
         return self._to_frame(constructor=FrameGO, #type: ignore
                 axis=axis,
+                index=index,
                 index_constructor=index_constructor,
+                columns=columns,
                 columns_constructor=columns_constructor,
                 )
 
     def to_frame_he(self,
             axis: int = 1,
             *,
+            index: IndexInitOrAutoType = None,
             index_constructor: IndexConstructor = None,
+            columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
             ) -> 'FrameHE':
         '''
@@ -2921,7 +2944,9 @@ class Series(ContainerOperand):
         from static_frame import FrameHE
         return self._to_frame(constructor=FrameHE, #type: ignore
                 axis=axis,
+                index=index,
                 index_constructor=index_constructor,
+                columns=columns,
                 columns_constructor=columns_constructor,
                 )
 
