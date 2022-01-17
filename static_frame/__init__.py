@@ -6,7 +6,8 @@
 from arraykit import mloc as mloc
 from arraykit import isna_element as isna_element
 
-
+from static_frame.core.archive_npy import NPY as NPY
+from static_frame.core.archive_npy import NPZ as NPZ
 from static_frame.core.batch import Batch as Batch
 from static_frame.core.bus import Bus as Bus
 from static_frame.core.display import Display as Display
@@ -106,9 +107,8 @@ from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
-from static_frame.core.archive_npy import NPY as NPY
-from static_frame.core.archive_npy import NPZ as NPZ
 
-__version__ = '0.8.33' # use -dev for new version in development
+
+__version__ = '0.8.34' # use -dev for new version in development
 
 
