@@ -1086,7 +1086,7 @@ def _index_many_to_one(
         index = next(indices_iter)
     except StopIteration:
         if explicit_constructor is not None:
-            return explicit_constructor(EMPTY_TUPLE)
+            return explicit_constructor(EMPTY_TUPLE) #type: ignore
         return cls_default.from_labels(EMPTY_TUPLE)
 
     arrays = [index.values]

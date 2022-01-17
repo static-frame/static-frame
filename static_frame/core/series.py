@@ -112,6 +112,7 @@ if tp.TYPE_CHECKING:
     from static_frame import Bus # pylint: disable=W0611 #pragma: no cover
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
     from static_frame import FrameGO # pylint: disable=W0611 #pragma: no cover
+    from static_frame import FrameHE # pylint: disable=W0611 #pragma: no cover
     import pandas # pylint: disable=W0611 #pragma: no cover
 
 
@@ -430,7 +431,7 @@ class Series(ContainerOperand):
             index = None
         elif index is not None:
             pass
-        elif index_constructor is IndexAutoFactory:
+        elif index_constructor is IndexAutoFactory: #type: ignore
             from static_frame.core.exception import deprecated #pragma: no cover
             deprecated('Passing indexAutoFactory as an index_constructor is deprecated and will be removed in v0.9; pass IndexAutoFactory as the index argument.') #pragma: no cover
             index = None #pragma: no cover
@@ -2804,8 +2805,6 @@ class Series(ContainerOperand):
         Common function for creating :obj:`Frame` from :obj:`Series`.
         '''
         from static_frame import TypeBlocks
-        columns: tp.Optional[IndexInitializer]
-        index: tp.Optional[IndexInitializer]
 
         if axis == 1:
             # present as a column
