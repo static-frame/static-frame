@@ -2549,7 +2549,7 @@ class TestUnit(TestCase):
 
         pds1 = pd.Series(['a', 'b', None], index=list('abc'))
         self.assertEqual(sf.Series.from_pandas(pds1,
-                index_constructor=sf.IndexAutoFactory).to_pairs(),
+                index=sf.IndexAutoFactory).to_pairs(),
                 ((0, 'a'), (1, 'b'), (2, None))
                 )
 
@@ -2578,6 +2578,19 @@ class TestUnit(TestCase):
         self.assertEqual(sf.Series.from_pandas(pds1, name=None).name, None)
         self.assertEqual(sf.Series.from_pandas(pds1, name='bar').name, 'bar')
 
+    def test_series_from_pandas_i(self) -> None:
+        import pandas as pd
+        pds = pd.Series([10, 20],
+                index=pd.DatetimeIndex(('2018-01-01', '2018-06-01')),
+                name='foo',
+                )
+        s1 = Series.from_pandas(pds, index=('a', 'b'))
+        self.assertEqual(s1.to_pairs(),
+                (('a', 10), ('b', 20)))
+
+        s2 = Series.from_pandas(pds, index=IndexAutoFactory)
+        self.assertEqual(s2.to_pairs(),
+                ((0, 10), (1, 20)))
 
     #---------------------------------------------------------------------------
     def test_series_to_pandas_a(self) -> None:

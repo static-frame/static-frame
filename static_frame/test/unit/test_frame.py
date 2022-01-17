@@ -9199,6 +9199,27 @@ class TestUnit(TestCase):
         f = Frame.from_pandas(pd.DataFrame())
         self.assertEqual(f.shape, (0, 0))
 
+    def test_frame_from_from_pandas_c(self) -> None:
+        import pandas as pd
+
+        pdf = pd.DataFrame(
+                dict(a=(False, True, False), b=(1,2,3)),
+                )
+        f1 = Frame.from_pandas(pdf,
+                index=(10, 20, 30),
+                columns=('x', 'y'),
+                )
+        self.assertEqual(f1.index.values.tolist(), [10, 20, 30])
+        self.assertEqual(f1.columns.values.tolist(), ['x', 'y'])
+
+        f2 = Frame.from_pandas(pdf,
+                index=IndexAutoFactory,
+                columns=IndexAutoFactory,
+                )
+        self.assertEqual(f2.index._map, None)
+        self.assertEqual(f2.columns._map, None)
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_frame_go_a(self) -> None:

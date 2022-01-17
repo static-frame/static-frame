@@ -85,9 +85,6 @@ class IndexAutoFactory:
 IndexAutoFactoryType = tp.Type[IndexAutoFactory]
 RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitializer]
 
-# NOTE: usage of this type should be removed
 IndexInitOrAutoType = tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]]
 
 
-# NOTE: usage of this type should be removed
-IndexCtrOrAutoType = tp.Optional[tp.Union[IndexConstructor, IndexAutoFactoryType]]

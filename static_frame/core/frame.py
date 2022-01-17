@@ -72,6 +72,8 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import IndexInitOrAutoType
+
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -290,8 +292,8 @@ class Frame(ContainerOperand):
     def from_elements(cls,
             elements: tp.Iterable[tp.Any],
             *,
-            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
-            columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            index: IndexInitOrAutoType = None,
+            columns: IndexInitOrAutoType = None,
             dtype: DtypeSpecifier = None,
             name: tp.Hashable = None,
             index_constructor: IndexConstructor = None,
@@ -367,8 +369,8 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0,
             union: bool = True,
-            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
-            columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            index: IndexInitOrAutoType = None,
+            columns: IndexInitOrAutoType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             columns_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = None,
@@ -2337,7 +2339,9 @@ class Frame(ContainerOperand):
     def from_pandas(cls,
             value: 'pandas.DataFrame',
             *,
+            index: IndexInitOrAutoType = None,
             index_constructor: IndexConstructor = None,
+            columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
             dtypes: DtypesSpecifier = None,
             name: NameType = NAME_DEFAULT,
@@ -2425,31 +2429,43 @@ class Frame(ContainerOperand):
         else:
             name = None # do not keep as NAME_DEFAULT
 
-        own_index = True
-        if index_constructor is IndexAutoFactory:
+        own_index = False
+        if index is IndexAutoFactory:
             index = None
-            own_index = False
-        elif index_constructor is not None:
-            index = index_constructor(value.index)
+        elif index is not None:
+            pass
+        elif index_constructor is IndexAutoFactory:
+            from static_frame.core.exception import deprecated #pragma: no cover
+            deprecated('Passing indexAutoFactory as an index_constructor is deprecated and will be removed in v0.9; pass IndexAutoFactory as the index argument.') #pragma: no cover
+            index = None #pragma: no cover
+            index_constructor = None #pragma: no cover
         else:
             index = Index.from_pandas(value.index)
+            own_index = index_constructor is None
 
-        own_columns = True
-        if columns_constructor is IndexAutoFactory:
+        own_columns = False
+        if columns is IndexAutoFactory:
             columns = None
-            own_columns = False
-        elif columns_constructor is not None:
-            columns = columns_constructor(value.columns)
+        elif columns is not None:
+            pass
+        elif columns_constructor is IndexAutoFactory:
+            from static_frame.core.exception import deprecated #pragma: no cover
+            deprecated('Passing indexAutoFactory as an columns_constructor is deprecated and will be removed in v0.9; pass IndexAutoFactory as the columns argument.') #pragma: no cover
+            columns = None #pragma: no cover
+            columns_constructor = None #pragma: no cover
         else:
             columns = cls._COLUMNS_CONSTRUCTOR.from_pandas(value.columns)
+            own_columns = columns_constructor is None
 
         return cls(blocks,
                 index=index,
                 columns=columns,
                 name=name,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
                 own_data=True,
                 own_index=own_index,
-                own_columns=own_columns
+                own_columns=own_columns,
                 )
 
     @classmethod
@@ -2755,8 +2771,8 @@ class Frame(ContainerOperand):
     def __init__(self,
             data: FrameInitializer = FRAME_INITIALIZER_DEFAULT,
             *,
-            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
-            columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            index: IndexInitOrAutoType = None,
+            columns: IndexInitOrAutoType = None,
             name: NameType = NAME_DEFAULT,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,

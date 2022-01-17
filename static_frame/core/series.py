@@ -38,7 +38,6 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_auto import IndexDefaultFactory
-from static_frame.core.index_auto import IndexCtrOrAutoType
 from static_frame.core.index_auto import IndexInitOrAutoType
 
 from static_frame.core.index_base import IndexBase
@@ -395,7 +394,8 @@ class Series(ContainerOperand):
     def from_pandas(cls,
             value: 'pandas.Series',
             *,
-            index_constructor: IndexCtrOrAutoType = None,
+            index: IndexInitOrAutoType = None,
+            index_constructor: IndexConstructor = None,
             name: NameType = NAME_DEFAULT,
             own_data: bool = False) -> 'Series':
         '''Given a Pandas Series, return a Series.
@@ -425,19 +425,25 @@ class Series(ContainerOperand):
 
         name = name if name is not NAME_DEFAULT else value.name
 
-        own_index = True
-        if index_constructor is IndexAutoFactory:
+        own_index = False
+        if index is IndexAutoFactory:
             index = None
-            own_index = False
-        elif index_constructor is not None:
-            index = index_constructor(value.index)
+        elif index is not None:
+            pass
+        elif index_constructor is IndexAutoFactory:
+            from static_frame.core.exception import deprecated #pragma: no cover
+            deprecated('Passing indexAutoFactory as an index_constructor is deprecated and will be removed in v0.9; pass IndexAutoFactory as the index argument.') #pragma: no cover
+            index = None #pragma: no cover
+            index_constructor = None #pragma: no cover
         else: # if None
             index = Index.from_pandas(value.index)
+            own_index = index_constructor is None
 
         return cls(data,
                 index=index,
+                index_constructor=index_constructor,
+                own_index=own_index,
                 name=name,
-                own_index=own_index
                 )
 
     #---------------------------------------------------------------------------
@@ -2784,8 +2790,6 @@ class Series(ContainerOperand):
             index_values = self._index.values
 
         return tuple(zip(index_values, self.values))
-
-
 
     def _to_frame(self,
             *,
