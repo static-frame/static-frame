@@ -103,7 +103,7 @@ class TestUnit(TestCase):
             post = InterfaceSummary.get_instance(component)
             if post is NPY or post is NPZ: #type: ignore
                 continue
-            elif not isinstance(post, ContainerBase):
+            if not isinstance(post, ContainerBase):
                 self.assertTrue(isinstance(post, ( # type: ignore
                     DisplayConfig,
                     StoreConfig,

@@ -2848,6 +2848,7 @@ class Series(ContainerOperand):
             # if column constuctor is static, we can own the static index
             if columns is IndexAutoFactory:
                 columns = None
+                own_columns = False
             elif columns is not None:
                 own_columns = False
             else:

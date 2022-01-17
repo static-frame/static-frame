@@ -70,7 +70,6 @@ from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultFactory
-from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_auto import IndexInitOrAutoType
 
