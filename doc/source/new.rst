@@ -12,13 +12,19 @@ Added ``index_constructor`` argument to ``Index.level_add()``, ``IndexHierarchy.
 
 Added ``index_constructor``, ``columns_constructor`` arguments to ``Frame.relabel()``.
 
-Added ``Series.to_frame_he()``
+Added ``Series.to_frame_he()``.
 
-Added ``index_constructor``, ``columns_constructor`` arguments to ``Series.to_frame()``, ``Series.to_frame_go()``, ``Series.to_frame_he()``.
+Added ``index``, ``index_constructor``, ``columns``, ``columns_constructor`` arguments to ``Series.to_frame()``, ``Series.to_frame_go()``, ``Series.to_frame_he()``.
+
+Improvement to ``Frame.from_concat`` to avoid creating one-element indices from ``Series`` when an index is provided along the appropriate axis.
 
 Added ``index_constructor`` argument to ``Series.relabel()``.
 
 Added ``index_constructor`` argument to ``Series.from_concat()``.
+
+Added ``index`` argument to ``Series.from_pandas()``.
+
+Added ``index`` and ``columns`` argument to ``Frame.from_pandas()``.
 
 Improvement to ``Index`` initialization to raise ``ErrorInitIndex`` if given a single string as ``labels``.
 
