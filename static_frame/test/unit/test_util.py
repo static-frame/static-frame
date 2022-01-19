@@ -66,6 +66,9 @@ from static_frame.core.util import isfalsy_array
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import UFUNC_MAP
 from static_frame.core.util import list_to_tuple
+from static_frame.core.util import datetime64_not_aligned
+
+from static_frame.core.exception import InvalidDatetime64Comparison
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -428,7 +431,25 @@ class TestUnit(TestCase):
         self.assertEqual(post4.tolist(),
             [False, True, False, False, False, False])
 
+    def test_datetime64_not_aligned_a(self) -> None:
+        a1 = np.array(['1999', '2000'], dtype='datetime64[Y]')
+        a2 = np.array(['1999', '2001'], dtype='datetime64[Y]')
+        self.assertFalse(datetime64_not_aligned(a1, a2))
 
+    def test_datetime64_not_aligned_b(self) -> None:
+        a1 = np.array(['1999', '2000'], dtype='datetime64[Y]')
+        a2 = np.array([3, 4])
+        self.assertFalse(datetime64_not_aligned(a1, a2))
+
+    def test_datetime64_not_aligned_c(self) -> None:
+        a1 = np.array(['1999', '2000'], dtype='datetime64[Y]')
+        a2 = np.array(['1999-01-01', '2001-01-01'], dtype='datetime64[D]')
+        self.assertTrue(datetime64_not_aligned(a1, a2))
+
+    def test_datetime64_not_aligned_d(self) -> None:
+        a1 = np.array([False, True])
+        a2 = np.array([3, 4])
+        self.assertFalse(datetime64_not_aligned(a1, a2))
 
 
     def test_array_set_ufunc_many_a(self) -> None:
@@ -532,6 +553,19 @@ class TestUnit(TestCase):
         self.assertEqual(union1d(a1, a2, assume_unique=True).tolist(),
                 [9007199254740993])
 
+    def test_union1d_d(self) -> None:
+        a1 = np.array(['1999', '2000'], dtype='datetime64[Y]')
+        a2 = np.array(['1999-01-01', '2000-01-01'], dtype='datetime64[D]')
+        with self.assertRaises(InvalidDatetime64Comparison):
+            _ = union1d(a1, a2)
+
+    def test_union1d_e(self) -> None:
+        a1 = np.array(['1999', '2000'], dtype='datetime64[Y]')
+        a2 = np.array(['1999', '2001'], dtype='datetime64[Y]')
+        post = union1d(a1, a2)
+        self.assertEqual(str(post), "['1999' '2000' '2001']")
+        self.assertEqual(post.dtype, np.dtype('datetime64[Y]'))
+
 
     def test_intersect1d_a(self) -> None:
 
@@ -578,8 +612,11 @@ class TestUnit(TestCase):
         a1 = np.array(('2020-12', '2021-01'), dtype='datetime64[M]')
         a2 = np.array(['2020-12-31', '2021-01-01', '2021-01-15'], dtype='datetime64[D]')
 
-        post = intersect1d(a1, a2)
-        self.assertEqual(post.tolist(), [])
+        with self.assertRaises(InvalidDatetime64Comparison):
+            _ = intersect1d(a1, a2)
+
+        post = intersect1d(a1.astype('datetime64[D]'), a2)
+        self.assertEqual(post.tolist(), [datetime.date(2021, 1, 1)])
         self.assertEqual(post.dtype, np.dtype('datetime64[D]'))
 
     def test_intersect1d_e(self) -> None:
@@ -603,8 +640,18 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), [])
         self.assertEqual(post.dtype, object)
 
+    def test_intersect1d_g(self) -> None:
+        a1 = np.array(['1999', '2000'], dtype='datetime64[Y]')
+        a2 = np.array(['1999-01-01', '2000-01-01'], dtype='datetime64[D]')
+        with self.assertRaises(InvalidDatetime64Comparison):
+            _ = intersect1d(a1, a2)
 
-
+    def test_intersect1d_h(self) -> None:
+        a1 = np.array(['1999', '2000'], dtype='datetime64[Y]')
+        a2 = np.array(['1999', '2001'], dtype='datetime64[Y]')
+        post = intersect1d(a1, a2)
+        self.assertEqual(post.dtype, np.dtype('datetime64[Y]'))
+        self.assertEqual(str(post), "['1999']")
 
     #---------------------------------------------------------------------------
     def test_setdiff1d_a(self) -> None:
@@ -665,6 +712,18 @@ class TestUnit(TestCase):
         a11 = np.array([False, np.nan, False], dtype=object)
         a12 = np.array([False, None])
         self.assertSetEqual(set(setdiff1d(a11, a12)), {np.nan})
+
+    def test_setdiff1d_d(self) -> None:
+        a1 = np.array(['1999', '2000'], dtype='datetime64[Y]')
+        a2 = np.array(['1999-01-01', '2000-01-01'], dtype='datetime64[D]')
+        with self.assertRaises(InvalidDatetime64Comparison):
+            _ = setdiff1d(a1, a2)
+
+    def test_setdiff1d_e(self) -> None:
+        a1 = np.array(['1999', '2000'], dtype='datetime64[Y]')
+        a2 = np.array(['2000', '2001'], dtype='datetime64[Y]')
+        self.assertEqual(str(setdiff1d(a1, a2)), "['1999']")
+        self.assertEqual(str(setdiff1d(a2, a1)), "['2001']")
 
 
     def test_union2d_a(self) -> None:

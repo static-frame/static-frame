@@ -443,7 +443,8 @@ class StoreXLSX(Store):
                             mask[row_count, col_count] = True
                         row_data.append(value) # type: ignore
                     if not row_data:
-                        mask[row_count] = True
+                        # NOTE: there might be scenarios where there are empty ``row`` iterables that still increment the row_count; we cannot generate these directly for test
+                        mask[row_count] = True #pragma: no cover
                 else:
                     if store_filter is None:
                         row_data = tuple(cell.value for cell in row)

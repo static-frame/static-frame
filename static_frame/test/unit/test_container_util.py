@@ -339,15 +339,20 @@ class TestUnit(TestCase):
         self.assertEqual(post2.tolist(), [[True, False], [True, False]])
 
 
-    def test_index_many_concat_a(self) -> None:
+    def test_index_many_concat_a1(self) -> None:
 
         idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
         idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
         idx2 = IndexDate(('2020-02-01', '2020-02-02'))
 
-
         post1 = index_many_concat((idx0,  idx1), Index)
         assert isinstance(post1, Index)
+
+        post1b = index_many_concat((idx0,  idx1), Index, IndexDate)
+        assert isinstance(post1b, IndexDate)
+
+        post1c = index_many_concat((idx0,  idx1, idx2), Index, IndexDate)
+        assert isinstance(post1c, IndexDate)
 
         self.assertEqual(post1.values.tolist(),
                 ['1997-01-01',
@@ -357,9 +362,14 @@ class TestUnit(TestCase):
         self.assertEqual(post1.name, 'foo')
         self.assertEqual(post1.__class__, Index)
 
+    def test_index_many_concat_a2(self) -> None:
+
+        # idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
+        idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
+        idx2 = IndexDate(('2020-02-01', '2020-02-02'))
+
         post2 = index_many_concat((idx1,  idx2), Index)
         assert isinstance(post2, Index)
-
         self.assertEqual(post2.__class__, IndexDate)
         self.assertEqual(post2.values.tolist(),
                 [datetime.date(2020, 1, 1),
@@ -531,7 +541,10 @@ class TestUnit(TestCase):
         self.assertTrue(idx3._map is not None) #type: ignore
         self.assertEqual(idx3.values.tolist(), [0, 1]) #type: ignore
 
-
+    def test_index_many_set_h(self) -> None:
+        post1 = index_many_set((), Index, union=True, explicit_constructor=IndexDate)
+        self.assertIs(post1.__class__, IndexDate)
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
     def test_get_col_dtype_factory_a(self) -> None:

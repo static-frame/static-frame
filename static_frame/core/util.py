@@ -22,6 +22,8 @@ from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
 import numpy as np
 
+from static_frame.core.exception import InvalidDatetime64Comparison
+
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index #pylint: disable=W0611 #pragma: no cover
@@ -656,7 +658,8 @@ def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
 
 def concat_resolved(
         arrays: tp.Iterable[np.ndarray],
-        axis: int = 0) -> np.ndarray:
+        axis: int = 0,
+        ) -> np.ndarray:
     '''
     Concatenation of 2D arrays that uses resolved dtypes to avoid truncation.
 
@@ -1410,6 +1413,17 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     return reduce(operator.add,
         (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
 
+
+def datetime64_not_aligned(array: np.ndarray, other: np.ndarray) -> bool:
+    '''Return True if both arrays are dt64 and they are not aligned by unit. Used in property tests that must skip this condition.
+    '''
+    array_is_dt64 = array.dtype.kind == DTYPE_DATETIME_KIND
+    other_is_dt64 = other.dtype.kind == DTYPE_DATETIME_KIND
+    if array_is_dt64 and other_is_dt64:
+        return np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0] #type: ignore
+    return False
+
+
 def _slice_to_datetime_slice_args(key: slice,
         dtype: tp.Optional[np.dtype] = None
         ) -> tp.Iterator[tp.Optional[np.datetime64]]:
@@ -1965,6 +1979,14 @@ def _ufunc_set_1d(
             post.flags.writeable = False
             return post
 
+    # np.intersect1d will not handle different dt64 units correctly, but rather "downcast" to the lowest unit, which is not what we want; so, only use np.intersect1d if the units are the same
+    array_is_dt64 = array.dtype.kind == DTYPE_DATETIME_KIND
+    other_is_dt64 = other.dtype.kind == DTYPE_DATETIME_KIND
+
+    if array_is_dt64 and other_is_dt64:
+        if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
+            raise InvalidDatetime64Comparison()
+
     if assume_unique:
         # can only return arguments, and use length to determine unique comparison condition, if arguments are assumed to already be unique
         if is_union:
@@ -1977,6 +1999,7 @@ def _ufunc_set_1d(
                 return array
 
         if len(array) == len(other):
+            # NOTE: if these are both dt64 of different units but "aligned" they will return equal
             compare = array == other
             # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it will always be False
             if compare.__class__ is np.ndarray and compare.all(axis=None):
@@ -1989,27 +2012,15 @@ def _ufunc_set_1d(
     array_is_str = array.dtype.kind in DTYPE_STR_KINDS
     other_is_str = other.dtype.kind in DTYPE_STR_KINDS
 
-    # np.intersect1d will not handle different dt64 units correctly, but rather "downcast" to the lowest unit, which is not what we want; so, only use np.intersect1d if the units are the same
-    array_is_dt64 = array.dtype.kind == DTYPE_DATETIME_KIND
-    other_is_dt64 = other.dtype.kind == DTYPE_DATETIME_KIND
-
-    if array_is_dt64 and other_is_dt64:
-        # if units are the same, no need for set compare
-        if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
-            set_compare = True
-        else: # can compare directly, dtype will be same
-            set_compare = False
-    else:
-        set_compare = array_is_str ^ other_is_str
-
-    if set_compare or dtype.kind == 'O':
-        # convert applicable dt64 types to objects
+    if (array_is_str ^ other_is_str) or dtype.kind == 'O':
+        # NOTE: we convert applicable dt64 types to objects to permit date object to dt64 comparisons when  possible
         if array_is_dt64 and np.datetime_data(array.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS:
             array = array.astype(DTYPE_OBJECT)
         elif other_is_dt64 and np.datetime_data(other.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS:
             # the case of both is handled above
             other = other.astype(DTYPE_OBJECT)
 
+        # NOTE: taking a frozenset of dt64 arrays does not force elements to date/datetime objects
         if is_union:
             result = frozenset(array) | frozenset(other)
         elif is_intersection:
@@ -2861,3 +2872,15 @@ def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
     if isinstance(key, str) or not hasattr(key, '__len__'):
         return [key]
     return key if isinstance(key, list) else list(key) # type: ignore
+
+
+def iloc_to_insertion_iloc(key: int, size: int) -> int:
+    '''
+    Given an iloc (possibly bipolar), return the appropriate insertion iloc (always positive)
+    '''
+    if key < -size or key >= size:
+        raise IndexError(f'index {key} out of range for length {size} container.')
+    return key % size
+
+
+

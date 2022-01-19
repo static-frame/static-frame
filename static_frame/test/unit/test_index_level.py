@@ -1,9 +1,8 @@
-
+import re
 import unittest
 from collections import OrderedDict
 import copy
 import datetime
-
 
 import numpy as np
 
@@ -161,14 +160,12 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             level0.extend(level0)
 
-
     def test_index_level_extend_b(self) -> None:
         level0 = IndexLevelGO(index=IndexGO(('a', 'b')), targets=None)
         level1 = IndexLevelGO(index=IndexGO(('c', 'd')), targets=None)
         # RuntimeError: found IndexLevel with None as targets
         with self.assertRaises(RuntimeError):
             level0.extend(level1)
-
 
     def test_index_level_extend_c(self) -> None:
         observations0 = IndexGO(('x', 'y'))
@@ -196,7 +193,6 @@ class TestUnit(TestCase):
         # RuntimeError: found IndexLevel with None as targets
         with self.assertRaises(RuntimeError):
             lvl1.extend(lvl0)
-
 
     #---------------------------------------------------------------------------
 
@@ -554,7 +550,6 @@ class TestUnit(TestCase):
         widths = tuple(lvl.label_widths_at_depth(0))
         self.assertEqual(widths, (('I', 5), ('II', 4)))
 
-
     #---------------------------------------------------------------------------
     def test_index_levels_with_tuple_a(self) -> None:
         OD = OrderedDict
@@ -678,7 +673,6 @@ class TestUnit(TestCase):
         # differeing depth
         self.assertFalse(levels2.equals(levels3))
 
-
     def test_index_levels_equals_d(self) -> None:
 
         levels1 = IndexLevel(Index(('a', 'b', 'c')), targets=None)
@@ -719,7 +713,6 @@ class TestUnit(TestCase):
         tb = levels1.to_type_blocks()
         self.assertEqual(tb.shape, (0, 3))
 
-
     #---------------------------------------------------------------------------
 
     def test_index_level_depth_reference_a(self) -> None:
@@ -756,7 +749,6 @@ class TestUnit(TestCase):
         lvl1 = IndexLevel.from_depth(4)
         self.assertEqual(lvl1.depth, 4)
         self.assertEqual(len(lvl1), 0)
-
 
     #---------------------------------------------------------------------------
     def test_index_level_from_tree_a(self) -> None:
@@ -852,14 +844,46 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_index_level_repr(self) -> None:
+    def test_index_level_repr_a(self) -> None:
+        """Small tree"""
         tree = {
-            "I": {"A": (1, 2), "B": (1, 2, 3), "C": (2, 3)},
-            "II": {"D": (1, 2, 3), "E": (1,)},
+                "I": {"A": (1, 2), "B": (1, 2, 3), "C": (2, 3)},
+                "II": {"D": (1, 2, 3), "E": (1,)},
         }
         lvl = IndexLevel.from_tree(tree)
         msg = repr(lvl)
         self.assertEqual(len(msg.split()), 52)
+
+        num_ellipsis = re.findall(r"\.\.\.", msg)
+        num_labels = re.findall(r"IndexLevel", msg)
+        self.assertEqual(len(num_ellipsis), 0)
+        self.assertEqual(len(num_labels), 8)
+
+    def test_index_level_repr_b(self) -> None:
+        """Very deep tree"""
+
+        index = IndexHierarchy.from_product(*(range(i, i+2) for i in range(0, 20, 2)))
+
+        msg = repr(index._levels)
+        self.assertEqual(len(msg.split()), 67)
+
+        num_ellipsis = re.findall(r"\.\.\.", msg)
+        num_labels = re.findall(r"IndexLevel", msg)
+        self.assertEqual(len(num_ellipsis), 8)
+        self.assertEqual(len(num_labels), 15)
+
+    def test_index_level_repr_c(self) -> None:
+        """Very wide tree"""
+
+        index = IndexHierarchy.from_product(range(10), range(10, 20))
+
+        msg = repr(index._levels)
+        self.assertEqual(len(msg.split()), 70)
+
+        num_ellipsis = re.findall(r"\.\.\.", msg)
+        num_labels = re.findall(r"IndexLevel", msg)
+        self.assertEqual(len(num_ellipsis), 1)
+        self.assertEqual(len(num_labels), 5)
 
     #---------------------------------------------------------------------------
 
@@ -870,8 +894,5 @@ class TestUnit(TestCase):
             _ = tuple(levels1.dtypes_at_depth(10))
 
 
-
-
 if __name__ == '__main__':
     unittest.main()
-

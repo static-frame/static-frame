@@ -11,6 +11,7 @@ from static_frame import IndexGO
 # from static_frame import IndexHierarchy
 from static_frame import Series
 from static_frame import Frame
+from static_frame import FrameGO
 
 from static_frame import IndexYear
 from static_frame import IndexYearGO
@@ -43,7 +44,7 @@ from static_frame import IndexNanosecondGO
 # from static_frame import ILoc
 from static_frame.core.index import _INDEX_SLOTS
 from static_frame.core.index import _INDEX_GO_SLOTS
-from static_frame.core.index_datetime import _dtype_to_index_cls
+from static_frame.core.index_datetime import dtype_to_index_cls
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.exception import LocInvalid
@@ -698,35 +699,35 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_dtype_to_index_cls_a(self) -> None:
-        t1 = _dtype_to_index_cls(True, np.dtype('datetime64[D]'))
+        t1 = dtype_to_index_cls(True, np.dtype('datetime64[D]'))
         self.assertEqual(t1, IndexDate)
 
-        t2 = _dtype_to_index_cls(False, np.dtype('datetime64[D]'))
+        t2 = dtype_to_index_cls(False, np.dtype('datetime64[D]'))
         self.assertEqual(t2, IndexDateGO)
 
-        t3 = _dtype_to_index_cls(True, np.dtype('datetime64[s]'))
+        t3 = dtype_to_index_cls(True, np.dtype('datetime64[s]'))
         self.assertEqual(t3, IndexSecond)
 
-        t4 = _dtype_to_index_cls(False, np.dtype('datetime64[s]'))
+        t4 = dtype_to_index_cls(False, np.dtype('datetime64[s]'))
         self.assertEqual(t4, IndexSecondGO)
 
-        t5 = _dtype_to_index_cls(True, np.dtype('datetime64[Y]'))
+        t5 = dtype_to_index_cls(True, np.dtype('datetime64[Y]'))
         self.assertEqual(t5, IndexYear)
 
-        t6 = _dtype_to_index_cls(False, np.dtype('datetime64[Y]'))
+        t6 = dtype_to_index_cls(False, np.dtype('datetime64[Y]'))
         self.assertEqual(t6, IndexYearGO)
 
     def test_dtype_to_index_cls_b(self) -> None:
-        t1 = _dtype_to_index_cls(True, np.dtype(str))
+        t1 = dtype_to_index_cls(True, np.dtype(str))
         self.assertEqual(t1, Index)
 
-        t2 = _dtype_to_index_cls(False, np.dtype(str))
+        t2 = dtype_to_index_cls(False, np.dtype(str))
         self.assertEqual(t2, IndexGO)
 
-        t3 = _dtype_to_index_cls(True, np.dtype(float))
+        t3 = dtype_to_index_cls(True, np.dtype(float))
         self.assertEqual(t3, Index)
 
-        t4 = _dtype_to_index_cls(False, np.dtype(float))
+        t4 = dtype_to_index_cls(False, np.dtype(float))
         self.assertEqual(t4, IndexGO)
 
 
@@ -846,6 +847,31 @@ class TestUnit(TestCase):
         self.assertEqual(idx.loc_to_iloc('2020-01-29'), 28)
 
 
+
+    def test_index_date_threshold_a(self) -> None:
+
+        index = IndexDate.from_date_range('2019-01-01', '2020-02-28')
+        threshold_day = 15
+        threshold_month = 2
+        lag = 2
+
+        f = FrameGO(index=index)
+        f['month_day'] = f.index.via_dt.month * 100 + f.index.via_dt.day
+        f['transition'] = f['month_day'] >= (threshold_month * 100 + threshold_day)
+        f['year_shift'] = Series.from_element(lag, index=index).assign[f['transition']](lag - 1)
+        f['year'] = f.index.via_dt.year - f['year_shift'].values
+
+        self.assertEqual(f['transition'].sum(), 334)
+        self.assertEqual(f['year'].values.tolist(),
+                [2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019]
+                )
+
+    def test_index_datetime_intersection_a(self) -> None:
+        # NOTE: pending resolution of behavior: should probably raise.
+        index_ym = IndexYearMonth.from_year_month_range('2021-01', '2021-05')
+        index_date = IndexDate(index_ym)
+        with self.assertRaises(RuntimeError):
+            post = index_ym.intersection(index_date)
 
 if __name__ == '__main__':
     unittest.main()

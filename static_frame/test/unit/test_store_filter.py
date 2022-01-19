@@ -102,6 +102,18 @@ class TestUnit(TestCase):
         self.assertEqual(a2.tolist(),
                 [datetime.date(2012, 2, 5), datetime.date(2013, 5, 21), ''])
 
+
+    def test_store_from_type_filter_array_h(self) -> None:
+
+        sf1 = StoreFilter(
+                value_format_float_positional='{:.2e}',
+                value_format_float_scientific='{:.2e}',
+                )
+        a1 = np.array([1.2, 3.4], dtype=float)
+        a2 = sf1.from_type_filter_array(a1)
+        self.assertEqual(a2.tolist(),
+                ['1.20e+00', '3.40e+00'])
+
     #---------------------------------------------------------------------------
     def test_store_from_type_filter_element_a(self) -> None:
         sfd = STORE_FILTER_DEFAULT
@@ -124,6 +136,17 @@ class TestUnit(TestCase):
         self.assertEqual(sf1.from_type_filter_element(3.1), '3.10e+00')
         self.assertEqual(sf1.from_type_filter_element(0.0000011193), '1.12e-06')
 
+    def test_store_from_type_filter_element_d(self) -> None:
+        sfd = STORE_FILTER_DEFAULT
+        self.assertEqual(sfd.from_type_filter_element(np.datetime64('nat')), '')
+        self.assertEqual(sfd.from_type_filter_element(np.datetime64('1971')), '1971')
+
+    def test_store_from_type_filter_element_e(self) -> None:
+        sf1 = StoreFilter(
+                value_format_complex_positional='{:.2e}',
+                value_format_complex_scientific='{:.2e}',
+                )
+        self.assertEqual(sf1.from_type_filter_element(1+4j), '1.00e+00+4.00e+00j')
 
 
     #---------------------------------------------------------------------------
@@ -256,6 +279,22 @@ class TestUnit(TestCase):
         self.assertEqual(
                 sf1._format_inexact_element(0.413-0.000000593j, DTYPE_OBJECT_KIND),
                 '4.1300e-01-5.9300e-07j'
+                )
+
+    def test_store_filter_format_inexact_element_f(self) -> None:
+        sf1 = StoreFilter()
+
+        self.assertEqual(
+                sf1._format_inexact_element(0.4123, DTYPE_FLOAT_KIND),
+                0.4123
+                )
+
+    def test_store_filter_format_inexact_element_g(self) -> None:
+        sf1 = StoreFilter()
+
+        self.assertEqual(
+                sf1._format_inexact_element(0.4123-3j, DTYPE_COMPLEX_KIND),
+                0.4123-3j
                 )
 
 

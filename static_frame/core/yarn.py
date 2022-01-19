@@ -14,8 +14,6 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
-# from static_frame.core.node_iter import IterNodeAxis
-# from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeApplyType
@@ -30,7 +28,6 @@ from static_frame.core.util import NameType
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import NAME_DEFAULT
 
-# from static_frame.core.util import concat_resolved
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.axis_map import buses_to_hierarchy
 from static_frame.core.index_auto import IndexAutoFactoryType
@@ -107,7 +104,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             deepcopy_from_bus: bool = False,
             ) -> 'Yarn':
         '''
-        Concatenate multiple :obj:`Bus` into a new :obj:`Yarn`. Loaded status of :obj:`Frame` within each :obj:`Bus` will not be altered.
+        Concatenate multiple :obj:`Yarn` into a new :obj:`Yarn`. Loaded status of :obj:`Frame` within each :obj:`Bus` will not be altered.
 
         Args:
             containers:

@@ -20,6 +20,12 @@ class TestUnit(TestCase):
             f1.__dict__ #pylint: disable=W0104
 
 
+    def test_frame_he_ne_a(self) -> None:
+
+        f1 = ff.parse('s(5,3)|i(I,str)|c(I,int)|v(int,str,bool)').to_frame_he()
+        f2 = ff.parse('s(5,2)|i(I,str)|c(I,int)|v(int,str,bool)').to_frame_he()
+        self.assertTrue(f1 != f2)
+
     def test_frame_he_hash_a(self) -> None:
 
         f1 = ff.parse('s(5,3)|i(I,str)|c(I,int)|v(int,str,bool)').to_frame_he()

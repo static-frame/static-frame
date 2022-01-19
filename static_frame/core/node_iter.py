@@ -117,7 +117,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
 
-        if not callable(func): # NOTE: when is func not a callable?
+        if not callable(func): # support array, Series mapping
             func = getattr(func, '__getitem__')
 
         # use side effect list population to create keys when iterating over values
@@ -148,8 +148,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             ) -> tp.Iterator[tp.Any]:
 
         pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
-
-        if not callable(func): # NOTE: when is func not a callable?
+        if not callable(func): # support array, Series mapping
             func = getattr(func, '__getitem__')
 
         # use side effect list population to create keys when iterating over values
@@ -369,7 +368,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         Args:
             {func}
         '''
-        # depend on yield type, we determine what the passed in function expects to take
+        # depend on yield type, we determine what the passed in function expects to
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, func(v)) for k, v in self._func_items())
         else:

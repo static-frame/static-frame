@@ -23,6 +23,7 @@ from static_frame import Series
 # from static_frame import SeriesHE
 from static_frame import Frame
 from static_frame import FrameGO
+from static_frame import FrameHE
 from static_frame import mloc
 from static_frame import DisplayConfig
 from static_frame import IndexHierarchy
@@ -30,12 +31,15 @@ from static_frame import IndexHierarchyGO
 from static_frame import IndexDate
 from static_frame import IndexSecond
 from static_frame import IndexYearMonth
+from static_frame import IndexYear
 from static_frame import IndexAutoFactory
 from static_frame import IndexDefaultFactory
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import isna_array
 
 from static_frame import HLoc
+from static_frame import ILoc
+
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 
@@ -1569,6 +1573,17 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 1), ('c', -2), ('d', -3), ('e', -4)))
 
 
+    def test_series_assign_i(self) -> None:
+        s1 = Series(range(6))
+        s2 = s1 * 3
+        s3 = s1.iter_element().apply_pool(s2,
+                max_workers=2,
+                use_threads=True,
+                )
+        self.assertEqual(s3.to_pairs(),
+            ((0, 0), (1, 3), (2, 6), (3, 9), (4, 12), (5, 15))
+            )
+
     #---------------------------------------------------------------------------
     def test_series_iloc_extract_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
@@ -1664,6 +1679,13 @@ class TestUnit(TestCase):
         self.assertEqual(s1['c'].tolist(), [3, 4])
 
 
+    def test_series_loc_extract_j(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'))
+        s2 = s1.loc[:]
+        self.assertEqual(s2.to_pairs(),
+            ((0, 'a'), (1, 'b'), (2, 'c')))
+
     #---------------------------------------------------------------------------
 
     def test_series_group_a(self) -> None:
@@ -1709,6 +1731,17 @@ class TestUnit(TestCase):
                 s1.iter_group_items().apply(lambda g, s: (g * s).values.tolist()).to_pairs(),
                 ((10, [100, 100, 100]), (20, [400, 400])))
 
+
+    def test_series_group_d(self) -> None:
+        from static_frame import SeriesHE
+        s1 = SeriesHE((10, 10, 10, 20, 20),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+        mapping = {s1.iloc[:3]: 100}
+        groups = s1.iter_group().map_fill(mapping, fill_value=None)
+        self.assertEqual(groups.to_pairs(),
+                ((10, 100), (20, None)),
+                )
 
     #---------------------------------------------------------------------------
 
@@ -1767,6 +1800,22 @@ class TestUnit(TestCase):
                 (('a', 100), ('b', 30), ('c', 150), ('d', 210), ('e', 280)))
 
 
+    def test_series_iter_element_d(self) -> None:
+
+        s1 = Series((10, 3, 15, 21),
+                index=('2021', '1564', '1876', '2067'),
+                )
+        post = s1.iter_element().apply(
+                lambda x: x*2,
+                index_constructor=IndexYear,
+                )
+        self.assertTrue(
+                (post.index.values == np.array(['2021', '1564', '1876', '2067'], dtype='datetime64[Y]')).all()
+                )
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_series_iter_element_map_any_a(self) -> None:
@@ -1807,8 +1856,17 @@ class TestUnit(TestCase):
 
         self.assertEqual(tuple(s2.iter_element().map_any_iter(s2)),
             (100, 101))
-        self.assertEqual(tuple(s2.iter_element().map_any_iter_items(s2)),
-            ((3, 100), (21, 101)))
+        self.assertEqual(tuple(s2.iter_element().map_any_iter_items(s2)),            ((3, 100), (21, 101)))
+
+
+    def test_series_iter_element_map_any_d(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+        mapping = {('b', 3): 300, ('d', 21): 200}
+        post = tuple(s1.iter_element_items().map_any_iter(mapping))
+        self.assertEqual(post, (10, 300, 15, 200, 28))
 
 
     def test_series_iter_element_map_all_a(self) -> None:
@@ -1858,6 +1916,17 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 1), ('c', 2), ('d', 3), ('e', 4))
                 )
 
+    def test_series_iter_element_map_all_d(self) -> None:
+
+        s1 = Series((3, 15, 21),
+                index=('b', 'c', 'd'),
+                )
+        mapping = {('b', 3): 300, ('c', 15): 100, ('d', 21): 200}
+        post = tuple(s1.iter_element_items().map_all_iter(mapping))
+        self.assertEqual(post, (300, 100, 200))
+
+
+
     def test_series_iter_element_map_fill_a(self) -> None:
 
         s1 = Series((10, 3, 15, 21, 28),
@@ -1882,7 +1951,6 @@ class TestUnit(TestCase):
                 (('a', -1), ('b', -1), ('c', -1), ('d', 100), ('e', 101))
                 )
 
-
     def test_series_iter_element_map_fill_c(self) -> None:
 
         s1 = Series((10, 3, 15, 21, 28),
@@ -1898,6 +1966,14 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 0), ('c', 0), ('d', 100), ('e', 101))
                 )
 
+    def test_series_iter_element_map_fill_d(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+        mapping = {('b', 3): 300, ('d', 21): 200}
+        post = tuple(s1.iter_element_items().map_fill_iter(mapping, fill_value=None))
+        self.assertEqual(post, (None, 300, None, 200, None))
 
 
     #---------------------------------------------------------------------------
@@ -2107,13 +2183,11 @@ class TestUnit(TestCase):
                 ((0, 0), (1, 1), (2, 2), (3, 3))
                 )
 
-
     def test_series_relabel_f(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
         # reuse the same instance
         s2 = s1.relabel(None)
         self.assertEqual(id(s1.index), id(s2.index))
-
 
     def test_series_relabel_g(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
@@ -2121,7 +2195,10 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             s1.relabel({'d', 'c', 'b', 'a'})
 
-
+    def test_series_relabel_h(self) -> None:
+        s1 = Series(range(2), index=('a', 'b'))
+        s2 = s1.relabel(('2021-04', '1999-12-31'), index_constructor=IndexYearMonth)
+        self.assertIs(s2.index.__class__, IndexYearMonth)
 
     #---------------------------------------------------------------------------
 
@@ -2472,7 +2549,7 @@ class TestUnit(TestCase):
 
         pds1 = pd.Series(['a', 'b', None], index=list('abc'))
         self.assertEqual(sf.Series.from_pandas(pds1,
-                index_constructor=sf.IndexAutoFactory).to_pairs(),
+                index=sf.IndexAutoFactory).to_pairs(),
                 ((0, 'a'), (1, 'b'), (2, None))
                 )
 
@@ -2501,6 +2578,19 @@ class TestUnit(TestCase):
         self.assertEqual(sf.Series.from_pandas(pds1, name=None).name, None)
         self.assertEqual(sf.Series.from_pandas(pds1, name='bar').name, 'bar')
 
+    def test_series_from_pandas_i(self) -> None:
+        import pandas as pd
+        pds = pd.Series([10, 20],
+                index=pd.DatetimeIndex(('2018-01-01', '2018-06-01')),
+                name='foo',
+                )
+        s1 = Series.from_pandas(pds, index=('a', 'b'))
+        self.assertEqual(s1.to_pairs(),
+                (('a', 10), ('b', 20)))
+
+        s2 = Series.from_pandas(pds, index=IndexAutoFactory)
+        self.assertEqual(s2.to_pairs(),
+                ((0, 10), (1, 20)))
 
     #---------------------------------------------------------------------------
     def test_series_to_pandas_a(self) -> None:
@@ -2934,7 +3024,7 @@ class TestUnit(TestCase):
             (['<Series: foo>'], ['<Index: bar>', ''], ['x', 'a'], ['y', 'b'], ['<<U1>', '<<U1>'])
             )
 
-
+    #---------------------------------------------------------------------------
     def test_series_to_frame_a(self) -> None:
 
         s1 = Series((2, 3), index=list('ab'), name='alt')
@@ -2976,6 +3066,54 @@ class TestUnit(TestCase):
             s1.to_frame(axis=None)  # type: ignore
 
 
+    def test_series_to_frame_e(self) -> None:
+        s1 = Series((2, 3), index=list('ab'), name='alt')
+        f1 = s1.to_frame(axis=1,
+                index=IndexAutoFactory,
+                columns=IndexAutoFactory,
+                )
+        self.assertTrue(f1.index._map is None)
+        self.assertTrue(f1.columns._map is None)
+
+
+    def test_series_to_frame_f(self) -> None:
+        s1 = Series((2, 3), index=list('ab'), name='alt')
+        f1 = s1.to_frame(axis=0,
+                index=(30,),
+                columns=('x', 'y'),
+                )
+        self.assertEqual(f1.index.values.tolist(), [30,])
+        self.assertEqual(f1.columns.values.tolist(), ['x', 'y'])
+
+
+    def test_series_to_frame_g(self) -> None:
+        s1 = Series((2, 3), index=list('ab'), name='alt')
+        f1 = s1.to_frame(axis=1,
+                columns=(30,),
+                index=('x', 'y'),
+                )
+        self.assertEqual(f1.columns.values.tolist(), [30,])
+        self.assertEqual(f1.index.values.tolist(), ['x', 'y'])
+
+    def test_series_to_frame_h(self) -> None:
+        s1 = Series((2, 3), index=list('ab'))
+        f1 = s1.to_frame(axis=0)
+        self.assertEqual(f1.to_pairs(),
+                (('a', ((0, 2),)), ('b', ((0, 3),)))
+                )
+
+    def test_series_to_frame_i(self) -> None:
+        s1 = Series((2, 3), index=list('ab'))
+        f1 = s1.to_frame(axis=0,
+                index=IndexAutoFactory,
+                columns=IndexAutoFactory,
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((0, 2),)), (1, ((0, 3),)))
+                )
+
+    #---------------------------------------------------------------------------
+
     def test_series_to_frame_go_a(self) -> None:
         a = sf.Series((1, 2, 3), name='a')
         f = a.to_frame_go(axis=0)
@@ -2985,6 +3123,12 @@ class TestUnit(TestCase):
                 ((0, (('a', 1),)), (1, (('a', 2),)), (2, (('a', 3),)), ('b', (('a', 'b'),)))
                 )
 
+    def test_series_to_frame_he_a(self) -> None:
+        a = Series((1, 2, 3), name='a')
+        f = a.to_frame_he(axis=0)
+        self.assertIs(f.__class__, FrameHE)
+
+    #---------------------------------------------------------------------------
 
     def test_series_from_concat_a(self) -> None:
         s1 = Series((2, 3, 0,), index=list('abc'))
@@ -3089,6 +3233,17 @@ class TestUnit(TestCase):
 
         s = Series.from_concat((s1, s2, s3))
         self.assertEqual(s.name, None)
+
+
+    def test_series_from_concat_j(self) -> None:
+        s1 = Series((2, 3,), index=('1991-03', '1992-04'))
+        s2 = Series((10, 20), index=('1995-08', '1999-04'))
+        s3 = Series.from_concat((s1, s2), index_constructor=IndexYearMonth)
+        self.assertIs(s3.index.__class__, IndexYearMonth)
+        self.assertTrue(
+            (s3.index.values == np.array(['1991-03', '1992-04', '1995-08', '1999-04'], dtype='datetime64[M]')).all()
+        )
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 
@@ -4393,15 +4548,15 @@ class TestUnit(TestCase):
         s2 = Series((1, 3.4, 5), index=('d', 'e', 'f'))
 
         with self.assertRaises(NotImplementedError):
-            _ = s1._insert(1, (3, 4)) #type: ignore
+            _ = s1._insert(1, (3, 4), after=True) #type: ignore
 
-        s3 = s1._insert(1, s2)
+        s3 = s1._insert(1, s2, after=False)
 
         self.assertEqual(s3.to_pairs(),
                 (('a', 1), ('d', 1.0), ('e', 3.4), ('f', 5.0), ('b', None), ('c', 5))
                 )
 
-        s4 = s1._insert(3, s2)
+        s4 = s1._insert(2, s2, after=True)
 
         self.assertEqual(s4.to_pairs(),
                 (('a', 1), ('b', None), ('c', 5), ('d', 1.0), ('e', 3.4), ('f', 5.0))
@@ -4434,6 +4589,34 @@ class TestUnit(TestCase):
             s1.insert_before(slice('a', 'c'), s2)
         with self.assertRaises(RuntimeError):
             s1.insert_after(slice('a', 'c'), s2)
+
+
+    def test_series_insert_d(self) -> None:
+
+        s1 = Series((1, 2, 5), index=('a', 'b', 'c'))
+        s2 = Series((1, 3), index=('d', 'e'))
+        s3 = s1.insert_after(ILoc[-1], s2)
+        self.assertEqual(s3.to_pairs(),
+                (('a', 1), ('b', 2), ('c', 5), ('d', 1), ('e', 3))
+                )
+
+        s4 = s1.insert_before(ILoc[-1], s2)
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1), ('b', 2), ('d', 1), ('e', 3), ('c', 5))
+                )
+
+    def test_series_insert_e(self) -> None:
+
+        s1 = Series((1, 2, 5), index=('a', 'b', 'c'))
+        s2 = Series((1, 3), index=('d', 'e'))
+        with self.assertRaises(IndexError):
+            _ = s1.insert_after(ILoc[-4], s2)
+        with self.assertRaises(IndexError):
+            _ = s1.insert_before(ILoc[-4], s2)
+        with self.assertRaises(IndexError):
+            _ = s1.insert_after(ILoc[3], s2)
+        with self.assertRaises(IndexError):
+            _ = s1.insert_before(ILoc[3], s2)
 
     #---------------------------------------------------------------------------
 

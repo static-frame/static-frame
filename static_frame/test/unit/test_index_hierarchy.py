@@ -14,11 +14,13 @@ from static_frame import FrameGO
 from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index
+from static_frame import IndexGO
 from static_frame import IndexDate
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
 from static_frame import IndexYearMonth
+from static_frame import IndexYearMonthGO
 from static_frame import Series
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
@@ -729,6 +731,34 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             IndexHierarchy.from_product((1, 2))
 
+    def test_hierarchy_from_product_c(self) -> None:
+
+        groups = ('A', 'B', 'C')
+        dates = ('2018-01-01', '2018-01-04')
+
+        with self.assertRaises(ErrorInitIndex):
+            # mis-matched length
+            _ = IndexHierarchy.from_product(groups, dates, index_constructors=(Index,))
+
+        ih = IndexHierarchy.from_product(groups, dates, index_constructors=(Index, IndexDate))
+
+        self.assertEqual(ih.index_types.values.tolist(), [Index, IndexDate])
+        self.assertEqual(ih.values.tolist(),
+                [['A', datetime.date(2018, 1, 1)], ['A', datetime.date(2018, 1, 4)], ['B', datetime.date(2018, 1, 1)], ['B', datetime.date(2018, 1, 4)], ['C', datetime.date(2018, 1, 1)], ['C', datetime.date(2018, 1, 4)]])
+
+
+    def test_hierarchy_from_product_d(self) -> None:
+
+        groups = ('2021-01-01', '2021-01-02')
+        dates = ('2018-01-01', '2018-01-04')
+
+        ih = IndexHierarchy.from_product(groups, dates, index_constructors=IndexDate)
+        self.assertEqual(ih.index_types.values.tolist(), [IndexDate, IndexDate])
+        self.assertEqual(ih.values.tolist(),
+                [[datetime.date(2021, 1, 1), datetime.date(2018, 1, 1)], [datetime.date(2021, 1, 1), datetime.date(2018, 1, 4)], [datetime.date(2021, 1, 2), datetime.date(2018, 1, 1)], [datetime.date(2021, 1, 2), datetime.date(2018, 1, 4)]])
+        # import ipdb; ipdb.set_trace()
+
+
     #--------------------------------------------------------------------------
 
     def test_hierarchy_from_tree_a(self) -> None:
@@ -1325,6 +1355,22 @@ class TestUnit(TestCase):
         self.assertEqual(
                 ih3.values.tolist(),
                 [['i', 'a'], ['i', 'b'], ['ii', 'a'], ['ii', 'b']])
+
+    @run_with_static_and_grow_only
+    def test_hierarchy_relabel_at_depth_a(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
+
+        idx1 = Index((True, False))
+        idx2 = Index(tuple("abcde"))
+        idx3 = Index(range(10))
+
+        ih = index_class.from_product(idx1, idx2, idx3)
+
+        actual = ih.relabel_at_depth(lambda x: x*2, [1, 2])
+        expected = index_class.from_product(idx1, idx2 * 2, idx3 * 2)
+
+        self.assertTrue(actual.equals(expected))
 
     @run_with_static_and_grow_only
     def test_hierarchy_relabel_at_depth_2d_single_depth(self,
@@ -2202,6 +2248,26 @@ class TestUnit(TestCase):
         ih2 = ih1.level_add('x')
         # proove we reused the underlying block arrays
         self.assertEqual(ih1._blocks.mloc.tolist(), ih2._blocks.mloc[1:].tolist())
+
+
+    def test_hierarchy_add_level_d(self) -> None:
+        labels = (
+                (1, 'A'),
+                (1, 'B'),
+                (2, 'A'),
+                (2, 'B'),
+                )
+        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih2 = ih1.level_add('1542-02', index_constructor=IndexYearMonth)
+
+        self.assertEqual(ih2.index_types.values.tolist(),
+                [IndexYearMonthGO, IndexGO, IndexGO],
+                )
+        self.assertTrue(
+                (ih2.values_at_depth(0) == np.array(['1542-02', '1542-02', '1542-02', '1542-02'], dtype='datetime64[M]')).all()
+                )
+
+
 
     #---------------------------------------------------------------------------
 

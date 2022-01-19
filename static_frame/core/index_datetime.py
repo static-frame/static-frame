@@ -519,7 +519,7 @@ _DTYPE_TO_CLASS = {cls._DTYPE: cls for cls in (
         IndexNanosecond
         )}
 
-def _dtype_to_index_cls(static: bool, dtype: np.dtype) -> tp.Type[Index]:
+def dtype_to_index_cls(static: bool, dtype: np.dtype) -> tp.Type[Index]:
     '''
     Given an the class of the Index from which this is valled, as well as the dtype of the resultant array, return the appropriate Index class.
     '''

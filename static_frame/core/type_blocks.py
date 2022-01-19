@@ -2318,7 +2318,7 @@ class TypeBlocks(ContainerOperand):
     def _extract_array_column(self,
             key: int,
             ) -> np.ndarray:
-        '''Alternative extractor that returns full-columns darrays from integer selection.
+        '''Alternative extractor that returns full-column arrays from single integer selection.
         '''
         block_idx, column = self._index[key]
         b = self._blocks[block_idx]

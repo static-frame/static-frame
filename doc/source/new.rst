@@ -1,6 +1,51 @@
 What is New in Static Frame
 ===============================
 
+0.8.34
+----------
+
+Added ``NPY`` and ``NPZ`` interfaces for creating NPY and NPZ archvies from arrays and ``Frame`` components.
+
+Added ``index_constructors`` argument to ``IndexHierarchy.from_product()``
+
+Added ``index_constructor`` argument to ``Index.level_add()``, ``IndexHierarchy.level_add()``, and  ``Frame.relabel_level_add()``.
+
+Added ``index_constructor``, ``columns_constructor`` arguments to ``Frame.relabel()``.
+
+Added ``Series.to_frame_he()``.
+
+Added ``index``, ``index_constructor``, ``columns``, ``columns_constructor`` arguments to ``Series.to_frame()``, ``Series.to_frame_go()``, ``Series.to_frame_he()``.
+
+Improvement to ``Frame.from_concat`` to avoid creating one-element indices from ``Series`` when an index is provided along the appropriate axis.
+
+Added ``index_constructor`` argument to ``Series.relabel()``.
+
+Added ``index_constructor`` argument to ``Series.from_concat()``.
+
+Added ``index`` argument to ``Series.from_pandas()``.
+
+Added ``index`` and ``columns`` argument to ``Frame.from_pandas()``.
+
+Improvement to ``Index`` initialization to raise ``ErrorInitIndex`` if given a single string as ``labels``.
+
+Set operations on labels of different ``datetime64`` units now raise an ``Exception``.
+
+
+0.8.33
+----------
+
+Performance enhancements to ``Frame.from_npy`` and ``Frame.from_npz``.
+
+
+0.8.32
+----------
+
+Added ``Frame.to_pickle()``, ``Frame.from_pickle()``.
+
+Added ``index_constructor``, ``columns_constructor`` to ``Frame.from_concat``.
+
+Fixed issue in ``Frame.insert_after()``, ``Frame.insert_before()``,  ``Series.insert_after()``, ``Series.insert_before()`` with negative ``ILoc`` labels.
+
 
 0.8.31
 ----------

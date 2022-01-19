@@ -9,7 +9,7 @@ class TestUnit(TestCase):
 
     def test_exceed_columns(self) -> None:
 
-        f1 = Frame.from_element('x', index='x', columns=range(16384))
+        f1 = Frame.from_element('x', index=('x',), columns=range(16384))
 
         with temp_file('.xlsx') as fp:
 
@@ -26,7 +26,7 @@ class TestUnit(TestCase):
 
     def test_exceed_rows(self) -> None:
 
-        f1 = Frame.from_element('x', index=range(1048576), columns='x')
+        f1 = Frame.from_element('x', index=range(1048576), columns=('x',))
 
         with temp_file('.xlsx') as fp:
 

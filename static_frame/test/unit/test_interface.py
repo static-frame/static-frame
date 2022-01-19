@@ -15,6 +15,8 @@ from static_frame.core.series import Series
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.test.test_case import TestCase
+from static_frame import NPZ
+from static_frame import NPY
 
 class TestUnit(TestCase):
 
@@ -32,7 +34,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Accessor Datetime', 10), ('Accessor Fill Value', 24), ('Accessor Regular Expression', 7), ('Accessor String', 37), ('Accessor Transpose', 24), ('Assignment', 8), ('Attribute', 11), ('Constructor', 33), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 25), ('Iterator', 224), ('Method', 83), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+            (('Accessor Datetime', 10), ('Accessor Fill Value', 24), ('Accessor Regular Expression', 7), ('Accessor String', 37), ('Accessor Transpose', 24), ('Assignment', 8), ('Attribute', 11), ('Constructor', 34), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 26), ('Iterator', 224), ('Method', 83), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
         )
 
     def test_interface_summary_c(self) -> None:
@@ -99,6 +101,8 @@ class TestUnit(TestCase):
     def test_interface_get_instance(self) -> None:
         for component in DOCUMENTED_COMPONENTS:
             post = InterfaceSummary.get_instance(component)
+            if post is NPY or post is NPZ: #type: ignore
+                continue
             if not isinstance(post, ContainerBase):
                 self.assertTrue(isinstance(post, ( # type: ignore
                     DisplayConfig,

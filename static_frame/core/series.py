@@ -38,6 +38,8 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_auto import IndexDefaultFactory
+from static_frame.core.index_auto import IndexInitOrAutoType
+
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -98,6 +100,7 @@ from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import arrays_equal
+from static_frame.core.util import iloc_to_insertion_iloc
 
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
@@ -109,6 +112,7 @@ if tp.TYPE_CHECKING:
     from static_frame import Bus # pylint: disable=W0611 #pragma: no cover
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
     from static_frame import FrameGO # pylint: disable=W0611 #pragma: no cover
+    from static_frame import FrameHE # pylint: disable=W0611 #pragma: no cover
     import pandas # pylint: disable=W0611 #pragma: no cover
 
 
@@ -232,7 +236,8 @@ class Series(ContainerOperand):
     def from_concat(cls,
             containers: tp.Iterable[tp.Union['Series', 'Bus']],
             *,
-            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            index: tp.Optional[IndexInitOrAutoType] = None,
+            index_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = NAME_DEFAULT,
             ) -> 'Series':
         '''
@@ -241,6 +246,8 @@ class Series(ContainerOperand):
         Args:
             containers: Iterable of ``Series`` from which values in the new ``Series`` are drawn.
             index: If None, the resultant index will be the concatenation of all indices (assuming they are unique in combination). If ``IndexAutoFactory``, the resultant index is a auto-incremented integer index. Otherwise, the value is used as a index initializer.
+            index_constructor:
+            name:
 
         Returns:
             :obj:`static_frame.Series`
@@ -269,17 +276,28 @@ class Series(ContainerOperand):
         # returns immutable arrays
         values = concat_resolved(array_values)
 
+        own_index = False
         if index is None:
-            index = index_many_concat(indices, cls_default=Index)
+            index = index_many_concat(indices,
+                    cls_default=Index,
+                    explicit_constructor=index_constructor,
+                    )
+            own_index = True
         elif index is IndexAutoFactory:
             # set index arg to None to force IndexAutoFactory usage in creation
             index = None
+        # else, index was supplied as an iterable, above
 
         if name == NAME_DEFAULT:
             # only derive if not explicitly set
             name = name_first if name_aligned else None
 
-        return cls(values, index=index, name=name)
+        return cls(values,
+                index=index,
+                name=name,
+                index_constructor=index_constructor,
+                own_index=own_index,
+                )
 
     @classmethod
     def from_concat_items(cls,
@@ -377,15 +395,18 @@ class Series(ContainerOperand):
     def from_pandas(cls,
             value: 'pandas.Series',
             *,
-            index_constructor: tp.Optional[tp.Union[IndexConstructor, IndexAutoFactoryType]] = None,
+            index: IndexInitOrAutoType = None,
+            index_constructor: IndexConstructor = None,
             name: NameType = NAME_DEFAULT,
             own_data: bool = False) -> 'Series':
         '''Given a Pandas Series, return a Series.
 
         Args:
             value: Pandas Series.
+            *
+            index_constructor:
+            name:
             {own_data}
-            {own_index}
 
         Returns:
             :obj:`static_frame.Series`
@@ -405,19 +426,25 @@ class Series(ContainerOperand):
 
         name = name if name is not NAME_DEFAULT else value.name
 
-        own_index = True
-        if index_constructor is IndexAutoFactory:
+        own_index = False
+        if index is IndexAutoFactory:
             index = None
-            own_index = False
-        elif index_constructor is not None:
-            index = index_constructor(value.index)
+        elif index is not None:
+            pass
+        elif index_constructor is IndexAutoFactory: #type: ignore
+            from static_frame.core.exception import deprecated #pragma: no cover
+            deprecated('Passing indexAutoFactory as an index_constructor is deprecated and will be removed in v0.9; pass IndexAutoFactory as the index argument.') #pragma: no cover
+            index = None #pragma: no cover
+            index_constructor = None #pragma: no cover
         else: # if None
             index = Index.from_pandas(value.index)
+            own_index = index_constructor is None
 
         return cls(data,
                 index=index,
+                index_constructor=index_constructor,
+                own_index=own_index,
                 name=name,
-                own_index=own_index
                 )
 
     #---------------------------------------------------------------------------
@@ -912,7 +939,9 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='relabel', class_name='Series')
     def relabel(self,
-            index: tp.Optional[RelabelInput]
+            index: tp.Optional[RelabelInput],
+            *,
+            index_constructor: IndexConstructor = None,
             ) -> 'Series':
         '''
         {doc}
@@ -920,15 +949,15 @@ class Series(ContainerOperand):
         Args:
             index: {relabel_input}
         '''
-        #NOTE: we name the parameter index for alignment with the corresponding Frame method
         own_index = False
         if index is IndexAutoFactory:
             index_init = None
         elif index is None:
             index_init = self._index
+            own_index = index_constructor is None
         elif is_callable_or_mapping(index): #type: ignore
             index_init = self._index.relabel(index)
-            own_index = True
+            own_index = index_constructor is None
         elif isinstance(index, Set):
             raise RelabelInvalid()
         else:
@@ -936,8 +965,10 @@ class Series(ContainerOperand):
 
         return self.__class__(self.values,
                 index=index_init,
+                index_constructor=index_constructor,
                 own_index=own_index,
-                name=self._name)
+                name=self._name,
+                )
 
     @doc_inject(selector='relabel_flat', class_name='Series')
     def relabel_flat(self) -> 'Series':
@@ -2596,6 +2627,8 @@ class Series(ContainerOperand):
     def _insert(self,
             key: int, # iloc positions
             container: 'Series',
+            *,
+            after: bool,
             ) -> 'Series':
         if not isinstance(container, Series):
             raise NotImplementedError(
@@ -2603,6 +2636,9 @@ class Series(ContainerOperand):
 
         if not len(container.index): # must be empty data, empty index container
             return self
+
+        # this filter is needed to handle possible invalid ILoc values passed through
+        key = iloc_to_insertion_iloc(key, self.values.__len__()) + after
 
         dtype = resolve_dtype(self.values.dtype, container.dtype)
         values = np.empty(len(self) + len(container), dtype=dtype)
@@ -2647,7 +2683,7 @@ class Series(ContainerOperand):
         iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
-        return self._insert(iloc_key, container)
+        return self._insert(iloc_key, container, after=False)
 
     @doc_inject(selector='insert')
     def insert_after(self,
@@ -2667,7 +2703,7 @@ class Series(ContainerOperand):
         iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
-        return self._insert(iloc_key + 1, container)
+        return self._insert(iloc_key, container, after=True)
 
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types
@@ -2756,37 +2792,69 @@ class Series(ContainerOperand):
 
         return tuple(zip(index_values, self.values))
 
-
-
     def _to_frame(self,
+            *,
             constructor: tp.Type['Frame'],
-            axis: int = 1
+            axis: int = 1,
+            index: IndexInitOrAutoType = None,
+            index_constructor: IndexConstructor = None,
+            columns: IndexInitOrAutoType = None,
+            columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
-        Common Frame construction utilities.
+        Common function for creating :obj:`Frame` from :obj:`Series`.
         '''
         from static_frame import TypeBlocks
-        columns: tp.Optional[IndexInitializer]
-        index: tp.Optional[IndexInitializer]
 
         if axis == 1:
             # present as a column
             def block_gen() -> tp.Iterator[np.ndarray]:
                 yield self.values
 
-            index = self._index
-            own_index = True
-            columns = None if self._name is None else (self._name,)
+            if index is IndexAutoFactory:
+                index = None
+                own_index = False
+            elif index is not None:
+                own_index = False
+            else:
+                index = self._index
+                own_index = index_constructor is None
+
+            if columns is IndexAutoFactory:
+                columns = None
+            elif columns is not None:
+                pass # precedent
+            elif self._name is None:
+                columns = None
+            else:
+                columns = (self._name,)
             own_columns = False
+
         elif axis == 0:
             def block_gen() -> tp.Iterator[np.ndarray]:
-                yield self.values.reshape((1, self.values.shape[0]))
+                array = self.values
+                yield array.reshape(1, array.shape[0])
 
-            index = None if self._name is None else (self._name,)
+            if index is IndexAutoFactory:
+                index = None
+            elif index is not None:
+                pass
+            elif self._name is None:
+                index = None
+            else:
+                index = (self._name,)
             own_index = False
-            columns = self._index
+
             # if column constuctor is static, we can own the static index
-            own_columns = constructor._COLUMNS_CONSTRUCTOR.STATIC
+            if columns is IndexAutoFactory:
+                columns = None
+                own_columns = False
+            elif columns is not None:
+                own_columns = False
+            else:
+                columns = self._index
+                own_columns = (constructor._COLUMNS_CONSTRUCTOR.STATIC
+                        and (columns_constructor is None))
         else:
             raise NotImplementedError(f'no handling for axis {axis}')
 
@@ -2794,31 +2862,98 @@ class Series(ContainerOperand):
                 TypeBlocks.from_blocks(block_gen()),
                 index=index,
                 columns=columns,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
                 own_data=True,
                 own_index=own_index,
                 own_columns=own_columns,
                 )
 
-
-    def to_frame(self, axis: int = 1) -> 'Frame':
+    def to_frame(self,
+            axis: int = 1,
+            *,
+            index: IndexInitOrAutoType = None,
+            index_constructor: IndexConstructor = None,
+            columns: IndexInitOrAutoType = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
         '''
         Return a :obj:`Frame` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
+
+        Args:
+            axis: Axis 1 (default) creates a single-column :obj:`Frame` with the same index: axis 0 creates a single-row :obj:`Frame` with the index as columns.
+            *,
+            index_constructor:
+            columns_constructor:
 
         Returns:
             :obj:`Frame`
         '''
         from static_frame import Frame
-        return self._to_frame(constructor=Frame, axis=axis)
+        return self._to_frame(constructor=Frame,
+                axis=axis,
+                index=index,
+                index_constructor=index_constructor,
+                columns=columns,
+                columns_constructor=columns_constructor,
+                )
 
-    def to_frame_go(self, axis: int = 1) -> 'FrameGO':
+    def to_frame_go(self,
+            axis: int = 1,
+            *,
+            index: IndexInitOrAutoType = None,
+            index_constructor: IndexConstructor = None,
+            columns: IndexInitOrAutoType = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'FrameGO':
         '''
         Return :obj:`FrameGO` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
 
+        Args:
+            axis:
+            *,
+            index_constructor:
+            columns_constructor:
         Returns:
             :obj:`FrameGO`
         '''
         from static_frame import FrameGO
-        return self._to_frame(constructor=FrameGO, axis=axis) #type: ignore
+        return self._to_frame(constructor=FrameGO, #type: ignore
+                axis=axis,
+                index=index,
+                index_constructor=index_constructor,
+                columns=columns,
+                columns_constructor=columns_constructor,
+                )
+
+    def to_frame_he(self,
+            axis: int = 1,
+            *,
+            index: IndexInitOrAutoType = None,
+            index_constructor: IndexConstructor = None,
+            columns: IndexInitOrAutoType = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'FrameHE':
+        '''
+        Return :obj:`FrameHE` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
+
+        Args:
+            axis:
+            *,
+            index_constructor:
+            columns_constructor:
+        Returns:
+            :obj:`FrameHE`
+        '''
+        from static_frame import FrameHE
+        return self._to_frame(constructor=FrameHE, #type: ignore
+                axis=axis,
+                index=index,
+                index_constructor=index_constructor,
+                columns=columns,
+                columns_constructor=columns_constructor,
+                )
+
 
     def to_series_he(self) -> 'SeriesHE':
         '''
