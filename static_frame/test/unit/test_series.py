@@ -1118,6 +1118,8 @@ class TestUnit(TestCase):
                 (('a', 'c'), ('b', 'c'), ('c', 'c'), ('d', 'c')))
 
 
+    #---------------------------------------------------------------------------
+
     def test_series_fillna_forward_a(self) -> None:
 
         index = tuple(string.ascii_lowercase[:8])
@@ -1196,6 +1198,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.fillna_backward().to_pairs(),
                 (('a', 3), ('b', 2), ('c', 4), ('d', 4), ('e', 5), ('f', 5), ('g', 5), ('h', 6)))
 
+    #---------------------------------------------------------------------------
 
     def test_series_fillfalsy_forward_a(self) -> None:
 
@@ -1214,6 +1217,12 @@ class TestUnit(TestCase):
         self.assertEqual(s1.fillfalsy_forward(limit=10).to_pairs(),
                 (('a', 3), ('b', 3), ('c', 3), ('d', 3), ('e', 4), ('f', 4), ('g', 4), ('h', 4)))
 
+    def test_series_fillfalsy_forward_b(self) -> None:
+
+        s1 = sf.Series(['x', '']).fillfalsy_forward()
+        self.assertEqual(s1.to_pairs(), ((0, 'x'), (1, 'x')))
+
+    #---------------------------------------------------------------------------
 
     def test_series_fillna_backward_a(self) -> None:
 
@@ -1292,7 +1301,14 @@ class TestUnit(TestCase):
         self.assertEqual(s3.fillfalsy_backward(4).to_pairs(),
                 (('a', 1), ('b', 1), ('c', ''), ('d', 5), ('e', 5), ('f', 5), ('g', 5), ('h', 5)))
 
+
+    def test_series_fillfalsy_backward_b(self) -> None:
+
+        s1 = sf.Series(['', 'x']).fillfalsy_backward()
+        self.assertEqual(s1.to_pairs(), ((0, 'x'), (1, 'x')))
+
     #---------------------------------------------------------------------------
+
     def test_series_from_element_a(self) -> None:
         s1 = Series.from_element('a', index=range(3))
         self.assertEqual(s1.to_pairs(),
