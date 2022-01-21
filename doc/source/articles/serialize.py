@@ -13,9 +13,10 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import frame_fixtures as ff
-import static_frame as sf
 import pandas as pd
 
+sys.path.append(os.getcwd())
+import static_frame as sf
 from static_frame.core.display_color import HexColor
 
 class FileIOTest:
