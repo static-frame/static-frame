@@ -55,7 +55,7 @@ Presentations
 
 The following presentations and interviews describe StaticFrame in greater depth.
 
-- PyData Global 2021: "Why Datetimes Need Units: Avoiding a Y2262 Problem & Harnessing the Power of NumPy's datetime64": https://zoom.us/rec/share/MhHxZLi-SMkU3Sewhv7MKLWhgS0y0T7E7xFqAWfukUNdUGtFJFcHxJf8g2r_dTqq.cBJaD2SZP5P7eLI9?startTime=1635534301000
+- PyData Global 2021: "Why Datetimes Need Units: Avoiding a Y2262 Problem & Harnessing the Power of NumPy's datetime64": https://www.youtube.com/watch?v=jdnr7sgxCQI
 - PyData LA 2019: "The Best Defense is not a Defensive Copy" (lightning talk starting at 18:25): https://youtu.be/_WXMs8o9Gdw
 - PyData LA 2019: "Fitting Many Dimensions into One The Promise of Hierarchical Indices for Data Beyond Two Dimensions": https://youtu.be/xX8tXSNDpmE
 - PyCon US 2019: "A Less Kind, Less Gentle DataFrame" (lightning talk starting at 53:00): https://pyvideo.org/pycon-us-2019/friday-lightning-talksbreak-pycon-2019.html
