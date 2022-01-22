@@ -67,11 +67,13 @@ class TestUnit(TestCase):
                     '__xor__',
                     '__or__',
                     '__mod__',
-                    '__floordiv__',
+                    # '__floordiv__',
                     }:
-                continue
+                continue # avoid zero division
             func = getattr(operator, op)
             values = s1.values
+            if (values == 0).all():
+                continue
             a = func(s1, s1).values
             b = func(values, values)
             self.assertAlmostEqualArray(a, b)
