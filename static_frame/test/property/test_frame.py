@@ -77,13 +77,11 @@ class TestUnit(TestCase):
                     '__xor__',
                     '__or__',
                     '__mod__',
-                    # '__floordiv__',
+                    '__floordiv__',
                     }:
                 continue
             func = getattr(operator, op)
             values = f1.values
-            if (values == 0).all():
-                continue # avoid zerodivision
             # must coerce all blocks to same type to compare to what NP does
             f2 = f1.astype(values.dtype)
             a = func(f2, f2).values
