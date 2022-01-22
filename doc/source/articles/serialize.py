@@ -13,9 +13,10 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import frame_fixtures as ff
-import static_frame as sf
 import pandas as pd
 
+sys.path.append(os.getcwd())
+import static_frame as sf
 from static_frame.core.display_color import HexColor
 
 class FileIOTest:
@@ -123,6 +124,30 @@ class PDWriteParquetFast(FileIOTest):
 
     def __call__(self):
         self.df.to_parquet(self.fp, engine='fastparquet')
+
+
+
+class PDReadFeather(FileIOTest):
+    SUFFIX = '.feather'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        df = self.fixture.to_pandas().reset_index() # required for feather
+        df.to_feather(self.fp)
+
+    def __call__(self):
+        f = pd.read_feather(self.fp)
+        f = f.set_index('index')
+
+class PDWriteFeather(FileIOTest):
+    SUFFIX = '.feather'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.df = self.fixture.to_pandas().reset_index() # required for feather
+
+    def __call__(self):
+        self.df.to_feather(self.fp)
 
 
 
@@ -254,6 +279,8 @@ def plot(frame: sf.Frame):
         PDWriteParquetArrowNoComp.__name__: 'Parquet\n(pd, no compression)',
         PDReadParquetFast.__name__: 'Parquet\n(pd, FastParquet)',
         PDWriteParquetFast.__name__: 'Parquet\n(pd, FastParquet)',
+        PDReadFeather.__name__: 'Feather (pd)',
+        PDWriteFeather.__name__: 'Feather (pd)',
         SFReadPickle.__name__: 'Pickle (sf)',
         SFWritePickle.__name__: 'Pickle (sf)',
         SFReadParquet.__name__: 'Parquet (sf)',
@@ -271,14 +298,16 @@ def plot(frame: sf.Frame):
         PDWriteParquetArrowNoComp.__name__: 1,
         PDReadParquetFast.__name__: 2,
         PDWriteParquetFast.__name__: 2,
-        SFReadParquet.__name__: 3,
-        SFWriteParquet.__name__: 3,
-        SFReadNPZ.__name__: 4,
-        SFWriteNPZ.__name__: 4,
-        SFReadNPY.__name__: 5,
-        SFWriteNPY.__name__: 5,
-        SFReadPickle.__name__: 6,
-        SFWritePickle.__name__: 6,
+        PDReadFeather.__name__: 3,
+        PDWriteFeather.__name__: 3,
+        SFReadParquet.__name__: 4,
+        SFWriteParquet.__name__: 4,
+        SFReadNPZ.__name__: 5,
+        SFWriteNPZ.__name__: 5,
+        SFReadNPY.__name__: 6,
+        SFWriteNPY.__name__: 6,
+        SFReadPickle.__name__: 7,
+        SFWritePickle.__name__: 7,
     }
 
     fixture_shape_map = {
@@ -441,8 +470,10 @@ def pandas_serialize_test():
     df = df.reindex(columns=pd.Index(df.columns, name='foo'))
 
 
+    # feather
+    # ValueError: feather does not support serializing <class 'pandas.core.indexes.base.Index'> for the index; you can .reset_index() to make the index into column(s)
+    # feather must have string column names
 
-# This subclass of ndarray has some unpleasant interactions with some operations, because it doesn’t quite fit properly as a subclass. An alternative to using this subclass is to create the mmap object yourself, then create an ndarray with ndarray.__new__ directly, passing the object created in its ‘buffer=’ parameter.
 
 #-------------------------------------------------------------------------------
 
@@ -496,6 +527,8 @@ def run_test():
             PDReadParquetArrow,
             PDReadParquetArrowNoComp,
             # PDReadParquetFast, # not faster!
+            PDReadFeather,
+
             # SFReadParquet,
             SFReadNPZ,
             SFReadNPY,
@@ -507,6 +540,7 @@ def run_test():
             PDWriteParquetArrowNoComp,
             # PDWriteParquetFast, # not faster!
             # SFWriteParquet,
+            PDWriteFeather,
             SFWriteNPZ,
             SFWriteNPY,
             SFWritePickle,
