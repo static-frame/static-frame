@@ -77,6 +77,7 @@ class TestUnit(TestCase):
                     '__xor__',
                     '__or__',
                     '__mod__',
+                    '__floordiv__',
                     }:
                 continue
             func = getattr(operator, op)
