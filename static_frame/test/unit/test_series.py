@@ -610,6 +610,10 @@ class TestUnit(TestCase):
         self.assertEqual(s4.to_pairs(),
             ((0, 5), (1, 6), (2, 7)))
 
+        s5 = Series([2.1, 2.7, 2.9]) // 2
+        self.assertEqual(s5.to_pairs(),
+            ((0, 1), (1, 1), (2, 1)))
+
     #---------------------------------------------------------------------------
     def test_series_rename_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
