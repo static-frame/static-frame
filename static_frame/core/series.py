@@ -358,8 +358,10 @@ class Series(ContainerOperand):
 
         Args:
             containers: Iterable of :obj:`Series`.
+            *,
             index: An :obj:`Index` or :obj:`IndexHierarchy`, or index initializer, to be used as the index upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
             union: If True, and no ``index`` argument is supplied, a union index from ``containers`` will be used; if False, the intersection index will be used.
+            name:
         '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
