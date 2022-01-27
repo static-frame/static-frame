@@ -21,8 +21,11 @@ import gprof2dot #type: ignore
 import numpy as np
 import pandas as pd
 import frame_fixtures as ff
-import static_frame as sf
 
+
+sys.path.append(os.getcwd())
+
+import static_frame as sf
 from static_frame.core.display_color import HexColor
 from static_frame.core.util import AnyCallable, isin
 from static_frame.test.test_case import temp_file
@@ -1450,11 +1453,14 @@ def main() -> None:
                 print(c)
                 print(alt[c].sort_values().display(config))
 
-        # import ipdb; ipdb.set_trace()
         # if 'sf/pd' in frame.columns:
         #     print('mean: {}'.format(round(frame['sf/pd'].mean(), 6)))
         #     print('wins: {}/{}'.format((frame['sf/pd'] < 1.05).sum(), len(frame)))
 
+
+        # getting an Markdown table
+
+        # print(display[display.columns.iloc[:-2]].to_markdown(config=sf.DisplayConfig(include_index=False, cell_max_width=np.inf, cell_max_width_leftmost=np.inf, type_show=False, display_rows=np.inf)))
 
 
 if __name__ == '__main__':
