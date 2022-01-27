@@ -88,7 +88,6 @@ def source_build() -> None:
 if __name__ == '__main__':
     doc_dir = os.path.abspath(os.path.dirname(__file__))
     sys.path.append(os.path.join(os.path.dirname(doc_dir)))
-    # import ipdb; ipdb.set_trace()
     source_build()
 
 
