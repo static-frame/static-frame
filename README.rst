@@ -64,9 +64,11 @@ Docs: http://static-frame.readthedocs.io
 
 Packages: https://pypi.org/project/static-frame
 
-Benchmarks: https://investmentsystems.github.io/static-frame-benchmark
+Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`
 
 Context: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_
+
+
 
 
 Why Immutable Data?
