@@ -117,17 +117,14 @@ For extended input and output, the following packages are required:
 - visidata >= 2.4
 
 
-
-Jupyter Notebook Tutorial
---------------------------------------
-
-`StaticFrame from the Ground Up: Getting Started with Immutable DataFrame <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_.
-
-
 Quick-Start Guide
 ---------------------
 
 StaticFrame provides numerous methods for loading and creating data, either as a 1D ``Series`` or a 2D ``Frame``. All creation routines are exposed as alternate constructors on the desired class, such as ``Frame.from_records()``, ``Frame.from_csv()`` or ``Frame.from_pandas()``.
+
+.. note::
+
+    For an introduciton via a runnable Jupyter notebook, see `StaticFrame from the Ground Up: Getting Started with Immutable DataFrames <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_.
 
 .. note::
 
