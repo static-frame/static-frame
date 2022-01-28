@@ -117,6 +117,13 @@ For extended input and output, the following packages are required:
 - visidata >= 2.4
 
 
+
+Jupyter Notebook Tutorial
+--------------------------------------
+
+`StaticFrame from the Ground Up: Getting Started with Immutable DataFrame <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_.
+
+
 Quick-Start Guide
 ---------------------
 

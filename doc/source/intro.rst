@@ -7,6 +7,8 @@ StaticFrame is not a drop-in replacement for Pandas. While some conventions and 
 
 For more comparisons to Pandas, see `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_.
 
+For a runnable Jupyter Notebook tutorial, see `StaticFrame from the Ground Up: Getting Started with Immutable DataFrames <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
+
 For a concise overview of StaticFrame interfaces, start with :ref:`api-overview-Frame`.
 
 StaticFrame does not aspire to be an all-in-one framework for all aspects of data processing and visualization. StaticFrame focuses on providing efficient and powerful data structures with consistent, clear, and stable interfaces.
@@ -72,6 +74,7 @@ These members of the Investment Systems team have contributed greatly to the des
 - Charles Burkland
 - Guru Devanla
 - John Hawk
+- John McCloskey
 - Adam Kay
 - Mark LeMoine
 - Myrl Marmarelis
