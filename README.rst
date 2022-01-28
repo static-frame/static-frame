@@ -124,10 +124,6 @@ StaticFrame provides numerous methods for loading and creating data, either as a
 
 .. note::
 
-    For an introduciton via a runnable Jupyter notebook, see `StaticFrame from the Ground Up: Getting Started with Immutable DataFrames <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_.
-
-.. note::
-
     For a concise overview of all StaticFrame interfaces, see `API Overview <https://static-frame.readthedocs.io/en/latest/api_overview>`_.
 
 
