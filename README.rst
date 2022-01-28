@@ -64,7 +64,7 @@ Docs: http://static-frame.readthedocs.io
 
 Packages: https://pypi.org/project/static-frame
 
-Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`
+Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
 
 Context: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_
 
