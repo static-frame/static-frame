@@ -633,9 +633,10 @@ class Frame(ContainerOperand):
             union: bool = True,
             name: NameType = None,
             func: tp.Callable[[np.ndarray], np.ndarray] = isna_array,
+            fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> 'Frame':
         '''
-        Return a new :obj:`Frame` made by overlaying containers, filling in values with aligned values from subsequent containers. Values are filled based on passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
+        Return a new :obj:`Frame` made by overlaying containers, filling in values with aligned values from subsequent containers. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
 
         Args:
             containers: Iterable of :obj:`Frame`.
@@ -643,6 +644,7 @@ class Frame(ContainerOperand):
             columns: An optional :obj:`Index`, :obj:`IndexHierarchy`, or columns initializer, to be used as the columns upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
             union: If True, and no ``index`` or ``columns`` argument is supplied, a union index or columns from ``containers`` will be used; if False, the intersection index or columns will be used.
             name:
+            func: A function that takes an array and returns a same-sized Boolean array, where True indicates availability for insertion.
         '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
@@ -671,7 +673,9 @@ class Frame(ContainerOperand):
 
         containers_iter = iter(containers)
         container = next(containers_iter)
-        fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
+
+        if fill_value is FILL_VALUE_DEFAULT:
+            fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
 
         # get the first container
         post = frame_to_frame(container, cls).reindex(
@@ -3849,6 +3853,7 @@ class Frame(ContainerOperand):
                 index=self._index,
                 columns=self._columns,
                 own_index=True,
+                own_columns=self.STATIC,
                 own_data=True,
                 )
 
@@ -3862,6 +3867,7 @@ class Frame(ContainerOperand):
                 index=self._index,
                 columns=self._columns,
                 own_index=True,
+                own_columns=self.STATIC,
                 own_data=True,
                 )
 
@@ -3902,6 +3908,7 @@ class Frame(ContainerOperand):
                 index=self._index,
                 columns=self._columns,
                 own_index=True,
+                own_columns=self.STATIC,
                 own_data=True,
                 )
 
@@ -3915,6 +3922,7 @@ class Frame(ContainerOperand):
                 index=self._index,
                 columns=self._columns,
                 own_index=True,
+                own_columns=self.STATIC,
                 own_data=True,
                 )
 

@@ -4813,6 +4813,14 @@ class TestUnit(TestCase):
                 (('a', 1.0), ('b', 230.0), ('c', 5.0))
                 )
 
+    def test_series_from_overlay_m(self) -> None:
+        s1 = Series((1, -1, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, -8, -3, -5), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, 230), index=('c', 'b'))
+        s4 = Series.from_overlay((s1, s2, s3), func=lambda x: x < 0, fill_value=-1)
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1), ('b', 230), ('c', 5), ('d', -5))
+                )
 
     #---------------------------------------------------------------------------
     def test_series_sample_a(self) -> None:

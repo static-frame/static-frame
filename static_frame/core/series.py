@@ -101,6 +101,7 @@ from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import arrays_equal
 from static_frame.core.util import iloc_to_insertion_iloc
+from static_frame.core.util import FILL_VALUE_DEFAULT
 
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
@@ -353,8 +354,10 @@ class Series(ContainerOperand):
             index: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
+            func: tp.Callable[[np.ndarray], np.ndarray] = isna_array,
+            fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> 'Series':
-        '''Return a new :obj:`Series` made by overlaying containers, filling in missing values (None or NaN) with aligned values from subsequent containers.
+        '''Return a new :obj:`Series` made by overlaying containers, filling in values with aligned values from subsequent containers. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
 
         Args:
             containers: Iterable of :obj:`Series`.
@@ -379,17 +382,20 @@ class Series(ContainerOperand):
         container_iter = iter(containers)
         container_first = next(container_iter)
 
-        if container_first.index.equals(index):
+        if container_first._index.equals(index):
             post = cls(container_first.values, index=index, own_index=True, name=name)
         else:
             # if the indices are not equal, we have to reindex, and we need to provide a fill_value that does minimal type corcion to the original
-            fill_value = dtype_kind_to_na(container_first.dtype.kind)
+            if fill_value is FILL_VALUE_DEFAULT:
+                fill_value = dtype_kind_to_na(container_first.dtype.kind)
             post = container_first.reindex(index, fill_value=fill_value).rename(name)
 
         for container in container_iter:
-            post = post.fillna(container)
-            if not post.isna().any(): # NOTE: should we short circuit, or get more out of fillna?
+            filled = post._fill_missing(container, func)
+            # if no targets are found self is returned; use to determine if no targets remain
+            if filled is post:
                 break
+            post = filled
         return post
 
     @classmethod
