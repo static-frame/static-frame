@@ -6440,7 +6440,7 @@ class Frame(ContainerOperand):
         # NOTE: this could be optimized by always iterating over the shorter target
         for idx_left, row_left in enumerate(target_left):
             # Get 1D vector showing matches along right's full heigh
-            # WARN_REMOVE
+            # WARNING_RAISED
             matched = row_left == target_right
             if matched is False:
                 continue

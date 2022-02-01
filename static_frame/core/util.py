@@ -1583,7 +1583,7 @@ def arrays_equal(array: np.ndarray,
             # do not permit True result between 2021 and 2021-01-01
             return False
 
-    # WARN_REMOVE
+    # WARNING_RAISED: FutureWarning: elementwise comparison failed; returning scalar instead,
     eq = array == other
 
     # NOTE: will only be False, or an array

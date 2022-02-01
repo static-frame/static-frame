@@ -911,7 +911,7 @@ def apply_binary_operator(*,
             result = npc.add(other, values)
         elif operator_name == 'mul' or operator_name == 'rmul':
             result = npc.multiply(values, other)
-        else: # WARN_REMOVE
+        else: # WARNING_RAISED
             result = operator(values, other)
     else:
         result = operator(values, other)
