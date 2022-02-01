@@ -108,10 +108,6 @@ from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 
-from static_frame.core.util import isna_array as isna_array
-from static_frame.core.util import isfalsy_array as isfalsy_array
-
-
 __version__ = '0.8.34' # use -dev for new version in development
 
 
