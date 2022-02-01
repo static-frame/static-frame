@@ -1562,7 +1562,7 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
     elif kind != 'O':
         return np.full(array.shape, False, dtype=DTYPE_BOOL)
 
-    # NOTE: an ArrayKit implementation might outperformthis
+    # NOTE: an ArrayKit implementation might out performthis
     post = np.empty(array.shape, dtype=DTYPE_BOOL)
     for coord, v in np.ndenumerate(array):
         post[coord] = not bool(array[coord])

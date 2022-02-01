@@ -2666,6 +2666,16 @@ class TypeBlocks(ContainerOperand):
         return self.from_blocks(array)
 
     #---------------------------------------------------------------------------
+    #
+    def boolean_apply_any(self, func: tp.Callable[[np.ndarray], np.ndarray]) -> bool:
+        '''Apply a Boolean-returning function to TypeBlocks and return a Boolean if any values are True. This takes advantage of short-circuiting and avoiding intermediary containers for better performance.
+        '''
+        for b in self._blocks:
+            if func(b).any():
+                return True
+        return False
+
+    #---------------------------------------------------------------------------
     # na handling
 
     def isna(self, include_none: bool = True) -> 'TypeBlocks':

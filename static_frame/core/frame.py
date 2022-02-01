@@ -632,9 +632,10 @@ class Frame(ContainerOperand):
             columns: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
+            func: tp.Callable[[np.ndarray], np.ndarray] = isna_array,
             ) -> 'Frame':
         '''
-        Return a new :obj:`Frame` made by overlaying containers, filling in missing values (None or NaN) with aligned values from subsequent containers.
+        Return a new :obj:`Frame` made by overlaying containers, filling in values with aligned values from subsequent containers. Values are filled based on passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
 
         Args:
             containers: Iterable of :obj:`Frame`.
@@ -680,19 +681,26 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True,
                 )
+        # dtype column mapping will not change
+        dtypes = post.dtypes
 
         for container in containers_iter:
             values = []
-            for col, dtype_at_col in post.dtypes.items():
+            index_match = container._index.equals(index)
+            for col, dtype_at_col in dtypes.items():
                 if col not in container:
                     # get fill value based on previous container
                     fill_value = dtype_kind_to_na(dtype_at_col.kind)
+                    # store fill_arrays for re-use
                     if fill_value not in fill_arrays:
                         array = np.full(len(index), fill_value)
                         array.flags.writeable = False
                         fill_arrays[fill_value] = array
                     array = fill_arrays[fill_value]
-                else:
+                elif index_match:
+                    iloc_column_key = container._columns._loc_to_iloc(col)
+                    array = container._blocks._extract_array_column(iloc_column_key)
+                else: # need to reindex
                     col_series = container[col]
                     fill_value = dtype_kind_to_na(col_series.dtype.kind)
                     array = col_series.reindex(index, fill_value=fill_value).values
@@ -700,7 +708,7 @@ class Frame(ContainerOperand):
                 values.append(array)
 
             post = cls(
-                    post._blocks.fill_missing_by_values(values, func=isna_array),
+                    post._blocks.fill_missing_by_values(values, func=func),
                     index=index,
                     columns=columns,
                     name=name,
@@ -709,7 +717,7 @@ class Frame(ContainerOperand):
                     own_columns=True,
                     )
 
-            if not post.isna().any().any():
+            if not post._blocks.boolean_apply_any(func):
                 break
 
         return post

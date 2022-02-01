@@ -12899,6 +12899,16 @@ class TestUnit(TestCase):
         self.assertEqual(f3.shape, (4, 4))
         self.assertIs(f3.__class__, Frame)
 
+    def test_frame_from_overlay_g(self) -> None:
+
+        f1 = Frame.from_dict(dict(a=(1, 5), b=(5, 20)))
+        f2 = Frame.from_dict(dict(a=(7, 200), b=(100, 6)))
+
+        f3 = sf.Frame.from_overlay((f1, f2), func=lambda a: a == 5)
+        self.assertEqual(f3.to_pairs(),
+            (('a', ((0, 1), (1, 200))), ('b', ((0, 100), (1, 20))))
+            )
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_fields_a(self) -> None:
