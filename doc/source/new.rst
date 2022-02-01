@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.35
+----------
+
+Extended ``Series.from_overlay()`` and ``Frame.from_overlay()`` to support ``func`` and ``fill_value`` arguments; ``func`` can be used to optionally specify what elements are available for assignment in overlay.
+
+
 0.8.34
 ----------
 
