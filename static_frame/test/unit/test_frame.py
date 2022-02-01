@@ -693,8 +693,8 @@ class TestUnit(TestCase):
         df = pd.DataFrame(dict(a=(1,2), b=('3','4'), c=(1.5,2.5), d=('a','b')))
 
         f = Frame.from_pandas(df,
-                index_constructor=IndexAutoFactory,
-                columns_constructor=IndexAutoFactory
+                index=IndexAutoFactory,
+                columns=IndexAutoFactory
                 )
 
         self.assertTrue(f.index._map is None)

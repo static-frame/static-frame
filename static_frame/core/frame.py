@@ -6440,6 +6440,7 @@ class Frame(ContainerOperand):
         # NOTE: this could be optimized by always iterating over the shorter target
         for idx_left, row_left in enumerate(target_left):
             # Get 1D vector showing matches along right's full heigh
+            # WARN_REMOVE
             matched = row_left == target_right
             if matched is False:
                 continue
@@ -8081,7 +8082,7 @@ class FrameAssignBLoc(FrameAssign):
                     )
 
         elif is_frame:
-            # NOTE: the type of FILL_VALUE_DEFAULT might coerce other blocks
+            # NOTE: the object type of FILL_VALUE_DEFAULT might coerce other blocks
             value = value.reindex(
                     index=self.container._index,
                     columns=self.container._columns,
