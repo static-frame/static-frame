@@ -6182,7 +6182,7 @@ class Frame(ContainerOperand):
             columns_fields: KeyOrKeys = EMPTY_TUPLE,
             data_fields: KeyOrKeys = EMPTY_TUPLE,
             *,
-            func: CallableOrCallableMap = None,
+            func: CallableOrCallableMap = np.nansum,
             fill_value: object = np.nan,
             index_constructor: IndexConstructor = None,
             ) -> 'Frame':
@@ -6199,11 +6199,13 @@ class Frame(ContainerOperand):
             index_constructor:
         '''
         # NOTE: default in Pandas pivot_table is a mean
-        func = np.nansum if func is None else func
-        if callable(func):
+        if func is None:
+            func_map = None
+        elif callable(func):
             func_map = (('', func),) # store iterable of pairs
-        else:
+        else: # assume it has an items method
             func_map = tuple(func.items())
+
         func_single = func_map[0][1] if len(func_map) == 1 else None
 
         func_fields = EMPTY_TUPLE if func_single else tuple(label for label, _ in func_map)
