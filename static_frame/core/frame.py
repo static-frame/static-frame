@@ -6201,14 +6201,16 @@ class Frame(ContainerOperand):
         # NOTE: default in Pandas pivot_table is a mean
         if func is None:
             func_map = None
+            func_single = None
+            func_fields = EMPTY_TUPLE
         elif callable(func):
             func_map = (('', func),) # store iterable of pairs
-        else: # assume it has an items method
+            func_single = func
+            func_fields = EMPTY_TUPLE
+        else: # assume func has an items method
             func_map = tuple(func.items())
-
-        func_single = func_map[0][1] if len(func_map) == 1 else None
-
-        func_fields = EMPTY_TUPLE if func_single else tuple(label for label, _ in func_map)
+            func_single = func_map[0][1] if len(func_map) == 1 else None
+            func_fields = EMPTY_TUPLE if func_single else tuple(label for label, _ in func_map)
 
         # normalize all keys to lists of values
         index_fields = key_normalize(index_fields)
