@@ -976,8 +976,6 @@ class IndexHierarchy2(IndexBase):
         if isinstance(other, Index):
             other = other.values
         elif isinstance(other, IndexHierarchy2):
-            if other._recache:
-                other._update_array_cache()
             other = other._blocks
 
         tb = self._blocks._ufunc_binary_operator(
@@ -1363,9 +1361,6 @@ class IndexHierarchyAsType:
 
         from static_frame.core.index_datetime import dtype_to_index_cls
         container = self.container
-
-        if container._recache:
-            container._update_array_cache()
 
         # use TypeBlocks in both situations to avoid double casting
         blocks = TypeBlocks.from_blocks(
