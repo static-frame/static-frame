@@ -610,7 +610,7 @@ class IndexHierarchy(IndexBase):
 
     def rename(self: IH, name: NameType) -> IH:
         '''
-        Return a new Frame with an updated name attribute.
+        Return a new IndexHierarchy with an updated name attribute.
         '''
         # do not need to recache
         # let the constructor handle reuse
@@ -626,7 +626,6 @@ class IndexHierarchy(IndexBase):
     @property
     def iloc(self) -> InterfaceGetItem['IndexHierarchy']:
         return InterfaceGetItem(self._extract_iloc) #type: ignore
-
 
     def _iter_label(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None,
@@ -657,7 +656,6 @@ class IndexHierarchy(IndexBase):
         '''This function is not directly called in iter_label or related routines, fulfills the expectations of the IterNodeDepthLevel interface.
         '''
         yield from enumerate(self._iter_label(depth_level=depth_level))
-
 
     @property
     def iter_label(self) -> IterNodeDepthLevel[tp.Any]:
@@ -953,7 +951,6 @@ class IndexHierarchy(IndexBase):
                 index_constructors=index_constructors,
                 depth_reference=self.depth)
 
-
     #---------------------------------------------------------------------------
     def _drop_iloc(self, key: GetItemKeyType) -> 'IndexHierarchy':
         '''Create a new index after removing the values specified by the loc key.
@@ -1029,7 +1026,7 @@ class IndexHierarchy(IndexBase):
             sel = depth_level
         else:
             raise NotImplementedError('selection from iterables is not implemented')
-        yield from self._levels.label_widths_at_depth(depth_level=depth_level)
+        yield from self._levels.label_widths_at_depth(depth_level=sel)
 
     @property
     def index_types(self) -> 'Series':
@@ -1081,7 +1078,6 @@ class IndexHierarchy(IndexBase):
                 name=self._name,
                 index_constructors=index_constructors,
                 )
-
 
     def relabel_at_depth(self,
             mapper: RelabelInput,
@@ -1246,6 +1242,7 @@ class IndexHierarchy(IndexBase):
         return self._extract_iloc(key)
 
     #---------------------------------------------------------------------------
+
     def _extract_getitem_astype(self, key: GetItemKeyType) -> 'IndexHierarchyAsType':
         '''Given an iloc key (using integer positions for columns) return a configured IndexHierarchyAsType instance.
         '''
@@ -1542,7 +1539,6 @@ class IndexHierarchy(IndexBase):
                 )
         return container, key
 
-
     @doc_inject(selector='searchsorted', label_type='iloc (integer)')
     def iloc_searchsorted(self,
             values: tp.Any,
@@ -1616,9 +1612,6 @@ class IndexHierarchy(IndexBase):
         post[mask] = fill_value
         post.flags.writeable = False
         return post #type: ignore [no-any-return]
-
-
-
 
     #---------------------------------------------------------------------------
     # export
