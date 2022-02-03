@@ -4408,10 +4408,15 @@ class Frame(ContainerOperand):
         iloc_row_key = self._index._loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-
     def _extract_loc(self, key: GetItemKeyTypeCompound) -> 'Frame':
         return self._extract(*self._compound_loc_to_iloc(key))
 
+    def _extract_loc_columns(self, key: GetItemKeyType):
+        '''Alternate extract of a columns only selection.
+        '''
+        return self._extract(None,
+                self._columns._loc_to_iloc(key),
+                )
 
     def _extract_bloc(self, key: Bloc2DKeyType) -> Series:
         '''
@@ -6231,7 +6236,7 @@ class Frame(ContainerOperand):
 
         all_fields = index_fields + columns_fields + data_fields
         if len(all_fields) < len(self.columns):
-            frame = self[all_fields]
+            frame = self._extract_loc_columns(all_fields)
         else:
             frame = self
         from static_frame.core.pivot import pivot_core
