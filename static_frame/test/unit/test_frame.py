@@ -11570,6 +11570,20 @@ class TestUnit(TestCase):
                 ((0, ((0, 0), (1, 0), (2, 0), (3, 0))), (10, ((0, 0), (1, 100), (2, 0), (3, 0))), (20, ((0, 0), (1, 0), (2, 200), (3, 0))), (30, ((0, 0), (1, 0), (2, 0), (3, 300))))
                 )
 
+
+    def test_frame_pivot_w(self) -> None:
+        f1 = sf.Frame.from_records([[0, 'A'],[1, None], [2, 'B']])
+
+        # NOTE: order is different with func=None as we avoid a group-by sort
+        f2 = f1.pivot(1, func=None)
+        self.assertEqual(f2.to_pairs(), ((0, (('A', 0), (None, 1), ('B', 2))),))
+
+        f3 = sf.Frame.from_records([[0, 'A', 10],[1, None, 20], [2, 'B', 30]])
+        f4 = f3.pivot(1, func=None)
+        self.assertEqual(f4.to_pairs(),
+            ((0, (('A', 0), ('B', 2), (None, 1))), (2, (('A', 10), ('B', 30), (None, 20)))))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_bool_a(self) -> None:

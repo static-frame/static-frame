@@ -40,6 +40,8 @@ def extrapolate_column_fields(
     Args:
         group: a unique label from the the result of doing a group-by with the `columns_fields`.
     '''
+    # NOTE: this will work correctly with no_func=True
+
     columns_fields_len = len(columns_fields)
     data_fields_len = len(data_fields)
 
@@ -129,7 +131,7 @@ def pivot_items(
         func_single: tp.Optional[UFunc],
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''
-    Specialized generator of pairs for when we hae only one data_field and one function.
+    Specialized generator of pairs for when we have only one data_field and one function.
     '''
     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
 
@@ -137,10 +139,10 @@ def pivot_items(
         for label, _, sub in blocks.group(axis=0, key=group_key):
             values = sub._extract_array_column(data_field_iloc)
             yield label, func_single(values)
-    else:
-        for label, _, sub in blocks.group(axis=0, key=group_key):
-            values = sub._extract_array_column(data_field_iloc)
-            yield label, values
+    else: # func_no scenario
+        # labels via blocks._extract_array_column(group_key) must be unique
+        yield from zip(blocks._extract_array_column(group_key), blocks._extract_array_column(data_field_iloc))
+
 
 
 def pivot_core(
@@ -188,7 +190,7 @@ def pivot_core(
                 depth_reference=columns_depth,
                 name=columns_name)
 
-    dtype_map = frame.dtypes
+    dtype_map = frame.dtypes # returns a Series
     if func_no:
         dtypes_per_data_fields = tuple(dtype_map[field] for field in data_fields)
         if data_fields_len == 1:
@@ -218,8 +220,7 @@ def pivot_core(
         else:
             index_constructor = partial(Index, name=name_index)
 
-        if len(columns) == 1:
-            # assert len(data_fields) == 1
+        if len(columns) == 1: # lenght of columns is equal to length of datafields
             f = frame.from_series(
                     Series.from_items(
                             pivot_items(blocks=frame._blocks,
