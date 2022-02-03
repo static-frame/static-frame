@@ -114,26 +114,48 @@ def build_indexers_from_product(lists: tp.List[list]) -> tp.List[np.ndarray]:
 
     This is equivalent to: ``np.array(list(itertools.product(*lists)))``
     except it scales incredibly well.
+
+    It observes that the indexers for a product will look like this:
+
+    Example:
+
+    >>> lists = [[1, 2, 3], [4, 5, 6]]
+    >>> build_indexers_from_product(lists)
+    [
+        array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
+        array([0, 1, 2, 0, 1, 2, 0, 1, 2]),
+    ]
+
+    >>> lists = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    >>> build_indexers_from_product(lists)
+    [
+        array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2]),
+        array([0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1]),
+        array([0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2]),
+    ]
     """
 
     lengths = list(map(len, lists))
 
+    padded = [1] + lengths + [1]
+    all_group_reps = np.cumprod(padded)[:-2]
+    all_index_reps = np.cumprod(padded[::-1])[-3::-1]
+
     result = []
 
-    for i in range(len(lists)):
-        subsection_reps = int(np.product(lengths[:i]))
-        element_reps = int(np.product(lengths[i + 1 :]))
-
+    for i, (group_reps, index_reps) in enumerate(zip(all_group_reps, all_index_reps)):
         subsection = np.hstack(
             tuple(
                 map(
-                    functools.partial(np.tile, reps=element_reps),
+                    # Repeat each index (i.e. element) `index_reps` times
+                    functools.partial(np.tile, reps=index_reps),
                     range(lengths[i]),
                 )
             )
         )
 
-        result.append(np.tile(subsection, reps=subsection_reps))
+        # Repeat each section `index_reps` times
+        result.append(np.tile(subsection, reps=group_reps))
 
     return result
 
