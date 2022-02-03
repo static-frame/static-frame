@@ -4845,6 +4845,7 @@ class Frame(ContainerOperand):
             labels = self._columns
 
         for label, axis_values in zip(labels, self._blocks.axis_values(axis)):
+            # NOTE: axis_values here are already immutable
             yield Series(axis_values, index=index, name=label, own_index=True)
 
     def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
@@ -6205,7 +6206,7 @@ class Frame(ContainerOperand):
         '''
         # NOTE: default in Pandas pivot_table is a mean
         if func is None:
-            func_map = None
+            func_map = EMPTY_TUPLE
             func_single = None
             func_fields = EMPTY_TUPLE
         elif callable(func):
@@ -6233,8 +6234,7 @@ class Frame(ContainerOperand):
 
         #-----------------------------------------------------------------------
         # have final fields and normalized function representation
-
-        all_fields = index_fields + columns_fields + data_fields
+        all_fields = list(chain(index_fields, columns_fields, data_fields))
         if len(all_fields) < len(self.columns):
             frame = self._extract_loc_columns(all_fields)
         else:

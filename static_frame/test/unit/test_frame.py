@@ -11515,6 +11515,61 @@ class TestUnit(TestCase):
             (('c', ((('a', 'a'), 12), (('b', 'b'), 1), (('b', 'c'), 2))),)
             )
 
+    def test_frame_pivot_t(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+        f2 = f1.unset_index()
+
+        post1 = f2.pivot(
+                index_fields=('z', 'x', 'y'), # values in this field become the index
+                data_fields=('a', 'b'),
+                func=None,
+                )
+        self.assertEqual(post1.to_pairs(),
+                (('a', ((('far', 'left', 'down'), 2), (('far', 'left', 'up'), 0), (('far', 'right', 'down'), 3), (('far', 'right', 'up'), 1), (('near', 'left', 'down'), 6), (('near', 'left', 'up'), 4), (('near', 'right', 'down'), 7), (('near', 'right', 'up'), 5))), ('b', ((('far', 'left', 'down'), 21), (('far', 'left', 'up'), 19), (('far', 'right', 'down'), 22), (('far', 'right', 'up'), 20), (('near', 'left', 'down'), 22), (('near', 'left', 'up'), 20), (('near', 'right', 'down'), 23), (('near', 'right', 'up'), 21))))
+                )
+        post2 = f2.pivot(
+                index_fields=('z', 'x', 'y'), # values in this field become the index
+                data_fields=('a', 'b'),
+                func=np.nansum,
+                )
+        self.assertTrue(post1.equals(post2))
+
+    def test_frame_pivot_u(self) -> None:
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+        f2 = f1.unset_index()
+
+        with self.assertRaises(RuntimeError):
+                post1 = f2.pivot(
+                        index_fields=('z', 'x'), # values in this field become the index
+                        data_fields=('a', 'b'),
+                        func=None,
+                        )
+
+
+    def test_frame_pivot_v(self) -> None:
+        f1 = FrameGO(index=IndexAutoFactory(4))
+        f1['a'] = np.arange(4)
+        f1['b'] = np.arange(4) * 10
+        f1['c'] = np.arange(4) * 100
+
+        post = f1.pivot(index_fields='a', columns_fields='b', fill_value=0, func=None)
+        self.assertEqual(post.to_pairs(),
+                ((0, ((0, 0), (1, 0), (2, 0), (3, 0))), (10, ((0, 0), (1, 100), (2, 0), (3, 0))), (20, ((0, 0), (1, 0), (2, 200), (3, 0))), (30, ((0, 0), (1, 0), (2, 0), (3, 300))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_bool_a(self) -> None:

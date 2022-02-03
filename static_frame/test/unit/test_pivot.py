@@ -25,6 +25,7 @@ class TestUnit(TestCase):
                 data_fields_iloc=loc_to_iloc(data_fields),
                 func_single=func_single,
                 func_map=func_map,
+                func_no=False,
                 ))
         self.assertEqual(post,
                 ((False, [201945, 1]), (True, [129017, False])))
@@ -46,6 +47,7 @@ class TestUnit(TestCase):
                 data_fields_iloc=loc_to_iloc(data_fields),
                 func_single=func_single,
                 func_map=func_map,
+                func_no=False,
                 ))
         self.assertEqual(post,
                 ((False, [201945, 35021, 1, False]),
