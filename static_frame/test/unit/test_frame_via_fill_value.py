@@ -107,7 +107,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.name, 'q')
 
 
-    def test_frame_via_fill_value_loc_e(self) -> None:
+    def test_frame_via_fill_value_loc_e1(self) -> None:
 
         f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
         s1 = f1.via_fill_value(-1)['y']
@@ -120,6 +120,7 @@ class TestUnit(TestCase):
                 (('y', (('a', 1), ('b', 4), ('c', 7), ('d', 10))), ('w', (('a', -1), ('b', -1), ('c', -1), ('d', -1))))
                 )
 
+
     def test_frame_via_fill_value_loc_f(self) -> None:
 
         f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
@@ -128,6 +129,24 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('y', (('b', 4), ('e', -1))), ('q', (('b', -1), ('e', -1))))
                 )
+
+
+    def test_frame_via_fill_value_loc_g(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
+
+        f2 = f1.via_fill_value(-1).loc[['d', 'e']]
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('d', 9), ('e', -1))), ('y', (('d', 10), ('e', -1))), ('z', (('d', 11), ('e', -1))))
+                )
+    def test_frame_via_fill_value_loc_h(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
+        f2 = f1.via_fill_value(-1).loc[['d', 'e'], 'w']
+        self.assertEqual(f2.to_pairs(),
+                (('d', -1), ('e', -1))
+                )
+
 
 if __name__ == '__main__':
     unittest.main()
