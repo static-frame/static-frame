@@ -82,6 +82,28 @@ class TestUnit(TestCase):
                 (('w', (('c', -1), ('d', -1))), ('x', (('c', 6), ('d', 9))))
                 )
 
+    def test_frame_via_fill_value_loc_b(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'), name='foo')
+        self.assertEqual(f1.via_fill_value(-1).loc['a', 'z'], 2)
+        self.assertEqual(f1.via_fill_value(-1).loc['a', 'w'], -1)
+
+    def test_frame_via_fill_value_loc_c(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'), name='foo')
+        s1 = f1.via_fill_value(-1).loc['b', ['w', 'y', 'z']]
+        self.assertEqual(s1.to_pairs(),
+                (('w', -1), ('y', 4), ('z', 5)))
+        self.assertEqual(s1.name, 'b')
+
+
+    def test_frame_via_fill_value_loc_d(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'), name='foo')
+        s1 = f1.via_fill_value(-1).loc['q', ['w', 'y', 'z']]
+        self.assertEqual(s1.to_pairs(),
+                (('w', -1), ('y', -1), ('z', -1)))
+        self.assertEqual(s1.name, 'q')
 
         # import ipdb; ipdb.set_trace()
 
