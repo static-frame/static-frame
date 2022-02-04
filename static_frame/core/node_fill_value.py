@@ -97,7 +97,7 @@ class InterfaceFillValue(Interface[TContainer]):
         key_is_multiple = isinstance(key, KEY_MULTIPLE_TYPES)
         if key.__class__ is slice:
             key_is_null_slice = key == NULL_SLICE
-            key = index._extract_loc(key)
+            key = index._extract_loc(key) #type: ignore
         else:
             key_is_null_slice = False
         return key, key_is_multiple, key_is_null_slice
@@ -113,10 +113,10 @@ class InterfaceFillValue(Interface[TContainer]):
         container = self._container
 
         if is_multiple:
-            return container.reindex(key if not is_null_slice else None,
+            return container.reindex(key if not is_null_slice else None, #type: ignore
                     fill_value=fill_value,
                     )
-        return container.get(key, fill_value)
+        return container.get(key, fill_value) #type: ignore
 
     def _extract_loc2d(self,
             row_key: GetItemKeyType = NULL_SLICE,
@@ -127,7 +127,7 @@ class InterfaceFillValue(Interface[TContainer]):
         '''
         from static_frame.core.series import Series
         fill_value = self._fill_value
-        container = self._container
+        container = self._container # alway as Frame
 
         row_key, row_is_multiple, row_is_null_slice = self._extract_key_attrs(
                 row_key,
@@ -135,12 +135,12 @@ class InterfaceFillValue(Interface[TContainer]):
                 )
         column_key, column_is_multiple, column_is_null_slice = self._extract_key_attrs(
                 column_key,
-                container._columns,
+                container._columns, #type: ignore
                 )
 
         if row_is_multiple and column_is_multiple:
             # cannot reindex if loc keys are elements
-            return container.reindex(
+            return container.reindex( # type: ignore
                     index=row_key if not row_is_null_slice else None,
                     columns=column_key if not column_is_null_slice else None,
                     fill_value=fill_value,
@@ -149,26 +149,26 @@ class InterfaceFillValue(Interface[TContainer]):
             try:
                 return container.loc[row_key, column_key]
             except KeyError:
-                return fill_value
+                return fill_value #type: ignore
         elif not row_is_multiple:
             # row is an element, return Series indexed by columns
-            if row_key in container._index:
+            if row_key in container._index: #type: ignore
                 s = container.loc[row_key]
-                return s.reindex(column_key, fill_value=fill_value)
+                return s.reindex(column_key, fill_value=fill_value) #type: ignore
             return Series.from_element(fill_value,
                     index=column_key,
                     name=row_key,
                     )
         # columns is an element, return Series indexed by index
-        if column_key in container._columns:
+        if column_key in container._columns: #type: ignore
             s = container[column_key]
-            return s.reindex(row_key, fill_value=fill_value)
+            return s.reindex(row_key, fill_value=fill_value) #type: ignore
         return Series.from_element(fill_value,
                 index=row_key,
                 name=column_key,
                 )
 
-    def _extract_loc2d_compound(self, key: GetItemKeyTypeCompound):
+    def _extract_loc2d_compound(self, key: GetItemKeyTypeCompound) -> tp.Union['Frame', 'Series']:
         if isinstance(key, tuple):
             row_key, column_key = key
         else:
