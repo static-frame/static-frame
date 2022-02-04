@@ -4,6 +4,8 @@ import numpy as np
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.util import OPERATORS
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.util import GetItemKeyTypeCompound
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -78,6 +80,38 @@ class InterfaceFillValue(Interface[TContainer]):
                 container=self._container,
                 fill_value=self._fill_value,
                 )
+
+
+    #---------------------------------------------------------------------------
+
+    def _extract_loc(self, key: GetItemKeyTypeCompound) -> 'Frame':
+        if isinstance(key, tuple):
+            loc_row_key, loc_column_key = key
+        else:
+            loc_row_key = key
+
+        # if a key is a slice?
+        # will raise if out of bound slice
+        if loc_row_key.__class__ is slice:
+            loc_row_key = self._container._index._extract_loc(loc_row_key)
+        if loc_column_key.__class__ is slice:
+            loc_column_key = self._container._columns._extract_loc(loc_column_key)
+
+        # cannot reindex if loc keys are elements
+        f = self._container.reindex(index=loc_row_key,
+                columns=loc_column_key,
+                fill_value=self._fill_value,
+                )
+
+        # import ipdb; ipdb.set_trace()
+
+        return f
+
+
+    @property
+    def loc(self) -> InterfaceGetItem['Frame']:
+        return InterfaceGetItem(self._extract_loc)
+
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:

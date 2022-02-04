@@ -74,6 +74,16 @@ class TestUnit(TestCase):
             f2.via_fill_value(0)['a'] = range(5) # type: ignore #pylint: disable=E1137
 
 
+    def test_frame_via_fill_value_loc_a(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'), name='foo')
+        f2 = f1.via_fill_value(-1).loc['c':, ['w', 'x']]
+        self.assertEqual(f2.to_pairs(),
+                (('w', (('c', -1), ('d', -1))), ('x', (('c', 6), ('d', 9))))
+                )
+
+
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
