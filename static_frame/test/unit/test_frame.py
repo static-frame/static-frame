@@ -11552,11 +11552,11 @@ class TestUnit(TestCase):
         f2 = f1.unset_index()
 
         with self.assertRaises(RuntimeError):
-                post1 = f2.pivot(
-                        index_fields=('z', 'x'), # values in this field become the index
-                        data_fields=('a', 'b'),
-                        func=None,
-                        )
+            post1 = f2.pivot(
+                    index_fields=('z', 'x'), # values in this field become the index
+                    data_fields=('a', 'b'),
+                    func=None,
+                    )
 
 
     def test_frame_pivot_v(self) -> None:

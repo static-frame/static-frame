@@ -887,20 +887,19 @@ def ufunc_unique_flat(array: np.ndarray) -> np.ndarray:
     if array.dtype.kind == 'O':
         try:
             array = np.sort(array)
-            mask = np.empty(array.shape, dtype=DTYPE_BOOL)
-            mask[:1] = True
-            mask[1:] = array[1:] != array[:-1]
-            return array[mask]
+            sortable = True
         except TypeError: # if unorderable types
             # np.unique will give TypeError: The axis argument to unique is not supported for dtype object
-            pass
-        # Use a dict to retain order; this will break for non hashables
-        store = dict.fromkeys(array)
-        array = np.empty(len(store), dtype=object)
-        array[:] = tuple(store)
-        return array
+            sortable = False
+        if not sortable:
+            # Use a dict to retain order; this will break for non hashables
+            store = dict.fromkeys(array)
+            array = np.empty(len(store), dtype=object)
+            array[:] = tuple(store)
+            return array
+    else:
+        array = np.sort(array)
 
-    array = np.sort(array)
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
