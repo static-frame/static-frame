@@ -87,6 +87,7 @@ class TestUnit(TestCase):
         f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'), name='foo')
         self.assertEqual(f1.via_fill_value(-1).loc['a', 'z'], 2)
         self.assertEqual(f1.via_fill_value(-1).loc['a', 'w'], -1)
+        self.assertEqual(f1.name, 'foo')
 
     def test_frame_via_fill_value_loc_c(self) -> None:
 
@@ -99,14 +100,34 @@ class TestUnit(TestCase):
 
     def test_frame_via_fill_value_loc_d(self) -> None:
 
-        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'), name='foo')
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
         s1 = f1.via_fill_value(-1).loc['q', ['w', 'y', 'z']]
         self.assertEqual(s1.to_pairs(),
                 (('w', -1), ('y', -1), ('z', -1)))
         self.assertEqual(s1.name, 'q')
 
-        # import ipdb; ipdb.set_trace()
 
+    def test_frame_via_fill_value_loc_e(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
+        s1 = f1.via_fill_value(-1)['y']
+        self.assertEqual(s1.to_pairs(),
+                (('a', 1), ('b', 4), ('c', 7), ('d', 10))
+                )
+
+        f2 = f1.via_fill_value(-1)[['y', 'w']]
+        self.assertEqual(f2.to_pairs(),
+                (('y', (('a', 1), ('b', 4), ('c', 7), ('d', 10))), ('w', (('a', -1), ('b', -1), ('c', -1), ('d', -1))))
+                )
+
+    def test_frame_via_fill_value_loc_f(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
+        f2 = f1.via_fill_value(-1).loc[['b', 'e'], ['y', 'q']]
+
+        self.assertEqual(f2.to_pairs(),
+                (('y', (('b', 4), ('e', -1))), ('q', (('b', -1), ('e', -1))))
+                )
 
 if __name__ == '__main__':
     unittest.main()
