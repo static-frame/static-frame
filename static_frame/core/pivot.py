@@ -17,7 +17,7 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import ufunc_unique
-from static_frame.core.util import ufunc_unique_flat
+from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.type_blocks import TypeBlocks
@@ -296,7 +296,7 @@ def pivot_core(
         # sub is TypeBlocks unique value in columns_group; this may or may not have unique index fields; if not, it needs to be aggregated
         if index_depth == 1:
             sub_index_labels = sub._extract_array_column(index_fields_iloc[0])
-            sub_index_labels_unique = ufunc_unique_flat(sub_index_labels)
+            sub_index_labels_unique = ufunc_unique1d(sub_index_labels)
         else: # match to an index of tuples; the order might not be the same as IH
             # NOTE: might be able to keep arays and concat below
             sub_index_labels = tuple(zip(*(
@@ -408,7 +408,7 @@ def pivot_outer_index(
     index_loc = index_fields if index_depth > 1 else index_fields[0]
 
     if index_depth == 1:
-        index_values = ufunc_unique_flat(
+        index_values = ufunc_unique1d(
                 frame._blocks._extract_array_column(
                         frame._columns._loc_to_iloc(index_loc)),
                 )

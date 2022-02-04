@@ -3275,10 +3275,10 @@ class TestUnit(TestCase):
 
         group = tuple(s1.iter_group(axis=0))
 
-        self.assertEqual(group[0].to_pairs(),
+        self.assertEqual(group[1].to_pairs(),
                 (('a', 10), ('c', 10), ('e', 10)))
 
-        self.assertEqual(group[1].to_pairs(),
+        self.assertEqual(group[0].to_pairs(),
                 (('b', 4), ('d', 4)))
 
         with self.assertRaises(AxisInvalid):

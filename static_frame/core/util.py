@@ -880,7 +880,7 @@ def ufunc_unique(
     return np.unique(array, axis=axis)
 
 
-def ufunc_unique_flat(array: np.ndarray) -> np.ndarray:
+def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     '''
     Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
     '''
@@ -889,7 +889,6 @@ def ufunc_unique_flat(array: np.ndarray) -> np.ndarray:
             array = np.sort(array)
             sortable = True
         except TypeError: # if unorderable types
-            # np.unique will give TypeError: The axis argument to unique is not supported for dtype object
             sortable = False
         if not sortable:
             # Use a dict to retain order; this will break for non hashables
@@ -904,6 +903,35 @@ def ufunc_unique_flat(array: np.ndarray) -> np.ndarray:
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
     return array[mask]
+
+
+def ufunc_unique1d_inverse(array: np.ndarray,
+        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+    '''
+    Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
+    '''
+    if array.dtype.kind == 'O':
+        try:
+            positions = array.argsort()
+            sortable = True
+        except TypeError: # if unorderable types
+            sortable = False
+        if not sortable:
+            # match on string representation as last resot
+            positions = array.astype(str).argsort()
+    else:
+        positions = array.argsort()
+
+    array = array[positions]
+    mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+    mask[:1] = True
+    mask[1:] = array[1:] != array[:-1]
+
+    inv_idx = np.empty(mask.shape, dtype=np.intp)
+    inv_idx[positions] = np.cumsum(mask) - 1
+
+    return array[mask], inv_idx
+
 
 
 def roll_1d(array: np.ndarray,
@@ -1472,6 +1500,8 @@ def array_to_groups_and_locations(
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''Locations are index positions for each group.
     '''
+    if array.ndim == 1:
+        return ufunc_unique1d_inverse(array)
     try:
         groups, locations = np.unique(
                 array,
