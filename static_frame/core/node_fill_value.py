@@ -13,6 +13,7 @@ from static_frame.core.util import GetItemKeyType
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import FrameGO  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
@@ -88,8 +89,36 @@ class InterfaceFillValue(Interface[TContainer]):
 
 
     #---------------------------------------------------------------------------
+    @staticmethod
+    def _extract_key_attrs(
+            key: GetItemKeyType,
+            index: 'IndexBase',
+            ) -> tp.Tuple[GetItemKeyType, bool, bool]:
+        key_is_multiple = isinstance(key, KEY_MULTIPLE_TYPES)
+        if key.__class__ is slice:
+            key_is_null_slice = key == NULL_SLICE
+            key = index._extract_loc(key)
+        else:
+            key_is_null_slice = False
+        return key, key_is_multiple, key_is_null_slice
 
-    def _extract_loc(self,
+    def _extract_loc1d(self,
+            key: GetItemKeyType = NULL_SLICE,
+            ) -> 'Series':
+        key, is_multiple, is_null_slice = self._extract_key_attrs(
+                key,
+                self._container._index,
+                )
+        fill_value = self._fill_value
+        container = self._container
+
+        if is_multiple:
+            return container.reindex(key if not is_null_slice else None,
+                    fill_value=fill_value,
+                    )
+        return container.get(key, fill_value)
+
+    def _extract_loc2d(self,
             row_key: GetItemKeyType = NULL_SLICE,
             column_key: GetItemKeyType = NULL_SLICE,
             ) -> tp.Union['Frame', 'Series']:
@@ -100,44 +129,36 @@ class InterfaceFillValue(Interface[TContainer]):
         fill_value = self._fill_value
         container = self._container
 
-        # if a key is a slice, we convert it into
-        row_key_is_multiple = isinstance(row_key, KEY_MULTIPLE_TYPES)
-        if row_key.__class__ is slice:
-            row_key_is_null_slice = row_key == NULL_SLICE
-            row_key = container._index._extract_loc(row_key)
-        else:
-            row_key_is_null_slice = False
+        row_key, row_is_multiple, row_is_null_slice = self._extract_key_attrs(
+                row_key,
+                container._index,
+                )
+        column_key, column_is_multiple, column_is_null_slice = self._extract_key_attrs(
+                column_key,
+                container._columns,
+                )
 
-        column_key_is_multiple = isinstance(column_key, KEY_MULTIPLE_TYPES)
-        if column_key.__class__ is slice:
-            column_key_is_null_slice = column_key == NULL_SLICE
-            column_key = container._columns._extract_loc(column_key)
-        else:
-            column_key_is_null_slice = False
-
-        if row_key_is_multiple and column_key_is_multiple:
+        if row_is_multiple and column_is_multiple:
             # cannot reindex if loc keys are elements
             return container.reindex(
-                    index=row_key if not row_key_is_null_slice else None,
-                    columns=column_key if not column_key_is_null_slice else None,
+                    index=row_key if not row_is_null_slice else None,
+                    columns=column_key if not column_is_null_slice else None,
                     fill_value=fill_value,
                     )
-        elif not row_key_is_multiple and not column_key_is_multiple:
-            # selecting an element
+        elif not row_is_multiple and not column_is_multiple: # selecting an element
             try:
                 return container.loc[row_key, column_key]
             except KeyError:
                 return fill_value
-        elif not row_key_is_multiple:
+        elif not row_is_multiple:
             # row is an element, return Series indexed by columns
             if row_key in container._index:
                 s = container.loc[row_key]
                 return s.reindex(column_key, fill_value=fill_value)
-            else:
-                return Series.from_element(fill_value,
-                        index=column_key,
-                        name=row_key,
-                        )
+            return Series.from_element(fill_value,
+                    index=column_key,
+                    name=row_key,
+                    )
         # columns is an element, return Series indexed by index
         if column_key in container._columns:
             s = container[column_key]
@@ -147,22 +168,26 @@ class InterfaceFillValue(Interface[TContainer]):
                 name=column_key,
                 )
 
-    def _extract_loc_compound(self, key: GetItemKeyTypeCompound):
+    def _extract_loc2d_compound(self, key: GetItemKeyTypeCompound):
         if isinstance(key, tuple):
             row_key, column_key = key
         else:
             row_key = key
             column_key = NULL_SLICE
-        return self._extract_loc(row_key, column_key)
+        return self._extract_loc2d(row_key, column_key)
 
     @property
     def loc(self) -> InterfaceGetItem['Frame']:
-        '''Label-based selection where labels not specified will define a new :obj:`Frame` containing those values filled with the fill value.
+        '''Label-based selection where labels not specified will define a new :obj:`Frame` containing those labels filled with the fill value.
         '''
-        return InterfaceGetItem(self._extract_loc_compound)
+        if self._container._NDIM == 1:
+            return InterfaceGetItem(self._extract_loc1d)
+        return InterfaceGetItem(self._extract_loc2d_compound)
 
     def __getitem__(self,  key: GetItemKeyType) -> tp.Union['Frame', 'Series']:
-        return self._extract_loc(NULL_SLICE, key)
+        if self._container._NDIM == 1:
+            return self._extract_loc1d(key)
+        return self._extract_loc2d(NULL_SLICE, key)
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
