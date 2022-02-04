@@ -1173,8 +1173,6 @@ class IndexHierarchy(IndexBase):
         '''
         Given iterable of GetItemKeyTypes, apply to each level of levels.
         '''
-        from static_frame.core.series import Series
-
         if isinstance(key, ILoc):
             return key.key
 
@@ -1410,7 +1408,7 @@ class IndexHierarchy(IndexBase):
             {compare_class}
             {skipna}
         '''
-        # NOTE: do not need to udpate array cache, as can compare elemetns in levels
+        # NOTE: do not need to udpate array cache, as can compare elements in levels
         if id(other) == id(self):
             return True
 

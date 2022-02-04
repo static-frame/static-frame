@@ -97,7 +97,7 @@ from static_frame.core.util import (
     ufunc_unique,
     union2d,
 )
-
+from tqdm import tqdm
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -214,8 +214,9 @@ class IndexHierarchy2(IndexBase):
         if index_constructors is None:
             for lvl in levels:
                 if not isinstance(lvl, Index): # Index, not IndexBase
-                    index = cls._INDEX_CONSTRUCTOR(lvl)
-                indices.append(index)
+                    indices.append(cls._INDEX_CONSTRUCTOR(lvl))
+                else:
+                    indices.append(lvl)
         else:
             if callable(index_constructors): # support a single constrctor
                 pair_iter = zip(levels, itertools.repeat(index_constructors))
@@ -267,7 +268,7 @@ class IndexHierarchy2(IndexBase):
             name: NameType = None,
             reorder_for_hierarchy: bool = False,
             index_constructors: tp.Optional[IndexConstructors] = None,
-            depth_reference: tp.Optional[int] = None,
+            depth_reference: tp.Optional[DepthLevelSpecifier] = None,
             continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE
             ) -> IH:
         '''
@@ -277,7 +278,6 @@ class IndexHierarchy2(IndexBase):
             labels: an iterator or generator of tuples.
             *,
             name:
-            reorder_for_hierarchy: reorder the labels to produce a hierarchable Index, assuming hierarchability is possible.
             index_constructors:
             depth_reference:
             continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
@@ -285,7 +285,55 @@ class IndexHierarchy2(IndexBase):
         Returns:
             :obj:`static_frame.IndexHierarchy2`
         '''
-        raise NotImplementedError()
+        # NOTE: This does nothing to enforce the sortedness of the labels!
+        labels = iter(labels)
+        label_row = next(labels)
+        depth = len(label_row)
+
+        if index_constructors is None:
+            constructor_iter = (cls._INDEX_CONSTRUCTOR for _ in range(depth))
+        elif callable(index_constructors):
+            constructor_iter = (index_constructors for _ in range(depth))
+        else:
+            constructor_iter = tuple(index_constructors)
+            if len(constructor_iter) != depth:
+                raise ValueError("index_constructors must be the same length as the number of levels in the hierarchy.")
+
+        hash_maps = [{} for _ in range(depth)]
+        indexers = [[] for _ in range(depth)]
+
+        prev_row = None
+
+        while True:
+            for hash_map, indexer, val in zip(hash_maps, indexers, label_row):
+                if val is continuation_token:
+                    if prev_row is None:
+                        raise RuntimeError("continuation_token used without previous row.")
+                    else:
+                        i = indexer[-1]
+                        val = prev_row[i]
+                elif val not in hash_map:
+                    i = len(hash_map)
+                    hash_map[val] = len(hash_map)
+                else:
+                    i = hash_map[val]
+
+                indexer.append(i)
+
+            prev_row = label_row
+            try:
+                label_row = next(labels)
+            except StopIteration:
+                break
+
+            if len(label_row) != depth:
+                raise ErrorInitIndex("All labels must have the same depth.")
+
+        return cls(
+            indices=[constructor(hash_map) for constructor, hash_map in zip(constructor_iter, hash_maps)],
+            indexers=list(map(np.array, indexers)),
+            name=name,
+        )
 
     @classmethod
     def from_index_items(cls: tp.Type[IH],
@@ -439,8 +487,8 @@ class IndexHierarchy2(IndexBase):
                 indices=self._indices,
                 indexers=self._indexers,
                 name=self._name,
-                blocks=blocks,
-                own_blocks=True
+                _blocks=blocks,
+                _own_blocks=True
                 )
 
     def copy(self: IH) -> IH:
@@ -813,7 +861,25 @@ class IndexHierarchy2(IndexBase):
             depth_level: DepthLevelSpecifier = 0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
         '''{}'''
-        raise NotImplementedError()
+        pos: tp.Optional[int] = None
+        if not isinstance(depth_level, INT_TYPES):
+            sel = list(depth_level)
+            if len(sel) == 1:
+                pos = sel.pop()
+        else: # is an int
+            pos = depth_level
+
+        if pos is not None:  # i.e. depth_level is an int
+
+            unique, widths = np.unique(self._indexers[pos], return_counts=True)
+            labels = np.take(self._indices[pos], unique)
+
+            result = np.empty(len(unique), dtype=object)
+            result[:] = list(zip(labels, widths))
+            result.flags.writeable = False
+            return result
+
+        raise NotImplementedError("selecting multiple depth levels is not yet implemented")
 
     @property
     def index_types(self) -> 'Series':
@@ -908,7 +974,27 @@ class IndexHierarchy2(IndexBase):
         '''
         Given iterable of GetItemKeyTypes, apply to each level of levels.
         '''
+        if isinstance(key, ILoc):
+            return key.key
+
+        if isinstance(key, IndexHierarchy2):
+            # default iteration of IH is as tuple
+            raise NotImplementedError()
+            #return [self._levels.leaf_loc_to_iloc(k) for k in key]
+
+        if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
+            return self.positions[key]
+
+        if isinstance(key, HLoc):
+            # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
+            key = HLoc(tuple(
+                    key_from_container_key(self, k, expand_iloc=True)
+                    for k in key))
+        else:
+            key = key_from_container_key(self, key)
+
         raise NotImplementedError()
+        #return self._levels.loc_to_iloc(key)
 
     def loc_to_iloc(self,
             key: tp.Union[GetItemKeyType, HLoc]
@@ -1041,7 +1127,8 @@ class IndexHierarchy2(IndexBase):
     def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
         '''Iterate over labels.
         '''
-        raise NotImplementedError()
+        # Don't use .values, as that can coerce types
+        yield from zip(*map(self.values_at_depth, range(self.depth)))
 
     def __reversed__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
         '''
@@ -1072,7 +1159,18 @@ class IndexHierarchy2(IndexBase):
         Returns:
             :obj:`numpy.ndarray`
         '''
-        raise NotImplementedError()
+        pos: tp.Optional[int] = None
+        if not isinstance(depth_level, INT_TYPES):
+            sel = list(depth_level)
+            if len(sel) == 1:
+                pos = sel.pop()
+        else: # is an int
+            pos = depth_level
+
+        if pos is not None: # i.e. a single level
+            return self._indices[pos].values
+
+        return np.unique(array2d_to_array1d(self.values_at_depth(sel)))
 
     @doc_inject()
     def equals(self,
@@ -1092,6 +1190,23 @@ class IndexHierarchy2(IndexBase):
             {compare_class}
             {skipna}
         '''
+        # NOTE: do not need to udpate array cache, as can compare elements in levels
+        if id(other) == id(self):
+            return True
+
+        if compare_class and self.__class__ != other.__class__:
+            return False
+
+        if not isinstance(other, IndexHierarchy2):
+            return False
+
+        # same type from here
+        if self.shape != other.shape:
+            return False
+
+        if compare_name and self.name != other.name:
+            return False
+
         raise NotImplementedError()
 
     @doc_inject(selector='sort')
