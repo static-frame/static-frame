@@ -155,6 +155,7 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_unique
+from static_frame.core.util import ufunc_unique_flat
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import DTYPE_DATETIME_KIND
@@ -6000,9 +6001,9 @@ class Frame(ContainerOperand):
                     valid = ~isna_array(values)
 
                 if unique and valid is None:
-                    array[i] = len(ufunc_unique(values))
+                    array[i] = len(ufunc_unique_flat(values))
                 elif unique and valid is not None: # valid is a Boolean array
-                    array[i] = len(ufunc_unique(values[valid]))
+                    array[i] = len(ufunc_unique_flat(values[valid]))
                 elif not unique and valid is not None:
                     array[i] = valid.sum()
                 else: # not unique, valid is None, means no removals, handled above
@@ -7146,7 +7147,7 @@ class Frame(ContainerOperand):
         else:
             index_name = index.names
             # index values are reduced to unique values for 2d presentation
-            coords = {index_name[d]: ufunc_unique(index.values_at_depth(d))
+            coords = {index_name[d]: ufunc_unique_flat(index.values_at_depth(d))
                     for d in range(index.depth)}
             # create dictionary version
             coords_index = {k: Index(v) for k, v in coords.items()}

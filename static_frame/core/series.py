@@ -94,7 +94,7 @@ from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import ufunc_unique
+from static_frame.core.util import ufunc_unique_flat
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
@@ -2461,9 +2461,9 @@ class Series(ContainerOperand):
             valid = ~isna_array(values)
 
         if unique and valid is None:
-            return len(ufunc_unique(values))
+            return len(ufunc_unique_flat(values))
         elif unique and valid is not None: # valid is a Boolean array
-            return len(ufunc_unique(values[valid]))
+            return len(ufunc_unique_flat(values[valid]))
         elif not unique and valid is not None:
             return valid.sum() #type: ignore [no-any-return]
         # not unique, valid is None, means no removals, handled above
@@ -2723,7 +2723,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`numpy.ndarray`
         '''
-        return ufunc_unique(self.values)
+        return ufunc_unique_flat(self.values)
 
     @doc_inject()
     def equals(self,

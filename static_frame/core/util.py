@@ -839,43 +839,6 @@ def unique1d_array_mask(array: np.ndarray
     return array, None
 
 
-
-
-# def _unique1d(ar,
-#         return_index=False,
-#         return_inverse=False,
-#         ):
-#     """
-#     Find the unique elements of an array, ignoring shape.
-#     """
-#     optional_indices = return_index or return_inverse
-
-#     if optional_indices:
-#         perm = ar.argsort(kind='mergesort' if return_index else 'quicksort')
-#         aux = ar[perm]
-#     else:
-#         ar.sort()
-#         aux = ar
-
-#     mask = np.empty(aux.shape, dtype=DTYPE_BOOL)
-#     mask[:1] = True
-#     mask[1:] = aux[1:] != aux[:-1]
-
-#     # ret = (aux[mask],)
-#     unique_array = aux[mask]
-
-#     if return_index:
-#         ret += (perm[mask],)
-#     if return_inverse:
-#         imask = np.cumsum(mask) - 1
-#         inv_idx = np.empty(mask.shape, dtype=np.intp)
-#         inv_idx[perm] = imask
-#         ret += (inv_idx,)
-
-#     return ret
-
-
-
 def ufunc_unique(
         array: np.ndarray,
         *,
@@ -913,7 +876,35 @@ def ufunc_unique(
         return array
 
     # all other types, use the main ufunc
+    # NOTE: this may use an unstable sort!
     return np.unique(array, axis=axis)
+
+
+def ufunc_unique_flat(array: np.ndarray) -> np.ndarray:
+    '''
+    Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
+    '''
+    if array.dtype.kind == 'O':
+        try:
+            array = np.sort(array)
+            mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+            mask[:1] = True
+            mask[1:] = array[1:] != array[:-1]
+            return array[mask]
+        except TypeError: # if unorderable types
+            # np.unique will give TypeError: The axis argument to unique is not supported for dtype object
+            pass
+        # Use a dict to retain order; this will break for non hashables
+        store = dict.fromkeys(array)
+        array = np.empty(len(store), dtype=object)
+        array[:] = tuple(store)
+        return array
+
+    array = np.sort(array)
+    mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+    mask[:1] = True
+    mask[1:] = array[1:] != array[:-1]
+    return array[mask]
 
 
 def roll_1d(array: np.ndarray,

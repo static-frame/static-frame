@@ -831,6 +831,7 @@ class Pivot(Perf):
                 )
 
         from static_frame.core.pivot import pivot_outer_index
+        from static_frame.core.pivot import pivot_core
         from static_frame import TypeBlocks
         from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
@@ -1465,3 +1466,4 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
+
