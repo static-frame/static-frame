@@ -178,13 +178,15 @@ class InterfaceFillValue(Interface[TContainer]):
 
     @property
     def loc(self) -> InterfaceGetItem['Frame']:
-        '''Label-based selection where labels not specified will define a new :obj:`Frame` containing those labels filled with the fill value.
+        '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:
             return InterfaceGetItem(self._extract_loc1d)
         return InterfaceGetItem(self._extract_loc2d_compound)
 
     def __getitem__(self,  key: GetItemKeyType) -> tp.Union['Frame', 'Series']:
+        '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
+        '''
         if self._container._NDIM == 1:
             return self._extract_loc1d(key)
         return self._extract_loc2d(NULL_SLICE, key)
