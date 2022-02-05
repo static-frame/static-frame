@@ -126,7 +126,57 @@ def pivot_records_items(
 
 from static_frame.core.util import NameType
 
-def pivot_items(
+def pivot_items_to_frame(
+        blocks: TypeBlocks,
+        group_fields_iloc: tp.Iterable[tp.Hashable],
+        group_depth: int,
+        data_field_iloc: tp.Hashable,
+        func_single: tp.Optional[UFunc],
+        frame_cls: tp.Type['Frame'],
+        name: NameType,
+        dtype: np.dtype,
+        index_constructor: IndexConstructor,
+        columns_constructor: IndexConstructor,
+        ) -> 'Series':
+    '''
+    Specialized generator of pairs for when we have only one data_field and one function.
+    This version returns a Frame.
+    '''
+    # from static_frame.core.series import Series
+    from static_frame.core.frame import Frame
+    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+
+    if func_single:
+        # this approach shown to be slower
+        index = []
+        def gen():
+            for label, _, sub in blocks.group(axis=0, key=group_key):
+                values = sub._extract_array_column(data_field_iloc)
+                index.append(label)
+                yield func_single(values) # cannot know the dtype
+        return frame_cls.from_elements(
+                gen(),
+                columns=(name,),
+                index=index,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                dtype=dtype,
+                )
+    # func_no scenario
+    # labels via blocks._extract_array_column(group_key) must be unique
+    if group_depth == 1:
+        return frame_cls.from_elements(
+                blocks._extract_array_column(data_field_iloc),
+                index=blocks._extract_array_column(group_key),
+                columns=(name,),
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                dtype=dtype,
+                )
+    raise NotImplementedError()
+
+# migrate this to be to blocks
+def pivot_items_to_series(
         blocks: TypeBlocks,
         group_fields_iloc: tp.Iterable[tp.Hashable],
         group_depth: int,
@@ -135,6 +185,7 @@ def pivot_items(
         dtype: np.dtype,
         name: NameType = None,
         index_constructor: IndexConstructor = None,
+        index_outer: 'IndexBase' = None,
         ) -> 'Series':
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
@@ -164,6 +215,7 @@ def pivot_items(
                 index_constructor=index_constructor,
                 )
     raise NotImplementedError()
+
 
 
 def pivot_core(
@@ -203,6 +255,7 @@ def pivot_core(
         columns_name = columns_name + ('func',)
 
     columns_depth = len(columns_name)
+
     if columns_depth == 1:
         columns_name = columns_name[0] # type: ignore
         columns_constructor = partial(frame._COLUMNS_CONSTRUCTOR, name=columns_name)
@@ -242,17 +295,17 @@ def pivot_core(
             index_constructor = partial(Index, name=name_index)
 
         if len(columns) == 1: # lenght of columns is equal to length of datafields
-            f = frame.from_series(
-                    pivot_items(blocks=frame._blocks,
-                            group_fields_iloc=index_fields_iloc,
-                            group_depth=index_depth,
-                            data_field_iloc=data_fields_iloc[0],
-                            func_single=func_single,
-                            name=columns[0],
-                            index_constructor=index_constructor,
-                            dtype=dtype_single,
-                            ),
-                    columns_constructor=columns_constructor)
+            f = pivot_items_to_frame(blocks=frame._blocks,
+                    group_fields_iloc=index_fields_iloc,
+                    group_depth=index_depth,
+                    data_field_iloc=data_fields_iloc[0],
+                    func_single=func_single,
+                    frame_cls=frame.__class__,
+                    name=columns[0],
+                    dtype=dtype_single,
+                    index_constructor=index_constructor,
+                    columns_constructor=columns_constructor,
+                    )
         else:
             f = frame.from_records_items(
                     pivot_records_items(
@@ -270,7 +323,8 @@ def pivot_core(
                     dtypes=dtypes_per_data_fields,
                     )
 
-        # have to rename columns if derived in from_concat
+        # have to rename columns if derived in from_concat:
+        # NOTE: not sure if have to call call columns_constructor
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
                 else columns_constructor(f.columns))
         return f.relabel(columns=columns_final) #type: ignore
@@ -330,12 +384,13 @@ def pivot_core(
             if len(sub_columns) == 1:
                 assert len(data_fields) == 1
                 # NOTE: grouping on index_fields; can pre-process array_to_groups_and_locations
-                sub_frame = pivot_items(blocks=sub,
+                sub_frame = pivot_items_to_series(blocks=sub,
                                 group_fields_iloc=index_fields_iloc,
                                 group_depth=index_depth,
                                 data_field_iloc=data_fields_iloc[0],
                                 func_single=func_single,
                                 dtype=dtype_single,
+                                index_outer=index_outer,
                                 )
             else:
                 sub_frame = Frame.from_records_items(
