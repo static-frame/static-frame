@@ -832,6 +832,7 @@ class Pivot(Perf):
 
         # from static_frame.core.pivot import pivot_outer_index
         from static_frame.core.pivot import pivot_core
+        from static_frame.core.pivot import pivot_items_to_block
         from static_frame import TypeBlocks
         from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
@@ -840,7 +841,7 @@ class Pivot(Perf):
                 line_target=array_to_groups_and_locations,
                 ),
             'index1_columns1_data1': FunctionMetaData(
-                line_target=pivot_core,
+                line_target=pivot_items_to_block,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             }

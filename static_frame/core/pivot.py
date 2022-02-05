@@ -176,16 +176,15 @@ def pivot_items_to_frame(
     raise NotImplementedError()
 
 # migrate this to be to blocks
-def pivot_items_to_series(
+def pivot_items_to_block(
         blocks: TypeBlocks,
         group_fields_iloc: tp.Iterable[tp.Hashable],
         group_depth: int,
         data_field_iloc: tp.Hashable,
         func_single: tp.Optional[UFunc],
         dtype: np.dtype,
-        name: NameType = None,
-        index_constructor: IndexConstructor = None,
-        index_outer: 'IndexBase' = None,
+        fill_value: tp.Any,
+        index_outer: 'IndexBase',
         ) -> 'Series':
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
@@ -193,27 +192,36 @@ def pivot_items_to_series(
     from static_frame.core.series import Series
     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
 
+    array = np.full(len(index_outer), fill_value, dtype=dtype)
     if func_single:
         # this approach shown to be slower
         # if group_depth == 1 and len(ufunc_unique1d(blocks._extract_array_column(group_key))) == len(blocks):
         #     pass
-        def gen():
-            for label, _, sub in blocks.group(axis=0, key=group_key):
-                values = sub._extract_array_column(data_field_iloc)
-                yield label, func_single(values)
-        return Series.from_items(gen(),
-                name=name,
-                index_constructor=index_constructor,
-                dtype=dtype,
-                )
+        for label, _, values in blocks.group_extract(
+                axis=0,
+                key=group_key,
+                extract=data_field_iloc,
+                ):
+            # values = sub._extract_array_column(data_field_iloc)
+            array[index_outer._loc_to_iloc(label)] = func_single(values)
+        array.flags.writeable = False
+        return array
+
     # func_no scenario
     # labels via blocks._extract_array_column(group_key) must be unique
     if group_depth == 1:
-        return Series(blocks._extract_array_column(data_field_iloc),
-                index=blocks._extract_array_column(group_key),
-                name=name,
-                index_constructor=index_constructor,
-                )
+        for label, value in zip(
+                blocks._extract_array_column(group_key),
+                blocks._extract_array_column(data_field_iloc),
+                ):
+            array[index_outer._loc_to_iloc(label)] = value
+        array.flags.writeable = False
+        return array
+
+        # return Series(blocks._extract_array_column(data_field_iloc),
+        #         index=blocks._extract_array_column(group_key),
+        #         index_constructor=index_constructor,
+        #         )
     raise NotImplementedError()
 
 
@@ -384,14 +392,17 @@ def pivot_core(
             if len(sub_columns) == 1:
                 assert len(data_fields) == 1
                 # NOTE: grouping on index_fields; can pre-process array_to_groups_and_locations
-                sub_frame = pivot_items_to_series(blocks=sub,
+                sub_block = pivot_items_to_block(blocks=sub,
                                 group_fields_iloc=index_fields_iloc,
                                 group_depth=index_depth,
                                 data_field_iloc=data_fields_iloc[0],
                                 func_single=func_single,
                                 dtype=dtype_single,
                                 index_outer=index_outer,
+                                fill_value=fill_value,
                                 )
+                sub_blocks.append(sub_block)
+                continue
             else:
                 sub_frame = Frame.from_records_items(
                         pivot_records_items(
