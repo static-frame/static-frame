@@ -8,6 +8,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
+from static_frame.core.util import PositionsAllocator
 
 if tp.TYPE_CHECKING:
 
@@ -91,7 +92,7 @@ class IndexCorrespondence:
                     iloc_src = src_index._loc_to_iloc(values_dst.tolist())
                 else:
                     iloc_src = src_index._loc_to_iloc(values_dst)
-                iloc_dst = np.arange(size)
+                iloc_dst = PositionsAllocator.get(size)
                 return cls(has_common=has_common,
                         is_subset=True,
                         iloc_src=iloc_src,
@@ -115,7 +116,8 @@ class IndexCorrespondence:
                 is_subset=False,
                 iloc_src=None,
                 iloc_dst=None,
-                size=size)
+                size=size,
+                )
 
 
     def __init__(self,
