@@ -3,23 +3,14 @@ from __future__ import annotations
 import functools
 import itertools
 import typing as tp
-from ast import literal_eval
 from copy import deepcopy
-from itertools import (
-    chain,
-    repeat,
-    zip_longest,
-)
-from operator import attrgetter
 
 import numpy as np
 from arraykit import (
     name_filter,
-    resolve_dtype,
 )
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.container_util import (
-    index_from_optional_constructor,
     key_from_container_key,
     matmul,
     rehierarch_from_type_blocks,
@@ -30,6 +21,7 @@ from static_frame.core.display import (
     DisplayActive,
     DisplayHeader,
 )
+from static_frame.core.util import arrays_equal
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
@@ -38,7 +30,6 @@ from static_frame.core.index import (
     ILoc,
     Index,
     IndexGO,
-    mutable_immutable_index_filter,
 )
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
@@ -69,7 +60,6 @@ from static_frame.core.util import (
     DEFAULT_SORT_KIND,
     DTYPE_BOOL,
     DTYPE_OBJECT,
-    EMPTY_TUPLE,
     INT_TYPES,
     NAME_DEFAULT,
     NULL_SLICE,
@@ -86,18 +76,14 @@ from static_frame.core.util import (
     array2d_to_array1d,
     array2d_to_tuples,
     array_sample,
-    concat_resolved,
     intersect2d,
     isin,
     isna_array,
-    iterable_to_array_1d,
     iterable_to_array_2d,
     key_to_datetime_key,
     setdiff2d,
-    ufunc_unique,
     union2d,
 )
-from tqdm import tqdm
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -287,7 +273,11 @@ class IndexHierarchy2(IndexBase):
         '''
         # NOTE: This does nothing to enforce the sortedness of the labels!
         labels = iter(labels)
-        label_row = next(labels)
+        try:
+            label_row = next(labels)
+        except StopIteration:
+            return cls.from_names(names=tuple(f"__index{i}__" for i in range(depth_reference)))
+
         depth = len(label_row)
 
         if index_constructors is None:
@@ -381,6 +371,9 @@ class IndexHierarchy2(IndexBase):
             names: Iterable of hashable names per depth.
         '''
         name = tuple(names)
+        if len(name) == 0:
+            raise ErrorInitIndex("names must be non-empty.")
+
         return cls(
             indices=[cls._INDEX_CONSTRUCTOR((), name=name) for name in names],
             indexers=[np.array([], dtype=int) for _ in names],
@@ -769,9 +762,7 @@ class IndexHierarchy2(IndexBase):
         if both_sized and isinstance(other, IndexHierarchy2):
             index_constructors = []
             # depth, and length of index_types, must be equal
-            for cls_self, cls_other in zip(
-                    self._index_constructors,
-                    other._levels.index_types()):
+            for cls_self, cls_other in zip(self._index_constructors, other._index_constructors):
                 if cls_self == cls_other:
                     index_constructors.append(cls_self)
                 else:
@@ -856,30 +847,48 @@ class IndexHierarchy2(IndexBase):
 
         return self._blocks._extract_array(column_key=sel)
 
+    # TODO: VERY SLOW!
     @doc_inject()
     def label_widths_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
         '''{}'''
         pos: tp.Optional[int] = None
-        if not isinstance(depth_level, INT_TYPES):
+
+        if depth_level is None:
+            raise NotImplementedError('depth_level of None is not supported')
+        elif not isinstance(depth_level, INT_TYPES):
             sel = list(depth_level)
             if len(sel) == 1:
                 pos = sel.pop()
         else: # is an int
             pos = depth_level
 
-        if pos is not None:  # i.e. depth_level is an int
+        if pos is None:
+            raise NotImplementedError("selecting multiple depth levels is not yet implemented")
 
-            unique, widths = np.unique(self._indexers[pos], return_counts=True)
-            labels = np.take(self._indices[pos], unique)
+        def _extractor(arr: np.ndarray, pos: int) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+            unique, widths = np.unique(arr, return_counts=True)
+            labels = np.take(self._indices[pos].values, unique)
+            yield from zip(labels, widths)
 
-            result = np.empty(len(unique), dtype=object)
-            result[:] = list(zip(labels, widths))
-            result.flags.writeable = False
-            return result
+        # i.e. depth_level is an int
+        if pos == 0:
+            arr = self._indexers[pos]
+            yield from _extractor(arr, pos)
+            return
 
-        raise NotImplementedError("selecting multiple depth levels is not yet implemented")
+        def gen()-> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+            for outer_level_idxs in itertools.product(*map(range, map(len, self._indices[:pos]))):
+                screen = np.full(self.__len__(), True, dtype=bool)
+
+                for i, outer_level_idx in enumerate(outer_level_idxs):
+                    screen &= (self._indexers[i] == outer_level_idx)
+
+                arr = self._indexers[pos][screen]
+                yield from _extractor(arr, pos)
+
+        yield from gen()
 
     @property
     def index_types(self) -> 'Series':
@@ -993,8 +1002,43 @@ class IndexHierarchy2(IndexBase):
         else:
             key = key_from_container_key(self, key)
 
-        raise NotImplementedError()
-        #return self._levels.loc_to_iloc(key)
+        self_len = self.__len__()
+
+        mask = np.full(self_len, True, dtype=bool)
+
+        for i, k in enumerate(key):
+            if k == NULL_SLICE:
+                continue
+
+            if isinstance(k, slice):
+                if k.start is not None:
+                    idx = self._indices[i].loc_to_iloc(k.start)
+                    start = np.argmax(self._indexers[i]==idx) # Arraykit: find_first_vectorized?
+                else:
+                    start = None
+
+                if k.step is not None and not isinstance(k.step, INT_TYPES):
+                    raise NotImplementedError(f"step must be an integer. What does this even mean? {k}")
+
+                if k.stop is not None:
+                    idx = self._indices[i].loc_to_iloc(k.stop)
+                    stop = np.argmax(self._indexers[i]==idx) # Arraykit: find_first_vectorized?
+                else:
+                    stop = None
+
+                # Is this the most efficient way to do this?
+                tmp_mask = np.full(self_len, False, dtype=bool)
+                tmp_mask[start:stop:k.step] = True
+            else:
+                key_iloc = self._indices[i].loc_to_iloc(k)
+                tmp_mask = self._indexers[i] == key_iloc
+
+            mask &= tmp_mask
+
+        positions = self.positions[mask]
+        if len(positions) == 1:
+            return positions[0]
+        return positions
 
     def loc_to_iloc(self,
             key: tp.Union[GetItemKeyType, HLoc]
@@ -1142,7 +1186,20 @@ class IndexHierarchy2(IndexBase):
             ) -> bool:
         '''Determine if a leaf loc is contained in this Index.
         '''
-        raise NotImplementedError()
+        # # Maybe?
+        # value = key_from_container_key(self, value)
+
+        # for i, k in enumerate(value):
+        #     if k not in self._indices[i]:
+        #         return False
+
+        #     # How to filter down subsequent levels efficiently?
+        try:
+            self._loc_to_iloc(value)
+        except KeyError:
+            return False
+        else:
+            return True
 
     #---------------------------------------------------------------------------
     # utility functions
@@ -1207,7 +1264,22 @@ class IndexHierarchy2(IndexBase):
         if compare_name and self.name != other.name:
             return False
 
-        raise NotImplementedError()
+        if compare_dtype and not self.dtypes.equals(other.dtypes):
+            return False
+
+        if compare_class:
+            for self_index, other_index in zip(self._indices, other._indices):
+                if self_index.__class__ != other_index.__class__:
+                    return False
+
+        for i in range(self.depth):
+            if not arrays_equal(self._indices[i].values, other._indices[i].values, skipna=skipna):
+                return False
+
+            if not arrays_equal(self._indexers[i], other._indexers[i], skipna=skipna):
+                return False
+
+        return True
 
     @doc_inject(selector='sort')
     def sort(self: IH,
@@ -1404,9 +1476,10 @@ class IndexHierarchy2(IndexBase):
         import pandas
 
         # must copy to get a mutable array
-        arrays = tuple(a.copy() for a in self._blocks.axis_values(axis=0))
-        mi = pandas.MultiIndex.from_arrays(arrays)
-
+        mi = pandas.MultiIndex(
+                levels=[index.values.copy() for index in self._indices],
+                codes=[arr.copy() for arr in self._indexers],
+                )
         mi.name = self._name
         mi.names = self.names
         return mi
