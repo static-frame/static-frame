@@ -124,26 +124,46 @@ def pivot_records_items(
                     pos += 1
         yield label, record
 
+from static_frame.core.util import NameType
+
 def pivot_items(
         blocks: TypeBlocks,
         group_fields_iloc: tp.Iterable[tp.Hashable],
         group_depth: int,
         data_field_iloc: tp.Hashable,
         func_single: tp.Optional[UFunc],
-        ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+        dtype: np.dtype,
+        name: NameType = None,
+        index_constructor: IndexConstructor = None,
+        ) -> 'Series':
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
     '''
+    from static_frame.core.series import Series
     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
 
     if func_single:
-        for label, _, sub in blocks.group(axis=0, key=group_key):
-            values = sub._extract_array_column(data_field_iloc)
-            yield label, func_single(values)
-    else: # func_no scenario
-        # labels via blocks._extract_array_column(group_key) must be unique
-        yield from zip(blocks._extract_array_column(group_key), blocks._extract_array_column(data_field_iloc))
-
+        # this approach shown to be slower
+        # if group_depth == 1 and len(ufunc_unique1d(blocks._extract_array_column(group_key))) == len(blocks):
+        #     pass
+        def gen():
+            for label, _, sub in blocks.group(axis=0, key=group_key):
+                values = sub._extract_array_column(data_field_iloc)
+                yield label, func_single(values)
+        return Series.from_items(gen(),
+                name=name,
+                index_constructor=index_constructor,
+                dtype=dtype,
+                )
+    # func_no scenario
+    # labels via blocks._extract_array_column(group_key) must be unique
+    if group_depth == 1:
+        return Series(blocks._extract_array_column(data_field_iloc),
+                index=blocks._extract_array_column(group_key),
+                name=name,
+                index_constructor=index_constructor,
+                )
+    raise NotImplementedError()
 
 
 def pivot_core(
@@ -223,13 +243,11 @@ def pivot_core(
 
         if len(columns) == 1: # lenght of columns is equal to length of datafields
             f = frame.from_series(
-                    Series.from_items(
-                            pivot_items(blocks=frame._blocks,
-                                    group_fields_iloc=index_fields_iloc,
-                                    group_depth=index_depth,
-                                    data_field_iloc=data_fields_iloc[0],
-                                    func_single=func_single,
-                                    ),
+                    pivot_items(blocks=frame._blocks,
+                            group_fields_iloc=index_fields_iloc,
+                            group_depth=index_depth,
+                            data_field_iloc=data_fields_iloc[0],
+                            func_single=func_single,
                             name=columns[0],
                             index_constructor=index_constructor,
                             dtype=dtype_single,
@@ -312,15 +330,13 @@ def pivot_core(
             if len(sub_columns) == 1:
                 assert len(data_fields) == 1
                 # NOTE: grouping on index_fields; can pre-process array_to_groups_and_locations
-                sub_frame = Series.from_items(
-                        pivot_items(blocks=sub,
+                sub_frame = pivot_items(blocks=sub,
                                 group_fields_iloc=index_fields_iloc,
                                 group_depth=index_depth,
                                 data_field_iloc=data_fields_iloc[0],
                                 func_single=func_single,
-                                ),
-                        dtype=dtype_single,
-                        )
+                                dtype=dtype_single,
+                                )
             else:
                 sub_frame = Frame.from_records_items(
                         pivot_records_items(
