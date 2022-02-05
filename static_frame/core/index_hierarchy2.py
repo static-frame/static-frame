@@ -79,6 +79,7 @@ from static_frame.core.util import (
     intersect2d,
     isin,
     isna_array,
+    iterable_to_array_1d,
     iterable_to_array_2d,
     key_to_datetime_key,
     setdiff2d,
@@ -233,6 +234,19 @@ class IndexHierarchy2(IndexBase):
         )
 
     @classmethod
+    def _from_tree(cls, tree: TreeNodeT) -> tp.List[tp.Tuple[tp.Hashable, ...]]:
+        values = []
+        for label, subtree in tree.items():
+            if isinstance(subtree, dict):
+                for row in cls._from_tree(subtree):
+                    yield (label, *row)
+            else:
+                for row in subtree:
+                    yield (label, row)
+
+        yield from values
+
+    @classmethod
     def from_tree(cls: tp.Type[IH],
             tree: TreeNodeT,
             *,
@@ -245,7 +259,11 @@ class IndexHierarchy2(IndexBase):
         Returns:
             :obj:`static_frame.IndexHierarchy2`
         '''
-        raise NotImplementedError()
+        return cls.from_labels(
+            labels=cls._from_tree(tree),
+            name=name,
+            index_constructors=index_constructors,
+        )
 
     @classmethod
     def from_labels(cls: tp.Type[IH],
@@ -436,9 +454,9 @@ class IndexHierarchy2(IndexBase):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            indices: ArrayGO,
-            indexers: tp.List[np.ndarray],
+            indices: ArrayGO | IH,
             *,
+            indexers: tp.List[np.ndarray] = (),
             name: NameType = NAME_DEFAULT,
             _blocks: tp.Optional[TypeBlocks] = None,
             _own_blocks: bool = False,
@@ -451,6 +469,17 @@ class IndexHierarchy2(IndexBase):
             indexers: list of indexer arrays
             name: name of the IndexHierarchy2
         '''
+        # TODO: Really ugly hack
+        if isinstance(indices, type(self)):
+            self._indices = indices._indices
+            self._indexers = indices._indexers
+            self._name = indices._name
+            self.__blocks = indices.__blocks
+            return
+
+        if not all(isinstance(arr, np.ndarray) for arr in indexers):
+            raise ErrorInitIndex("indexers must be numpy arrays.")
+
         self._indices = indices
         self._indexers = indexers
         self._name = None if name is NAME_DEFAULT else name_filter(name)
@@ -497,7 +526,13 @@ class IndexHierarchy2(IndexBase):
         '''
         Return a new IndexHierarchy2 with an updated name attribute.
         '''
-        raise NotImplementedError()
+        return self.__class__(
+            indices=self._indices,
+            indexers=self._indexers,
+            name=name,
+            _blocks=self.__blocks,
+            _own_blocks=False,
+            )
 
     #---------------------------------------------------------------------------
     # interfaces
@@ -959,7 +994,77 @@ class IndexHierarchy2(IndexBase):
 
         albeit more efficient.
         '''
-        raise NotImplementedError()
+        if isinstance(depth_level, INT_TYPES):
+            depth_level = [depth_level]
+            target_depths = depth_level
+        else:
+            depth_level = sorted(depth_level)
+            target_depths = set(depth_level)
+
+            if len(target_depths) != len(depth_level):
+                raise ValueError('depth_levels must be unique')
+
+            if not depth_level:
+                raise ValueError('depth_level must be non-empty')
+
+        if any(level < 0 or level >= self.depth for level in depth_level):
+            raise ValueError(f'Invalid depth level found. Valid levels: [0-{self.depth - 1}]')
+
+        is_callable = callable(mapper)
+
+        # Special handling for full replacements
+        if not is_callable and not hasattr(mapper, 'get'):
+            values, _ = iterable_to_array_1d(mapper, count=len(self))
+
+            if len(values) != len(self):
+                raise ValueError('Iterable must provide a value for each label')
+
+            def gen() -> tp.Iterator[np.ndarray]:
+                for depth_idx in range(self.depth):
+                    if depth_idx in target_depths:
+                        yield values
+                    else:
+                        yield self._blocks._extract_array_column(depth_idx)
+
+            return self.__class__._from_type_blocks(
+                    TypeBlocks.from_blocks(gen()),
+                    name=self._name,
+                    index_constructors=self._index_constructors,
+                    own_blocks=True
+                )
+
+        mapper_func = mapper if is_callable else mapper.__getitem__
+
+        def get_new_label(label: tp.Hashable) -> tp.Hashable:
+            if is_callable or label in mapper:
+                return mapper_func(label)
+            return label
+
+        new_indices = list(self._indices)
+        new_indexers = list(self._indexers)
+
+        for level in depth_level:
+            index = self._indices[level]
+
+            new_index = {}
+            index_remap = {}
+
+            for label_idx, label in enumerate(index.values):
+                new_label = get_new_label(label)
+
+                if new_label not in new_index:
+                    new_index[new_label] = len(new_index)
+                else:
+                    index_remap[label_idx] = new_index[new_label]
+
+            new_indices[level] = index.__class__(new_index)
+            new_indexers[level] = np.array([index_remap.get(i, i) for i in self._indexers[level]])
+
+        return self.__class__(
+            indices=new_indices,
+            indexers=new_indexers,
+            name=self._name,
+        )
 
     def rehierarch(self: IH,
             depth_map: tp.Sequence[int]
@@ -992,7 +1097,30 @@ class IndexHierarchy2(IndexBase):
             #return [self._levels.leaf_loc_to_iloc(k) for k in key]
 
         if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
-            return self.positions[key]
+            return self.positions[key].tolist()
+
+        if isinstance(key, slice):
+            if key == NULL_SLICE:
+                return key
+
+            if isinstance(key, slice):
+                if key.start is not None:
+                    start = self._loc_to_iloc(key.start)
+                else:
+                    start = None
+
+                if key.step is not None and not isinstance(key.step, INT_TYPES):
+                    raise NotImplementedError(f"step must be an integer. What does this even mean? {key}")
+
+                if key.stop is not None:
+                    stop = self._loc_to_iloc(key.stop) + 1
+                else:
+                    stop = None
+
+                return slice(start, stop, key.step)
+
+        if isinstance(key, list):
+            return [self._loc_to_iloc(k) for k in key]
 
         if isinstance(key, HLoc):
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
@@ -1005,15 +1133,27 @@ class IndexHierarchy2(IndexBase):
         self_len = self.__len__()
 
         mask = np.full(self_len, True, dtype=bool)
+        ilocs = np.arange(self_len)
 
         for i, k in enumerate(key):
-            if k == NULL_SLICE:
+            if isinstance(k, slice) and k == NULL_SLICE:
                 continue
 
-            if isinstance(k, slice):
+            if isinstance(k, np.ndarray) and k.dtype == DTYPE_BOOL:
+                mask &= k
+                continue
+
+            index = self._indices[i]
+            masked_indexer = self._indexers[i][mask]
+            masked_ilocs = ilocs[mask]
+
+            if isinstance(k, np.ndarray) and k.dtype == int:
+                valid_ilocs = masked_ilocs[k]
+
+            elif isinstance(k, slice):
                 if k.start is not None:
-                    idx = self._indices[i].loc_to_iloc(k.start)
-                    start = np.argmax(self._indexers[i]==idx) # Arraykit: find_first_vectorized?
+                    idx = index.loc_to_iloc(k.start)
+                    start = np.argmax(masked_indexer == idx) # Arraykit: find_first_vectorized?
                 else:
                     start = None
 
@@ -1021,24 +1161,28 @@ class IndexHierarchy2(IndexBase):
                     raise NotImplementedError(f"step must be an integer. What does this even mean? {k}")
 
                 if k.stop is not None:
-                    idx = self._indices[i].loc_to_iloc(k.stop)
-                    stop = np.argmax(self._indexers[i]==idx) # Arraykit: find_first_vectorized?
+                    idx = index.loc_to_iloc(k.stop)
+                    stop = -np.argmax((masked_indexer==idx)[::-1])
                 else:
                     stop = None
 
-                # Is this the most efficient way to do this?
-                tmp_mask = np.full(self_len, False, dtype=bool)
-                tmp_mask[start:stop:k.step] = True
+                valid_ilocs = masked_ilocs[start:stop:k.step]
             else:
-                key_iloc = self._indices[i].loc_to_iloc(k)
-                tmp_mask = self._indexers[i] == key_iloc
+                key_iloc = index.loc_to_iloc(k)
 
+                if hasattr(key_iloc, "__len__"):
+                    valid_ilocs = masked_ilocs[np.isin(masked_indexer, key_iloc)]
+                else:
+                    valid_ilocs = masked_ilocs[masked_indexer == key_iloc]
+
+            tmp_mask = np.full(self_len, False, dtype=bool)
+            tmp_mask[valid_ilocs] = True
             mask &= tmp_mask
 
         positions = self.positions[mask]
         if len(positions) == 1:
             return positions[0]
-        return positions
+        return positions.tolist()
 
     def loc_to_iloc(self,
             key: tp.Union[GetItemKeyType, HLoc]
