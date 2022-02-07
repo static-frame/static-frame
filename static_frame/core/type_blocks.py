@@ -2263,6 +2263,7 @@ class TypeBlocks(ContainerOperand):
         elif isinstance(row_key, INT_TYPES):
             single_row = True
         elif row_key.__class__ is slice:
+            # NOTE: NULL_SLICE already handled above
             # need to determine if there is only one index returned by range (after getting indices from the slice); do this without creating a list/tuple, or walking through the entire range; get constant time look-up of range length after uses slice.indicies
             if len(range(*row_key.indices(self._shape[0]))) == 1: #type: ignore
                 single_row = True
@@ -2285,7 +2286,7 @@ class TypeBlocks(ContainerOperand):
             else:
                 for b in self._blocks:
                     # selection work for both 1D and 2D
-                    block_sliced = b[row_key] # PERF: slow from line profiler
+                    block_sliced = b[row_key] # PERF: most time from line profiler
                     if block_sliced.__class__ is np.ndarray:
                         if single_row and block_sliced.ndim == 1:
                             block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
@@ -2294,7 +2295,7 @@ class TypeBlocks(ContainerOperand):
                     yield block_sliced
         else:
             # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
-            for block_idx, slc in self._key_to_block_slices(column_key): # PERF: slow from line profiler
+            for block_idx, slc in self._key_to_block_slices(column_key): # PERF: most time from line profiler
                 b = self._blocks[block_idx]
                 if b.ndim == 1: # given 1D array, our row key is all we need
                     if row_key_null:

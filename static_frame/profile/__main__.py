@@ -841,7 +841,7 @@ class Pivot(Perf):
                 line_target=array_to_groups_and_locations,
                 ),
             'index1_columns1_data1': FunctionMetaData(
-                line_target=pivot_items_to_block,
+                line_target=TypeBlocks._slice_blocks,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             }
