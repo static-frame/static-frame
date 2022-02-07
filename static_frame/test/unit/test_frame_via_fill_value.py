@@ -74,6 +74,78 @@ class TestUnit(TestCase):
             f2.via_fill_value(0)['a'] = range(5) # type: ignore #pylint: disable=E1137
 
 
+    def test_frame_via_fill_value_loc_a(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'), name='foo')
+        f2 = f1.via_fill_value(-1).loc['c':, ['w', 'x']]
+        self.assertEqual(f2.to_pairs(),
+                (('w', (('c', -1), ('d', -1))), ('x', (('c', 6), ('d', 9))))
+                )
+
+    def test_frame_via_fill_value_loc_b(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'), name='foo')
+        self.assertEqual(f1.via_fill_value(-1).loc['a', 'z'], 2)
+        self.assertEqual(f1.via_fill_value(-1).loc['a', 'w'], -1)
+        self.assertEqual(f1.name, 'foo')
+
+    def test_frame_via_fill_value_loc_c(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'), name='foo')
+        s1 = f1.via_fill_value(-1).loc['b', ['w', 'y', 'z']]
+        self.assertEqual(s1.to_pairs(),
+                (('w', -1), ('y', 4), ('z', 5)))
+        self.assertEqual(s1.name, 'b')
+
+
+    def test_frame_via_fill_value_loc_d(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
+        s1 = f1.via_fill_value(-1).loc['q', ['w', 'y', 'z']]
+        self.assertEqual(s1.to_pairs(),
+                (('w', -1), ('y', -1), ('z', -1)))
+        self.assertEqual(s1.name, 'q')
+
+
+    def test_frame_via_fill_value_loc_e1(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
+        s1 = f1.via_fill_value(-1)['y']
+        self.assertEqual(s1.to_pairs(),
+                (('a', 1), ('b', 4), ('c', 7), ('d', 10))
+                )
+
+        f2 = f1.via_fill_value(-1)[['y', 'w']]
+        self.assertEqual(f2.to_pairs(),
+                (('y', (('a', 1), ('b', 4), ('c', 7), ('d', 10))), ('w', (('a', -1), ('b', -1), ('c', -1), ('d', -1))))
+                )
+
+
+    def test_frame_via_fill_value_loc_f(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
+        f2 = f1.via_fill_value(-1).loc[['b', 'e'], ['y', 'q']]
+
+        self.assertEqual(f2.to_pairs(),
+                (('y', (('b', 4), ('e', -1))), ('q', (('b', -1), ('e', -1))))
+                )
+
+
+    def test_frame_via_fill_value_loc_g(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
+
+        f2 = f1.via_fill_value(-1).loc[['d', 'e']]
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('d', 9), ('e', -1))), ('y', (('d', 10), ('e', -1))), ('z', (('d', 11), ('e', -1))))
+                )
+    def test_frame_via_fill_value_loc_h(self) -> None:
+
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
+        f2 = f1.via_fill_value(-1).loc[['d', 'e'], 'w']
+        self.assertEqual(f2.to_pairs(),
+                (('d', -1), ('e', -1))
+                )
 
 
 if __name__ == '__main__':

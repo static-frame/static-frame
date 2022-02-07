@@ -5009,6 +5009,30 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             s1.via_fill_value(0) + s2.via_fill_value(1)
 
+
+    def test_series_via_fill_value_f(self) -> None:
+        s1 = sf.Series(range(4), index=tuple('abcd'))
+        s2 = s1.via_fill_value(-1)[['b', 'e']]
+        self.assertEqual(s2.to_pairs(),
+                (('b', 1), ('e', -1)))
+        self.assertEqual(s1.via_fill_value(-1)['f'], -1)
+        self.assertEqual(s1.via_fill_value(-1)['a'], 0)
+
+    def test_series_via_fill_value_g(self) -> None:
+        s1 = sf.Series(range(4), index=tuple('abcd'))
+        s2 = s1.via_fill_value(-1).loc[['b', 'e']]
+        self.assertEqual(s2.to_pairs(),
+                (('b', 1), ('e', -1)))
+        self.assertEqual(s1.via_fill_value(-1).loc['f'], -1)
+        self.assertEqual(s1.via_fill_value(-1).loc['a'], 0)
+
+    def test_series_via_fill_value_h(self) -> None:
+        s1 = sf.Series(range(4), index=tuple('abcd'))
+        s2 = s1.via_fill_value(-1)[s1.index.values]
+        self.assertEqual(s2.to_pairs(),
+                (('a', 0), ('b', 1), ('c', 2), ('d', 3))
+                )
+
     #---------------------------------------------------------------------------
     def test_series_via_re_search_a(self) -> None:
 

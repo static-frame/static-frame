@@ -34,7 +34,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Accessor Datetime', 10), ('Accessor Fill Value', 24), ('Accessor Regular Expression', 7), ('Accessor String', 37), ('Accessor Transpose', 24), ('Assignment', 8), ('Attribute', 11), ('Constructor', 34), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 26), ('Iterator', 224), ('Method', 83), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+            (('Accessor Datetime', 10), ('Accessor Fill Value', 26), ('Accessor Regular Expression', 7), ('Accessor String', 37), ('Accessor Transpose', 24), ('Assignment', 8), ('Attribute', 11), ('Constructor', 34), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 26), ('Iterator', 224), ('Method', 83), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
         )
 
     def test_interface_summary_c(self) -> None:
@@ -87,10 +87,9 @@ class TestUnit(TestCase):
                 minimized=False,
                 max_args=99, # +inf, but keep as int
                 )
-
         self.assertEqual(
             inter.loc[inter['group']==InterfaceGroup.AccessorFillValue, 'signature_no_args'].values.tolist(),
-            ['via_fill_value(fill_value).via_T', 'via_fill_value().__add__()', 'via_fill_value().__sub__()', 'via_fill_value().__mul__()', 'via_fill_value().__truediv__()', 'via_fill_value().__floordiv__()', 'via_fill_value().__mod__()', 'via_fill_value().__pow__()', 'via_fill_value().__lshift__()', 'via_fill_value().__rshift__()', 'via_fill_value().__and__()', 'via_fill_value().__xor__()', 'via_fill_value().__or__()', 'via_fill_value().__lt__()', 'via_fill_value().__le__()', 'via_fill_value().__eq__()', 'via_fill_value().__ne__()', 'via_fill_value().__gt__()', 'via_fill_value().__ge__()', 'via_fill_value().__radd__()', 'via_fill_value().__rsub__()', 'via_fill_value().__rmul__()', 'via_fill_value().__rtruediv__()', 'via_fill_value().__rfloordiv__()']
+            ['via_fill_value(fill_value).loc', 'via_fill_value().__getitem__()', 'via_fill_value(fill_value).via_T', 'via_fill_value().__add__()', 'via_fill_value().__sub__()', 'via_fill_value().__mul__()', 'via_fill_value().__truediv__()', 'via_fill_value().__floordiv__()', 'via_fill_value().__mod__()', 'via_fill_value().__pow__()', 'via_fill_value().__lshift__()', 'via_fill_value().__rshift__()', 'via_fill_value().__and__()', 'via_fill_value().__xor__()', 'via_fill_value().__or__()', 'via_fill_value().__lt__()', 'via_fill_value().__le__()', 'via_fill_value().__eq__()', 'via_fill_value().__ne__()', 'via_fill_value().__gt__()', 'via_fill_value().__ge__()', 'via_fill_value().__radd__()', 'via_fill_value().__rsub__()', 'via_fill_value().__rmul__()', 'via_fill_value().__rtruediv__()', 'via_fill_value().__rfloordiv__()']
             )
 
         self.assertEqual(
