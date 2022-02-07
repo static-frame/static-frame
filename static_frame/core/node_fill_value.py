@@ -127,7 +127,7 @@ class InterfaceFillValue(Interface[TContainer]):
         '''
         from static_frame.core.series import Series
         fill_value = self._fill_value
-        container = self._container # alway as Frame
+        container = self._container # always a Frame
 
         row_key, row_is_multiple, row_is_null_slice = self._extract_key_attrs(
                 row_key,
