@@ -98,9 +98,11 @@ if tp.TYPE_CHECKING:
 IH = tp.TypeVar('IH', bound='IndexHierarchy2')
 
 
-def build_indexers_from_product(lists: tp.List[list]) -> tp.List[np.ndarray]:
+def build_indexers_from_product(lists: tp.List[tp.Sequence[tp.Any]]) -> tp.List[np.ndarray]:
     """
-    Creates a list of indexer arrays for the product of a list of lists
+    Creates a list of indexer arrays for the product of a list of lists.
+
+    Assumes the lists are unique.
 
     This is equivalent to: ``np.array(list(itertools.product(*lists)))``
     except it scales incredibly well.
@@ -125,6 +127,8 @@ def build_indexers_from_product(lists: tp.List[list]) -> tp.List[np.ndarray]:
     ]
     """
 
+    # padded = np.full(len(lists) + 2, 1, dtype=int)
+    # padded[1:-2] = list(map(len, lists))
     lengths = list(map(len, lists))
 
     padded = [1] + lengths + [1]
@@ -154,6 +158,23 @@ def build_indexers_from_product(lists: tp.List[list]) -> tp.List[np.ndarray]:
 
 def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
     return TypeBlocks.from_blocks(blocks).values
+
+
+def _slice_to_iloc_slice(index: Index, indexer: np.ndarray, key: slice) -> slice:
+    if key.start is not None:
+        idx = index.loc_to_iloc(key.start)
+    else:
+        start = None
+
+    if key.step is not None and not isinstance(key.step, INT_TYPES):
+        raise NotImplementedError(f"step must be an integer. What does this even mean? {key}")
+
+    if key.stop is not None:
+        idx = index.loc_to_iloc(key.stop)
+    else:
+        stop = None
+
+    return slice(start, stop, key.step)
 
 
 #-------------------------------------------------------------------------------
@@ -1203,47 +1224,83 @@ class IndexHierarchy2(IndexBase):
 
         if isinstance(key, IndexHierarchy2):
             # default iteration of IH is as tuple
-            raise NotImplementedError()
             #return [self._levels.leaf_loc_to_iloc(k) for k in key]
+            raise NotImplementedError()
 
         if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
-            return self.positions[key].tolist()
+            # TODO: Can I just return key?
+            return self.positions[key]
 
         if isinstance(key, slice):
             if key == NULL_SLICE:
                 return key
 
-            if isinstance(key, slice):
-                if key.start is not None:
-                    start = self._loc_to_iloc(key.start)
-                else:
-                    start = None
+            # reuse - slice_to_inclusive_slice and/or LocMap.map_slice_args
+            if key.start is not None:
+                start = self._loc_to_iloc(key.start)
+            else:
+                start = None
 
-                if key.step is not None and not isinstance(key.step, INT_TYPES):
-                    raise NotImplementedError(f"step must be an integer. What does this even mean? {key}")
+            if key.step is not None and not isinstance(key.step, INT_TYPES):
+                raise ValueError(f"step must be an integer. What does this even mean? {key}")
 
-                if key.stop is not None:
-                    stop = self._loc_to_iloc(key.stop) + 1
-                else:
-                    stop = None
+            if key.stop is not None:
+                stop = self._loc_to_iloc(key.stop) + 1
+            else:
+                stop = None
 
-                return slice(start, stop, key.step)
+            return slice(start, stop, key.step)
 
         if isinstance(key, list):
             return [self._loc_to_iloc(k) for k in key]
 
         if isinstance(key, HLoc):
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
-            key = HLoc(tuple(
+            key = tuple(HLoc(tuple(
                     key_from_container_key(self, k, expand_iloc=True)
-                    for k in key))
+                    for k in key)))
         else:
-            key = key_from_container_key(self, key)
+            key = tuple(key_from_container_key(self, key))
+
+        meaningful_selections = {i: not (isinstance(k, slice) and k == NULL_SLICE) for i, k in enumerate(key)}
+
+        if sum(meaningful_selections.values()) == 1 and meaningful_selections[0]:
+            key_at_depth = key[0]
+            index_at_depth = self._indices[0]
+            indexer_at_depth = self._indexers[0]
+
+            if isinstance(key_at_depth, slice):
+                return _slice_to_iloc_slice(index_at_depth, indexer_at_depth, key_at_depth)
+
+            # TODO: Add more optimized branches when we know about or sortedness
+
+            mask = indexer_at_depth == index_at_depth.loc_to_iloc[key_at_depth]
+            changes = (mask[1:] != mask[:-1]).sum()
+
+            if changes == 0 and mask.any():
+                return NULL_SLICE
+
+            if changes == 1:
+                positions = PositionsAllocator.get(len(mask))
+                start, stop = positions[mask][[0, -1]]
+                return slice(start, stop)
+
+            if changes == len(mask) - 1: # It exactly alternates!
+                return slice(0 if mask[0] else 1, None, 2)
 
         self_len = self.__len__()
 
         mask = np.full(self_len, True, dtype=bool)
         ilocs = np.arange(self_len)
+
+        #mask_2d = np.full(self.shape, True, dtype=bool)
+
+        # for i, k in enumerate(key):
+        #     mask_2d[:,i] = self._indexers[i] == self._indices[i].loc_to_iloc(k)
+
+        # sel = mask_2d.all(axis=1)
+
+        # return self.positions[sel]
 
         for i, k in enumerate(key):
             if isinstance(k, slice) and k == NULL_SLICE:
@@ -1288,6 +1345,8 @@ class IndexHierarchy2(IndexBase):
             tmp_mask = np.full(self_len, False, dtype=bool)
             tmp_mask[valid_ilocs] = True
             mask &= tmp_mask
+
+        #positions = self.positions[mask_2d.all(axis=1)]
 
         positions = self.positions[mask]
         if len(positions) == 1:
