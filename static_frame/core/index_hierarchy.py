@@ -126,7 +126,7 @@ class IndexHierarchy(IndexBase):
     def from_product(cls: tp.Type[IH],
             *levels: IndexInitializer,
             name: NameType = None,
-            index_constructors: tp.Optional[IndexConstructors] = None,
+            index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
         Given groups of iterables, return an ``IndexHierarchy`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
@@ -198,7 +198,7 @@ class IndexHierarchy(IndexBase):
             tree: TreeNodeT,
             *,
             name: NameType = None,
-            index_constructors: tp.Optional[IndexConstructors] = None,
+            index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
         Convert into a ``IndexHierarchy`` a dictionary defining keys to either iterables or nested dictionaries of the same.
@@ -220,7 +220,7 @@ class IndexHierarchy(IndexBase):
             *,
             name: NameType = None,
             reorder_for_hierarchy: bool = False,
-            index_constructors: tp.Optional[IndexConstructors] = None,
+            index_constructors: IndexConstructors = None,
             depth_reference: tp.Optional[int] = None,
             continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE
             ) -> IH:
@@ -384,7 +384,7 @@ class IndexHierarchy(IndexBase):
             *,
             delimiter: str = ' ',
             name: NameType = None,
-            index_constructors: tp.Optional[IndexConstructors] = None,
+            index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
         Construct an :obj:`IndexHierarchy` from an iterable of labels, where each label is string defining the component labels for all hierarchies using a string delimiter. All components after splitting the string by the delimited will be literal evaled to produce proper types; thus, strings must be quoted.
@@ -444,7 +444,7 @@ class IndexHierarchy(IndexBase):
             blocks: TypeBlocks,
             *,
             name: NameType = None,
-            index_constructors: tp.Optional[IndexConstructors] = None,
+            index_constructors: IndexConstructors = None,
             own_blocks: bool = False,
             ) -> IH:
         '''

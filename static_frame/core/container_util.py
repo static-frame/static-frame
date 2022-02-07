@@ -783,7 +783,7 @@ def rehierarch_from_type_blocks(*,
         labels: 'TypeBlocks',
         depth_map: tp.Sequence[int],
         index_cls: tp.Type['IndexHierarchy'],
-        index_constructors: tp.Optional[IndexConstructors] = None,
+        index_constructors: IndexConstructors = None,
         name: tp.Optional[tp.Hashable] = None,
         ) -> tp.Tuple['IndexBase', np.ndarray]:
     '''
@@ -830,7 +830,7 @@ def rehierarch_from_type_blocks(*,
 def rehierarch_from_index_hierarchy(*,
         labels: 'IndexHierarchy',
         depth_map: tp.Sequence[int],
-        index_constructors: tp.Optional[IndexConstructors] = None,
+        index_constructors: IndexConstructors = None,
         name: tp.Optional[tp.Hashable] = None,
         ) -> tp.Tuple['IndexBase', np.ndarray]:
     '''

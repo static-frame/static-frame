@@ -100,7 +100,7 @@ class IndexLevel:
     @classmethod
     def from_tree(cls,
             tree: TreeNodeT,
-            index_constructors: tp.Optional[IndexConstructors] = None,
+            index_constructors: IndexConstructors = None,
             depth_reference: tp.Optional[int] = None,
             ) -> 'IndexLevel':
         '''

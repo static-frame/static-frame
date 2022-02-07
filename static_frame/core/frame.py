@@ -5495,7 +5495,7 @@ class Frame(ContainerOperand):
             columns: GetItemKeyType,
             *,
             drop: bool = False,
-            index_constructors: tp.Optional[IndexConstructors] = None,
+            index_constructors: IndexConstructors = None,
             reorder_for_hierarchy: bool = False,
             ) -> 'Frame':
         '''
