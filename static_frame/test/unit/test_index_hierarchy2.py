@@ -17,8 +17,7 @@ from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexDate
 from static_frame import IndexHierarchy2
-from static_frame import IndexHierarchyGO
-from static_frame import IndexLevel
+from static_frame import IndexHierarchy2GO
 from static_frame import IndexYearMonth
 from static_frame import IndexYearMonthGO
 from static_frame import Series
@@ -36,12 +35,12 @@ SelfT = tp.TypeVar('SelfT')
 
 def run_with_static_and_grow_only(func: tp.Callable[[SelfT, tp.Type[IndexHierarchy2]], None]) -> tp.Callable[[SelfT], None]:
     """
-    Run a unit test using both `IndexHierarchy2` and `IndexHierarchyGO`
+    Run a unit test using both `IndexHierarchy2` and `IndexHierarchy2GO`
     """
     @wraps(func)
     def inner(self: SelfT) -> None:
         func(self, IndexHierarchy2)
-        func(self, IndexHierarchyGO)
+        func(self, IndexHierarchy2GO)
     return inner
 
 
@@ -219,7 +218,6 @@ class TestUnit(TestCase):
                 ('I', 'B'),
                 )
         ih1 = IndexHierarchy2.from_labels(labels, name='foo')
-        # force recache
         post = ih1.mloc
         self.assertEqual(post.tolist(), ih1._blocks.mloc.tolist())
 
@@ -244,81 +242,6 @@ class TestUnit(TestCase):
             bool(ih1)
 
     #---------------------------------------------------------------------------
-
-    def test_hierarchy_loc_to_iloc_a(self) -> None:
-
-
-        groups = Index(('A', 'B', 'C'))
-        dates = IndexDate.from_date_range('2018-01-01', '2018-01-04')
-        observations = Index(('x', 'y'))
-
-        lvl2a = IndexLevel(index=observations)
-        lvl2b = IndexLevel(index=observations, offset=2)
-        lvl2c = IndexLevel(index=observations, offset=4)
-        lvl2d = IndexLevel(index=observations, offset=6)
-        lvl2_targets = ArrayGO((lvl2a, lvl2b, lvl2c, lvl2d))
-
-
-        lvl1a = IndexLevel(index=dates,
-                targets=lvl2_targets, offset=0)
-        lvl1b = IndexLevel(index=dates,
-                targets=lvl2_targets, offset=len(lvl1a))
-        lvl1c = IndexLevel(index=dates,
-                targets=lvl2_targets, offset=len(lvl1a) * 2)
-
-        # we need as many targets as len(index)
-        lvl0 = IndexLevel(index=groups,
-                targets=ArrayGO((lvl1a, lvl1b, lvl1c)))
-
-
-        self.assertEqual(len(lvl2a), 2)
-        self.assertEqual(len(lvl1a), 8)
-        self.assertEqual(len(lvl0), 24)
-
-        self.assertEqual(list(lvl2a.depths()),
-                [1])
-        self.assertEqual(list(lvl1a.depths()),
-                [2, 2, 2, 2])
-        self.assertEqual(list(lvl0.depths()),
-                [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3])
-
-        ih = IndexHierarchy2(lvl0)
-
-        self.assertEqual(len(ih), 24)
-
-        post = ih._loc_to_iloc(HLoc[
-                ['A', 'B', 'C'],
-                slice('2018-01-01', '2018-01-04'),
-                ['x', 'y']])
-        # this will break if we recognize this can be a slice
-        self.assertEqual(post, list(range(len(ih))))
-
-        post = ih._loc_to_iloc(HLoc[
-                ['A', 'B', 'C'],
-                slice('2018-01-01', '2018-01-04'),
-                'x'])
-
-        self.assertEqual(post, list(range(0, len(ih), 2)))
-
-        post = ih._loc_to_iloc(HLoc[
-                'C',
-                '2018-01-03',
-                'y'])
-
-        self.assertEqual(post, 21)
-
-        post = ih._loc_to_iloc(HLoc['B', '2018-01-03':, 'y'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
-        self.assertEqual(post, [13, 15])
-
-
-        post = ih._loc_to_iloc(HLoc[['B', 'C'], '2018-01-03'])
-        self.assertEqual(post, [12, 13, 20, 21])
-
-        post = ih._loc_to_iloc(HLoc[['A', 'C'], :, 'y'])
-        self.assertEqual(post, [1, 3, 5, 7, 17, 19, 21, 23])
-
-        post = ih._loc_to_iloc(HLoc[['A', 'C'], :, 'x'])
-        self.assertEqual(post, [0, 2, 4, 6, 16, 18, 20, 22])
 
     def test_hierarchy_loc_to_iloc_b(self) -> None:
         OD = OrderedDict
@@ -662,11 +585,11 @@ class TestUnit(TestCase):
                 ('II', 'B', 2),
                 )
 
-        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih1 = IndexHierarchy2GO.from_labels(labels)
         ih2 = ih1.iloc[:0]
         self.assertEqual(ih1.depth, ih2.depth)
 
-        assert isinstance(ih2, IndexHierarchyGO)
+        assert isinstance(ih2, IndexHierarchy2GO)
 
         ih2.append(('a', 'b', 'c'))
         ih2.append(('a', 'b', 'd'))
@@ -987,7 +910,7 @@ class TestUnit(TestCase):
         idx2 = Index(('x', 'y'))
         idx3 = Index((4, 5, 6))
 
-        ih = IndexHierarchyGO.from_index_items(dict(a=idx1, b=idx2, c=idx3).items())
+        ih = IndexHierarchy2GO.from_index_items(dict(a=idx1, b=idx2, c=idx3).items())
         ih.append(('c', 7))
 
         self.assertEqual(ih.values.tolist(),
@@ -1141,7 +1064,7 @@ class TestUnit(TestCase):
                 ),
                 ])
 
-        ih = IndexHierarchyGO.from_tree(tree)
+        ih = IndexHierarchy2GO.from_tree(tree)
         self._assert_to_tree_consistency(ih)
 
         self.assertEqual([k in ih for k in ih], #pylint: disable=E1133
@@ -1263,7 +1186,7 @@ class TestUnit(TestCase):
                 ),
                 ])
 
-        ih = IndexHierarchyGO.from_tree(tree)
+        ih = IndexHierarchy2GO.from_tree(tree)
         self._assert_to_tree_consistency(ih)
         data = np.arange(6*6).reshape(6, 6)
         # TODO: this only works if own_columns is True for now
@@ -1298,7 +1221,7 @@ class TestUnit(TestCase):
                         ])
                 ),
                 ])
-        ih1 = IndexHierarchyGO.from_tree(tree1)
+        ih1 = IndexHierarchy2GO.from_tree(tree1)
         self._assert_to_tree_consistency(ih1)
 
         tree2 = OD([
@@ -1311,7 +1234,7 @@ class TestUnit(TestCase):
                         ])
                 ),
                 ])
-        ih2 = IndexHierarchyGO.from_tree(tree2)
+        ih2 = IndexHierarchy2GO.from_tree(tree2)
         self._assert_to_tree_consistency(ih2)
 
         ih1.extend(ih2)
@@ -1605,7 +1528,7 @@ class TestUnit(TestCase):
                 ('IV', 'A'),
                 )
 
-        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih1 = IndexHierarchy2GO.from_labels(labels)
         self.assertEqual(ih1.rehierarch([1, 0]).values.tolist(),
                 [['A', 'I'], ['A', 'IV'], ['B', 'I'], ['B', 'II'], ['C', 'II'], ['D', 'II'], ['D', 'III']]
                 )
@@ -1900,9 +1823,7 @@ class TestUnit(TestCase):
                 (2, 1),
                 (2, 2),
                 )
-        ih1 = IndexHierarchyGO.from_labels(labels)
-        ih1.append((3, 1)) # force a recache state
-        self.assertTrue(ih1._recache)
+        ih1 = IndexHierarchy2GO.from_labels(labels)
 
         self.assertEqual((-ih1).tolist(),
                 [[-1, -1], [-1, -2], [-2, -1], [-2, -2], [-3, -1]]
@@ -1962,7 +1883,7 @@ class TestUnit(TestCase):
                 (2, 1),
                 (2, 2),
                 )
-        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih1 = IndexHierarchy2GO.from_labels(labels)
 
         # by default, 1D multiplies by row (label)
         a1 = ih1 * Index((3, 4))
@@ -2162,7 +2083,7 @@ class TestUnit(TestCase):
                 ('II', 'B'),
                 )
 
-        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih1 = IndexHierarchy2GO.from_labels(labels)
         ih1.append(('III', 'A'))
         ih2 = ih1.level_add('x')
 
@@ -2181,7 +2102,7 @@ class TestUnit(TestCase):
                 (2, 'B'),
                 )
 
-        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih1 = IndexHierarchy2GO.from_labels(labels)
         # force TB creation
         part = ih1.iloc[1:]
         ih2 = ih1.level_add('x')
@@ -2196,7 +2117,7 @@ class TestUnit(TestCase):
                 (2, 'A'),
                 (2, 'B'),
                 )
-        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih1 = IndexHierarchy2GO.from_labels(labels)
         ih2 = ih1.level_add('1542-02', index_constructor=IndexYearMonth)
 
         self.assertEqual(ih2.index_types.values.tolist(),
@@ -2433,7 +2354,7 @@ class TestUnit(TestCase):
 
     def test_hierarchy_name_b(self) -> None:
 
-        idx1 = IndexHierarchyGO.from_product(list('ab'), list('xy'), name='q')
+        idx1 = IndexHierarchy2GO.from_product(list('ab'), list('xy'), name='q')
         idx2 = idx1.rename('w')
 
         self.assertEqual(idx1.name, 'q')
@@ -2454,7 +2375,7 @@ class TestUnit(TestCase):
 
     def test_hierarchy_name_c(self) -> None:
 
-        idx1 = IndexHierarchyGO.from_product(list('ab'), list('xy'), name='q')
+        idx1 = IndexHierarchy2GO.from_product(list('ab'), list('xy'), name='q')
         idx2 = idx1.rename(('a', 'b', 'c'))
 
         # since the name attr is the wrong size, names use the generic from
@@ -2539,7 +2460,7 @@ class TestUnit(TestCase):
 
         pdidx = pandas.MultiIndex.from_product((('I', 'II'), ('A', 'B')))
 
-        idx = IndexHierarchyGO.from_pandas(pdidx)
+        idx = IndexHierarchy2GO.from_pandas(pdidx)
 
         self.assertEqual(idx.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
@@ -2578,7 +2499,7 @@ class TestUnit(TestCase):
                 ('II', 'B'),
                 )
 
-        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih1 = IndexHierarchy2GO.from_labels(labels)
         ih2 = ih1.copy()
         ih2.append(('II', 'C'))
 
@@ -2618,7 +2539,7 @@ class TestUnit(TestCase):
         idx2 = Index(('x', 'y'))
         idx3 = Index((4, 5, 6))
 
-        ih1 = IndexHierarchyGO.from_index_items(dict(a=idx1, b=idx2, c=idx3).items())
+        ih1 = IndexHierarchy2GO.from_index_items(dict(a=idx1, b=idx2, c=idx3).items())
         ih1.append(('c', 7))
 
         ih2 = copy.deepcopy(ih1)
@@ -3097,7 +3018,7 @@ class TestUnit(TestCase):
     def test_index_hierarchy_equals_d(self) -> None:
 
         ih1 = IndexHierarchy2.from_product((1, 2), ('a', 'b'), (2, 5))
-        ih2 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'), (2, 5))
+        ih2 = IndexHierarchy2GO.from_product((1, 2), ('a', 'b'), (2, 5))
 
         self.assertFalse(ih1.equals(ih2, compare_class=True))
         self.assertTrue(ih1.equals(ih2, compare_class=False))
@@ -3113,7 +3034,7 @@ class TestUnit(TestCase):
 
     def test_index_hierarchy_fillna_b(self) -> None:
 
-        ih1 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'), (2, np.nan))
+        ih1 = IndexHierarchy2GO.from_product((1, 2), ('a', 'b'), (2, np.nan))
         ih1.append((3, 'c', np.nan))
         ih2 = ih1.fillna('foo')
 
@@ -3128,7 +3049,7 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.name, ('foo', 'bar'))
         self.assertEqual(ih1.shape, (0, 2))
 
-        ih2 = IndexHierarchyGO.from_names(('x', 'y', 'z'))
+        ih2 = IndexHierarchy2GO.from_names(('x', 'y', 'z'))
         self.assertEqual(ih2.name, ('x', 'y', 'z'))
         self.assertEqual(ih2.shape, (0, 3))
 

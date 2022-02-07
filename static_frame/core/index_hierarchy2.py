@@ -31,6 +31,7 @@ from static_frame.core.index import (
     ILoc,
     Index,
     IndexGO,
+    immutable_index_filter,
 )
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_auto import RelabelInput
@@ -235,7 +236,10 @@ class IndexHierarchy2(IndexBase):
 
             # we call the constructor on all lvl, even if it is already an Index
             # This will raise if any incoming levels are not unique
-            indices.append(constructor(lvl))
+            if isinstance(lvl, IndexBase):
+                indices.append(immutable_index_filter(lvl))
+            else:
+                indices.append(constructor(lvl))
 
         if name is None:
             name = cls._build_name_from_indices(indices)
@@ -303,10 +307,10 @@ class IndexHierarchy2(IndexBase):
         Returns:
             :obj:`static_frame.IndexHierarchy2`
         '''
-        labels = iter(labels)
+        labels_iter = iter(labels)
 
         try:
-            label_row = next(labels)
+            label_row = next(labels_iter)
         except StopIteration:
             labels_are_empty = True
         else:
@@ -325,15 +329,24 @@ class IndexHierarchy2(IndexBase):
                 else:
                     raise ErrorInitIndex(f'depth_reference provided {depth_reference} does not match depth of supplied array {depth}')
 
+            if not isinstance(depth_reference, INT_TYPES):
+                raise ErrorInitIndex('depth_reference must be an integer when labels are empty.')
+
+            if depth_reference == 1:
+                raise ErrorInitIndex('Cannot create IndexHierarchy2 from only one level.')
+
             empty_indexer = np.array([], dtype=int)
             empty_indexer.flags.writeable = False
             return cls(
-                indices=[cls._INDEX_CONSTRUCTOR(()) for _ in range(depth)],
-                indexers=[empty_indexer for _ in range(depth)],
+                indices=[cls._INDEX_CONSTRUCTOR(()) for _ in range(depth_reference)],
+                indexers=[empty_indexer for _ in range(depth_reference)],
                 name=name
             )
 
         depth = len(label_row)
+
+        if depth == 1:
+            raise ErrorInitIndex('Cannot create IndexHierarchy2 from only one level.')
 
         index_constructors = cls._build_index_constructors(index_constructors, depth=depth)
 
@@ -360,7 +373,7 @@ class IndexHierarchy2(IndexBase):
 
             prev_row = label_row
             try:
-                label_row = next(labels)
+                label_row = next(labels_iter)
             except StopIteration:
                 break
 
@@ -541,7 +554,7 @@ class IndexHierarchy2(IndexBase):
     def __init__(self,
             indices: tp.List[IndexBase],
             *,
-            indexers: tp.List[np.ndarray],
+            indexers: tp.List[np.ndarray] = (),
             name: NameType = NAME_DEFAULT,
             _blocks: tp.Optional[TypeBlocks] = None,
             _own_blocks: bool = False,
@@ -556,10 +569,13 @@ class IndexHierarchy2(IndexBase):
         '''
         # TODO: Really ugly hack. Better to create specialized constructor
         if isinstance(indices, type(self)):
+            if indexers:
+                raise ErrorInitIndex('indexers must not be provided when copying an IndexHierarchy2')
+
             self._indices = indices._indices
             self._indexers = indices._indexers
             self._name = indices._name
-            self.__blocks = indices.__blocks
+            self._blocks = indices._blocks
             return
 
         if not all(isinstance(arr, np.ndarray) for arr in indexers):
@@ -597,7 +613,7 @@ class IndexHierarchy2(IndexBase):
         obj = self.__new__(self.__class__)
         obj._indices = deepcopy(self._indices, memo)
         obj._indexers = deepcopy(self._indexers, memo)
-        obj.__blocks = deepcopy(self.__blocks, memo)
+        obj._blocks = deepcopy(self._blocks, memo)
         obj._name = self._name # should be hashable/immutable
 
         memo[id(self)] = obj
@@ -633,8 +649,8 @@ class IndexHierarchy2(IndexBase):
             indices=self._indices,
             indexers=self._indexers,
             name=name,
-            _blocks=self.__blocks,
-            _own_blocks=False,
+            _blocks=self._blocks,
+            _own_blocks=True,
             )
 
     #---------------------------------------------------------------------------
