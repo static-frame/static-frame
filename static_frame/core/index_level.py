@@ -1065,7 +1065,3 @@ class IndexLevelGO(IndexLevel):
         # defer calculation be setting _length to None for all edge levels
         for node in edge_nodes:
             node._length = None
-
-
-
-

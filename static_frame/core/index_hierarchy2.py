@@ -144,7 +144,9 @@ def build_indexers_from_product(lists: tp.List[list]) -> tp.List[np.ndarray]:
         )
 
         # Repeat each section `index_reps` times
-        result.append(np.tile(subsection, reps=group_reps))
+        indexer = np.tile(subsection, reps=group_reps)
+        indexer.flags.writeable = False
+        result.append(indexer)
 
     return result
 
@@ -323,9 +325,11 @@ class IndexHierarchy2(IndexBase):
                 else:
                     raise ErrorInitIndex(f'depth_reference provided {depth_reference} does not match depth of supplied array {depth}')
 
+            empty_indexer = np.array([], dtype=int)
+            empty_indexer.flags.writeable = False
             return cls(
                 indices=[cls._INDEX_CONSTRUCTOR(()) for _ in range(depth)],
-                indexers=[np.array([], dtype=int) for _ in range(depth)],
+                indexers=[empty_indexer for _ in range(depth)],
                 name=name
             )
 
@@ -372,11 +376,11 @@ class IndexHierarchy2(IndexBase):
         if name is None:
             name = cls._build_name_from_indices(indices)
 
-        return cls(
-            indices=indices,
-            indexers=list(map(np.array, indexers)),
-            name=name,
-        )
+        for i in range(depth):
+            indexers[i] = np.array(indexers[i], dtype=int)
+            indexers[i].flags.writeable = False
+
+        return cls(indices=indices, indexers=indexers, name=name)
 
     @classmethod
     def from_index_items(cls: tp.Type[IH],
@@ -468,9 +472,13 @@ class IndexHierarchy2(IndexBase):
         if len(name) == 0:
             raise ErrorInitIndex("names must be non-empty.")
 
+
+        empty_indexer = np.array([], dtype=int)
+        empty_indexer.flags.writeable = False
+
         return cls(
             indices=[cls._INDEX_CONSTRUCTOR((), name=name) for name in names],
-            indexers=[np.array([], dtype=int) for _ in names],
+            indexers=[empty_indexer for _ in names],
             name=name,
         )
 
@@ -510,6 +518,7 @@ class IndexHierarchy2(IndexBase):
 
             # we call the constructor on all lvl, even if it is already an Index
             indices.append(constructor(unique_values))
+            indexer.flags.writeable = False
             indexers.append(indexer)
 
         if index_constructors is not None:
@@ -530,9 +539,9 @@ class IndexHierarchy2(IndexBase):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            indices: ArrayGO | IH,
+            indices: tp.List[IndexBase],
             *,
-            indexers: tp.List[np.ndarray] = (),
+            indexers: tp.List[np.ndarray],
             name: NameType = NAME_DEFAULT,
             _blocks: tp.Optional[TypeBlocks] = None,
             _own_blocks: bool = False,
@@ -545,7 +554,7 @@ class IndexHierarchy2(IndexBase):
             indexers: list of indexer arrays
             name: name of the IndexHierarchy2
         '''
-        # TODO: Really ugly hack
+        # TODO: Really ugly hack. Better to create specialized constructor
         if isinstance(indices, type(self)):
             self._indices = indices._indices
             self._indexers = indices._indexers
@@ -558,6 +567,10 @@ class IndexHierarchy2(IndexBase):
 
         self._indices = indices
         self._indexers = indexers
+
+        if not all(not arr.flags.writeable for arr in indexers):
+            raise ErrorInitIndex("indexers must be read-only.")
+
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
         if _blocks is not None and not _own_blocks:
@@ -1136,7 +1149,10 @@ class IndexHierarchy2(IndexBase):
                     index_remap[label_idx] = new_index[new_label]
 
             new_indices[level] = index.__class__(new_index)
-            new_indexers[level] = np.array([index_remap.get(i, i) for i in self._indexers[level]])
+
+            indexer = np.array([index_remap.get(i, i) for i in self._indexers[level]])
+            indexer.flags.writeable = False
+            new_indexers[level] = indexer
 
         return self.__class__(
             indices=new_indices,
@@ -1706,10 +1722,26 @@ class IndexHierarchy2(IndexBase):
         mi.names = self.names
         return mi
 
+    def _build_tree_at_depth_from_mask(self, depth: int, mask: np.ndarray) -> TreeNodeT:
+
+        if depth == self.depth - 1:
+            values = np.take(self._indices[depth], self._indexers[depth][mask])
+            return self._indices[depth].__class__(values)
+
+        tree: TreeNodeT = {}
+
+        index = self._indices[depth]
+        indexer = self._indexers[depth]
+
+        for i in range(len(index)):
+            tree[index[i]] = self._build_tree_at_depth_from_mask(depth + 1, mask & (indexer == i))
+
+        return tree
+
     def to_tree(self) -> TreeNodeT:
         '''Returns the tree representation of an IndexHierarchy2
         '''
-        raise NotImplementedError()
+        return self._build_tree_at_depth_from_mask(0, np.ones(len(self), dtype=bool))
 
     def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.
@@ -1723,7 +1755,29 @@ class IndexHierarchy2(IndexBase):
             ) -> IH:
         '''Return an IndexHierarchy2 with a new root (outer) level added.
         '''
-        raise NotImplementedError()
+        index_cls = self._INDEX_CONSTRUCTOR if index_constructor is None else index_constructor
+
+
+        if self.STATIC:
+            indices = [index_cls((level,)), *self._indices]
+        else:
+            indices = [index_cls((level,)), *(idx.copy() for idx in self._indices)]
+
+        # Indexers are always immutable
+        new_indexer = np.full(self.__len__(), 0, dtype=int)
+        new_indexer.flags.writeable = False
+        indexers = [new_indexer, *self._indexers]
+
+        def gen_blocks() -> tp.Iterator[np.ndarray]:
+            yield np.full(self.__len__(), level)
+            yield from self._blocks._blocks
+
+        return self.__class__(
+            indices=indices,
+            indexers=indexers,
+            _blocks=TypeBlocks.from_blocks(gen_blocks()),
+            _own_blocks=True,
+        )
 
     def level_drop(self,
             count: int = 1,
@@ -1733,7 +1787,42 @@ class IndexHierarchy2(IndexBase):
         Args:
             count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative value is the number of depths to remove from the leaf (inner) side of the hierarchy.
         '''
-        raise NotImplementedError()
+        # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
+        if self._name_is_names():
+            if count < 0:
+                name = self._name[:count] #type: ignore
+            elif count > 0:
+                name = self._name[count:] #type: ignore
+            if len(name) == 1:
+                name = name[0]
+        else:
+            name = self._name
+
+        if count < 0: # remove from inner
+            if count <= (1 - self.depth):
+                return self._indices.__class__(self._blocks.iloc[:,0].values.ravel(), name=name)
+
+            return self.__class__(
+                    indices=self._indices[count:],
+                    indexers=self._indexers[count:],
+                    _blocks=self._blocks.iloc[:,count:],
+                    _own_blocks=self.STATIC,
+                    _name=name,
+                    )
+
+        elif count > 0: # remove from outer
+            if count >= (self.depth - 1):
+                return self._indices.__class__(self._blocks.iloc[:,-1].values.ravel(), name=name)
+
+            return self.__class__(
+                    indices=self._indices[count:],
+                    indexers=self._indexers[count:],
+                    _blocks=self._blocks.iloc[:,count:],
+                    _own_blocks=self.STATIC,
+                    _name=name,
+                    )
+
+        raise NotImplementedError('no handling for a 0 count drop level.')
 
 
 class IndexHierarchy2GO(IndexHierarchy2):
@@ -1748,31 +1837,70 @@ class IndexHierarchy2GO(IndexHierarchy2):
     _INDEX_CONSTRUCTOR = IndexGO
 
     __slots__ = (
-            '_levels', # IndexLevel
+            '_name',
+            '_indices',
+            '_indexers',
             '_blocks',
-            '_recache',
-            '_name'
+            '_values',
             )
-
-    _levels: IndexLevelGO
 
     def append(self, value: tp.Sequence[tp.Hashable]) -> None:
         '''
         Append a single label to this index.
         '''
-        raise NotImplementedError()
+        if value in self:
+            raise ErrorInitIndexNonUnique(f"The label '{value}' is already in the index.")
+
+        label_indexers = []
+
+        for depth, label_at_depth in enumerate(value):
+            if label_at_depth in self._indices[depth]:
+                label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
+            else:
+                label_index = len(self._indices[depth])
+                self._indices[depth].append(label_at_depth)
+
+            label_indexers.append(label_index)
+
+        for i, label_index in enumerate(label_indexers):
+            self._indexers[i] = np.append(self._indexers[i], label_index)
+            self._indexers[i].flags.writeable = False
 
     def extend(self, other: IndexHierarchy2) -> None:
         '''
         Extend this IndexHiearchy in-place
         '''
-        raise NotImplementedError()
+        def blocks() -> tp.Iterator[np.ndarray]:
+            type_blocks = [self._blocks, other._blocks]
+
+            block_compatible = self._blocks.block_compatible(other, axis=1)
+            reblock_compatible = self._blocks.reblock_compatible(other._blocks)
+
+            yield from TypeBlocks.vstack_blocks_to_blocks(
+                    type_blocks=type_blocks,
+                    block_compatible=block_compatible,
+                    reblock_compatible=reblock_compatible,
+                    )
+
+        return self._from_type_blocks(
+            TypeBlocks.from_blocks(blocks()),
+            name=self._name,
+            index_constructors=self._index_constructors,
+            own_blocks=True,
+        )
 
     def __copy__(self: IH) -> IH:
         '''
         Return a shallow copy of this IndexHierarchy2.
         '''
-        raise NotImplementedError()
+        return self.__class__(
+                indices=[index.copy() for index in self._indices],
+                indexers=self._indexers,
+                name=self._name,
+                blocks=self._blocks.copy(),
+                own_blocks=True,
+                )
+
 
 # update class attr on Index after class initialization
 IndexHierarchy2._MUTABLE_CONSTRUCTOR = IndexHierarchy2GO
