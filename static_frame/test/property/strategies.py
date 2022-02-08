@@ -40,8 +40,8 @@ from static_frame import IndexNanosecond
 from static_frame import IndexNanosecondGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
-from static_frame import IndexHierarchy2
-from static_frame import IndexHierarchy2GO
+from static_frame import IndexHierarchyOld
+from static_frame import IndexHierarchyOldGO
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
@@ -756,7 +756,7 @@ def get_index_hierarchy_any(
             ).flatmap(get_labels_spacings)
 
 
-def get_index_hierarchy2_any(
+def get_index_hierarchyold_any(
         min_size: int = 1,
         max_size: int = MAX_ROWS,
         min_depth: int = 2,
@@ -773,8 +773,8 @@ def get_index_hierarchy2_any(
                     ))
 
         return st.one_of(
-                st.builds(IndexHierarchy2.from_product, *args),
-                st.builds(IndexHierarchy2GO.from_product, *args),
+                st.builds(IndexHierarchyOld.from_product, *args),
+                st.builds(IndexHierarchyOldGO.from_product, *args),
                 )
 
     return st.tuples(

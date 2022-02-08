@@ -15,7 +15,7 @@ from static_frame import IndexDateGO
 from static_frame import IndexYearMonthGO
 from static_frame import IndexSecond
 from static_frame import IndexGO
-from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyOld
 from static_frame import IndexLevel
 from static_frame import IndexLevelGO
 from static_frame.core.array_go import ArrayGO
@@ -86,7 +86,7 @@ class TestUnit(TestCase):
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
         idx3 = Index((1, 2))
 
-        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+        hidx = IndexHierarchyOld.from_product(idx1, idx2, idx3)
 
         self.assertEqual([dt.kind for dt in hidx._levels.dtype_per_depth()],
                 ['U', 'M', 'i'],
@@ -101,7 +101,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     @skip_win #type: ignore
     def test_index_level_dtypes_per_depth_a(self) -> None:
-        hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 1, 'bar')))
+        hidx = IndexHierarchyOld.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 1, 'bar')))
         lvl = hidx._levels
 
         self.assertEqual(
@@ -116,14 +116,14 @@ class TestUnit(TestCase):
                 )
 
     def test_index_level_values_at_depth_a(self) -> None:
-        hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 1, 'bar')))
+        hidx = IndexHierarchyOld.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 1, 'bar')))
         lvl = hidx._levels
         self.assertEqual(lvl.values_at_depth(2).tolist(), ['x', 'y', 'foo', 'bar'])
         self.assertEqual(lvl.depth, next(lvl.depths()))
 
     def test_index_level_values_at_depth_b(self) -> None:
 
-        hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 2, None)))
+        hidx = IndexHierarchyOld.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 2, None)))
         lvl = hidx._levels
         self.assertEqual(lvl.values_at_depth(2).tolist(), ['x', 'y', 'foo', None])
 
@@ -133,7 +133,7 @@ class TestUnit(TestCase):
         idx1 = Index(('A', 'B'))
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
         idx3 = Index((1, 2))
-        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+        hidx = IndexHierarchyOld.from_product(idx1, idx2, idx3)
         lvl = hidx._levels
         self.assertEqual(
                 [it.__name__ for it in lvl.index_types()],
@@ -498,7 +498,7 @@ class TestUnit(TestCase):
                 ('II', 'C', 3),
                 ('II', 'C', 4),
                 )
-        ih = IndexHierarchy.from_labels(labels)
+        ih = IndexHierarchyOld.from_labels(labels)
         lavels = ih._levels
 
         self.assertEqual(tuple(lavels.label_widths_at_depth(0)),
@@ -519,7 +519,7 @@ class TestUnit(TestCase):
                 ('II', 'C', 3),
                 ('II', 'C', 4),
                 )
-        ih = IndexHierarchy.from_labels(labels)
+        ih = IndexHierarchyOld.from_labels(labels)
         lavels = ih._levels
 
         self.assertEqual(tuple(lavels.label_widths_at_depth(0)),
@@ -620,11 +620,11 @@ class TestUnit(TestCase):
 
         idx1 = Index(('a', 'b', 'c', 'd', 'e'))
         idx2 = Index(range(10))
-        levels1 = IndexHierarchy.from_product(idx1, idx2)._levels
+        levels1 = IndexHierarchyOld.from_product(idx1, idx2)._levels
 
         idx3 = Index(('a', 'b', 'c', 'd', 'e'))
         idx4 = Index(range(10))
-        levels2 = IndexHierarchy.from_product(idx3, idx4)._levels
+        levels2 = IndexHierarchyOld.from_product(idx3, idx4)._levels
 
         self.assertTrue(levels1.equals(levels2))
 
@@ -862,7 +862,7 @@ class TestUnit(TestCase):
     def test_index_level_repr_b(self) -> None:
         """Very deep tree"""
 
-        index = IndexHierarchy.from_product(*(range(i, i+2) for i in range(0, 20, 2)))
+        index = IndexHierarchyOld.from_product(*(range(i, i+2) for i in range(0, 20, 2)))
 
         msg = repr(index._levels)
         self.assertEqual(len(msg.split()), 67)
@@ -875,7 +875,7 @@ class TestUnit(TestCase):
     def test_index_level_repr_c(self) -> None:
         """Very wide tree"""
 
-        index = IndexHierarchy.from_product(range(10), range(10, 20))
+        index = IndexHierarchyOld.from_product(range(10), range(10, 20))
 
         msg = repr(index._levels)
         self.assertEqual(len(msg.split()), 70)

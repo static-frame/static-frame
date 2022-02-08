@@ -546,7 +546,7 @@ def pivot_derive_constructors(*,
     if expand_src.depth == 1:
         expand_types = [expand_src.__class__]
     else:
-        expand_types = list(expand_src._levels.index_types()) #type: ignore
+        expand_types = expand_src.index_types.values.tolist()
 
     if contract_src.depth == 1:
         expand_types.append(contract_src.__class__)

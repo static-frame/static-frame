@@ -8526,7 +8526,7 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(
-                f3.columns._levels.values.tolist(), #type: ignore
+                f3.columns.values.tolist(), #type: ignore
                 [[('a', 'b'), 'p'], [('a', 'b'), 'q'], [('a', 'b'), 't'], [('x', 'y'), 'r'], [('x', 'y'), 's']]
                 )
 

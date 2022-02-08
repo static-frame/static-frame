@@ -61,9 +61,9 @@ from static_frame.core.index_datetime import IndexYearGO as IndexYearGO
 from static_frame.core.index_datetime import IndexYearMonth as IndexYearMonth
 from static_frame.core.index_datetime import IndexYearMonthGO as IndexYearMonthGO
 from static_frame.core.index_hierarchy import IndexHierarchy as IndexHierarchy
-from static_frame.core.index_hierarchy2 import IndexHierarchy2 as IndexHierarchy2
+from static_frame.core.index_hierarchy_old import IndexHierarchyOld as IndexHierarchyOld
 from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchyGO
-from static_frame.core.index_hierarchy2 import IndexHierarchy2GO as IndexHierarchy2GO
+from static_frame.core.index_hierarchy_old import IndexHierarchyOldGO as IndexHierarchyOldGO
 from static_frame.core.index_level import IndexLevel as IndexLevel
 from static_frame.core.index_level import IndexLevelGO as IndexLevelGO
 from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta

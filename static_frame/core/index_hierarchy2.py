@@ -96,7 +96,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import FrameGO #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series #pylint: disable=W0611,C0412 #pragma: no cover
 
-IH = tp.TypeVar('IH', bound='IndexHierarchy2')
+IH = tp.TypeVar('IH', bound='IndexHierarchy')
 
 
 def build_indexers_from_product(lists: tp.List[tp.Sequence[tp.Any]]) -> tp.List[np.ndarray]:
@@ -180,7 +180,7 @@ def _mask_to_slice_or_ilocs(mask: np.ndarray) -> slice | np.ndarray | int:
 
 
 #-------------------------------------------------------------------------------
-class IndexHierarchy2(IndexBase):
+class IndexHierarchy(IndexBase):
     '''A hierarchy of :obj:`Index` objects, defined as a strict tree of uniform depth across all branches.'''
 
     __slots__ = (
@@ -189,6 +189,7 @@ class IndexHierarchy2(IndexBase):
             '_indexers',
             '_blocks',
             '_values',
+            '_recache',
             )
     _name: NameType
     _indices: tp.List[IndexBase] # Of index objects
@@ -235,7 +236,7 @@ class IndexHierarchy2(IndexBase):
             index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
-        Given groups of iterables, return an ``IndexHierarchy2`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
+        Given groups of iterables, return an ``IndexHierarchy`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
 
         Args:
             *levels: index initializers (or Index instances) for each level
@@ -243,11 +244,11 @@ class IndexHierarchy2(IndexBase):
             index_consructors:
 
         Returns:
-            :obj:`static_frame.IndexHierarchy2`
+            :obj:`static_frame.IndexHierarchy`
 
         '''
         if len(levels) == 1:
-            raise ErrorInitIndex('Cannot create IndexHierarchy2 from only one level.')
+            raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
         indices = [] # store in a list, where index is depth
 
@@ -296,10 +297,10 @@ class IndexHierarchy2(IndexBase):
             index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
-        Convert into a ``IndexHierarchy2`` a dictionary defining keys to either iterables or nested dictionaries of the same.
+        Convert into a ``IndexHierarchy`` a dictionary defining keys to either iterables or nested dictionaries of the same.
 
         Returns:
-            :obj:`static_frame.IndexHierarchy2`
+            :obj:`static_frame.IndexHierarchy`
         '''
         return cls.from_labels(
             labels=cls._from_tree(tree),
@@ -328,7 +329,7 @@ class IndexHierarchy2(IndexBase):
             continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
         Returns:
-            :obj:`static_frame.IndexHierarchy2`
+            :obj:`static_frame.IndexHierarchy`
         '''
         labels_iter = iter(labels)
 
@@ -356,7 +357,7 @@ class IndexHierarchy2(IndexBase):
                 raise ErrorInitIndex('depth_reference must be an integer when labels are empty.')
 
             if depth_reference == 1:
-                raise ErrorInitIndex('Cannot create IndexHierarchy2 from only one level.')
+                raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
             empty_indexer = np.array([], dtype=int)
             empty_indexer.flags.writeable = False
@@ -369,7 +370,7 @@ class IndexHierarchy2(IndexBase):
         depth = len(label_row)
 
         if depth == 1:
-            raise ErrorInitIndex('Cannot create IndexHierarchy2 from only one level.')
+            raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
         index_constructors = cls._build_index_constructors(index_constructors, depth=depth)
 
@@ -427,7 +428,7 @@ class IndexHierarchy2(IndexBase):
             name: NameType = None,
             ) -> IH:
         '''
-        Given an iterable of pairs of label, :obj:`Index`, produce an :obj:`IndexHierarchy2` where the labels are depth 0, the indices are depth 1.
+        Given an iterable of pairs of label, :obj:`Index`, produce an :obj:`IndexHierarchy` where the labels are depth 0, the indices are depth 1.
 
         Args:
             items: iterable of pairs of label, :obj:`Index`.
@@ -476,13 +477,13 @@ class IndexHierarchy2(IndexBase):
             index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
-        Construct an :obj:`IndexHierarchy2` from an iterable of labels, where each label is string defining the component labels for all hierarchies using a string delimiter. All components after splitting the string by the delimited will be literal evaled to produce proper types; thus, strings must be quoted.
+        Construct an :obj:`IndexHierarchy` from an iterable of labels, where each label is string defining the component labels for all hierarchies using a string delimiter. All components after splitting the string by the delimited will be literal evaled to produce proper types; thus, strings must be quoted.
 
         Args:
             labels: an iterator or generator of tuples.
 
         Returns:
-            :obj:`static_frame.IndexHierarchy2`
+            :obj:`static_frame.IndexHierarchy`
         '''
         def to_label(label: str) -> tp.Tuple[tp.Hashable, ...]:
 
@@ -513,7 +514,7 @@ class IndexHierarchy2(IndexBase):
     @classmethod
     def from_names(cls: tp.Type[IH], names: tp.Iterable[tp.Hashable]) -> IH:
         '''
-        Construct a zero-length :obj:`IndexHierarchy2` from an iterable of ``names``, where the length of ``names`` defines the zero-length depth.
+        Construct a zero-length :obj:`IndexHierarchy` from an iterable of ``names``, where the length of ``names`` defines the zero-length depth.
 
         Args:
             names: Iterable of hashable names per depth.
@@ -541,13 +542,13 @@ class IndexHierarchy2(IndexBase):
             own_blocks: bool = False,
             ) -> IH:
         '''
-        Construct an :obj:`IndexHierarchy2` from a :obj:`TypeBlocks` instance.
+        Construct an :obj:`IndexHierarchy` from a :obj:`TypeBlocks` instance.
 
         Args:
             blocks: a TypeBlocks instance
 
         Returns:
-            :obj:`IndexHierarchy2`
+            :obj:`IndexHierarchy`
         '''
         indices: tp.List[Index] = []
         indexers: tp.List[np.ndarray] = []
@@ -622,14 +623,14 @@ class IndexHierarchy2(IndexBase):
         Args:
             indices: list of :obj:`Index` objects
             indexers: list of indexer arrays
-            name: name of the IndexHierarchy2
+            name: name of the IndexHierarchy
         '''
         # TODO: Really ugly hack. Better to create specialized constructor
         if isinstance(indices, type(self)):
             if indexers:
-                raise ErrorInitIndex('indexers must not be provided when copying an IndexHierarchy2')
+                raise ErrorInitIndex('indexers must not be provided when copying an IndexHierarchy')
             if _blocks is not None:
-                raise ErrorInitIndex('_blocks must not be provided when copying an IndexHierarchy2')
+                raise ErrorInitIndex('_blocks must not be provided when copying an IndexHierarchy')
 
             self._indices = indices._indices
             self._indexers = indices._indexers
@@ -661,6 +662,10 @@ class IndexHierarchy2(IndexBase):
         self._values = self._blocks.values
 
         self._ensure_uniqueness(self._values)
+        self._recache = False
+
+    def _update_array_cache(self):
+        print("UPDATING ARRAY CACHE")
 
     #---------------------------------------------------------------------------
     def __deepcopy__(self: IH, memo: tp.Dict[int, tp.Any]) -> IH:
@@ -675,7 +680,7 @@ class IndexHierarchy2(IndexBase):
 
     def __copy__(self: IH) -> IH:
         '''
-        Return a shallow copy of this IndexHierarchy2.
+        Return a shallow copy of this IndexHierarchy.
         '''
         blocks = self._blocks.copy()
         return self.__class__(
@@ -688,7 +693,7 @@ class IndexHierarchy2(IndexBase):
 
     def copy(self: IH) -> IH:
         '''
-        Return a shallow copy of this IndexHierarchy2.
+        Return a shallow copy of this IndexHierarchy.
         '''
         return self.__copy__()
 
@@ -697,7 +702,7 @@ class IndexHierarchy2(IndexBase):
 
     def rename(self: IH, name: NameType) -> IH:
         '''
-        Return a new IndexHierarchy2 with an updated name attribute.
+        Return a new IndexHierarchy with an updated name attribute.
         '''
         if self.STATIC:
             indices = self._indices
@@ -762,7 +767,7 @@ class IndexHierarchy2(IndexBase):
     @doc_inject(select='astype')
     def astype(self) -> InterfaceAsType[TContainer]:
         '''
-        Retype one or more depths. Can be used as as function to retype the entire ``IndexHierarchy2``; alternatively, a ``__getitem__`` interface permits retyping selected depths.
+        Retype one or more depths. Can be used as as function to retype the entire ``IndexHierarchy``; alternatively, a ``__getitem__`` interface permits retyping selected depths.
 
         Args:
             {dtype}
@@ -934,7 +939,7 @@ class IndexHierarchy2(IndexBase):
     def _ufunc_set(self,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
             other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
-            ) -> 'IndexHierarchy2':
+            ) -> 'IndexHierarchy':
         '''
         Utility function for preparing and collecting values for Indices to produce a new Index.
         '''
@@ -962,19 +967,19 @@ class IndexHierarchy2(IndexBase):
         both_sized = len(operand) > 0 and len(self) > 0
 
         if operand.ndim != 2:
-            raise ErrorInitIndex('operand in IndexHierarchy2 set operations must ndim of 2')
+            raise ErrorInitIndex('operand in IndexHierarchy set operations must ndim of 2')
         if both_sized and self.shape[1] != operand.shape[1]:
-            raise ErrorInitIndex('operands in IndexHierarchy2 set operations must have matching depth')
+            raise ErrorInitIndex('operands in IndexHierarchy set operations must have matching depth')
 
         cls = self.__class__
 
         # using assume_unique will permit retaining order when operands are identical
         labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
 
-        # derive index_constructors for IndexHierarchy2
+        # derive index_constructors for IndexHierarchy
         index_constructors: tp.Optional[tp.Sequence[tp.Type[IndexBase]]]
 
-        if both_sized and isinstance(other, IndexHierarchy2):
+        if both_sized and isinstance(other, IndexHierarchy):
             index_constructors = []
             # depth, and length of index_types, must be equal
             for cls_self, cls_other in zip(self._index_constructors, other._index_constructors):
@@ -983,7 +988,7 @@ class IndexHierarchy2(IndexBase):
                 else:
                     index_constructors.append(Index)
         else:
-            # if other is not an IndexHierarchy2, do not try to propagate types
+            # if other is not an IndexHierarchy, do not try to propagate types
             index_constructors = None
 
         return cls.from_labels(labels,
@@ -996,7 +1001,7 @@ class IndexHierarchy2(IndexBase):
     def _index_constructors(self) -> tp.Tuple[tp.Type[Index]]:
         return tuple(index.__class__ for index in self._indices)
 
-    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexHierarchy2':
+    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexHierarchy':
         '''Create a new index after removing the values specified by the loc key.
         '''
         blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
@@ -1007,7 +1012,7 @@ class IndexHierarchy2(IndexBase):
                 own_blocks=True
                 )
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'IndexHierarchy2':
+    def _drop_loc(self, key: GetItemKeyType) -> 'IndexHierarchy':
         '''Create a new index after removing the values specified by the loc key.
         '''
         return self._drop_iloc(self._loc_to_iloc(key))
@@ -1015,7 +1020,7 @@ class IndexHierarchy2(IndexBase):
     #---------------------------------------------------------------------------
 
     @property #type: ignore
-    @doc_inject(selector='values_2d', class_name='IndexHierarchy2')
+    @doc_inject(selector='values_2d', class_name='IndexHierarchy')
     def values(self) -> np.ndarray:
         '''
         {}
@@ -1114,9 +1119,9 @@ class IndexHierarchy2(IndexBase):
         return Series(self._index_constructors, index=labels, dtype=DTYPE_OBJECT)
 
     #---------------------------------------------------------------------------
-    def relabel(self, mapper: RelabelInput) -> 'IndexHierarchy2':
+    def relabel(self, mapper: RelabelInput) -> 'IndexHierarchy':
         '''
-        Return a new IndexHierarchy2 with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
+        Return a new IndexHierarchy with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
         '''
         if not callable(mapper):
             # if a mapper, it must support both __getitem__ and __contains__
@@ -1142,9 +1147,9 @@ class IndexHierarchy2(IndexBase):
     def relabel_at_depth(self,
             mapper: RelabelInput,
             depth_level: DepthLevelSpecifier = 0
-            ) -> "IndexHierarchy2":
+            ) -> "IndexHierarchy":
         '''
-        Return a new :obj:`IndexHierarchy2` after applying `mapper` to a level or each individual level specified by `depth_level`.
+        Return a new :obj:`IndexHierarchy` after applying `mapper` to a level or each individual level specified by `depth_level`.
 
         `mapper` can be a callable, mapping, or iterable.
             - If a callable, it must accept a single value, and return a single value.
@@ -1241,7 +1246,7 @@ class IndexHierarchy2(IndexBase):
             depth_map: tp.Sequence[int]
             ) -> IH:
         '''
-        Return a new :obj:`IndexHierarchy2` that conforms to the new depth assignments given be `depth_map`.
+        Return a new :obj:`IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
         '''
         index, _ = rehierarch_from_type_blocks(
                 labels=self._blocks,
@@ -1295,7 +1300,7 @@ class IndexHierarchy2(IndexBase):
         if isinstance(key, ILoc):
             return key.key
 
-        if isinstance(key, IndexHierarchy2):
+        if isinstance(key, IndexHierarchy):
 
             if not key.depth == self.depth:
                 raise KeyError(f"Key must have the same depth as the index. {key}")
@@ -1393,7 +1398,7 @@ class IndexHierarchy2(IndexBase):
 
     def _extract_iloc(self,
             key: GetItemKeyType,
-            ) -> tp.Union['IndexHierarchy2', tp.Tuple[tp.Hashable]]:
+            ) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
         '''Extract a new index given an iloc key
         '''
         if isinstance(key, INT_TYPES):
@@ -1412,12 +1417,12 @@ class IndexHierarchy2(IndexBase):
 
     def _extract_loc(self,
             key: GetItemKeyType
-            ) -> tp.Union['IndexHierarchy2', tp.Tuple[tp.Hashable]]:
+            ) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
         return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self, #pylint: disable=E0102
             key: GetItemKeyType
-            ) -> tp.Union['IndexHierarchy2', tp.Tuple[tp.Hashable]]:
+            ) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
@@ -1467,7 +1472,7 @@ class IndexHierarchy2(IndexBase):
 
         if isinstance(other, Index):
             other = other.values
-        elif isinstance(other, IndexHierarchy2):
+        elif isinstance(other, IndexHierarchy):
             other = other._blocks
 
         tb = self._blocks._ufunc_binary_operator(
@@ -1593,7 +1598,7 @@ class IndexHierarchy2(IndexBase):
         if compare_class and self.__class__ != other.__class__:
             return False
 
-        if not isinstance(other, IndexHierarchy2):
+        if not isinstance(other, IndexHierarchy):
             return False
 
         # same type from here
@@ -1625,7 +1630,7 @@ class IndexHierarchy2(IndexBase):
             *,
             ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[['IndexHierarchy2'], tp.Union[np.ndarray, 'IndexHierarchy2']]] = None,
+            key: tp.Optional[tp.Callable[['IndexHierarchy'], tp.Union[np.ndarray, 'IndexHierarchy']]] = None,
             ) -> IH:
         '''Return a new Index with the labels sorted.
 
@@ -1663,8 +1668,8 @@ class IndexHierarchy2(IndexBase):
 
         return isin(self.flat().values, matches)
 
-    def roll(self, shift: int) -> 'IndexHierarchy2':
-        '''Return an :obj:`IndexHierarchy2` with values rotated forward and wrapped around (with a positive shift) or backward and wrapped around (with a negative shift).
+    def roll(self, shift: int) -> 'IndexHierarchy':
+        '''Return an :obj:`IndexHierarchy` with values rotated forward and wrapped around (with a positive shift) or backward and wrapped around (with a negative shift).
         '''
         blocks = TypeBlocks.from_blocks(
                 self._blocks._shift_blocks(row_shift=shift, wrap=True)
@@ -1677,8 +1682,8 @@ class IndexHierarchy2(IndexBase):
                 )
 
     @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> 'IndexHierarchy2':
-        '''Return an :obj:`IndexHierarchy2` after replacing NA (NaN or None) with the supplied value.
+    def fillna(self, value: tp.Any) -> 'IndexHierarchy':
+        '''Return an :obj:`IndexHierarchy` after replacing NA (NaN or None) with the supplied value.
 
         Args:
             {value}
@@ -1695,7 +1700,7 @@ class IndexHierarchy2(IndexBase):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple['IndexHierarchy2', np.ndarray]:
+            ) -> tp.Tuple['IndexHierarchy', np.ndarray]:
 
         # sort to ensure hierarchability
         key = array_sample(self.positions, count=count, seed=seed, sort=True)
@@ -1804,7 +1809,7 @@ class IndexHierarchy2(IndexBase):
 
     def to_frame_go(self) -> 'FrameGO':
         '''
-        Return a :obj:`FrameGO` version of this :obj:`IndexHierarchy2`.
+        Return a :obj:`FrameGO` version of this :obj:`IndexHierarchy`.
         '''
         from static_frame import FrameGO
         return self._to_frame(FrameGO) #type: ignore
@@ -1840,7 +1845,7 @@ class IndexHierarchy2(IndexBase):
         return tree
 
     def to_tree(self) -> TreeNodeT:
-        '''Returns the tree representation of an IndexHierarchy2
+        '''Returns the tree representation of an IndexHierarchy
         '''
         return self._build_tree_at_depth_from_mask(0, np.ones(len(self), dtype=bool))
 
@@ -1854,7 +1859,7 @@ class IndexHierarchy2(IndexBase):
             *,
             index_constructor: IndexConstructor = None,
             ) -> IH:
-        '''Return an IndexHierarchy2 with a new root (outer) level added.
+        '''Return an IndexHierarchy with a new root (outer) level added.
         '''
         index_cls = self._INDEX_CONSTRUCTOR if index_constructor is None else index_constructor._MUTABLE_CONSTRUCTOR
 
@@ -1881,8 +1886,8 @@ class IndexHierarchy2(IndexBase):
 
     def level_drop(self,
             count: int = 1,
-            ) -> tp.Union[Index, 'IndexHierarchy2']:
-        '''Return an IndexHierarchy2 with one or more leaf levels removed. This might change the size of the resulting index if the resulting levels are not unique.
+            ) -> tp.Union[Index, 'IndexHierarchy']:
+        '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the resulting index if the resulting levels are not unique.
 
         Args:
             count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative value is the number of depths to remove from the leaf (inner) side of the hierarchy.
@@ -1925,14 +1930,14 @@ class IndexHierarchy2(IndexBase):
         raise NotImplementedError('no handling for a 0 count drop level.')
 
 
-class IndexHierarchy2GO(IndexHierarchy2):
+class IndexHierarchyGO(IndexHierarchy):
     '''
     A hierarchy of :obj:`static_frame.Index` objects that permits mutation only in the addition of new hierarchies or labels.
     '''
 
     STATIC = False
 
-    _IMMUTABLE_CONSTRUCTOR = IndexHierarchy2
+    _IMMUTABLE_CONSTRUCTOR = IndexHierarchy
     _LEVEL_CONSTRUCTOR = IndexLevelGO
     _INDEX_CONSTRUCTOR = IndexGO
 
@@ -1970,7 +1975,7 @@ class IndexHierarchy2GO(IndexHierarchy2):
         self._blocks = self._gen_blocks_from_self()
         self._values = self._blocks.values
 
-    def extend(self, other: IndexHierarchy2) -> None:
+    def extend(self, other: IndexHierarchy) -> None:
         '''
         Extend this IndexHiearchy in-place
         '''
@@ -2038,9 +2043,9 @@ class IndexHierarchy2GO(IndexHierarchy2):
         self._values = self._blocks.values
         self._ensure_uniqueness(self._values)
 
-    def __copy__(self: IndexHierarchy2) -> IndexHierarchy2:
+    def __copy__(self: IndexHierarchy) -> IndexHierarchy:
         '''
-        Return a shallow copy of this IndexHierarchy2.
+        Return a shallow copy of this IndexHierarchy.
         '''
         return self.__class__(
                 indices=[index.copy() for index in self._indices],
@@ -2052,7 +2057,7 @@ class IndexHierarchy2GO(IndexHierarchy2):
 
 
 # update class attr on Index after class initialization
-IndexHierarchy2._MUTABLE_CONSTRUCTOR = IndexHierarchy2GO
+IndexHierarchy._MUTABLE_CONSTRUCTOR = IndexHierarchyGO
 
 
 class IndexHierarchyAsType:
@@ -2060,13 +2065,13 @@ class IndexHierarchyAsType:
     __slots__ = ('container', 'key',)
 
     def __init__(self,
-            container: IndexHierarchy2,
+            container: IndexHierarchy,
             key: GetItemKeyType
             ) -> None:
         self.container = container
         self.key = key
 
-    def __call__(self, dtype: DtypeSpecifier) -> IndexHierarchy2:
+    def __call__(self, dtype: DtypeSpecifier) -> IndexHierarchy:
 
         from static_frame.core.index_datetime import dtype_to_index_cls
         container = self.container
