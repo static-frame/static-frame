@@ -123,6 +123,8 @@ def group_match(
         drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
         drop_mask[key] = False
 
+    column_key: tp.Union[int, np.ndarray, None]
+    row_key: tp.Union[int, np.ndarray, None]
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
     if axis == 0:
         if extract is not None:
@@ -198,6 +200,9 @@ def group_sort(
         shape = blocks._shape[1] if axis == 0 else blocks._shape[0]
         drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
         drop_mask[key] = False
+
+    column_key: tp.Union[int, np.ndarray, None]
+    row_key: tp.Union[int, np.ndarray, None]
 
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
     if axis == 0:

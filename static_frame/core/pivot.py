@@ -165,7 +165,7 @@ def pivot_items_to_block(
         return array
 
     if func_single and dtype is None:
-        def gen():
+        def gen() -> tp.Iterator[tp.Tuple[int, tp.Any]]:
             for label, _, values in blocks.group_extract(
                     axis=0,
                     key=group_key,
@@ -456,7 +456,7 @@ def pivot_core(
 
     columns_loc_to_iloc = frame.columns._loc_to_iloc
     # group by on 1 or more columns fields
-    # NOTE: explored doing one group on index and coluns that insert into pre-allocated arrays, but that proved slower than this approach
+    # NOTE: explored doing one group on index and columns that insert into pre-allocated arrays, but that proved slower than this approach
     group_key = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
 
     index_outer = pivot_outer_index(frame=frame,
@@ -478,6 +478,8 @@ def pivot_core(
                 func_fields,
                 )
         sub_columns_collected.extend(sub_columns)
+
+        # NOTE: used to pre-extract index to check if grouping was necessary; this prooved too expensive when doing grouping
         # sub is TypeBlocks unique value in columns_group; this may or may not have unique index fields; if not, it needs to be aggregated
         # if index_depth == 1:
         #     sub_index_labels = sub._extract_array_column(index_fields_iloc[0])
@@ -488,93 +490,96 @@ def pivot_core(
         #             sub._extract_array_column(columns_loc_to_iloc(f))
         #             for f in index_fields)))
         #     sub_index_labels_unique = set(sub_index_labels)
-
-        sub_frame: tp.Union[Frame, Series]
-
         # if sub_index_labels are not unique we need to aggregate
-        if True:
         # if len(sub_index_labels_unique) != len(sub_index_labels):
-            # if sub_columns length is 1, that means that we only need to extract one column out of the sub Frame
-            if len(sub_columns) == 1:
-                sub_block = pivot_items_to_block(blocks=sub,
-                                group_fields_iloc=index_fields_iloc,
-                                group_depth=index_depth,
-                                data_field_iloc=data_fields_iloc[0],
-                                func_single=func_single,
-                                dtype=dtype_single,
-                                index_outer=index_outer,
-                                fill_value=fill_value,
-                                fill_value_dtype=fill_value_dtype,
-                                kind=kind,
-                                )
-                sub_blocks.append(sub_block)
-                continue
-            else:
-                sub_frame = Frame.from_records_items(
-                        pivot_records_items(
-                                blocks=sub,
-                                group_fields_iloc=index_fields_iloc,
-                                group_depth=index_depth,
-                                data_fields_iloc=data_fields_iloc,
-                                func_single=func_single,
-                                func_map=func_map,
-                                func_no=func_no,
-                                kind=kind,
-                                ),
-                        dtypes=dtypes_per_data_fields,
-                        )
-        else:
-            # import ipdb; ipdb.set_trace()
-            # we have unique values per index item, but may not have a complete index
-            if func_no:
-                if len(data_fields) == 1:
-                    sub_frame = Frame(
-                            sub._extract_array_column(data_fields_iloc[0]),
-                            index=sub_index_labels,
-                            index_constructor=index_constructor,
-                            own_data=True)
-                else:
-                    sub_frame = Frame(
-                            sub._extract(row_key=None,
-                                    column_key=data_fields_iloc),
-                            index=sub_index_labels,
-                            index_constructor=index_constructor,
-                            own_data=True)
-            elif func_single:
-                # NOTE: apply function with func_single is akward
-                if len(data_fields) == 1:
-                    sub_frame = Frame(
-                            sub._extract_array_column(data_fields_iloc[0]),
-                            index=sub_index_labels,
-                            index_constructor=index_constructor,
-                            own_data=True,
+
+        sub_frame: Frame
+
+        # if sub_columns length is 1, that means that we only need to extract one column out of the sub Frame
+        if len(sub_columns) == 1:
+            sub_block = pivot_items_to_block(blocks=sub,
+                            group_fields_iloc=index_fields_iloc,
+                            group_depth=index_depth,
+                            data_field_iloc=data_fields_iloc[0],
+                            func_single=func_single,
+                            dtype=dtype_single,
+                            index_outer=index_outer,
+                            fill_value=fill_value,
+                            fill_value_dtype=fill_value_dtype,
+                            kind=kind,
                             )
-                else:
-                    sub_frame = Frame(
-                            sub._extract(row_key=None,
-                                    column_key=data_fields_iloc),
-                            index=sub_index_labels,
-                            index_constructor=index_constructor,
-                            own_data=True)
-            else:
-                def blocks() -> tp.Iterator[np.ndarray]:
-                    for field in data_fields_iloc:
-                        for _, func in func_map:
-                            yield sub._extract_array_column(field)
-                sub_frame = Frame(
-                        TypeBlocks.from_blocks(blocks()),
-                        index=sub_index_labels,
-                        own_data=True,
-                        )
-        # can we avoid this reindex if we create sub_frame correctly from the begining
-        sub_frame = sub_frame.reindex(index_outer,
-                own_index=True,
-                fill_value=fill_value,
-                )
-        if sub_frame.ndim == 1:
-            sub_blocks.append(sub_frame.values)
+            sub_blocks.append(sub_block)
         else:
-            sub_blocks.extend(sub_frame._blocks._blocks) # type: ignore
+            sub_frame = Frame.from_records_items(
+                    pivot_records_items(
+                            blocks=sub,
+                            group_fields_iloc=index_fields_iloc,
+                            group_depth=index_depth,
+                            data_fields_iloc=data_fields_iloc,
+                            func_single=func_single,
+                            func_map=func_map,
+                            func_no=func_no,
+                            kind=kind,
+                            ),
+                    dtypes=dtypes_per_data_fields,
+                    )
+            sub_frame = sub_frame.reindex(index_outer,
+                    own_index=True,
+                    fill_value=fill_value,
+                    )
+            sub_blocks.extend(sub_frame._blocks._blocks)
+
+        # else:
+        #     # we have unique values per index item, but may not have a complete index
+        #     if func_no:
+        #         if len(data_fields) == 1:
+        #             sub_frame = Frame(
+        #                     sub._extract_array_column(data_fields_iloc[0]),
+        #                     index=sub_index_labels,
+        #                     index_constructor=index_constructor,
+        #                     own_data=True)
+        #         else:
+        #             sub_frame = Frame(
+        #                     sub._extract(row_key=None,
+        #                             column_key=data_fields_iloc),
+        #                     index=sub_index_labels,
+        #                     index_constructor=index_constructor,
+        #                     own_data=True)
+        #     elif func_single:
+        #         # NOTE: apply function with func_single is akward
+        #         if len(data_fields) == 1:
+        #             sub_frame = Frame(
+        #                     sub._extract_array_column(data_fields_iloc[0]),
+        #                     index=sub_index_labels,
+        #                     index_constructor=index_constructor,
+        #                     own_data=True,
+        #                     )
+        #         else:
+        #             sub_frame = Frame(
+        #                     sub._extract(row_key=None,
+        #                             column_key=data_fields_iloc),
+        #                     index=sub_index_labels,
+        #                     index_constructor=index_constructor,
+        #                     own_data=True)
+        #     else:
+        #         def blocks() -> tp.Iterator[np.ndarray]:
+        #             for field in data_fields_iloc:
+        #                 for _, func in func_map:
+        #                     yield sub._extract_array_column(field)
+        #         sub_frame = Frame(
+        #                 TypeBlocks.from_blocks(blocks()),
+        #                 index=sub_index_labels,
+        #                 own_data=True,
+        #                 )
+        # can we avoid this reindex if we create sub_frame correctly from the begining
+        # sub_frame = sub_frame.reindex(index_outer,
+        #         own_index=True,
+        #         fill_value=fill_value,
+        #         )
+        # if sub_frame.ndim == 1:
+        #     sub_blocks.append(sub_frame.values)
+        # else:
+        #     sub_blocks.extend(sub_frame._blocks._blocks) # type: ignore
 
     tb = TypeBlocks.from_blocks(sub_blocks)
     return frame.__class__(tb,
