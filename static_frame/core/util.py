@@ -1,6 +1,7 @@
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
+from collections import Counter
 from enum import Enum
 from functools import partial
 from functools import reduce
@@ -880,6 +881,8 @@ def ufunc_unique(
         array: np.ndarray,
         *,
         axis: tp.Optional[int] = None,
+        return_inverse: bool = False,
+        return_counts: bool = False,
         ) -> np.ndarray:
     '''
     Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a heterogenous object type.
@@ -890,7 +893,7 @@ def ufunc_unique(
     if array.dtype.kind == 'O':
         if axis is None or array.ndim < 2:
             try:
-                return np.unique(array)
+                return np.unique(array, return_inverse=return_inverse, return_counts=return_counts)
             except TypeError: # if unorderable types
                 # np.unique will give TypeError: The axis argument to unique is not supported for dtype object
                 pass
@@ -906,14 +909,55 @@ def ufunc_unique(
             else:
                 array_iter = array2d_to_tuples(array.T)
 
+        if return_inverse:
+            inverse = np.empty(len(array_iter), dtype=np.intp)
+
         # Use a dict to retain order; this will break for non hashables
-        store = dict.fromkeys(array_iter)
+        if return_counts:
+            if not return_inverse:
+                store = Counter(array_iter)
+            else:
+                store = Counter()
+                indices = {}
+                for i, element in enumerate(array_iter):
+                    store[element] += 1
+                    indices.setdefault(element, len(indices))
+                    inverse[i] = indices[element]
+
+                indices.clear()
+
+            counts = np.empty(len(store), dtype=np.intp)
+            counts[:] = tuple(store.values())
+        else:
+            if not return_inverse:
+                store = dict.fromkeys(array_iter)
+            else:
+                store = {}
+                indices = {}
+                for i, element in enumerate(array_iter):
+                    store[element] = None
+                    indices.setdefault(element, len(indices))
+                    inverse[i] = indices[element]
+
+                indices.clear()
+
         array = np.empty(len(store), dtype=object)
         array[:] = tuple(store)
+
+        if return_inverse and return_counts:
+            return array, inverse, counts
+
+        if return_inverse:
+            return array, inverse
+
+        if return_counts:
+            return array, counts
+
         return array
 
+
     # all other types, use the main ufunc
-    return np.unique(array, axis=axis)
+    return np.unique(array, axis=axis, return_inverse=return_inverse, return_counts=return_counts)
 
 
 def roll_1d(array: np.ndarray,

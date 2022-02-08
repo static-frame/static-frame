@@ -87,6 +87,7 @@ from static_frame.core.util import (
     key_to_datetime_key,
     setdiff2d,
     union2d,
+    ufunc_unique,
 )
 
 if tp.TYPE_CHECKING:
@@ -127,13 +128,11 @@ def build_indexers_from_product(lists: tp.List[tp.Sequence[tp.Any]]) -> tp.List[
     ]
     """
 
-    # padded = np.full(len(lists) + 2, 1, dtype=int)
-    # padded[1:-2] = list(map(len, lists))
-    lengths = list(map(len, lists))
+    padded_lengths = np.full(len(lists) + 2, 1, dtype=int)
+    padded_lengths[1:-1] = tuple(map(len, lists))
 
-    padded = [1] + lengths + [1]
-    all_group_reps = np.cumprod(padded)[:-2]
-    all_index_reps = np.cumprod(padded[::-1])[-3::-1]
+    all_group_reps = np.cumprod(padded_lengths)[:-2]
+    all_index_reps = np.cumprod(padded_lengths[::-1])[-3::-1]
 
     result = []
 
@@ -143,7 +142,7 @@ def build_indexers_from_product(lists: tp.List[tp.Sequence[tp.Any]]) -> tp.List[
                 map(
                     # Repeat each index (i.e. element) `index_reps` times
                     functools.partial(np.tile, reps=index_reps),
-                    range(lengths[i]),
+                    range(padded_lengths[i+1]),
                 )
             )
         )
@@ -162,7 +161,7 @@ def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
 
 def _slice_to_iloc_slice(index: Index, indexer: np.ndarray, key: slice) -> slice:
     if key.start is not None:
-        idx = index.loc_to_iloc(key.start)
+        start = index.loc_to_iloc(key.start)
     else:
         start = None
 
@@ -170,11 +169,30 @@ def _slice_to_iloc_slice(index: Index, indexer: np.ndarray, key: slice) -> slice
         raise NotImplementedError(f"step must be an integer. What does this even mean? {key}")
 
     if key.stop is not None:
-        idx = index.loc_to_iloc(key.stop)
+        stop = index.loc_to_iloc(key.stop)
     else:
         stop = None
 
     return slice(start, stop, key.step)
+
+
+def _mask_to_slice_or_ilocs(mask: np.ndarray) -> slice | np.ndarray | int:
+    assert mask.dtype == DTYPE_BOOL
+
+    valid_ilocs = PositionsAllocator.get(len(mask))[mask]
+
+    if len(valid_ilocs) == 1:
+        return valid_ilocs[0]
+
+    if len(valid_ilocs) == len(mask):
+        return NULL_SLICE
+
+    steps = np.unique(valid_ilocs[1:] - valid_ilocs[:-1])
+
+    if len(steps) == 1:
+        return slice(valid_ilocs[0], valid_ilocs[-1] + 1, steps[0])
+
+    return valid_ilocs
 
 
 #-------------------------------------------------------------------------------
@@ -548,7 +566,7 @@ class IndexHierarchy2(IndexBase):
             if block is None or constructor is None:
                 raise ErrorInitIndex(f'Levels and index_constructors must be the same length.')
 
-            unique_values, indexer = np.unique(block.values.ravel(), return_inverse=True)
+            unique_values, indexer = ufunc_unique(block.values, return_inverse=True)
 
             # we call the constructor on all lvl, even if it is already an Index
             indices.append(constructor(unique_values))
@@ -1031,7 +1049,7 @@ class IndexHierarchy2(IndexBase):
             raise NotImplementedError("selecting multiple depth levels is not yet implemented")
 
         def _extractor(arr: np.ndarray, pos: int) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
-            unique, widths = np.unique(arr, return_counts=True)
+            unique, widths = ufunc_unique(arr, return_counts=True)
             labels = np.take(self._indices[pos].values, unique)
             yield from zip(labels, widths)
 
@@ -1213,11 +1231,31 @@ class IndexHierarchy2(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def _loc_to_iloc(self,
-            key: tp.Union[GetItemKeyType, HLoc]
-            ) -> GetItemKeyType:
+    def _process_key_at_depth(self, depth: int, key) -> slice | np.ndarray:
+        key_at_depth = key[depth]
+
+        # Key is already a mask!
+        if isinstance(key_at_depth, np.ndarray) and key_at_depth.dtype == DTYPE_BOOL:
+            return key_at_depth
+
+        index_at_depth = self._indices[depth]
+        indexer_at_depth = self._indexers[depth]
+
+        if isinstance(key_at_depth, slice):
+            return _slice_to_iloc_slice(index_at_depth, indexer_at_depth, key_at_depth)
+
+        key_iloc = index_at_depth.loc_to_iloc(key_at_depth)
+
+        if hasattr(key_iloc, "__len__"):
+            return np.isin(indexer_at_depth, key_iloc)
+
+        return indexer_at_depth == key_iloc
+
+    def _loc_to_iloc(self, key: tp.Union[GetItemKeyType, HLoc]) -> GetItemKeyType:
         '''
-        Given iterable of GetItemKeyTypes, apply to each level of levels.
+        Given iterable (or instance) of GetItemKeyType, determine the equivalent iloc key.
+
+        When possible, prefer slices.
         '''
         if isinstance(key, ILoc):
             return key.key
@@ -1264,94 +1302,33 @@ class IndexHierarchy2(IndexBase):
 
         meaningful_selections = {i: not (isinstance(k, slice) and k == NULL_SLICE) for i, k in enumerate(key)}
 
-        if sum(meaningful_selections.values()) == 1 and meaningful_selections[0]:
-            key_at_depth = key[0]
-            index_at_depth = self._indices[0]
-            indexer_at_depth = self._indexers[0]
+        # Return a slice wherever possible
+        if sum(meaningful_selections.values()) == 1:
 
-            if isinstance(key_at_depth, slice):
-                return _slice_to_iloc_slice(index_at_depth, indexer_at_depth, key_at_depth)
+            depth = next(i for i, meaningful in meaningful_selections.items() if meaningful)
+            mask = self._process_key_at_depth(depth=depth, key=key)
 
-            # TODO: Add more optimized branches when we know about or sortedness
+            if isinstance(mask, slice):
+                return mask # Not actually a mask
 
-            mask = indexer_at_depth == index_at_depth.loc_to_iloc[key_at_depth]
-            changes = (mask[1:] != mask[:-1]).sum()
+        else:
+            mask_2d = np.full(self.shape, True, dtype=bool)
 
-            if changes == 0 and mask.any():
-                return NULL_SLICE
+            for depth, (key_at_depth, meaningful) in enumerate(meaningful_selections.items()):
+                if not meaningful:
+                    continue
 
-            if changes == 1:
-                positions = PositionsAllocator.get(len(mask))
-                start, stop = positions[mask][[0, -1]]
-                return slice(start, stop)
+                result = self._process_key_at_depth(depth=depth, key=key)
 
-            if changes == len(mask) - 1: # It exactly alternates!
-                return slice(0 if mask[0] else 1, None, 2)
-
-        self_len = self.__len__()
-
-        mask = np.full(self_len, True, dtype=bool)
-        ilocs = np.arange(self_len)
-
-        #mask_2d = np.full(self.shape, True, dtype=bool)
-
-        # for i, k in enumerate(key):
-        #     mask_2d[:,i] = self._indexers[i] == self._indices[i].loc_to_iloc(k)
-
-        # sel = mask_2d.all(axis=1)
-
-        # return self.positions[sel]
-
-        for i, k in enumerate(key):
-            if isinstance(k, slice) and k == NULL_SLICE:
-                continue
-
-            if isinstance(k, np.ndarray) and k.dtype == DTYPE_BOOL:
-                mask &= k
-                continue
-
-            index = self._indices[i]
-            masked_indexer = self._indexers[i][mask]
-            masked_ilocs = ilocs[mask]
-
-            if isinstance(k, np.ndarray) and k.dtype == int:
-                valid_ilocs = masked_ilocs[k]
-
-            elif isinstance(k, slice):
-                if k.start is not None:
-                    idx = index.loc_to_iloc(k.start)
-                    start = np.argmax(masked_indexer == idx) # Arraykit: find_first_vectorized?
+                if isinstance(result, slice):
+                    mask_2d[result, depth] = True
                 else:
-                    start = None
+                    mask_2d[:, depth] = result
 
-                if k.step is not None and not isinstance(k.step, INT_TYPES):
-                    raise NotImplementedError(f"step must be an integer. What does this even mean? {k}")
+            mask = mask_2d.all(axis=1)
+            del mask_2d
 
-                if k.stop is not None:
-                    idx = index.loc_to_iloc(k.stop)
-                    stop = -np.argmax((masked_indexer==idx)[::-1])
-                else:
-                    stop = None
-
-                valid_ilocs = masked_ilocs[start:stop:k.step]
-            else:
-                key_iloc = index.loc_to_iloc(k)
-
-                if hasattr(key_iloc, "__len__"):
-                    valid_ilocs = masked_ilocs[np.isin(masked_indexer, key_iloc)]
-                else:
-                    valid_ilocs = masked_ilocs[masked_indexer == key_iloc]
-
-            tmp_mask = np.full(self_len, False, dtype=bool)
-            tmp_mask[valid_ilocs] = True
-            mask &= tmp_mask
-
-        #positions = self.positions[mask_2d.all(axis=1)]
-
-        positions = self.positions[mask]
-        if len(positions) == 1:
-            return positions[0]
-        return positions.tolist()
+        return _mask_to_slice_or_ilocs(mask)
 
     def loc_to_iloc(self,
             key: tp.Union[GetItemKeyType, HLoc]
@@ -1540,7 +1517,7 @@ class IndexHierarchy2(IndexBase):
         if pos is not None: # i.e. a single level
             return self._indices[pos].values
 
-        return np.unique(array2d_to_array1d(self.values_at_depth(sel)))
+        return ufunc_unique(array2d_to_array1d(self.values_at_depth(sel)))
 
     @doc_inject()
     def equals(self,
