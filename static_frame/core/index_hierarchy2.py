@@ -650,8 +650,11 @@ class IndexHierarchy2(IndexBase):
         self._indexers = indexers
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
-        if _blocks is not None and not _own_blocks:
-            self._blocks = _blocks.copy()
+        if _blocks is not None:
+            if _own_blocks:
+                self._blocks = _blocks
+            else:
+                self._blocks = _blocks.copy()
         else:
             self._blocks = self._gen_blocks_from_self()
 
@@ -1326,6 +1329,9 @@ class IndexHierarchy2(IndexBase):
         if isinstance(key, list):
             return [self._loc_to_iloc(k) for k in key]
 
+        if isinstance(key, np.ndarray) and key.dtype != DTYPE_BOOL and key.ndim == 2:
+            return [self._loc_to_iloc(k) for k in key]
+
         if isinstance(key, HLoc):
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
             key = tuple(HLoc(tuple(
@@ -1850,8 +1856,7 @@ class IndexHierarchy2(IndexBase):
             ) -> IH:
         '''Return an IndexHierarchy2 with a new root (outer) level added.
         '''
-        index_cls = self._INDEX_CONSTRUCTOR if index_constructor is None else index_constructor
-
+        index_cls = self._INDEX_CONSTRUCTOR if index_constructor is None else index_constructor._MUTABLE_CONSTRUCTOR
 
         if self.STATIC:
             indices = [index_cls((level,)), *self._indices]
@@ -1864,7 +1869,7 @@ class IndexHierarchy2(IndexBase):
         indexers = [new_indexer, *self._indexers]
 
         def gen_blocks() -> tp.Iterator[np.ndarray]:
-            yield np.full(self.__len__(), level)
+            yield np.full(self.__len__(), indices[0].values)
             yield from self._blocks._blocks
 
         return self.__class__(
@@ -1898,10 +1903,10 @@ class IndexHierarchy2(IndexBase):
                 return self._index_constructors[-1](self._blocks.iloc[:,0].values.ravel(), name=name)
 
             return self.__class__(
-                    indices=self._indices[count:],
-                    indexers=self._indexers[count:],
+                    indices=self._indices[:count],
+                    indexers=self._indexers[:count],
                     name=name,
-                    _blocks=self._blocks.iloc[:,count:],
+                    _blocks=self._blocks[:count],
                     _own_blocks=self.STATIC,
                     )
 
@@ -2033,7 +2038,7 @@ class IndexHierarchy2GO(IndexHierarchy2):
         self._values = self._blocks.values
         self._ensure_uniqueness(self._values)
 
-    def __copy__(self: IH) -> IH:
+    def __copy__(self: IndexHierarchy2) -> IndexHierarchy2:
         '''
         Return a shallow copy of this IndexHierarchy2.
         '''
@@ -2041,8 +2046,8 @@ class IndexHierarchy2GO(IndexHierarchy2):
                 indices=[index.copy() for index in self._indices],
                 indexers=self._indexers,
                 name=self._name,
-                blocks=self._blocks.copy(),
-                own_blocks=True,
+                _blocks=self._blocks.copy(),
+                _own_blocks=True,
                 )
 
 

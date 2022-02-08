@@ -2119,8 +2119,6 @@ class TestUnit(TestCase):
                 (ih2.values_at_depth(0) == np.array(['1542-02', '1542-02', '1542-02', '1542-02'], dtype='datetime64[M]')).all()
                 )
 
-
-
     #---------------------------------------------------------------------------
 
     def test_hierarchy_drop_level_a(self) -> None:
@@ -2214,13 +2212,13 @@ class TestUnit(TestCase):
 
         ih = IndexHierarchy2.from_labels(labels)
 
-        part = ih.iloc[1:] # force TB creation
-
         post1 = ih.level_drop(-1)
         assert isinstance(post1, IndexHierarchy2) # mypy
         self.assertEqual(ih._blocks.mloc[:-1].tolist(), post1._blocks.mloc.tolist())
-        # we changed shape after dropping two depths
-        self.assertEqual(ih.level_drop(-2).shape, (3, 2))
+
+        # BEHAVIOR CHANGE!
+        with self.assertRaises(ErrorInitIndexNonUnique):
+            ih.level_drop(-2).shape, (3, 2)
 
         post2 = ih.level_drop(1)
         assert isinstance(post2, IndexHierarchy2) # mypy
