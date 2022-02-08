@@ -1022,6 +1022,7 @@ class TypeBlocks(ContainerOperand):
             axis: int,
             key: int,
             drop: bool = False,
+            kind: str = DEFAULT_SORT_KIND,
             ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
         '''
         NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sort directly.
@@ -1039,7 +1040,7 @@ class TypeBlocks(ContainerOperand):
             use_sort = False
 
         if use_sort:
-            blocks, _ = self.sort(key=key, axis=not axis, kind=DEFAULT_SORT_KIND)
+            blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
             yield from group_sort(blocks, axis, key, drop)
         else:
             yield from group_match(self, axis, key, drop)
@@ -1049,6 +1050,7 @@ class TypeBlocks(ContainerOperand):
             axis: int,
             key: int,
             extract: int,
+            kind: str = DEFAULT_SORT_KIND,
             ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
         '''
         This interface will do an extraction on the opposite axis if the extraction is a single row/column.
@@ -1068,7 +1070,7 @@ class TypeBlocks(ContainerOperand):
             use_sort = False
 
         if use_sort:
-            blocks, _ = self.sort(key=key, axis=not axis, kind=DEFAULT_SORT_KIND)
+            blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
             yield from group_sort(blocks, axis, key, drop=False, extract=extract)
         else:
             yield from group_match(self, axis, key, drop=False, extract=extract)

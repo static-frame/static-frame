@@ -1153,6 +1153,20 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), [(1, 1, 1), ('x', None, 'x')])
 
 
+
+    def test_ufunc_unique2s_inverse_a(self) -> None:
+        from static_frame.core.util import ufunc_unique2d_inverse
+        a1 = np.array([[1, 1], [1, 2], [1, 2], [3, 0], [1, 1]])
+        post = ufunc_unique2d_inverse(a1)
+        self.assertEqual(post[0].tolist(),
+                [[1, 1], [1, 2], [3, 0]])
+        self.assertEqual(post[1].tolist(),
+                [0, 1, 1, 2, 0])
+        # import ipdb; ipdb.set_trace()
+
+    #---------------------------------------------------------------------------
+
+
     def test_concat_resolved_a(self) -> None:
         a1 = np.array([[3,4,5],[0,0,0]])
         a2 = np.array([1,2,3]).reshape((1,3))

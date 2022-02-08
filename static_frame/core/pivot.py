@@ -19,6 +19,9 @@ from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import DEFAULT_FAST_SORT_KIND
+from static_frame.core.util import dtype_from_element
+
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.type_blocks import TypeBlocks
 
@@ -97,6 +100,7 @@ def pivot_records_items(
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]],
         func_no: bool,
+        kind: str,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
@@ -106,7 +110,7 @@ def pivot_records_items(
     record_size = len(data_fields_iloc) * (1 if (func_single or func_no) else len(func_map))
     record: tp.List[tp.Any]
 
-    for label, _, part in blocks.group(axis=0, key=group_key):
+    for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
         if func_no:
             if len(part) != 1:
                 raise RuntimeError('pivot requires aggregation of values; provide a `func` argument.')
@@ -126,6 +130,85 @@ def pivot_records_items(
 
 from static_frame.core.util import NameType
 
+
+def pivot_items_to_block(
+        blocks: TypeBlocks,
+        group_fields_iloc: tp.Iterable[tp.Hashable],
+        group_depth: int,
+        data_field_iloc: tp.Hashable,
+        func_single: tp.Optional[UFunc],
+        dtype: tp.Optional[np.dtype],
+        fill_value: tp.Any,
+        fill_value_dtype: np.dtype,
+        index_outer: 'IndexBase',
+        kind: str,
+        ) -> np.ndarray:
+    '''
+    Specialized generator of pairs for when we have only one data_field and one function.
+    '''
+    from static_frame.core.series import Series
+    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+
+    if func_single and dtype is not None:
+        array = np.full(len(index_outer),
+                fill_value,
+                dtype=resolve_dtype(dtype, fill_value_dtype),
+                )
+        for label, _, values in blocks.group_extract(
+                axis=0,
+                key=group_key,
+                extract=data_field_iloc,
+                kind=kind,
+                ):
+            array[index_outer._loc_to_iloc(label)] = func_single(values)
+        array.flags.writeable = False
+        return array
+
+    if func_single and dtype is None:
+        def gen():
+            for label, _, values in blocks.group_extract(
+                    axis=0,
+                    key=group_key,
+                    extract=data_field_iloc,
+                    kind=kind,
+                    ):
+                yield index_outer._loc_to_iloc(label), func_single(values)
+        post = Series.from_items(gen())
+        if len(post) == len(index_outer):
+            array = np.empty(len(index_outer), dtype=post.dtype)
+        else:
+            array = np.full(len(index_outer),
+                    fill_value,
+                    dtype=resolve_dtype(post.dtype, fill_value_dtype),
+                    )
+        array[post.index.values] = post.values
+        array.flags.writeable = False
+        return array
+
+    # func_no scenario
+    if group_depth == 1:
+        # NOTE: can replace _extract_array_column with an iterator of values
+        labels = [index_outer._loc_to_iloc(label) for label in blocks._extract_array_column(group_key)]
+    else:
+        # NOTE: can replace _extract_array_column with an iterator of values
+        labels = [index_outer._loc_to_iloc(tuple(label)) for label in blocks._extract_array(column_key=group_key)]
+
+    values = blocks._extract_array_column(data_field_iloc)
+    assert dtype == values.dtype
+
+    if len(values) == len(index_outer):
+        array = np.empty(len(index_outer), dtype=dtype)
+    else:
+        array = np.full(len(index_outer),
+                fill_value,
+                dtype=resolve_dtype(values.dtype, fill_value_dtype),
+                )
+    array[labels] = values
+    array.flags.writeable = False
+    return array
+
+from static_frame.core.util import iterable_to_array_1d
+
 def pivot_items_to_frame(
         blocks: TypeBlocks,
         group_fields_iloc: tp.Iterable[tp.Hashable],
@@ -137,92 +220,110 @@ def pivot_items_to_frame(
         dtype: np.dtype,
         index_constructor: IndexConstructor,
         columns_constructor: IndexConstructor,
-        ) -> 'Series':
+        kind: str,
+        ) -> 'Frame':
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
     This version returns a Frame.
     '''
-    # from static_frame.core.series import Series
-    from static_frame.core.frame import Frame
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
 
-    if func_single:
-        # this approach shown to be slower
-        index = []
-        def gen():
-            for label, _, sub in blocks.group(axis=0, key=group_key):
-                values = sub._extract_array_column(data_field_iloc)
-                index.append(label)
-                yield func_single(values) # cannot know the dtype
-        return frame_cls.from_elements(
-                gen(),
-                columns=(name,),
-                index=index,
-                index_constructor=index_constructor,
-                columns_constructor=columns_constructor,
-                dtype=dtype,
-                )
-    # func_no scenario
-    # labels via blocks._extract_array_column(group_key) must be unique
-    if group_depth == 1:
-        return frame_cls.from_elements(
-                blocks._extract_array_column(data_field_iloc),
-                index=blocks._extract_array_column(group_key),
-                columns=(name,),
-                index_constructor=index_constructor,
-                columns_constructor=columns_constructor,
-                dtype=dtype,
-                )
-    raise NotImplementedError()
-
-# migrate this to be to blocks
-def pivot_items_to_block(
-        blocks: TypeBlocks,
-        group_fields_iloc: tp.Iterable[tp.Hashable],
-        group_depth: int,
-        data_field_iloc: tp.Hashable,
-        func_single: tp.Optional[UFunc],
-        dtype: np.dtype,
-        fill_value: tp.Any,
-        index_outer: 'IndexBase',
-        ) -> 'Series':
-    '''
-    Specialized generator of pairs for when we have only one data_field and one function.
-    '''
     from static_frame.core.series import Series
     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
 
-    array = np.full(len(index_outer), fill_value, dtype=dtype)
     if func_single:
-        # this approach shown to be slower
-        # if group_depth == 1 and len(ufunc_unique1d(blocks._extract_array_column(group_key))) == len(blocks):
-        #     pass
-        for label, _, values in blocks.group_extract(
+        labels = []
+        values = []
+        for label, _, v in blocks.group_extract(
                 axis=0,
                 key=group_key,
                 extract=data_field_iloc,
+                kind=kind,
                 ):
-            # values = sub._extract_array_column(data_field_iloc)
-            array[index_outer._loc_to_iloc(label)] = func_single(values)
+            labels.append(label)
+            values.append(func_single(v))
+
+        if dtype is None:
+            array, _ = iterable_to_array_1d(values, count=len(values))
+        else:
+            array = np.array(values, dtype=dtype)
         array.flags.writeable = False
-        return array
+        index = index_constructor(labels)
+        return frame_cls.from_elements(array,
+                index=index,
+                own_index=True,
+                columns=(name,),
+                columns_constructor=columns_constructor,
+                )
 
     # func_no scenario
-    # labels via blocks._extract_array_column(group_key) must be unique
     if group_depth == 1:
-        for label, value in zip(
-                blocks._extract_array_column(group_key),
-                blocks._extract_array_column(data_field_iloc),
-                ):
-            array[index_outer._loc_to_iloc(label)] = value
-        array.flags.writeable = False
-        return array
+        index = index_constructor(blocks._extract_array_column(group_key))
+    else:
+        index = index_constructor(tuple(label) for label in blocks._extract_array(column_key=group_key))
 
-        # return Series(blocks._extract_array_column(data_field_iloc),
-        #         index=blocks._extract_array_column(group_key),
-        #         index_constructor=index_constructor,
-        #         )
-    raise NotImplementedError()
+    array = blocks._extract_array_column(data_field_iloc)
+    assert dtype == array.dtype
+
+    return frame_cls.from_elements(array,
+            index=index,
+            own_index=True,
+            columns=(name,),
+            columns_constructor=columns_constructor,
+            )
+
+
+
+
+# def pivot_items_to_frame(
+#         blocks: TypeBlocks,
+#         group_fields_iloc: tp.Iterable[tp.Hashable],
+#         group_depth: int,
+#         data_field_iloc: tp.Hashable,
+#         func_single: tp.Optional[UFunc],
+#         frame_cls: tp.Type['Frame'],
+#         name: NameType,
+#         dtype: np.dtype,
+#         index_constructor: IndexConstructor,
+#         columns_constructor: IndexConstructor,
+#         kind: str,
+#         ) -> 'Frame':
+
+    # from static_frame.core.frame import Frame
+    # group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+
+    # if func_single:
+    #     # this approach shown to be slower
+    #     index = []
+    #     def gen():
+    #         for label, _, sub in blocks.group(axis=0, key=group_key, kind=kind):
+    #             # import ipdb; ipdb.set_trace()
+    #             values = sub._extract_array_column(data_field_iloc)
+    #             index.append(label)
+    #             yield func_single(values) # cannot know the dtype
+
+    #     return frame_cls.from_elements(
+    #             gen(),
+    #             columns=(name,),
+    #             index=index,
+    #             index_constructor=index_constructor,
+    #             columns_constructor=columns_constructor,
+    #             dtype=dtype,
+    #             )
+    # # func_no scenario
+    # # labels via blocks._extract_array_column(group_key) must be unique
+    # if group_depth == 1:
+    #     return frame_cls.from_elements(
+    #             blocks._extract_array_column(data_field_iloc),
+    #             index=blocks._extract_array_column(group_key),
+    #             columns=(name,),
+    #             index_constructor=index_constructor,
+    #             columns_constructor=columns_constructor,
+    #             dtype=dtype,
+    #             )
+    # raise NotImplementedError()
+
+
+
 
 
 
@@ -237,6 +338,7 @@ def pivot_core(
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]],
         fill_value: object = np.nan,
         index_constructor: IndexConstructor = None,
+        kind: str = DEFAULT_FAST_SORT_KIND,
         ) -> 'Frame':
     '''Core implementation of Frame.pivot(). The Frame has already been reduced to just relevant columns, and all fields groups are normalized as lists of hashables.
     '''
@@ -287,6 +389,8 @@ def pivot_core(
         if func_single and data_fields_len == 1:
             dtype_single = ufunc_dtype_to_dtype(func_single, dtype_map[data_fields[0]])
 
+    fill_value_dtype = dtype_from_element(fill_value)
+
     #---------------------------------------------------------------------------
     # first major branch: if we are only grouping be index fields
 
@@ -302,7 +406,7 @@ def pivot_core(
         else:
             index_constructor = partial(Index, name=name_index)
 
-        if len(columns) == 1: # lenght of columns is equal to length of datafields
+        if len(columns) == 1: # length of columns is equal to length of datafields, func_map not needed
             f = pivot_items_to_frame(blocks=frame._blocks,
                     group_fields_iloc=index_fields_iloc,
                     group_depth=index_depth,
@@ -313,6 +417,7 @@ def pivot_core(
                     dtype=dtype_single,
                     index_constructor=index_constructor,
                     columns_constructor=columns_constructor,
+                    kind=kind,
                     )
         else:
             f = frame.from_records_items(
@@ -324,6 +429,7 @@ def pivot_core(
                             func_single=func_single,
                             func_map=func_map,
                             func_no=func_no,
+                            kind=kind,
                     ),
                     columns_constructor=columns_constructor,
                     columns=columns,
@@ -363,7 +469,7 @@ def pivot_core(
     sub_blocks = []
     sub_columns_collected: tp.List[tp.Hashable] = []
 
-    for group, _, sub in frame._blocks.group(axis=0, key=group_key):
+    for group, _, sub in frame._blocks.group(axis=0, key=group_key, kind=kind):
         # derive the column fields represented by this group
         sub_columns = extrapolate_column_fields(
                 columns_fields,
@@ -372,26 +478,24 @@ def pivot_core(
                 func_fields,
                 )
         sub_columns_collected.extend(sub_columns)
-
         # sub is TypeBlocks unique value in columns_group; this may or may not have unique index fields; if not, it needs to be aggregated
-        if index_depth == 1:
-            sub_index_labels = sub._extract_array_column(index_fields_iloc[0])
-            sub_index_labels_unique = ufunc_unique1d(sub_index_labels)
-        else: # match to an index of tuples; the order might not be the same as IH
-            # NOTE: might be able to keep arays and concat below
-            sub_index_labels = tuple(zip(*(
-                    sub._extract_array_column(columns_loc_to_iloc(f))
-                    for f in index_fields)))
-            sub_index_labels_unique = set(sub_index_labels)
+        # if index_depth == 1:
+        #     sub_index_labels = sub._extract_array_column(index_fields_iloc[0])
+        #     sub_index_labels_unique = ufunc_unique1d(sub_index_labels)
+        # else: # match to an index of tuples; the order might not be the same as IH
+        #     # NOTE: might be able to keep arays and concat below
+        #     sub_index_labels = tuple(zip(*(
+        #             sub._extract_array_column(columns_loc_to_iloc(f))
+        #             for f in index_fields)))
+        #     sub_index_labels_unique = set(sub_index_labels)
 
         sub_frame: tp.Union[Frame, Series]
 
         # if sub_index_labels are not unique we need to aggregate
-        if len(sub_index_labels_unique) != len(sub_index_labels):
+        if True:
+        # if len(sub_index_labels_unique) != len(sub_index_labels):
             # if sub_columns length is 1, that means that we only need to extract one column out of the sub Frame
             if len(sub_columns) == 1:
-                assert len(data_fields) == 1
-                # NOTE: grouping on index_fields; can pre-process array_to_groups_and_locations
                 sub_block = pivot_items_to_block(blocks=sub,
                                 group_fields_iloc=index_fields_iloc,
                                 group_depth=index_depth,
@@ -400,6 +504,8 @@ def pivot_core(
                                 dtype=dtype_single,
                                 index_outer=index_outer,
                                 fill_value=fill_value,
+                                fill_value_dtype=fill_value_dtype,
+                                kind=kind,
                                 )
                 sub_blocks.append(sub_block)
                 continue
@@ -413,10 +519,12 @@ def pivot_core(
                                 func_single=func_single,
                                 func_map=func_map,
                                 func_no=func_no,
+                                kind=kind,
                                 ),
                         dtypes=dtypes_per_data_fields,
                         )
         else:
+            # import ipdb; ipdb.set_trace()
             # we have unique values per index item, but may not have a complete index
             if func_no:
                 if len(data_fields) == 1:
@@ -494,6 +602,7 @@ def pivot_outer_index(
                 frame._blocks._extract_array_column(
                         frame._columns._loc_to_iloc(index_loc)),
                 )
+        index_values.flags.writeable = False
         name = index_fields[0]
         index_inner = index_from_optional_constructor(
                 index_values,
@@ -506,6 +615,7 @@ def pivot_outer_index(
                 frame._blocks._extract_array(
                         column_key=frame._columns._loc_to_iloc(index_loc)),
                 axis=0)
+        index_values.flags.writeable = False
         # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
         name = tuple(index_fields)
         index_inner = index_from_optional_constructor( # type: ignore

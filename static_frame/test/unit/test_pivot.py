@@ -26,6 +26,7 @@ class TestUnit(TestCase):
                 func_single=func_single,
                 func_map=func_map,
                 func_no=False,
+                kind='quicksort',
                 ))
         self.assertEqual(post,
                 ((False, [201945, 1]), (True, [129017, False])))
@@ -48,6 +49,7 @@ class TestUnit(TestCase):
                 func_single=func_single,
                 func_map=func_map,
                 func_no=False,
+                kind='quicksort',
                 ))
         self.assertEqual(post,
                 ((False, [201945, 35021, 1, False]),

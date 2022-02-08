@@ -50,7 +50,8 @@ if tp.TYPE_CHECKING:
 
 
 DEFAULT_SORT_KIND = 'mergesort'
-DEFAULT_STABLE_SORT_KIND = 'mergesort'
+DEFAULT_STABLE_SORT_KIND = 'mergesort' # for when results will be in correct if not used
+DEFAULT_FAST_SORT_KIND = 'quicksort' # for when fastest is all that we want
 
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
@@ -933,6 +934,25 @@ def ufunc_unique1d_inverse(array: np.ndarray,
     return array[mask], inv_idx
 
 
+def ufunc_unique2d_inverse(array: np.ndarray,
+        axis: int = 0,
+        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+    '''
+    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array.
+    '''
+    # NOTE: reoorint axis here, then undo at end
+
+    if not array.flags.c_contiguous and not array.flags.f_contiguous:
+        array = np.ascontiguousarray(array)
+
+    if axis == 0:
+        dtype = [('f{i}'.format(i=i), array.dtype) for i in range(array.shape[1])]
+        consolidated = array.view(dtype)[NULL_SLICE, 0] # get 1D representation
+        values, positions = ufunc_unique1d_inverse(consolidated)
+        values = values.view(array.dtype).reshape(-1, array.shape[1])
+        return values, positions
+
+    raise NotImplementedError()
 
 def roll_1d(array: np.ndarray,
             shift: int
@@ -1502,6 +1522,7 @@ def array_to_groups_and_locations(
     '''
     if array.ndim == 1:
         return ufunc_unique1d_inverse(array)
+    # return ufunc_unique2d_inverse(array)
     try:
         groups, locations = np.unique(
                 array,
