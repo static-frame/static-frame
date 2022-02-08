@@ -807,37 +807,37 @@ def array_ufunc_axis_skipna(
 #-------------------------------------------------------------------------------
 # unique value discovery; based on NP's arraysetops.py
 
-def unique1d_array_mask(array: np.ndarray
-        ) -> tp.Tuple[np.ndarray, tp.Optional[np.ndarray]]:
-    '''
-    Return an array of unique elements, handling
-    '''
-    # NOTE: might optionally own data to avoid making copy
+# def unique1d_array_mask(array: np.ndarray
+#         ) -> tp.Tuple[np.ndarray, tp.Optional[np.ndarray]]:
+#     '''
+#     Return an array of unique elements, handling
+#     '''
+#     # NOTE: might optionally own data to avoid making copy
 
-    if array.dtype.kind == 'O':
-        try:
-            # avoid making a copy until we know we can sort
-            sel = array.argsort()
-        except TypeError: # if unorderable types
-            mutable = None
-        else:
-            mutable = array[sel]
-    else:
-        mutable = array.copy()
-        mutable.sort() # can sort in-place with any sort algorithm
+#     if array.dtype.kind == 'O':
+#         try:
+#             # avoid making a copy until we know we can sort
+#             sel = array.argsort()
+#         except TypeError: # if unorderable types
+#             mutable = None
+#         else:
+#             mutable = array[sel]
+#     else:
+#         mutable = array.copy()
+#         mutable.sort() # can sort in-place with any sort algorithm
 
-    if mutable is not None:
-        mask = np.empty(array.shape, dtype=DTYPE_BOOL)
-        mask[0] = True
-        mask[1:] = mutable[1:] != mutable[:-1] # where not equal
-        return mutable[mask], mask
+#     if mutable is not None:
+#         mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+#         mask[0] = True
+#         mask[1:] = mutable[1:] != mutable[:-1] # where not equal
+#         return mutable[mask], mask
 
-    store = dict.fromkeys(array)
-    array = np.empty(len(store), dtype=object)
-    array[NULL_SLICE] = tuple(store)
+#     store = dict.fromkeys(array)
+#     array = np.empty(len(store), dtype=object)
+#     array[NULL_SLICE] = tuple(store)
 
-    # we do not hae a mask; caller will need to make one
-    return array, None
+#     # we do not have a mask; caller will need to make one
+#     return array, None
 
 
 def ufunc_unique(
@@ -933,26 +933,37 @@ def ufunc_unique1d_inverse(array: np.ndarray,
 
     return array[mask], inv_idx
 
-
 def ufunc_unique2d_inverse(array: np.ndarray,
         axis: int = 0,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array.
     '''
-    # NOTE: reoorint axis here, then undo at end
+    if axis == 1: # make wide tall
+        array = array.T
 
-    if not array.flags.c_contiguous and not array.flags.f_contiguous:
-        array = np.ascontiguousarray(array)
+    if array.dtype.kind != 'O':
+        if not array.flags.c_contiguous:
+            array = np.ascontiguousarray(array)
 
-    if axis == 0:
-        dtype = [('f{i}'.format(i=i), array.dtype) for i in range(array.shape[1])]
+        dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
         consolidated = array.view(dtype)[NULL_SLICE, 0] # get 1D representation
         values, positions = ufunc_unique1d_inverse(consolidated)
         values = values.view(array.dtype).reshape(-1, array.shape[1])
+        if axis == 1:
+            return values.T, positions
         return values, positions
 
-    raise NotImplementedError()
+    # TODO: replace with version code that returns locations
+    _, group_index, positions = np.unique(
+            array.astype(str),
+            return_index=True,
+            return_inverse=True,
+            axis=axis,
+            )
+    # groups here are the strings; need to restore to values
+    groups = array[group_index]
+    return groups, positions
 
 def roll_1d(array: np.ndarray,
             shift: int
@@ -1522,25 +1533,25 @@ def array_to_groups_and_locations(
     '''
     if array.ndim == 1:
         return ufunc_unique1d_inverse(array)
-    # return ufunc_unique2d_inverse(array)
-    try:
-        groups, locations = np.unique(
-                array,
-                return_inverse=True,
-                axis=unique_axis,
-                )
-    except TypeError:
-        # group by string representations, necessary when object types are not comparable; some object arrays will not need to follow this path.
-        _, group_index, locations = np.unique(
-                array.astype(str),
-                return_index=True,
-                return_inverse=True,
-                axis=unique_axis,
-                )
-        # groups here are the strings; need to restore to values
-        groups = array[group_index]
+    return ufunc_unique2d_inverse(array, axis=unique_axis)
+    # try:
+    #     groups, locations = np.unique(
+    #             array,
+    #             return_inverse=True,
+    #             axis=unique_axis,
+    #             )
+    # except TypeError:
+    #     # group by string representations, necessary when object types are not comparable; some object arrays will not need to follow this path.
+        # _, group_index, locations = np.unique(
+    #             array.astype(str),
+    #             return_index=True,
+    #             return_inverse=True,
+    #             axis=unique_axis,
+    #             )
+    #     # groups here are the strings; need to restore to values
+    #     groups = array[group_index]
 
-    return groups, locations
+    # return groups, locations
 
 
 # def isna_element(value: tp.Any) -> bool:

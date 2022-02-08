@@ -67,6 +67,7 @@ from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import UFUNC_MAP
 from static_frame.core.util import list_to_tuple
 from static_frame.core.util import datetime64_not_aligned
+from static_frame.core.util import ufunc_unique2d_inverse
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 
@@ -1154,15 +1155,22 @@ class TestUnit(TestCase):
 
 
 
-    def test_ufunc_unique2s_inverse_a(self) -> None:
-        from static_frame.core.util import ufunc_unique2d_inverse
+    def test_ufunc_unique2d_inverse_a(self) -> None:
         a1 = np.array([[1, 1], [1, 2], [1, 2], [3, 0], [1, 1]])
-        post = ufunc_unique2d_inverse(a1)
-        self.assertEqual(post[0].tolist(),
+        values, positions = ufunc_unique2d_inverse(a1)
+        self.assertEqual(values.tolist(),
                 [[1, 1], [1, 2], [3, 0]])
-        self.assertEqual(post[1].tolist(),
+        self.assertEqual(positions.tolist(),
                 [0, 1, 1, 2, 0])
-        # import ipdb; ipdb.set_trace()
+
+    def test_ufunc_unique2d_inverse_b(self) -> None:
+        a1 = np.array([[1, 1, 1, 2, 1, 1], [1, 1, 2, 2, 2, 1]])
+        values, positions = ufunc_unique2d_inverse(a1, axis=1)
+        self.assertEqual(values.tolist(),
+                [[1, 1, 2], [1, 2, 2]])
+        self.assertEqual(positions.tolist(),
+                [0, 0, 1, 2, 1, 0]
+                )
 
     #---------------------------------------------------------------------------
 
@@ -2609,16 +2617,16 @@ class TestUnit(TestCase):
                 self.assertEqual(post.dtype, resolved)
 
     #---------------------------------------------------------------------------
-    def test_unique1d_array_mask_a(self) -> None:
-        from static_frame.core.util import unique1d_array_mask
-        a1, _ = unique1d_array_mask(np.array([10, 20, 30, 10, 20]))
-        self.assertEqual(a1.tolist(), [10, 20, 30])
+    # def test_unique1d_array_mask_a(self) -> None:
+    #     from static_frame.core.util import unique1d_array_mask
+    #     a1, _ = unique1d_array_mask(np.array([10, 20, 30, 10, 20]))
+    #     self.assertEqual(a1.tolist(), [10, 20, 30])
 
-        a2, _ = unique1d_array_mask(np.array([10, None, 30, 'foo', 'foo']))
-        self.assertEqual(a2.tolist(), [10, None, 30, 'foo'])
+    #     a2, _ = unique1d_array_mask(np.array([10, None, 30, 'foo', 'foo']))
+    #     self.assertEqual(a2.tolist(), [10, None, 30, 'foo'])
 
-        a3, _ = unique1d_array_mask(np.array([10, 40, 50, 50, 10], dtype=object))
-        self.assertEqual(a3.tolist(), [10, 40, 50])
+    #     a3, _ = unique1d_array_mask(np.array([10, 40, 50, 50, 10], dtype=object))
+    #     self.assertEqual(a3.tolist(), [10, 40, 50])
 
 
     #---------------------------------------------------------------------------
