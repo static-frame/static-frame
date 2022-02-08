@@ -159,23 +159,6 @@ def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
     return TypeBlocks.from_blocks(blocks).values
 
 
-def _slice_to_iloc_slice(index: Index, indexer: np.ndarray, key: slice) -> slice:
-    if key.start is not None:
-        start = index.loc_to_iloc(key.start)
-    else:
-        start = None
-
-    if key.step is not None and not isinstance(key.step, INT_TYPES):
-        raise NotImplementedError(f"step must be an integer. What does this even mean? {key}")
-
-    if key.stop is not None:
-        stop = index.loc_to_iloc(key.stop)
-    else:
-        stop = None
-
-    return slice(start, stop, key.step)
-
-
 def _mask_to_slice_or_ilocs(mask: np.ndarray) -> slice | np.ndarray | int:
     assert mask.dtype == DTYPE_BOOL
 
@@ -190,7 +173,8 @@ def _mask_to_slice_or_ilocs(mask: np.ndarray) -> slice | np.ndarray | int:
     steps = np.unique(valid_ilocs[1:] - valid_ilocs[:-1])
 
     if len(steps) == 1:
-        return slice(valid_ilocs[0], valid_ilocs[-1] + 1, steps[0])
+        [step] = steps
+        return slice(valid_ilocs[0], valid_ilocs[-1] + 1, None if step == 1 else step)
 
     return valid_ilocs
 
@@ -689,13 +673,20 @@ class IndexHierarchy2(IndexBase):
         '''
         Return a new IndexHierarchy2 with an updated name attribute.
         '''
+        if self.STATIC:
+            indices = self._indices
+            blocks = self._blocks
+        else:
+            indices = [idx.copy() for idx in self._indices]
+            blocks = self._blocks.copy()
+
         return self.__class__(
-            indices=self._indices,
-            indexers=self._indexers,
-            name=name,
-            _blocks=self._blocks,
-            _own_blocks=True,
-            )
+                indices=indices,
+                indexers=list(self._indexers),
+                name=name,
+                _blocks=blocks,
+                _own_blocks=True,
+                )
 
     #---------------------------------------------------------------------------
     # interfaces
@@ -1247,7 +1238,20 @@ class IndexHierarchy2(IndexBase):
         indexer_at_depth = self._indexers[depth]
 
         if isinstance(key_at_depth, slice):
-            return _slice_to_iloc_slice(index_at_depth, indexer_at_depth, key_at_depth)
+            if key_at_depth.start is not None:
+                start = index_at_depth.loc_to_iloc(key_at_depth.start)
+            else:
+                start = None
+
+            if key_at_depth.step is not None and not isinstance(key_at_depth.step, INT_TYPES):
+                raise NotImplementedError(f"step must be an integer. What does this even mean? {key_at_depth}")
+
+            if key_at_depth.stop is not None:
+                stop = index_at_depth.loc_to_iloc(key_at_depth.stop)
+            else:
+                stop = None
+
+            return np.isin(indexer_at_depth, np.arange(start, stop + 1, key_at_depth.step))
 
         key_iloc = index_at_depth.loc_to_iloc(key_at_depth)
 
@@ -1266,9 +1270,11 @@ class IndexHierarchy2(IndexBase):
             return key.key
 
         if isinstance(key, IndexHierarchy2):
-            # default iteration of IH is as tuple
-            #return [self._levels.leaf_loc_to_iloc(k) for k in key]
-            raise NotImplementedError()
+
+            if not key.depth == self.depth:
+                raise KeyError(f"Key must have the same depth as the index. {key}")
+
+            return [self._loc_to_iloc(label) for label in key.iter_label()]
 
         if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
             # TODO: Can I just return key?
@@ -1303,7 +1309,16 @@ class IndexHierarchy2(IndexBase):
                     key_from_container_key(self, k, expand_iloc=True)
                     for k in key)))
         else:
-            key = tuple(key_from_container_key(self, key))
+            # If the key is a series, key_from_container_key will invoke IndexCorrespondence
+            # logic that eventually calls _loc_to_iloc on all the indices of that series.
+            key = key_from_container_key(self, key)
+            if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
+                return _mask_to_slice_or_ilocs(key)
+
+            key = tuple(key)
+
+        if any(isinstance(k, tuple) for k in key):
+            return [self._loc_to_iloc(k) for k in key]
 
         meaningful_selections = {i: not (isinstance(k, slice) and k == NULL_SLICE) for i, k in enumerate(key)}
 
@@ -1319,13 +1334,14 @@ class IndexHierarchy2(IndexBase):
         else:
             mask_2d = np.full(self.shape, True, dtype=bool)
 
-            for depth, (key_at_depth, meaningful) in enumerate(meaningful_selections.items()):
+            for depth, meaningful in meaningful_selections.items():
                 if not meaningful:
                     continue
 
                 result = self._process_key_at_depth(depth=depth, key=key)
 
                 if isinstance(result, slice):
+                    mask_2d[:, depth] = False
                     mask_2d[result, depth] = True
                 else:
                     mask_2d[:, depth] = result
