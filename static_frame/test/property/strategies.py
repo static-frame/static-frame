@@ -40,6 +40,8 @@ from static_frame import IndexNanosecond
 from static_frame import IndexNanosecondGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
+from static_frame import IndexHierarchy2
+from static_frame import IndexHierarchy2GO
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
@@ -752,6 +754,34 @@ def get_index_hierarchy_any(
             st.integers(min_value=min_depth, max_value=max_depth),
             st.integers(min_value=min_size, max_value=max_size)
             ).flatmap(get_labels_spacings)
+
+
+def get_index_hierarchy2_any(
+        min_size: int = 1,
+        max_size: int = MAX_ROWS,
+        min_depth: int = 2,
+        max_depth: int = 5,
+        ) -> st.SearchStrategy:
+
+    def get_labels_spacings(depth_size: tp.Tuple[int, int]) -> st.SearchStrategy:
+        depth, size = depth_size
+        args = []
+        for _ in range(depth):
+            args.append(get_index_any(
+                    min_size=size,
+                    max_size=size,
+                    ))
+
+        return st.one_of(
+                st.builds(IndexHierarchy2.from_product, *args),
+                st.builds(IndexHierarchy2GO.from_product, *args),
+                )
+
+    return st.tuples(
+            st.integers(min_value=min_depth, max_value=max_depth),
+            st.integers(min_value=min_size, max_value=max_size)
+            ).flatmap(get_labels_spacings)
+
 
 
 
