@@ -644,7 +644,7 @@ class IndexHierarchy2(IndexBase):
             raise ErrorInitIndex("indexers must be read-only.")
 
         if not all(isinstance(index, IndexBase) for index in indices):
-            raise ErrorInitIndex("indices must be Indexs!")
+            raise ErrorInitIndex("indices must be Index's!")
 
         self._indices = indices
         self._indexers = indexers
