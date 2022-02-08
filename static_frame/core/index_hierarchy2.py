@@ -381,11 +381,12 @@ class IndexHierarchy2(IndexBase):
         while True:
             for hash_map, indexer, val in zip(hash_maps, indexers, label_row):
                 if val is continuation_token:
-                    if prev_row is None:
-                        raise RuntimeError("continuation_token used without previous row.")
-                    else:
+                    if prev_row is not None:
                         i = indexer[-1]
                         val = prev_row[i]
+                    else:
+                        i = len(hash_map)
+                        hash_map[val] = len(hash_map)
                 elif val not in hash_map:
                     i = len(hash_map)
                     hash_map[val] = len(hash_map)
@@ -432,24 +433,37 @@ class IndexHierarchy2(IndexBase):
             items: iterable of pairs of label, :obj:`Index`.
             index_constructor: Optionally provide index constructor for outermost index.
         '''
-
         [depth1_constructor, depth2_constructor] = cls._build_index_constructors(index_constructor, depth=2)
 
         depth_1 = []
         depth_2 = []
+        repeats = []
 
         for label, index in items:
             index = mutable_immutable_index_filter(cls.STATIC, index) #type: ignore
             depth_1.append(label)
             depth_2.append(index)
+            repeats.append(len(index))
 
         # name stomp to avoid holding onto duplicates
-        depth1 = depth1_constructor(depth_1)
+        depth_1 = depth1_constructor(depth_1)
         depth_2 = depth2_constructor.from_labels(itertools.chain(*depth_2))
 
+        indexers = []
+
+        def _repeat(i_repeat_tuple: tp.Tuple[int, int]) -> np.ndarray:
+            i, repeat = i_repeat_tuple
+            return np.tile(i, reps=repeat)
+
+        indexer_0 = np.hstack(tuple(map(_repeat, enumerate(repeats))))
+        indexer_0.flags.writeable = False
+
+        indexers.append(indexer_0)
+        indexers.append(PositionsAllocator.get(len(depth_2)))
+
         return cls(
-            indices=[depth1, depth_2],
-            indexers=build_indexers_from_product([depth1, depth_2]),
+            indices=[depth_1, depth_2],
+            indexers=indexers,
             name=name,
         )
 
@@ -545,7 +559,7 @@ class IndexHierarchy2(IndexBase):
         else:
             constructor_iter = index_constructors
 
-        for block, constructor in itertools.zip_longest(blocks, constructor_iter):
+        for i, (block, constructor) in enumerate(itertools.zip_longest(blocks, constructor_iter)):
 
             if block is None or constructor is None:
                 raise ErrorInitIndex(f'Levels and index_constructors must be the same length.')
@@ -553,7 +567,11 @@ class IndexHierarchy2(IndexBase):
             unique_values, indexer = ufunc_unique(block.values, return_inverse=True)
 
             # we call the constructor on all lvl, even if it is already an Index
-            indices.append(constructor(unique_values))
+            try:
+                indices.append(constructor(unique_values))
+            except ValueError:
+                raise ErrorInitIndex(f'Could construct {constructor.__name__} with values at depth {i}')
+
             indexer.flags.writeable = False
             indexers.append(indexer)
 
@@ -610,6 +628,8 @@ class IndexHierarchy2(IndexBase):
         if isinstance(indices, type(self)):
             if indexers:
                 raise ErrorInitIndex('indexers must not be provided when copying an IndexHierarchy2')
+            if _blocks is not None:
+                raise ErrorInitIndex('_blocks must not be provided when copying an IndexHierarchy2')
 
             self._indices = indices._indices
             self._indexers = indices._indexers
@@ -622,6 +642,9 @@ class IndexHierarchy2(IndexBase):
 
         if not all(not arr.flags.writeable for arr in indexers):
             raise ErrorInitIndex("indexers must be read-only.")
+
+        if not all(isinstance(index, IndexBase) for index in indices):
+            raise ErrorInitIndex("indices must be Indexs!")
 
         self._indices = indices
         self._indexers = indexers
@@ -1872,26 +1895,26 @@ class IndexHierarchy2(IndexBase):
 
         if count < 0: # remove from inner
             if count <= (1 - self.depth):
-                return self._indices.__class__(self._blocks.iloc[:,0].values.ravel(), name=name)
+                return self._index_constructors[-1](self._blocks.iloc[:,0].values.ravel(), name=name)
 
             return self.__class__(
                     indices=self._indices[count:],
                     indexers=self._indexers[count:],
+                    name=name,
                     _blocks=self._blocks.iloc[:,count:],
                     _own_blocks=self.STATIC,
-                    _name=name,
                     )
 
         elif count > 0: # remove from outer
             if count >= (self.depth - 1):
-                return self._indices.__class__(self._blocks.iloc[:,-1].values.ravel(), name=name)
+                return self._index_constructors[0](self._blocks.iloc[:,-1].values.ravel(), name=name)
 
             return self.__class__(
                     indices=self._indices[count:],
                     indexers=self._indexers[count:],
+                    name=name,
                     _blocks=self._blocks.iloc[:,count:],
                     _own_blocks=self.STATIC,
-                    _name=name,
                     )
 
         raise NotImplementedError('no handling for a 0 count drop level.')

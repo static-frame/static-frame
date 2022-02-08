@@ -87,8 +87,8 @@ class TestUnit(TestCase):
                 ('I', 'C')
                 )
 
-        with self.assertRaises(RuntimeError):
-            ih1 = IndexHierarchy2.from_labels(labels)
+        # BEHAVIOR CHANGE! This is supported now
+        IndexHierarchy2.from_labels(labels)
 
     def test_hierarchy_init_c(self) -> None:
 
@@ -164,8 +164,11 @@ class TestUnit(TestCase):
                 ('II', 'B', 1),
                 ('II', 'A', 3),
                 )
-        with self.assertRaises(RuntimeError):
-            ih1 = IndexHierarchy2.from_labels(labels)
+        # BEHAVIOR CHANGE! This is supported now
+        IndexHierarchy2.from_labels(labels)
+
+        # TODO:
+        # IndexHierarchy2.from_labels(labels, reorder_for_hierarchy=True)
 
     def test_hierarchy_init_i(self) -> None:
         with self.assertRaises(RuntimeError):
@@ -193,7 +196,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy2.from_labels(labels, name='foo')
 
         with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy2(ih1, blocks=ih1._blocks)
+            _ = IndexHierarchy2(ih1, _blocks=ih1._blocks)
 
         ih2 = IndexHierarchy2(ih1)
         self.assertTrue(ih2.equals(ih1, compare_dtype=True))
@@ -606,7 +609,6 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy2.from_labels(labels)
         ih2 = ih1[:0]
         assert isinstance(ih2, IndexHierarchy2)
-        self.assertEqual(ih2._levels.depth, 3)
         self.assertEqual(ih2._blocks.shape, (0, 3))
         self.assertEqual(ih2.shape, (0, 3))
 
@@ -750,7 +752,8 @@ class TestUnit(TestCase):
 
     def test_hierarchy_from_labels_c(self) -> None:
 
-        with self.assertRaises(ErrorInitIndexLevel):
+        # BEHAVIOR CHANGE!
+        with self.assertRaises(ErrorInitIndex):
             ih = IndexHierarchy2.from_labels(tuple())
 
         with self.assertRaises(ErrorInitIndex):
@@ -831,13 +834,14 @@ class TestUnit(TestCase):
                 ('I', 'A', 1),
                 )
 
-        with self.assertRaises(ErrorInitIndex):
-            ih1 = IndexHierarchy2.from_labels(labels1)
+        # BEHAVIOR CHANGE: This is supported now!
+        ih1 = IndexHierarchy2.from_labels(labels1)
 
-        ih2 = IndexHierarchy2.from_labels(labels1, reorder_for_hierarchy=True)
-        self.assertEqual(ih2.shape, (8, 3))
-        self.assertEqual(ih2.iloc[-1], ('I', 'B', 2))
+        # ih2 = IndexHierarchy2.from_labels(labels1, reorder_for_hierarchy=True)
+        # self.assertEqual(ih2.shape, (8, 3))
+        # self.assertEqual(ih2.iloc[-1], ('I', 'B', 2))
 
+    @unittest.skip("reorder_for_hierarchy not implemented yet")
     def test_hierarchy_from_labels_h(self) -> None:
 
         labels = (
@@ -849,9 +853,7 @@ class TestUnit(TestCase):
                 ('I', 'B', 1),
                 )
         with self.assertRaises(RuntimeError):
-            ih1 = IndexHierarchy2.from_labels(labels,
-                    reorder_for_hierarchy=True,
-                    continuation_token='')
+            IndexHierarchy2.from_labels(labels, reorder_for_hierarchy=True, continuation_token='')
 
     def test_hierarchy_from_labels_i(self) -> None:
         labels = (('I', 'A', 1),
@@ -860,7 +862,7 @@ class TestUnit(TestCase):
                 ('II', 'B', 2),
                 )
         with self.assertRaises(ErrorInitIndex):
-            ih1 = IndexHierarchy2.from_labels(labels)
+            IndexHierarchy2.from_labels(labels)
 
     def test_hierarchy_from_labels_j(self) -> None:
 
@@ -961,7 +963,7 @@ class TestUnit(TestCase):
                 )
 
         with self.assertRaises(ValueError):
-            ih = IndexHierarchy2.from_labels_delimited(labels)
+            IndexHierarchy2.from_labels_delimited(labels)
 
     #---------------------------------------------------------------------------
 
@@ -971,7 +973,7 @@ class TestUnit(TestCase):
         f3 = Frame.from_items((('a', tuple('AABA')), ('b', (1, 2, 1, 2))))
 
         with self.assertRaises(ErrorInitIndex):
-            ih = IndexHierarchy2._from_type_blocks(f1._blocks)
+            IndexHierarchy2._from_type_blocks(f1._blocks)
 
         with self.assertRaises(ErrorInitIndex):
             IndexHierarchy2._from_type_blocks(f2._blocks, index_constructors=(IndexDate,))
@@ -1390,7 +1392,6 @@ class TestUnit(TestCase):
                  [3, 3, 2],
                  [2, 2, 1]])
 
-    @unittest.skip("GO")
     @run_with_static_and_grow_only
     def test_hierarchy_relabel_at_depth_3d_all_depths(self,
             index_class: tp.Type[IndexHierarchy2]
@@ -2512,17 +2513,6 @@ class TestUnit(TestCase):
         ih2 = copy.deepcopy(ih1)
         self.assertEqual(ih1.values.tolist(), ih2.values.tolist())
 
-        # show that memo dict is working
-        ref_id = id(ih2._levels.targets[0].targets[0].index._labels) #type: ignore
-        self.assertEqual(
-                ref_id,
-                id(ih2._levels.targets[0].targets[1].index._labels), #type: ignore
-                )
-        self.assertEqual(
-                ref_id,
-                id(ih2._levels.targets[1].targets[3].index._labels), #type: ignore
-                )
-
     def test_hierarchy_deepcopy_b(self) -> None:
 
 
@@ -3005,7 +2995,6 @@ class TestUnit(TestCase):
         self.assertFalse(ih1.equals(ih2, compare_class=True))
         self.assertTrue(ih1.equals(ih2, compare_class=False))
 
-    @unittest.skip("GO")
     def test_index_hierarchy_equals_d(self) -> None:
 
         ih1 = IndexHierarchy2.from_product((1, 2), ('a', 'b'), (2, 5))
