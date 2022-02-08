@@ -1534,6 +1534,7 @@ def array_to_groups_and_locations(
     if array.ndim == 1:
         return ufunc_unique1d_inverse(array)
     return ufunc_unique2d_inverse(array, axis=unique_axis)
+
     # try:
     #     groups, locations = np.unique(
     #             array,
