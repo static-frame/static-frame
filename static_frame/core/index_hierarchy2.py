@@ -589,6 +589,22 @@ class IndexHierarchy2(IndexBase):
 
     # NOTE: could have a _from_fields (or similar) that takes a sequence of column iterables/arrays
 
+    @staticmethod
+    def _ensure_uniqueness(values: np.ndarray) -> None:
+        duplicates = array_to_duplicated(values, exclude_first=True, exclude_last=False)
+        if any(duplicates):
+            first_duplicate = values[duplicates][0]
+            msg = f'Labels have {sum(duplicates)} non-unique values, including {tuple(first_duplicate)}.'
+            raise ErrorInitIndexNonUnique(msg)
+
+    def _gen_blocks_from_self(self) -> TypeBlocks:
+        def gen_blocks() -> tp.Iterator[np.ndarray]:
+            for i, index in enumerate(self._indices):
+                indexer = self._indexers[i]
+                yield np.take(index.values, indexer)
+
+        return TypeBlocks.from_blocks(gen_blocks())
+
     #---------------------------------------------------------------------------
     def __init__(self,
             indices: tp.List[IndexBase],
@@ -620,32 +636,21 @@ class IndexHierarchy2(IndexBase):
         if not all(isinstance(arr, np.ndarray) for arr in indexers):
             raise ErrorInitIndex("indexers must be numpy arrays.")
 
-        self._indices = indices
-        self._indexers = indexers
-
         if not all(not arr.flags.writeable for arr in indexers):
             raise ErrorInitIndex("indexers must be read-only.")
 
+        self._indices = indices
+        self._indexers = indexers
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
         if _blocks is not None and not _own_blocks:
             self._blocks = _blocks.copy()
         else:
-            def gen_blocks() -> tp.Iterator[np.ndarray]:
-                for i, index in enumerate(self._indices):
-                    indexer = self._indexers[i]
-                    yield np.take(index.values, indexer)
-
-            self._blocks = TypeBlocks.from_blocks(gen_blocks())
+            self._blocks = self._gen_blocks_from_self()
 
         self._values = self._blocks.values
 
-        # Ensure uniqueness
-        duplicates = array_to_duplicated(self._values, exclude_first=True, exclude_last=False)
-        if any(duplicates):
-            first_duplicate = self._values[duplicates][0]
-            msg = f'Labels have {sum(duplicates)} non-unique values, including {tuple(first_duplicate)}.'
-            raise ErrorInitIndexNonUnique(msg)
+        self._ensure_uniqueness(self._values)
 
     #---------------------------------------------------------------------------
     def __deepcopy__(self: IH, memo: tp.Dict[int, tp.Any]) -> IH:
@@ -1476,20 +1481,19 @@ class IndexHierarchy2(IndexBase):
             ) -> bool:
         '''Determine if a leaf loc is contained in this Index.
         '''
-        # # Maybe?
-        # value = key_from_container_key(self, value)
-
-        # for i, k in enumerate(value):
-        #     if k not in self._indices[i]:
-        #         return False
-
-        #     # How to filter down subsequent levels efficiently?
+        # TODO: Can this be optimized, or is all the optimization already done in _loc_to_iloc?
         try:
-            self._loc_to_iloc(value)
+            result = self._loc_to_iloc(value)
         except KeyError:
             return False
-        else:
-            return True
+
+        if isinstance(result, np.ndarray):
+            return bool(result.size)
+
+        if isinstance(result, list):
+            return bool(result)
+
+        return True
 
     #---------------------------------------------------------------------------
     # utility functions
@@ -1918,28 +1922,77 @@ class IndexHierarchy2GO(IndexHierarchy2):
             self._indexers[i] = np.append(self._indexers[i], label_index)
             self._indexers[i].flags.writeable = False
 
+        # No need to ensure uniqueness! It's already been checked.
+        self._blocks = self._gen_blocks_from_self()
+        self._values = self._blocks.values
+
     def extend(self, other: IndexHierarchy2) -> None:
         '''
         Extend this IndexHiearchy in-place
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
-            type_blocks = [self._blocks, other._blocks]
+        for depth, (self_index, other_index) in enumerate(zip(self._indices, other._indices)):
 
-            block_compatible = self._blocks.block_compatible(other, axis=1)
-            reblock_compatible = self._blocks.reblock_compatible(other._blocks)
+            intersection = self_index.intersection(other_index)
+            if not intersection.size:
+                del intersection
 
-            yield from TypeBlocks.vstack_blocks_to_blocks(
-                    type_blocks=type_blocks,
-                    block_compatible=block_compatible,
-                    reblock_compatible=reblock_compatible,
-                    )
+                starting_len = len(self_index)
 
-        return self._from_type_blocks(
-            TypeBlocks.from_blocks(blocks()),
-            name=self._name,
-            index_constructors=self._index_constructors,
-            own_blocks=True,
-        )
+                # Easy case! We can simply append
+                self_index.extend(other_index)
+
+                new_indexer = np.hstack((self._indexers[depth], other._indexers[depth] + starting_len))
+                new_indexer.flags.writeable = False
+                self._indexers[depth] = new_indexer
+                continue
+
+            elif len(intersection) == len(self_index) == len(other_index):
+                del intersection
+
+                if self_index.equals(other_index):
+                    # Easy case! We just have to append the indexers; no change needed to the index
+
+                    new_indexer = np.hstack((self._indexers[depth], other._indexers[depth]))
+                    new_indexer.flags.writeable = False
+                    self._indexers[depth] = new_indexer
+                    continue
+                else:
+                    # Same labels, but different order. We have to remap the indexers.
+                    indexer_remap = other_index.iter_label().apply(lambda k: self_index._loc_to_iloc(k))
+
+                    remap_indexer = np.take(indexer_remap, other._indexers[depth])
+                    new_indexer = np.hstack((self._indexers[depth], remap_indexer))
+                    new_indexer.flags.writeable = False
+                    self._indexers[depth] = new_indexer
+                    continue
+
+            else:
+                starting_len = len(self_index)
+
+                self_index.extend(other_index[~other_index.isin(intersection)])
+
+                def remap(k: tp.Hashable) -> int:
+                   if k in intersection:
+                       return self_index._loc_to_iloc(k)
+                   return -1
+
+                offset = starting_len - len(intersection)
+                indexer_remap = other_index.iter_label().apply(remap)
+                del intersection
+
+                remap_indexer = np.take(indexer_remap, other._indexers[depth])
+
+                mask = remap_indexer == -1
+
+                remap_indexer[mask] = (other._indexers[depth][mask] + offset)
+                new_indexer = np.hstack((self._indexers[depth], remap_indexer))
+                new_indexer.flags.writeable = False
+                self._indexers[depth] = new_indexer
+
+        # No need to ensure uniqueness! It's already been checked.
+        self._blocks = self._gen_blocks_from_self()
+        self._values = self._blocks.values
+        self._ensure_uniqueness(self._values)
 
     def __copy__(self: IH) -> IH:
         '''
