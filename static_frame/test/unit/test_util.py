@@ -67,7 +67,7 @@ from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import UFUNC_MAP
 from static_frame.core.util import list_to_tuple
 from static_frame.core.util import datetime64_not_aligned
-from static_frame.core.util import ufunc_unique2d_inverse
+from static_frame.core.util import ufunc_unique2d_indexer
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 
@@ -1157,7 +1157,7 @@ class TestUnit(TestCase):
 
     def test_ufunc_unique2d_inverse_a(self) -> None:
         a1 = np.array([[1, 1], [1, 2], [1, 2], [3, 0], [1, 1]])
-        values, positions = ufunc_unique2d_inverse(a1)
+        values, positions = ufunc_unique2d_indexer(a1)
         self.assertEqual(values.tolist(),
                 [[1, 1], [1, 2], [3, 0]])
         self.assertEqual(positions.tolist(),
@@ -1165,12 +1165,23 @@ class TestUnit(TestCase):
 
     def test_ufunc_unique2d_inverse_b(self) -> None:
         a1 = np.array([[1, 1, 1, 2, 1, 1], [1, 1, 2, 2, 2, 1]])
-        values, positions = ufunc_unique2d_inverse(a1, axis=1)
+        values, positions = ufunc_unique2d_indexer(a1, axis=1)
         self.assertEqual(values.tolist(),
                 [[1, 1, 2], [1, 2, 2]])
         self.assertEqual(positions.tolist(),
                 [0, 0, 1, 2, 1, 0]
                 )
+
+    def test_ufunc_unique2d_inverse_c(self) -> None:
+        a1 = np.array([[1, 1, 1, None, 1, 1], [1, 1, None, None, None, 1]])
+        values, positions = ufunc_unique2d_indexer(a1, axis=1)
+        self.assertEqual(values.tolist(),
+                [[1, 1, None], [1, None, None]],
+                )
+        self.assertEqual(positions.tolist(),
+                [0, 0, 1, 2, 1, 0]
+                )
+
 
     #---------------------------------------------------------------------------
 

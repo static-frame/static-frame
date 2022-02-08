@@ -906,10 +906,10 @@ def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     return array[mask]
 
 
-def ufunc_unique1d_inverse(array: np.ndarray,
+def ufunc_unique1d_indexer(array: np.ndarray,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''
-    Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
+    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as index positions of those values in the original array.
     '''
     if array.dtype.kind == 'O':
         try:
@@ -918,7 +918,7 @@ def ufunc_unique1d_inverse(array: np.ndarray,
         except TypeError: # if unorderable types
             sortable = False
         if not sortable:
-            # match on string representation as last resot
+            # match on string representation as last resort
             positions = array.astype(str).argsort()
     else:
         positions = array.argsort()
@@ -928,12 +928,41 @@ def ufunc_unique1d_inverse(array: np.ndarray,
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
 
-    inv_idx = np.empty(mask.shape, dtype=np.intp)
-    inv_idx[positions] = np.cumsum(mask) - 1
+    indexer = np.empty(mask.shape, dtype=np.intp)
+    indexer[positions] = np.cumsum(mask) - 1
 
-    return array[mask], inv_idx
+    return array[mask], indexer
 
-def ufunc_unique2d_inverse(array: np.ndarray,
+def ufunc_unique1d_positions(array: np.ndarray,
+        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+    '''
+    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Does not return the unqiue values, but the positions in the original index of those values, as well as the locations of the unique values.
+    '''
+    # NOTE: must use stable sort when returning positions
+    if array.dtype.kind == 'O':
+        try:
+            positions = array.argsort(kind=DEFAULT_STABLE_SORT_KIND)
+            sortable = True
+        except TypeError: # if unorderable types
+            sortable = False
+        if not sortable:
+            # match on string representation as last resort
+            positions = array.astype(str).argsort(kind=DEFAULT_STABLE_SORT_KIND)
+    else:
+        positions = array.argsort(kind=DEFAULT_STABLE_SORT_KIND)
+
+    array = array[positions]
+    mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+    mask[:1] = True
+    mask[1:] = array[1:] != array[:-1]
+
+    indexer = np.empty(mask.shape, dtype=np.intp)
+    indexer[positions] = np.cumsum(mask) - 1
+
+    return positions[mask], indexer
+
+
+def ufunc_unique2d_indexer(array: np.ndarray,
         axis: int = 0,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''
@@ -948,22 +977,25 @@ def ufunc_unique2d_inverse(array: np.ndarray,
 
         dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
         consolidated = array.view(dtype)[NULL_SLICE, 0] # get 1D representation
-        values, positions = ufunc_unique1d_inverse(consolidated)
+        values, indexer = ufunc_unique1d_indexer(consolidated)
         values = values.view(array.dtype).reshape(-1, array.shape[1])
         if axis == 1:
-            return values.T, positions
-        return values, positions
+            return values.T, indexer
+        return values, indexer
 
-    # TODO: replace with version code that returns locations
-    _, group_index, positions = np.unique(
-            array.astype(str),
-            return_index=True,
-            return_inverse=True,
-            axis=axis,
-            )
-    # groups here are the strings; need to restore to values
-    groups = array[group_index]
-    return groups, positions
+    temp = array.astype(str)
+    if not temp.flags.c_contiguous:
+        temp = np.ascontiguousarray(temp)
+
+    dtype = [(f'f{i}', temp.dtype) for i in range(temp.shape[1])]
+    consolidated = temp.view(dtype)[NULL_SLICE, 0] # get 1D representation
+    positions, indexer = ufunc_unique1d_positions(consolidated)
+    # restore original values
+    values = array[positions]
+    if axis == 1:
+        return values.T, indexer
+    return values, indexer
+
 
 def roll_1d(array: np.ndarray,
             shift: int
@@ -1532,8 +1564,8 @@ def array_to_groups_and_locations(
     '''Locations are index positions for each group.
     '''
     if array.ndim == 1:
-        return ufunc_unique1d_inverse(array)
-    return ufunc_unique2d_inverse(array, axis=unique_axis)
+        return ufunc_unique1d_indexer(array)
+    return ufunc_unique2d_indexer(array, axis=unique_axis)
 
     # try:
     #     groups, locations = np.unique(
