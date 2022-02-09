@@ -308,6 +308,7 @@ class IndexHierarchy(IndexBase):
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
             name: NameType = None,
+            reorder_for_hierarchy: bool = False,
             index_constructors: IndexConstructors = None,
             depth_reference: tp.Optional[DepthLevelSpecifier] = None,
             continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE
@@ -1891,6 +1892,7 @@ class IndexHierarchy(IndexBase):
         return self.__class__(
             indices=indices,
             indexers=indexers,
+            name=self.name,
             _blocks=TypeBlocks.from_blocks(gen_blocks()),
             _own_blocks=True,
         )

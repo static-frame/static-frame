@@ -1,4 +1,3 @@
-import unittest
 import typing as tp
 
 import numpy as np
@@ -20,7 +19,6 @@ nan = np.nan
 
 class TestUnit(TestCase):
 
-
     #---------------------------------------------------------------------------
 
     def test_frame_iter_a(self) -> None:
@@ -36,7 +34,6 @@ class TestUnit(TestCase):
         self.assertEqual((f1.keys() == f1.columns).all(), True)
         self.assertEqual([x for x in f1.columns], ['p', 'q', 'r', 's', 't'])
         self.assertEqual([x for x in f1], ['p', 'q', 'r', 's', 't'])
-
 
     def test_frame_iter_array_a(self) -> None:
 
@@ -55,7 +52,6 @@ class TestUnit(TestCase):
         self.assertEqual(
                 next(iter(f1.iter_array(axis=1))).tolist(),
                 [1, 2, 'a', False, True])
-
 
     def test_frame_iter_array_b(self) -> None:
 
@@ -106,7 +102,6 @@ class TestUnit(TestCase):
                 ((0, ((0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0))), (1, ((0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1))), (2, ((0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2))), (3, ((0, 3), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3))), (4, ((0, 4), (1, 4), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4))), (5, ((0, 5), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5))), (6, ((0, 6), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6))), (7, ((0, 7), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7))))
                 )
 
-
     def test_frame_iter_array_e(self) -> None:
 
         f = sf.Frame.from_dict(
@@ -117,7 +112,6 @@ class TestUnit(TestCase):
 
         post = f.iter_array(axis=0).apply(np.sum)
         self.assertTrue(post.dtype == float)
-
 
     def test_frame_iter_array_f(self) -> None:
 
@@ -146,12 +140,11 @@ class TestUnit(TestCase):
         post = list(f.iter_array(axis=1))
         self.assertEqual([x.tolist() for x in post], [[], [], []])
 
-
     #---------------------------------------------------------------------------
+
     def test_frame_iter_tuple_a(self) -> None:
         post = tuple(sf.Frame.from_elements(range(5)).iter_tuple(axis=0, constructor=tuple))
         self.assertEqual(post, ((0, 1, 2, 3, 4),))
-
 
     def test_frame_iter_tuple_b(self) -> None:
         post = tuple(sf.Frame.from_elements(range(3), index=tuple('abc')).iter_tuple(axis=0))
@@ -194,6 +187,7 @@ class TestUnit(TestCase):
                 [(1, 30), (2, 50), ('a', 'b'), (False, True), (True, False)])
 
     #---------------------------------------------------------------------------
+
     def test_frame_iter_series_a(self) -> None:
         f1 = ff.parse('f(Fg)|s(2,8)|i(I,str)|c(Ig,str)|v(int)')
         post1 = tuple(f1.iter_series(axis=0))
@@ -205,7 +199,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(post2), 2)
         self.assertEqual(post2[0].to_pairs(),
                 (('zZbu', -88017), ('ztsv', 162197), ('zUvW', -3648), ('zkuW', 129017), ('zmVj', 58768), ('z2Oo', 84967), ('z5l6', 146284), ('zCE3', 137759)))
-
 
     def test_frame_iter_series_b(self) -> None:
         f1 = ff.parse('s(10,4)|i(I,str)|c(I,str)|v(float)')
@@ -231,8 +224,8 @@ class TestUnit(TestCase):
         self.assertEqual(post5.dtype, object)
         self.assertEqual(post5.shape, (10,))
 
-
     #---------------------------------------------------------------------------
+
     def test_frame_iter_tuple_items_a(self) -> None:
         records = (
                 (1, 2, 'a', False, True),
@@ -245,9 +238,8 @@ class TestUnit(TestCase):
         post1 = list(f1.iter_tuple_items(constructor=list))
         self.assertEqual(post1, [('p', [1, 30]), ('q', [2, 50]), ('r', ['a', 'b']), ('s', [False, True]), ('t', [True, False])])
 
-
-
     #---------------------------------------------------------------------------
+
     def test_frame_iter_element_a(self) -> None:
         # reindex both axis
         records = (
@@ -287,9 +279,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(post3.to_pairs(0),
                 (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
-
-
-
 
     def test_frame_iter_element_b(self) -> None:
         # reindex both axis
@@ -340,7 +329,6 @@ class TestUnit(TestCase):
                 ((('i', 'a'), (('a', 'a'), ('b', 'b'), ('c', 'c'))), (('i', 'b'), (('a', 'tru'), ('b', 'fals'), ('c', 'tru'))), (('ii', 'a'), (('a', 'non'), ('b', 'non'), ('c', 'non'))), (('ii', 'b'), (('a', 'non'), ('b', '1'), ('c', '5'))))
                 )
 
-
     def test_frame_iter_element_d(self) -> None:
         f1 = sf.Frame.from_elements(['I', 'II', 'III'], columns=('A',))
         f2 = sf.Frame.from_elements([67, 28, 99], columns=('B',), index=('I', 'II', 'IV'))
@@ -353,7 +341,6 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 ((0, 67), (1, 28), (2, 'III')))
 
-
     def test_frame_iter_element_e(self) -> None:
         f1 = Frame.from_records(np.arange(9).reshape(3, 3))
 
@@ -364,7 +351,6 @@ class TestUnit(TestCase):
         f2 = f1.iter_element(axis=1).map_all(mapping)
         self.assertEqual([d.kind for d in f2.dtypes.values],
                 ['i', 'i', 'i'])
-
 
     #---------------------------------------------------------------------------
 
@@ -403,7 +389,6 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 ((('A', 1), 1), (('A', 2), 1), (('B', 1), 1), (('B', 2), 1))
                 )
-
 
     def test_frame_iter_group_c(self) -> None:
         columns = tuple('pqrst')
@@ -462,6 +447,7 @@ class TestUnit(TestCase):
             (np.datetime64('1998-10-13'), 2)))
 
     #---------------------------------------------------------------------------
+
     def test_frame_iter_group_items_a(self) -> None:
 
         # testing a hierarchical index and columns, selecting column with a tuple
@@ -486,7 +472,6 @@ class TestUnit(TestCase):
         self.assertEqual(groups[1][1].to_pairs(0),
                 ((('i', 'a'), ((('b', 999999), 'b'), (('b', 201810), 'b'))), (('i', 'b'), ((('b', 999999), 999999), (('b', 201810), 201810))), (('i', 'c'), ((('b', 999999), 0.4), (('b', 201810), 0.4)))))
 
-
     def test_frame_iter_group_items_b(self) -> None:
         columns = tuple('pqrst')
         index = tuple('zxwy')
@@ -503,7 +488,6 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 ((False, 'False: 2'), (True, 'True: 2'))
                 )
-
 
     def test_frame_iter_group_items_c(self) -> None:
         # Test optimized sorting approach. Data must have a non-object dtype and key must be single
@@ -540,7 +524,6 @@ class TestUnit(TestCase):
 
         self.assertEqual([0, 1, 3], [group[0] for group in groups])
         self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
-
 
     def test_frame_iter_group_items_d(self) -> None:
         # Test iterating with multiple key selection
@@ -583,7 +566,6 @@ class TestUnit(TestCase):
         self.assertEqual([(2, 1), (3, 3), (3, 5)], [group[0] for group in groups])
         self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
-
     def test_frame_iter_group_items_e(self) -> None:
         columns = tuple('pqrst')
         index = tuple('zxwy')
@@ -615,7 +597,6 @@ class TestUnit(TestCase):
                 ((False, False), (True, False), (True, True))
                 )
 
-
     def test_frame_iter_group_items_f(self) -> None:
 
         objs = [object() for _ in range(2)]
@@ -646,8 +627,8 @@ class TestUnit(TestCase):
         self.assertEqual(post2[obj_b].to_pairs(0),
                 (('a', ((2, 5),)), ('b', ((2, 6),)), ('c', ((2, obj_b),))))
 
-
     #---------------------------------------------------------------------------
+
     def test_frame_iter_group_index_a(self) -> None:
 
         records = (
@@ -707,7 +688,6 @@ class TestUnit(TestCase):
                 (('a', 34), ('b', 131))
                 )
 
-
     def test_frame_iter_group_index_c(self) -> None:
         columns = tuple('pqrst')
         index = tuple('zxwy')
@@ -744,7 +724,6 @@ class TestUnit(TestCase):
 
         self.assertTrue(tuple(reversed(f)) == tuple(reversed(columns)))
 
-
     #---------------------------------------------------------------------------
 
     def test_frame_axis_window_items_a(self) -> None:
@@ -777,8 +756,6 @@ class TestUnit(TestCase):
         self.assertEqual(post1[-1][1].__class__, Frame)
         self.assertEqual(post1[-1][1].shape, (20, 2))
 
-
-
     def test_frame_axis_window_items_b(self) -> None:
 
         base = np.array([1, 2, 3, 4])
@@ -809,8 +786,6 @@ class TestUnit(TestCase):
         self.assertEqual(post1[-1][1].__class__, np.ndarray)
         self.assertEqual(post1[-1][1].shape, (20, 2))
 
-
-
     def test_frame_iter_window_a(self) -> None:
 
         base = np.array([1, 2, 3, 4])
@@ -829,9 +804,8 @@ class TestUnit(TestCase):
         self.assertEqual(len(post), 18)
         self.assertTrue(all(f.shape == (3, 4) for f in post))
 
-
-
     #---------------------------------------------------------------------------
+
     def test_frame_axis_interface_a(self) -> None:
         # reindex both axis
         records = (
@@ -873,8 +847,8 @@ class TestUnit(TestCase):
         self.assertEqual(list(s3.items()),
                 [('w', None), ('x', 64), ('y', None), ('z', 138)])
 
-
     #---------------------------------------------------------------------------
+
     def test_frame_group_a(self) -> None:
         # reindex both axis
         records = (
@@ -901,7 +875,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(group_frame_2.to_pairs(0),
                 (('p', (('z', 30),)), ('q', (('z', 73),)), ('r', (('z', 'd'),)), ('s', (('z', True),)), ('t', (('z', True),))))
-
 
     def test_frame_group_b(self) -> None:
         # reindex both axis
@@ -932,7 +905,6 @@ class TestUnit(TestCase):
         self.assertEqual(post[2][1].to_pairs(0),
                 (('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))),))
 
-
     def test_frame_group_c(self) -> None:
         f = ff.parse('s(10,3)|v(int,str,bool)').assign[0].apply(lambda s: s % 4)
         post1 = tuple(f.iter_group(0, axis=0, drop=True))
@@ -952,7 +924,6 @@ class TestUnit(TestCase):
         self.assertEqual(post2[1][0], 3)
         self.assertEqual(post2[1][1].shape, (6, 2))
 
-
     def test_frame_group_d(self) -> None:
         f = ff.parse('s(3,6)|v(bool)')
         post1 = tuple(f.iter_group(0, axis=1, drop=True))
@@ -967,9 +938,8 @@ class TestUnit(TestCase):
         self.assertEqual(post2[1][0], True)
         self.assertEqual(post2[1][1].shape, (2, 2))
 
-
-
     #---------------------------------------------------------------------------
+
     def test_frame_axis_interface_b(self) -> None:
         # reindex both axis
         records = (
@@ -994,9 +964,3 @@ class TestUnit(TestCase):
 
         s1 = f1.iter_group('p', axis=0).apply(lambda f: f['q'].values.sum())
         self.assertEqual(list(s1.items()), [(2, 97), (30, 107)])
-
-if __name__ == '__main__':
-    unittest.main()
-
-
-
