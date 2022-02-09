@@ -1,6 +1,3 @@
-
-
-import unittest
 import frame_fixtures as ff
 
 
@@ -20,8 +17,8 @@ class TestUnit(TestCase):
         with self.assertRaises(AttributeError):
             f1.__dict__ #pylint: disable=W0104
 
-
     #---------------------------------------------------------------------------
+
     def test_series_he_hash_a(self) -> None:
 
         s1 = SeriesHE(('a', 'b', 'c'))
@@ -62,7 +59,6 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             _ = s6 in d
 
-
     def test_series_he_hash_b(self) -> None:
 
         s1 = SeriesHE.from_dict(dict(a=10, b=42))
@@ -75,14 +71,8 @@ class TestUnit(TestCase):
         self.assertEqual(s3[s2], 1000)
         self.assertFalse(s1 == s2) # name attr is different
 
-
     def test_series_he_hash_c(self) -> None:
 
         s1 = ff.parse('s(10,1)|i(I,str)')[ILoc[0]].to_series_he()
         self.assertFalse(hasattr(s1, '_hash'))
         self.assertEqual(hash(s1), s1._hash)
-
-
-if __name__ == '__main__':
-    unittest.main()
-

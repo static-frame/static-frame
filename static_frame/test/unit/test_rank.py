@@ -1,6 +1,3 @@
-
-import unittest
-
 import numpy as np
 
 from static_frame.test.test_case import TestCase
@@ -8,6 +5,7 @@ from static_frame.core.rank import rank_1d
 from static_frame.core.rank import rank_2d
 
 from static_frame.core.rank import RankMethod
+
 
 class TestUnit(TestCase):
 
@@ -63,12 +61,6 @@ class TestUnit(TestCase):
                 )
         #scipy: [9, 8, 4, 2, 7, 5, 1, 11, 6, 3, 10]
 
-
-
-
-
-
-
     def test_rank_average_a(self) -> None:
 
         a1 = rank_1d(np.array([0, 2, 3, 2]), 'mean', ascending=True)
@@ -85,7 +77,6 @@ class TestUnit(TestCase):
         self.assertEqual(a3.tolist(),
                 [4.0, 2.5, 1.0, 2.5]
                 )
-
 
     def test_rank_average_b(self) -> None:
 
@@ -125,11 +116,6 @@ class TestUnit(TestCase):
                 )
         #scipy: [9.5, 8.0, 5.0, 2.0, 7.0, 5.0, 1.0, 11.0, 5.0, 3.0, 9.5
 
-
-
-
-
-
     def test_rank_min_a(self) -> None:
 
         a1 = rank_1d(np.array([0, 2, 3, 2]), 'min', start=1)
@@ -160,11 +146,6 @@ class TestUnit(TestCase):
                 )
 
         #scipy: [9, 8, 4, 2, 7, 4, 1, 11, 4, 3, 9]
-
-
-
-
-
 
     def test_rank_max_a(self) -> None:
 
@@ -198,9 +179,6 @@ class TestUnit(TestCase):
                 )
         #scipy: [10, 8, 6, 2, 7, 6, 1, 11, 6, 3, 10]
 
-
-
-
     def test_rank_dense_a(self) -> None:
 
         a1 = rank_1d(np.array([0, 2, 3, 2]), 'dense', start=1)
@@ -231,10 +209,6 @@ class TestUnit(TestCase):
                 [7, 6, 4, 2, 5, 4, 1, 8, 4, 3, 7]
                 )
         #scipy: [7, 6, 4, 2, 5, 4, 1, 8, 4, 3, 7]
-
-
-
-
 
     def test_rank_2d_a(self) -> None:
         a1 = np.array([10, 3, -4, 9, 3, -12, 18, 3, 0, 17]).reshape(5,2)
@@ -280,7 +254,6 @@ class TestUnit(TestCase):
             [[2, 1], [1, 2], [2, 1], [2, 1], [1, 2]]
         )
 
-
     def test_rank_2d_e(self) -> None:
         a1 = np.array([10, 3, -4, 9, 3, -12, 18, 3, 0, 17]).reshape(5,2)
         self.assertEqual(
@@ -292,9 +265,8 @@ class TestUnit(TestCase):
             [[2, 1], [1, 2], [2, 1], [2, 1], [1, 2]]
         )
 
-
-
     #---------------------------------------------------------------------------
+
     def test_rank_1d_pair_a(self) -> None:
         self.assertEqual(
                 rank_1d(np.array([0, 0]), 'mean').tolist(),
@@ -351,7 +323,3 @@ class TestUnit(TestCase):
                 [0, 1, 2]
                 )
         self.assertEqual(rank_1d(np.array([0, 0, 1]), 'ordinal').dtype.kind, 'i')
-
-
-if __name__ == '__main__':
-    unittest.main()
