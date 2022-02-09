@@ -1,5 +1,4 @@
 import typing as tp
-import unittest
 
 import numpy as np
 import frame_fixtures as ff
@@ -171,7 +170,3 @@ class TestUnit(TestCase):
                     (b1.name, b2.name),
                     deepcopy_from_bus=False,
                     init_exception_cls=ErrorInitYarn)
-
-
-if __name__ == '__main__':
-    unittest.main()

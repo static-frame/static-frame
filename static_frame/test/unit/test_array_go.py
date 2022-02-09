@@ -1,5 +1,3 @@
-
-import unittest
 import copy
 
 import numpy as np
@@ -10,8 +8,6 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
-
 
     def test_array_init_a(self) -> None:
         with self.assertRaises(NotImplementedError):
@@ -37,7 +33,6 @@ class TestUnit(TestCase):
         self.assertEqual([x for x in ag1],
             ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
 
-
     def test_array_append_b(self) -> None:
 
         ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), object))
@@ -57,7 +52,6 @@ class TestUnit(TestCase):
 
         self.assertEqual([x for x in ag1],
             ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
-
 
     def test_array_getitem_a(self) -> None:
 
@@ -90,7 +84,6 @@ class TestUnit(TestCase):
         self.assertEqual(ag2.values.tolist(),
                 ['a', 'b', 'c', 'd', 'e'])
 
-
     def test_array_deepcopy_a(self) -> None:
         ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), dtype=object))
         ag1.append('e')
@@ -104,11 +97,3 @@ class TestUnit(TestCase):
         ag1.append('e')
 
         self.assertEqual(len(ag1), 5)
-
-
-if __name__ == '__main__':
-    unittest.main()
-
-
-
-
