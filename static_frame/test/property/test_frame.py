@@ -349,3 +349,7 @@ class TestUnit(TestCase):
     def test_frame_blocks_dont_have_reference_cycles(self, f1: Frame) -> None:
         self.assertEqual([f1], gc.get_referrers(f1._blocks))
 
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

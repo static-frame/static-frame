@@ -427,3 +427,8 @@ class TestUnit(TestCase):
         if result is not None:
             self.assertTrue(array.shape == result.shape)
             self.assertTrue(result.dtype == bool)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

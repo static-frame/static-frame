@@ -551,3 +551,8 @@ class TestUnit(TestCase):
             npy = NPY(fp, 'w')
             with self.assertRaises(UnsupportedOperation):
                 _ = npy.nbytes
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

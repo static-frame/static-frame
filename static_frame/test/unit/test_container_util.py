@@ -696,3 +696,8 @@ class TestUnit(TestCase):
                 [(2, 3), (2,), (2, 1)])
         self.assertEqual([a.shape for a in stack],
                 [(2, 1)])
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

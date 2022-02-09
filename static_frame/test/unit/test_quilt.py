@@ -21,6 +21,7 @@ from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.axis_map import bus_to_hierarchy
 
+
 class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
@@ -1612,3 +1613,8 @@ class TestUnit(TestCase):
         q2 = Quilt.from_frames((f1, f3), retain_labels=True)
 
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

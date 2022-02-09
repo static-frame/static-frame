@@ -83,3 +83,8 @@ class TestUnit(TestCase):
             f1.via_re('[e8]').subn('*').to_pairs(),
             (('zZbu', (('zZbu', ('-**017', 2)), ('ztsv', ('92*67', 1)))), ('ztsv', (('zZbu', ('Fals*', 1)), ('ztsv', ('Fals*', 1)))), ('zUvW', (('zZbu', ('Tru*', 1)), ('ztsv', ('Fals*', 1)))), ('zkuW', (('zZbu', ('10*0.4', 1)), ('ztsv', ('25*0.34', 1)))), ('zmVj', (('zZbu', ('zDVQ', 0)), ('ztsv', ('z5hI', 0)))))
             )
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

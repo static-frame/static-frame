@@ -97,3 +97,8 @@ class TestUnit(TestCase):
         ag1.append('e')
 
         self.assertEqual(len(ag1), 5)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

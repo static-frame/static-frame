@@ -26,3 +26,8 @@ class TestUnit(TestCase):
     def test_index_to_frame(self, ih: IndexHierarchy) -> None:
         f1 = ih.to_frame()
         self.assertEqual(f1.shape, ih.shape)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

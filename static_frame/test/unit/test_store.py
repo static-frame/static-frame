@@ -332,3 +332,8 @@ class TestUnit(TestCase):
 
         sc1m = StoreConfigMap.from_initializer(maps)
         self.assertTrue(sc1m.default == StoreConfigMap._DEFAULT)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

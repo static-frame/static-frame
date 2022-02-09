@@ -37,3 +37,8 @@ class TestUnit(TestCase):
             # f2 = Frame.from_xlsx(fp, index_depth=1, columns_depth=0)
             # # need to remove index on original for appropriate comparison
             # self.assertEqualFrames(f1.relabel(columns=IndexAutoFactory), f2)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

@@ -15,6 +15,7 @@ from static_frame.test.test_case import TestCase
 from static_frame import NPZ
 from static_frame import NPY
 
+
 class TestUnit(TestCase):
 
     def test_interface_summary_a(self) -> None:
@@ -101,3 +102,8 @@ class TestUnit(TestCase):
                     StoreConfig,
                     StoreFilter,
                     )))
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

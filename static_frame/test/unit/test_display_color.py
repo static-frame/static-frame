@@ -37,3 +37,8 @@ class TestUnit(TestCase):
 
         msg = HexColor.format_terminal('#040273', 'test')
         self.assertEqual(msg, '\x1b[38;5;4mtest\x1b[0m')
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

@@ -97,3 +97,8 @@ class TestUnit(TestCase):
     def test_index_to_series(self, index: Index) -> None:
         s1 = index.to_series()
         self.assertEqual(len(s1), len(index))
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

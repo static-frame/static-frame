@@ -332,3 +332,8 @@ class TestUnit(TestCase):
         front.extend(back._blocks)
         self.assertEqual(front.shape,
                 (shape_original[0], shape_original[1] + back.shape[1] * 2))
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

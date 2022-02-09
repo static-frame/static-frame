@@ -964,3 +964,8 @@ class TestUnit(TestCase):
 
         s1 = f1.iter_group('p', axis=0).apply(lambda f: f['q'].values.sum())
         self.assertEqual(list(s1.items()), [(2, 97), (30, 107)])
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

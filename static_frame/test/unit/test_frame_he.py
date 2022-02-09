@@ -61,3 +61,8 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(10,2)|i(I,str)|v(str)').to_frame_he().astype(object)
         self.assertTrue(f1 == f2)
         self.assertEqual(len(set((f1 ,f2))), 1)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

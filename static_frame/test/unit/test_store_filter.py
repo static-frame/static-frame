@@ -363,3 +363,8 @@ class TestUnit(TestCase):
 
         self.assertEqual(post2.tolist(),
                 ['0.413-0.000j', '0.412-0.593j', 'foo', False, 100, '0.833', '20.000+3.000j'])
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

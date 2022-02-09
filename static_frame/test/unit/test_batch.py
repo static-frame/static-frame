@@ -1255,3 +1255,8 @@ class TestUnit(TestCase):
             frames = dict(b2.items())
 
             self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

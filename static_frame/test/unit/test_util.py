@@ -2510,3 +2510,8 @@ class TestUnit(TestCase):
                 [[[2,], 3, 4], [[[1, 2], [3, 4]], [5, 6]]]),
                 (((2,), 3, 4), (((1, 2), (3, 4)), (5, 6)))
                 )
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

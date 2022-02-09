@@ -831,3 +831,8 @@ class TestUnit(TestCase):
         index_date = IndexDate(index_ym)
         with self.assertRaises(RuntimeError):
             post = index_ym.intersection(index_date)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

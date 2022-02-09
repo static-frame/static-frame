@@ -14,3 +14,8 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             c().display()
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

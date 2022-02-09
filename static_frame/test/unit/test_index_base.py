@@ -43,3 +43,8 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             idx1.from_labels(())
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

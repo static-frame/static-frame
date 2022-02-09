@@ -10,3 +10,8 @@ class TestUnit(TestCase):
         for target in self.get_containers():
             post = pydoc.render_doc(target, renderer=pydoc.plaintext) # type: ignore
             self.assertTrue(len(post) > 0)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

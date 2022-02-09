@@ -16,3 +16,8 @@ class TestUnit(TestCase):
             f1.to_npz(fp)
             # f2 = Frame.from_npz(fp)
             # f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

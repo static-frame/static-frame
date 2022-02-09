@@ -9,3 +9,8 @@ class TestUnit(TestCase):
         post = DisplayConfig.interface
         self.assertTrue(post.shape[0] > 40)
         self.assertTrue(post.shape[1] == 3)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

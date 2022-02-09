@@ -1517,3 +1517,8 @@ class TestUnit(TestCase):
         self.assertTrue(
             (idx2.values_at_depth(0) == np.array(['2012', '2012', '2012'], dtype='datetime64[Y]')).all()
             )
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

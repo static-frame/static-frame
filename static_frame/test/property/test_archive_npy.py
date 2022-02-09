@@ -82,3 +82,8 @@ class TestUnit(TestCase):
                 else:
                     self.assertTrue((a1 == a2).all())
                 self.assertTrue(a1.shape == a2.shape)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

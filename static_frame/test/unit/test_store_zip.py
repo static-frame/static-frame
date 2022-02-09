@@ -425,3 +425,8 @@ class TestUnitMultiProcess(TestCase):
 
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

@@ -3513,3 +3513,8 @@ class TestUnit(TestCase):
         tb2 = tb1[slice(1, 3)]
         post = tuple(tb2._slice_blocks(column_key=slice(0, 1)))
         self.assertEqual([a.shape for a in post], [(3,)])
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

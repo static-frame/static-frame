@@ -33,3 +33,8 @@ class TestUnit(TestCase):
         self.assertEqual(ic.size, 1)
         self.assertEqual(ic.iloc_src, [0]) # this is as list in this use case
         self.assertEqual(ic.iloc_dst.tolist(), [0]) # type: ignore
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

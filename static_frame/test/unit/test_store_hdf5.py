@@ -187,3 +187,8 @@ class TestUnit(TestCase):
             for i, f_loaded in enumerate(st1.read_many(labels, config=config_map_read)):
                 f_src = frames[i]
                 self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

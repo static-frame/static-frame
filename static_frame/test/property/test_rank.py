@@ -119,3 +119,8 @@ class TestUnit(TestCase):
             a1 = rankdata(value, method='average', axis=axis)
             a2 = rank_2d(value, method='mean', start=1, axis=axis)
             self.assertEqual(a1.tolist(), a2.tolist())
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

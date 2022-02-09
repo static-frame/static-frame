@@ -120,3 +120,8 @@ class TestUnit(TestCase):
                 partial_selection=False,
                 )
         self.assertEqual(post1, slice(0, 85, None))
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

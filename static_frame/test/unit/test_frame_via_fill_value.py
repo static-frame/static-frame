@@ -136,3 +136,7 @@ class TestUnit(TestCase):
                 (('d', -1), ('e', -1))
                 )
 
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

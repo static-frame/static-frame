@@ -5,6 +5,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.pivot import pivot_records_items
 
+
 class TestUnit(TestCase):
 
     def test_pivot_records_items_a(self) -> None:
@@ -68,3 +69,8 @@ class TestUnit(TestCase):
         self.assertTrue(post2.to_pairs(),
                 ((2, (((0, 0), 463099), ((0, 1), -88017), ((0, 2), 35021), ((1, 0), 92867), ((1, 2), 96520), ((2, 0), 172133), ((2, 1), 279191), ((2, 2), 13448), ((3, 0), 255338), ((3, 1), 372807), ((3, 2), 155574))), (3, (((0, 0), 348362), ((0, 1), 175579), ((0, 2), 105269), ((1, 0), 58768), ((1, 2), 13448), ((2, 0), 84967), ((2, 1), 239151), ((2, 2), 170440), ((3, 0), 269300), ((3, 1), 204528), ((3, 2), 493169))))
                 )
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

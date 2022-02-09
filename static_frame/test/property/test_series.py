@@ -111,3 +111,8 @@ class TestUnit(TestCase):
 
 #         post = Series.from_overlay((s1, s2, s3))
 #         self.assertTrue(post.index.equals(s1.index.union(s2.index, s3.index)))
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

@@ -8,6 +8,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultFactory
 
+
 class TestUnit(TestCase):
 
     def test_index_auto_factory_a(self) -> None:
@@ -54,3 +55,8 @@ class TestUnit(TestCase):
         self.assertEqual(post.name, 'foo')
         self.assertEqual(post.values.tolist(),
             [datetime.date(1970, 1, 1), datetime.date(1970, 1, 2), datetime.date(1970, 1, 3)])
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

@@ -5159,3 +5159,8 @@ class TestUnit(TestCase):
         self.assertEqual(s1.fillfalsy(Series.from_dict({'c':20, 'b':30})).to_pairs(),
                 (('a', 'a'), ('b', 30), ('c', 20)),
                 )
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

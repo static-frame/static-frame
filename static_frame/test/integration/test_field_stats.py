@@ -130,3 +130,8 @@ class TestUnit(TestCase):
 
         self.assertAlmostEqualValues(post.sum().values.tolist(),
             [58.466999999999985, 61.121, 48.06699999999999, 71.52100000000004, 119.587, 59.794000000000004, 59.794000000000004])
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

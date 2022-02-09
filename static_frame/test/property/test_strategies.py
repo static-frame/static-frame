@@ -118,3 +118,8 @@ class TestUnit(TestCase):
         self.assertTrue(frame.index.depth > 1)
         self.assertTrue(frame.columns.depth > 1)
         self.assertEqual(frame.shape, frame.values.shape)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

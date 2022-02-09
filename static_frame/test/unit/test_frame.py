@@ -13144,3 +13144,8 @@ class TestUnit(TestCase):
         self.assertEqual(f3.index.values.tolist(), [1, 2])
 
         self.assertEqual(f2.loc[[0, 2]].index.values.tolist(), [0, 2])
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

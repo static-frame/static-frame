@@ -323,3 +323,8 @@ class TestUnit(TestCase):
                 [0, 1, 2]
                 )
         self.assertEqual(rank_1d(np.array([0, 0, 1]), 'ordinal').dtype.kind, 'i')
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

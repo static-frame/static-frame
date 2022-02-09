@@ -1119,3 +1119,8 @@ class TestUnit(TestCase):
         y1 = Yarn((b1,))
         with self.assertRaises(RuntimeError):
             y1.rehierarch((1,0))
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

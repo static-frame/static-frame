@@ -925,3 +925,8 @@ class TestUnit(TestCase):
         s1 = Series.from_items((('f', chr(0x265C)), ('g', chr(0x265A))))
 
         f.assign.loc[8, :](s1, fill_value='')
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

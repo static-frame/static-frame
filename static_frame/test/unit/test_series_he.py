@@ -6,6 +6,7 @@ from static_frame import SeriesHE
 from static_frame.test.test_case import TestCase
 from static_frame import ILoc
 
+
 class TestUnit(TestCase):
 
     def test_frame_he_slotted_a(self) -> None:
@@ -76,3 +77,8 @@ class TestUnit(TestCase):
         s1 = ff.parse('s(10,1)|i(I,str)')[ILoc[0]].to_series_he()
         self.assertFalse(hasattr(s1, '_hash'))
         self.assertEqual(hash(s1), s1._hash)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

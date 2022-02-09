@@ -20,3 +20,8 @@ class TestUnit(TestCase):
         f = Frame()
         sc = StyleConfig(f)
         self.assertTrue(style_config_css_factory(sc, f) is sc)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

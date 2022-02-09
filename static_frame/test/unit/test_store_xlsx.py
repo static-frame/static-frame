@@ -13,6 +13,7 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
 
+
 class TestUnit(TestCase):
 
     def test_store_xlsx_write_a(self) -> None:
@@ -401,3 +402,8 @@ class TestUnit(TestCase):
 
         self.assertEqual(attr2, 'write')
         self.assertEqual(switch2, True)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()
