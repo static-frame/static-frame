@@ -7906,9 +7906,8 @@ class TestUnit(TestCase):
         frame2 = sf.Frame.from_dict_records(
                 [dict(a=100,b=200), dict(a=20,b=30), dict(a=101,b=101), dict(a=201,b=301)], index=sf.IndexHierarchy.from_labels([(1,'ddd',0), (1,'bbb',0), (2,'ccc',0), (2,'eee',0)]))
 
-        # produce invalid index labels into an IndexHierarchy constructor
-        with self.assertRaises(RuntimeError):
-            sf.Frame.from_concat((frame1, frame2))
+        # BEHAVIOR CHANGE!
+        sf.Frame.from_concat((frame1, frame2))
 
     def test_frame_from_concat_u(self) -> None:
         # this fails; figure out why
@@ -9630,11 +9629,12 @@ class TestUnit(TestCase):
         f5 = f1.drop[:]
         self.assertEqual(f5.shape, (2, 0))
 
+        # BEHAVIOR CHANGE!!
         # Check that we can represent the IndexHierarchy
         d = f5.display(DisplayConfig(type_color=False))
         self.assertEqual(tuple(d), (['<Frame>'],
-                ['<IndexHierarchy>', '<float64>'],
-                ['', '<float64>'],
+                ['<IndexHierarchy>', '<int64>'],
+                ['', '<U1>'],
                 ['<Index>'],
                 ['0'],
                 ['1'],

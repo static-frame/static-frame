@@ -355,11 +355,9 @@ class IndexHierarchy(IndexBase):
             if depth_reference == 1:
                 raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
-            empty_indexer = np.array([], dtype=int)
-            empty_indexer.flags.writeable = False
             return cls(
                 indices=[cls._INDEX_CONSTRUCTOR(()) for _ in range(depth_reference)],
-                indexers=[empty_indexer for _ in range(depth_reference)],
+                indexers=[PositionsAllocator.get(0) for _ in range(depth_reference)],
                 name=name
             )
 
@@ -377,7 +375,7 @@ class IndexHierarchy(IndexBase):
 
         while True:
             for i_zip, (hash_map, indexer, val) in enumerate(zip(hash_maps, indexers, label_row)):
-                if val is continuation_token:
+                if val == continuation_token:
                     if prev_row is not None:
                         i = indexer[-1]
                         val = prev_row[i_zip]
@@ -430,7 +428,6 @@ class IndexHierarchy(IndexBase):
             items: iterable of pairs of label, :obj:`Index`.
             index_constructor: Optionally provide index constructor for outermost index.
         '''
-        items = list(items)
         [depth1_constructor, depth2_constructor] = cls._build_index_constructors(index_constructor, depth=2)
 
         depth_1_index = []
@@ -458,6 +455,14 @@ class IndexHierarchy(IndexBase):
 
             indexers_1.append(new_indexer)
             repeats.append(len(index))
+
+        if not depth_1_index:
+            assert depth_2_index is None
+            return cls(
+                indices=[cls._INDEX_CONSTRUCTOR(()) for _ in range(2)],
+                indexers=[PositionsAllocator.get(0) for _ in range(2)],
+                name=name,
+            )
 
         def _repeat(i_repeat_tuple: tp.Tuple[int, int]) -> np.ndarray:
             i, repeat = i_repeat_tuple
@@ -531,13 +536,9 @@ class IndexHierarchy(IndexBase):
         if len(name) == 0:
             raise ErrorInitIndex("names must be non-empty.")
 
-
-        empty_indexer = np.array([], dtype=int)
-        empty_indexer.flags.writeable = False
-
         return cls(
             indices=[cls._INDEX_CONSTRUCTOR((), name=name) for name in names],
-            indexers=[empty_indexer for _ in names],
+            indexers=[PositionsAllocator.get(0) for _ in names],
             name=name,
         )
 
@@ -1267,6 +1268,9 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
 
     def _process_key_at_depth(self, depth: int, key) -> slice | np.ndarray:
+        if depth >= self.depth:
+            raise RuntimeError(f'Invalid depth level for key={key} depth={depth}')
+
         key_at_depth = key[depth]
 
         # Key is already a mask!
@@ -1634,10 +1638,7 @@ class IndexHierarchy(IndexBase):
                     return False
 
         for i in range(self.depth):
-            if not arrays_equal(self._indices[i].values, other._indices[i].values, skipna=skipna):
-                return False
-
-            if not arrays_equal(self._indexers[i], other._indexers[i], skipna=skipna):
+            if not arrays_equal(self.values_at_depth(i), other.values_at_depth(i), skipna=skipna):
                 return False
 
         return True
