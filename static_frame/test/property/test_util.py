@@ -1,7 +1,5 @@
-
 import typing as tp
 import datetime
-import unittest
 import fractions
 import numpy as np
 
@@ -14,10 +12,6 @@ from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import isna_element
 
-
-# from static_frame.test.property.strategies import get_arrays_2d_aligned
-# from static_frame.test.property.strategies import get_blocks
-# from static_frame.test.property.strategies import get_label
 from static_frame.core import util
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA
 from static_frame.core.util import DTYPE_INEXACT_KINDS
@@ -80,8 +74,6 @@ class TestUnit(TestCase):
         resolved, has_tuple, values_post = util.prepare_iter_for_array(objects)
         self.assertTrue(resolved in known_types)
 
-
-
     @given(get_arrays_2d_aligned_columns())
     def test_concat_resolved_axis_0(self, arrays: tp.List[np.ndarray]) -> None:
         array = util.concat_resolved(arrays, axis=0)
@@ -110,7 +102,6 @@ class TestUnit(TestCase):
     def test_dtype_to_na(self, dtype: util.DtypeSpecifier) -> None:
         post = util.dtype_to_fill_value(dtype)
         self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
-
 
     @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC))
     def test_ufunc_axis_skipna(self, array: np.ndarray) -> None:
@@ -164,8 +155,6 @@ class TestUnit(TestCase):
 
             self.assertAlmostEqualValues(a, b)
 
-
-
     @given(get_array_1d(dtype_group=DTGroup.OBJECT))
     def test_iterable_to_array_a(self, array: np.ndarray) -> None:
         values = array.tolist()
@@ -176,13 +165,11 @@ class TestUnit(TestCase):
         post, _ = util.iterable_to_array_1d(values, dtype=util.DTYPE_OBJECT)
         self.assertAlmostEqualValues(post, values)
 
-
     @given(get_labels())
     def test_iterable_to_array_b(self, labels: tp.Iterable[tp.Any]) -> None:
         post, _ = util.iterable_to_array_1d(labels)
         self.assertAlmostEqualValues(post, labels)
         self.assertTrue(isinstance(post, np.ndarray))
-
 
     @given(get_labels())
     def test_iterable_to_array_nd(self, labels: tp.Iterable[tp.Any]) -> None:
@@ -204,9 +191,9 @@ class TestUnit(TestCase):
             set(range(*post_key.indices(10)))
             )
 
-# to_datetime64
-# to_timedelta64
-# key_to_datetime_key
+    # to_datetime64
+    # to_timedelta64
+    # key_to_datetime_key
 
     @given(get_array_1d2d())
     def test_array_to_groups_and_locations(self, array: np.ndarray) -> None:
@@ -220,7 +207,6 @@ class TestUnit(TestCase):
         self.assertTrue(locations.ndim == 1)
         self.assertTrue(len(np.unique(locations)) == len(groups))
 
-
     @given(get_array_1d2d())
     def test_isna_array(self, array: np.ndarray) -> None:
 
@@ -231,7 +217,6 @@ class TestUnit(TestCase):
         count_na = sum(isna_element(x) for x in values)
 
         self.assertTrue(np.ravel(post).sum() == count_na)
-
 
     @given(get_array_1d(dtype_group=DTGroup.BOOL))
     def test_binary_transition(self, array: np.ndarray) -> None:
@@ -249,7 +234,6 @@ class TestUnit(TestCase):
         else:
             # the post selection shold always be indices that are false
             self.assertTrue(array[post].sum() == 0)
-
 
     @given(get_array_1d2d())
     def test_array_to_duplicated(self, array: np.ndarray) -> None:
@@ -302,6 +286,7 @@ class TestUnit(TestCase):
                         self.assertTrue(array.dtype == post.dtype)
 
     #---------------------------------------------------------------------------
+
     @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_union1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
@@ -321,7 +306,6 @@ class TestUnit(TestCase):
                 and not np.isnan(post).any()):
             self.assertSetEqual(set(post), (set(arrays[0]) | set(arrays[1])))
 
-
     @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_intersect1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
@@ -337,7 +321,6 @@ class TestUnit(TestCase):
         if (post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
                 and not np.isnan(post).any()):
             self.assertSetEqual(set(post), (set(arrays[0]) & set(arrays[1])))
-
 
     @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_setdiff1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
@@ -361,8 +344,8 @@ class TestUnit(TestCase):
                 and not np.isnan(post).any()):
             self.assertSetEqual(set(post), (set(arrays[0]).difference(set(arrays[1]))))
 
-
     #---------------------------------------------------------------------------
+
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_union2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
@@ -417,6 +400,7 @@ class TestUnit(TestCase):
             self.assertTrue(post.ndim == 2)
 
     #---------------------------------------------------------------------------
+
     @given(get_array_1d2d(min_rows=1, min_columns=1))
     def test_isin(self, array: np.ndarray) -> None:
 
@@ -443,9 +427,3 @@ class TestUnit(TestCase):
         if result is not None:
             self.assertTrue(array.shape == result.shape)
             self.assertTrue(result.dtype == bool)
-
-
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -1,4 +1,3 @@
-
 import typing as tp
 import unittest
 
@@ -12,14 +11,9 @@ from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 
 from static_frame import TypeBlocks
-# from static_frame import Index
-# from static_frame import IndexHierarchy
-# from static_frame import Series
-# from static_frame import Frame
 
 
 class TestUnit(TestCase):
-
 
     @given(st.lists(sfst.get_shape_2d(), min_size=1), sfst.get_labels(min_size=1))
     def test_from_element_items(self,
@@ -37,14 +31,12 @@ class TestUnit(TestCase):
         post = TypeBlocks.from_element_items(values(), shape=shape, dtype=object)
         self.assertEqual(post.shape, shape)
 
-
     @given(st.integers(max_value=sfst.MAX_COLUMNS))
     def test_from_zero_size_shape(self, value: int) -> None:
 
         for shape in ((0, value), (value, 0)):
             post = TypeBlocks.from_zero_size_shape(shape=shape)
             self.assertEqual(post.shape, shape)
-
 
     @given(sfst.get_type_blocks())
     def test_basic_attributes(self, tb: TypeBlocks) -> None:
@@ -61,14 +53,11 @@ class TestUnit(TestCase):
             self.assertTrue(tb.size == 0)
             self.assertTrue(tb.nbytes == 0)
 
-
-
     @given(sfst.get_type_blocks())
     def test_values(self, tb: TypeBlocks) -> None:
         values = tb.values
         self.assertEqual(values.shape, tb.shape)
         self.assertEqual(values.dtype, tb._row_dtype)
-
 
     @given(sfst.get_type_blocks())
     def test_axis_values(self, tb: TypeBlocks) -> None:
@@ -85,7 +74,6 @@ class TestUnit(TestCase):
                     else:
                         # NOTE: only checking kinde because found cases where byte-order deviates
                         self.assertTrue(array.dtype.kind == tb._row_dtype.kind)
-
 
     @given(sfst.get_type_blocks())
     def test_element_items(self, tb: TypeBlocks) -> None:
@@ -106,7 +94,6 @@ class TestUnit(TestCase):
         # sum of column widths is qual to columns in shape
         self.assertTrue(sum(p[1] for p in post), tb.shape[1])
 
-
     @given(sfst.get_type_blocks(), sfst.get_type_blocks())
     def test_block_compatible(self, tb1: TypeBlocks, tb2: TypeBlocks) -> None:
 
@@ -118,7 +105,6 @@ class TestUnit(TestCase):
             # if the shapes are different, they cannot be block compatible
             if axis is None and tb1.shape != tb2.shape:
                 self.assertFalse(post1)
-
 
     @given(sfst.get_type_blocks(), sfst.get_type_blocks())
     def test_reblock_compatible(self, tb1: TypeBlocks, tb2: TypeBlocks) -> None:
@@ -221,7 +207,6 @@ class TestUnit(TestCase):
             # we have as many or more blocks
             self.assertTrue(len(tb4.shapes) >= len(tb1.shapes))
 
-
     @unittest.skip('pending')
     def test_assign_blocks_from_boolean_blocks(self) -> None:
         pass
@@ -270,8 +255,6 @@ class TestUnit(TestCase):
             for start in range(1, tb.shape[1]):
                 tb_post4 = tb.drop((None, slice(start, None)))
                 self.assertTrue(tb_post4.shape[1] == start)
-
-
 
     @unittest.skip('pending')
     def test_getitem(self) -> None:
@@ -325,7 +308,6 @@ class TestUnit(TestCase):
     def test_fillna(self) -> None:
         pass
 
-
     @given(sfst.get_type_blocks_aligned_array())
     def test_append(self, tb_aligned_array: tp.Tuple[TypeBlocks, np.ndarray]) -> None:
         tb, aa = tb_aligned_array
@@ -350,7 +332,3 @@ class TestUnit(TestCase):
         front.extend(back._blocks)
         self.assertEqual(front.shape,
                 (shape_original[0], shape_original[1] + back.shape[1] * 2))
-
-
-if __name__ == '__main__':
-    unittest.main()

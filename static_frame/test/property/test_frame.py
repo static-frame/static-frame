@@ -1,6 +1,4 @@
-
 import typing as tp
-import unittest
 import operator
 import os
 import sqlite3
@@ -24,7 +22,6 @@ from static_frame.test.test_case import TestCase
 
 class TestUnit(TestCase):
 
-
     @given(sfst.get_frame_or_frame_go())
     def test_basic_attributes(self, f1: Frame) -> None:
 
@@ -40,7 +37,6 @@ class TestUnit(TestCase):
             self.assertTrue(f1.size == 0)
             self.assertTrue(f1.nbytes == 0)
 
-
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC))
     def test_unary_operators_numeric(self, f1: Frame) -> None:
         for op in UFUNC_UNARY_OPERATORS:
@@ -53,7 +49,6 @@ class TestUnit(TestCase):
             b = func(values)
             self.assertAlmostEqualArray(a, b)
 
-
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
     def test_unary_operators_boolean(self, f1: Frame) -> None:
         for op in UFUNC_UNARY_OPERATORS:
@@ -63,7 +58,6 @@ class TestUnit(TestCase):
             a = func(f1).values
             b = func(f1.values)
             self.assertAlmostEqualArray(a, b)
-
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC))
     def test_binary_operators_numeric(self, f1: Frame) -> None:
@@ -87,7 +81,6 @@ class TestUnit(TestCase):
             a = func(f2, f2).values
             b = func(values, values)
             self.assertAlmostEqualArray(a, b)
-
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
     def test_binary_operators_boolean(self, f1: Frame) -> None:
@@ -157,8 +150,6 @@ class TestUnit(TestCase):
                 not isinstance(value, np.timedelta64)):
             self.assertTrue(f1.isin((value,)).iloc[0, 0])
 
-
-
     # # TODO: intger tests with pow, mod
 
     #---------------------------------------------------------------------------
@@ -170,7 +161,6 @@ class TestUnit(TestCase):
         f1['foo'] = label # type: ignore
         self.assertEqual(shape[1] + 1, f1.shape[1])
 
-
     @given(sfst.get_arrays_2d_aligned_rows(min_size=2, max_size=2))
     def test_frame_go_extend(self, arrays: tp.Sequence[np.ndarray]) -> None:
         f1 = FrameGO(arrays[0], columns=self.get_letters(arrays[0].shape[1]))
@@ -178,7 +168,6 @@ class TestUnit(TestCase):
         f2 = Frame(arrays[1])
         f1.extend(f2)
         self.assertEqual(f1.shape[1], shape[1] + f2.shape[1])
-
 
     @given(sfst.get_arrays_2d_aligned_rows(min_size=3))
     def test_frame_go_extend_items(self, arrays: tp.Sequence[np.ndarray]) -> None:
@@ -200,7 +189,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.shape[1], shape[1] + len(series_arrays))
 
-
     #---------------------------------------------------------------------------
     # exporters
 
@@ -214,7 +202,6 @@ class TestUnit(TestCase):
                 self.assertEqual(len(post[0][1]), f1.shape[0]) # type: ignore
             self.assertTrue(isinstance(post, tuple))
 
-
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             index_dtype_group=sfst.DTGroup.BASIC,
@@ -224,7 +211,6 @@ class TestUnit(TestCase):
         self.assertTrue(post.shape == f1.shape)
         if not f1.isna().any().any():
             self.assertTrue((post.values == f1.values).all())
-
 
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
@@ -240,7 +226,6 @@ class TestUnit(TestCase):
                 # could be Byte-swapped arrays not supported
                 pass
 
-
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.CORE,
             index_dtype_group=sfst.DTGroup.CORE,
@@ -254,7 +239,6 @@ class TestUnit(TestCase):
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
-
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             index_dtype_group=sfst.DTGroup.BASIC,
@@ -262,7 +246,6 @@ class TestUnit(TestCase):
     def test_frame_to_xarray(self, f1: Frame) -> None:
         xa = f1.to_xarray()
         self.assertTrue(tuple(xa.keys()) == tuple(f1.columns))
-
 
     @given(sfst.get_frame(
             dtype_group=sfst.DTGroup.BASIC,
@@ -297,7 +280,6 @@ class TestUnit(TestCase):
             f1.to_tsv(fp)
             self.assertTrue(os.stat(fp).st_size > 0)
 
-
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -321,7 +303,6 @@ class TestUnit(TestCase):
                 # OverflowError: Python int too large to convert to SQLite INTEGER
                 pass
 
-
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             columns_dtype_group=sfst.DTGroup.STRING,
@@ -337,7 +318,6 @@ class TestUnit(TestCase):
             except ValueError:
                 # will happen for empty strings and unicde that cannot be handled by HDF5
                 pass
-
 
     @given(sfst.get_frame_or_frame_go())
     def test_frame_to_html(self, f1: Frame) -> None:
@@ -369,6 +349,3 @@ class TestUnit(TestCase):
     def test_frame_blocks_dont_have_reference_cycles(self, f1: Frame) -> None:
         self.assertEqual([f1], gc.get_referrers(f1._blocks))
 
-
-if __name__ == '__main__':
-    unittest.main()

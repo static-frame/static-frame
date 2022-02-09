@@ -1,6 +1,3 @@
-
-# import typing as tp
-import unittest
 import numpy as np
 from hypothesis import given
 
@@ -13,6 +10,7 @@ from static_frame.test.property import strategies as sfst
 
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
+
 
 class TestUnit(TestCase):
 
@@ -27,7 +25,6 @@ class TestUnit(TestCase):
             f2 = Frame.from_npz(fp)
             self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
 
-
     @given(sfst.get_frame(dtype_group=sfst.DTGroup.ALL_NO_OBJECT,
             index_cls=IndexDate,
             index_dtype_group=sfst.DTGroup.DATE,
@@ -40,7 +37,6 @@ class TestUnit(TestCase):
             f1.to_npz(fp)
             f2 = Frame.from_npz(fp)
             self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
-
 
     @given(sfst.get_array_1d2d(dtype_group=sfst.DTGroup.ALL_NO_OBJECT))
     def test_frame_to_npy_a(self, a1: Frame) -> None:
@@ -86,7 +82,3 @@ class TestUnit(TestCase):
                 else:
                     self.assertTrue((a1 == a2).all())
                 self.assertTrue(a1.shape == a2.shape)
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -1,14 +1,7 @@
-
-# import typing as tp
-import unittest
-
-# import numpy as np
-
 from hypothesis import given
 from static_frame.test.test_case import TestCase
 
 from static_frame.test.property.strategies import get_index_hierarchyold_any
-
 
 from static_frame import IndexHierarchy
 
@@ -16,6 +9,7 @@ from static_frame import IndexHierarchy
 class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
+
     @given(get_index_hierarchyold_any())
     def test_index_display(self, ih: IndexHierarchy) -> None:
 
@@ -32,7 +26,3 @@ class TestUnit(TestCase):
     def test_index_to_frame(self, ih: IndexHierarchy) -> None:
         f1 = ih.to_frame()
         self.assertEqual(f1.shape, ih.shape)
-
-
-if __name__ == '__main__':
-    unittest.main()

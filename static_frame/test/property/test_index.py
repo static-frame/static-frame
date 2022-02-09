@@ -1,12 +1,9 @@
-
 import typing as tp
 import unittest
 
 import numpy as np
 
-# from hypothesis import strategies as st
 from hypothesis import given
-# from hypothesis import reproduce_failure  # type: ignore
 
 from static_frame.test.property.strategies import get_labels
 from static_frame.test.property.strategies import get_index_any
@@ -15,16 +12,9 @@ from static_frame.test.test_case import TestCase
 
 from static_frame import Index
 from static_frame import IndexGO
-# from static_frame import Series
-# from static_frame import Frame
-# from static_frame import FrameGO
-# from static_frame import TypeBlocks
-# from static_frame import Display
-
 
 
 class TestUnit(TestCase):
-
 
     @given(get_labels())
     def test_index_values_len(self, values: tp.Sequence[tp.Hashable]) -> None:
@@ -48,7 +38,6 @@ class TestUnit(TestCase):
 
         property_values(Index, values)
         property_values(IndexGO, values)
-
 
     @given(get_labels())
     def test_index_loc_to_iloc_element(self, values: tp.Sequence[tp.Hashable]) -> None:
@@ -77,8 +66,6 @@ class TestUnit(TestCase):
         property_loc_to_iloc_slice(Index, values)
         property_loc_to_iloc_slice(IndexGO, values)
 
-
-
     @given(get_labels(min_size=2))
     def test_index_go_append(self, values: tp.Sequence[tp.Hashable]) -> None:
 
@@ -88,14 +75,13 @@ class TestUnit(TestCase):
         length_end = len(index)
         self.assertEqual(length_start + 1, length_end)
 
-
     @given(get_labels(min_size=1))
     def test_index_isin(self, labels: tp.Sequence[tp.Hashable]) -> None:
         index = Index(labels)
         self.assertTrue(index.isin((labels[0],))[0])
 
-
     #---------------------------------------------------------------------------
+
     @given(get_index_any())
     def test_index_display(self, index: Index) -> None:
 
@@ -112,6 +98,3 @@ class TestUnit(TestCase):
     def test_index_to_series(self, index: Index) -> None:
         s1 = index.to_series()
         self.assertEqual(len(s1), len(index))
-
-if __name__ == '__main__':
-    unittest.main()
