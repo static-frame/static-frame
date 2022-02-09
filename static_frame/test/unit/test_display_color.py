@@ -1,6 +1,5 @@
-
-
 from static_frame.test.test_case import TestCase
+from static_frame.core.display_color import HexColor
 
 # assuming located in the same directory
 # from static_frame import Index
@@ -14,7 +13,6 @@ from static_frame.test.test_case import TestCase
 # from static_frame import DisplayConfig
 # from static_frame import DisplayConfigs
 
-from static_frame.core.display_color import HexColor
 
 class TestUnit(TestCase):
 
@@ -39,9 +37,3 @@ class TestUnit(TestCase):
 
         msg = HexColor.format_terminal('#040273', 'test')
         self.assertEqual(msg, '\x1b[38;5;4mtest\x1b[0m')
-
-
-
-if __name__ == '__main__':
-    import unittest
-    unittest.main()

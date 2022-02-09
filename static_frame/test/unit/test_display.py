@@ -58,14 +58,11 @@ class TestUnit(TestCase):
 
         self.assertFalse(post.cell_align_left)
 
-
-
     def test_display_config_c(self) -> None:
         config_right = sf.DisplayConfig.from_default(cell_align_left=False)
         config_left = sf.DisplayConfig.from_default(cell_align_left=True)
 
         msg = config_right.to_json()
-
 
     def test_display_config_d(self) -> None:
 
@@ -82,7 +79,6 @@ class TestUnit(TestCase):
         dc1 = DisplayConfig()
         self.assertTrue(str(dc1).startswith('<DisplayConfig'))
 
-
     #---------------------------------------------------------------------------
 
     @skip_win  #type: ignore
@@ -93,7 +89,6 @@ class TestUnit(TestCase):
         with temp_file('.json') as fp2:
             DisplayActive.write(fp2) #type: ignore
             DisplayActive.read(fp2) #type: ignore
-
 
     #---------------------------------------------------------------------------
 
@@ -109,9 +104,6 @@ class TestUnit(TestCase):
         self.assertEqual(
                 index.display(config=config_right).to_rows(),
                 ['<Index>', '      a', '      b', '      c', '  <<U1>'])
-
-
-
 
     @skip_win  #type: ignore
     def test_display_cell_align_left_b(self) -> None:
@@ -154,7 +146,6 @@ class TestUnit(TestCase):
                 '      x      30      34     b   True  False',
                 '      y       2      95     c  False  False',
                 '  <<U1> <int64> <int64> <<U1> <bool> <bool>'])
-
 
     @skip_win  # type: ignore
     def test_display_type_show_a(self) -> None:
@@ -204,7 +195,6 @@ class TestUnit(TestCase):
                 'x       30      34      b     True   False',
                 'y       2       95      c     False  False',
                 '<<U1>   <int64> <int64> <<U1> <bool> <bool>'])
-
 
     @skip_win  # type: ignore
     def test_display_type_show_b(self) -> None:
@@ -307,7 +297,6 @@ class TestUnit(TestCase):
                 '<<U1>  <<U10> <<U10> <<U10> <<U10>']
                 )
 
-
     def test_display_display_rows_a(self) -> None:
 
         config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False)
@@ -346,7 +335,6 @@ class TestUnit(TestCase):
                 'xz       323',
                 'yz       324',
                 '<<U2>    <int64>'])
-
 
     def test_display_rows_b(self) -> None:
         # this isseu was found only with Frame, not with Series
@@ -394,7 +382,6 @@ class TestUnit(TestCase):
                 '<int64> <int64>']
                 )
 
-
     @skip_win  # type: ignore
     def test_display_display_columns_a(self) -> None:
 
@@ -428,7 +415,6 @@ class TestUnit(TestCase):
                 '2         0       1       ... 323     324',
                 '3         0       1       ... 323     324',
                 '<int64>   <int64> <int64> ... <int64> <int64>'])
-
 
     @skip_win  # type: ignore
     def test_display_display_columns_b(self) -> None:
@@ -468,7 +454,6 @@ class TestUnit(TestCase):
                 '<<U1>   <int64> <int64> <<U1> <bool> <bool>']
                 )
 
-
     def test_display_truncate_a(self) -> None:
 
         config_rows_12_cols_8 = sf.DisplayConfig.from_default(display_rows=12, display_columns=8)
@@ -495,7 +480,6 @@ class TestUnit(TestCase):
         self.assertEqual(
                 len(tuple(f.display(config_rows_7_cols_5).to_rows())), 11)
 
-
     def test_display_type_attributes_a(self) -> None:
 
         x, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.DEFAULT)
@@ -505,7 +489,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             x, z = Display.type_attributes(None, DisplayConfigs.DEFAULT)
-
 
     def test_display_type_category_a(self) -> None:
 
@@ -558,7 +541,6 @@ class TestUnit(TestCase):
         self.assertEqual(d1.transform().to_rows(),
                 ['header 1 2 3 4 <int64>', 'header 5 6 7 8 <int64>'])
 
-
     @skip_win  # type: ignore
     def test_display_html_pre_a(self) -> None:
         f = Frame.from_dict(dict(a=(1, 2),
@@ -577,7 +559,6 @@ class TestUnit(TestCase):
 &lt;int64&gt; &lt;int64&gt; &lt;float64&gt; &lt;bool&gt;</div>'''
 
         self.assertEqualLines(html, str(expected))
-
 
     @skip_win  # type: ignore
     def test_display_html_table_a(self) -> None:
@@ -628,9 +609,6 @@ class TestUnit(TestCase):
         '''
         self.assertEqual(html5.strip(), str(expected5).strip())
 
-
-
-
     def test_display_html_table_b(self) -> None:
         records = (
                 (2, 'a', False),
@@ -641,7 +619,6 @@ class TestUnit(TestCase):
                 index=('w', 'x'))
         self.assertEqual(f._repr_html_(),
             '<table><thead><tr><th></th><th>p</th><th>q</th><th>r</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>30</td><td>b</td><td>False</td></tr></tbody></table>')
-
 
     def test_display_html_series_a(self) -> None:
         records = (
@@ -697,8 +674,6 @@ class TestUnit(TestCase):
         self.assertEqual(post[2],
                 '<span style="color: #777777">&lt;IndexHierarchy: (&#x27;p&#x27;, &#x27;q&#x27;)&gt;</span>')
 
-
-
     def test_display_max_width_a(self) -> None:
         records = (
                 (2, 'a', False),
@@ -746,8 +721,6 @@ class TestUnit(TestCase):
                 '<int64>  <float64>']
                 )
 
-
-
     def test_display_float_scientific_b(self) -> None:
 
         s1 = sf.Series([3.1j, 5.2j]) ** 40
@@ -779,20 +752,19 @@ class TestUnit(TestCase):
                 '<int64>  <complex128>']
                 )
 
-
     def test_display_tall(self) -> None:
         f = Frame.from_element(None, index=range(40), columns=range(20))
         self.assertEqual(len(f.display_tall().to_rows()), 44)
         self.assertEqual(len(f.display_wide().to_rows()), 39)
 
     #---------------------------------------------------------------------------
+
     def test_display_format_latex_a(self) -> None:
 
         post = DisplayFormatLaTeX.markup_outermost('x', identifier='foo')
         self.assertEqual(post,
             '''\\begin{table}[ht]\n\\centering\nx\n\\label{table:foo}\n\\end{table}'''
             )
-
 
     @skip_win #type: ignore
     def test_display_type_color_markup_a(self) -> None:
@@ -808,8 +780,6 @@ class TestUnit(TestCase):
         config2 = DisplayConfig(display_format=DisplayFormats.HTML_TABLE)
         post2 = Display.type_color_markup(DisplayTypeInt, config2)
         self.assertEqual(post2, '<span style="color: #505050">{}</span>')
-
-
 
     def test_display_include_index_a(self) -> None:
 
@@ -834,6 +804,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+
     def test_display_value_color_a(self) -> None:
 
         f1 = ff.parse('s(10,3)|i(I,str)')
@@ -841,6 +812,7 @@ class TestUnit(TestCase):
         post = s2.display()
 
     #---------------------------------------------------------------------------
+
     def test_display_get_max_width_pad_width_a(self) -> None:
 
         row1 = [DisplayCell(FORMAT_EMPTY, 'foo'), DisplayCell(FORMAT_EMPTY, 'bar')]
@@ -854,6 +826,7 @@ class TestUnit(TestCase):
         self.assertEqual(post, (3, 3))
 
     #---------------------------------------------------------------------------
+
     def test_display_repr_a(self) -> None:
 
         row1 = [DisplayCell(FORMAT_EMPTY, 'foo'), DisplayCell(FORMAT_EMPTY, 'bar')]
@@ -952,8 +925,3 @@ class TestUnit(TestCase):
         s1 = Series.from_items((('f', chr(0x265C)), ('g', chr(0x265A))))
 
         f.assign.loc[8, :](s1, fill_value='')
-
-
-
-if __name__ == '__main__':
-    unittest.main()
