@@ -100,7 +100,7 @@ class IndexLevel:
     @classmethod
     def from_tree(cls,
             tree: TreeNodeT,
-            index_constructors: IndexConstructors = None,
+            index_constructors: tp.Optional[IndexConstructors] = None,
             depth_reference: tp.Optional[int] = None,
             ) -> 'IndexLevel':
         '''
@@ -637,14 +637,14 @@ class IndexLevel:
         while levels:
             level, depth, offset = levels.popleft()
 
-            depth_key = key[depth] # type: ignore
+            depth_key = key[depth]
             # NOTE: depth_key should not be Series or Index at this point; IndexHierarchy is responsible for unpacking / reindexing prior to this call
             next_offset = offset + level.offset
 
             if depth_key.__class__ is np.ndarray and depth_key.dtype == DTYPE_BOOL: #type: ignore
                 # NOTE: use length of level, not length of index, as need to observe all leafs covered at this node.
                 depth_key = depth_key[next_offset: next_offset + len(level)] #type: ignore
-                if len(depth_key) > len(level.index):
+                if len(depth_key) > len(level.index): #type: ignore
                     # given leaf-Boolean, determine what upper nodes to select
                     depth_key = level.values_at_depth(0)[depth_key]
                     if len(depth_key) > 1:
@@ -681,7 +681,7 @@ class IndexLevel:
         if iloc_count == 0:
             raise KeyError('no matching keys across all levels')
 
-        if iloc_count == 1 and not key.has_key_multiple(): # type: ignore
+        if iloc_count == 1 and not key.has_key_multiple():
             return ilocs[0] # drop to a single iloc selection
 
         # NOTE: might be able to combine contiguous ilocs into a single slice
@@ -689,7 +689,7 @@ class IndexLevel:
         length = self.__len__()
         for part in ilocs:
             if part.__class__ is slice:
-                iloc_flat.extend(range(*part.indices(length))) # type: ignore
+                iloc_flat.extend(range(*part.indices(length)))
             elif isinstance(part, INT_TYPES):
                 iloc_flat.append(part)
             else: # assume it is an iterable
@@ -1065,3 +1065,7 @@ class IndexLevelGO(IndexLevel):
         # defer calculation be setting _length to None for all edge levels
         for node in edge_nodes:
             node._length = None
+
+
+
+

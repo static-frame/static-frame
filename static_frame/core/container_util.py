@@ -783,7 +783,7 @@ def rehierarch_from_type_blocks(*,
         labels: 'TypeBlocks',
         depth_map: tp.Sequence[int],
         index_cls: tp.Type['IndexHierarchy'],
-        index_constructors: IndexConstructors = None,
+        index_constructors: tp.Optional[IndexConstructors] = None,
         name: tp.Optional[tp.Hashable] = None,
         ) -> tp.Tuple['IndexBase', np.ndarray]:
     '''
@@ -830,7 +830,7 @@ def rehierarch_from_type_blocks(*,
 def rehierarch_from_index_hierarchy(*,
         labels: 'IndexHierarchy',
         depth_map: tp.Sequence[int],
-        index_constructors: IndexConstructors = None,
+        index_constructors: tp.Optional[IndexConstructors] = None,
         name: tp.Optional[tp.Hashable] = None,
         ) -> tp.Tuple['IndexBase', np.ndarray]:
     '''
@@ -1106,7 +1106,7 @@ def _index_many_to_one(
     # if IndexHierarchy, collect index_types generators
     if index.ndim == 2:
         depth_first = index.depth
-        index_types_gen = [index.index_types.values.tolist()]
+        index_types_gen = [index._levels.index_types()] #type: ignore
         index_types_aligned = True
     else: # for 1D we ignore this
         index_types_aligned = False
@@ -1121,7 +1121,7 @@ def _index_many_to_one(
             index_auto_aligned = False
 
         if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
-            index_types_gen.append(index.index_types.values.tolist())
+            index_types_gen.append(index._levels.index_types()) #type: ignore
         else:
             index_types_aligned = False
 

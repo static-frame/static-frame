@@ -3576,10 +3576,13 @@ class Frame(ContainerOperand):
             index_constructor:
             columns_constructor:
         '''
-        index = (self._index.level_add(index, index_constructor=index_constructor)
+
+        index = (self._index.level_add(
+                index, index_constructor=index_constructor)
                 if index is not None else self._index
                 )
-        columns = (self._columns.level_add(columns, index_constructor=columns_constructor)
+        columns = (self._columns.level_add(
+                columns, index_constructor=columns_constructor)
                 if columns is not None else self._columns
                 )
 
@@ -5492,7 +5495,7 @@ class Frame(ContainerOperand):
             columns: GetItemKeyType,
             *,
             drop: bool = False,
-            index_constructors: IndexConstructors = None,
+            index_constructors: tp.Optional[IndexConstructors] = None,
             reorder_for_hierarchy: bool = False,
             ) -> 'Frame':
         '''
