@@ -616,7 +616,7 @@ class IndexLevel:
         '''
         from static_frame.core.series import Series
 
-        if isinstance(key, slice):
+        if key.__class__ is slice:
             # given a top-level definition of a slice (and if that slice results in a single value), we can get a value range
             return slice(*LocMap.map_slice_args(self.leaf_loc_to_iloc, key))
 
@@ -625,7 +625,7 @@ class IndexLevel:
                 return key # keep as Boolean
             return [self.leaf_loc_to_iloc(x) for x in key]
 
-        if not isinstance(key, HLoc): # assume a leaf loc tuple
+        if not key.__class__ is HLoc: # assume a leaf loc tuple
             if not isinstance(key, tuple):
                 raise KeyError(f'{key} cannot be used for loc selection from IndexHierarchy; try HLoc')
             return self.leaf_loc_to_iloc(key)
@@ -688,7 +688,7 @@ class IndexLevel:
         iloc_flat: tp.List[GetItemKeyType] = [] # combine into one flat iloc
         length = self.__len__()
         for part in ilocs:
-            if isinstance(part, slice):
+            if part.__class__ is slice:
                 iloc_flat.extend(range(*part.indices(length)))
             elif isinstance(part, INT_TYPES):
                 iloc_flat.append(part)
