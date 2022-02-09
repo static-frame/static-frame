@@ -2003,16 +2003,16 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels)
 
         ih2 = ih1 + '_'
-        self.assertEqual(ih2,
+        self.assertEqual(list(map(list, ih2)),
             [['I_', 'A_'], ['I_', 'B_'], ['II_', 'A_'], ['II_', 'B_']])
 
         ih3 = '_' + ih1
-        self.assertEqual(ih3,
+        self.assertEqual(list(map(list, ih3)),
             [['_I', '_A'], ['_I', '_B'], ['_II', '_A'], ['_II', '_B']])
 
 
         ih4 = ih1 * 2
-        self.assertEqual(ih4,
+        self.assertEqual(list(map(list, ih4)),
             [['II', 'AA'], ['II', 'BB'], ['IIII', 'AA'], ['IIII', 'BB']])
 
     def test_hierarchy_binary_operators_j(self) -> None:
