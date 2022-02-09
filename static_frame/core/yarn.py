@@ -507,7 +507,10 @@ class Yarn(ContainerBase, StoreClientMixin):
             return self._series[target_hierarchy[0]][target_hierarchy[1]] #type: ignore
 
         # get the outer-most index of the hierarchical index
-        target_bus_index = target_hierarchy._indices[0]
+        target_bus_index = target_hierarchy.values_at_depth(0)
+        label_indexes = sorted(np.unique(target_bus_index, return_index=True)[1])
+        target_bus_index = target_bus_index[label_indexes]
+        target_bus_index = target_hierarchy._index_constructors[0](target_bus_index)
 
         # create a Boolean array equal to the entire realized length
         valid = np.full(len(self._index), False)
