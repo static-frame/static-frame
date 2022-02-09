@@ -166,8 +166,7 @@ class TestUnit(TestCase):
         # BEHAVIOR CHANGE! This is supported now
         IndexHierarchy.from_labels(labels)
 
-        # TODO:
-        # IndexHierarchy.from_labels(labels, reorder_for_hierarchy=True)
+    # TODO: IndexHierarchy.from_labels(labels, reorder_for_hierarchy=True)
 
     def test_hierarchy_init_i(self) -> None:
         with self.assertRaises(RuntimeError):
@@ -271,10 +270,10 @@ class TestUnit(TestCase):
         self.assertEqual(post, 9)
 
         post = ih._loc_to_iloc(HLoc['II', 'A'])
-        self.assertEqual(post, slice(7, 10))
+        self.assertEqual(post.tolist(), [7, 8, 9])
 
         post = ih._loc_to_iloc(HLoc['I', 'C'])
-        self.assertEqual(post, slice(5, 7))
+        self.assertEqual(post.tolist(), [5, 6])
 
         post = ih._loc_to_iloc(HLoc['I', ['A', 'C']])
         self.assertEqual(post.tolist(), [0, 1, 5, 6])
@@ -374,7 +373,7 @@ class TestUnit(TestCase):
 
         # selection with Boolean and non-Bolean Series
         a1 = ih1._loc_to_iloc(Series((True, True), index=(labels[1], labels[4])))
-        self.assertEqual(a1, slice(1, 5, 3))
+        self.assertEqual(a1.tolist(), [1, 4])
 
         a2 = ih1._loc_to_iloc(Series((labels[5], labels[2], labels[4])))
         self.assertEqual(a2, [5, 2, 4])
@@ -398,8 +397,8 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(
-                ih1._loc_to_iloc(HLoc[slice(None), ['A', 'C'], [-1, 3]]),
-                slice(0, 6, 5)
+                ih1._loc_to_iloc(HLoc[slice(None), ['A', 'C'], [-1, 3]]).tolist(),
+                [0, 5],
                 )
 
     def test_hierarchy_loc_to_iloc_h(self) -> None:
@@ -445,7 +444,7 @@ class TestUnit(TestCase):
         self.assertEqual(post1, [6])
 
         post2 = ih1._loc_to_iloc(HLoc[['I', 'III'], 'B', 1])
-        self.assertEqual(post2, slice(1, 5, 3))
+        self.assertEqual(post2.tolist(), [1, 4])
 
     def test_hierarchy_loc_to_iloc_j(self) -> None:
 
@@ -461,10 +460,10 @@ class TestUnit(TestCase):
                 )
         ih1 = IndexHierarchy.from_labels(labels)
 
-        self.assertEqual(ih1._loc_to_iloc(HLoc[ILoc[-4:], :, 1]), slice(4, 8, 3))
+        self.assertEqual(ih1._loc_to_iloc(HLoc[ILoc[-4:], :, 1]).tolist(), [4, 7])
         self.assertEqual(ih1._loc_to_iloc(HLoc[:, :, 1]).tolist(), [0, 3, 4, 7])
-        self.assertEqual(ih1._loc_to_iloc(HLoc[:, :, ILoc[-2:]]), slice(6, 8))
-        self.assertEqual(ih1._loc_to_iloc(HLoc[:, ILoc[2:6], 1]), slice(3, 5))
+        self.assertEqual(ih1._loc_to_iloc(HLoc[:, :, ILoc[-2:]]).tolist(), [6, 7])
+        self.assertEqual(ih1._loc_to_iloc(HLoc[:, ILoc[2:6], 1]).tolist(), [3, 4])
 
     def test_hierarchy_loc_to_iloc_k(self) -> None:
 
@@ -481,7 +480,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels)
 
         post1 = ih1._loc_to_iloc(HLoc['II', ILoc[-5:], [2, 3]])
-        self.assertEqual(post1, slice(4, 8))
+        self.assertEqual(post1.tolist(), list(range(4, 8)))
 
         post2 = ih1._loc_to_iloc(HLoc[:, :, ILoc[-4]])
         self.assertEqual(post2, 4)
@@ -497,26 +496,26 @@ class TestUnit(TestCase):
         ih1_alt = IndexHierarchy.from_tree(tree_alt)
 
         post1 = ih1._loc_to_iloc(HLoc['b'])
-        self.assertEqual(post1, ih1_alt._loc_to_iloc(HLoc['b']))
-        self.assertEqual(post1, slice(20, 40))
+        self.assertEqual(post1.tolist(), ih1_alt._loc_to_iloc(HLoc['b']).tolist())
+        self.assertEqual(post1.tolist(), list(range(20, 40)))
 
         post2 = ih1._loc_to_iloc(HLoc['b', 10:12])
-        self.assertEqual(post2, ih1_alt._loc_to_iloc(HLoc['b', 10:12]))
-        self.assertEqual(post2, slice(30, 33))
+        self.assertEqual(post2.tolist(), ih1_alt._loc_to_iloc(HLoc['b', 10:12]).tolist())
+        self.assertEqual(post2.tolist(), [30, 31, 32])
 
         post3 = ih1._loc_to_iloc(HLoc['b', [0, 10, 19]])
         self.assertEqual(post3.tolist(), ih1_alt._loc_to_iloc(HLoc['b', [0, 10, 19]]).tolist())
         self.assertEqual(post3.tolist(), [20, 30, 39])
 
         post4 = ih1._loc_to_iloc(HLoc['b', 11])
-        self.assertEqual(post4, ih1_alt._loc_to_iloc(HLoc['b', 11]))
-        self.assertEqual(post4, 31)
+        self.assertEqual(post4.tolist(), ih1_alt._loc_to_iloc(HLoc['b', 11]).tolist())
+        self.assertEqual(post4, [31])
 
         post5 = ih1._loc_to_iloc(
                 HLoc['b', ~(ih1.values_at_depth(1) % 3).astype(bool)])
-        self.assertEqual(post5, ih1_alt._loc_to_iloc(
-                HLoc['b', ~(ih1.values_at_depth(1) % 3).astype(bool)]))
-        self.assertEqual(post5, slice(20, 39, 3))
+        self.assertEqual(post5.tolist(), ih1_alt._loc_to_iloc(
+                HLoc['b', ~(ih1.values_at_depth(1) % 3).astype(bool)]).tolist())
+        self.assertEqual(post5.tolist(), [20, 23, 26, 29, 32, 35, 38])
 
         post6 = ih1._loc_to_iloc(HLoc['b', np.array([0, 10, 19])])
         self.assertEqual(post6.tolist(), ih1_alt._loc_to_iloc(HLoc['b', np.array([0, 10, 19])]).tolist())
@@ -669,8 +668,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih.index_types.values.tolist(), [IndexDate, IndexDate])
         self.assertEqual(ih.values.tolist(),
                 [[datetime.date(2021, 1, 1), datetime.date(2018, 1, 1)], [datetime.date(2021, 1, 1), datetime.date(2018, 1, 4)], [datetime.date(2021, 1, 2), datetime.date(2018, 1, 1)], [datetime.date(2021, 1, 2), datetime.date(2018, 1, 4)]])
-        # import ipdb; ipdb.set_trace()
-
 
     #--------------------------------------------------------------------------
 
@@ -2578,13 +2575,6 @@ class TestUnit(TestCase):
                 self.assertFalse(index_new.values.flags.writeable)
                 self.assertEqual(index_new.loc[v], index.loc[v])
 
-    # def test_index_hierarchy_get_a(self) -> None:
-
-    #     ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
-    #     self.assertEqual(ih1.get((20, 3)), 2)
-    #     self.assertEqual(ih1.get((20, 7)), 3)
-    #     self.assertEqual(ih1.get((20, 200)), None)
-
     #---------------------------------------------------------------------------
     def test_index_hierarchy_sort_a(self) -> None:
 
@@ -3184,7 +3174,3 @@ class TestUnit(TestCase):
         )
 
         result = IndexHierarchy.from_tree(tree).to_tree()
-
-
-if __name__ == '__main__':
-    unittest.main()
