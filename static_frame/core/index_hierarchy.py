@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import functools
 import itertools
 import typing as tp
@@ -155,7 +153,7 @@ def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
     return TypeBlocks.from_blocks(blocks).values
 
 
-def _mask_to_slice_or_ilocs(mask: np.ndarray) -> slice | np.ndarray | int:
+def _mask_to_slice_or_ilocs(mask: np.ndarray) -> tp.Union[slice, np.ndarray, int]:
     assert mask.dtype == DTYPE_BOOL
 
     valid_ilocs = PositionsAllocator.get(len(mask))[mask]
@@ -217,7 +215,7 @@ class IndexHierarchy(IndexBase):
         return index_constructors
 
     @classmethod
-    def _build_name_from_indices(cls, indices: tp.List[Index]) -> tp.Tuple[tp.Hashable] | None:
+    def _build_name_from_indices(cls, indices: tp.List[Index]) -> tp.Optional[tp.Tuple[tp.Hashable]]:
         # build name from index names, assuming they are all specified
         name = tuple(index.name for index in indices)
         if any(n is None for n in name):
@@ -1268,7 +1266,7 @@ class IndexHierarchy(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def _process_key_at_depth(self, depth: int, key) -> slice | np.ndarray:
+    def _process_key_at_depth(self, depth: int, key) -> tp.Union[slice, np.ndarray]:
         if depth >= self.depth:
             raise RuntimeError(f'Invalid depth level for key={key} depth={depth}')
 
