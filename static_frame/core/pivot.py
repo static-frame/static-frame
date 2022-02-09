@@ -149,21 +149,11 @@ def pivot_records_items_to_blocks(
     # NOTE: this delivers results by label, row for use in a Frame.from_records_items constructor
 
     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
-
-    if func_map is not None:
-        raise NotImplementedError()
-        # repeat dtype per func_map field
-        arrays = [np.empty(len(index_outer), dtype=dtype) for _, dtype in product(data_fields_iloc, dtypes)]
-    else:
-        arrays = [np.empty(len(index_outer), dtype=dtype) for dtype in dtypes]
-
-    # decompose into the one block per data fields iloc
     if None in dtypes:
         # possible store a list of None and update at end?
         raise NotImplementedError()
-
+    arrays = [np.empty(len(index_outer), dtype=dtype) for dtype in dtypes]
     # try to use the dtype specifieid; fill values at end of necessary
-
     iloc_found = set()
     # each group forms a row, each label a value in the index
     for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
