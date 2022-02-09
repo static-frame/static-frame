@@ -1,4 +1,3 @@
-import unittest
 import datetime
 
 import numpy as np
@@ -60,7 +59,6 @@ class TestUnit(TestCase):
         self.assertFalse(is_static(IndexHierarchyGO.from_tree))
         self.assertFalse(is_static(IndexHierarchyGO.from_index_items))
 
-
     def test_index_from_optional_constructor_a(self) -> None:
         idx1 = index_from_optional_constructor([1, 3, 4],
                 default_constructor=Index)
@@ -82,7 +80,6 @@ class TestUnit(TestCase):
                 default_constructor=Index)
         self.assertEqual(idx4.__class__, IndexSecond)
 
-
     def test_index_from_optional_constructor_b(self) -> None:
         idx0 = IndexHierarchy.from_labels(
                 [('a', 0), ('a', 1), ('b', 0), ('b', 1)])
@@ -92,7 +89,6 @@ class TestUnit(TestCase):
 
         # Since the default constructo is static, we should be able to reuse the index
         self.assertEqual(id(idx0), id(idx1))
-
 
     def test_index_from_optional_constructor_c(self) -> None:
         idx0 = IndexHierarchyGO.from_labels(
@@ -105,7 +101,6 @@ class TestUnit(TestCase):
         self.assertNotEqual(id(idx0), id(idx1))
         self.assertTrue(idx1.STATIC)
 
-
     def test_index_from_optional_constructor_d(self) -> None:
         idx0 = IndexHierarchy.from_labels(
                 [('a', 0), ('a', 1), ('b', 0), ('b', 1)])
@@ -116,8 +111,6 @@ class TestUnit(TestCase):
         # Since the default constructo is static, we should be able to reuse the index
         self.assertNotEqual(id(idx0), id(idx1))
         self.assertFalse(idx1.STATIC)
-
-
 
     def test_matmul_a(self) -> None:
         # lhs: frame, rhs: array
@@ -145,7 +138,6 @@ class TestUnit(TestCase):
                 matmul(f1, np.array([3, 4])).to_pairs(),
                 (('x', 15), ('y', 22), ('z', 29))
                 )
-
 
     def test_matmul_b(self) -> None:
         # lhs: frame, rhs: array
@@ -175,7 +167,6 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             matmul(f1, np.arange(20).reshape(5, 4))
 
-
     def test_matmul_d(self) -> None:
         # lhs: series, rhs: frame
 
@@ -203,7 +194,6 @@ class TestUnit(TestCase):
         self.assertEqual(matmul(s1, s2), 98)
         self.assertEqual(matmul(s1, s2.values), 98)
 
-
     def test_matmul_f(self) -> None:
         # lhs: array 1D, rhs: array 2D, Frame
 
@@ -217,7 +207,6 @@ class TestUnit(TestCase):
                 (('a', 26), ('b', 50))
                 )
 
-
     def test_matmul_g(self) -> None:
         # lhs: array 1D, rhs: array 1D, Series
 
@@ -227,7 +216,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             self.assertEqual(matmul(s1, [10, 11]), 98)
-
 
     def test_matmul_h(self) -> None:
         # lhs: array 2D, rhs: array 2D, Frame
@@ -247,7 +235,6 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             matmul(f1, np.arange(25).reshape(5, 5))
 
-
     def test_matmul_i(self) -> None:
         import itertools as it
 
@@ -264,7 +251,6 @@ class TestUnit(TestCase):
                 elif isinstance(post, np.ndarray):
                     self.assertTrue(post.tolist(), (pair[0].values @ pair[1].values).tolist())
 
-
     def test_matmul_j(self) -> None:
 
         f1 = Frame.from_dict(dict(a=(1, 2, 3), b=(5, 6, 7)),
@@ -275,8 +261,8 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = matmul(a1, f1)
 
-
     #---------------------------------------------------------------------------
+
     def test_key_to_ascending_key_a(self) -> None:
         self.assertEqual(key_to_ascending_key([9, 5, 1], 3), [1, 5, 9])
         self.assertEqual(key_to_ascending_key(np.array([9, 5, 1]), 3).tolist(), [1, 5, 9]) # type: ignore
@@ -293,7 +279,6 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict(dict(b=(1, 2), a=(5, 6)), index=tuple('yz'))
         f2 = key_to_ascending_key(f1, f1.shape[1])
         self.assertEqual(f2.columns.values.tolist(), ['a', 'b']) # type: ignore
-
 
     def test_key_to_ascending_key_b(self) -> None:
 
@@ -324,8 +309,6 @@ class TestUnit(TestCase):
             a4 = pandas_to_numpy(s2[:2], own_data=False)
             self.assertEqual(a4.dtype, np.dtype('bool'))
 
-
-
     def test_bloc_key_normalize_a(self) -> None:
         f1 = Frame.from_dict(dict(b=(1, 2), a=(5, 6)), index=tuple('yz'))
 
@@ -337,7 +320,6 @@ class TestUnit(TestCase):
 
         post2 = bloc_key_normalize(f1 < 5, f1)
         self.assertEqual(post2.tolist(), [[True, False], [True, False]])
-
 
     def test_index_many_concat_a1(self) -> None:
 
@@ -430,7 +412,6 @@ class TestUnit(TestCase):
                 [[1, date(2019, 1, 1)], [2, date(2019, 1, 2)], [2, date(2019, 1, 3)], [3, date(2019, 1, 4)]]
                 )
 
-
     def test_index_many_concat_e(self) -> None:
 
         idx1 = IndexDateGO(('2020-01-01', '2020-01-02'))
@@ -444,6 +425,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+
     def test_index_many_set_a(self) -> None:
 
         idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
@@ -500,7 +482,6 @@ class TestUnit(TestCase):
         post2 = index_many_set((idx1,  idx2), IndexGO, union=False)
         self.assertEqual(post2.__class__, IndexDateGO)
 
-
     def test_index_many_set_c(self) -> None:
         idx1 = IndexDate(('2020-02-01', '2020-02-02'))
 
@@ -511,7 +492,6 @@ class TestUnit(TestCase):
         # empty iterable returns an empty index
         post2 = index_many_set((), Index, union=True)
         self.assertEqual(len(post2), 0) #type: ignore
-
 
     def test_index_many_set_d(self) -> None:
         idx1 = Index(range(3), loc_is_iloc=True)
@@ -544,9 +524,9 @@ class TestUnit(TestCase):
     def test_index_many_set_h(self) -> None:
         post1 = index_many_set((), Index, union=True, explicit_constructor=IndexDate)
         self.assertIs(post1.__class__, IndexDate)
-        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
+
     def test_get_col_dtype_factory_a(self) -> None:
 
         func1 = get_col_dtype_factory((np.dtype(float), np.dtype(object)), None)
@@ -567,8 +547,8 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = get_col_dtype_factory(dict(bar=np.dtype(bool)), None)
 
-
     #---------------------------------------------------------------------------
+
     def test_apex_to_name_a(self) -> None:
         self.assertEqual(
                 apex_to_name([['foo']],
@@ -665,8 +645,8 @@ class TestUnit(TestCase):
         with self.assertRaises(AxisInvalid):
             _ = apex_to_name([['foo']], depth_level=-1, axis=3, axis_depth=1)
 
-
     #---------------------------------------------------------------------------
+
     def test_apply_binary_operator_blocks_by_column_a(self) -> None:
         blocks = (np.arange(3), np.arange(6).reshape(3, 2), np.arange(3) * 10)
         other = np.array([1, 0, 1])
@@ -678,8 +658,8 @@ class TestUnit(TestCase):
         self.assertEqual(np.stack(post, axis=1).tolist(),
                 [[0, 0, 1, 0], [0, 0, 0, 0], [2, 4, 5, 20]])
 
-
     #---------------------------------------------------------------------------
+
     def test_container_to_exporter_attr(self) -> None:
         self.assertEqual(container_to_exporter_attr(Frame), 'to_frame')
         self.assertEqual(container_to_exporter_attr(FrameHE), 'to_frame_he')
@@ -688,6 +668,7 @@ class TestUnit(TestCase):
             container_to_exporter_attr(Series)
 
     #---------------------------------------------------------------------------
+
     def test_block_match_a(self) -> None:
 
         # opperate on the back of the list
@@ -715,6 +696,3 @@ class TestUnit(TestCase):
                 [(2, 3), (2,), (2, 1)])
         self.assertEqual([a.shape for a in stack],
                 [(2, 1)])
-
-if __name__ == '__main__':
-    unittest.main()

@@ -633,7 +633,7 @@ class IndexHierarchy(IndexBase):
             name: name of the IndexHierarchy
         '''
         # TODO: Really ugly hack. Better to create specialized constructor
-        if isinstance(indices, type(self)):
+        if isinstance(indices, IndexHierarchy):
             if indexers:
                 raise ErrorInitIndex('indexers must not be provided when copying an IndexHierarchy')
             if _blocks is not None:
@@ -1391,7 +1391,10 @@ class IndexHierarchy(IndexBase):
             mask = mask_2d.all(axis=1)
             del mask_2d
 
-        return PositionsAllocator.get(len(mask))[mask]
+        result = PositionsAllocator.get(len(mask))[mask]
+        if len(result) == 1:
+            return result[0]
+        return result
 
     def loc_to_iloc(self,
             key: tp.Union[GetItemKeyType, HLoc]
