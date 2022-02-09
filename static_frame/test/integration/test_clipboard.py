@@ -1,5 +1,3 @@
-
-
 from static_frame import Frame
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_linux_no_display
@@ -22,6 +20,3 @@ class TestUnit(TestCase):
         f1.to_clipboard()
         f2 = Frame.from_clipboard(index_depth=1)
         self.assertTrue(f2.equals(f1, compare_dtype=True))
-
-
-

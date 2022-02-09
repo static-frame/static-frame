@@ -1,5 +1,3 @@
-
-import unittest
 import typing as tp
 
 import numpy as np
@@ -37,7 +35,6 @@ class FieldStatConfig:
             ('category_a', 'CATEGORY_A_FIELDS'),
             ('category_b', 'CATEGORY_B_FIELDS'),
             )
-
 
 
 def process(
@@ -92,9 +89,7 @@ def process(
     return sf.Frame.from_concat(field_categories()) # type: ignore
 
 
-
 class TestUnit(TestCase):
-
 
     def test_process(self) -> None:
 
@@ -135,6 +130,3 @@ class TestUnit(TestCase):
 
         self.assertAlmostEqualValues(post.sum().values.tolist(),
             [58.466999999999985, 61.121, 48.06699999999999, 71.52100000000004, 119.587, 59.794000000000004, 59.794000000000004])
-
-if __name__ == '__main__':
-    unittest.main()

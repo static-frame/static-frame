@@ -76,6 +76,7 @@ from static_frame.core.util import (
     array_sample,
     intersect2d,
     isin,
+    isin_array,
     isna_array,
     iterable_to_array_1d,
     iterable_to_array_2d,
@@ -1294,12 +1295,22 @@ class IndexHierarchy(IndexBase):
             else:
                 stop = None
 
-            return np.isin(indexer_at_depth, np.arange(start, stop + 1, key_at_depth.step))
+            return isin_array(
+                    array=indexer_at_depth,
+                    array_is_unique=False,
+                    other=np.arange(start, stop + 1, key_at_depth.step),
+                    other_is_unique=True
+                    )
 
         key_iloc = index_at_depth.loc_to_iloc(key_at_depth)
 
         if hasattr(key_iloc, "__len__"):
-            return np.isin(indexer_at_depth, key_iloc)
+            return isin_array(
+                    array=indexer_at_depth,
+                    array_is_unique=False,
+                    other=key_iloc,
+                    other_is_unique=True
+                    )
 
         return indexer_at_depth == key_iloc
 
