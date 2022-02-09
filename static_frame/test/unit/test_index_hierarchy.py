@@ -47,11 +47,10 @@ def run_with_static_and_grow_only(func: tp.Callable[[SelfT, tp.Type[IndexHierarc
 class TestUnit(TestCase):
 
     def _assert_to_tree_consistency(self, ih1: IndexHierarchy) -> None:
-        pass
-        # # Ensure all IndexHierarchy's created using `from_tree` return the same tree using `to_tree`
-        # tree = ih1.to_tree()
-        # ih2 = IndexHierarchy.from_tree(tree)
-        # self.assertTrue(ih1.equals(ih2))
+        # Ensure all IndexHierarchy's created using `from_tree` return the same tree using `to_tree`
+        tree = ih1.to_tree()
+        ih2 = IndexHierarchy.from_tree(tree)
+        self.assertTrue(ih1.equals(ih2))
 
     #--------------------------------------------------------------------------
 
@@ -3176,6 +3175,15 @@ class TestUnit(TestCase):
         ih3 = ih1.union(ih2)
         self.assertEqual(ih3.index_types.to_pairs(),
             ((0, Index), (1, IndexDate)))
+
+    def test_to_tree(self) -> None:
+        tree = dict(
+            f1=dict(a_I=Index((1,2,3)), a_II=Index((1,2,3))),
+            f2=dict(b_I=Index((1,2,3)), b_II=Index((1,2,3))),
+            f3=dict(c_I=Index((1,2,3)), c_II=Index((1,2,3)))
+        )
+
+        result = IndexHierarchy.from_tree(tree).to_tree()
 
 
 if __name__ == '__main__':

@@ -10,7 +10,6 @@ import numpy as np
 from arraykit import (
     name_filter,
 )
-from static_frame.core.array_go import ArrayGO
 from static_frame.core.container_util import (
     key_from_container_key,
     matmul,
@@ -37,11 +36,7 @@ from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
-from static_frame.core.index_level import (
-    IndexLevel,
-    IndexLevelGO,
-    TreeNodeT,
-)
+from static_frame.core.index_level import TreeNodeT
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import (
     IterNodeApplyType,
@@ -434,36 +429,48 @@ class IndexHierarchy(IndexBase):
             items: iterable of pairs of label, :obj:`Index`.
             index_constructor: Optionally provide index constructor for outermost index.
         '''
+        items = list(items)
         [depth1_constructor, depth2_constructor] = cls._build_index_constructors(index_constructor, depth=2)
 
-        depth_1 = []
-        depth_2 = []
+        depth_1_index = []
+        depth_2_index = None
+        indexers_1 = []
         repeats = []
 
         for label, index in items:
+            index = depth2_constructor(index)
             index = mutable_immutable_index_filter(cls.STATIC, index) #type: ignore
-            depth_1.append(label)
-            depth_2.append(index)
+
+            depth_1_index.append(label)
+
+            if depth_2_index is None:
+                # We will grow this in-place
+                depth_2_index = mutable_immutable_index_filter(False, index)
+                new_indexer = PositionsAllocator.get(len(depth_2_index))
+            else:
+                new_labels = index.difference(depth_2_index) # Retains order!
+
+                if new_labels.size:
+                    depth_2_index.extend(new_labels)
+
+                new_indexer = index.iter_label().apply(lambda k: depth_2_index._loc_to_iloc(k))
+
+            indexers_1.append(new_indexer)
             repeats.append(len(index))
-
-        # name stomp to avoid holding onto duplicates
-        depth_1 = depth1_constructor(depth_1)
-        depth_2 = depth2_constructor.from_labels(itertools.chain(*depth_2))
-
-        indexers = []
 
         def _repeat(i_repeat_tuple: tp.Tuple[int, int]) -> np.ndarray:
             i, repeat = i_repeat_tuple
             return np.tile(i, reps=repeat)
 
-        indexer_0 = np.hstack(tuple(map(_repeat, enumerate(repeats))))
-        indexer_0.flags.writeable = False
+        indexers = []
+        indexers.append(np.hstack(tuple(map(_repeat, enumerate(repeats)))))
+        indexers.append(np.hstack(indexers_1))
 
-        indexers.append(indexer_0)
-        indexers.append(PositionsAllocator.get(len(depth_2)))
+        indexers[0].flags.writeable = False
+        indexers[1].flags.writeable = False
 
         return cls(
-            indices=[depth_1, depth_2],
+            indices=[depth1_constructor(depth_1_index), depth_2_index],
             indexers=indexers,
             name=name,
         )
@@ -1305,6 +1312,7 @@ class IndexHierarchy(IndexBase):
             if not key.depth == self.depth:
                 raise KeyError(f"Key must have the same depth as the index. {key}")
 
+            # TODO: Explore optimizations here
             return [self._loc_to_iloc(label) for label in key.iter_label()]
 
         if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
@@ -1347,14 +1355,14 @@ class IndexHierarchy(IndexBase):
             # logic that eventually calls _loc_to_iloc on all the indices of that series.
             key = key_from_container_key(self, key)
             if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
-                return _mask_to_slice_or_ilocs(key)
+                return PositionsAllocator.get(len(key))[key]
 
             key = tuple(key)
 
         if any(isinstance(k, tuple) for k in key):
             return [self._loc_to_iloc(k) for k in key]
 
-        meaningful_selections = {i: not (isinstance(k, slice) and k == NULL_SLICE) for i, k in enumerate(key)}
+        meaningful_selections = {depth: not (isinstance(k, slice) and k == NULL_SLICE) for depth, k in enumerate(key)}
 
         # Return a slice wherever possible
         if sum(meaningful_selections.values()) == 1:
@@ -1383,7 +1391,7 @@ class IndexHierarchy(IndexBase):
             mask = mask_2d.all(axis=1)
             del mask_2d
 
-        return _mask_to_slice_or_ilocs(mask)
+        return PositionsAllocator.get(len(mask))[mask]
 
     def loc_to_iloc(self,
             key: tp.Union[GetItemKeyType, HLoc]
@@ -1836,11 +1844,11 @@ class IndexHierarchy(IndexBase):
 
         tree: TreeNodeT = {}
 
-        index = self._indices[depth]
-        indexer = self._indexers[depth]
+        index_at_depth = self._indices[depth]
+        indexer_at_depth = self._indexers[depth]
 
-        for i in range(len(index)):
-            tree[index[i]] = self._build_tree_at_depth_from_mask(depth + 1, mask & (indexer == i))
+        for i in np.unique(indexer_at_depth[mask]):
+            tree[index_at_depth[i]] = self._build_tree_at_depth_from_mask(depth + 1, mask & (indexer_at_depth == i))
 
         return tree
 
@@ -1938,7 +1946,6 @@ class IndexHierarchyGO(IndexHierarchy):
     STATIC = False
 
     _IMMUTABLE_CONSTRUCTOR = IndexHierarchy
-    _LEVEL_CONSTRUCTOR = IndexLevelGO
     _INDEX_CONSTRUCTOR = IndexGO
 
     __slots__ = (

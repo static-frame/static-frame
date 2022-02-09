@@ -2082,6 +2082,10 @@ def _ufunc_set_1d(
 
     if is_union:
         post = func(array, other)
+
+        # Preserve order when union is the same as array!
+        # if len(post) == len(array) == len(other):
+        #     post = array.copy()
     else:
         post = func(array, other, assume_unique=assume_unique) #type: ignore
 
