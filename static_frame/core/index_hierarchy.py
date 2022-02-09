@@ -1322,7 +1322,7 @@ class IndexHierarchy(IndexBase):
 
         When possible, prefer slices.
         '''
-        if isinstance(key, ILoc):
+        if key.__class__ is ILoc:
             return key.key
 
         if isinstance(key, IndexHierarchy):
@@ -1333,7 +1333,7 @@ class IndexHierarchy(IndexBase):
             # TODO: Explore optimizations here
             return [self._loc_to_iloc(label) for label in key.iter_label()]
 
-        if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
+        if (key.__class__ is np.ndarray) and key.dtype == DTYPE_BOOL:
             # TODO: Can I just return key?
             return self.positions[key]
 
@@ -1363,7 +1363,7 @@ class IndexHierarchy(IndexBase):
         if isinstance(key, np.ndarray) and key.dtype != DTYPE_BOOL and key.ndim == 2:
             return [self._loc_to_iloc(k) for k in key]
 
-        if isinstance(key, HLoc):
+        if key.__class__ is HLoc:
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
             key = tuple(HLoc(tuple(
                     key_from_container_key(self, k, expand_iloc=True)
