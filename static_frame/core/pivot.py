@@ -21,6 +21,7 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import dtype_from_element
+from static_frame.core.util import NameType
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.type_blocks import TypeBlocks
@@ -128,7 +129,81 @@ def pivot_records_items(
                     pos += 1
         yield label, record
 
-from static_frame.core.util import NameType
+def pivot_records_items_to_blocks(
+        blocks: TypeBlocks,
+        group_fields_iloc: tp.Iterable[tp.Hashable],
+        group_depth: int,
+        data_fields_iloc: tp.Iterable[tp.Hashable],
+        func_single: tp.Optional[UFunc],
+        func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]],
+        func_no: bool,
+        fill_value: tp.Any,
+        fill_value_dtype: np.dtype,
+        index_outer: 'IndexBase',
+        dtypes: tp.Tuple[tp.Optional[np.dtype]],
+        kind: str,
+        ) -> tp.List[np.ndarray]:
+    '''
+    Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
+    '''
+    # NOTE: this delivers results by label, row for use in a Frame.from_records_items constructor
+
+    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+
+    if func_map is not None:
+        raise NotImplementedError()
+        # repeat dtype per func_map field
+        arrays = [np.empty(len(index_outer), dtype=dtype) for _, dtype in product(data_fields_iloc, dtypes)]
+    else:
+        arrays = [np.empty(len(index_outer), dtype=dtype) for dtype in dtypes]
+
+    # decompose into the one block per data fields iloc
+    if None in dtypes:
+        # possible store a list of None and update at end?
+        raise NotImplementedError()
+
+    # try to use the dtype specifieid; fill values at end of necessary
+
+    iloc_found = set()
+    # each group forms a row, each label a value in the index
+    for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
+        iloc = index_outer._loc_to_iloc(label)
+        iloc_found.add(iloc)
+        if func_no:
+            if len(part) != 1:
+                raise RuntimeError('pivot requires aggregation of values; provide a `func` argument.')
+            for arrays_key, column_key in enumerate(data_fields_iloc):
+                # this is equivalent to extracting a row, but doing so would force a type consolidation
+                arrays[arrays_key][iloc] = part._extract(0, column_key)
+        elif func_single:
+            for arrays_key, column_key in enumerate(data_fields_iloc):
+                arrays[arrays_key][iloc] = part._extract_array_column(column_key)
+        else:
+            arrays_key = 0
+            for column_key in data_fields_iloc:
+                values = part._extract_array_column(column_key)
+                for _, func in func_map:
+                    arrays[arrays_key][iloc] = func(values)
+                    arrays_key += 1
+
+    if len(iloc_found) != len(index_outer):
+        # we did not fill all arrrays and have values that need to be filled
+        # order does not matter
+        fill_targets = list(set(range(len(index_outer))) - iloc_found)
+        # mutate in place then make immutable
+        for arrays_key in range(len(arrays)):
+            array = arrays[arrays_key]
+            dtype_resolved = resolve_dtype(array.dtype, fill_value_dtype)
+            if array.dtype != dtype_resolved:
+                array = array.astype(dtype_resolved)
+                array[fill_targets] = fill_value
+                arrays[arrays_key] = array # restore new array
+            array.flags.writeable = False
+    else:
+        for array in arrays:
+            array.flags.writeable = False
+    return arrays
+
 
 
 def pivot_items_to_block(
@@ -392,7 +467,7 @@ def pivot_core(
     fill_value_dtype = dtype_from_element(fill_value)
 
     #---------------------------------------------------------------------------
-    # first major branch: if we are only grouping be index fields
+    # First major branch: if we are only grouping be index fields. This can be done in a single group-by operation on those fields. The final index is not known until the group-by is performed.
 
     if not columns_fields: # group by is only index_fields
         columns = data_fields if (func_no or func_single) else tuple(
@@ -406,7 +481,8 @@ def pivot_core(
         else:
             index_constructor = partial(Index, name=name_index)
 
-        if len(columns) == 1: # length of columns is equal to length of datafields, func_map not needed
+        if len(columns) == 1:
+            # length of columns is equal to length of datafields, func_map not needed
             f = pivot_items_to_frame(blocks=frame._blocks,
                     group_fields_iloc=index_fields_iloc,
                     group_depth=index_depth,
@@ -444,7 +520,7 @@ def pivot_core(
         return f.relabel(columns=columns_final) #type: ignore
 
     #---------------------------------------------------------------------------
-    # second major branch: we are only grouping by index and columns fields
+    # Second major branch: we are grouping by index and columns fields. This is done with an outer and inner gruop by. The index is calculated ahead of time.
 
     # avoid doing a multi-column-style selection if not needed
     if len(columns_fields) == 1:
@@ -495,9 +571,9 @@ def pivot_core(
 
         sub_frame: Frame
 
-        # if sub_columns length is 1, that means that we only need to extract one column out of the sub Frame
+        # if sub_columns length is 1, that means that we only need to extract one column out of the sub blocks
         if len(sub_columns) == 1:
-            sub_block = pivot_items_to_block(blocks=sub,
+            sub_blocks.append(pivot_items_to_block(blocks=sub,
                             group_fields_iloc=index_fields_iloc,
                             group_depth=index_depth,
                             data_field_iloc=data_fields_iloc[0],
@@ -507,11 +583,9 @@ def pivot_core(
                             fill_value=fill_value,
                             fill_value_dtype=fill_value_dtype,
                             kind=kind,
-                            )
-            sub_blocks.append(sub_block)
+                            ))
         else:
-            sub_frame = Frame.from_records_items(
-                    pivot_records_items(
+            sub_blocks.extend(pivot_records_items_to_blocks(
                             blocks=sub,
                             group_fields_iloc=index_fields_iloc,
                             group_depth=index_depth,
@@ -519,15 +593,32 @@ def pivot_core(
                             func_single=func_single,
                             func_map=func_map,
                             func_no=func_no,
+                            fill_value=fill_value,
+                            fill_value_dtype=fill_value_dtype,
+                            index_outer=index_outer,
+                            dtypes=dtypes_per_data_fields,
                             kind=kind,
-                            ),
-                    dtypes=dtypes_per_data_fields,
-                    )
-            sub_frame = sub_frame.reindex(index_outer,
-                    own_index=True,
-                    fill_value=fill_value,
-                    )
-            sub_blocks.extend(sub_frame._blocks._blocks)
+                            ))
+
+            # import ipdb; ipdb.set_trace()
+            # sub_frame = Frame.from_records_items(
+            #         pivot_records_items(
+            #                 blocks=sub,
+            #                 group_fields_iloc=index_fields_iloc,
+            #                 group_depth=index_depth,
+            #                 data_fields_iloc=data_fields_iloc,
+            #                 func_single=func_single,
+            #                 func_map=func_map,
+            #                 func_no=func_no,
+            #                 kind=kind,
+            #                 ),
+            #         dtypes=dtypes_per_data_fields,
+            #         )
+            # sub_frame = sub_frame.reindex(index_outer,
+            #         own_index=True,
+            #         fill_value=fill_value,
+            #         )
+            # sub_blocks.extend(sub_frame._blocks._blocks)
 
         # else:
         #     # we have unique values per index item, but may not have a complete index
