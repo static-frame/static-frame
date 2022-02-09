@@ -166,7 +166,7 @@ def _mask_to_slice_or_ilocs(mask: np.ndarray) -> slice | np.ndarray | int:
     if len(valid_ilocs) == len(mask):
         return NULL_SLICE
 
-    steps = np.unique(valid_ilocs[1:] - valid_ilocs[:-1])
+    steps = ufunc_unique(valid_ilocs[1:] - valid_ilocs[:-1])
 
     if len(steps) == 1:
         [step] = steps
@@ -614,7 +614,7 @@ class IndexHierarchy(IndexBase):
         def gen_blocks() -> tp.Iterator[np.ndarray]:
             for i, index in enumerate(self._indices):
                 indexer = self._indexers[i]
-                yield np.take(index.values, indexer)
+                yield index.values[indexer]
 
         return TypeBlocks.from_blocks(gen_blocks())
 
@@ -1087,7 +1087,7 @@ class IndexHierarchy(IndexBase):
 
         def _extractor(arr: np.ndarray, pos: int) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
             unique, widths = ufunc_unique(arr, return_counts=True)
-            labels = np.take(self._indices[pos].values, unique)
+            labels = self._indices[pos].values[unique]
             yield from zip(labels, widths)
 
         # i.e. depth_level is an int
@@ -1305,12 +1305,14 @@ class IndexHierarchy(IndexBase):
         key_iloc = index_at_depth.loc_to_iloc(key_at_depth)
 
         if hasattr(key_iloc, "__len__"):
-            return isin_array(
-                    array=indexer_at_depth,
-                    array_is_unique=False,
-                    other=key_iloc,
-                    other_is_unique=True
-                    )
+            if isinstance(key, np.ndarray):
+                return isin_array(
+                        array=indexer_at_depth,
+                        array_is_unique=False,
+                        other=key_iloc,
+                        other_is_unique=True
+                        )
+            return isin(indexer_at_depth, key_iloc)
 
         return indexer_at_depth == key_iloc
 
@@ -1865,7 +1867,7 @@ class IndexHierarchy(IndexBase):
     def _build_tree_at_depth_from_mask(self, depth: int, mask: np.ndarray) -> TreeNodeT:
 
         if depth == self.depth - 1:
-            values = np.take(self._indices[depth], self._indexers[depth][mask])
+            values = self._indices[depth][self._indexers[depth][mask]]
             return self._indices[depth].__class__(values)
 
         tree: TreeNodeT = {}
@@ -1873,7 +1875,7 @@ class IndexHierarchy(IndexBase):
         index_at_depth = self._indices[depth]
         indexer_at_depth = self._indexers[depth]
 
-        for i in np.unique(indexer_at_depth[mask]):
+        for i in ufunc_unique(indexer_at_depth[mask]):
             tree[index_at_depth[i]] = self._build_tree_at_depth_from_mask(depth + 1, mask & (indexer_at_depth == i))
 
         return tree
@@ -2043,7 +2045,7 @@ class IndexHierarchyGO(IndexHierarchy):
                     # Same labels, but different order. We have to remap the indexers.
                     indexer_remap = other_index.iter_label().apply(lambda k: self_index._loc_to_iloc(k))
 
-                    remap_indexer = np.take(indexer_remap, other._indexers[depth])
+                    remap_indexer = indexer_remap[other._indexers[depth]]
                     new_indexer = np.hstack((self._indexers[depth], remap_indexer))
                     new_indexer.flags.writeable = False
                     self._indexers[depth] = new_indexer
@@ -2063,7 +2065,7 @@ class IndexHierarchyGO(IndexHierarchy):
                 indexer_remap = other_index.iter_label().apply(remap)
                 del intersection
 
-                remap_indexer = np.take(indexer_remap, other._indexers[depth])
+                remap_indexer = indexer_remap[other._indexers[depth]]
 
                 mask = remap_indexer == -1
 
