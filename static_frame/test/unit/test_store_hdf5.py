@@ -1,4 +1,3 @@
-
 import unittest
 import typing as tp
 
@@ -12,7 +11,6 @@ from static_frame.core.store import StoreConfig
 
 
 class TestUnit(TestCase):
-
 
     def test_store_hdf5_write_a(self) -> None:
 
@@ -60,8 +58,6 @@ class TestUnit(TestCase):
                 f_loaded = st1.read(name, config=c)
                 self.assertEqualFrames(f_src, f_loaded)
 
-
-
     def test_store_hdf5_write_b(self) -> None:
 
         # failure when including objects
@@ -75,7 +71,6 @@ class TestUnit(TestCase):
             st1 = StoreHDF5(fp)
             with self.assertRaises(RuntimeError):
                 st1.write(((f.name, f) for f in frames))
-
 
     def test_store_hdf5_write_c(self) -> None:
 
@@ -96,7 +91,6 @@ class TestUnit(TestCase):
             config = StoreConfig(dtypes=(int,))
             with self.assertRaises(NotImplementedError):
                 f2 = st1.read('baz', config=config)
-
 
     def test_store_hdf5_write_d(self) -> None:
 
@@ -138,8 +132,6 @@ class TestUnit(TestCase):
             self.assertEqual(f2.to_pairs(0),
                     (('0ax', ((0, 1), (1, 2), (2, -5), (3, 3))),
                     ('3iv', ((0, 3), (1, 4), (2, -5), (3, -3000)))))
-
-
 
     #---------------------------------------------------------------------------
 
@@ -196,11 +188,3 @@ class TestUnit(TestCase):
             for i, f_loaded in enumerate(st1.read_many(labels, config=config_map_read)):
                 f_src = frames[i]
                 self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
-
-
-
-if __name__ == '__main__':
-    unittest.main()
-
-
-

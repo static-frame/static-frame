@@ -1,4 +1,3 @@
-import unittest
 import typing as tp
 
 import frame_fixtures as ff
@@ -6,8 +5,6 @@ import frame_fixtures as ff
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.frame import FrameHE
-# from static_frame.core.bus import Bus
-# from static_frame.core.series import Series
 from static_frame.core.index_datetime import IndexDate
 
 from static_frame.core.store import StoreConfig
@@ -23,9 +20,8 @@ from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
-# from static_frame.test.test_case import skip_win
 from static_frame.core.exception import ErrorInitStore
-# from static_frame.core.exception import ErrorInitStoreConfig
+
 
 def get_test_framesA(container_type: tp.Type[Frame] = Frame) -> tp.Tuple[Frame, Frame, Frame]:
     return (
@@ -42,6 +38,7 @@ def get_test_framesA(container_type: tp.Type[Frame] = Frame) -> tp.Tuple[Frame, 
                 index=('p', 'q'),
                 name='baz')
             )
+
 
 def get_test_framesB() -> tp.Tuple[Frame, Frame]:
     return (
@@ -428,7 +425,3 @@ class TestUnitMultiProcess(TestCase):
 
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
-
-
-if __name__ == '__main__':
-    unittest.main()

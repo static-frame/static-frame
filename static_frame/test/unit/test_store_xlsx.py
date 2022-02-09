@@ -1,5 +1,3 @@
-
-import unittest
 import typing as tp
 
 import numpy as np
@@ -16,7 +14,6 @@ from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
 
 class TestUnit(TestCase):
-
 
     def test_store_xlsx_write_a(self) -> None:
 
@@ -68,7 +65,6 @@ class TestUnit(TestCase):
                 f_loaded = st1.read(name, config=c)
                 self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
 
-
     def test_store_xlsx_write_b(self) -> None:
 
         f1 = Frame.from_records(
@@ -98,7 +94,6 @@ class TestUnit(TestCase):
 
             self.assertEqualFrames(f1, f2)
 
-
     def test_store_xlsx_read_a(self) -> None:
         f1 = Frame.from_elements([1, 2, 3], index=('a', 'b', 'c'), columns=('x',))
 
@@ -120,7 +115,6 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('x', ((0, 1), (1, 2), (2, 3))),)
                 )
-
 
     def test_store_xlsx_read_b(self) -> None:
         index = IndexHierarchy.from_product(('left', 'right'), ('up', 'down'))
@@ -147,7 +141,6 @@ class TestUnit(TestCase):
                 (((100, -5, 20), ((0, 1), (1, 2), (2, 3), (3, 4))),)
                 )
 
-
     def test_store_xlsx_read_c(self) -> None:
         index = IndexHierarchy.from_product(('left', 'right'), ('up', 'down'))
         columns = IndexHierarchy.from_labels(((100, -5, 20),))
@@ -173,7 +166,6 @@ class TestUnit(TestCase):
                 ((0, ((('left', 'up'), 1), (('left', 'down'), 2), (('right', 'up'), 3), (('right', 'down'), 4))),)
                 )
 
-
     def test_store_xlsx_read_d(self) -> None:
 
         f1 = Frame.from_records(
@@ -198,7 +190,6 @@ class TestUnit(TestCase):
             f3 = st.read(STORE_LABEL_DEFAULT, config=sc2)
             self.assertEqual(f3.to_pairs(0),
                     ((0, ((0, 'a'), (1, 10), (2, 50))), (1, ((0, 'b'), (1, 20), (2, 60.4))), (2, ((0, 'c'), (1, 50), (2, -50))), (3, ((0, 'd'), (1, 60), (2, -60)))))
-
 
     def test_store_xlsx_read_e(self) -> None:
 
@@ -322,7 +313,6 @@ class TestUnit(TestCase):
             f2 = next(st1.read_many(('f1',), config=c))
             self.assertEqual(f2.shape, (2, 4))
 
-
     def test_store_xlsx_read_many_d(self) -> None:
         records = (
                 (2, 2, 'a', False, None),
@@ -349,7 +339,6 @@ class TestUnit(TestCase):
             self.assertEqual(f2.to_pairs(),
                     ((('a', 1), ((0, 2), (1, 30))), (('a', 2), ((0, 2), (1, 73))), (('b', 1), ((0, 'a'), (1, 'd'))), (('b', 2), ((0, False), (1, True)))))
 
-
     def test_store_xlsx_read_many_e(self) -> None:
         records = (
                 (2, 2, 'a', False, None),
@@ -372,7 +361,6 @@ class TestUnit(TestCase):
             # NOTE: if store_filter is None, None is not properly identified as a nadir-area entity and trim_nadir does not drop any rows or columns here
             f2 = next(st1.read_many(('f1',), store_filter=None, config=c))
             self.assertEqual(f2.shape, (4, 5))
-
 
     def test_store_xlsx_read_many_f(self) -> None:
         records = (
@@ -413,9 +401,3 @@ class TestUnit(TestCase):
 
         self.assertEqual(attr2, 'write')
         self.assertEqual(switch2, True)
-
-if __name__ == '__main__':
-    unittest.main()
-
-
-
