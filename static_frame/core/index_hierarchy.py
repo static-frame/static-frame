@@ -450,7 +450,7 @@ class IndexHierarchy(IndexBase):
                 if new_labels.size:
                     depth_2_index.extend(new_labels)
 
-                new_indexer = index.iter_label().apply(lambda k: depth_2_index._loc_to_iloc(k))
+                new_indexer = index.iter_label().apply(depth_2_index._loc_to_iloc)
 
             indexers_1.append(new_indexer)
             repeats.append(len(index))
@@ -2044,15 +2044,15 @@ class IndexHierarchyGO(IndexHierarchy):
                     new_indexer.flags.writeable = False
                     self._indexers[depth] = new_indexer
                     continue
-                else:
-                    # Same labels, but different order. We have to remap the indexers.
-                    indexer_remap = other_index.iter_label().apply(lambda k: self_index._loc_to_iloc(k))
 
-                    remap_indexer = indexer_remap[other._indexers[depth]]
-                    new_indexer = np.hstack((self._indexers[depth], remap_indexer))
-                    new_indexer.flags.writeable = False
-                    self._indexers[depth] = new_indexer
-                    continue
+                # Same labels, but different order. We have to remap the indexers.
+                indexer_remap = other_index.iter_label().apply(self_index._loc_to_iloc)
+
+                remap_indexer = indexer_remap[other._indexers[depth]]
+                new_indexer = np.hstack((self._indexers[depth], remap_indexer))
+                new_indexer.flags.writeable = False
+                self._indexers[depth] = new_indexer
+                continue
 
             starting_len = len(self_index)
 
