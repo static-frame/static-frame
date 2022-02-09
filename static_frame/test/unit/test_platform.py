@@ -1,6 +1,3 @@
-
-
-
 import static_frame as sf
 from static_frame.test.test_case import TestCase
 
