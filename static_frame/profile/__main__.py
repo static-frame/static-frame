@@ -1145,6 +1145,7 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
     p.add_argument('patterns',
             help='Names of classes to match using fn_match syntax',
             nargs='+',
+            choices=sorted(str(x).replace("<class '__main__.","").replace("'>", "") for x in Perf.__subclasses__()),
             )
     # p.add_argument('--modules',
     #         help='Names of modules to find tests',
