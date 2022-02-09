@@ -1,7 +1,3 @@
-
-
-import unittest
-
 import frame_fixtures as ff
 import numpy as np
 
@@ -29,7 +25,6 @@ class TestUnit(TestCase):
                 (('zUvW', (('zZbu', -3648), ('ztsv', 91301), ('zUvW', 30205))), ('zZbu', (('zZbu', -176034), ('ztsv', 4850), ('zUvW', -3050))), ('ztsv', (('zZbu', 324394), ('ztsv', 121040), ('zUvW', 167926))))
                 )
 
-
     def test_frame_via_fill_value_b(self) -> None:
 
         f1 = ff.parse('s(3,3)|c(I,str)|i(I,str)|v(int)')
@@ -46,7 +41,6 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(),
                 (('zZbu', (('zUvW', 84967), ('zZbu', 0), ('ztsv', 185734))), ('ztsv', (('zUvW', 5729), ('zZbu', 0), ('ztsv', -82314))), ('zUvW', (('zUvW', 30205), ('zZbu', 0), ('ztsv', 182602))))
                 )
-
 
     def test_frame_via_fill_value_c(self) -> None:
         f1 = Frame(np.arange(20).reshape(4, 5), index=tuple('abcd'))
@@ -72,10 +66,3 @@ class TestUnit(TestCase):
         f2 = Frame(index=range(5))
         with self.assertRaises(TypeError):
             f2.via_fill_value(0)['a'] = range(5) # type: ignore #pylint: disable=E1137
-
-
-
-
-if __name__ == '__main__':
-    unittest.main()
-
