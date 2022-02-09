@@ -1,5 +1,4 @@
 import re
-import unittest
 from collections import OrderedDict
 import copy
 import datetime
@@ -482,13 +481,12 @@ class TestUnit(TestCase):
         )
 
     def test_index_level_label_widths_at_depth_b(self) -> None:
-        f = Frame.from_dict(
-            dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
-        f = f.set_index_hierarchy(['a', 'b'])
+        ih = IndexHierarchyOld.from_labels(enumerate((True, False, True, False)))
 
-        post1 = tuple(f.index._levels.label_widths_at_depth(0))
-        self.assertEqual(post1, ((1, 1), (2, 1), (3, 1), (4, 1)))
-        post2 = tuple(f.index._levels.label_widths_at_depth(1))
+        post1 = tuple(ih._levels.label_widths_at_depth(0))
+        self.assertEqual(post1, ((0, 1), (1, 1), (2, 1), (3, 1)))
+
+        post2 = tuple(ih._levels.label_widths_at_depth(1))
         self.assertEqual(post2, ((True, 1), (False, 1), (True, 1), (False, 1)))
 
     def test_index_level_label_widths_at_depth_c(self) -> None:
@@ -892,7 +890,3 @@ class TestUnit(TestCase):
         levels1 = IndexLevel(Index(()), targets=None, depth_reference=3)
         with self.assertRaises(RuntimeError):
             _ = tuple(levels1.dtypes_at_depth(10))
-
-
-if __name__ == '__main__':
-    unittest.main()

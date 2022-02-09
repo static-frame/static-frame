@@ -49,15 +49,14 @@ class TestUnit(TestCase):
         with self.assertRaises(AttributeError):
             idx1.__dict__ #pylint: disable=W0104
 
-
     #---------------------------------------------------------------------------
+
     def test_index_init_a(self) -> None:
         idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
         idx2 = Index(idx1)
 
         self.assertEqual(idx1.name, 'foo')
         self.assertEqual(idx2.name, 'foo')
-
 
     def test_index_init_b(self) -> None:
 
@@ -67,7 +66,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx2.values.tolist(),
             [('A', 1), ('A', 2), ('B', 1), ('B', 2)])
-
 
     def test_index_init_c(self) -> None:
 
@@ -108,17 +106,14 @@ class TestUnit(TestCase):
                 [(0, 1, 2), (3, 4, 5)]
                 )
 
-
     def test_index_init_h(self) -> None:
         index = Index(range(10, 20, 2))
         self.assertEqual(index.values.tolist(), list(range(10, 20, 2)))
-
 
     def test_index_init_i(self) -> None:
         i1 = Index([10, 20, 30], name='foo')
         i2 = Index(i1)
         self.assertEqual(i2.name, 'foo')
-
 
     def test_index_init_j(self) -> None:
         from itertools import chain
@@ -132,7 +127,6 @@ class TestUnit(TestCase):
     def test_index_init_k(self) -> None:
         with self.assertRaises(ErrorInitIndexNonUnique):
             _ = Index((x for x in (3, 5, 3)))
-
 
     def test_index_init_l(self) -> None:
         with self.assertRaises(ErrorInitIndex):
@@ -152,7 +146,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx._loc_to_iloc(slice('b','d')), slice(1, 4, None))
         self.assertEqual(idx._loc_to_iloc('d'), 3)
 
-
     def test_index_loc_to_iloc_b(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
         post = idx._loc_to_iloc(Series(['b', 'c']))
@@ -165,7 +158,6 @@ class TestUnit(TestCase):
 
         post = idx._loc_to_iloc(['c', 'd', 'e'], partial_selection=True)
         self.assertEqual(post, [2, 3])
-
 
     def test_index_loc_to_iloc_d(self) -> None:
         # testing the public interface
@@ -210,7 +202,6 @@ class TestUnit(TestCase):
         with self.assertRaises(IndexError):
             _ = idx2.loc_to_iloc(np.array([False, True, False]))
 
-
     def test_index_loc_to_iloc_f(self) -> None:
         dt = datetime.date
         dt64 = np.datetime64
@@ -232,7 +223,6 @@ class TestUnit(TestCase):
         post = idx1.loc_to_iloc(np.array([dt64(d) for d in reversed(idx1)]))
         self.assertEqual(post, [2, 1, 0])
 
-
     def test_index_loc_to_iloc_g(self) -> None:
         dt = datetime.date
         dt64 = np.datetime64
@@ -244,7 +234,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(KeyError):
             idx1.loc_to_iloc(np.array((dt64('2001-01-01'), dt64('2018-01-01'))))
-
 
     def test_index_loc_to_iloc_h(self) -> None:
         dt = datetime.date
@@ -266,7 +255,6 @@ class TestUnit(TestCase):
         idx2 = idx1[:]
         self.assertTrue(idx2._map is None) #type: ignore
 
-
     def test_index_loc_to_iloc_j(self) -> None:
         idx1 = IndexAutoFactory.from_optional_constructor(10,
                 default_constructor=Index)
@@ -274,6 +262,7 @@ class TestUnit(TestCase):
         self.assertEqual(post, NULL_SLICE)
 
     #---------------------------------------------------------------------------
+
     def test_index_mloc_a(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
         self.assertTrue(idx.mloc == idx[:2].mloc) #type: ignore
@@ -283,13 +272,11 @@ class TestUnit(TestCase):
         idx.append('e')
         self.assertTrue(idx.mloc == idx[:2].mloc) #type: ignore
 
-
     def test_index_dtype_a(self) -> None:
         idx = IndexGO(('a', 'b', 'c', 'd'))
         self.assertEqual(str(idx.dtype), '<U1')
         idx.append('eee')
         self.assertEqual(str(idx.dtype), '<U3')
-
 
     def test_index_shape_a(self) -> None:
         idx = IndexGO(('a', 'b', 'c', 'd'))
@@ -297,13 +284,11 @@ class TestUnit(TestCase):
         idx.append('e')
         self.assertEqual(idx.shape, (5,))
 
-
     def test_index_ndim_a(self) -> None:
         idx = IndexGO(('a', 'b', 'c', 'd'))
         self.assertEqual(idx.ndim, 1)
         idx.append('e')
         self.assertEqual(idx.ndim, 1)
-
 
     def test_index_size_a(self) -> None:
         idx = IndexGO(('a', 'b', 'c', 'd'))
@@ -340,7 +325,6 @@ class TestUnit(TestCase):
         idx1.append('e')
         self.assertEqual(idx1.positions.tolist(), list(range(5)))
 
-
     def test_index_unique_a(self) -> None:
 
         with self.assertRaises(ErrorInitIndex):
@@ -360,7 +344,6 @@ class TestUnit(TestCase):
 
         # acceptable but not advisiable
         idx = Index([0, '0'])
-
 
     def test_index_unique_b(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
@@ -390,7 +373,6 @@ class TestUnit(TestCase):
         idxgo.extend(('f', 'g'))
         self.assertEqual(idxgo.values.tolist(), ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
 
-
     def test_index_creation_b(self) -> None:
         idx = Index((x for x in ('a', 'b', 'c', 'd') if x in {'b', 'd'}))
         self.assertEqual(idx._loc_to_iloc('b'), 0)
@@ -410,13 +392,11 @@ class TestUnit(TestCase):
         self.assertEqual(not_idx.tolist(),
                 [-21, -31, -41, -51],)
 
-
     def test_index_unary_operators_b(self) -> None:
         idx = IndexGO((20, 30, 40))
         idx.append(50)
         a1 = -idx
         self.assertEqual(a1.tolist(), [-20, -30, -40, -50])
-
 
     def test_index_binary_operators_a(self) -> None:
         idx = Index((20, 30, 40, 50))
@@ -434,7 +414,6 @@ class TestUnit(TestCase):
         self.assertEqual(
                 (2 - idx).tolist(),
                 [-18, -28, -38, -48])
-
 
     def test_index_binary_operators_b(self) -> None:
         '''Both operands are Index instances
@@ -474,7 +453,6 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             _ = idx1 * s1
 
-
     #---------------------------------------------------------------------------
 
     def test_index_ufunc_axis_a(self) -> None:
@@ -490,7 +468,6 @@ class TestUnit(TestCase):
         idx = IndexGO((30, 40, 20))
         idx.append(10)
         self.assertEqual(idx.sum(), 100)
-
 
     def test_index_isin_a(self) -> None:
 
@@ -520,6 +497,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+
     def test_index_copy_a(self) -> None:
         idx1 = IndexGO(('a', 'b', 'c'))
         idx1.append('d')
@@ -527,7 +505,6 @@ class TestUnit(TestCase):
         idx2.append('e')
         self.assertEqual(idx2.values.tolist(), ['a', 'b', 'c', 'd', 'e'])
         self.assertEqual(idx1.values.tolist(), ['a', 'b', 'c', 'd'])
-
 
     #---------------------------------------------------------------------------
 
@@ -561,7 +538,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(index3.values.tolist(), ['c', 'd', 'e', 'f', 'h', 'i']) #type: ignore
         self.assertEqual(index.values.tolist(), ['a', 'b', 'c', 'd', 'e', 'f', 'h'])
-
 
     def test_index_go_b(self) -> None:
 
@@ -671,9 +647,6 @@ class TestUnit(TestCase):
         self.assertEqual(index.relabel({'e': 'E'}).values.tolist(),
                 ['a', 'c', 'd', 'E', 'b'])
 
-
-
-
     def test_index_tuples_a(self) -> None:
 
         index = Index([('a','b'), ('b','c'), ('c','d')])
@@ -692,7 +665,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(s2[[(1, 7), (1, 5), (1, 0)]].values.tolist(),
                 [7, 5, 0])
-
 
     def test_index_pickle_a(self) -> None:
         a = Index([('a','b'), ('b','c'), ('c','d')])
@@ -721,8 +693,8 @@ class TestUnit(TestCase):
         self.assertEqual(index._drop_loc(slice('b', None)).values.tolist(),
                 ['a'])
 
-
     #---------------------------------------------------------------------------
+
     def test_index_iloc_loc_to_iloc_a(self) -> None:
 
         idx = Index(('a', 'b', 'c', 'd'))
@@ -738,7 +710,6 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(), #type: ignore
                 ['a', 'b', 'c', 'd', 'e'])
 
-
     def test_index_drop_iloc_a(self) -> None:
 
         idx = IndexGO(('a', 'b', 'c', 'd'))
@@ -747,7 +718,6 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(),
                 ['a', 'd', 'e'])
 
-
     def test_index_drop_iloc_b(self) -> None:
 
         idx = IndexGO(('a', 'b', 'c', 'd'))
@@ -755,7 +725,6 @@ class TestUnit(TestCase):
         post = idx._drop_iloc(None)
         self.assertEqual(post.values.tolist(),
                 ['a', 'b', 'c', 'd', 'e'])
-
 
     #---------------------------------------------------------------------------
 
@@ -775,7 +744,6 @@ class TestUnit(TestCase):
         assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1, 3])
 
-
     def test_index_loc_to_iloc_boolen_b(self) -> None:
 
         idx = Index(('a', 'b', 'c', 'd'))
@@ -793,7 +761,6 @@ class TestUnit(TestCase):
                 index=list('abcd')))
         assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1,3])
-
 
     def test_index_drop_b(self) -> None:
 
@@ -841,7 +808,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx4.values.tolist(),
                 [10, 20, 30.1])
 
-
     def test_index_fillna_b(self) -> None:
 
         idx1 = Index(('a', 'b', 'c'))
@@ -852,7 +818,6 @@ class TestUnit(TestCase):
         idx4 = idx3.fillna('d')
         self.assertNotEqual(id(idx3), id(idx4))
 
-
     def test_index_fillna_c(self) -> None:
 
         idx1 = Index((3.0, 2.0, np.nan))
@@ -860,7 +825,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx2.values.tolist(),
                 [3.0, 2.0, 'foo'],
                 )
-
 
     #---------------------------------------------------------------------------
 
@@ -871,7 +835,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx.dtype.kind, 'U')
         self.assertEqual(idx.ndim, 1)
         self.assertEqual(idx.nbytes, 16)
-
 
     def test_index_name_a(self) -> None:
 
@@ -891,7 +854,6 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             Index(('a', 'b', 'c', 'd'), name={'x', 'y'})
 
-
     def test_index_name_c(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
@@ -910,6 +872,7 @@ class TestUnit(TestCase):
                 ['a', 'b', 'c', 'd', 'x'])
 
     #---------------------------------------------------------------------------
+
     def test_index_to_series_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
@@ -919,7 +882,6 @@ class TestUnit(TestCase):
                 ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))
                 )
 
-
     #---------------------------------------------------------------------------
 
     def test_index_to_pandas_a(self) -> None:
@@ -928,7 +890,6 @@ class TestUnit(TestCase):
         pdidx = idx1.to_pandas()
         self.assertEqual(pdidx.name, idx1.name)
         self.assertTrue((pdidx.values == idx1.values).all())
-
 
     def test_index_to_pandas_b(self) -> None:
         import pandas
@@ -940,14 +901,12 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-
     def test_index_from_pandas_a(self) -> None:
         import pandas
 
         pdidx = pandas.Index(list('abcd'))
         idx = Index.from_pandas(pdidx)
         self.assertEqual(idx.values.tolist(), ['a', 'b', 'c', 'd'])
-
 
     def test_index_from_pandas_b(self) -> None:
         import pandas
@@ -966,7 +925,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx.values.tolist(),
                 [datetime.date(2018, 1, 1), datetime.date(2018, 6, 1)]
                 )
-
 
     def test_index_from_pandas_d(self) -> None:
         import pandas
@@ -995,9 +953,8 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             idx = Index.from_pandas(Index(('a', 'b')))
 
-
-
     #---------------------------------------------------------------------------
+
     def test_index_iter_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c'), name='foo')
@@ -1031,7 +988,6 @@ class TestUnit(TestCase):
         post = idx1.iter_label(0).apply(lambda x: x.upper())
         self.assertEqual(post.tolist(), ['A', 'B', 'C', 'D'])
 
-
     def test_index_iter_label_b(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
@@ -1042,7 +998,6 @@ class TestUnit(TestCase):
             ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D')),
             )
 
-
     def test_index_iter_label_c(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
@@ -1052,8 +1007,8 @@ class TestUnit(TestCase):
                     index_constructor=IndexDate,
                     ))
 
-
     #---------------------------------------------------------------------------
+
     def test_index_intersection_a(self) -> None:
 
         idx1 = Index(('a', 'b', 'c', 'd', 'e'))
@@ -1064,7 +1019,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx2.values.tolist(),
                 ['a', 'b', 'c'])
-
 
     def test_index_intersection_b(self) -> None:
 
@@ -1108,7 +1062,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(idx4), 0)
         self.assertEqual(idx4.dtype, np.dtype(object))
 
-
     def test_index_intersection_f(self) -> None:
 
         idx1 = IndexDate.from_date_range('2020-01-02', '2020-01-08')
@@ -1141,7 +1094,6 @@ class TestUnit(TestCase):
         idx4 = idx1.intersection(idx2, idx3)
         self.assertEqual(idx4.values.tolist(), ['b'])
 
-
     #---------------------------------------------------------------------------
 
     def test_index_union_a(self) -> None:
@@ -1155,7 +1107,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx2.values.tolist(),
                 ['a', 'b', 'c', 'd', 'dd', 'e', 'f'])
 
-
     def test_index_union_b(self) -> None:
 
         idx1 = Index(('c', 'b', 'a'))
@@ -1165,7 +1116,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx3.values.tolist(),
                 ['c', 'b', 'a']
                 )
-
 
     def test_index_union_c(self) -> None:
 
@@ -1229,8 +1179,6 @@ class TestUnit(TestCase):
                 set([np.nan, None, 4.4, obj])
                 ) # Note: order is lost...
 
-
-
     def test_index_to_html_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c'))
@@ -1251,7 +1199,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(post, None)
         self.assertTrue(len(sio.read()) > 1200)
-
 
     def test_index_empty_a(self) -> None:
         idx1 = Index(())
@@ -1278,13 +1225,10 @@ class TestUnit(TestCase):
             (('a', 1), ('b', 1), ('c', 1), ('d', 1), ('e', 1))
             )
 
-
     def test_index_label_widths_at_depth_b(self) -> None:
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         with self.assertRaises(RuntimeError):
             next(idx1.label_widths_at_depth(1))
-
-
 
     #---------------------------------------------------------------------------
 
@@ -1327,7 +1271,6 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             idx1.values_at_depth(1)
 
-
     def test_index_values_at_depth_b(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
@@ -1339,8 +1282,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(post.tolist(),
                 ['a', 'b', 'c', 'd', 'e'])
-
-
 
     #---------------------------------------------------------------------------
 
@@ -1354,8 +1295,8 @@ class TestUnit(TestCase):
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         self.assertEqual(idx1.tail(2).values.tolist(), ['d' ,'e'])
 
-
     #---------------------------------------------------------------------------
+
     def test_index_via_str_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
@@ -1364,7 +1305,6 @@ class TestUnit(TestCase):
         self.assertEqual(a1.tolist(),
                 ['A', 'B', 'C', 'D', 'E']
                 )
-
 
     def test_index_via_str_b(self) -> None:
 
@@ -1377,7 +1317,6 @@ class TestUnit(TestCase):
         self.assertEqual(a1.tolist(),
                 ['A', 'B', 'C', 'D', 'E', 'F', 'G']
                 )
-
 
     def test_index_via_dt_a(self) -> None:
 
@@ -1400,7 +1339,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.via_dt.weekday().tolist(),
                 [2, 4, 6, 2, 4]
                 )
-
 
     #---------------------------------------------------------------------------
 
@@ -1426,7 +1364,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.equals(idx1), True)
         self.assertEqual(idx1.equals(idx4), True)
 
-
     def test_index_equals_b(self) -> None:
 
         idx1 = Index((5, 3, 20), dtype=np.int64)
@@ -1434,7 +1371,6 @@ class TestUnit(TestCase):
 
         self.assertFalse(idx1.equals(idx2, compare_dtype=True))
         self.assertTrue(idx1.equals(idx2, compare_dtype=False))
-
 
     def test_index_equals_c(self) -> None:
 
@@ -1456,7 +1392,6 @@ class TestUnit(TestCase):
         # nan and None are not treated equivalent, even with skipna true
         self.assertFalse(idx1.equals(idx3, compare_dtype=False, skipna=True))
 
-
     def test_index_equals_e(self) -> None:
         a = Index([1, 2, 3])
         b = Index([1, 2, 3])
@@ -1469,7 +1404,6 @@ class TestUnit(TestCase):
         self.assertTrue(not a.equals(c))
         self.assertTrue(not a.equals(d))
         self.assertTrue(not a.equals(e))
-
 
     def test_index_equals_f(self) -> None:
         a = IndexGO([1, 2, 3])
@@ -1492,6 +1426,7 @@ class TestUnit(TestCase):
         self.assertFalse(a.equals(b))
 
     #---------------------------------------------------------------------------
+
     def test_index_sample_a(self) -> None:
         a = IndexGO([1, 2, 3])
         a.append(None)
@@ -1500,6 +1435,7 @@ class TestUnit(TestCase):
         self.assertEqual(b.values.tolist(), [2, None])
 
     #---------------------------------------------------------------------------
+
     def test_index_deepcopy_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd'))
@@ -1520,7 +1456,6 @@ class TestUnit(TestCase):
         self.assertTrue(id(idx1._labels) != id(idx2._labels))
         self.assertTrue(idx2._map is None)
 
-
     def test_index_deepcopy_c(self) -> None:
         idx1 = IndexGO(range(3))
         idx1.append(100)
@@ -1529,6 +1464,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx2.values.tolist(), [0, 1, 2, 100])
 
     #---------------------------------------------------------------------------
+
     def test_index_iloc_searchsorted_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd'))
@@ -1551,8 +1487,8 @@ class TestUnit(TestCase):
         idx1 = Index(())
         self.assertEqual(idx1.loc_searchsorted(0, fill_value=None), None)
 
-
     #---------------------------------------------------------------------------
+
     def test_index_via_re_a(self) -> None:
 
         idx1 = IndexGO(('aabbcc', 'bbcccc', 'cc', 'ddddbb'))
@@ -1562,15 +1498,15 @@ class TestUnit(TestCase):
         self.assertEqual(a1.tolist(),
                 [True, True, False, True, False])
 
-
     #---------------------------------------------------------------------------
+
     def test_index_index_types_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
         self.assertEqual(idx1.index_types.to_pairs(), (('foo', IndexGO),))
 
-
     #---------------------------------------------------------------------------
+
     def test_index_level_add_a(self) -> None:
         idx1 = Index(('a', 'b', 'c'), name='foo')
         idx2 = idx1.level_add('2012', index_constructor=IndexYear)
@@ -1581,7 +1517,3 @@ class TestUnit(TestCase):
         self.assertTrue(
             (idx2.values_at_depth(0) == np.array(['2012', '2012', '2012'], dtype='datetime64[Y]')).all()
             )
-
-if __name__ == '__main__':
-    unittest.main()
-
