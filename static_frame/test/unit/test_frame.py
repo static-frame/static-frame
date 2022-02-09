@@ -8258,7 +8258,7 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(
-                f3.columns.values.tolist(), #type: ignore
+                f3.columns.values.tolist(),
                 [[('a', 'b'), 'p'], [('a', 'b'), 'q'], [('a', 'b'), 't'], [('x', 'y'), 'r'], [('x', 'y'), 's']]
                 )
 
@@ -9634,8 +9634,8 @@ class TestUnit(TestCase):
         f5 = f1.drop[:]
         self.assertEqual(f5.shape, (2, 0))
 
-        col1_dtype = str(f1.columns.dtypes.values[0])
-        col2_dtype = str(f1.columns.dtypes.values[1])
+        col1_dtype = str(f1.columns.dtypes.values[0]) # type: ignore
+        col2_dtype = str(f1.columns.dtypes.values[1]) # type: ignore
 
         # BEHAVIOR CHANGE!!
         # Check that we can represent the IndexHierarchy

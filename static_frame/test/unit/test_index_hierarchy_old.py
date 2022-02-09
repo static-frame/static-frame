@@ -395,7 +395,7 @@ class TestUnit(TestCase):
         post = ih.loc[('I', 'B', 2): ('II', 'A', 2)]  # type: ignore
         self.assertTrue(len(post), 6)
 
-        post = ih.loc[[('I', 'B', 2), ('II', 'A', 2)]]
+        post = ih.loc[[('I', 'B', 2), ('II', 'A', 2)]]  # type: ignore
         self.assertTrue(len(post), 2)
 
     def test_hierarchy_loc_to_iloc_d(self) -> None:

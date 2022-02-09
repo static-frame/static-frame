@@ -620,11 +620,11 @@ class IndexHierarchyOld(IndexBase):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem['IndexHierarchyOld']:
+    def loc(self) -> InterfaceGetItem[IH]: # type: ignore
         return InterfaceGetItem(self._extract_loc) #type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItem['IndexHierarchyOld']:
+    def iloc(self) -> InterfaceGetItem[IH]: # type: ignore
         return InterfaceGetItem(self._extract_iloc) #type: ignore
 
     def _iter_label(self,
@@ -714,13 +714,11 @@ class IndexHierarchyOld(IndexBase):
                 )
 
     @property
-    def via_T(self) -> InterfaceTranspose['IndexHierarchyOld']:
+    def via_T(self) -> InterfaceTranspose[IH]: # type: ignore
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
-        return InterfaceTranspose(
-                container=self,
-                )
+        return InterfaceTranspose(container=self) # type: ignore
 
     def via_re(self,
             pattern: str,
@@ -1668,7 +1666,7 @@ class IndexHierarchyOld(IndexBase):
         '''
         return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name)
 
-    def level_add(self: IH,
+    def level_add(self: IH, # type: ignore
             level: tp.Hashable,
             *,
             index_constructor: IndexConstructor = None,
