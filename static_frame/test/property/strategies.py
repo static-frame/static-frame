@@ -40,8 +40,6 @@ from static_frame import IndexNanosecond
 from static_frame import IndexNanosecondGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
-from static_frame import IndexHierarchyOld
-from static_frame import IndexHierarchyOldGO
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
@@ -660,7 +658,7 @@ def get_index_any(
     return st.one_of(strategies)
 
 
-def get_index_hierarchy(
+def get_index_hierarchy_any(
         min_size: int = 1,
         max_size: int = MAX_ROWS,
         min_depth: int = 2,
@@ -756,34 +754,6 @@ def get_index_hierarchy_any(
             ).flatmap(get_labels_spacings)
 
 
-def get_index_hierarchy_old_any(
-        min_size: int = 1,
-        max_size: int = MAX_ROWS,
-        min_depth: int = 2,
-        max_depth: int = 5,
-        ) -> st.SearchStrategy:
-
-    def get_labels_spacings(depth_size: tp.Tuple[int, int]) -> st.SearchStrategy:
-        depth, size = depth_size
-        args = []
-        for _ in range(depth):
-            args.append(get_index_any(
-                    min_size=size,
-                    max_size=size,
-                    ))
-
-        return st.one_of(
-                st.builds(IndexHierarchyOld.from_product, *args),
-                st.builds(IndexHierarchyOldGO.from_product, *args),
-                )
-
-    return st.tuples(
-            st.integers(min_value=min_depth, max_value=max_depth),
-            st.integers(min_value=min_size, max_value=max_size)
-            ).flatmap(get_labels_spacings)
-
-
-
 
 #-------------------------------------------------------------------------------
 # series objects
@@ -801,7 +771,7 @@ def get_series(
         size = shape[0] # tuple len 1
 
         if issubclass(index_cls, IndexHierarchy):
-            index = get_index_hierarchy(
+            index = get_index_hierarchy_any(
                     cls=index_cls.from_labels,
                     min_size=size,
                     max_size=size,
@@ -873,7 +843,7 @@ def get_frame(
         row_count, column_count = shape
 
         if issubclass(index_cls, IndexHierarchy):
-            index = get_index_hierarchy(
+            index = get_index_hierarchy_any(
                     cls=index_cls.from_labels,
                     min_size=row_count,
                     max_size=row_count,
@@ -888,7 +858,7 @@ def get_frame(
             )
 
         if issubclass(index_cls, IndexHierarchy):
-            columns = get_index_hierarchy(
+            columns = get_index_hierarchy_any(
                     cls=columns_cls.from_labels,
                     min_size=column_count,
                     max_size=column_count,
