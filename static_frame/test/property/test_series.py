@@ -1,4 +1,3 @@
-import unittest
 import operator
 
 from hypothesis import given

@@ -21,9 +21,7 @@ from static_frame import IndexHierarchyGO
 from static_frame import IndexYearMonth
 from static_frame import IndexYearMonthGO
 from static_frame import Series
-from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import ErrorInitIndexLevel
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file

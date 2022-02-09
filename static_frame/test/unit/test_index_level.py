@@ -5,7 +5,6 @@ import datetime
 
 import numpy as np
 
-from static_frame import Frame
 from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index

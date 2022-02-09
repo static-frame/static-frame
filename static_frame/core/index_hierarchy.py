@@ -370,12 +370,12 @@ class IndexHierarchy(IndexBase):
         hash_maps: tp.List[tp.Dict[tp.Hashable, int]] = [{} for _ in range(depth)]
         indexers: tp.List[tp.List[int]] = [[] for _ in range(depth)]
 
-        prev_row: tp.Optional[tp.Sequence[tp.Hashable]] = None
+        prev_row: tp.Sequence[tp.Hashable] = ()
 
         while True:
             for i_zip, (hash_map, indexer, val) in enumerate(zip(hash_maps, indexers, label_row)):
                 if val == continuation_token:
-                    if prev_row is not None:
+                    if not prev_row:
                         i: int = indexer[-1]
                         val = prev_row[i_zip]
                     else:
@@ -2034,7 +2034,7 @@ class IndexHierarchyGO(IndexHierarchy):
                 self._indexers[depth] = new_indexer
                 continue
 
-            elif len(intersection) == len(self_index) == len(other_index):
+            if len(intersection) == len(self_index) == len(other_index):
                 del intersection
 
                 if self_index.equals(other_index):
@@ -2054,28 +2054,27 @@ class IndexHierarchyGO(IndexHierarchy):
                     self._indexers[depth] = new_indexer
                     continue
 
-            else:
-                starting_len = len(self_index)
+            starting_len = len(self_index)
 
-                self_index.extend(other_index[~other_index.isin(intersection)])
+            self_index.extend(other_index[~other_index.isin(intersection)])
 
-                def remap(k: tp.Hashable) -> int:
-                   if k in intersection:
-                       return self_index._loc_to_iloc(k) # type: ignore
-                   return -1
+            def remap(k: tp.Hashable) -> int:
+                if k in intersection:
+                    return self_index._loc_to_iloc(k) # type: ignore
+                return -1
 
-                offset = starting_len - len(intersection)
-                indexer_remap = other_index.iter_label().apply(remap)
-                del intersection
+            offset = starting_len - len(intersection)
+            indexer_remap = other_index.iter_label().apply(remap)
+            del intersection
 
-                remap_indexer = indexer_remap[other._indexers[depth]]
+            remap_indexer = indexer_remap[other._indexers[depth]]
 
-                mask = remap_indexer == -1
+            mask = remap_indexer == -1
 
-                remap_indexer[mask] = (other._indexers[depth][mask] + offset)
-                new_indexer = np.hstack((self._indexers[depth], remap_indexer))
-                new_indexer.flags.writeable = False
-                self._indexers[depth] = new_indexer
+            remap_indexer[mask] = (other._indexers[depth][mask] + offset)
+            new_indexer = np.hstack((self._indexers[depth], remap_indexer))
+            new_indexer.flags.writeable = False
+            self._indexers[depth] = new_indexer
 
         # No need to ensure uniqueness! It's already been checked.
         self._blocks = self._gen_blocks_from_self()

@@ -1,4 +1,3 @@
-import unittest
 import typing as tp
 
 from static_frame.core.frame import Frame
