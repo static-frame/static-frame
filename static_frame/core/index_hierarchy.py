@@ -1863,7 +1863,7 @@ class IndexHierarchy(IndexBase):
         mi.names = self.names
         return mi
 
-    def _build_tree_at_depth_from_mask(self, depth: int, mask: np.ndarray) -> tp.Optional[TreeNodeT, Index]:
+    def _build_tree_at_depth_from_mask(self, depth: int, mask: np.ndarray) -> tp.Union[TreeNodeT, Index]:
 
         if depth == self.depth - 1:
             values = self._indices[depth][self._indexers[depth][mask]]
