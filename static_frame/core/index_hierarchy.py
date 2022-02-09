@@ -731,11 +731,11 @@ class IndexHierarchy(IndexBase):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem[IndexHierarchy]:
+    def loc(self) -> InterfaceGetItem["IndexHierarchy"]:
         return InterfaceGetItem(self._extract_loc) #type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItem[IndexHierarchy]:
+    def iloc(self) -> InterfaceGetItem["IndexHierarchy"]:
         return InterfaceGetItem(self._extract_iloc) #type: ignore
 
     def _iter_label(self,
@@ -804,7 +804,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     @property
-    def via_T(self) -> InterfaceTranspose[IndexHierarchy]:
+    def via_T(self) -> InterfaceTranspose["IndexHierarchy"]:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
