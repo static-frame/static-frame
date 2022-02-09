@@ -375,7 +375,7 @@ class IndexHierarchy(IndexBase):
         while True:
             for i_zip, (hash_map, indexer, val) in enumerate(zip(hash_maps, indexers, label_row)):
                 if val == continuation_token:
-                    if not prev_row:
+                    if prev_row:
                         i: int = indexer[-1]
                         val = prev_row[i_zip]
                     else:

@@ -506,8 +506,8 @@ class TestUnit(TestCase):
         self.assertEqual(list(post3), [20, 30, 39])
 
         post4 = ih1._loc_to_iloc(HLoc['b', 11])
-        self.assertEqual(list(post4), list(ih1_alt._loc_to_iloc(HLoc['b', 11])))
-        self.assertEqual(post4, [31])
+        self.assertEqual(post4, ih1_alt._loc_to_iloc(HLoc['b', 11]))
+        self.assertEqual(post4, 31)
 
         post5 = ih1._loc_to_iloc(
                 HLoc['b', ~(ih1.values_at_depth(1) % 3).astype(bool)])
