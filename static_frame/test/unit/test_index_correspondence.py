@@ -1,13 +1,4 @@
-
-
-
-
-
-import unittest
-
-
 import numpy as np
-
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index import Index
@@ -16,7 +7,6 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
 
     def test_index_correspondence_a(self) -> None:
         idx0 = Index([0, 1, 2, 3, 4], loc_is_iloc=True)
@@ -33,7 +23,6 @@ class TestUnit(TestCase):
                 [0, 1, 2, 3, 4]
                 )
 
-
     def test_index_correspondence_b(self) -> None:
         # issue found with a hypothesis test
 
@@ -44,8 +33,3 @@ class TestUnit(TestCase):
         self.assertEqual(ic.size, 1)
         self.assertEqual(ic.iloc_src, [0]) # this is as list in this use case
         self.assertEqual(ic.iloc_dst.tolist(), [0]) # type: ignore
-
-
-
-if __name__ == '__main__':
-    unittest.main()

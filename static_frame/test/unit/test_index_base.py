@@ -1,13 +1,8 @@
-
-import unittest
 import numpy as np
-# import typing as tp
 
 from static_frame.core.index_base import IndexBase
 
-# from static_frame.core.exception import ErrorInitIndex
 from static_frame.test.test_case import TestCase
-
 
 
 class TestUnit(TestCase):
@@ -48,10 +43,3 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             idx1.from_labels(())
-
-
-
-if __name__ == '__main__':
-    unittest.main()
-
-

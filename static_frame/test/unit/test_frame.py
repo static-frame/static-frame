@@ -9634,7 +9634,7 @@ class TestUnit(TestCase):
         d = f5.display(DisplayConfig(type_color=False))
         self.assertEqual(tuple(d), (['<Frame>'],
                 ['<IndexHierarchy>', '<int64>'],
-                ['', '<U1>'],
+                ['', '<<U1>'],
                 ['<Index>'],
                 ['0'],
                 ['1'],

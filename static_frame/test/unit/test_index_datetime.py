@@ -1,5 +1,3 @@
-
-import unittest
 import datetime
 from  itertools import product
 
@@ -8,7 +6,6 @@ import numpy as np
 from static_frame import Index
 from static_frame import IndexGO
 
-# from static_frame import IndexHierarchy
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
@@ -40,8 +37,6 @@ from static_frame import IndexMicrosecondGO
 from static_frame import IndexNanosecond
 from static_frame import IndexNanosecondGO
 
-# from static_frame import HLoc
-# from static_frame import ILoc
 from static_frame.core.index import _INDEX_SLOTS
 from static_frame.core.index import _INDEX_GO_SLOTS
 from static_frame.core.index_datetime import dtype_to_index_cls
@@ -52,7 +47,6 @@ from static_frame.core.exception import ErrorInitIndex
 
 
 class TestUnit(TestCase):
-
 
     def test_index_datetime_go_config(self) -> None:
 
@@ -72,7 +66,6 @@ class TestUnit(TestCase):
             self.assertEqual(len(base.__slots__), len(_INDEX_SLOTS))
             self.assertEqual(len(base_go.__slots__), len(_INDEX_GO_SLOTS))
 
-
     #---------------------------------------------------------------------------
 
     def test_index_date_a(self) -> None:
@@ -82,7 +75,6 @@ class TestUnit(TestCase):
         self.assertEqual(index.values[-1], np.datetime64('2018-03-01'))
         self.assertEqual(index.loc['2018-02-22'],
                 np.datetime64('2018-02-22'))
-
 
     def test_index_date_b(self) -> None:
 
@@ -122,14 +114,12 @@ class TestUnit(TestCase):
         self.assertEqual(index.loc['2018-02-19'],
                 np.datetime64('2018-02-19'))
 
-
     def test_index_date_e(self) -> None:
         index = IndexDate.from_date_range('2017-12-15', '2018-03-15', 2)
 
         post = index + np.timedelta64(2, 'D')
 
         self.assertEqual(post[0], np.datetime64('2017-12-17'))
-
 
     def test_index_date_f(self) -> None:
         index = IndexDate.from_date_range('2017-12-15', '2018-01-15')
@@ -139,7 +129,6 @@ class TestUnit(TestCase):
         self.assertEqual(post[0], np.datetime64('2017-12-25'))
         self.assertEqual(post[-1], np.datetime64('2018-01-25'))
 
-
     def test_index_date_g(self) -> None:
         index = IndexDate.from_date_range('2017-12-15', '2018-02-15')
 
@@ -147,7 +136,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(post), 31) #type: ignore
         self.assertEqual(post[0], np.datetime64('2018-01-01')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-01-31')) #type: ignore
-
 
     def test_index_date_h(self) -> None:
         index = IndexDate.from_date_range('2017-12-15', '2018-02-15')
@@ -157,7 +145,6 @@ class TestUnit(TestCase):
         self.assertEqual(post[0], np.datetime64('2018-01-01')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-01-15')) #type: ignore
 
-
     def test_index_date_i(self) -> None:
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
 
@@ -165,7 +152,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(post), 62) #type: ignore
         self.assertEqual(post[0], np.datetime64('2017-12-01')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-01-31')) #type: ignore
-
 
     def test_index_date_j(self) -> None:
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
@@ -175,14 +161,12 @@ class TestUnit(TestCase):
         self.assertEqual(post[0], np.datetime64('2017-12-01')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-02-15')) #type: ignore
 
-
     def test_index_date_k(self) -> None:
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
         post = index.loc[['2017-12-10', '2018-02-06']]
         self.assertEqual(len(post), 2) #type: ignore
         self.assertEqual(post[0], np.datetime64('2017-12-10')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-02-06')) #type: ignore
-
 
     def test_index_date_m(self) -> None:
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
@@ -204,7 +188,6 @@ class TestUnit(TestCase):
             {np.datetime64('2018-02'), np.datetime64('2017-12')}
             )
 
-
     def test_index_date_o(self) -> None:
         index = IndexDate.from_year_month_range('2017-12', '2018-01')
         s1 = Series(range(len(index)), index=index)
@@ -213,7 +196,6 @@ class TestUnit(TestCase):
         self.assertEqual(s1['2016':].shape, (0,)) # type: ignore
         self.assertEqual(s1['2017':].shape, (62,)) # type: ignore
         self.assertEqual(s1['2019':].shape, (0,)) # type: ignore
-
 
     def test_index_date_p(self) -> None:
         index = IndexDate.from_year_month_range('2017-12', '2018-01')
@@ -227,7 +209,6 @@ class TestUnit(TestCase):
             # out of range start date
             s1['2016-01-01':'2018-01-04'] # type: ignore #pylint: disable=W0104
 
-
     def test_index_date_q(self) -> None:
         index = IndexDate(('2017-12-30', '2017-12-31', '2018-01-05'))
         s1 = Series(range(len(index)), index=index)
@@ -235,8 +216,8 @@ class TestUnit(TestCase):
         self.assertEqual(s1[:'2019'].shape, (0,)) # type: ignore
         self.assertEqual(s1['2016':].shape, (0,)) # type: ignore
 
-
     #---------------------------------------------------------------------------
+
     def test_index_datetime_init_a(self) -> None:
 
         dates = [datetime.date(*x) for x in product((2017,), (4,5,), range(1, 4))]
@@ -285,6 +266,7 @@ class TestUnit(TestCase):
                 [datetime.date(2017, 12, 30), datetime.date(2017, 12, 31), datetime.date(2018, 1, 5)])
 
     #---------------------------------------------------------------------------
+
     def test_index_date_from_year_month_range_a(self) -> None:
         index = IndexDate.from_year_month_range('2017-12', '2018-03')
 
@@ -294,7 +276,6 @@ class TestUnit(TestCase):
         self.assertEqual(
             [str(d) for d in np.unique(index.values.astype('datetime64[M]'))],
             ['2017-12', '2018-01', '2018-02', '2018-03'])
-
 
     def test_index_date_from_year_range_a(self) -> None:
         index = IndexDate.from_year_range('2016', '2018')
@@ -308,7 +289,6 @@ class TestUnit(TestCase):
         self.assertEqual(
                 [str(d) for d in np.unique(index.values.astype('datetime64[Y]'))],
                 ['2016', '2017', '2018'])
-
 
     def test_index_date_series_a(self) -> None:
 
@@ -326,13 +306,11 @@ class TestUnit(TestCase):
                 ((np.datetime64('2018-01-28'), 58), (np.datetime64('2018-01-29'), 59), (np.datetime64('2018-01-30'), 60), (np.datetime64('2018-01-31'), 61))
                 )
 
-
     def test_index_year_month_a(self) -> None:
         idx1 = IndexYearMonth(('2018-01', '2018-06'))
 
         self.assertEqual(idx1.values.tolist(),
             [datetime.date(2018, 1, 1), datetime.date(2018, 6, 1)])
-
 
     def test_index_year_month_b(self) -> None:
         idx1 = IndexYearMonth(('2017-12', '2018-01', '2018-02', '2018-03', '2018-04'))
@@ -349,7 +327,6 @@ class TestUnit(TestCase):
                 post2.values.tolist(), #type: ignore
                 [datetime.date(2018, 1, 1), datetime.date(2018, 2, 1), datetime.date(2018, 3, 1), datetime.date(2018, 4, 1)]
                 )
-
 
     def test_index_year_month_from_date_range_a(self) -> None:
         index = IndexYearMonth.from_date_range('2017-12-15', '2018-03-15')
@@ -375,7 +352,6 @@ class TestUnit(TestCase):
         index = IndexYearMonth.from_year_month_range('2017-12', '2018-03', step=2)
         self.assertEqual([str(d) for d in index], ['2017-12', '2018-02'])
 
-
     def test_index_year_month_from_year_range_a(self) -> None:
 
         index = IndexYearMonth.from_year_range('2010', '2018')
@@ -390,7 +366,6 @@ class TestUnit(TestCase):
                 [str(d) for d in IndexYearMonth.from_year_range('2010', '2018', 6)],
                 ['2010-01', '2010-07', '2011-01', '2011-07', '2012-01', '2012-07', '2013-01', '2013-07', '2014-01', '2014-07', '2015-01', '2015-07', '2016-01', '2016-07', '2017-01', '2017-07', '2018-01', '2018-07'])
 
-
     def test_index_year_from_date_range_a(self) -> None:
 
         index = IndexYear.from_date_range('2014-12-15', '2018-03-15')
@@ -400,18 +375,15 @@ class TestUnit(TestCase):
         self.assertEqual([str(d) for d in index.values],
                 ['2014', '2016', '2018'])
 
-
     def test_index_year_from_year_month_range_a(self) -> None:
 
         index = IndexYear.from_year_month_range('2014-12', '2018-03')
         self.assertEqual(len(index), 5)
 
-
     def test_index_year_from_year_range_a(self) -> None:
 
         index = IndexYear.from_year_range('2010', '2018')
         self.assertEqual(len(index), 9)
-
 
     def test_index_year_from_year_range_b(self) -> None:
 
@@ -436,6 +408,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+
     def test_index_date_loc_to_iloc_a(self) -> None:
 
         index = IndexDate.from_date_range('2018-01-01', '2018-03-01')
@@ -461,7 +434,6 @@ class TestUnit(TestCase):
                 ['2017-12-01', '2018-01-01', '2018-02-01'],
                 partial_selection=True)
         self.assertEqual(post, [0, 31])
-
 
     def test_index_millisecond_a(self) -> None:
 
@@ -495,16 +467,12 @@ class TestUnit(TestCase):
         self.assertEqual(idx.loc['2016-05-01T00'].values, #type: ignore
                 np.array(['2016-05-01T00:00:33.483'], dtype='datetime64[ms]'))
 
-
-
-
     def test_index_millisecond_b(self) -> None:
         # integer arguments are interpreted as milliseconds from the epoch
         idx = IndexMillisecond(range(10))
         self.assertAlmostEqualValues(idx.loc['1970-01-01T00:00:00.007':].values,  # type: ignore  # https://github.com/python/typeshed/pull/3024
                 np.array(['1970-01-01T00:00:00.007', '1970-01-01T00:00:00.008',
                '1970-01-01T00:00:00.009'], dtype='datetime64[ms]'))
-
 
     def test_index_second_a(self) -> None:
         # integer arguments are interpreted as seconds from the epoch
@@ -513,7 +481,6 @@ class TestUnit(TestCase):
                 np.array(['1970-01-01T00:00:07', '1970-01-01T00:00:08',
                '1970-01-01T00:00:09'], dtype='datetime64[s]')
                 )
-
 
     def test_index_millisecond_series_a(self) -> None:
 
@@ -540,7 +507,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(s['2016-05-01T09'].to_pairs(),
                 ((np.datetime64('2016-05-01T09:26:43.185'), 6),))
-
 
     def test_index_millisecond_frame_a(self) -> None:
 
@@ -579,7 +545,6 @@ class TestUnit(TestCase):
         self.assertEqual(f2.loc['2016-05', 0].values.tolist(),
                 [4, 5, 6, 7, 8])
 
-
     def test_index_minute_a(self) -> None:
 
         idx1 = IndexMinute(('2018-01-01T03:30', '2018-01-01T03:45', '2019-01-02T03:45'))
@@ -591,7 +556,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.loc['2018-01'].values.tolist(), #type: ignore
                 [datetime.datetime(2018, 1, 1, 3, 30), datetime.datetime(2018, 1, 1, 3, 45)])
 
-
     def test_index_nanosecond_a(self) -> None:
 
         idx1 = IndexNanosecond(('2018-01-01T03:30', '2018-01-01T03:45', '2019-01-02T03:45'))
@@ -601,7 +565,6 @@ class TestUnit(TestCase):
         # NP reduces nanoseconds to integers
         self.assertEqual(idx1.values.tolist(),
                 [1514777400000000000, 1514778300000000000, 1546400700000000000])
-
 
     #---------------------------------------------------------------------------
 
@@ -615,15 +578,14 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = index @ []
 
-
     def test_index_datetime_binary_operator_b(self) -> None:
         index = IndexDateGO.from_date_range('2018-03-12', '2018-03-14')
         a1 = index + Index((1, 2, 3))
         self.assertEqual(a1.tolist(),
                 [datetime.date(2018, 3, 13), datetime.date(2018, 3, 15), datetime.date(2018, 3, 17)])
 
-
     #---------------------------------------------------------------------------
+
     def test_index_datetime_append_a(self) -> None:
         index = IndexDateGO.from_date_range('2018-03-12', '2018-03-14')
         with self.assertRaises(KeyError):
@@ -637,14 +599,12 @@ class TestUnit(TestCase):
                 datetime.date(2018, 3, 14),
                 datetime.date(2018, 3, 11)])
 
-
     def test_index_datetime_to_pandas_a(self) -> None:
 
         for cls in (IndexYear, IndexYearMonth):
             index = cls.from_year_range('2010', '2018') #type: ignore
             with self.assertRaises(NotImplementedError):
                 _ = index.to_pandas()
-
 
     #---------------------------------------------------------------------------
 
@@ -656,9 +616,8 @@ class TestUnit(TestCase):
                 [datetime.date(2020, 1, 1), datetime.date(2020, 2, 1)]
                 )
 
-
-
     #---------------------------------------------------------------------------
+
     def test_index_datetime_hour_a(self) -> None:
         index1 = IndexHour(('2020-01-01', '2020-02-01'))
         self.assertEqual(index1.dtype, np.dtype('<M8[h]'))
@@ -678,6 +637,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+
     def test_index_datetime_microsecond_a(self) -> None:
         index1 = IndexMicrosecond(('2020-01-01', '2020-02-01'))
         self.assertEqual(index1.dtype, np.dtype('<M8[us]'))
@@ -698,6 +658,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+
     def test_dtype_to_index_cls_a(self) -> None:
         t1 = dtype_to_index_cls(True, np.dtype('datetime64[D]'))
         self.assertEqual(t1, IndexDate)
@@ -730,8 +691,8 @@ class TestUnit(TestCase):
         t4 = dtype_to_index_cls(False, np.dtype(float))
         self.assertEqual(t4, IndexGO)
 
-
     #---------------------------------------------------------------------------
+
     def test_index_datetime_astype_a(self) -> None:
 
         idx1 = IndexDate(('2020-01-01', '2022-05-10'))
@@ -785,6 +746,7 @@ class TestUnit(TestCase):
             _ = IndexYearMonth.from_date_range(date_min, date_max)
 
     #---------------------------------------------------------------------------
+
     def test_index_datetime_iloc_searchsorted_a(self) -> None:
         dt64 = np.datetime64
         idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
@@ -804,7 +766,6 @@ class TestUnit(TestCase):
         idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
         self.assertEqual(idx.iloc_searchsorted('2020-01-05'), 4)
         self.assertEqual(idx.iloc_searchsorted(datetime.date(2020, 1, 5)), 4)
-
 
     def test_index_datetime_loc_searchsorted_a(self) -> None:
         dt64 = np.datetime64
@@ -830,8 +791,8 @@ class TestUnit(TestCase):
                 [datetime.date(2020, 1, 6), None]
                 )
 
-
     #---------------------------------------------------------------------------
+
     def test_index_datetime_loc_to_iloc_a(self) -> None:
         dt64 = np.datetime64
         idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
@@ -845,8 +806,6 @@ class TestUnit(TestCase):
                 slice(14, 29, None))
 
         self.assertEqual(idx.loc_to_iloc('2020-01-29'), 28)
-
-
 
     def test_index_date_threshold_a(self) -> None:
 
@@ -872,9 +831,3 @@ class TestUnit(TestCase):
         index_date = IndexDate(index_ym)
         with self.assertRaises(RuntimeError):
             post = index_ym.intersection(index_date)
-
-if __name__ == '__main__':
-    unittest.main()
-
-
-
