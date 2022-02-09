@@ -1,7 +1,7 @@
 from hypothesis import given
 from static_frame.test.test_case import TestCase
 
-from static_frame.test.property.strategies import get_index_hierarchyold_any
+from static_frame.test.property.strategies import get_index_hierarchy
 
 from static_frame import IndexHierarchy
 
@@ -10,7 +10,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @given(get_index_hierarchyold_any())
+    @given(get_index_hierarchy())
     def test_index_display(self, ih: IndexHierarchy) -> None:
 
         d1 = ih.display()
@@ -22,7 +22,7 @@ class TestUnit(TestCase):
         d3 = ih.display_wide()
         self.assertTrue(len(d3) > 0)
 
-    @given(get_index_hierarchyold_any())
+    @given(get_index_hierarchy())
     def test_index_to_frame(self, ih: IndexHierarchy) -> None:
         f1 = ih.to_frame()
         self.assertEqual(f1.shape, ih.shape)

@@ -3576,16 +3576,12 @@ class Frame(ContainerOperand):
             index_constructor:
             columns_constructor:
         '''
-        index = (
-            self._index.level_add(index, index_constructor=index_constructor)
-            if index is not None
-            else self._index
-            )
-        columns = (
-            self._columns.level_add(columns, index_constructor=columns_constructor)
-            if columns is not None
-            else self._columns
-            )
+        index = (self._index.level_add(index, index_constructor=index_constructor)
+                if index is not None else self._index
+                )
+        columns = (self._columns.level_add(columns, index_constructor=columns_constructor)
+                if columns is not None else self._columns
+                )
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays

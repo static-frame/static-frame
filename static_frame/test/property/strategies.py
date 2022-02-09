@@ -756,7 +756,7 @@ def get_index_hierarchy_any(
             ).flatmap(get_labels_spacings)
 
 
-def get_index_hierarchyold_any(
+def get_index_hierarchy_old_any(
         min_size: int = 1,
         max_size: int = MAX_ROWS,
         min_depth: int = 2,

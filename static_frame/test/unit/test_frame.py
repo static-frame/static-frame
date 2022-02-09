@@ -9634,12 +9634,15 @@ class TestUnit(TestCase):
         f5 = f1.drop[:]
         self.assertEqual(f5.shape, (2, 0))
 
+        col1_dtype = str(f1.columns.dtypes.values[0])
+        col2_dtype = str(f1.columns.dtypes.values[1])
+
         # BEHAVIOR CHANGE!!
         # Check that we can represent the IndexHierarchy
         d = f5.display(DisplayConfig(type_color=False))
         self.assertEqual(tuple(d), (['<Frame>'],
-                ['<IndexHierarchy>', '<int64>'],
-                ['', '<<U1>'],
+                ['<IndexHierarchy>', f'<{col1_dtype}>'],
+                ['', f'<{col2_dtype}>'],
                 ['<Index>'],
                 ['0'],
                 ['1'],

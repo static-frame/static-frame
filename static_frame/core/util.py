@@ -915,10 +915,10 @@ def ufunc_unique(
         # Use a dict to retain order; this will break for non hashables
         if return_counts:
             if not return_inverse:
-                store = Counter(array_iter)
+                store: tp.Mapping[tp.Hashable, tp.Union[int, None]] = Counter(array_iter)
             else:
                 store = Counter()
-                indices = {}
+                indices: tp.Dict[tp.Hashable, int] = {}
                 for i, element in enumerate(array_iter):
                     store[element] += 1
                     indices.setdefault(element, len(indices))
