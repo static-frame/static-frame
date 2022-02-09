@@ -1355,7 +1355,6 @@ class IndexHierarchy(IndexBase):
             key = tuple(HLoc(tuple(
                     key_from_container_key(self, k, expand_iloc=True)
                     for k in key)))
-            was_hloc = True
         else:
             # If the key is a series, key_from_container_key will invoke IndexCorrespondence
             # logic that eventually calls _loc_to_iloc on all the indices of that series.
@@ -1364,12 +1363,18 @@ class IndexHierarchy(IndexBase):
                 return PositionsAllocator.get(len(key))[key]
 
             key = tuple(key)
-            was_hloc = False
 
         if any(isinstance(k, tuple) for k in key):
             return [self._loc_to_iloc(k) for k in key]
 
         meaningful_selections = {depth: not (isinstance(k, slice) and k == NULL_SLICE) for depth, k in enumerate(key)}
+
+        can_return_element = all(
+                meaningful and (isinstance(key[depth], str) or not hasattr(key[depth], "__len__"))
+                for depth, meaningful
+                in meaningful_selections.items()
+                )
+
         meaningful_depths = sum(meaningful_selections.values())
 
         # Return a slice wherever possible
@@ -1402,7 +1407,7 @@ class IndexHierarchy(IndexBase):
         result = PositionsAllocator.get(len(mask))[mask]
 
         # Even if there was one result, unless the HLoc specified all levels, we need to return a list
-        if len(result) == 1 and not (was_hloc and meaningful_depths != self.depth):
+        if len(result) == 1 and can_return_element:
             return result[0]
         return result
 

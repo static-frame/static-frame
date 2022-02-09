@@ -855,13 +855,18 @@ class TestUnit(TestCase):
         f1 = sf.Frame.from_dict_records(
                 [dict(a=1,b=1), dict(a=2,b=3), dict(a=1,b=1), dict(a=2,b=3)], index=sf.IndexHierarchy.from_labels(
                 [(1,'dd',0),(1,'b',0),(2,'cc',0),(2,'ee',0)]))
-        df = f1.loc[sf.HLoc[(1,'dd')]].to_pandas()
 
-        self.assertEqual(df.index.values.tolist(),
-                [(1, 'dd', 0)])
-        self.assertEqual(df.values.tolist(),
-                [[1, 1]]
-                )
+        series = f1.loc[sf.HLoc[(1,'dd')]].to_pandas()
+
+        self.assertEqual(series.index.values.tolist(), ['a', 'b'])
+        self.assertEqual(series.values.tolist(), [1, 1])
+        self.assertEqual(series.name, (1, 'dd', 0))
+
+        df = f1.loc[sf.HLoc[(1,['dd'])]].to_pandas()
+
+        self.assertEqual(df.columns.values.tolist(), ['a', 'b'])
+        self.assertEqual(df.values.tolist(), [[1, 1]])
+        self.assertEqual(df.index.values.tolist(), [(1, 'dd', 0)])
 
     def test_frame_to_pandas_c(self) -> None:
         f = sf.FrameGO.from_elements(['a' for x in range(5)], columns=['a'])
