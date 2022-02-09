@@ -209,11 +209,11 @@ class IndexHierarchy(IndexBase):
     def _build_index_constructors(cls, index_constructors: IndexConstructors, depth: int) -> IndexConstructors:
         if index_constructors is None:
             return [cls._INDEX_CONSTRUCTOR for _ in range(depth)]
-        else:
-            if callable(index_constructors): # support a single constrctor
-                return [index_constructors for _ in range(depth)]
 
-            return index_constructors
+        if callable(index_constructors): # support a single constrctor
+            return [index_constructors for _ in range(depth)]
+
+        return index_constructors
 
     @classmethod
     def _build_name_from_indices(cls, indices: tp.List[Index]) -> tp.Tuple[tp.Hashable] | None:
@@ -376,11 +376,11 @@ class IndexHierarchy(IndexBase):
         prev_row = None
 
         while True:
-            for hash_map, indexer, val in zip(hash_maps, indexers, label_row):
+            for i_zip, (hash_map, indexer, val) in enumerate(zip(hash_maps, indexers, label_row)):
                 if val is continuation_token:
                     if prev_row is not None:
                         i = indexer[-1]
-                        val = prev_row[i]
+                        val = prev_row[i_zip]
                     else:
                         i = len(hash_map)
                         hash_map[val] = len(hash_map)
@@ -640,7 +640,7 @@ class IndexHierarchy(IndexBase):
             if _blocks is not None:
                 raise ErrorInitIndex('_blocks must not be provided when copying an IndexHierarchy')
 
-            self._indices = indices._indices
+            self._indices = [mutable_immutable_index_filter(self.STATIC, idx) for idx in indices._indices]
             self._indexers = indices._indexers
             self._name = indices._name
             self._blocks = indices._blocks
@@ -655,7 +655,7 @@ class IndexHierarchy(IndexBase):
         if not all(isinstance(index, IndexBase) for index in indices):
             raise ErrorInitIndex("indices must be Index's!")
 
-        self._indices = indices
+        self._indices = [mutable_immutable_index_filter(self.STATIC, idx) for idx in indices]
         self._indexers = indexers
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
@@ -1351,6 +1351,7 @@ class IndexHierarchy(IndexBase):
             key = tuple(HLoc(tuple(
                     key_from_container_key(self, k, expand_iloc=True)
                     for k in key)))
+            was_hloc = True
         else:
             # If the key is a series, key_from_container_key will invoke IndexCorrespondence
             # logic that eventually calls _loc_to_iloc on all the indices of that series.
@@ -1359,14 +1360,16 @@ class IndexHierarchy(IndexBase):
                 return PositionsAllocator.get(len(key))[key]
 
             key = tuple(key)
+            was_hloc = False
 
         if any(isinstance(k, tuple) for k in key):
             return [self._loc_to_iloc(k) for k in key]
 
         meaningful_selections = {depth: not (isinstance(k, slice) and k == NULL_SLICE) for depth, k in enumerate(key)}
+        meaningful_depths = sum(meaningful_selections.values())
 
         # Return a slice wherever possible
-        if sum(meaningful_selections.values()) == 1:
+        if meaningful_depths == 1:
 
             depth = next(i for i, meaningful in meaningful_selections.items() if meaningful)
             mask = self._process_key_at_depth(depth=depth, key=key)
@@ -1393,7 +1396,9 @@ class IndexHierarchy(IndexBase):
             del mask_2d
 
         result = PositionsAllocator.get(len(mask))[mask]
-        if len(result) == 1:
+
+        # Even if there was one result, unless the HLoc specified all levels, we need to return a list
+        if len(result) == 1 and not (was_hloc and meaningful_depths != self.depth):
             return result[0]
         return result
 
