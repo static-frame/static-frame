@@ -1,4 +1,3 @@
-import unittest
 import pickle
 from itertools import zip_longest
 import copy
@@ -31,7 +30,6 @@ class TestUnit(TestCase):
             tb1 = TypeBlocks.from_blocks((3, 4))
         with self.assertRaises(ErrorInitTypeBlocks):
             tb1 = TypeBlocks.from_blocks((np.arange(8).reshape((2, 2, 2)),))
-
 
     def test_type_blocks_a(self) -> None:
 
@@ -77,8 +75,6 @@ class TestUnit(TestCase):
                 (2, slice(1, 2)),
                 (2, slice(3, 4)),
             ])
-
-
 
     def test_type_blocks_b(self) -> None:
 
@@ -128,8 +124,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(tb1.unified, False)
 
-
-
     def test_type_blocks_c(self) -> None:
 
         a1 = np.array([1, 2, 3])
@@ -153,8 +147,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.iloc[0, 0:2].shape, (1, 2))
         self.assertEqual(tb1.iloc[0:2, 0:2].shape, (2, 2))
 
-
-
     def test_type_blocks_d(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
@@ -165,8 +157,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(tb1.iloc[0:2].shape, (2, 8))
         self.assertEqual(tb1.iloc[1:3].shape, (2, 8))
-
-
 
     def test_type_blocks_indices_to_contiguous_pairs(self) -> None:
 
@@ -195,7 +185,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             list(tb1._key_to_block_slices('a'))
-
 
     #---------------------------------------------------------------------------
 
@@ -247,7 +236,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb2._extract(slice(2,4)).shape, (1,8))
         self.assertEqual(tb2._extract(slice(None), slice(2,4)).shape, (3, 2))
         self.assertEqual(tb1._extract(slice(2,4)).shape, (1, 4))
-
 
     def test_type_blocks_extract_b(self) -> None:
         # test case of a single unified block
@@ -368,7 +356,6 @@ class TestUnit(TestCase):
         self.assertEqual(a5.tolist(),
                 [True, True, True])
 
-
     def test_type_blocks_extract_array_b(self) -> None:
 
         a1 = np.arange(10).reshape(2, 5)
@@ -379,7 +366,6 @@ class TestUnit(TestCase):
 
         a2 = tb1._extract_array(NULL_SLICE, 4)
         self.assertEqual(a2.tolist(), [4, 9])
-
 
     def test_type_blocks_extract_array_c(self) -> None:
 
@@ -406,7 +392,6 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             a3[0] = 34
 
-
     def test_type_blocks_static_frame(self) -> None:
         a1 = np.array([1, 2, 3], dtype=np.int64)
         a2 = np.array([False, True, False])
@@ -414,7 +399,6 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertTrue(tb1.dtypes[0] == np.int64)
-
 
     def test_type_blocks_attributes(self) -> None:
 
@@ -431,9 +415,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.size, 9)
         self.assertEqual(tb2.size, 24)
 
-
-
-
     def test_type_blocks_block_pointers(self) -> None:
 
         a1 = np.array([1, 2, 3])
@@ -448,9 +429,6 @@ class TestUnit(TestCase):
 
         self.assertTrue((tb1[0:2].mloc == tb1.mloc[:2]).all())
         self.assertTrue((tb1.mloc[:2] == tb1.iloc[0:2, 0:2].mloc).all())
-
-
-
 
     def test_type_blocks_unary_operator_a(self) -> None:
 
@@ -484,8 +462,6 @@ class TestUnit(TestCase):
                 [False,  True]],
                 )
 
-
-
     def test_type_blocks_block_compatible_a(self) -> None:
 
         a1 = np.array([1, 2, 3])
@@ -508,7 +484,6 @@ class TestUnit(TestCase):
 
         self.assertFalse(tb1.block_compatible(tb2))
         self.assertFalse(tb2.block_compatible(tb1))
-
 
     def test_type_blocks_block_compatible_b(self) -> None:
 
@@ -547,7 +522,6 @@ class TestUnit(TestCase):
         # we have perfect correspondence between the two
         self.assertTrue((tb1.values == tb2.values).all())
 
-
     def test_type_blocks_consolidate_b(self) -> None:
         # if we hava part of TB consolidated, we do not reallocate
 
@@ -570,7 +544,6 @@ class TestUnit(TestCase):
         # the first block is the same instance
         self.assertEqual(tb1.mloc[0], tb2.mloc[0])
 
-
     def test_type_blocks_consolidate_c(self) -> None:
         blocks = [np.empty(shape=(0, 1), dtype=np.dtype('>f4')), np.empty(shape=(0, 2), dtype=np.dtype('>f4'))]
 
@@ -578,9 +551,7 @@ class TestUnit(TestCase):
         tb2 = tb1.consolidate()
         self.assertTrue((tb1.dtypes == tb2.dtypes).all())
 
-
     #---------------------------------------------------------------------------
-
 
     def test_type_blocks_binary_operator_a(self) -> None:
 
@@ -599,8 +570,6 @@ class TestUnit(TestCase):
         self.assertTrue(((tb1 + tb2).values == (tb1 + tb1).values).all())
 
         post1 = tb1 + tb2
-
-
 
     def test_type_blocks_binary_operator_b(self) -> None:
 
@@ -637,7 +606,6 @@ class TestUnit(TestCase):
                 [13, 10]],
                 )
 
-
     def test_type_blocks_binary_operator_c(self) -> None:
         a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
@@ -671,7 +639,6 @@ class TestUnit(TestCase):
                 [0, 0, 1]]
             )
 
-
     def test_type_blocks_binary_operator_d(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[1.5,2.6], [4.2,5.5], [0.2,0.1]])
@@ -682,7 +649,6 @@ class TestUnit(TestCase):
                 [[  1. ,   0. ,   6. ,   0. ,   2.6],
                 [  4. ,   0. ,  12. ,   0. ,   5.5],
                 [  0. ,   0. ,   2. ,   0. ,   0.1]])
-
 
     def test_type_blocks_binary_operator_e(self) -> None:
 
@@ -715,18 +681,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = tb1 + tb2.values
-
-    # def test_type_blocks_binary_operator_e(self) -> None:
-
-    #     a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
-    #     a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
-    #     tb = TypeBlocks.from_blocks((a1, a2))
-
-    #     # this applies row-wise, NPs default:
-    #     # tb * [2, 2, 2, 2, 2, 2]
-    #     # if this can be assumed to be an axis 0 operation
-    #     import ipdb; ipdb.set_trace()
-
 
     #---------------------------------------------------------------------------
 
@@ -805,7 +759,6 @@ class TestUnit(TestCase):
                 [[ True, False, False, False, False,  True,  True, False],
                 [ True, False, False, False, False,  True,  True, False]])
 
-
     def test_type_blocks_mask_blocks_c(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6]])
@@ -837,7 +790,6 @@ class TestUnit(TestCase):
         self.assertTypeBlocksArrayEqual(tb5,
                 [[ True, False, False,  True, False, False,  True, False],
                 [ True, False, False,  True, False, False,  True, False]])
-
 
     def test_type_blocks_mask_blocks_d(self) -> None:
 
@@ -918,7 +870,6 @@ class TestUnit(TestCase):
             [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('bool'), np.dtype('int64'), np.dtype('<U2'), np.dtype('int64')]
             )
 
-
     def test_type_blocks_assign_blocks_d(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -937,8 +888,6 @@ class TestUnit(TestCase):
             [[1.0, 2.0, 3.0, False, False, True, 'a', 'b'],
             [1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1],
             [0.0, 0.0, 1.0, True, False, True, 'oe', 'od']], match_dtype=object)
-
-
 
     def test_type_blocks_assign_blocks_e(self) -> None:
 
@@ -1005,8 +954,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb6.iloc[1].values[0].tolist(),
                 [True, True, True, False, False, 1.1, 2.1, 3.1, 4.1])
 
-
-
     def test_type_blocks_assign_blocks_f(self) -> None:
 
         a1 = np.array([[True, True, True], [True, True, True], [True, True, True]])
@@ -1071,8 +1018,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb6.iloc[1].values[0].tolist(),
                 [True, True, True, False, False, 1.1, 2.1, 3.1, 4.1])
 
-
-
     def test_type_blocks_assign_blocks_g(self) -> None:
 
         a1 = np.array([[True, True, True], [True, True, True], [True, True, True]])
@@ -1112,7 +1057,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(tb4.shapes.tolist(),
                 [(3, 3), (3, 2), (3, 1), (3, 1), (3, 2)])
-
 
     def test_type_blocks_assign_blocks_h(self) -> None:
 
@@ -1154,8 +1098,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb4.shapes.tolist(),
                 [(3, 3), (3, 2), (3, 1), (3, 1), (3, 2)])
 
-
-
     def test_type_blocks_assign_blocks_i(self) -> None:
 
         a1 = np.array([[1.2], [2.1], [3.1]])
@@ -1168,7 +1110,6 @@ class TestUnit(TestCase):
 
         self.assertTypeBlocksArrayEqual(tb2,
             [[20.1, False], [40.1, True], [3.1, True]], match_dtype=object)
-
 
     def test_type_blocks_assign_blocks_j(self) -> None:
 
@@ -1196,7 +1137,6 @@ class TestUnit(TestCase):
                            value=value,
                            value_valid=targets,
                            ))
-
 
     def test_type_blocks_assign_blocks_k(self) -> None:
 
@@ -1284,7 +1224,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb5.iloc[1].values.tolist(),
                 [[True, True, 4, False, 4, False, True, 'b', True]])
 
-
     def test_type_blocks_assign_blocks_from_keys_by_blocks_b(self) -> None:
 
         a1 = np.array([[True, True, True], [True, True, True], [True, True, True]])
@@ -1319,9 +1258,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb3.values.tolist(),
                 [[True, True, 3, False, False, False, True, 'a', True], [True, True, True, False, False, False, True, True, True], [True, True, 4, False, False, False, True, 'b', True]]
                 )
-
-
-
 
     #--------------------------------------------------------------------------
 
@@ -1470,7 +1406,6 @@ class TestUnit(TestCase):
         self.assertEqual(subtb.values.tolist(),
                 [[1, 2, 3, 4, False, False, True], [4, 2, 6, 3, False, False, True]])
 
-
     def test_type_blocks_group_b(self) -> None:
 
         a1 = np.array([
@@ -1531,7 +1466,6 @@ class TestUnit(TestCase):
                 [(6, 1), (6, 1)]
                 )
 
-
     #---------------------------------------------------------------------------
 
     def test_type_blocks_transpose_a(self) -> None:
@@ -1586,7 +1520,6 @@ class TestUnit(TestCase):
         # we are iterating over slices so we get views of columns without copying
         self.assertEqual(tb.mloc[0], mloc(next(tb.axis_values(0))))
 
-
     def test_type_blocks_axis_values_b(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
@@ -1599,7 +1532,6 @@ class TestUnit(TestCase):
         self.assertEqual([a.tolist() for a in tb.axis_values(axis=0, reverse=False)],
                 [[1, 4, 0], [2, 5, 0], [3, 6, 1], [False, True, True], [False, False, False], [True, True, True], ['a', 'c', 'oe'], ['b', 'd', 'od']])
 
-
     def test_type_blocks_axis_values_c(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
@@ -1609,8 +1541,8 @@ class TestUnit(TestCase):
         with self.assertRaises(AxisInvalid):
             _ = next(tb.axis_values(-1))
 
-
     #---------------------------------------------------------------------------
+
     def test_type_blocks_extract_iloc_mask_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -1632,9 +1564,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb.extract_iloc_mask((slice(1, None), slice(4, None))).values.tolist(),
                 [[False, False, False, False, False, False, False, False], [False, False, False, False, True, True, True, True], [False, False, False, False, True, True, True, True]])
 
-
-
-
     def test_type_blocks_extract_iloc_assign_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -1648,7 +1577,6 @@ class TestUnit(TestCase):
                 [600, 600, 600, 600, 600, 600, 600, 600],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
 
-
     def test_type_blocks_extract_iloc_assign_b(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -1660,7 +1588,6 @@ class TestUnit(TestCase):
                 [[1, 2, 3, False, False, True, 'a', 'b'],
                 [4, 5, 6, True, False, 20, 'c', 'd'],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
-
 
     def test_type_blocks_extract_iloc_assign_c(self) -> None:
 
@@ -1675,7 +1602,6 @@ class TestUnit(TestCase):
                 [0, 0, 1, True, False, True, 'oe', 'od']]
                 )
 
-
     def test_type_blocks_extract_iloc_assign_d(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -1687,7 +1613,6 @@ class TestUnit(TestCase):
                 [[1, -5, 3, False, -5, True, 'a', -5],
                 [4, -5, 6, True, -5, True, 'c', -5],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
-
 
     def test_type_blocks_extract_iloc_assign_e(self) -> None:
 
@@ -1702,7 +1627,6 @@ class TestUnit(TestCase):
                 [-1, -2, -3, -4, False, True, 'c', 'd'],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
 
-
     def test_type_blocks_extract_iloc_assign_f(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -1716,7 +1640,6 @@ class TestUnit(TestCase):
                 [4, 5, 6, True, False, True, 'c', 'd'],
                 [0, 0, 1, -1, -2, -3, -4, 'od']])
 
-
     def test_type_blocks_extract_iloc_assign_g(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -1729,7 +1652,6 @@ class TestUnit(TestCase):
                 [[1, 2, 3, False, -1, -2, -3, -4],
                 [4, 5, 6, True, False, True, 'c', 'd'],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
-
 
     #---------------------------------------------------------------------------
 
@@ -1761,8 +1683,8 @@ class TestUnit(TestCase):
                 [((0, 0), 1), ((1, 0), 4), ((2, 0), 0), ((0, 1), 2), ((1, 1), 5), ((2, 1), 0), ((0, 2), 3), ((1, 2), 6), ((2, 2), 1), ((0, 3), None), ((1, 3), None), ((2, 3), None)]
 )
 
-
     #---------------------------------------------------------------------------
+
     def test_type_blocks_reblock_signature_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]], dtype=np.int64)
@@ -1786,7 +1708,6 @@ class TestUnit(TestCase):
                 list(tb._reblock_signature()),
                 [(dtype('int64'), 3), (dtype('bool'), 3), (dtype('<U2'), 2), (dtype('O'), 1)])
 
-
     #---------------------------------------------------------------------------
 
     def test_type_blocks_copy_a(self) -> None:
@@ -1809,7 +1730,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb2.iloc[2].values.tolist(),
                 [[0, 0, 1, True, False, True, None, 'oe', 'od']])
 
-
     def test_type_blocks_copy_b(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -1821,8 +1741,8 @@ class TestUnit(TestCase):
 
         self.assertEqual([id(a) for a in tb1._blocks], [id(a) for a in tb2._blocks])
 
-
     #---------------------------------------------------------------------------
+
     def test_type_blocks_isna_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, np.nan, 6], [0, 0, 1]], dtype=object)
@@ -1888,7 +1808,6 @@ class TestUnit(TestCase):
                 [4.0, 4.0, 2.0, 2.0],
                 [1.0, 4.0, 1.0, 0.0]])
 
-
     def test_type_blocks_clip_d(self) -> None:
 
         a1 = np.array([[10, 2], [10, 2], [10, 2]], dtype=float)
@@ -1909,7 +1828,6 @@ class TestUnit(TestCase):
                 [[8.0, 2.0, 1.0, 0.0],
                 [6.0, 0.0, 0.0, 0.0],
                 [8.0, 2.0, 1.0, 0.0]])
-
 
     def test_type_blocks_clip_e(self) -> None:
 
@@ -1956,7 +1874,6 @@ class TestUnit(TestCase):
                 [5.0, 0.0, 0.0, 0.0],
                 [5.0, 0.0, 0.0, 0.0]])
 
-
     def test_type_blocks_clip_g(self) -> None:
 
         a1 = np.array([[10, 2, 10, 2], [10, 2, 10, 2], [10, 2, 10, 2]], dtype=float)
@@ -1976,7 +1893,6 @@ class TestUnit(TestCase):
         tb2 = tb1.clip(None, ub)
         self.assertEqual(tb2.values.tolist(),
                 [[6.0, 2.0, 2.0, 1.0], [6.0, -2.0, 6.0, 0.0], [6.0, 2.0, 2.0, 0.0]])
-
 
     #---------------------------------------------------------------------------
 
@@ -2008,7 +1924,6 @@ class TestUnit(TestCase):
                 [True, True, False])
         self.assertEqual(column_key, None)
 
-
     def test_type_blocks_fillna_a(self) -> None:
 
         a1 = np.array([
@@ -2034,8 +1949,6 @@ class TestUnit(TestCase):
         # we ahve Nones, which are na
         self.assertEqual(tb3.isna().values.any(), True)
 
-
-
     def test_type_blocks_fillna_trailing_a(self) -> None:
 
         for axis in (0, 1):
@@ -2043,7 +1956,6 @@ class TestUnit(TestCase):
                 tb = TypeBlocks.from_blocks(arrays)
                 post = tb.fillna_trailing(-1, axis=axis)
                 self.assertEqual(tb.shape, post.shape)
-
 
     def test_type_blocks_fillna_trailing_b(self) -> None:
 
@@ -2061,7 +1973,6 @@ class TestUnit(TestCase):
         self.assertAlmostEqualValues(
                 list(tb2.values.flat),
                 [nan, 0.0, 3.0, 4.0, 0, nan, 0.0, 6.0, 0.0, 0, 5.0, 0.0, 0.0, 0.0, 0])
-
 
     def test_type_blocks_fillna_trailing_c(self) -> None:
 
@@ -2081,7 +1992,6 @@ class TestUnit(TestCase):
 
         # no change as no leading values are NaN
         self.assertEqual(tb1.values.tolist(), tb2.values.tolist())
-
 
     def test_type_blocks_fillna_trailing_d(self) -> None:
 
@@ -2104,7 +2014,6 @@ class TestUnit(TestCase):
                 [None, 1, None, 1, None, 6, 0],
                 [None, 5, None, 5, 0, 0, 0]])
 
-
     def test_type_blocks_fillna_trailing_e(self) -> None:
 
         a1 = np.array([None, None, None], dtype=object)
@@ -2113,6 +2022,7 @@ class TestUnit(TestCase):
             tb1.fillna_trailing(value=3, axis=2)
 
     #---------------------------------------------------------------------------
+
     def test_type_blocks_fillna_leading_a(self) -> None:
 
         for axis in (0, 1):
@@ -2120,7 +2030,6 @@ class TestUnit(TestCase):
                 tb = TypeBlocks.from_blocks(arrays)
                 post = tb.fillna_leading(-1, axis=axis)
                 self.assertEqual(tb.shape, post.shape)
-
 
     def test_type_blocks_fillna_leading_b(self) -> None:
 
@@ -2137,7 +2046,6 @@ class TestUnit(TestCase):
 
         self.assertAlmostEqualValues(list(tb2.values.flat),
                 [0.0, 0.0, 3.0, 4.0, 0, 0.0, 0.0, 6.0, nan, 0, 5.0, 0.0, nan, nan, 0])
-
 
     def test_type_blocks_fillna_leading_c(self) -> None:
 
@@ -2193,14 +2101,12 @@ class TestUnit(TestCase):
                 [0, 0, 1, None, 6, None, 1],
                 [0, 0, 5, None, None, None, 5]])
 
-
     def test_type_blocks_fillna_leading_f(self) -> None:
 
         a1 = np.array([None, None, None], dtype=object)
         tb1 = TypeBlocks.from_blocks((a1,))
         with self.assertRaises(AxisInvalid):
             tb1.fillna_leading(value=3, axis=2)
-
 
     def test_type_blocks_fillna_leading_g(self) -> None:
 
@@ -2211,8 +2117,6 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             tb1.fillna_leading(value=np.array((3, 4)), axis=0)
 
-
-
     def test_type_blocks_fillna_leading_h(self) -> None:
 
         a1 = np.array(['foo', None, None], dtype=object)
@@ -2222,7 +2126,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb2.values.tolist(),
                 [['foo', 3], [None, 3], [None, 'bar']])
 
-
     def test_type_blocks_fillna_leading_i(self) -> None:
 
         a1 = np.array([np.nan, 10, np.nan], dtype=float)
@@ -2231,8 +2134,6 @@ class TestUnit(TestCase):
         tb2 = tb1.fillna_leading(value=None, axis=0)
         self.assertEqual(tb2.values[:2,:].tolist(),
                 [[None, None], [10.0, None]])
-
-
 
     def test_type_blocks_fillna_leading_j(self) -> None:
 
@@ -2249,8 +2150,6 @@ class TestUnit(TestCase):
                 [[None, 10.0, 0.0], [None, None, 20.0]]
                 )
 
-
-
     #---------------------------------------------------------------------------
 
     def test_type_blocks_fillna_forward_a(self) -> None:
@@ -2263,8 +2162,6 @@ class TestUnit(TestCase):
 
                 post2 = tb.fillna_backward(axis=axis)
                 self.assertEqual(tb.shape, post2.shape)
-
-
 
     def test_type_blocks_fillna_forward_b(self) -> None:
 
@@ -2362,7 +2259,6 @@ class TestUnit(TestCase):
                 [74, 74, 74, 74, 234, 234, None]]
                 )
 
-
     def test_type_blocks_fillna_forward_f(self) -> None:
 
         a1 = np.array([None, None, 40], dtype=object)
@@ -2383,9 +2279,6 @@ class TestUnit(TestCase):
                 [8, 40, 74, 601],
                 [None, 40, 74, 234]]
                 )
-
-
-
 
     def test_type_blocks_fillna_forward_g(self) -> None:
 
@@ -2411,8 +2304,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.fillna_backward(limit=1, axis=1).values.tolist(),
             [[None, None, 30, 30, None, 543, 543, None], [8, None, None, None, None, 601, 601, None], [None, None, 74, 74, None, 234, 234, None]])
 
-
-
     def test_type_blocks_fillna_forward_h(self) -> None:
 
         a1 = np.array([
@@ -2437,7 +2328,6 @@ class TestUnit(TestCase):
         self.assertEqual(
                 tb1.fillna_forward(axis=1, limit=3).values.tolist(),
                 [[543, 543, 543, 3, 3, 3, 3, None, 10, 10], [601, 601, 601, 601, 4, 4, 4, 4, 88, 88], [234, 234, 3, 3, 3, 3, None, None, 40, 40]])
-
 
     def test_type_blocks_fillna_forward_i(self) -> None:
 
@@ -2470,8 +2360,6 @@ class TestUnit(TestCase):
                 tb1.fillna_backward(axis=1, limit=2).values.tolist(),
                 [[543, 3, 3, 3, None, None, 10, 10, 10, None], [601, None, 4, 4, 4, 23, 23, 88, 88, None], [234, 3, 3, None, None, None, 40, 40, 40, None]])
 
-
-
     def test_type_blocks_fillna_forward_j(self) -> None:
 
 
@@ -2486,6 +2374,7 @@ class TestUnit(TestCase):
             tb1.fillna_backward(axis=3)
 
     #---------------------------------------------------------------------------
+
     def test_type_blocks_from_none_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, np.nan, 6], [0, 0, 1]], dtype=object)
@@ -2523,7 +2412,6 @@ class TestUnit(TestCase):
             self.assertEqual(tb1.nbytes, 0)
             self.assertEqual(len(tb1), tb1.shape[0])
 
-
     def test_type_blocks_datetime64_a(self) -> None:
 
         d = np.datetime64
@@ -2547,7 +2435,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(len(tb2._blocks), 1)
 
-
     def test_type_blocks_resize_blocks_a(self) -> None:
 
         a1 = np.array([1, 2, 3])
@@ -2563,7 +2450,6 @@ class TestUnit(TestCase):
 
         tb2 = TypeBlocks.from_blocks(tb1.resize_blocks(index_ic=index_ic, columns_ic=None, fill_value=None))
         self.assertEqual(tb2.shape, (2, 3))
-
 
     def test_type_blocks_resize_blocks_b(self) -> None:
 
@@ -2699,7 +2585,6 @@ class TestUnit(TestCase):
                 [0, 0, 1, True, 0, True]]
                 )
 
-
     def test_type_blocks_astype_b(self) -> None:
 
         a1 = np.array([1, 2, 3])
@@ -2725,7 +2610,6 @@ class TestUnit(TestCase):
                 [True, True, True, True]]
                 )
 
-
     def test_type_blocks_astype_c(self) -> None:
 
         a1 = np.array([1, 2, 3])
@@ -2750,7 +2634,6 @@ class TestUnit(TestCase):
         self.assertEqual([d.kind for d in tb3.dtypes],
                 ['U', 'i', 'U', 'b'])
 
-
     def test_type_blocks_astype_d(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -2772,9 +2655,6 @@ class TestUnit(TestCase):
                 ['U', 'U', 'U', 'U', 'U', 'U'])
         self.assertEqual(tb3.shapes.tolist(),
                 [(3, 3), (3, 3)])
-
-        # import ipdb; ipdb.set_trace()
-
 
     #---------------------------------------------------------------------------
 
@@ -2824,7 +2704,6 @@ class TestUnit(TestCase):
                 )
         self.assertTrue(tb1.mloc[0] == tb6.mloc[0])
 
-
     def test_type_blocks_drop_blocks_b(self) -> None:
 
         a1 = np.array([1, 2, 3])
@@ -2851,7 +2730,6 @@ class TestUnit(TestCase):
                 [True, True]]
                 )
 
-
     def test_type_blocks_drop_blocks_c(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
@@ -2871,7 +2749,6 @@ class TestUnit(TestCase):
         self.assertTypeBlocksArrayEqual(tb3,
                 [[4, True, False, True]]
                 )
-
 
     def test_type_blocks_drop_blocks_d(self) -> None:
 
@@ -2896,7 +2773,6 @@ class TestUnit(TestCase):
                 [3, 6, True, True]]
                 )
 
-
     def test_type_blocks_drop_blocks_e(self) -> None:
 
 
@@ -2906,8 +2782,6 @@ class TestUnit(TestCase):
             for i in range(tb1.shape[1]):
                 tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=i))
                 self.assertTrue(tb2.shape == (3, tb1.shape[1] - 1))
-
-
 
     def test_type_blocks_drop_blocks_f(self) -> None:
         a1 = np.array([[1], [5], [0]])
@@ -2919,7 +2793,6 @@ class TestUnit(TestCase):
         tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=slice(0, 2)))
         self.assertEqual(tb2.shape, (3, 2))
         self.assertTrue((tb1[2:].values == tb2.values).all())
-
 
     def test_type_blocks_drop_blocks_g(self) -> None:
         a1 = np.array([[1], [5], [0]])
@@ -2933,8 +2806,6 @@ class TestUnit(TestCase):
         tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=slice(0, 2)))
         self.assertEqual(tb2.shape, (3, 2))
         self.assertTrue((tb1[2:].values == tb2.values).all())
-
-
 
     def test_type_blocks_drop_blocks_h(self) -> None:
         a1 = np.array([[False]])
@@ -2954,7 +2825,6 @@ class TestUnit(TestCase):
         with self.assertRaises(IndexError):
             tb3.drop((None, 0))
 
-
     def test_type_blocks_pickle_a(self) -> None:
 
         a1 = np.array([1, 2, 3])
@@ -2969,8 +2839,8 @@ class TestUnit(TestCase):
                 [False, False, False]
                 )
 
-
     #---------------------------------------------------------------------------
+
     def test_type_blocks_roll_blocks_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, -1, 6], [0, 0, 1]], dtype=object)
@@ -2999,7 +2869,6 @@ class TestUnit(TestCase):
                 ['b', None, 1, 2, 3, 'a'],
                 ['d', None, 4, -1, 6, 'c']]
                 )
-
 
     def test_type_blocks_roll_blocks_b(self) -> None:
 
@@ -3051,8 +2920,8 @@ class TestUnit(TestCase):
                 [[1, 'a', 'b'], [2, 'c', 'd'], [3, 'oe', 'od']]
                 )
 
-
     #---------------------------------------------------------------------------
+
     def test_type_blocks_from_blocks_a(self) -> None:
 
         a1 = np.full((3, 0), False)
@@ -3089,7 +2958,6 @@ class TestUnit(TestCase):
             ['y', 'y', 'y']
             )
 
-
     def test_type_blocks_from_blocks_c(self) -> None:
 
         a1 = np.full((0, 2), False)
@@ -3108,9 +2976,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             tb.append(np.empty((3, 0)))
-
-        # import ipdb; ipdb.set_trace()
-
 
     def test_type_blocks_from_blocks_d(self) -> None:
 
@@ -3135,12 +3000,12 @@ class TestUnit(TestCase):
         self.assertEqual(tb.shape, (0, 5))
         self.assertEqual(len(tb.shapes), 4)
 
-
     def test_type_blocks_from_blocks_e(self) -> None:
         with self.assertRaises(ErrorInitTypeBlocks):
             _ = TypeBlocks.from_blocks([])
 
     #---------------------------------------------------------------------------
+
     def test_type_blocks_append_a(self) -> None:
         a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
@@ -3157,7 +3022,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.iloc[1].values.tolist(), [[2, True, 5, 4, 6]])
         self.assertEqual(tb1.iloc[:, 3].values.tolist(), [[3], [4], [5]])
 
-
     def test_type_blocks_append_b(self) -> None:
 
         a1 = np.full((2, 3), False)
@@ -3168,7 +3032,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb.shape, (2, 3))
         # array was not added
         self.assertEqual(len(tb.shapes), 1)
-
 
     def test_type_blocks_append_c(self) -> None:
 
@@ -3181,8 +3044,6 @@ class TestUnit(TestCase):
         # array was not added
         self.assertEqual(len(tb.shapes), 1)
 
-
-
     def test_type_blocks_append_d(self) -> None:
 
         tb = TypeBlocks.from_zero_size_shape((0, 0))
@@ -3191,7 +3052,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb.shape, (0, 0))
         # array was not added
         self.assertEqual(len(tb.shapes), 0)
-
 
     def test_type_blocks_append_e(self) -> None:
 
@@ -3202,9 +3062,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb.shape, (0, 1))
         # array was not added
         self.assertEqual(len(tb.shapes), 1)
-
-
-
 
     def test_type_blocks_extract_bloc_assign_a(self) -> None:
 
@@ -3224,8 +3081,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb2.values.tolist(),
                 [[1, 2, 3, None, False, False, True], [4, None, 6, 5.2, True, False, True], [0, 0, 1, 5.5, None, False, True]]
                 )
-
-
 
     def test_type_blocks_extract_bloc_assign_b(self) -> None:
 
@@ -3249,6 +3104,7 @@ class TestUnit(TestCase):
             )
 
     #---------------------------------------------------------------------------
+
     def test_type_blocks_round_a(self) -> None:
 
         a1 = np.full(4, .33333, )
@@ -3267,7 +3123,6 @@ class TestUnit(TestCase):
                 [[0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6]]
                 )
 
-
     #---------------------------------------------------------------------------
 
     def test_type_blocks_ufunc_blocks_a(self) -> None:
@@ -3284,7 +3139,6 @@ class TestUnit(TestCase):
         tb3 = TypeBlocks.from_blocks(tb1._ufunc_blocks(1, ufunc))
         self.assertEqual(tb3.values.tolist(),
                 [[0, 2, 2, 3], [4, 10, 6, 7]])
-
 
     def test_type_blocks_ufunc_blocks_b(self) -> None:
 
@@ -3303,7 +3157,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb3.values.tolist(),
                 [[0, 0, 0], [1, 2, 1], [2, 4, 2]])
 
-
     def test_type_blocks_ufunc_blocks_c(self) -> None:
 
         a1 = np.arange(3)
@@ -3320,8 +3173,8 @@ class TestUnit(TestCase):
         self.assertEqual(tb3.values.tolist(),
                 [[0, 0, 2, 0], [1, 2, 6, 2], [2, 4, 10, 4]])
 
-
     #---------------------------------------------------------------------------
+
     def test_type_blocks_getitem_a(self) -> None:
 
         a1 = np.arange(3)
@@ -3341,6 +3194,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+
     def test_type_blocks_equals_a(self) -> None:
 
         a1 = np.array([[1, 10], [2, 20], [3, 30]])
@@ -3364,7 +3218,6 @@ class TestUnit(TestCase):
         self.assertFalse(tb1.equals(tb3))
         self.assertFalse(tb3.equals(tb1))
 
-
     def test_type_blocks_equals_b(self) -> None:
 
         a1 = np.array([[1, 10], [2, 20], [3, 30]])
@@ -3377,7 +3230,6 @@ class TestUnit(TestCase):
         self.assertFalse(tb1.equals(np.arange(3)))
         self.assertFalse(tb1.equals(None))
         self.assertFalse(tb1.equals(dict(a=30, b=40)))
-
 
     def test_type_blocks_equals_c(self) -> None:
 
@@ -3392,8 +3244,6 @@ class TestUnit(TestCase):
         self.assertFalse(tb1.equals(tb2, compare_dtype=True))
         self.assertTrue(tb1.equals(tb2, compare_dtype=False))
 
-
-
     def test_type_blocks_equals_d(self) -> None:
 
         a1 = np.array([False, True, False])
@@ -3404,7 +3254,6 @@ class TestUnit(TestCase):
         self.assertFalse(tb1.equals(tb1.values, compare_class=True))
         # difference by shape
         self.assertFalse(tb1.equals(tb2))
-
 
     def test_type_blocks_equals_e(self) -> None:
 
@@ -3418,8 +3267,8 @@ class TestUnit(TestCase):
         # import ipdb; ipdb.set_trace()
         self.assertFalse(tb1.equals(tb2))
 
-
     #---------------------------------------------------------------------------
+
     def test_type_blocks_ufunc_binary_operator_a(self) -> None:
         a1 = np.array([10, 20, 30])
         a2 = np.arange(10, 16).reshape(3, 2)
@@ -3444,6 +3293,7 @@ class TestUnit(TestCase):
                     )
 
     #---------------------------------------------------------------------------
+
     def test_type_blocks_deepcopy_a(self) -> None:
         a1 = np.array([10, 20, 30])
         a2 = np.arange(10, 16).reshape(3, 2)
@@ -3480,6 +3330,7 @@ class TestUnit(TestCase):
         self.assertTrue(id(tb1._blocks[2]) != id(tb2._blocks[2]))
 
     #---------------------------------------------------------------------------
+
     def test_type_blocks_sort_a(self) -> None:
         tb1 = ff.parse('s(10,4)|v(str,int,bool,float)')._blocks
 
@@ -3537,8 +3388,8 @@ class TestUnit(TestCase):
         post, sel = tb1.sort(axis=1, key=[1])
         self.assertEqual(sel.tolist(), [3, 1, 2, 4, 0])
 
-
     #---------------------------------------------------------------------------
+
     def test_type_blocks_group_sort_a(self) -> None:
 
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
@@ -3553,6 +3404,7 @@ class TestUnit(TestCase):
             _ = tuple(group_sort(tb1, axis=3, key=0))
 
     #---------------------------------------------------------------------------
+
     def test_type_blocks_group_match_a(self) -> None:
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
         with self.assertRaises(RuntimeError):
@@ -3565,6 +3417,7 @@ class TestUnit(TestCase):
                 [(5, 2), (1, 2), (6, 2)])
 
     #---------------------------------------------------------------------------
+
     def test_type_blocks_ufunc_axis_skipna_a(self) -> None:
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
 
@@ -3653,17 +3506,10 @@ class TestUnit(TestCase):
         self.assertEqual(post.dtype, np.dtype(float))
         self.assertEqual(post.tolist(), [-88017.0, -610.8])
 
-
     #---------------------------------------------------------------------------
+
     def test_type_blocks_slice_blocks_a(self) -> None:
         tb1 = ff.parse('s(3,6)|v(int,int,bool,bool)')._blocks
         tb2 = tb1[slice(1, 3)]
         post = tuple(tb2._slice_blocks(column_key=slice(0, 1)))
         self.assertEqual([a.shape for a in post], [(3,)])
-
-if __name__ == '__main__':
-    unittest.main()
-    # t = TestUnit()
-    # t.test_type_blocks_c()
-
-
