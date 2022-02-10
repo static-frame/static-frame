@@ -21,7 +21,7 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYear
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy_old import IndexHierarchyOld
+from static_frame.core.index_hierarchy_old import IndexHierarchyTree
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeDelegate
 from static_frame.core.node_selector import Interface
@@ -833,7 +833,7 @@ class InterfaceSummary(Features):
                 instance = Batch(iter(()))
             elif target is NPY or target is NPZ: #type: ignore
                 instance = target
-            elif issubclass(target, (IndexHierarchy, IndexHierarchyOld)):
+            elif issubclass(target, (IndexHierarchy, IndexHierarchyTree)):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):
                 instance = target(np.array((0,), dtype=DT64_S))

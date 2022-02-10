@@ -43,7 +43,7 @@ from static_frame.core.index_auto import IndexInitOrAutoType
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy_old import IndexHierarchyOld
+from static_frame.core.index_hierarchy_old import IndexHierarchyTree
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
@@ -2794,7 +2794,7 @@ class Series(ContainerOperand):
         Returns:
             tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]
         '''
-        if isinstance(self._index, (IndexHierarchy, IndexHierarchyOld)):
+        if isinstance(self._index, (IndexHierarchy, IndexHierarchyTree)):
             index_values = array2d_to_tuples(self._index.values)
         else:
             index_values = self._index.values
