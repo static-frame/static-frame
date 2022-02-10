@@ -2518,26 +2518,6 @@ class TestUnit(TestCase):
                 self.assertEqual(post.dtype, resolved)
 
     #---------------------------------------------------------------------------
-<<<<<<< HEAD
-    # def test_unique1d_array_mask_a(self) -> None:
-    #     from static_frame.core.util import unique1d_array_mask
-    #     a1, _ = unique1d_array_mask(np.array([10, 20, 30, 10, 20]))
-    #     self.assertEqual(a1.tolist(), [10, 20, 30])
-=======
-
-    def test_unique1d_array_mask_a(self) -> None:
-        from static_frame.core.util import unique1d_array_mask
-        a1, _ = unique1d_array_mask(np.array([10, 20, 30, 10, 20]))
-        self.assertEqual(a1.tolist(), [10, 20, 30])
->>>>>>> master
-
-    #     a2, _ = unique1d_array_mask(np.array([10, None, 30, 'foo', 'foo']))
-    #     self.assertEqual(a2.tolist(), [10, None, 30, 'foo'])
-
-    #     a3, _ = unique1d_array_mask(np.array([10, 40, 50, 50, 10], dtype=object))
-    #     self.assertEqual(a3.tolist(), [10, 40, 50])
-
-    #---------------------------------------------------------------------------
 
     def test_list_to_tuple_a(self) -> None:
         self.assertEqual(list_to_tuple(
