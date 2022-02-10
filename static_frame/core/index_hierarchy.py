@@ -1281,7 +1281,7 @@ class IndexHierarchy(IndexBase):
             if key_at_depth.start is not None:
                 start: tp.Optional[int] = index_at_depth.loc_to_iloc(key_at_depth.start) # type: ignore
             else:
-                start = None
+                start = 0
 
             if key_at_depth.step is not None and not isinstance(key_at_depth.step, INT_TYPES):
                 raise NotImplementedError(f"step must be an integer. What does this even mean? {key_at_depth}")
@@ -1289,7 +1289,7 @@ class IndexHierarchy(IndexBase):
             if key_at_depth.stop is not None:
                 stop: tp.Optional[int] = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1 # type: ignore
             else:
-                stop = None
+                stop = len(indexer_at_depth)
 
             return isin_array(
                     array=indexer_at_depth,
