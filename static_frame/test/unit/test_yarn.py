@@ -11,6 +11,7 @@ from static_frame.core.yarn import Yarn
 from static_frame.core.frame import Frame
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitYarn
+from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.index_datetime import IndexDate
 from static_frame import ILoc

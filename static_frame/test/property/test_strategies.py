@@ -93,7 +93,7 @@ class TestUnit(TestCase):
         self.assertEqual(len(idx), len(idx.values))
 
     @hypo_settings(max_examples=10)  # type: ignore
-    @given(sfst.get_index_hierarchy_any())
+    @given(sfst.get_index_hierarchy())
     def test_get_index_hierarchy(self, idx: IndexHierarchy) -> None:
         self.assertTrue(isinstance(idx, IndexHierarchy))
         self.assertTrue(idx.depth > 1)
