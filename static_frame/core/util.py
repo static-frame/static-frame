@@ -812,7 +812,7 @@ def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
     '''
     if array.dtype.kind == 'O':
-        try:
+        try: # some 1D object arrays are sortable
             array = np.sort(array)
             sortable = True
         except TypeError: # if unorderable types
@@ -829,6 +829,7 @@ def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
+
     return array[mask]
 
 
@@ -843,13 +844,14 @@ def ufunc_unique1d_indexer(array: np.ndarray,
             sortable = True
         except TypeError: # if unorderable types
             sortable = False
+        # if not sortable, we cannot do anything else but a string
         if not sortable:
-            # match on string representation as last resort
             positions = array.astype(str).argsort()
     else:
         positions = array.argsort()
-
+    # get the sorted array
     array = array[positions]
+
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
@@ -872,12 +874,12 @@ def ufunc_unique1d_positions(array: np.ndarray,
         except TypeError: # if unorderable types
             sortable = False
         if not sortable:
-            # match on string representation as last resort
             positions = array.astype(str).argsort(kind=DEFAULT_STABLE_SORT_KIND)
     else:
         positions = array.argsort(kind=DEFAULT_STABLE_SORT_KIND)
-
     array = array[positions]
+
+
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
@@ -886,6 +888,16 @@ def ufunc_unique1d_positions(array: np.ndarray,
     indexer[positions] = np.cumsum(mask) - 1
 
     return positions[mask], indexer
+
+
+def view_1d(array: np.ndarray) -> np.ndarray:
+    '''Given a 2D array, reshape it as a consolidated 1D arrays
+    '''
+    if not array.flags.c_contiguous:
+        array = np.ascontiguousarray(array)
+    # NOTE: this could be cached
+    dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
+    return array.view(dtype)[NULL_SLICE, 0] # get 1D representation
 
 
 def ufunc_unique2d(array: np.ndarray,
@@ -900,21 +912,19 @@ def ufunc_unique2d(array: np.ndarray,
         else:
             array_iter = array2d_to_tuples(array.T)
         # Use a dict to retain order; this will break for non hashables
+        # NOTE: could try to sort tuples and do matching, but might fail comparison
         store = dict.fromkeys(array_iter)
         array = np.empty(len(store), dtype=object)
         array[:] = tuple(store)
         return array
 
+    # if not an object array, we can create a 1D structure array and sort that
     if axis == 1:
         array = array.T
 
-    if not array.flags.c_contiguous:
-        array = np.ascontiguousarray(array)
-
-    dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
-    consolidated = array.view(dtype)[NULL_SLICE, 0] # get 1D representation
+    consolidated = view_1d(array)
     values = ufunc_unique1d(consolidated)
-    values = values.view(array.dtype).reshape(-1, array.shape[1])
+    values = values.view(array.dtype).reshape(-1, array.shape[1]) # restore dtype, shape
     if axis == 1:
         return values.T
     return values
@@ -924,33 +934,22 @@ def ufunc_unique2d_indexer(array: np.ndarray,
         axis: int = 0,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''
-    Find the unique elements of an array.
+    Find the unique elements of an array and provide an indexer that shows their locations in the original.
     '''
     if axis == 1:
         array = array.T
 
-    if array.dtype.kind != 'O':
-        if not array.flags.c_contiguous:
-            array = np.ascontiguousarray(array)
+    if array.dtype.kind == 'O':
+        # we must convert to string in order to extract positions data
+        consolidated = view_1d(array.astype(str))
+        positions, indexer = ufunc_unique1d_positions(consolidated)
+        values = array[positions] # restore original values
 
-        dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
-        consolidated = array.view(dtype)[NULL_SLICE, 0] # get 1D representation
+    else:
+        consolidated = view_1d(array)
         values, indexer = ufunc_unique1d_indexer(consolidated)
         values = values.view(array.dtype).reshape(-1, array.shape[1])
-        if axis == 1:
-            return values.T, indexer
-        return values, indexer
 
-    # we must convert to string in order to reuse the structured array appraoch
-    temp = array.astype(str)
-    if not temp.flags.c_contiguous:
-        temp = np.ascontiguousarray(temp)
-
-    dtype = [(f'f{i}', temp.dtype) for i in range(temp.shape[1])]
-    consolidated = temp.view(dtype)[NULL_SLICE, 0] # get 1D representation
-    positions, indexer = ufunc_unique1d_positions(consolidated)
-    # restore original values
-    values = array[positions]
     if axis == 1:
         return values.T, indexer
     return values, indexer
@@ -1544,25 +1543,6 @@ def array_to_groups_and_locations(
     if array.ndim == 1:
         return ufunc_unique1d_indexer(array)
     return ufunc_unique2d_indexer(array, axis=unique_axis)
-
-    # try:
-    #     groups, locations = np.unique(
-    #             array,
-    #             return_inverse=True,
-    #             axis=unique_axis,
-    #             )
-    # except TypeError:
-    #     # group by string representations, necessary when object types are not comparable; some object arrays will not need to follow this path.
-        # _, group_index, locations = np.unique(
-    #             array.astype(str),
-    #             return_index=True,
-    #             return_inverse=True,
-    #             axis=unique_axis,
-    #             )
-    #     # groups here are the strings; need to restore to values
-    #     groups = array[group_index]
-
-    # return groups, locations
 
 
 # def isna_element(value: tp.Any) -> bool:
