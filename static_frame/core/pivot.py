@@ -526,10 +526,8 @@ def pivot_core(
 
     # avoid doing a multi-column-style selection if not needed
     if len(columns_fields) == 1:
-        # columns_group = columns_fields[0]
         retuple_group_label = True
     else:
-        # columns_group = columns_fields
         retuple_group_label = False
 
     columns_loc_to_iloc = frame.columns._loc_to_iloc
