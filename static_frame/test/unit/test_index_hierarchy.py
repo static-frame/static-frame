@@ -192,7 +192,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
 
         with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy(ih1, _blocks=ih1._blocks)
+            _ = IndexHierarchy(ih1, blocks=ih1._blocks)
 
         ih2 = IndexHierarchy(ih1)
         self.assertTrue(ih2.equals(ih1, compare_dtype=True))

@@ -594,8 +594,8 @@ class IndexHierarchy(IndexBase):
             indices=indices,
             indexers=indexers,
             name=name,
-            _blocks=blocks,
-            _own_blocks=own_blocks,
+            blocks=blocks,
+            own_blocks=own_blocks,
         )
 
     # NOTE: could have a _from_fields (or similar) that takes a sequence of column iterables/arrays
@@ -622,8 +622,8 @@ class IndexHierarchy(IndexBase):
             *,
             indexers: tp.List[np.ndarray] = (), # type: ignore
             name: NameType = NAME_DEFAULT,
-            _blocks: tp.Optional[TypeBlocks] = None,
-            _own_blocks: bool = False,
+            blocks: tp.Optional[TypeBlocks] = None,
+            own_blocks: bool = False,
             ):
         '''
         Initializer.
@@ -637,8 +637,8 @@ class IndexHierarchy(IndexBase):
         if isinstance(indices, IndexHierarchy):
             if indexers:
                 raise ErrorInitIndex('indexers must not be provided when copying an IndexHierarchy')
-            if _blocks is not None:
-                raise ErrorInitIndex('_blocks must not be provided when copying an IndexHierarchy')
+            if blocks is not None:
+                raise ErrorInitIndex('blocks must not be provided when copying an IndexHierarchy')
 
             self._indices = [mutable_immutable_index_filter(self.STATIC, idx) for idx in indices._indices]
             self._indexers = indices._indexers
@@ -659,11 +659,11 @@ class IndexHierarchy(IndexBase):
         self._indexers = indexers
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
-        if _blocks is not None:
-            if _own_blocks:
-                self._blocks = _blocks
+        if blocks is not None:
+            if own_blocks:
+                self._blocks = blocks
             else:
-                self._blocks = _blocks.copy()
+                self._blocks = blocks.copy()
         else:
             self._blocks = self._gen_blocks_from_self()
 
@@ -695,8 +695,8 @@ class IndexHierarchy(IndexBase):
                 indices=self._indices,
                 indexers=self._indexers,
                 name=self._name,
-                _blocks=blocks,
-                _own_blocks=True
+                blocks=blocks,
+                own_blocks=True
                 )
 
     def copy(self: IH) -> IH:
@@ -723,8 +723,8 @@ class IndexHierarchy(IndexBase):
                 indices=indices,
                 indexers=list(self._indexers),
                 name=name,
-                _blocks=blocks,
-                _own_blocks=True,
+                blocks=blocks,
+                own_blocks=True,
                 )
 
     #---------------------------------------------------------------------------
@@ -1918,8 +1918,8 @@ class IndexHierarchy(IndexBase):
             indices=indices,
             indexers=indexers,
             name=self.name,
-            _blocks=TypeBlocks.from_blocks(gen_blocks()),
-            _own_blocks=True,
+            blocks=TypeBlocks.from_blocks(gen_blocks()),
+            own_blocks=True,
         )
 
     def level_drop(self,
@@ -1949,8 +1949,8 @@ class IndexHierarchy(IndexBase):
                     indices=self._indices[:count],
                     indexers=self._indexers[:count],
                     name=name,
-                    _blocks=self._blocks[:count],
-                    _own_blocks=self.STATIC,
+                    blocks=self._blocks[:count],
+                    own_blocks=self.STATIC,
                     )
 
         elif count > 0: # remove from outer
@@ -1961,8 +1961,8 @@ class IndexHierarchy(IndexBase):
                     indices=self._indices[count:],
                     indexers=self._indexers[count:],
                     name=name,
-                    _blocks=self._blocks.iloc[:,count:],
-                    _own_blocks=self.STATIC,
+                    blocks=self._blocks.iloc[:,count:],
+                    own_blocks=self.STATIC,
                     )
 
         raise NotImplementedError('no handling for a 0 count drop level.')
@@ -2089,8 +2089,8 @@ class IndexHierarchyGO(IndexHierarchy):
                 indices=[index.copy() for index in self._indices],
                 indexers=self._indexers,
                 name=self._name,
-                _blocks=self._blocks.copy(),
-                _own_blocks=True,
+                blocks=self._blocks.copy(),
+                own_blocks=True,
                 )
 
 
