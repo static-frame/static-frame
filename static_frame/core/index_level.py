@@ -100,7 +100,7 @@ class IndexLevel:
     @classmethod
     def from_tree(cls,
             tree: TreeNodeT,
-            index_constructors: tp.Optional[IndexConstructors] = None,
+            index_constructors: IndexConstructors = None,
             depth_reference: tp.Optional[int] = None,
             ) -> 'IndexLevel':
         '''
@@ -1065,7 +1065,3 @@ class IndexLevelGO(IndexLevel):
         # defer calculation be setting _length to None for all edge levels
         for node in edge_nodes:
             node._length = None
-
-
-
-

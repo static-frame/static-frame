@@ -11,7 +11,6 @@ from static_frame.core.yarn import Yarn
 from static_frame.core.frame import Frame
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitYarn
-from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.index_datetime import IndexDate
 from static_frame import ILoc
@@ -367,8 +366,11 @@ class TestUnit(TestCase):
                 (('f7', (4, 2)), ('f3', (4, 4)))
                 )
 
-        with self.assertRaises(ErrorInitIndex):
-            y2 = y1.loc[['f1', 'f7', 'f3']]
+        # BEHAVIOR CHANGE!
+        y2 = y1.loc[['f1', 'f7', 'f3']]
+        self.assertEqual(y2.shapes.to_pairs(),
+                (('f1', (4, 4)), ('f7', (4, 4)), ('f3', (4, 2)))
+                )
 
     def test_yarn_loc_e(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')

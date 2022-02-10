@@ -856,13 +856,17 @@ class TestUnit(TestCase):
                 [dict(a=1,b=1), dict(a=2,b=3), dict(a=1,b=1), dict(a=2,b=3)], index=sf.IndexHierarchy.from_labels(
                 [(1,'dd',0),(1,'b',0),(2,'cc',0),(2,'ee',0)]))
 
-        df = f1.loc[sf.HLoc[(1,'dd')]].to_pandas()
+        series = f1.loc[sf.HLoc[(1,'dd')]].to_pandas()
 
-        self.assertEqual(df.index.values.tolist(),
-                [(1, 'dd', 0)])
-        self.assertEqual(df.values.tolist(),
-                [[1, 1]]
-                )
+        self.assertEqual(series.index.values.tolist(), ['a', 'b'])
+        self.assertEqual(series.values.tolist(), [1, 1])
+        self.assertEqual(series.name, (1, 'dd', 0))
+
+        df = f1.loc[sf.HLoc[(1,['dd'])]].to_pandas()
+
+        self.assertEqual(df.columns.values.tolist(), ['a', 'b'])
+        self.assertEqual(df.values.tolist(), [[1, 1]])
+        self.assertEqual(df.index.values.tolist(), [(1, 'dd', 0)])
 
     def test_frame_to_pandas_c(self) -> None:
         f = sf.FrameGO.from_elements(['a' for x in range(5)], columns=['a'])
@@ -7907,9 +7911,8 @@ class TestUnit(TestCase):
         frame2 = sf.Frame.from_dict_records(
                 [dict(a=100,b=200), dict(a=20,b=30), dict(a=101,b=101), dict(a=201,b=301)], index=sf.IndexHierarchy.from_labels([(1,'ddd',0), (1,'bbb',0), (2,'ccc',0), (2,'eee',0)]))
 
-        # produce invalid index labels into an IndexHierarchy constructor
-        with self.assertRaises(RuntimeError):
-            sf.Frame.from_concat((frame1, frame2))
+        # BEHAVIOR CHANGE!
+        sf.Frame.from_concat((frame1, frame2))
 
     def test_frame_from_concat_u(self) -> None:
         # this fails; figure out why
@@ -8255,7 +8258,7 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(
-                f3.columns._levels.values.tolist(), #type: ignore
+                f3.columns.values.tolist(),
                 [[('a', 'b'), 'p'], [('a', 'b'), 'q'], [('a', 'b'), 't'], [('x', 'y'), 'r'], [('x', 'y'), 's']]
                 )
 
@@ -9631,11 +9634,15 @@ class TestUnit(TestCase):
         f5 = f1.drop[:]
         self.assertEqual(f5.shape, (2, 0))
 
+        col1_dtype = str(f1.columns.dtypes.values[0]) # type: ignore
+        col2_dtype = str(f1.columns.dtypes.values[1]) # type: ignore
+
+        # BEHAVIOR CHANGE!!
         # Check that we can represent the IndexHierarchy
         d = f5.display(DisplayConfig(type_color=False))
         self.assertEqual(tuple(d), (['<Frame>'],
-                ['<IndexHierarchy>', '<float64>'],
-                ['', '<float64>'],
+                ['<IndexHierarchy>', f'<{col1_dtype}>'],
+                ['', f'<{col2_dtype}>'],
                 ['<Index>'],
                 ['0'],
                 ['1'],
