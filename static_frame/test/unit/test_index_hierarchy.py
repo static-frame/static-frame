@@ -258,29 +258,29 @@ class TestUnit(TestCase):
                 ['x', 'y']])
 
         # this will break if we recognize this can be a slice
-        self.assertEqual(post.tolist(), list(range(len(ih))))
+        self.assertEqual(post.tolist(), list(range(len(ih)))) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
                 slice('2018-01-01', '2018-01-04'),
                 'x'])
 
-        self.assertEqual(post.tolist(), list(range(0, len(ih), 2)))
+        self.assertEqual(post.tolist(), list(range(0, len(ih), 2))) # type: ignore
 
         post = ih._loc_to_iloc(HLoc['C', '2018-01-03', 'y'])
         self.assertEqual(post, 21)
 
         post = ih._loc_to_iloc(HLoc['B', '2018-01-03':, 'y'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
-        self.assertEqual(post.tolist(), [13, 15])
+        self.assertEqual(post.tolist(), [13, 15]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[['B', 'C'], '2018-01-03'])
-        self.assertEqual(post.tolist(), [12, 13, 20, 21])
+        self.assertEqual(post.tolist(), [12, 13, 20, 21]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[['A', 'C'], :, 'y'])
-        self.assertEqual(post.tolist(), [1, 3, 5, 7, 17, 19, 21, 23])
+        self.assertEqual(post.tolist(), [1, 3, 5, 7, 17, 19, 21, 23]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[['A', 'C'], :, 'x'])
-        self.assertEqual(post.tolist(), [0, 2, 4, 6, 16, 18, 20, 22])
+        self.assertEqual(post.tolist(), [0, 2, 4, 6, 16, 18, 20, 22]) # type: ignore
 
     def test_hierarchy_loc_to_iloc_b(self) -> None:
         OD = OrderedDict
@@ -411,7 +411,7 @@ class TestUnit(TestCase):
 
         # selection with Boolean and non-Bolean Series
         a1 = ih1._loc_to_iloc(Series((True, True), index=(labels[1], labels[4])))
-        self.assertEqual(a1.tolist(), [1, 4])
+        self.assertEqual(a1.tolist(), [1, 4]) # type: ignore
 
         a2 = ih1._loc_to_iloc(Series((labels[5], labels[2], labels[4])))
         self.assertEqual(a2, [5, 2, 4])

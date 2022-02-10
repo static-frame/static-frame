@@ -1262,6 +1262,18 @@ class IndexHierarchy(IndexBase):
                 )
         return index #type: ignore
 
+    def _get_outer_index_labels_in_order_they_appear(self) -> tp.Sequence[tp.Hashable]:
+        """
+        Index could be [A, B, C]
+        Indexers could be [2, 0, 0, 2, 1]
+
+        This function return [C, A, B] # shoutout to my initials
+        """
+        # get the outer level, or just the unique frame labels needed
+        labels = self.values_at_depth(0)
+        label_indexes = sorted(np.unique(labels, return_index=True)[1])
+        return labels[label_indexes] # type: ignore
+
     #---------------------------------------------------------------------------
 
     def _process_key_at_depth(self, depth: int, key: GetItemKeyType) -> tp.Union[slice, np.ndarray]:
