@@ -6223,7 +6223,6 @@ class Frame(ContainerOperand):
         index_fields = key_normalize(index_fields)
         columns_fields = key_normalize(columns_fields)
         data_fields = key_normalize(data_fields)
-
         for field in chain(index_fields, columns_fields):
             if field not in self._columns:
                 raise ErrorInitFrame(f'cannot create a pivot Frame from a field ({field}) that is not a column')

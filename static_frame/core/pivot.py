@@ -81,7 +81,7 @@ def pivot_records_dtypes(
         data_fields: tp.Iterable[tp.Hashable],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
-        ) -> tp.Iterator[np.dtype]:
+        ) -> tp.Iterator[tp.Optional[np.dtype]]:
     '''
     Iterator of ordered dtypes, providing multiple dtypes per field when func_map is provided.
     '''
@@ -149,10 +149,14 @@ def pivot_records_items_to_blocks(
     # NOTE: this delivers results by label, row for use in a Frame.from_records_items constructor
 
     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
-    if None in dtypes:
-        # possible store a list of None and update at end?
-        raise NotImplementedError()
-    arrays = [np.empty(len(index_outer), dtype=dtype) for dtype in dtypes]
+    arrays = []
+    for dtype in dtypes:
+        if dtype is None:
+            # we can use fill_value here, as either it will be completely replaced (and not effect dtype evaluation) or be needed (and already there)
+            arrays.append([fill_value] * len(index_outer))
+        else:
+            arrays.append(np.empty(len(index_outer), dtype=dtype))
+
     # try to use the dtype specifieid; fill values at end of necessary
     iloc_found = set()
     # each group forms a row, each label a value in the index
@@ -167,7 +171,7 @@ def pivot_records_items_to_blocks(
                 arrays[arrays_key][iloc] = part._extract(0, column_key)
         elif func_single:
             for arrays_key, column_key in enumerate(data_fields_iloc):
-                arrays[arrays_key][iloc] = part._extract_array_column(column_key)
+                arrays[arrays_key][iloc] = func_single(part._extract_array_column(column_key))
         else:
             arrays_key = 0
             for column_key in data_fields_iloc:
@@ -183,14 +187,22 @@ def pivot_records_items_to_blocks(
         # mutate in place then make immutable
         for arrays_key in range(len(arrays)):
             array = arrays[arrays_key]
-            dtype_resolved = resolve_dtype(array.dtype, fill_value_dtype)
-            if array.dtype != dtype_resolved:
-                array = array.astype(dtype_resolved)
-                array[fill_targets] = fill_value
+            if not array.__class__ is np.ndarray: # a list
+                array, _ = iterable_to_array_1d(array, count=len(index_outer))
                 arrays[arrays_key] = array # restore new array
+            else:
+                dtype_resolved = resolve_dtype(array.dtype, fill_value_dtype)
+                if array.dtype != dtype_resolved:
+                    array = array.astype(dtype_resolved)
+                    array[fill_targets] = fill_value
+                    arrays[arrays_key] = array # re-assign new array
             array.flags.writeable = False
     else:
-        for array in arrays:
+        for arrays_key in range(len(arrays)):
+            array = arrays[arrays_key]
+            if not array.__class__ is np.ndarray: # a list
+                array, _ = iterable_to_array_1d(array, count=len(index_outer))
+                arrays[arrays_key] = array # re-assign new array
             array.flags.writeable = False
     return arrays
 
@@ -425,7 +437,7 @@ def pivot_core(
     columns_name = tuple(columns_fields)
     if data_fields_len > 1 or not columns_fields:
         # if no columns_fields, have to add values label
-        columns_name = tuple(chain(*columns_fields, ('values',)))
+        columns_name = tuple(chain(columns_fields, ('values',)))
     if len(func_map) > 1:
         columns_name = columns_name + ('func',)
 
