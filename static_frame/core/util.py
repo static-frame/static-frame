@@ -807,80 +807,6 @@ def array_ufunc_axis_skipna(
 #-------------------------------------------------------------------------------
 # unique value discovery; based on NP's arraysetops.py
 
-# def unique1d_array_mask(array: np.ndarray
-#         ) -> tp.Tuple[np.ndarray, tp.Optional[np.ndarray]]:
-#     '''
-#     Return an array of unique elements, handling
-#     '''
-#     # NOTE: might optionally own data to avoid making copy
-
-#     if array.dtype.kind == 'O':
-#         try:
-#             # avoid making a copy until we know we can sort
-#             sel = array.argsort()
-#         except TypeError: # if unorderable types
-#             mutable = None
-#         else:
-#             mutable = array[sel]
-#     else:
-#         mutable = array.copy()
-#         mutable.sort() # can sort in-place with any sort algorithm
-
-#     if mutable is not None:
-#         mask = np.empty(array.shape, dtype=DTYPE_BOOL)
-#         mask[0] = True
-#         mask[1:] = mutable[1:] != mutable[:-1] # where not equal
-#         return mutable[mask], mask
-
-#     store = dict.fromkeys(array)
-#     array = np.empty(len(store), dtype=object)
-#     array[NULL_SLICE] = tuple(store)
-
-#     # we do not have a mask; caller will need to make one
-#     return array, None
-
-
-def ufunc_unique(
-        array: np.ndarray,
-        *,
-        axis: tp.Optional[int] = None,
-        ) -> np.ndarray:
-    '''
-    Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a heterogenous object type.
-
-    Args:
-
-    '''
-    if array.dtype.kind == 'O':
-        if axis is None or array.ndim < 2:
-            try:
-                return np.unique(array)
-            except TypeError: # if unorderable types
-                # np.unique will give TypeError: The axis argument to unique is not supported for dtype object
-                pass
-            # this may or may not work, depending on contained types
-            if array.ndim > 1: # axis is None, need to flatten
-                array_iter = array.flat
-            else:
-                array_iter = array
-        else:
-            # ndim == 2 and axis is not None
-            if axis == 0:
-                array_iter = array2d_to_tuples(array)
-            else:
-                array_iter = array2d_to_tuples(array.T)
-
-        # Use a dict to retain order; this will break for non hashables
-        store = dict.fromkeys(array_iter)
-        array = np.empty(len(store), dtype=object)
-        array[:] = tuple(store)
-        return array
-
-    # all other types, use the main ufunc
-    # NOTE: this may use an unstable sort!
-    return np.unique(array, axis=axis)
-
-
 def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     '''
     Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
@@ -962,13 +888,45 @@ def ufunc_unique1d_positions(array: np.ndarray,
     return positions[mask], indexer
 
 
+def ufunc_unique2d(array: np.ndarray,
+        axis: int = 0,
+    ) -> np.ndarray:
+    '''
+    Optimized from NumPy implementation.
+    '''
+    if array.dtype.kind == 'O':
+        if axis == 0:
+            array_iter = array2d_to_tuples(array)
+        else:
+            array_iter = array2d_to_tuples(array.T)
+        # Use a dict to retain order; this will break for non hashables
+        store = dict.fromkeys(array_iter)
+        array = np.empty(len(store), dtype=object)
+        array[:] = tuple(store)
+        return array
+
+    if axis == 1:
+        array = array.T
+
+    if not array.flags.c_contiguous:
+        array = np.ascontiguousarray(array)
+
+    dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
+    consolidated = array.view(dtype)[NULL_SLICE, 0] # get 1D representation
+    values = ufunc_unique1d(consolidated)
+    values = values.view(array.dtype).reshape(-1, array.shape[1])
+    if axis == 1:
+        return values.T
+    return values
+
+
 def ufunc_unique2d_indexer(array: np.ndarray,
         axis: int = 0,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''
-    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array.
+    Find the unique elements of an array.
     '''
-    if axis == 1: # make wide tall
+    if axis == 1:
         array = array.T
 
     if array.dtype.kind != 'O':
@@ -983,6 +941,7 @@ def ufunc_unique2d_indexer(array: np.ndarray,
             return values.T, indexer
         return values, indexer
 
+    # we must convert to string in order to reuse the structured array appraoch
     temp = array.astype(str)
     if not temp.flags.c_contiguous:
         temp = np.ascontiguousarray(temp)
@@ -995,6 +954,25 @@ def ufunc_unique2d_indexer(array: np.ndarray,
     if axis == 1:
         return values.T, indexer
     return values, indexer
+
+
+def ufunc_unique(
+        array: np.ndarray,
+        *,
+        axis: tp.Optional[int] = None,
+        ) -> np.ndarray:
+    '''
+    Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a heterogenous object type.
+
+    Args:
+
+    '''
+    if axis is None and array.ndim == 2:
+        return ufunc_unique1d(array.flatten())
+    elif array.ndim == 1:
+        return ufunc_unique1d(array)
+    return ufunc_unique2d(array, axis=axis)
+
 
 
 def roll_1d(array: np.ndarray,
