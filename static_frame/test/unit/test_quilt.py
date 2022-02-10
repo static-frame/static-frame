@@ -21,9 +21,11 @@ from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.axis_map import bus_to_hierarchy
 
+
 class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
+
     def test_quilt_init_a(self) -> None:
 
         f1 = Frame.from_dict(
@@ -48,7 +50,6 @@ class TestUnit(TestCase):
         q2 = Quilt(b1, retain_labels=True, axis=1)
         with self.assertRaises(ErrorInitQuilt):
             self.assertEqual(q2.shape, (7, 2))
-
 
     def test_quilt_init_b(self) -> None:
 
@@ -80,7 +81,6 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitQuilt):
             self.assertEqual(q3.shape, (7, 2))
 
-
     def test_quilt_init_c(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -97,7 +97,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitQuilt):
             Quilt(y1, retain_labels=False, axis=1).shape
-
 
     def test_quilt_init_d(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
@@ -148,7 +147,6 @@ class TestUnit(TestCase):
                     ((0, ((('f6', 3), 1699.34),)), (1, ((('f6', 3), 114.58),)))
                     )
 
-
     def test_quilt_init_f(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,2)').rename('f2')
@@ -184,6 +182,7 @@ class TestUnit(TestCase):
             Quilt(q1._bus, axis=1, retain_labels=False, axis_hierarchy=axis_hierarchy)
 
     #---------------------------------------------------------------------------
+
     def test_quilt_from_items_a(self) -> None:
 
         f1 = Frame.from_dict(
@@ -206,8 +205,8 @@ class TestUnit(TestCase):
         self.assertEqual(q1.to_frame().to_pairs(),
                 ((('f1', 'a'), (('x', 1), ('y', 2))), (('f1', 'c'), (('x', 3), ('y', 4))), (('f2', 'a'), (('x', 2), ('y', 3))), (('f2', 'b'), (('x', 4), ('y', 6))), (('f3', 'c'), (('x', 10), ('y', 20))), (('f3', 'b'), (('x', 50), ('y', 60)))))
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_from_frames_a(self) -> None:
 
         f1 = Frame.from_dict(
@@ -274,12 +273,12 @@ class TestUnit(TestCase):
             quilt.display()
 
     #---------------------------------------------------------------------------
+
     def test_quilt_values_a(self) -> None:
         f1 = ff.parse('s(6,4)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=2, retain_labels=False)
         self.assertEqual(q1.values.tolist(),
                 [[-88017, 162197, -3648, 129017], [92867, -41157, 91301, 35021], [84967, 5729, 30205, 166924], [13448, -168387, 54020, 122246], [175579, 140627, 129017, 197228], [58768, 66269, 35021, 105269]])
-
 
     def test_quilt_nbytes_a(self) -> None:
 
@@ -290,6 +289,7 @@ class TestUnit(TestCase):
         self.assertEqual(q1.nbytes, f1.nbytes)
 
     #---------------------------------------------------------------------------
+
     def test_quilt_from_frame_a(self) -> None:
 
         f1 = ff.parse('s(100,4)|v(int)|i(I,str)|c(I,str)').rename('foo')
@@ -319,7 +319,6 @@ class TestUnit(TestCase):
         f3 = q1.loc['zQuq':, 'zUvW':] #type: ignore
         self.assertEqual(f3.shape, (6, 2))
 
-
     def test_quilt_from_frame_b(self) -> None:
 
         f1 = ff.parse('s(4,100)|v(int)|i(I,str)|c(I,str)')
@@ -343,7 +342,6 @@ class TestUnit(TestCase):
         with self.assertRaises(AxisInvalid):
             q1 = Quilt.from_frame(f1, chunksize=10, axis=2, retain_labels=False)
 
-
     #---------------------------------------------------------------------------
 
     def test_quilt_extract_a1(self) -> None:
@@ -355,7 +353,6 @@ class TestUnit(TestCase):
         self.assertEqual(q1['zkuW':'zTSt'].shape, (4, 95)) #type: ignore
         self.assertEqual(q1.loc[ILoc[-2:], 'zaji': 'zsa5'].shape, (2, 17)) #type: ignore
 
-
     def test_quilt_extract_a2(self) -> None:
 
         f1 = ff.parse('s(4,100)|v(int)|i(I,str)|c(I,str)')
@@ -364,8 +361,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(q1._bus), 10)
         self.assertEqual(q1['zkuW':'zTSt'].shape, (4, 95)) #type: ignore
         self.assertEqual(q1.loc[ILoc[-2:], 'zaji': 'zsa5'].shape, (2, 17)) #type: ignore
-
-
 
     def test_quilt_extract_b1(self) -> None:
 
@@ -417,8 +412,6 @@ class TestUnit(TestCase):
                 (('zZbu', 146284), ('ztsv', 170440), ('zUvW', 32395), ('zkuW', 137759))
                 )
 
-
-
     def test_quilt_extract_c1(self) -> None:
 
         f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
@@ -435,7 +428,6 @@ class TestUnit(TestCase):
         # return an element
         self.assertEqual(q1.loc[('zOyq', 'zIA5'), 'zkuW'], 92867)
 
-
     def test_quilt_extract_c2(self) -> None:
 
         f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
@@ -451,7 +443,6 @@ class TestUnit(TestCase):
 
         # return an element
         self.assertEqual(q1.loc[('zOyq', 'zIA5'), 'zkuW'], 92867)
-
 
     def test_quilt_extract_d1(self) -> None:
 
@@ -503,7 +494,6 @@ class TestUnit(TestCase):
         self.assertEqual(s1.name, 'zkuW')
         self.assertEqual(s1.shape, (4,))
 
-
     def test_quilt_extract_f1(self) -> None:
 
         f1 = ff.parse('s(4,20)|v(int)|i(I,str)|c(I,str)')
@@ -513,7 +503,6 @@ class TestUnit(TestCase):
         self.assertTrue(f2.equals(f1.loc[:, ['zUvW', 'zB7E', 'zwIp']]))
 
         self.assertEqual(q1.loc['zkuW', 'zwIp'], -112188)
-
 
     def test_quilt_extract_f2(self) -> None:
 
@@ -557,9 +546,8 @@ class TestUnit(TestCase):
             self.assertEqual(post.shape, (10, 1))
             self.assertEqual(set(post.index.values_at_depth(0)), {'c'})
 
-
-
     #---------------------------------------------------------------------------
+
     def test_quilt_extract_array_a1(self) -> None:
 
         f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
@@ -634,7 +622,6 @@ class TestUnit(TestCase):
         self.assertEqual(q1._extract_array(2, 2), 30205)
         self.assertEqual(q1._extract_array(-1, -1), -112188)
 
-
     def test_quilt_extract_array_b2(self) -> None:
 
         f1 = ff.parse('s(4,20)|v(int)|i(I,str)|c(I,str)')
@@ -671,7 +658,6 @@ class TestUnit(TestCase):
         a2_id_via_quilt = id(q2._extract_array())
         self.assertNotEqual(a2_id_in_bus, a2_id_via_quilt)
 
-
     def test_quilt_extract_array_c(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -683,8 +669,8 @@ class TestUnit(TestCase):
         self.assertTrue(a1.tolist(),
                 [[-88017.0, -610.8, -3648.0, 1080.4, False, False, True, False], [92867.0, 3243.94, 91301.0, 2580.34, False, False, False, False], [84967.0, -823.14, 30205.0, 700.42, False, False, False, True], [13448.0, 114.58, 54020.0, 3338.48, True, False, True, True]])
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_retain_labels_a(self) -> None:
 
         dc = DisplayConfig(type_show=False)
@@ -707,8 +693,8 @@ class TestUnit(TestCase):
                 (('zZbu', ((('zUvW', 'zUvW'), 84967), (('zUvW', 'zkuW'), 13448), (('zmVj', 'zmVj'), 175579), (('zmVj', 'z2Oo'), 58768), (('z5l6', 'z5l6'), 146284), (('z5l6', 'zCE3'), 170440))), ('ztsv', ((('zUvW', 'zUvW'), 5729), (('zUvW', 'zkuW'), -168387), (('zmVj', 'zmVj'), 140627), (('zmVj', 'z2Oo'), 66269), (('z5l6', 'z5l6'), -171231), (('z5l6', 'zCE3'), -38997))), ('zUvW', ((('zUvW', 'zUvW'), 30205), (('zUvW', 'zkuW'), 54020), (('zmVj', 'zmVj'), 129017), (('zmVj', 'z2Oo'), 35021), (('z5l6', 'z5l6'), 166924), (('z5l6', 'zCE3'), 122246))), ('zkuW', ((('zUvW', 'zUvW'), 166924), (('zUvW', 'zkuW'), 122246), (('zmVj', 'zmVj'), 197228), (('zmVj', 'z2Oo'), 105269), (('z5l6', 'z5l6'), 119909), (('z5l6', 'zCE3'), 194224))))
                 )
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_items_store_a(self) -> None:
 
         f1 = ff.parse('s(10,4)|v(int)|i(I,str)|c(I,str)')
@@ -717,6 +703,7 @@ class TestUnit(TestCase):
         self.assertEqual(len(tuple(q1._items_store())), 5)
 
     #---------------------------------------------------------------------------
+
     def test_quilt_keys_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
@@ -742,8 +729,8 @@ class TestUnit(TestCase):
         self.assertEqual(q1.get('zZbu').shape, (4,)) #type: ignore
         self.assertEqual(q1.get(''), None)
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_from_zip_pickle_a(self) -> None:
 
         # indexes are heterogenous but columns are not
@@ -787,8 +774,8 @@ class TestUnit(TestCase):
             q2 = Quilt.from_zip_pickle(fp, config=sc, retain_labels=True)
             self.assertTrue(q2.to_frame().equals(q1.to_frame()))
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_from_zip_tsv_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -806,6 +793,7 @@ class TestUnit(TestCase):
             self.assertTrue(q2.to_frame().equals(q1.to_frame()))
 
     #---------------------------------------------------------------------------
+
     def test_quilt_from_zip_csv_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -823,6 +811,7 @@ class TestUnit(TestCase):
             self.assertTrue(q2.to_frame().equals(q1.to_frame()))
 
     #---------------------------------------------------------------------------
+
     def test_quilt_from_zip_parquet_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -841,6 +830,7 @@ class TestUnit(TestCase):
             self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
 
     #---------------------------------------------------------------------------
+
     def test_quilt_from_xlsx_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -858,6 +848,7 @@ class TestUnit(TestCase):
             self.assertTrue(q2.to_frame().equals(q1.to_frame()))
 
     #---------------------------------------------------------------------------
+
     def test_quilt_from_sqlite_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -874,6 +865,7 @@ class TestUnit(TestCase):
             self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
 
     #---------------------------------------------------------------------------
+
     def test_quilt_from_hdf5_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
@@ -888,8 +880,6 @@ class TestUnit(TestCase):
             q1.to_hdf5(fp, config=sc)
             q2 = Quilt.from_hdf5(fp, config=sc, retain_labels=True)
             self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
-
-
 
     #---------------------------------------------------------------------------
 
@@ -931,7 +921,6 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.iter_array_items(axis=0))
 
-
     def test_quilt_iter_array_a2(self) -> None:
 
         # indexes are hetergenous but columns are not
@@ -970,8 +959,6 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.iter_array_items(axis=0))
 
-
-
     def test_quilt_iter_array_b1(self) -> None:
 
         f1 = ff.parse('s(2,6)|v(int)|i(I,str)|c(I,str)')
@@ -992,8 +979,6 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.iter_array_items(axis=1))
 
-
-
     def test_quilt_iter_array_b2(self) -> None:
 
         f1 = ff.parse('s(2,6)|v(int)|i(I,str)|c(I,str)')
@@ -1013,7 +998,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.iter_array_items(axis=1))
-
 
     def test_quilt_iter_array_b3(self) -> None:
 
@@ -1101,8 +1085,8 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.items())
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_iter_tuple_a1(self) -> None:
 
         f1 = ff.parse('s(2,6)|v(int)|i(I,str)|c(I,str)')
@@ -1124,7 +1108,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = tuple(q1.iter_tuple(axis=1))
-
 
     def test_quilt_iter_tuple_b1(self) -> None:
 
@@ -1163,6 +1146,7 @@ class TestUnit(TestCase):
         self.assertEqual(post[0].__class__, NT)
 
     #---------------------------------------------------------------------------
+
     def test_quilt_to_frame_a1(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int)|i(I,str)|c(I,str)')
@@ -1184,6 +1168,7 @@ class TestUnit(TestCase):
         self.assertTrue(q2.to_frame().equals(f1))
 
     #---------------------------------------------------------------------------
+
     def test_quilt_iter_window_a1(self) -> None:
 
         f1 = ff.parse('s(20,2)|v(int)|i(I,str)|c(I,str)')
@@ -1250,8 +1235,6 @@ class TestUnit(TestCase):
             self.assertEqual(f1.shape, (75, 3))
             self.assertEqual(q1.status['loaded'].sum(), 1)
 
-
-
     def test_quilt_iter_window_b2(self) -> None:
         from string import ascii_lowercase
         # indexes are heterogenous but columns are not
@@ -1306,6 +1289,7 @@ class TestUnit(TestCase):
 )
 
     #---------------------------------------------------------------------------
+
     def test_quilt_iter_window_array_b1(self) -> None:
 
         f1 = ff.parse('s(20,2)|v(int)|i(I,str)|c(I,str)')
@@ -1329,6 +1313,7 @@ class TestUnit(TestCase):
                 (('zmVj', 377853), ('zr4u', 597832), ('zGDJ', 46996), ('zO5l', 391169)))
 
     #---------------------------------------------------------------------------
+
     def test_quilt_iter_window_array_items_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -1346,8 +1331,8 @@ class TestUnit(TestCase):
                 ((('f1', 1), 105189.58), (('f1', 2), 173802.58), (('f1', 3), 179577.64), (('f2', 0), 7700.64), (('f2', 1), 1.0), (('f2', 2), 2.0), (('f2', 3), 4.0))
                 )
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_repr_a(self) -> None:
         config = DisplayConfig.from_default(cell_align_left=True, type_color=False)
 
@@ -1372,6 +1357,7 @@ class TestUnit(TestCase):
         self.assertEqual(q2.display(config=config).to_rows(), ['<Quilt>', * common_rows])
 
     #---------------------------------------------------------------------------
+
     def test_quilt_columns_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -1382,6 +1368,7 @@ class TestUnit(TestCase):
                 [['f1', 0], ['f1', 1], ['f1', 2], ['f1', 3], ['f2', 0], ['f2', 1], ['f2', 2], ['f2', 3]])
 
     #---------------------------------------------------------------------------
+
     def test_quilt_size_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -1391,6 +1378,7 @@ class TestUnit(TestCase):
         self.assertEqual(q1.size, 32)
 
     #---------------------------------------------------------------------------
+
     def test_quilt_items_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -1402,8 +1390,8 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(items.keys()),
                 (('f1', 0), ('f1', 1), ('f1', 2), ('f1', 3), ('f2', 0), ('f2', 1), ('f2', 2), ('f2', 3)))
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_axis_array_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -1415,6 +1403,7 @@ class TestUnit(TestCase):
             _ = tuple(q1._axis_array(3))
 
     #---------------------------------------------------------------------------
+
     def test_quilt_axis_tuple_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -1444,6 +1433,7 @@ class TestUnit(TestCase):
                 (False, False, True, True)))
 
     #---------------------------------------------------------------------------
+
     def test_quilt_iter_series_items_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -1457,6 +1447,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+
     def test_quilt_head_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -1466,8 +1457,8 @@ class TestUnit(TestCase):
         self.assertEqual(q1.head(2).to_pairs(),
                 ((('f1', 0), ((0, -88017), (1, 92867))), (('f1', 1), ((0, -610.8), (1, 3243.94))), (('f1', 2), ((0, -3648), (1, 91301))), (('f1', 3), ((0, 1080.4), (1, 2580.34))), (('f2', 0), ((0, False), (1, False))), (('f2', 1), ((0, False), (1, False))), (('f2', 2), ((0, True), (1, False))), (('f2', 3), ((0, False), (1, False)))))
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_tail_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -1478,8 +1469,8 @@ class TestUnit(TestCase):
                 ((('f1', 0), ((2, 84967), (3, 13448))), (('f1', 1), ((2, -823.14), (3, 114.58))), (('f1', 2), ((2, 30205), (3, 54020))), (('f1', 3), ((2, 700.42), (3, 3338.48))), (('f2', 0), ((2, False), (3, True))), (('f2', 1), ((2, False), (3, False))), (('f2', 2), ((2, False), (3, True))), (('f2', 3), ((2, True), (3, True))))
                 )
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_unpersist_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -1515,8 +1506,8 @@ class TestUnit(TestCase):
             self.assertEqual(len(dict(q2.items())), 12)
             self.assertEqual(q2._bus.status['loaded'].sum(), 3)
 
-
     #---------------------------------------------------------------------------
+
     def test_quilt_sample_a(self) -> None:
 
         f1 = ff.parse('s(20,20)|v(int)|c(I,str)|i(I,str)').rename('f1')
@@ -1532,6 +1523,7 @@ class TestUnit(TestCase):
         self.assertEqual(q1.sample(columns=4).shape, (20, 4))
 
     #---------------------------------------------------------------------------
+
     def test_quilt_to_zip_npz_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
@@ -1545,9 +1537,8 @@ class TestUnit(TestCase):
 
             self.assertTrue(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
 
-
-
     #---------------------------------------------------------------------------
+
     def test_quilt_equals_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
@@ -1568,7 +1559,6 @@ class TestUnit(TestCase):
 
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
 
-
     def test_quilt_equals_c(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
@@ -1578,7 +1568,6 @@ class TestUnit(TestCase):
 
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
 
-
     def test_quilt_equals_d(self) -> None:
 
         f1 = ff.parse('s(3,4)|v(int,float)|c(I,str)').rename('f1').reindex((1, 2, 3))
@@ -1587,7 +1576,6 @@ class TestUnit(TestCase):
         q2 = Quilt.from_frames((f1, f2), retain_labels=False)
 
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
-
 
     def test_quilt_equals_e(self) -> None:
 
@@ -1600,7 +1588,6 @@ class TestUnit(TestCase):
         q2 = Quilt.from_frames((f3, f4), retain_labels=True)
 
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
-
 
     def test_quilt_equals_f(self) -> None:
 
@@ -1616,7 +1603,6 @@ class TestUnit(TestCase):
 
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
 
-
     def test_quilt_equals_g(self) -> None:
 
         f1 = ff.parse('s(3,4)|v(int,float)|c(I,str)').rename('f1')
@@ -1629,3 +1615,6 @@ class TestUnit(TestCase):
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
 
 
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

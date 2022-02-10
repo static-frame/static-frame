@@ -1,11 +1,7 @@
-import unittest
 import re
 
 import frame_fixtures as ff
-# import numpy as np
 
-# from static_frame import Frame
-# from static_frame import Series
 from static_frame.test.test_case import TestCase
 
 
@@ -90,5 +86,5 @@ class TestUnit(TestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
-

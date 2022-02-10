@@ -1,7 +1,3 @@
-
-
-import unittest
-
 import frame_fixtures as ff
 
 from static_frame import FrameHE
@@ -18,7 +14,6 @@ class TestUnit(TestCase):
             f1.g = 30 #type: ignore #pylint: disable=E0237
         with self.assertRaises(AttributeError):
             f1.__dict__ #pylint: disable=W0104
-
 
     def test_frame_he_ne_a(self) -> None:
 
@@ -48,13 +43,11 @@ class TestUnit(TestCase):
         self.assertTrue(f3 in d)
         self.assertEqual(d[f3], 'bar')
 
-
     def test_frame_he_hash_b(self) -> None:
 
         f1 = ff.parse('s(10,1)|i(I,str)').to_frame_he()
         self.assertFalse(hasattr(f1, '_hash'))
         self.assertEqual(hash(f1), f1._hash)
-
 
     def test_frame_he_hash_c(self) -> None:
 
@@ -70,7 +63,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(set((f1 ,f2))), 1)
 
 
-
 if __name__ == '__main__':
+    import unittest
     unittest.main()
-

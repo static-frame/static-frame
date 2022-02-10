@@ -1,5 +1,3 @@
-
-
 from static_frame import Frame
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_linux_no_display
@@ -24,4 +22,6 @@ class TestUnit(TestCase):
         self.assertTrue(f2.equals(f1, compare_dtype=True))
 
 
-
+if __name__ == '__main__':
+    import unittest
+    unittest.main()
