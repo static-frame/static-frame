@@ -898,7 +898,6 @@ class Quilt(ContainerBase, StoreClientMixin):
         if isinstance(axis_map_sub, tuple): # type: ignore
             bus_keys = (axis_map_sub[0],) #type: ignore
         else:
-            # get the outer level, or just the unique frame labels needed
             bus_keys = axis_map_sub._get_outer_index_labels_in_order_they_appear()
 
         for key_count, key in enumerate(bus_keys):
@@ -980,7 +979,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         # get ordered unique Bus labels
         axis_map_sub = self._axis_hierarchy.iloc[sel_key]
-        if isinstance(axis_map_sub, tuple): # type: ignore
+        if isinstance(axis_map_sub, tuple): #type: ignore
             frame_labels = (axis_map_sub[0],) #type: ignore
         else:
             # get the outer level, or just the unique frame labels needed
