@@ -212,6 +212,10 @@ class IndexHierarchy(IndexBase):
         if callable(index_constructors): # support a single constrctor
             return [index_constructors for _ in range(depth)]
 
+        index_constructors = tuple(index_constructors)
+
+        if len(index_constructors) != depth:
+            raise ErrorInitIndex("When providing index constructors, number of index constructors must equal depth of IndexHierarchy.")
         return index_constructors
 
     @classmethod
@@ -601,10 +605,11 @@ class IndexHierarchy(IndexBase):
     # NOTE: could have a _from_fields (or similar) that takes a sequence of column iterables/arrays
 
     @staticmethod
-    def _ensure_uniqueness(values: np.ndarray) -> None:
-        duplicates = array_to_duplicated(values, exclude_first=True, exclude_last=False)
+    def _ensure_uniqueness(indexers: tp.List[np.ndarray], values: np.ndarray) -> None:
+        duplicates = array_to_duplicated(np.array(indexers), axis=1, exclude_first=True, exclude_last=False)
+
         if any(duplicates):
-            first_duplicate = values[duplicates][0]
+            first_duplicate = values[np.argmax(duplicates)]
             msg = f'Labels have {sum(duplicates)} non-unique values, including {tuple(first_duplicate)}.'
             raise ErrorInitIndexNonUnique(msg)
 
@@ -669,7 +674,7 @@ class IndexHierarchy(IndexBase):
 
         self._values = self._blocks.values
 
-        self._ensure_uniqueness(self._values)
+        self._ensure_uniqueness(self._indexers, self.values)
         self._recache = False
 
     def _update_array_cache(self) -> None:
@@ -2091,7 +2096,7 @@ class IndexHierarchyGO(IndexHierarchy):
         # No need to ensure uniqueness! It's already been checked.
         self._blocks = self._gen_blocks_from_self()
         self._values = self._blocks.values
-        self._ensure_uniqueness(self._values)
+        self._ensure_uniqueness(self._indexers, self.values)
 
     def __copy__(self: IH) -> IH:
         '''
