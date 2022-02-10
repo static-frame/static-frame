@@ -7911,8 +7911,13 @@ class TestUnit(TestCase):
         frame2 = sf.Frame.from_dict_records(
                 [dict(a=100,b=200), dict(a=20,b=30), dict(a=101,b=101), dict(a=201,b=301)], index=sf.IndexHierarchy.from_labels([(1,'ddd',0), (1,'bbb',0), (2,'ccc',0), (2,'eee',0)]))
 
-        # BEHAVIOR CHANGE!
-        sf.Frame.from_concat((frame1, frame2))
+        frame3 = sf.Frame.from_concat((frame1, frame2))
+
+        self.assertTrue(frame3.columns.equals(frame1.columns))
+        self.assertTrue(frame3.columns.equals(frame2.columns))
+        self.assertTrue(frame3.index.loc[frame1.index].equals(frame1.index))
+        self.assertTrue(frame3.index.loc[frame2.index].equals(frame2.index))
+
 
     def test_frame_from_concat_u(self) -> None:
         # this fails; figure out why
@@ -9637,7 +9642,6 @@ class TestUnit(TestCase):
         col1_dtype = str(f1.columns.dtypes.values[0]) # type: ignore
         col2_dtype = str(f1.columns.dtypes.values[1]) # type: ignore
 
-        # BEHAVIOR CHANGE!!
         # Check that we can represent the IndexHierarchy
         d = f5.display(DisplayConfig(type_color=False))
         self.assertEqual(tuple(d), (['<Frame>'],

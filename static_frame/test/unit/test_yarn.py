@@ -366,7 +366,6 @@ class TestUnit(TestCase):
                 (('f7', (4, 2)), ('f3', (4, 4)))
                 )
 
-        # BEHAVIOR CHANGE!
         y2 = y1.loc[['f1', 'f7', 'f3']]
         self.assertEqual(y2.shapes.to_pairs(),
                 (('f1', (4, 4)), ('f7', (4, 4)), ('f3', (4, 2)))

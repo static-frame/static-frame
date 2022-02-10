@@ -1576,11 +1576,9 @@ class TestUnit(TestCase):
                 index=sf.IndexHierarchy.from_labels(
                 (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
 
-        # BEHAVIOR CHANGE
         post = s.loc['a', :] #pylint: disable=W0104
         self.assertEqual(post.to_pairs(), ((('a', 'a'), 0), (('a', 'b'), 1)))
 
-        # BEHAVIOR CHANGE
         post = s.loc[['a', 'b'], 'b'] #pylint: disable=W0104
         self.assertEqual(post.to_pairs(), ((('a', 'b'), 1), (('b', 'b'), 3)))
 
