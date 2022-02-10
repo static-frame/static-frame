@@ -1,10 +1,7 @@
-
 import typing as tp
-import unittest
 
 import numpy as np
 
-# from hypothesis import strategies as st
 from hypothesis import given
 from hypothesis import settings as hypo_settings
 
@@ -20,7 +17,6 @@ from static_frame import Frame
 
 
 class TestUnit(TestCase):
-
 
     @given(sfst.get_labels())
     def test_get_labels(self, values: tp.Iterable[tp.Hashable]) -> None:
@@ -125,4 +121,5 @@ class TestUnit(TestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()

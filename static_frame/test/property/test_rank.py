@@ -1,8 +1,3 @@
-
-
-
-# import typing as tp
-import unittest
 from hypothesis import given
 import numpy as np
 from scipy.stats import rankdata
@@ -13,9 +8,7 @@ from static_frame.core.rank import rank_1d
 from static_frame.core.rank import rank_2d
 
 
-
 class TestUnit(TestCase):
-
 
     @given(sfst.get_array_1d(dtype_group=sfst.DTGroup.NUMERIC, max_size=100))
     def test_rank_1d_ordinal(self, value: np.ndarray) -> None:
@@ -62,7 +55,6 @@ class TestUnit(TestCase):
             a4 = rank_1d(value, method='min', ascending=False)
             self.assertEqual(a4.min(), 0)
 
-
     @given(sfst.get_array_1d(dtype_group=sfst.DTGroup.NUMERIC, max_size=100))
     def test_rank_1d_max(self, value: np.ndarray) -> None:
         # cannot compare values with NaN as scipy uses quicksort
@@ -72,8 +64,6 @@ class TestUnit(TestCase):
         a2 = rank_1d(value, method='max', start=1)
         self.assertEqual(a1.tolist(), a2.tolist())
 
-
-
     @given(sfst.get_array_1d(dtype_group=sfst.DTGroup.NUMERIC, max_size=100))
     def test_rank_1d_average(self, value: np.ndarray) -> None:
         # cannot compare values with NaN as scipy uses quicksort
@@ -82,9 +72,6 @@ class TestUnit(TestCase):
         a1 = rankdata(value, method='average')
         a2 = rank_1d(value, method='mean', start=1)
         self.assertEqual(a1.tolist(), a2.tolist())
-
-
-
 
     @given(sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20))
     def test_rank_2d_ordinal(self, value: np.ndarray) -> None:
@@ -134,8 +121,6 @@ class TestUnit(TestCase):
             self.assertEqual(a1.tolist(), a2.tolist())
 
 
-
-
-
 if __name__ == '__main__':
+    import unittest
     unittest.main()

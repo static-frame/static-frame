@@ -1,6 +1,3 @@
-
-
-
 import static_frame as sf
 from static_frame.test.test_case import TestCase
 
@@ -13,3 +10,8 @@ class TestUnit(TestCase):
 
         d = sf.Platform.display()
         self.assertTrue(len(str(d)) > 100)
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()
