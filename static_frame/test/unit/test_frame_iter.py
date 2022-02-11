@@ -489,7 +489,7 @@ class TestUnit(TestCase):
                 ((False, 'False: 2'), (True, 'True: 2'))
                 )
 
-    def test_frame_iter_group_items_c(self) -> None:
+    def test_frame_iter_group_items_c1(self) -> None:
         # Test optimized sorting approach. Data must have a non-object dtype and key must be single
         data = np.array([[0, 1, 1, 3],
                          [3, 3, 2, 3],
@@ -514,7 +514,14 @@ class TestUnit(TestCase):
         self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
 
-        # Index
+    def test_frame_iter_group_items_c2(self) -> None:
+        # Test optimized sorting approach. Data must have a non-object dtype and key must be single
+        data = np.array([[0, 1, 1, 3],
+                         [3, 3, 2, 3],
+                         [5, 5, 1, 3],
+                         [7, 2, 2, 4]])
+
+        frame = sf.Frame(data, columns=tuple('abcd'), index=tuple('wxyz'))
         groups = list(frame.iter_group_items('w', axis=1))
         expected_pairs = [
                 (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),), #type: ignore
@@ -525,7 +532,8 @@ class TestUnit(TestCase):
         self.assertEqual([0, 1, 3], [group[0] for group in groups])
         self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
-    def test_frame_iter_group_items_d(self) -> None:
+
+    def test_frame_iter_group_items_d1(self) -> None:
         # Test iterating with multiple key selection
         data = np.array([[0, 1, 1, 3],
                          [3, 3, 2, 3],
@@ -536,6 +544,7 @@ class TestUnit(TestCase):
 
         # Column
         groups = list(frame.iter_group_items(['c', 'd'], axis=0))
+        self.assertEqual([(1, 3), (2, 3), (2, 4)], [group[0] for group in groups])
         expected_pairs = [
                 (('a', (('w', 0), ('y', 5))),
                  ('b', (('w', 1), ('y', 5))),
@@ -550,12 +559,21 @@ class TestUnit(TestCase):
                  ('c', (('z', 2),)),
                  ('d', (('z', 4),)))]
 
-        self.assertEqual([(1, 3), (2, 3), (2, 4)], [group[0] for group in groups])
         self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
 
+    def test_frame_iter_group_items_d2(self) -> None:
+        # Test iterating with multiple key selection
+        data = np.array([[0, 1, 1, 3],
+                         [3, 3, 2, 3],
+                         [5, 5, 1, 3],
+                         [7, 2, 2, 4]])
+
+        frame = sf.Frame(data, columns=tuple('abcd'), index=tuple('wxyz'))
         # Index
         groups = list(frame.iter_group_items(['x', 'y'], axis=1))
+        self.assertEqual([(2, 1), (3, 3), (3, 5)], [group[0] for group in groups])
+
         expected_pairs = [
                 (('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2))),), #type: ignore
                 (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),), #type: ignore
@@ -563,7 +581,6 @@ class TestUnit(TestCase):
                  ('b', (('w', 1), ('x', 3), ('y', 5), ('z', 2)))),
         ]
 
-        self.assertEqual([(2, 1), (3, 3), (3, 5)], [group[0] for group in groups])
         self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
     def test_frame_iter_group_items_e(self) -> None:

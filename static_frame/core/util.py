@@ -890,9 +890,10 @@ def ufunc_unique1d_positions(array: np.ndarray,
     return positions[mask], indexer
 
 
-def view_1d(array: np.ndarray) -> np.ndarray:
+def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
     '''Given a 2D array, reshape it as a consolidated 1D arrays
     '''
+    assert array.ndim == 2
     if not array.flags.c_contiguous:
         array = np.ascontiguousarray(array)
     # NOTE: this could be cached
@@ -922,7 +923,7 @@ def ufunc_unique2d(array: np.ndarray,
     if axis == 1:
         array = array.T
 
-    consolidated = view_1d(array)
+    consolidated = view_2d_as_1d(array)
     values = ufunc_unique1d(consolidated)
     values = values.view(array.dtype).reshape(-1, array.shape[1]) # restore dtype, shape
     if axis == 1:
@@ -941,12 +942,12 @@ def ufunc_unique2d_indexer(array: np.ndarray,
 
     if array.dtype.kind == 'O':
         # we must convert to string in order to extract positions data
-        consolidated = view_1d(array.astype(str))
+        consolidated = view_2d_as_1d(array.astype(str))
         positions, indexer = ufunc_unique1d_positions(consolidated)
         values = array[positions] # restore original values
 
     else:
-        consolidated = view_1d(array)
+        consolidated = view_2d_as_1d(array)
         values, indexer = ufunc_unique1d_indexer(consolidated)
         values = values.view(array.dtype).reshape(-1, array.shape[1])
 

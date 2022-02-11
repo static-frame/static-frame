@@ -16,7 +16,7 @@ from static_frame.core.util import isna_array
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase
 from static_frame.core.type_blocks import group_match
-from static_frame.core.type_blocks import group_sort
+from static_frame.core.type_blocks import group_sorted
 from static_frame.core.display_config import DisplayConfig
 
 
@@ -1423,9 +1423,7 @@ class TestUnit(TestCase):
 
         # return rows, by columns key [4, 5]
         groups = list(tb1.group(axis=0, key=[4, 5]))
-
         self.assertEqual(len(groups), 2)
-
 
         group, selection, subtb = groups[0]
         self.assertEqual(group, (False, False))
@@ -3401,7 +3399,24 @@ class TestUnit(TestCase):
     def test_type_blocks_group_sort_b(self) -> None:
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
         with self.assertRaises(RuntimeError):
-            _ = tuple(group_sort(tb1, axis=3, key=0))
+            _ = tuple(group_sorted(tb1, axis=3, key=0))
+
+    def test_type_blocks_group_sort_c(self) -> None:
+
+        tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(
+                lambda s: s % 3).assign[1].apply(
+                lambda s: s % 3)._blocks
+
+        post = tuple(tb1.group(axis=0, key=[0, 1]))
+        self.assertEqual([(x[0], x[2].shape) for x in post],
+            [((0, 0), (1, 3)),
+             ((0, 2), (1, 3)),
+             ((1, 0), (2, 3)),
+             ((1, 1), (1, 3)),
+             ((1, 2), (3, 3)),
+             ((2, 0), (3, 3)),
+             ((2, 1), (1, 3))]
+            )
 
     #---------------------------------------------------------------------------
 

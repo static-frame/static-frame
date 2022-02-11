@@ -837,7 +837,7 @@ class Pivot(Perf):
         from static_frame.core.pivot import pivot_items_to_block
         from static_frame.core.pivot import pivot_items_to_frame
         from static_frame import TypeBlocks
-        from static_frame.core.type_blocks import group_sort
+        from static_frame.core.type_blocks import group_sorted
         from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(

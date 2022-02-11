@@ -99,7 +99,7 @@ from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.type_blocks import group_match
-from static_frame.core.type_blocks import group_sort
+from static_frame.core.type_blocks import group_sorted
 from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
 from static_frame.core.util import BOOL_TYPES
@@ -4866,42 +4866,48 @@ class Frame(ContainerOperand):
         '''
         Core group implementation.
         '''
-        key_is_int = isinstance(key, INT_TYPES)
         blocks = self._blocks
 
-        # NOTE: the index returned with each group needs to be reordered before slicing; in reordering an IndexHierarchy, and invalid tree form might be needed; thus, we only permit 1D indices
-        if (key_is_int and axis == 0
-                and blocks.dtypes[key] != DTYPE_OBJECT
-                and self._index.depth == 1
-                ):
-            use_sort = True
-        elif (key_is_int and axis == 1
-                and blocks._row_dtype != DTYPE_OBJECT
-                and self._columns.depth == 1
-                ):
-            use_sort = True
-        else:
-            use_sort = False
+        # key_is_int = isinstance(key, INT_TYPES)
+        # # NOTE: the index returned with each group needs to be reordered before slicing; in reordering an IndexHierarchy, and invalid tree form might be needed; thus, we only permit 1D indices
+        # if (key_is_int and axis == 0
+        #         and blocks.dtypes[key] != DTYPE_OBJECT
+        #         and self._index.depth == 1
+        #         ):
+        #     use_sort = True
+        # elif (key_is_int and axis == 1
+        #         and blocks._row_dtype != DTYPE_OBJECT
+        #         and self._columns.depth == 1
+        #         ):
+        #     use_sort = True
+        # else:
+        #     use_sort = False
 
         if drop:
             shape = blocks._shape[1] if axis == 0 else blocks._shape[0]
             drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
             drop_mask[key] = False
 
-        if use_sort:
+        try:
             blocks, ordering = blocks.sort(key=key, axis=not axis, kind=DEFAULT_SORT_KIND)
-            group_iter = group_sort(
+            use_sorted = True
+        except TypeError:
+            use_sorted = False
+            ordering = None
+
+        if use_sorted:
+            group_iter = group_sorted(
                     blocks=blocks,
                     axis=axis,
                     key=key,
                     drop=drop,
                     )
             if axis == 0:
-                index = self._index._extract_iloc(ordering) # sort index once for slicing
+                index = self._index #._extract_iloc(ordering) # sort
                 columns = self._columns if not drop else self._columns[drop_mask]
             else:
                 index = self._index if not drop else self._index[drop_mask]
-                columns = self._columns._extract_iloc(ordering) # sort
+                columns = self._columns #._extract_iloc(ordering) # sort
 
         else:
             group_iter = group_match(
@@ -4918,20 +4924,26 @@ class Frame(ContainerOperand):
                 columns = self._columns
 
         for group, selection, tb in group_iter:
-            # NOTE: selection can be an array or a slice
+            # NOTE: selection can be a Boolean array or a slice
             if axis == 0:
                 # axis 0 is a row iter, so need to slice index, keep columns
+                index_group = (index._extract_iloc(selection) if ordering is None
+                        else index._extract_iloc(ordering[selection])
+                        )
                 yield group, self.__class__(tb,
-                        index=index._extract_iloc(selection),
+                        index=index_group,
                         columns=columns,
                         own_columns=self.STATIC, # own if static
                         own_index=True,
                         own_data=True)
             else:
                 # axis 1 is a column iterators, so need to slice columns, keep index
+                columns_group = (columns._extract_iloc(selection) if ordering is None
+                        else columns._extract_iloc(ordering[selection])
+                        )
                 yield group, self.__class__(tb,
                         index=index,
-                        columns=columns._extract_iloc(selection),
+                        columns=columns_group,
                         own_index=True,
                         own_columns=True,
                         own_data=True)
