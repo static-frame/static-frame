@@ -824,14 +824,20 @@ class Pivot(Perf):
                 )
         self.pdf2 = self.sff2.to_pandas()
 
-        # more than one data fields
+        # index2_columns0_data1
         self.sff3 = ff.parse('s(100_000,4)|v(int,int,int,int)').assign[0].apply(
                 lambda s: s % 6).assign[1].apply(
-                lambda s: s % 12
+                lambda s: s % 3).assign[2].apply(
+                lambda s: s % 5
                 )
+        self.pdf3 = self.sff3.to_pandas()
 
         from static_frame.core.pivot import pivot_outer_index
+        from static_frame.core.pivot import pivot_core
+        from static_frame.core.pivot import pivot_items_to_block
+        from static_frame.core.pivot import pivot_items_to_frame
         from static_frame import TypeBlocks
+        from static_frame.core.type_blocks import group_sorted
         from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
@@ -842,6 +848,14 @@ class Pivot(Perf):
                 line_target=pivot_outer_index,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
+            'index2_columns0_data1': FunctionMetaData(
+                line_target=pivot_items_to_frame,
+                # perf_status=PerfStatus.EXPLAINED_LOSS,
+                ),
+            # 'index2_columns1_data1': FunctionMetaData(
+            #     # line_target=pivot_outer_index,
+            #     # perf_status=PerfStatus.EXPLAINED_LOSS,
+            #     ),
             }
 
 class Pivot_N(Pivot, Native):
@@ -854,6 +868,9 @@ class Pivot_N(Pivot, Native):
         post = self.sff2.pivot(index_fields=0, columns_fields=1)
         assert post.shape == (6, 12)
 
+    def index2_columns0_data1(self) -> None:
+        post = self.sff3.pivot(index_fields=(0, 1), data_fields=3)
+        assert post.shape == (18, 1)
 
 class Pivot_R(Pivot, Reference):
 
@@ -864,6 +881,10 @@ class Pivot_R(Pivot, Reference):
     def index1_columns1_data1(self) -> None:
         post = self.pdf2.pivot_table(index=0, columns=1, aggfunc=np.nansum)
         assert post.shape == (6, 12)
+
+    def index2_columns0_data1(self) -> None:
+        post = self.pdf3.pivot_table(index=(0, 1), values=3, aggfunc=np.nansum)
+        assert post.shape == (18, 1)
 
 #-------------------------------------------------------------------------------
 class BusItemsZipPickle(Perf):
@@ -1398,8 +1419,10 @@ def performance_tables_from_records(
             frame[fields].median().rename('median'),
             frame[fields].std(ddof=1).rename('std')
             )).rename(index='name').unset_index()
-    # import ipdb; ipdb.set_trace()
-    composit = sf.Frame.from_concat((frame, stats), columns=frame.columns, index=sf.IndexAutoFactory)
+    if len(frame) < 9:
+        composit = frame.relabel(columns=frame.columns, index=sf.IndexAutoFactory)
+    else:
+        composit = sf.Frame.from_concat((frame, stats), columns=frame.columns, index=sf.IndexAutoFactory)
     display = composit.iter_element_items().apply(format)
     # display = display[display.columns.drop.loc['status'].values.tolist() + ['status']]
     # display = display[[c for c in display.columns if '/' not in c]]
@@ -1466,3 +1489,4 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
+
