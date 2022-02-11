@@ -93,44 +93,6 @@ def pivot_records_dtypes(
             for _, func in func_map:
                 yield ufunc_dtype_to_dtype(func, dtype)
 
-#-------------------------------------------------------------------------------
-# def pivot_records_items(*,
-#         blocks: TypeBlocks,
-#         group_fields_iloc: tp.Iterable[tp.Hashable],
-#         group_depth: int,
-#         data_fields_iloc: tp.Iterable[tp.Hashable],
-#         func_single: tp.Optional[UFunc],
-#         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]],
-#         func_no: bool,
-#         kind: str,
-#         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
-#     '''
-#     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
-#     '''
-#     # NOTE: this delivers results by label, row for use in a Frame.from_records_items constructor
-#     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
-#     record_size = len(data_fields_iloc) * (1 if (func_single or func_no) else len(func_map))
-#     record: tp.List[tp.Any]
-
-#     for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
-#         if func_no:
-#             if len(part) != 1:
-#                 raise RuntimeError('pivot requires aggregation of values; provide a `func` argument.')
-#             record = [part._extract(0, column_key) for column_key in data_fields_iloc]
-#         elif func_single:
-#             record = [func_single(part._extract_array_column(column_key)) for
-#                     column_key in data_fields_iloc]
-#         else:
-#             record = [None] * record_size # This size can be pre allocated,
-#             pos = 0
-#             for column_key in data_fields_iloc:
-#                 values = part._extract_array_column(column_key)
-#                 for _, func in func_map:
-#                     record[pos] = func(values)
-#                     pos += 1
-#         yield label, record
-
-
 def pivot_records_items_to_frame(
         *,
         blocks: TypeBlocks,
@@ -484,7 +446,6 @@ def pivot_core(
         columns = data_fields if (func_no or func_single) else tuple(
                 product(data_fields, func_fields)
                 )
-
         # NOTE: at this time we do not automatically give back an IndexHierarchy when index_depth is == 1, as the order of the resultant values may not be hierarchable.
         name_index = index_fields[0] if index_depth == 1 else tuple(index_fields)
         if index_constructor:
@@ -507,7 +468,6 @@ def pivot_core(
                     kind=kind,
                     )
         else:
-            # import ipdb; ipdb.set_trace()
             f = pivot_records_items_to_frame(
                     blocks=frame._blocks,
                     group_fields_iloc=index_fields_iloc,
@@ -523,9 +483,6 @@ def pivot_core(
                     dtypes=dtypes_per_data_fields,
                     frame_cls=frame.__class__,
                     )
-
-        # have to rename columns if derived in from_concat:
-        # NOTE: not sure if have to call call columns_constructor
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
                 else columns_constructor(f.columns))
         return f.relabel(columns=columns_final) #type: ignore
