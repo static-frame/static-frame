@@ -874,6 +874,7 @@ def ufunc_unique1d_positions(array: np.ndarray,
         except TypeError: # if unorderable types
             sortable = False
         if not sortable:
+            # NOTE: using string here could lead to None, 'None' being evaluated the same;  could repalce values with tuples of value as string, type as string, but that might also have collisions
             positions = array.astype(str).argsort(kind=DEFAULT_STABLE_SORT_KIND)
     else:
         positions = array.argsort(kind=DEFAULT_STABLE_SORT_KIND)
