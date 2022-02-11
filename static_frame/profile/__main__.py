@@ -832,25 +832,25 @@ class Pivot(Perf):
                 )
         self.pdf3 = self.sff3.to_pandas()
 
-        from static_frame.core.pivot import pivot_outer_index
-        from static_frame.core.pivot import pivot_core
-        from static_frame.core.pivot import pivot_items_to_block
-        from static_frame.core.pivot import pivot_items_to_frame
-        from static_frame import TypeBlocks
-        from static_frame.core.type_blocks import group_sorted
-        from static_frame.core.util import array_to_groups_and_locations
+        # from static_frame.core.pivot import pivot_outer_index
+        # from static_frame.core.pivot import pivot_core
+        # from static_frame.core.pivot import pivot_items_to_block
+        # from static_frame.core.pivot import pivot_items_to_frame
+        # from static_frame import TypeBlocks
+        # from static_frame.core.type_blocks import group_sorted
+        # from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                line_target=array_to_groups_and_locations,
+                # line_target=array_to_groups_and_locations,
                 ),
             'index1_columns1_data1': FunctionMetaData(
-                line_target=pivot_outer_index,
+                # line_target=pivot_outer_index,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'index2_columns0_data1': FunctionMetaData(
-                line_target=pivot_items_to_frame,
-                # perf_status=PerfStatus.EXPLAINED_LOSS,
+                # line_target=pivot_items_to_frame,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             # 'index2_columns1_data1': FunctionMetaData(
             #     # line_target=pivot_outer_index,
