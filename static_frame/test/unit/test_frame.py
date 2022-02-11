@@ -11228,9 +11228,8 @@ class TestUnit(TestCase):
         f1['a'] = range(len(f1))
         f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
         f2 = f1.unset_index()
-
-        # with self.assertRaises(RuntimeError):
-        post1 = f2.pivot(
+        with self.assertRaises(RuntimeError):
+            post1 = f2.pivot(
                 index_fields='z',
                 columns_fields='y',
                 data_fields=('a', 'b'),
