@@ -11244,7 +11244,7 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(),
             ((0, (('A', 0), ('B', 2), (None, 1))), (2, (('A', 10), ('B', 30), (None, 20)))))
 
-
+    @skip_win #type: ignore
     def test_frame_pivot_x(self) -> None:
         f = ff.parse('s(10,4)|v(int)').assign[0].apply(
                 lambda x: x % 3).assign[1].apply(
