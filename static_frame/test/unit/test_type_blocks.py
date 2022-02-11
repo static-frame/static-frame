@@ -3388,7 +3388,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_type_blocks_group_sort_a(self) -> None:
+    def test_type_blocks_group_sorted_a(self) -> None:
 
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
 
@@ -3396,12 +3396,12 @@ class TestUnit(TestCase):
         self.assertEqual([(x[0], x[2].shape) for x in post],
                 [(0, (5, 3)), (2, (1, 3)), (3, (6, 3))]
                 )
-    def test_type_blocks_group_sort_b(self) -> None:
+    def test_type_blocks_group_sorted_b(self) -> None:
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(lambda s: s % 4)._blocks
         with self.assertRaises(RuntimeError):
             _ = tuple(group_sorted(tb1, axis=3, key=0))
 
-    def test_type_blocks_group_sort_c(self) -> None:
+    def test_type_blocks_group_sorted_c(self) -> None:
 
         tb1 = ff.parse('s(12,3)|v(int)').assign[0].apply(
                 lambda s: s % 3).assign[1].apply(
@@ -3418,6 +3418,18 @@ class TestUnit(TestCase):
              ((2, 1), (1, 3))]
             )
 
+    def test_type_blocks_group_sorted_d(self) -> None:
+        tb1 = ff.parse('s(4,6)|v(int)').assign.loc[1].apply(
+                lambda s: s % 3)._blocks
+        tb1, _ = tb1.sort(key=1, axis=0)
+        post = tuple(group_sorted(tb1, axis=1, key=1, extract=0))
+        self.assertEqual([x[0] for x in post],
+                [0, 1, 2]
+                )
+        self.assertEqual([x[2].shape for x in post],
+                [(1,), (1,), (4,)]
+                )
+
     #---------------------------------------------------------------------------
 
     def test_type_blocks_group_match_a(self) -> None:
@@ -3430,6 +3442,32 @@ class TestUnit(TestCase):
         post = tuple(group_match(tb1, axis=0, key=0, drop=True))
         self.assertEqual([x.shape for _, _, x in post],
                 [(5, 2), (1, 2), (6, 2)])
+
+    def test_type_blocks_group_match_c(self) -> None:
+        tb1 = TypeBlocks.from_zero_size_shape((0, 3))
+        post = tuple(group_match(tb1, axis=0, key=0, drop=True))
+        self.assertEqual(post, ())
+
+    def test_type_blocks_group_match_d(self) -> None:
+        tb1 = ff.parse('s(4,6)|v(int)').assign.loc[1].apply(
+                lambda s: s % 2).assign.loc[2].apply(
+                lambda s: s % 2)._blocks
+        post = tuple(group_match(tb1, axis=1, key=[1, 2]))
+        self.assertEqual([x[0] for x in post],
+                [(0, 0), (0, 1), (1, 0), (1, 1)]
+                )
+        self.assertEqual([x[2].shape for x in post],
+                [(4, 1), (4, 1), (4, 1), (4, 3)]
+                )
+
+    def test_type_blocks_group_match_e(self) -> None:
+        tb1 = ff.parse('s(4,6)|v(int)').assign.loc[1].apply(
+                lambda s: s % 2)._blocks
+        post = tuple(group_match(tb1, axis=1, key=1, extract=0))
+
+        self.assertEqual([x[0] for x in post], [0, 1])
+        self.assertEqual([x[2].shape for x in post], [(2,), (4,)])
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 
@@ -3522,12 +3560,23 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), [-88017.0, -610.8])
 
     #---------------------------------------------------------------------------
-
     def test_type_blocks_slice_blocks_a(self) -> None:
         tb1 = ff.parse('s(3,6)|v(int,int,bool,bool)')._blocks
         tb2 = tb1[slice(1, 3)]
         post = tuple(tb2._slice_blocks(column_key=slice(0, 1)))
         self.assertEqual([a.shape for a in post], [(3,)])
+
+    #---------------------------------------------------------------------------
+    def test_type_blocks_blocks_to_array_a(self) -> None:
+        tb1 = ff.parse('s(1,2)|v(int,int)')._blocks
+
+        post = TypeBlocks._blocks_to_array(
+                blocks=tb1._blocks,
+                shape=tb1.shape,
+                row_dtype=tb1._row_dtype,
+                row_multiple=False,
+                )
+        self.assertEqual(post.tolist(), [-88017, 162197])
 
 
 if __name__ == '__main__':
