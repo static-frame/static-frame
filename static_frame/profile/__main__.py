@@ -1041,7 +1041,7 @@ class FrameFromNPZ_R(FrameFromNPZ, Reference):
 
 #-------------------------------------------------------------------------------
 class Group(Perf):
-    NUMBER = 150
+    NUMBER = 200
 
     def __init__(self) -> None:
         super().__init__()

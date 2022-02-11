@@ -113,6 +113,8 @@ from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import CallableOrCallableMap
 from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DEFAULT_STABLE_SORT_KIND
+from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
@@ -4862,34 +4864,22 @@ class Frame(ContainerOperand):
             *,
             axis: int,
             drop: bool = False,
+            stable: bool = True,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
         '''
         Core group implementation.
         '''
         blocks = self._blocks
 
-        # key_is_int = isinstance(key, INT_TYPES)
-        # # NOTE: the index returned with each group needs to be reordered before slicing; in reordering an IndexHierarchy, and invalid tree form might be needed; thus, we only permit 1D indices
-        # if (key_is_int and axis == 0
-        #         and blocks.dtypes[key] != DTYPE_OBJECT
-        #         and self._index.depth == 1
-        #         ):
-        #     use_sort = True
-        # elif (key_is_int and axis == 1
-        #         and blocks._row_dtype != DTYPE_OBJECT
-        #         and self._columns.depth == 1
-        #         ):
-        #     use_sort = True
-        # else:
-        #     use_sort = False
-
         if drop:
             shape = blocks._shape[1] if axis == 0 else blocks._shape[0]
             drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
             drop_mask[key] = False
 
+        # NOTE: in limited studies using stable does not show significant overhead
+        kind = DEFAULT_STABLE_SORT_KIND if stable else DEFAULT_FAST_SORT_KIND
         try:
-            blocks, ordering = blocks.sort(key=key, axis=not axis, kind=DEFAULT_SORT_KIND)
+            blocks, ordering = blocks.sort(key=key, axis=not axis, kind=kind)
             use_sorted = True
         except TypeError:
             use_sorted = False
@@ -4954,6 +4944,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0,
             drop: bool = False,
+            stable: bool = True,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
         '''
         Args:
@@ -4967,7 +4958,7 @@ class Frame(ContainerOperand):
             iloc_key = self._index._loc_to_iloc(key)
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
-        yield from self._axis_group_iloc_items(key=iloc_key, axis=axis, drop=drop)
+        yield from self._axis_group_iloc_items(key=iloc_key, axis=axis, drop=drop, stable=stable)
 
 
     def _axis_group_loc(self,
