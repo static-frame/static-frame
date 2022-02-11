@@ -11202,7 +11202,7 @@ class TestUnit(TestCase):
                 )
         self.assertTrue(post1.equals(post2))
 
-    def test_frame_pivot_u(self) -> None:
+    def test_frame_pivot_u1(self) -> None:
         index = IndexHierarchy.from_product(
                 ('far', 'near'), ('up', 'down'), ('left', 'right'),
                 name=('z', 'y', 'x')
@@ -11218,6 +11218,24 @@ class TestUnit(TestCase):
                     data_fields=('a', 'b'),
                     func=None,
                     )
+
+    def test_frame_pivot_u2(self) -> None:
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+        f2 = f1.unset_index()
+
+        # with self.assertRaises(RuntimeError):
+        post1 = f2.pivot(
+                index_fields='z',
+                columns_fields='y',
+                data_fields=('a', 'b'),
+                func=None,
+                )
 
 
     def test_frame_pivot_v(self) -> None:
