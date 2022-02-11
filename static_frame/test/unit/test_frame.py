@@ -11277,7 +11277,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_frame_pivot_y(self) -> None:
+    def test_frame_pivot_y1(self) -> None:
         f1 = ff.parse('s(10,4)|v(int)').assign[0].apply(
                 lambda x: x % 3).assign[1].apply(
                 lambda x: x % 3).assign[2].apply(
@@ -11294,6 +11294,22 @@ class TestUnit(TestCase):
         self.assertEqual(f3.columns.name, (1, 'values'))
         self.assertEqual(f3.to_pairs(),
                 (((0, 0), ((0, 0), (1, 1), (2, 4))), ((0, 3), ((0, 0), (1, 1), (2, 4))), ((1, 0), ((0, 0), (1, 0), (2, 1))), ((1, 3), ((0, 0), (1, 0), (2, 1))), ((2, 0), ((0, 1), (1, 1), (2, 2))), ((2, 3), ((0, 1), (1, 1), (2, 2))))
+                )
+
+    def test_frame_pivot_y2(self) -> None:
+        f1 = ff.parse('s(10,4)|v(int)').assign[0].apply(
+                lambda x: x % 3).assign[1].apply(
+                lambda x: x % 3).assign[2].apply(
+                lambda x: x % 3)
+
+        f2 = f1.pivot(index_fields=2,
+                columns_fields=1,
+                data_fields=0,
+                func=lambda x: str(x),
+                fill_value='[]',
+                )
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, '[]'), (1, '[1]'), (2, '[2 2 1 2]'))), (1, ((0, '[]'), (1, '[]'), (2, '[1]'))), (2, ((0, '[0]'), (1, '[1]'), (2, '[1 1]'))))
                 )
 
     #---------------------------------------------------------------------------
