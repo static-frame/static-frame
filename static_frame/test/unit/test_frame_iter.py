@@ -524,10 +524,10 @@ class TestUnit(TestCase):
         frame = sf.Frame(data, columns=tuple('abcd'), index=tuple('wxyz'))
         groups = list(frame.iter_group_items('w', axis=1))
         expected_pairs = [
-                (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),), #type: ignore
-                (('b', (('w', 1), ('x', 3), ('y', 5), ('z', 2))), #type: ignore
+                (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),),
+                (('b', (('w', 1), ('x', 3), ('y', 5), ('z', 2))),
                  ('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2)))),
-                (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),)] #type: ignore
+                (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),)]
 
         self.assertEqual([0, 1, 3], [group[0] for group in groups])
         self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
@@ -575,9 +575,9 @@ class TestUnit(TestCase):
         self.assertEqual([(2, 1), (3, 3), (3, 5)], [group[0] for group in groups])
 
         expected_pairs = [
-                (('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2))),), #type: ignore
-                (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),), #type: ignore
-                (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))), #type: ignore
+                (('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2))),),
+                (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),),
+                (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),
                  ('b', (('w', 1), ('x', 3), ('y', 5), ('z', 2)))),
         ]
 

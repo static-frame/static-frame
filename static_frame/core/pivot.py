@@ -108,7 +108,7 @@ def pivot_records_items_to_frame(
         index_constructor: IndexConstructor,
         dtypes: tp.Tuple[tp.Optional[np.dtype]],
         frame_cls: tp.Type['Frame'],
-        ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
+        ) -> 'Frame':
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
@@ -175,7 +175,7 @@ def pivot_records_items_to_blocks(*,
     # NOTE: this delivers results by label, row for use in a Frame.from_records_items constructor
 
     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
-    arrays = []
+    arrays: tp.List[tp.Union[tp.List[tp.Any], np.ndarray]] = []
     for dtype in dtypes:
         if dtype is None:
             # we can use fill_value here, as either it will be completely replaced (and not effect dtype evaluation) or be needed (and already there)
@@ -184,10 +184,10 @@ def pivot_records_items_to_blocks(*,
             arrays.append(np.empty(len(index_outer), dtype=dtype))
 
     # try to use the dtype specifieid; fill values at end of necessary
-    iloc_found = set()
+    iloc_found: tp.Set[int] = set()
     # each group forms a row, each label a value in the index
     for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
-        iloc = index_outer._loc_to_iloc(label)
+        iloc: int = index_outer._loc_to_iloc(label) #type: ignore
         iloc_found.add(iloc)
         if func_no:
             if len(part) != 1:
@@ -217,12 +217,12 @@ def pivot_records_items_to_blocks(*,
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
                 arrays[arrays_key] = array # restore new array
             else:
-                dtype_resolved = resolve_dtype(array.dtype, fill_value_dtype)
-                if array.dtype != dtype_resolved:
-                    array = array.astype(dtype_resolved)
+                dtype_resolved = resolve_dtype(array.dtype, fill_value_dtype) # type: ignore
+                if array.dtype != dtype_resolved: # type: ignore
+                    array = array.astype(dtype_resolved) #type: ignore
                     array[fill_targets] = fill_value
                     arrays[arrays_key] = array # re-assign new array
-            array.flags.writeable = False
+            array.flags.writeable = False # type: ignore
     else:
         for arrays_key in range(len(arrays)):
             array = arrays[arrays_key]
