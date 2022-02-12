@@ -11108,7 +11108,7 @@ class TestUnit(TestCase):
         f1["b"] = np.array(range(3), "datetime64[D]")
         f1["c"] = np.array(range(3)) * 1e9
 
-        f2 = f1.pivot("b", "a", fill_value='', index_constructor=IndexDate, func=lambda s: str(s))
+        f2 = f1.pivot("b", "a", fill_value='', index_constructor=IndexDate, func=str)
         dt64 = np.datetime64
         self.assertEqual(f2.to_pairs(),
                 ((10001, ((dt64('1970-01-01'), '[0.]'), (dt64('1970-01-02'), ''), (dt64('1970-01-03'), ''))), (10002, ((dt64('1970-01-01'), ''), (dt64('1970-01-02'), '[1.e+09]'), (dt64('1970-01-03'), ''))), (10003, ((dt64('1970-01-01'), ''), (dt64('1970-01-02'), ''), (dt64('1970-01-03'), '[2.e+09]')))))
@@ -11288,7 +11288,7 @@ class TestUnit(TestCase):
                 [((0, 0), 'f'), ((0, 3), 'f'), ((1, 0), 'f'), ((1, 3), 'f'), ((2, 0), 'i'), ((2, 3), 'i')])
 
         f3 = f1.pivot(index_fields=2, columns_fields=1, data_fields=[0, 3],
-                func=lambda x: len(x),
+                func=len,
                 fill_value=0)
         self.assertEqual(f3.index.name, 2)
         self.assertEqual(f3.columns.name, (1, 'values'))
@@ -11305,7 +11305,7 @@ class TestUnit(TestCase):
         f2 = f1.pivot(index_fields=2,
                 columns_fields=1,
                 data_fields=0,
-                func=lambda x: str(x),
+                func=str,
                 fill_value='[]',
                 )
         self.assertEqual(f2.to_pairs(),

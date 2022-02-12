@@ -1,8 +1,5 @@
 import typing as tp
 
-import numpy as np
-
-
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import GetItemKeyType

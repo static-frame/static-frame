@@ -22,6 +22,8 @@ from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import NameType
+from static_frame.core.util import iterable_to_array_1d
+
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.type_blocks import TypeBlocks
@@ -211,7 +213,7 @@ def pivot_records_items_to_blocks(*,
         # order does not matter
         fill_targets = list(set(range(len(index_outer))) - iloc_found)
         # mutate in place then make immutable
-        for arrays_key in range(len(arrays)):
+        for arrays_key in range(len(arrays)): #pylint: disable=C0200
             array = arrays[arrays_key]
             if not array.__class__ is np.ndarray: # a list
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
@@ -224,7 +226,7 @@ def pivot_records_items_to_blocks(*,
                     arrays[arrays_key] = array # re-assign new array
             array.flags.writeable = False # type: ignore
     else:
-        for arrays_key in range(len(arrays)):
+        for arrays_key in range(len(arrays)): #pylint: disable=C0200
             array = arrays[arrays_key]
             if not array.__class__ is np.ndarray: # a list
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
@@ -309,8 +311,6 @@ def pivot_items_to_block(*,
     array[labels] = values
     array.flags.writeable = False
     return array
-
-from static_frame.core.util import iterable_to_array_1d
 
 def pivot_items_to_frame(*,
         blocks: TypeBlocks,
