@@ -290,17 +290,14 @@ def pivot_items_to_block(*,
         array.flags.writeable = False
         return array
 
-    # func_no scenario
+    # func_no scenario as no mapping here
     if group_depth == 1:
-        # NOTE: can replace _extract_array_column with an iterator of values
         labels = [index_outer._loc_to_iloc(label) for label in blocks._extract_array_column(group_key)]
     else:
-        # NOTE: can replace _extract_array_column with an iterator of values
+        # NOTE: might replace _extract_array_column with an iterator of tuples
         labels = [index_outer._loc_to_iloc(tuple(label)) for label in blocks._extract_array(column_key=group_key)]
 
     values = blocks._extract_array_column(data_field_iloc)
-    assert dtype == values.dtype
-
     if len(values) == len(index_outer):
         array = np.empty(len(index_outer), dtype=dtype)
     else:
@@ -357,7 +354,6 @@ def pivot_items_to_frame(*,
                 columns=(name,),
                 columns_constructor=columns_constructor,
                 )
-
     # func_no scenario
     if group_depth == 1:
         index = index_constructor(blocks._extract_array_column(group_key))
@@ -365,8 +361,6 @@ def pivot_items_to_frame(*,
         index = index_constructor(tuple(label) for label in blocks._extract_array(column_key=group_key))
 
     array = blocks._extract_array_column(data_field_iloc)
-    assert dtype == array.dtype
-
     return frame_cls.from_elements(array,
             index=index,
             own_index=True,
