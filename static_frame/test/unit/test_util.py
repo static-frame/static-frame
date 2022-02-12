@@ -65,6 +65,8 @@ from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import UFUNC_MAP
 from static_frame.core.util import list_to_tuple
 from static_frame.core.util import datetime64_not_aligned
+from static_frame.core.util import ufunc_unique2d_indexer
+from static_frame.core.util import ufunc_unique1d_positions
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 
@@ -1102,6 +1104,37 @@ class TestUnit(TestCase):
 
         post = ufunc_unique(a1, axis=1)
         self.assertEqual(post.tolist(), [(1, 1, 1), ('x', None, 'x')])
+
+    #---------------------------------------------------------------------------
+
+    def test_ufunc_unique2d_inverse_a(self) -> None:
+        a1 = np.array([[1, 1], [1, 2], [1, 2], [3, 0], [1, 1]])
+        values, positions = ufunc_unique2d_indexer(a1)
+        self.assertEqual(values.tolist(),
+                [[1, 1], [1, 2], [3, 0]])
+        self.assertEqual(positions.tolist(),
+                [0, 1, 1, 2, 0])
+
+    def test_ufunc_unique2d_inverse_b(self) -> None:
+        a1 = np.array([[1, 1, 1, 2, 1, 1], [1, 1, 2, 2, 2, 1]])
+        values, positions = ufunc_unique2d_indexer(a1, axis=1)
+        self.assertEqual(values.tolist(),
+                [[1, 1, 2], [1, 2, 2]])
+        self.assertEqual(positions.tolist(),
+                [0, 0, 1, 2, 1, 0]
+                )
+
+    def test_ufunc_unique2d_inverse_c(self) -> None:
+        a1 = np.array([[1, 1, 1, None, 1, 1], [1, 1, None, None, None, 1]])
+        values, positions = ufunc_unique2d_indexer(a1, axis=1)
+        self.assertEqual(values.tolist(),
+                [[1, 1, None], [1, None, None]],
+                )
+        self.assertEqual(positions.tolist(),
+                [0, 0, 1, 2, 1, 0]
+                )
+
+    #---------------------------------------------------------------------------
 
     def test_concat_resolved_a(self) -> None:
         a1 = np.array([[3,4,5],[0,0,0]])
@@ -2485,18 +2518,10 @@ class TestUnit(TestCase):
                     continue
                 self.assertEqual(post.dtype, resolved)
 
-    #---------------------------------------------------------------------------
+    def test_ufunc_dtype_to_dtype_b(self) -> None:
+        # NOTE: this tests the final fall through
+        self.assertIs(ufunc_dtype_to_dtype(np.cumsum, np.dtype(np.datetime64)), None)
 
-    def test_unique1d_array_mask_a(self) -> None:
-        from static_frame.core.util import unique1d_array_mask
-        a1, _ = unique1d_array_mask(np.array([10, 20, 30, 10, 20]))
-        self.assertEqual(a1.tolist(), [10, 20, 30])
-
-        a2, _ = unique1d_array_mask(np.array([10, None, 30, 'foo', 'foo']))
-        self.assertEqual(a2.tolist(), [10, None, 30, 'foo'])
-
-        a3, _ = unique1d_array_mask(np.array([10, 40, 50, 50, 10], dtype=object))
-        self.assertEqual(a3.tolist(), [10, 40, 50])
 
     #---------------------------------------------------------------------------
 
@@ -2510,6 +2535,26 @@ class TestUnit(TestCase):
                 [[[2,], 3, 4], [[[1, 2], [3, 4]], [5, 6]]]),
                 (((2,), 3, 4), (((1, 2), (3, 4)), (5, 6)))
                 )
+
+    #---------------------------------------------------------------------------
+
+    def test_ufunc_unique1d_positions_a(self) -> None:
+        pos, indexer = ufunc_unique1d_positions(np.array([3, 2, 3, 2, 5, 3]))
+        self.assertEqual(pos.tolist(), [1, 0, 4])
+        self.assertEqual(indexer.tolist(), [1, 0, 1, 0, 2, 1])
+
+    def test_ufunc_unique1d_positions_b(self) -> None:
+        pos, indexer = ufunc_unique1d_positions(np.array([3, 3, 2, 2, 3], dtype=object))
+        self.assertEqual(pos.tolist(), [2, 0])
+        self.assertEqual(indexer.tolist(), [1, 1, 0, 0, 1])
+
+    def test_ufunc_unique1d_positions_c(self) -> None:
+        pos, indexer = ufunc_unique1d_positions(np.array([None, 'foo', 3, 'foo', None], dtype=object))
+        self.assertEqual(pos.tolist(), [2, 0, 1])
+        self.assertEqual(indexer.tolist(), [1, 2, 0, 2, 1])
+
+
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':

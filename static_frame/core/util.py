@@ -50,7 +50,8 @@ if tp.TYPE_CHECKING:
 
 
 DEFAULT_SORT_KIND = 'mergesort'
-DEFAULT_STABLE_SORT_KIND = 'mergesort'
+DEFAULT_STABLE_SORT_KIND = 'mergesort' # for when results will be in correct if not used
+DEFAULT_FAST_SORT_KIND = 'quicksort' # for when fastest is all that we want
 
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
@@ -806,74 +807,154 @@ def array_ufunc_axis_skipna(
 #-------------------------------------------------------------------------------
 # unique value discovery; based on NP's arraysetops.py
 
-def unique1d_array_mask(array: np.ndarray
-        ) -> tp.Tuple[np.ndarray, tp.Optional[np.ndarray]]:
+def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     '''
-    Return an array of unique elements, handling
+    Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
     '''
-    # NOTE: might optionally own data to avoid making copy
+    if array.dtype.kind == 'O':
+        try: # some 1D object arrays are sortable
+            array = np.sort(array)
+            sortable = True
+        except TypeError: # if unorderable types
+            sortable = False
+        if not sortable:
+            # Use a dict to retain order; this will break for non hashables
+            store = dict.fromkeys(array)
+            array = np.empty(len(store), dtype=object)
+            array[:] = tuple(store)
+            return array
+    else:
+        array = np.sort(array)
 
+    mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+    mask[:1] = True
+    mask[1:] = array[1:] != array[:-1]
+
+    return array[mask]
+
+
+def ufunc_unique1d_indexer(array: np.ndarray,
+        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+    '''
+    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as index positions of those values in the original array.
+    '''
     if array.dtype.kind == 'O':
         try:
-            # avoid making a copy until we know we can sort
-            sel = array.argsort()
+            positions = array.argsort()
+            sortable = True
         except TypeError: # if unorderable types
-            mutable = None
-        else:
-            mutable = array[sel]
+            sortable = False
+        # if not sortable, we cannot do anything else but a string
+        if not sortable:
+            positions = array.astype(str).argsort()
     else:
-        mutable = array.copy()
-        mutable.sort() # can sort in-place with any sort algorithm
+        positions = array.argsort()
+    # get the sorted array
+    array = array[positions]
 
-    if mutable is not None:
-        mask = np.empty(array.shape, dtype=DTYPE_BOOL)
-        mask[0] = True
-        mask[1:] = mutable[1:] != mutable[:-1] # where not equal
-        return mutable[mask], mask
+    mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+    mask[:1] = True
+    mask[1:] = array[1:] != array[:-1]
 
-    store = dict.fromkeys(array)
-    array = np.empty(len(store), dtype=object)
-    array[NULL_SLICE] = tuple(store)
+    indexer = np.empty(mask.shape, dtype=np.intp)
+    indexer[positions] = np.cumsum(mask) - 1
 
-    # we do not hae a mask; caller will need to make one
-    return array, None
+    return array[mask], indexer
+
+def ufunc_unique1d_positions(array: np.ndarray,
+        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+    '''
+    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Does not return the unqiue values, but the positions in the original index of those values, as well as the locations of the unique values.
+    '''
+    # NOTE: must use stable sort when returning positions
+    if array.dtype.kind == 'O':
+        try:
+            positions = array.argsort(kind=DEFAULT_STABLE_SORT_KIND)
+            sortable = True
+        except TypeError: # if unorderable types
+            sortable = False
+        if not sortable:
+            # NOTE: using string here could lead to None, 'None' being evaluated the same;  could repalce values with tuples of value as string, type as string, but that might also have collisions
+            positions = array.astype(str).argsort(kind=DEFAULT_STABLE_SORT_KIND)
+    else:
+        positions = array.argsort(kind=DEFAULT_STABLE_SORT_KIND)
+    array = array[positions]
 
 
+    mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+    mask[:1] = True
+    mask[1:] = array[1:] != array[:-1]
+
+    indexer = np.empty(mask.shape, dtype=np.intp)
+    indexer[positions] = np.cumsum(mask) - 1
+
+    return positions[mask], indexer
 
 
-# def _unique1d(ar,
-#         return_index=False,
-#         return_inverse=False,
-#         ):
-#     """
-#     Find the unique elements of an array, ignoring shape.
-#     """
-#     optional_indices = return_index or return_inverse
+def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
+    '''Given a 2D array, reshape it as a consolidated 1D arrays
+    '''
+    assert array.ndim == 2
+    if not array.flags.c_contiguous:
+        array = np.ascontiguousarray(array)
+    # NOTE: this could be cached
+    dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
+    return array.view(dtype)[NULL_SLICE, 0] # get 1D representation
 
-#     if optional_indices:
-#         perm = ar.argsort(kind='mergesort' if return_index else 'quicksort')
-#         aux = ar[perm]
-#     else:
-#         ar.sort()
-#         aux = ar
 
-#     mask = np.empty(aux.shape, dtype=DTYPE_BOOL)
-#     mask[:1] = True
-#     mask[1:] = aux[1:] != aux[:-1]
+def ufunc_unique2d(array: np.ndarray,
+        axis: int = 0,
+    ) -> np.ndarray:
+    '''
+    Optimized from NumPy implementation.
+    '''
+    if array.dtype.kind == 'O':
+        if axis == 0:
+            array_iter = array2d_to_tuples(array)
+        else:
+            array_iter = array2d_to_tuples(array.T)
+        # Use a dict to retain order; this will break for non hashables
+        # NOTE: could try to sort tuples and do matching, but might fail comparison
+        store = dict.fromkeys(array_iter)
+        array = np.empty(len(store), dtype=object)
+        array[:] = tuple(store)
+        return array
 
-#     # ret = (aux[mask],)
-#     unique_array = aux[mask]
+    # if not an object array, we can create a 1D structure array and sort that
+    if axis == 1:
+        array = array.T
 
-#     if return_index:
-#         ret += (perm[mask],)
-#     if return_inverse:
-#         imask = np.cumsum(mask) - 1
-#         inv_idx = np.empty(mask.shape, dtype=np.intp)
-#         inv_idx[perm] = imask
-#         ret += (inv_idx,)
+    consolidated = view_2d_as_1d(array)
+    values = ufunc_unique1d(consolidated)
+    values = values.view(array.dtype).reshape(-1, array.shape[1]) # restore dtype, shape
+    if axis == 1:
+        return values.T
+    return values
 
-#     return ret
 
+def ufunc_unique2d_indexer(array: np.ndarray,
+        axis: int = 0,
+        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+    '''
+    Find the unique elements of an array and provide an indexer that shows their locations in the original.
+    '''
+    if axis == 1:
+        array = array.T
+
+    if array.dtype.kind == 'O':
+        # we must convert to string in order to extract positions data
+        consolidated = view_2d_as_1d(array.astype(str))
+        positions, indexer = ufunc_unique1d_positions(consolidated)
+        values = array[positions] # restore original values
+
+    else:
+        consolidated = view_2d_as_1d(array)
+        values, indexer = ufunc_unique1d_indexer(consolidated)
+        values = values.view(array.dtype).reshape(-1, array.shape[1])
+
+    if axis == 1:
+        return values.T, indexer
+    return values, indexer
 
 
 def ufunc_unique(
@@ -887,33 +968,12 @@ def ufunc_unique(
     Args:
 
     '''
-    if array.dtype.kind == 'O':
-        if axis is None or array.ndim < 2:
-            try:
-                return np.unique(array)
-            except TypeError: # if unorderable types
-                # np.unique will give TypeError: The axis argument to unique is not supported for dtype object
-                pass
-            # this may or may not work, depending on contained types
-            if array.ndim > 1: # axis is None, need to flatten
-                array_iter = array.flat
-            else:
-                array_iter = array
-        else:
-            # ndim == 2 and axis is not None
-            if axis == 0:
-                array_iter = array2d_to_tuples(array)
-            else:
-                array_iter = array2d_to_tuples(array.T)
+    if axis is None and array.ndim == 2:
+        return ufunc_unique1d(array.flatten())
+    elif array.ndim == 1:
+        return ufunc_unique1d(array)
+    return ufunc_unique2d(array, axis=axis)
 
-        # Use a dict to retain order; this will break for non hashables
-        store = dict.fromkeys(array_iter)
-        array = np.empty(len(store), dtype=object)
-        array[:] = tuple(store)
-        return array
-
-    # all other types, use the main ufunc
-    return np.unique(array, axis=axis)
 
 
 def roll_1d(array: np.ndarray,
@@ -1482,24 +1542,9 @@ def array_to_groups_and_locations(
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''Locations are index positions for each group.
     '''
-    try:
-        groups, locations = np.unique(
-                array,
-                return_inverse=True,
-                axis=unique_axis,
-                )
-    except TypeError:
-        # group by string representations, necessary when object types are not comparable; some object arrays will not need to follow this path.
-        _, group_index, locations = np.unique(
-                array.astype(str),
-                return_index=True,
-                return_inverse=True,
-                axis=unique_axis,
-                )
-        # groups here are the strings; need to restore to values
-        groups = array[group_index]
-
-    return groups, locations
+    if array.ndim == 1:
+        return ufunc_unique1d_indexer(array)
+    return ufunc_unique2d_indexer(array, axis=unique_axis)
 
 
 # def isna_element(value: tp.Any) -> bool:
