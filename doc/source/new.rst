@@ -6,7 +6,7 @@ What is New in Static Frame
 
 Performance enhancements to ``Frame.pivot()``, ``Frame.iter_group()``, and ``Frame.iter_group_items()``.
 
-``Frame.pivot()`` ``func`` parameter now defeatable with ``None``.
+``Frame.pivot()`` ``func`` parameter can now be set to ``None`` to perform no aggregation.
 
 Extended ``Series.from_overlay()`` and ``Frame.from_overlay()`` to support ``func`` and ``fill_value`` arguments; ``func`` can be used to optionally specify what elements are available for assignment in overlay.
 
