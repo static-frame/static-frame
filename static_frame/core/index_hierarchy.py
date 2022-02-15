@@ -82,6 +82,8 @@ from static_frame.core.util import (
     setdiff2d,
     union2d,
     ufunc_unique,
+    ufunc_unique1d_counts,
+    ufunc_unique1d_indexer,
 )
 
 if tp.TYPE_CHECKING:
@@ -577,7 +579,7 @@ class IndexHierarchy(IndexBase):
             if block is None or constructor is None:
                 raise ErrorInitIndex(f'Levels and index_constructors must be the same length.')
 
-            unique_values, indexer = ufunc_unique(block.values, return_inverse=True)
+            unique_values, indexer = ufunc_unique1d_indexer(block.values)
 
             # we call the constructor on all lvl, even if it is already an Index
             try:
@@ -1087,7 +1089,7 @@ class IndexHierarchy(IndexBase):
             raise NotImplementedError("selecting multiple depth levels is not yet implemented")
 
         def _extractor(arr: np.ndarray, pos: int) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
-            unique, widths = ufunc_unique(arr, return_counts=True)
+            unique, widths = ufunc_unique1d_counts(arr)
             labels = self._indices[pos].values[unique]
             yield from zip(labels, widths)
 
