@@ -1078,7 +1078,8 @@ class IndexHierarchy(IndexBase):
 
         if depth_level is None:
             raise NotImplementedError('depth_level of None is not supported')
-        elif not isinstance(depth_level, INT_TYPES):
+
+        if not isinstance(depth_level, INT_TYPES):
             sel = list(depth_level)
             if len(sel) == 1:
                 pos = sel.pop()
