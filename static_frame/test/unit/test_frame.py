@@ -10932,7 +10932,7 @@ class TestUnit(TestCase):
         f2 = f1.unset_index()
 
         # shows unique values of 'b' as columns, then shows values for z, a
-        post = f2.pivot(('x', 'y'), ('b',), fill_value='')
+        post = f2.pivot(('x', 'y'), ('b',), fill_value='', func=None)
 
         self.assertEqual(post.index.name, ('x', 'y'))
         self.assertEqual(post.columns.name, ('b', 'values'))
@@ -11096,17 +11096,34 @@ class TestUnit(TestCase):
             # cannot create a pivot Frame from a field (q) that is not a column
             _ = f2.pivot('q')
 
-    def test_frame_pivot_n(self) -> None:
+    def test_frame_pivot_n1(self) -> None:
 
         f1 = FrameGO(index=range(3))
         f1["a"] = np.array(range(3)) + 10001
         f1["b"] = np.array(range(3), "datetime64[D]")
         f1["c"] = np.array(range(3)) * 1e9
 
-        f2 = f1.pivot("b", "a", fill_value=0, index_constructor=IndexDate)
+        f2 = f1.pivot("b", "a", fill_value=0, index_constructor=IndexDate, func=np.nansum)
+        self.assertIs(f2.index.__class__, sf.IndexDate)
+        self.assertIs(f2.__class__, FrameGO)
+        self.assertEqual(f2.index.name, 'b')
         self.assertEqual(f2.to_pairs(0),
                 ((10001, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 0.0), (np.datetime64('1970-01-03'), 0.0))), (10002, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 1000000000.0), (np.datetime64('1970-01-03'), 0.0))), (10003, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 0.0), (np.datetime64('1970-01-03'), 2000000000.0))))
                 )
+
+
+    def test_frame_pivot_n2(self) -> None:
+
+        f1 = FrameGO(index=range(3))
+        f1["a"] = np.array(range(3)) + 10001
+        f1["b"] = np.array(range(3), "datetime64[D]")
+        f1["c"] = np.array(range(3)) * 1e9
+
+        f2 = f1.pivot("b", "a", fill_value='', index_constructor=IndexDate, func=str)
+        dt64 = np.datetime64
+        self.assertEqual(f2.to_pairs(),
+                ((10001, ((dt64('1970-01-01'), '[0.]'), (dt64('1970-01-02'), ''), (dt64('1970-01-03'), ''))), (10002, ((dt64('1970-01-01'), ''), (dt64('1970-01-02'), '[1.e+09]'), (dt64('1970-01-03'), ''))), (10003, ((dt64('1970-01-01'), ''), (dt64('1970-01-02'), ''), (dt64('1970-01-03'), '[2.e+09]')))))
+
 
     def test_frame_pivot_o(self) -> None:
 
@@ -11169,6 +11186,142 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
             (('c', ((('a', 'a'), 12), (('b', 'b'), 1), (('b', 'c'), 2))),)
             )
+
+    def test_frame_pivot_t(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+        f2 = f1.unset_index()
+
+        post1 = f2.pivot(
+                index_fields=('z', 'x', 'y'), # values in this field become the index
+                data_fields=('a', 'b'),
+                func=None,
+                )
+        self.assertEqual(post1.to_pairs(),
+                (('a', ((('far', 'left', 'down'), 2), (('far', 'left', 'up'), 0), (('far', 'right', 'down'), 3), (('far', 'right', 'up'), 1), (('near', 'left', 'down'), 6), (('near', 'left', 'up'), 4), (('near', 'right', 'down'), 7), (('near', 'right', 'up'), 5))), ('b', ((('far', 'left', 'down'), 21), (('far', 'left', 'up'), 19), (('far', 'right', 'down'), 22), (('far', 'right', 'up'), 20), (('near', 'left', 'down'), 22), (('near', 'left', 'up'), 20), (('near', 'right', 'down'), 23), (('near', 'right', 'up'), 21))))
+                )
+        post2 = f2.pivot(
+                index_fields=('z', 'x', 'y'), # values in this field become the index
+                data_fields=('a', 'b'),
+                func=np.nansum,
+                )
+        self.assertTrue(post1.equals(post2))
+
+    def test_frame_pivot_u1(self) -> None:
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+        f2 = f1.unset_index()
+
+        with self.assertRaises(RuntimeError):
+            post1 = f2.pivot(
+                    index_fields=('z', 'x'), # values in this field become the index
+                    data_fields=('a', 'b'),
+                    func=None,
+                    )
+
+    def test_frame_pivot_u2(self) -> None:
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+        f2 = f1.unset_index()
+        with self.assertRaises(RuntimeError):
+            post1 = f2.pivot(
+                index_fields='z',
+                columns_fields='y',
+                data_fields=('a', 'b'),
+                func=None,
+                )
+
+
+    def test_frame_pivot_v(self) -> None:
+        f1 = FrameGO(index=IndexAutoFactory(4))
+        f1['a'] = np.arange(4)
+        f1['b'] = np.arange(4) * 10
+        f1['c'] = np.arange(4) * 100
+
+        post = f1.pivot(index_fields='a', columns_fields='b', fill_value=0, func=None)
+        self.assertEqual(post.to_pairs(),
+                ((0, ((0, 0), (1, 0), (2, 0), (3, 0))), (10, ((0, 0), (1, 100), (2, 0), (3, 0))), (20, ((0, 0), (1, 0), (2, 200), (3, 0))), (30, ((0, 0), (1, 0), (2, 0), (3, 300))))
+                )
+
+
+    def test_frame_pivot_w(self) -> None:
+        f1 = sf.Frame.from_records([[0, 'A'],[1, None], [2, 'B']])
+
+        # NOTE: order is different with func=None as we avoid a group-by sort
+        f2 = f1.pivot(1, func=None)
+        self.assertEqual(f2.to_pairs(), ((0, (('A', 0), (None, 1), ('B', 2))),))
+
+        f3 = sf.Frame.from_records([[0, 'A', 10],[1, None, 20], [2, 'B', 30]])
+        f4 = f3.pivot(1, func=None)
+        self.assertEqual(f4.to_pairs(),
+            ((0, (('A', 0), ('B', 2), (None, 1))), (2, (('A', 10), ('B', 30), (None, 20)))))
+
+    @skip_win #type: ignore
+    def test_frame_pivot_x(self) -> None:
+        f = ff.parse('s(10,4)|v(int)').assign[0].apply(
+                lambda x: x % 3).assign[1].apply(
+                lambda x: x % 3).assign[2].apply(
+                lambda x: x % 3)
+        # remove the one duplicated value so no aggregation is needed
+        f = f.drop.loc[[3, 5, 9]]
+        f2 = f.pivot(index_fields=(0, 1), columns_fields=2, func=None, fill_value=0)
+        f3 = f.pivot(index_fields=(0, 1), columns_fields=2, fill_value=0)
+        self.assertTrue(f2.equals(f3, compare_name=True, compare_dtype=True, compare_class=True))
+        self.assertEqual(f2.to_pairs(),
+                ((0, (((0, 2), 129017), ((1, 0), 0), ((1, 1), 0), ((1, 2), 0), ((2, 0), 0))), (1, (((0, 2), 0), ((1, 0), 119909), ((1, 1), 0), ((1, 2), 166924), ((2, 0), 0))), (2, (((0, 2), 0), ((1, 0), 194224), ((1, 1), 172133), ((1, 2), 197228), ((2, 0), 35021))))
+                )
+
+
+    def test_frame_pivot_y1(self) -> None:
+        f1 = ff.parse('s(10,4)|v(int)').assign[0].apply(
+                lambda x: x % 3).assign[1].apply(
+                lambda x: x % 3).assign[2].apply(
+                lambda x: x % 3)
+
+        f2 = f1.pivot(index_fields=2, columns_fields=1, data_fields=[0, 3])
+        self.assertEqual([(k, v.kind) for k, v in f2.dtypes.items()],
+                [((0, 0), 'f'), ((0, 3), 'f'), ((1, 0), 'f'), ((1, 3), 'f'), ((2, 0), 'i'), ((2, 3), 'i')])
+
+        f3 = f1.pivot(index_fields=2, columns_fields=1, data_fields=[0, 3],
+                func=len,
+                fill_value=0)
+        self.assertEqual(f3.index.name, 2)
+        self.assertEqual(f3.columns.name, (1, 'values'))
+        self.assertEqual(f3.to_pairs(),
+                (((0, 0), ((0, 0), (1, 1), (2, 4))), ((0, 3), ((0, 0), (1, 1), (2, 4))), ((1, 0), ((0, 0), (1, 0), (2, 1))), ((1, 3), ((0, 0), (1, 0), (2, 1))), ((2, 0), ((0, 1), (1, 1), (2, 2))), ((2, 3), ((0, 1), (1, 1), (2, 2))))
+                )
+
+    def test_frame_pivot_y2(self) -> None:
+        f1 = ff.parse('s(10,4)|v(int)').assign[0].apply(
+                lambda x: x % 3).assign[1].apply(
+                lambda x: x % 3).assign[2].apply(
+                lambda x: x % 3)
+
+        f2 = f1.pivot(index_fields=2,
+                columns_fields=1,
+                data_fields=0,
+                func=str,
+                fill_value='[]',
+                )
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, '[]'), (1, '[1]'), (2, '[2 2 1 2]'))), (1, ((0, '[]'), (1, '[]'), (2, '[1]'))), (2, ((0, '[0]'), (1, '[1]'), (2, '[1 1]'))))
+                )
 
     #---------------------------------------------------------------------------
 

@@ -95,7 +95,7 @@ from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import ufunc_unique
+from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
@@ -1790,6 +1790,7 @@ class Series(ContainerOperand):
             raise AxisInvalid(f'invalid axis {axis}')
 
         groups, locations = array_to_groups_and_locations(self.values)
+
         for idx, g in enumerate(groups):
             selection = locations == idx
             yield g, self._extract_iloc(selection)
@@ -2462,9 +2463,9 @@ class Series(ContainerOperand):
             valid = ~isna_array(values)
 
         if unique and valid is None:
-            return len(ufunc_unique(values))
+            return len(ufunc_unique1d(values))
         elif unique and valid is not None: # valid is a Boolean array
-            return len(ufunc_unique(values[valid]))
+            return len(ufunc_unique1d(values[valid]))
         elif not unique and valid is not None:
             return valid.sum() #type: ignore [no-any-return]
         # not unique, valid is None, means no removals, handled above
@@ -2724,7 +2725,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`numpy.ndarray`
         '''
-        return ufunc_unique(self.values)
+        return ufunc_unique1d(self.values)
 
     @doc_inject()
     def equals(self,

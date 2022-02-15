@@ -1,53 +1,86 @@
+import numpy as np
 import frame_fixtures as ff
 
 from static_frame.test.test_case import TestCase
+from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.pivot import pivot_records_items
+from static_frame.core.pivot import pivot_items_to_block
+from static_frame.core.pivot import pivot_items_to_frame
+# from static_frame.core.pivot import pivot_records_items
 
 
 class TestUnit(TestCase):
 
-    def test_pivot_records_items_a(self) -> None:
-        frame = ff.parse('s(3,6)|v(int,str,bool)|c(I,str)|i(I,int)')
-        group_fields = ['zUvW',] # needs to be valif loc selection
-        group_depth = 1
-        data_fields = ['zkuW', 'z2Oo']
-        func_single = sum
-        func_map = None
-        loc_to_iloc = frame.columns.loc_to_iloc
-        post = tuple(pivot_records_items(
-                blocks=frame._blocks,
-                group_fields_iloc=loc_to_iloc(group_fields),
-                group_depth=group_depth,
-                data_fields_iloc=loc_to_iloc(data_fields),
-                func_single=func_single,
-                func_map=func_map,
-                ))
-        self.assertEqual(post,
-                ((False, [201945, 1]), (True, [129017, False])))
-
-    def test_pivot_records_items_b(self) -> None:
-        frame = ff.parse('s(3,6)|v(int,str,bool)|c(I,str)|i(I,int)')
-        group_fields = ['zUvW',] # needs to be valif loc selection
-        group_depth = 1
-        data_fields = ['zkuW', 'z2Oo']
-        func_single = None
-        func_map = (('zkuW', sum), ('z2Oo', min))
-        loc_to_iloc = frame.columns.loc_to_iloc
-
-        post = tuple(pivot_records_items(
-                blocks=frame._blocks,
-                group_fields_iloc=loc_to_iloc(group_fields),
-                group_depth=group_depth,
-                data_fields_iloc=loc_to_iloc(data_fields),
-                func_single=func_single,
-                func_map=func_map,
-                ))
-        self.assertEqual(post,
-                ((False, [201945, 35021, 1, False]),
-                (True, [129017, 129017, False, False]))
+    def test_pivot_items_to_block_a(self) -> None:
+        f = ff.parse('s(6,4)|v(int)').assign[0](
+                range(6)
                 )
+        group_fields_iloc = [0]
+        index_outer = Index(f[0].values.tolist())
+
+        post = pivot_items_to_block(
+                blocks=f._blocks,
+                group_fields_iloc=group_fields_iloc,
+                group_depth=1,
+                data_field_iloc=3,
+                func_single=None,
+                dtype=np.dtype(int),
+                fill_value=0,
+                fill_value_dtype=np.dtype(int),
+                index_outer=index_outer,
+                kind='mergesort',
+                )
+        self.assertEqual(post.tolist(),
+                [129017,  35021, 166924, 122246, 197228, 105269]
+                )
+
+    def test_pivot_items_to_frame_a(self) -> None:
+        f = ff.parse('s(6,4)|v(int)').assign[0](
+                range(6)
+                )
+
+        post = pivot_items_to_frame(
+                blocks=f._blocks,
+                group_fields_iloc=[0],
+                group_depth=1,
+                data_field_iloc=3,
+                func_single=lambda x: str(x) if x % 2 else sum(x),
+                frame_cls=Frame,
+                name='foo',
+                dtype=None,
+                index_constructor=Index,
+                columns_constructor=Index,
+                kind='mergesort',
+                )
+        self.assertEqual(post.to_pairs(),
+                (('foo', ((0, '[129017]'), (1, '[35021]'), (2, 166924), (3, 122246), (4, 197228), (5, '[105269]'))),))
+
+
+
+    def test_pivot_items_to_frame_b(self) -> None:
+        f = ff.parse('s(6,4)|v(int)').assign[0](
+                range(6)
+                )
+        post = pivot_items_to_frame(
+                blocks=f._blocks,
+                group_fields_iloc=[0, 1],
+                group_depth=2,
+                data_field_iloc=3,
+                func_single=None,
+                frame_cls=Frame,
+                name='foo',
+                dtype=np.dtype(int),
+                index_constructor=IndexHierarchy.from_labels,
+                columns_constructor=Index,
+                kind='mergesort',
+                )
+        self.assertEqual(post.to_pairs(),
+                (('foo', (((0, 162197), 129017), ((1, -41157), 35021), ((2, 5729), 166924), ((3, -168387), 122246), ((4, 140627), 197228), ((5, 66269), 105269))),),
+                )
+
+
+
 
     def test_pivot_core_a(self) -> None:
 
