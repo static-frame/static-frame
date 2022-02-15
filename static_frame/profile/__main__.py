@@ -1032,12 +1032,14 @@ class FrameFromNPZ(Perf):
         _, self.fp_parquet = tempfile.mkstemp(suffix='.parquet')
         self.sff1.to_parquet(self.fp_parquet)
 
-        # self.meta = {
-        #     'int_index_str_double': FunctionMetaData(
-        #         perf_status=PerfStatus.EXPLAINED_LOSS,
-        #         None
-        #         ),
-        #     }
+        from static_frame.core.archive_npy import NPYConverter
+
+        self.meta = {
+            'wide_mixed_index_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=NPYConverter._header_decode,
+                ),
+            }
 
     def __del__(self) -> None:
         os.unlink(self.fp_npz)
