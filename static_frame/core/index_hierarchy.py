@@ -19,7 +19,8 @@ from static_frame.core.display import (
     DisplayActive,
     DisplayHeader,
 )
-from static_frame.core.util import array_to_duplicated, arrays_equal
+from static_frame.core.util import array_to_duplicated
+from static_frame.core.util import arrays_equal
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex, ErrorInitIndexNonUnique
@@ -83,7 +84,7 @@ from static_frame.core.util import (
     union2d,
     ufunc_unique,
     ufunc_unique1d_counts,
-    ufunc_unique1d_indexer,
+    ufunc_unique1d_positions,
 )
 
 if tp.TYPE_CHECKING:
@@ -186,12 +187,14 @@ class IndexHierarchy(IndexBase):
             '_blocks',
             '_values',
             '_recache',
+            '_treelike',
             )
     _name: NameType
     _indices: tp.List[Index] # Of index objects
     _indexers: tp.List[np.ndarray] # integer arrays
     _blocks: TypeBlocks
     _values: np.ndarray
+    _treelike: bool
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
@@ -274,6 +277,7 @@ class IndexHierarchy(IndexBase):
             name=name,
             indices=indices,
             indexers=indexers,
+            treelike=True,
         )
 
     @classmethod
@@ -306,6 +310,7 @@ class IndexHierarchy(IndexBase):
             labels=cls._from_tree(tree),
             name=name,
             index_constructors=index_constructors,
+            reorder_for_hierarchy=True,
         )
 
     @classmethod
@@ -378,9 +383,11 @@ class IndexHierarchy(IndexBase):
 
         prev_row: tp.Sequence[tp.Hashable] = ()
 
+        requires_sort = False
+
         while True:
             for i_zip, (hash_map, indexer, val) in enumerate(zip(hash_maps, indexers, label_row)):
-                if val == continuation_token:
+                if val is continuation_token:
                     if prev_row:
                         i: int = indexer[-1]
                         val = prev_row[i_zip]
@@ -389,8 +396,10 @@ class IndexHierarchy(IndexBase):
                         hash_map[val] = len(hash_map)
                 elif val not in hash_map:
                     i = len(hash_map)
-                    hash_map[val] = len(hash_map)
+                    hash_map[val] = i
                 else:
+                    if reorder_for_hierarchy and not requires_sort and val != prev_row[i_zip]:
+                        requires_sort = True
                     i = hash_map[val]
 
                 indexer.append(i)
@@ -404,6 +413,21 @@ class IndexHierarchy(IndexBase):
             if len(label_row) != depth:
                 raise ErrorInitIndex("All labels must have the same depth.")
 
+        for i in range(depth):
+            indexers[i] = np.array(indexers[i], dtype=int)
+
+        if requires_sort:
+            sort_order = np.lexsort(indexers[::-1])
+            indexers = [indexer[sort_order] for indexer in indexers]
+            del sort_order
+            treelike = True
+        else:
+            # How to find when True?
+            treelike = False # not always!
+
+        for i in range(depth):
+            indexers[i].flags.writeable = False # type: ignore
+
         indices = [
             constructor(hash_map)
             for constructor, hash_map
@@ -413,11 +437,7 @@ class IndexHierarchy(IndexBase):
         if name is None:
             name = cls._build_name_from_indices(indices)
 
-        for i in range(depth):
-            indexers[i] = np.array(indexers[i], dtype=int)
-            indexers[i].flags.writeable = False # type: ignore
-
-        return cls(indices=indices, indexers=indexers, name=name)
+        return cls(indices=indices, indexers=indexers, name=name, treelike=treelike)
 
     @classmethod
     def from_index_items(cls: tp.Type[IH],
@@ -631,6 +651,7 @@ class IndexHierarchy(IndexBase):
             name: NameType = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
+            treelike: bool = False,
             ):
         '''
         Initializer.
@@ -651,6 +672,7 @@ class IndexHierarchy(IndexBase):
             self._indexers = indices._indexers
             self._name = indices._name
             self._blocks = indices._blocks
+            self._treelike = indices._treelike
             return
 
         if not all(isinstance(arr, np.ndarray) for arr in indexers):
@@ -665,6 +687,7 @@ class IndexHierarchy(IndexBase):
         self._indices = [mutable_immutable_index_filter(self.STATIC, idx) for idx in indices]
         self._indexers = indexers
         self._name = None if name is NAME_DEFAULT else name_filter(name)
+        self._treelike = treelike
 
         if blocks is not None:
             if own_blocks:
