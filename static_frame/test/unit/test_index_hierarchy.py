@@ -162,10 +162,14 @@ class TestUnit(TestCase):
                 ('II', 'A', 3),
                 )
 
-        ih = IndexHierarchy.from_labels(labels)
-        self.assertEqual(tuple(ih.iter_label()), labels)
+        ih1 = IndexHierarchy.from_labels(labels)
+        self.assertEqual(tuple(ih1.iter_label()), labels)
 
-    # TODO: IndexHierarchy.from_labels(labels, reorder_for_hierarchy=True)
+        ih2 = IndexHierarchy.from_labels(labels, reorder_for_hierarchy=True)
+        self.assertEqual(ih1.shape, ih2.shape)
+        self.assertEqual(tuple(ih2.iter_label()),
+                (('I', 'A', 1), ('I', 'B', 1), ('II', 'A', 1), ('II', 'A', 2), ('II', 'A', 3), ('II', 'B', 1))
+                )
 
     def test_hierarchy_init_i(self) -> None:
         with self.assertRaises(RuntimeError):
@@ -534,8 +538,8 @@ class TestUnit(TestCase):
         ih1_alt = IndexHierarchy.from_tree(tree_alt)
 
         post1 = ih1._loc_to_iloc(HLoc['b'])
-        self.assertEqual(list(post1), list(ih1_alt._loc_to_iloc(HLoc['b'])))
-        self.assertEqual(list(post1), list(range(20, 40)))
+        self.assertEqual(post1, ih1_alt._loc_to_iloc(HLoc['b']))
+        self.assertEqual(post1, slice(20, 40))
 
         post2 = ih1._loc_to_iloc(HLoc['b', 10:12])
         self.assertEqual(list(post2), list(ih1_alt._loc_to_iloc(HLoc['b', 10:12])))
@@ -870,23 +874,32 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels)
         self.assertEqual(tuple(ih1.iter_label()), labels)
 
-        # ih2 = IndexHierarchy.from_labels(labels1, reorder_for_hierarchy=True)
-        # self.assertEqual(ih2.shape, (8, 3))
-        # self.assertEqual(ih2.iloc[-1], ('I', 'B', 2))
+        ih2 = IndexHierarchy.from_labels(labels, reorder_for_hierarchy=True)
+        self.assertEqual(ih1.shape, ih2.shape)
+        self.assertEqual(tuple(ih2.iter_label()),
+                (('II', 'A', 1), ('II', 'A', 2), ('II', 'B', 1), ('II', 'B', 2), ('I', 'A', 1), ('I', 'A', 2), ('I', 'B', 1), ('I', 'B', 2))
+                )
 
-    @unittest.skip("reorder_for_hierarchy not implemented yet")
     def test_hierarchy_from_labels_h(self) -> None:
 
         labels = (
                 ('I', 'A', 1),
                 ('II', 'B', 1),
-                ('II', 'A', 1),
-                ('II', 'A', 2),
-                ('II', 'A', 3),
+                ('', 'A', 3),
+                ('', 'A', 2),
+                ('', 'A', 1),
                 ('I', 'B', 1),
                 )
-        with self.assertRaises(RuntimeError):
-            IndexHierarchy.from_labels(labels, reorder_for_hierarchy=True, continuation_token='')
+
+        ih  = IndexHierarchy.from_labels(labels, reorder_for_hierarchy=True, continuation_token='')
+        self.assertEqual(tuple(ih.iter_label()),
+                (('I', 'A', 1),
+                 ('I', 'B', 1),
+                 ('II', 'A', 1),
+                 ('II', 'A', 3),
+                 ('II', 'A', 2),
+                 ('II', 'B', 1))
+                )
 
     def test_hierarchy_from_labels_i(self) -> None:
         labels = (('I', 'A', 1),

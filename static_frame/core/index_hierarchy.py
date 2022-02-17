@@ -85,6 +85,7 @@ from static_frame.core.util import (
     ufunc_unique,
     ufunc_unique1d_counts,
     ufunc_unique1d_positions,
+    ufunc_unique1d_indexer,
 )
 
 if tp.TYPE_CHECKING:
@@ -188,6 +189,7 @@ class IndexHierarchy(IndexBase):
             '_values',
             '_recache',
             '_treelike',
+            '__widths_at_outer_level',
             )
     _name: NameType
     _indices: tp.List[Index] # Of index objects
@@ -195,6 +197,7 @@ class IndexHierarchy(IndexBase):
     _blocks: TypeBlocks
     _values: np.ndarray
     _treelike: bool
+    __widths_at_outer_level: tp.Optional["Series"]
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
@@ -387,7 +390,7 @@ class IndexHierarchy(IndexBase):
 
         while True:
             for i_zip, (hash_map, indexer, val) in enumerate(zip(hash_maps, indexers, label_row)):
-                if val is continuation_token:
+                if continuation_token is not CONTINUATION_TOKEN_INACTIVE and val == continuation_token:
                     if prev_row:
                         i: int = indexer[-1]
                         val = prev_row[i_zip]
@@ -599,7 +602,7 @@ class IndexHierarchy(IndexBase):
             if block is None or constructor is None:
                 raise ErrorInitIndex(f'Levels and index_constructors must be the same length.')
 
-            unique_values, indexer = ufunc_unique1d_indexer(block.values)
+            unique_values, indexer = ufunc_unique1d_indexer(block.values.ravel())
 
             # we call the constructor on all lvl, even if it is already an Index
             try:
@@ -702,6 +705,8 @@ class IndexHierarchy(IndexBase):
         self._ensure_uniqueness(self._indexers, self.values)
         self._recache = False
 
+        self.__widths_at_outer_level = None
+
     def _update_array_cache(self) -> None:
         pass
 
@@ -712,6 +717,9 @@ class IndexHierarchy(IndexBase):
         obj._indexers = deepcopy(self._indexers, memo)
         obj._blocks = deepcopy(self._blocks, memo)
         obj._name = self._name # should be hashable/immutable
+        obj._recache = False
+        obj._treelike = self._treelike
+        obj.__widths_at_outer_level = deepcopy(self.__widths_at_outer_level, memo)
 
         memo[id(self)] = obj
         return obj #type: ignore
@@ -1307,6 +1315,13 @@ class IndexHierarchy(IndexBase):
 
     #---------------------------------------------------------------------------
 
+    @property
+    def _widths_at_outer_level(self) -> "Series":
+        if self.__widths_at_outer_level is None:
+            from static_frame.core.series import Series
+            self.__widths_at_outer_level = Series.from_items(self.label_widths_at_depth(0))
+        return self.__widths_at_outer_level
+
     def _process_key_at_depth(self, depth: int, key: GetItemKeyType) -> tp.Union[slice, np.ndarray]:
         if depth >= self.depth:
             raise RuntimeError(f'Invalid depth level for key={key} depth={depth}')
@@ -1352,6 +1367,17 @@ class IndexHierarchy(IndexBase):
                         other_is_unique=True
                         )
             return isin(indexer_at_depth, key_iloc)
+
+        """
+        If our internal structure is tree-like, then we can return a slice.
+        Otherwise, we must return a mask
+        """
+        if self._treelike and depth == 0:
+            idx = self._widths_at_outer_level.index.loc_to_iloc(key_at_depth)
+
+            start = self._widths_at_outer_level.values[:idx].sum()
+            end = start + self._widths_at_outer_level.values[idx]
+            return slice(start, end)
 
         return indexer_at_depth == key_iloc
 
@@ -2027,6 +2053,9 @@ class IndexHierarchyGO(IndexHierarchy):
             '_indexers',
             '_blocks',
             '_values',
+            '_recache',
+            '_treelike',
+            '__widths_at_outer_level',
             )
 
     _indices: tp.List[IndexGO] # type: ignore
