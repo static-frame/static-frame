@@ -700,16 +700,19 @@ def full_for_fill(
         dtype: tp.Optional[np.dtype],
         shape: tp.Union[int, tp.Tuple[int, ...]],
         fill_value: object,
+        resolve_fill_value_dtype: bool = True,
         ) -> np.ndarray:
     '''
     Return a "full" NP array for the given fill_value
     Args:
         dtype: target dtype, which may or may not be possible given the fill_value. This can be set to None to only use the fill_value to determine dtype.
     '''
-    # if not isinstance(fill_value, str) and hasattr(fill_value, '__len__'):
-    #     import ipdb; ipdb.set_trace()
-    dtype_element = dtype_from_element(fill_value)
-    dtype_final = dtype_element if dtype is None else resolve_dtype(dtype, dtype_element)
+    # NOTE: this will treat all no-str iterables as
+    if resolve_fill_value_dtype:
+        dtype_element = dtype_from_element(fill_value)
+        dtype_final = dtype_element if dtype is None else resolve_dtype(dtype, dtype_element)
+    else:
+        dtype_final = dtype
 
     # NOTE: we do not make this array immutable as we sometimes need to mutate it before adding it to TypeBlocks
     if dtype_final != DTYPE_OBJECT:
@@ -721,8 +724,6 @@ def full_for_fill(
         return array # None is already set for empty object arrays
 
     # if we have a generator, None, string, or other simple types, can directly assign
-    # if hasattr(element, '__len__') and not isinstance(element, str):
-
     if isinstance(fill_value, str) or not hasattr(fill_value, '__len__'):
         array[NULL_SLICE] = fill_value
     else:

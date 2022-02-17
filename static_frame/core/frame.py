@@ -173,6 +173,7 @@ from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import iloc_to_insertion_iloc
+from static_frame.core.util import full_for_fill
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -269,18 +270,25 @@ class Frame(ContainerOperand):
 
         shape = (len(index_final), len(columns_final))
 
-        if hasattr(element, '__len__') and not isinstance(element, str):
-            array = np.empty(shape, dtype=DTYPE_OBJECT)
-            # this is the only way to insert tuples, lists,ranges
-            for iloc in np.ndindex(shape):
-                array[iloc] = element
-        else:
-            array = np.full(
-                    shape,
-                    fill_value=element,
-                    dtype=dtype)
+        # if hasattr(element, '__len__') and not isinstance(element, str):
+        #     array = np.empty(shape, dtype=DTYPE_OBJECT)
+        #     # this is the only way to insert tuples, lists,ranges
+        #     for iloc in np.ndindex(shape):
+        #         array[iloc] = element
+        # else:
+        #     array = np.full(
+        #             shape,
+        #             fill_value=element,
+        #             dtype=dtype)
+        dtype = None if dtype is None else np.dtype(dtype)
+        # NOTE: if dtype is not None, do not resolve to type of element and force going to specified dtype
+        array = full_for_fill(
+                dtype,
+                shape,
+                element,
+                resolve_fill_value_dtype=dtype is None, # True means derive from fill value
+                )
         array.flags.writeable = False
-
         return cls(TypeBlocks.from_blocks(array),
                 index=index_final,
                 columns=columns_final,
