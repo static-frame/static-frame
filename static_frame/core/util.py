@@ -572,7 +572,9 @@ def _gen_skip_middle(
     yield from reversed(values)
 
 
-def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
+def dtype_from_element(
+        value: tp.Optional[tp.Hashable],
+        ) -> np.dtype:
     '''Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object.
     '''
     if value is np.nan:
@@ -580,10 +582,13 @@ def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
         return DTYPE_FLOAT_DEFAULT
     if value is None:
         return DTYPE_OBJECT
-    if isinstance(value, tuple): # should this include all iterables, i.e., has atter __len__ and is not str?
-        return DTYPE_OBJECT
     if hasattr(value, 'dtype'):
         return value.dtype #type: ignore
+    # if isinstance(value, tuple): # should this include all iterables, i.e., has atter __len__ and is not str?
+    #     return DTYPE_OBJECT
+    if hasattr(value, '__len__') and not isinstance(value, str):
+        return DTYPE_OBJECT
+
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
     return np.array(value).dtype
 
@@ -701,6 +706,8 @@ def full_for_fill(
     Args:
         dtype: target dtype, which may or may not be possible given the fill_value. This can be set to None to only use the fill_value to determine dtype.
     '''
+    # if not isinstance(fill_value, str) and hasattr(fill_value, '__len__'):
+    #     import ipdb; ipdb.set_trace()
     dtype_element = dtype_from_element(fill_value)
     dtype_final = dtype_element if dtype is None else resolve_dtype(dtype, dtype_element)
 
@@ -714,6 +721,8 @@ def full_for_fill(
         return array # None is already set for empty object arrays
 
     # if we have a generator, None, string, or other simple types, can directly assign
+    # if hasattr(element, '__len__') and not isinstance(element, str):
+
     if isinstance(fill_value, str) or not hasattr(fill_value, '__len__'):
         array[NULL_SLICE] = fill_value
     else:

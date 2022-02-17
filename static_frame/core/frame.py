@@ -268,6 +268,7 @@ class Frame(ContainerOperand):
                     )
 
         shape = (len(index_final), len(columns_final))
+
         if hasattr(element, '__len__') and not isinstance(element, str):
             array = np.empty(shape, dtype=DTYPE_OBJECT)
             # this is the only way to insert tuples, lists,ranges

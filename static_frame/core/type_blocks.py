@@ -1864,8 +1864,14 @@ class TypeBlocks(ContainerOperand):
         Args:
             column_key: must be sorted in ascending order.
         '''
-        value_dtype = dtype_from_element(value)
-
+        if value.__class__ is np.ndarray:
+            value_dtype = value.dtype
+        elif hasattr(value, '__len__') and not isinstance(value, str):
+            value, _ = iterable_to_array_1d(value)
+            value_dtype = value.dtype
+        else:
+            value_dtype = dtype_from_element(value)
+        # import ipdb; ipdb.set_trace()
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = self._key_to_block_slices(
                 column_key,

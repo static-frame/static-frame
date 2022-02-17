@@ -67,6 +67,7 @@ from static_frame.core.util import list_to_tuple
 from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
+from static_frame.core.util import dtype_from_element
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 
@@ -2553,6 +2554,10 @@ class TestUnit(TestCase):
         self.assertEqual(pos.tolist(), [2, 0, 1])
         self.assertEqual(indexer.tolist(), [1, 2, 0, 2, 1])
 
+
+
+    def test_dtype_from_element_a(self) -> None:
+        dt = dtype_from_element([1, 2, 3])
 
         # import ipdb; ipdb.set_trace()
 
