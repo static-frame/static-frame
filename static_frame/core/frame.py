@@ -281,7 +281,6 @@ class Frame(ContainerOperand):
         #             fill_value=element,
         #             dtype=dtype)
         dtype = None if dtype is None else np.dtype(dtype)
-        # NOTE: if dtype is not None, do not resolve to type of element and force going to specified dtype
         array = full_for_fill(
                 dtype,
                 shape,

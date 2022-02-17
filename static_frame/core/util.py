@@ -712,6 +712,7 @@ def full_for_fill(
         dtype_element = dtype_from_element(fill_value)
         dtype_final = dtype_element if dtype is None else resolve_dtype(dtype, dtype_element)
     else:
+        assert dtype is not None
         dtype_final = dtype
 
     # NOTE: we do not make this array immutable as we sometimes need to mutate it before adding it to TypeBlocks

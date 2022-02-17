@@ -161,16 +161,25 @@ class Series(ContainerOperand):
                     )
 
         length = len(index_final) #type: ignore
-        if hasattr(element, '__len__') and not isinstance(element, str):
-            array = np.empty(length, dtype=DTYPE_OBJECT)
-            # this is the only way to insert tuples
-            for i in range(length):
-                array[i] = element
-        else:
-            array = np.full(
-                    length,
-                    fill_value=element,
-                    dtype=dtype)
+
+        # if hasattr(element, '__len__') and not isinstance(element, str):
+        #     array = np.empty(length, dtype=DTYPE_OBJECT)
+        #     # this is the only way to insert tuples
+        #     for i in range(length):
+        #         array[i] = element
+        # else:
+        #     array = np.full(
+        #             length,
+        #             fill_value=element,
+        #             dtype=dtype)
+
+        dtype = None if dtype is None else np.dtype(dtype)
+        array = full_for_fill(
+                dtype,
+                length,
+                element,
+                resolve_fill_value_dtype=dtype is None, # True means derive from fill value
+                )
         array.flags.writeable = False
         return cls(array,
                 index=index_final,
