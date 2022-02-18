@@ -1261,6 +1261,30 @@ class IndexHierarchyLoc(Perf):
             self.small.loc[sf.HLoc[8, :, False]]
             self.small.loc[sf.HLoc[:, "c", None]]
 
+
+class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
+
+    @property
+    def large(self) -> IndexBase:
+        return self.ih_large
+
+    @property
+    def small(self) -> IndexBase:
+        return self.ih_small
+
+
+class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
+
+    @property
+    def large(self) -> IndexBase:
+        return self.tree_large
+
+    @property
+    def small(self) -> IndexBase:
+        return self.tree_small
+
+
+
 #-------------------------------------------------------------------------------
 
 class IndexHierarchyConstructors(Perf):
