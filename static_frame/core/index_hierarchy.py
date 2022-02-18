@@ -1421,7 +1421,7 @@ class IndexHierarchy(IndexBase):
                 start = 0
 
             if key_at_depth.step is not None and not isinstance(key_at_depth.step, INT_TYPES):
-                raise NotImplementedError(f"step must be an integer. What does this even mean? {key_at_depth}")
+                raise TypeError(f"slice step must be an integer, not {type(key_at_depth.step)}")
 
             if key_at_depth.stop is not None:
                 stop: tp.Optional[int] = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1 # type: ignore
@@ -1438,13 +1438,6 @@ class IndexHierarchy(IndexBase):
         key_iloc = index_at_depth.loc_to_iloc(key_at_depth)
 
         if hasattr(key_iloc, "__len__"):
-            if isinstance(key, np.ndarray):
-                return isin_array(
-                        array=indexer_at_depth,
-                        array_is_unique=False,
-                        other=key_iloc,
-                        other_is_unique=True
-                        )
             return isin(indexer_at_depth, key_iloc)
 
         # If our internal structure is tree-like, then we can return a slice.
@@ -1490,7 +1483,7 @@ class IndexHierarchy(IndexBase):
                 start = None
 
             if key.step is not None and not isinstance(key.step, INT_TYPES):
-                raise ValueError(f"step must be an integer. What does this even mean? {key}")
+                raise TypeError(f"slice step must be an integer, not {type(key.step)}")
 
             if key.stop is not None:
                 stop: tp.Optional[int] = self._loc_to_iloc(key.stop) + 1 # type: ignore
