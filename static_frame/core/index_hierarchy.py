@@ -454,6 +454,7 @@ class IndexHierarchy(IndexBase):
             items: iterable of pairs of label, :obj:`Index`.
             index_constructor: Optionally provide index constructor for outermost index.
         '''
+        # TODO: How to handle when both indexes have incompatible types?
         [depth1_constructor, depth2_constructor] = cls._build_index_constructors(index_constructor, depth=2)
 
         depth_1_index = []
