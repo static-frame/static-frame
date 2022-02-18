@@ -70,7 +70,6 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
-from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_TUPLE
