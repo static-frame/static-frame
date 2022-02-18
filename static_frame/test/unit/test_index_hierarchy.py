@@ -190,17 +190,34 @@ class TestUnit(TestCase):
 
     def test_hierarchy_init_k(self) -> None:
 
-        labels = (('I', 'A'),
-                ('I', 'B'),
-                )
-
+        labels = (('I', 'A'), ('I', 'B'))
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
 
+        # Cannot provide blocks in this case
         with self.assertRaises(ErrorInitIndex):
             _ = IndexHierarchy(ih1, blocks=ih1._blocks)
 
+        # Cannot provide indexers in this case
+        with self.assertRaises(ErrorInitIndex):
+            _ = IndexHierarchy(ih1, indexers=ih1._indexers)
+
         ih2 = IndexHierarchy(ih1)
         self.assertTrue(ih2.equals(ih1, compare_dtype=True))
+
+    def test_hierarchy_init_l(self) -> None:
+
+        indices = [Index(tuple("ABC")) for _ in range(2)]
+        indexers = [[0, 1, 2], [0, 1, 2]]
+
+        # Indexers must be numpy arrays
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy(indices, indexers=indexers)
+
+        indexers = [np.array(indexer) for indexer in indexers]
+
+        # Indexers must be read-only
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy(indices, indexers=indexers)
 
     #---------------------------------------------------------------------------
     def test_hierarchy_mloc_a(self) -> None:
@@ -700,7 +717,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih.values.tolist(),
                 [['A', datetime.date(2018, 1, 1)], ['A', datetime.date(2018, 1, 4)], ['B', datetime.date(2018, 1, 1)], ['B', datetime.date(2018, 1, 4)], ['C', datetime.date(2018, 1, 1)], ['C', datetime.date(2018, 1, 4)]])
 
-
     def test_hierarchy_from_product_d(self) -> None:
 
         groups = ('2021-01-01', '2021-01-02')
@@ -710,6 +726,13 @@ class TestUnit(TestCase):
         self.assertEqual(ih.index_types.values.tolist(), [IndexDate, IndexDate])
         self.assertEqual(ih.values.tolist(),
                 [[datetime.date(2021, 1, 1), datetime.date(2018, 1, 1)], [datetime.date(2021, 1, 1), datetime.date(2018, 1, 4)], [datetime.date(2021, 1, 2), datetime.date(2018, 1, 1)], [datetime.date(2021, 1, 2), datetime.date(2018, 1, 4)]])
+
+    def test_hierarchy_from_product_e(self) -> None:
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy.from_product(range(2), range(2), range(2), index_constructors=[Index for _ in range(2)])
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy.from_product(range(2), range(2), range(2), index_constructors=[Index for _ in range(8)])
 
     #--------------------------------------------------------------------------
 
@@ -1036,6 +1059,29 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             ih = IndexHierarchy._from_type_blocks(f1._blocks)
 
+    def test_hierarchy_from_type_blocks_c(self) -> None:
+        f1 = Frame.from_items((
+                ('a', tuple('ABAB')),
+                ('b', (1, 2, 1, 2)),
+                ('c', (1, 2, 1, 2)))
+                )
+
+        with self.assertRaises(ErrorInitIndex):
+            ih = IndexHierarchy._from_type_blocks(f1._blocks, index_constructors=Index)
+
+    def test_hierarchy_from_type_blocks_c(self) -> None:
+        f1 = Frame.from_items((
+                ('a', tuple('ABAB')),
+                ('b', (1, 2, 1, 2)),
+                ('c', (1, 2, 1, 2)))
+                )
+
+        with self.assertRaises(ErrorInitIndex):
+            ih = IndexHierarchy._from_type_blocks(f1._blocks, index_constructors=[Index for _ in range(2)])
+
+        with self.assertRaises(ErrorInitIndex):
+            ih = IndexHierarchy._from_type_blocks(f1._blocks, index_constructors=[Index for _ in range(8)])
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_contains_a(self) -> None:
@@ -1356,6 +1402,22 @@ class TestUnit(TestCase):
 
     @run_with_static_and_grow_only
     def test_hierarchy_relabel_at_depth_a(self,
+            index_class: tp.Type[IndexHierarchy]
+            ) -> None:
+
+        idx1 = Index((True, False))
+        idx2 = Index(tuple("abcde"))
+        idx3 = Index(range(10))
+
+        ih = index_class.from_product(idx1, idx2, idx3)
+
+        actual = ih.relabel_at_depth(lambda x: x*2, [1, 2])
+        expected = index_class.from_product(idx1, idx2 * 2, idx3 * 2)
+
+        self.assertTrue(actual.equals(expected))
+
+    @run_with_static_and_grow_only
+    def test_hierarchy_relabel_at_depth_b(self,
             index_class: tp.Type[IndexHierarchy]
             ) -> None:
 
@@ -2848,15 +2910,20 @@ class TestUnit(TestCase):
                 ((1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1))
                 )
 
+        self.assertEqual(tuple(hidx.label_widths_at_depth(2)), tuple(hidx.label_widths_at_depth([2])))
+
+
     def test_index_hierarchy_label_widths_at_depth_b(self) -> None:
         idx1 = Index(('A', 'B'), name='a')
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08', name='b')
         idx3 = Index((1, 2), name='c')
         hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
 
-
         with self.assertRaises(NotImplementedError):
             _ = next(hidx.label_widths_at_depth(None))
+
+        with self.assertRaises(NotImplementedError):
+            _ = next(hidx.label_widths_at_depth([0, 1]))
 
     #---------------------------------------------------------------------------
 
@@ -3108,6 +3175,13 @@ class TestUnit(TestCase):
         ih2.append(('A', 10, False))
         self.assertEqual(ih2.values.tolist(),
                 [['A', 10, False]])
+
+    def test_index_hierarchy_from_names_b(self) -> None:
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy.from_names(())
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy.from_names([])
 
     #---------------------------------------------------------------------------
 

@@ -157,24 +157,24 @@ def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
     return TypeBlocks.from_blocks(blocks).values
 
 
-def _mask_to_slice_or_ilocs(mask: np.ndarray) -> tp.Union[slice, np.ndarray, int]:
-    assert mask.dtype == DTYPE_BOOL
+# def _mask_to_slice_or_ilocs(mask: np.ndarray) -> tp.Union[slice, np.ndarray, int]:
+#     assert mask.dtype == DTYPE_BOOL
 
-    valid_ilocs = PositionsAllocator.get(len(mask))[mask]
+#     valid_ilocs = PositionsAllocator.get(len(mask))[mask]
 
-    if len(valid_ilocs) == 1:
-        return valid_ilocs[0]
+#     if len(valid_ilocs) == 1:
+#         return valid_ilocs[0]
 
-    if len(valid_ilocs) == len(mask):
-        return NULL_SLICE
+#     if len(valid_ilocs) == len(mask):
+#         return NULL_SLICE
 
-    steps = ufunc_unique(valid_ilocs[1:] - valid_ilocs[:-1])
+#     steps = ufunc_unique(valid_ilocs[1:] - valid_ilocs[:-1])
 
-    if len(steps) == 1:
-        [step] = steps
-        return slice(valid_ilocs[0], valid_ilocs[-1] + 1, None if step == 1 else step)
+#     if len(steps) == 1:
+#         [step] = steps
+#         return slice(valid_ilocs[0], valid_ilocs[-1] + 1, None if step == 1 else step)
 
-    return valid_ilocs
+#     return valid_ilocs
 
 
 #-------------------------------------------------------------------------------
@@ -785,7 +785,8 @@ class IndexHierarchy(IndexBase):
         self.__widths_at_outer_level = None
 
     def _update_array_cache(self) -> None:
-        pass
+        # This is never hit because we are by definition updated
+        pass #pragma: no cover
 
     #---------------------------------------------------------------------------
     def __deepcopy__(self: IH, memo: tp.Dict[int, tp.Any]) -> IH:
