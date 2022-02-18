@@ -1165,6 +1165,17 @@ class TestUnit(TestCase):
                 s.loc[HLoc[:, 'A']].values.tolist(),
                 [0, 1, 4, 5])
 
+    def test_hierarchy_loc_b(self) -> None:
+        ih1 = IndexHierarchy.from_labels([(1,'dd',0),(1,'b',0),(2,'cc',0),(2,'ee',0)])
+
+        ih2 = ih1.loc[HLoc[(1,['dd'])]]
+
+        [[a],[b],[c]] = ih2._indexers
+        self.assertEqual((a, b, c), (0, 0, 0))
+
+        [[a],[b],[c]] = ih2._indices
+        self.assertEqual((a, b, c), (1, "dd", 0))
+
     def test_hierarchy_series_a(self) -> None:
         f1 = IndexHierarchy.from_tree
         tree = dict(a=(1,2,3))

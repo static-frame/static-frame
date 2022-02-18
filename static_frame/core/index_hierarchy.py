@@ -1586,16 +1586,36 @@ class IndexHierarchy(IndexBase):
         '''
         if isinstance(key, INT_TYPES):
             # return a tuple if selecting a single row
-            # NOTE: if extracting a single row, should be able to get it from IndexLevel without forcing a complete recache
             # NOTE: Selecting a single row may force type coercion before values are added to the tuple; i.e., a datetime64 will go to datetime.date before going to the tuple
             return tuple(self._blocks._extract_array(row_key=key)) #type: ignore
 
-        tb = self._blocks._extract(row_key=key)
+        if key is None:
+            return self.copy()
 
-        return self.__class__._from_type_blocks(tb,
-                name=self._name,
-                index_constructors=self._index_constructors,
+        if isinstance(key, slice) and key.step in (1, None):
+            treelike = True
+        else:
+            treelike = False
+
+        tb = self._blocks._extract(row_key=key)
+        new_indices = []
+        new_indexers = []
+
+        for index, indexer in zip(self._indices, self._indexers):
+            unique_indexes, new_indexer = ufunc_unique1d_indexer(indexer[key])
+            new_indices.append(index.iloc[unique_indexes])
+            new_indexers.append(new_indexer)
+
+        for new_indexer in new_indexers:
+            new_indexer.flags.writeable = False
+
+        return self.__class__(
+                indices=new_indices,
+                indexers=new_indexers,
+                name=self.name,
+                blocks=tb,
                 own_blocks=True,
+                treelike=treelike,
                 )
 
     def _extract_loc(self,

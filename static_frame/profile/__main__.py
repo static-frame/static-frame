@@ -4,15 +4,13 @@ import argparse
 import typing as tp
 import fnmatch
 import timeit
-from time import sleep
+import string
 import cProfile
 import pstats
 import sys
 import datetime
 import tempfile
 from enum import Enum
-import shutil
-
 
 from pyinstrument import Profiler #type: ignore
 from line_profiler import LineProfiler #type: ignore
@@ -1166,6 +1164,117 @@ class FrameFromConcat_R(FrameFromConcat, Reference):
 
 
 #-------------------------------------------------------------------------------
+
+class IndexHierarchyLoc(Perf):
+
+    NUMBER = 5
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        class Obj:
+            def __repr__(self):
+                return f'Obj({id(self)})'
+
+        self.obj = Obj()
+
+        self.ih_small = sf.IndexHierarchy.from_product(
+                range(10),
+                tuple("abcdefg"),
+                [True, False, None, self.obj],
+                )
+        self.tree_small = sf.IndexHierarchyTree.from_product(
+                range(10),
+                tuple("abcdefg"),
+                [True, False, None, self.obj],
+                )
+        # This is a one time cost to pay upfront since we are not timing init
+        self.tree_small._update_array_cache()
+
+
+        self.ih_large = sf.IndexHierarchy.from_product(
+                range(300),
+                tuple(string.printable),
+                [True, False, None, self.obj]
+                )
+        self.tree_large = sf.IndexHierarchyTree.from_product(
+                range(300),
+                tuple(string.printable),
+                [True, False, None, self.obj]
+                )
+        # This is a one time cost to pay upfront since we are not timing init
+        self.tree_large._update_array_cache()
+
+        meta_kwargs = dict(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation="index/indexer paradigm outperforms tree paradigm"
+                )
+
+        self.meta = dict(
+                large_element_loc=FunctionMetaData(**meta_kwargs),
+                large_element_hloc=FunctionMetaData(**meta_kwargs),
+                small_element_loc=FunctionMetaData(**meta_kwargs),
+                small_element_hloc=FunctionMetaData(**meta_kwargs),
+                )
+
+    def large_element_loc(self) -> None:
+        self.large.loc[(100, "A", True)]
+        self.large.loc[self.large.iloc[12839]]
+        self.large.loc[:(199, "z", None)]
+        self.large.loc[(0, "5", False):]
+        self.large.loc[(19, ".", True):(100, "B",  self.obj)]
+
+    def large_element_hloc(self) -> None:
+        self.large.loc[sf.HLoc[100, "A", True]]
+        self.large.loc[sf.HLoc[144]]
+        self.large.loc[sf.HLoc[:, "|"]]
+        self.large.loc[sf.HLoc[:, :, self.obj]]
+        self.large.loc[sf.HLoc[100, "{"]]
+        self.large.loc[sf.HLoc[113, :, False]]
+        self.large.loc[sf.HLoc[:, "H", None]]
+
+    def small_element_loc(self) -> None:
+        for _ in range(100):
+            self.small.loc[(1, "a", True)]
+            self.small.loc[self.small.iloc[25]]
+            self.small.loc[:(9, "g", None)]
+            self.small.loc[(0, "c", False):]
+            self.small.loc[(3, "b", True):(5, "e",  self.obj)]
+
+    def small_element_hloc(self) -> None:
+        for _ in range(100):
+            self.small.loc[sf.HLoc[2, "b", True]]
+            self.small.loc[sf.HLoc[4]]
+            self.small.loc[sf.HLoc[:, "a"]]
+            self.small.loc[sf.HLoc[:, :, self.obj]]
+            self.small.loc[sf.HLoc[0, "f"]]
+            self.small.loc[sf.HLoc[8, :, False]]
+            self.small.loc[sf.HLoc[:, "c", None]]
+
+
+
+class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
+
+    @property
+    def large(self):
+        return self.ih_large
+
+    @property
+    def small(self):
+        return self.ih_small
+
+class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
+
+    @property
+    def large(self):
+        return self.tree_large
+
+    @property
+    def small(self):
+        return self.tree_small
+
+
+#-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 def get_arg_parser() -> argparse.ArgumentParser:
@@ -1281,12 +1390,15 @@ def graph(
     '''
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
-        _, fp = tempfile.mkstemp(suffix='', text=True)
+        f = getattr(runner, name)
+
+        suffix = f"{f.__qualname__}"
+
+        _, fp = tempfile.mkstemp(suffix=suffix, text=True)
         fp_pstat = fp + '.pstat'
         fp_dot = fp + '.dot'
         fp_png = fp + '.png'
 
-        f = getattr(runner, name)
         pr = cProfile.Profile()
 
         pr.enable()
