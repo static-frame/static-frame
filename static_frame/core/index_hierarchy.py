@@ -628,78 +628,78 @@ class IndexHierarchy(IndexBase):
             treelike=False, # Since ufunc_unique1d_indexer will sort the indices, the blocks might be lexigraphically sorted, but won't appear as such
         )
 
-    # This approach is too slow, but it will can determine treelike
-    @classmethod
-    def _from_type_blocks_slow(cls: tp.Type[IH],
-            blocks: TypeBlocks,
-            *,
-            name: NameType = None,
-            index_constructors: IndexConstructors = None,
-            own_blocks: bool = False,
-            ) -> IH:
-        '''
-        Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
+    # # This approach is too slow, but it will can determine treelike
+    # @classmethod
+    # def _from_type_blocks_slow(cls: tp.Type[IH],
+    #         blocks: TypeBlocks,
+    #         *,
+    #         name: NameType = None,
+    #         index_constructors: IndexConstructors = None,
+    #         own_blocks: bool = False,
+    #         ) -> IH:
+    #     '''
+    #     Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
 
-        Args:
-            labels: an iterator or generator of tuples.
-            *,
-            name:
-            index_constructors:
-            depth_reference:
-            continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
+    #     Args:
+    #         labels: an iterator or generator of tuples.
+    #         *,
+    #         name:
+    #         index_constructors:
+    #         depth_reference:
+    #         continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
-        Returns:
-            :obj:`static_frame.IndexHierarchy`
-        '''
-        size, depth = blocks.shape
+    #     Returns:
+    #         :obj:`static_frame.IndexHierarchy`
+    #     '''
+    #     size, depth = blocks.shape
 
-        if index_constructors is not None:
-            # If defined, we may have changed columnar dtypes in IndexLevels, and cannot reuse blocks
-            if tuple(blocks.dtypes) != tuple(index.dtype for index in indices):
-                blocks = None #type: ignore
-                own_blocks = False
+    #     if index_constructors is not None:
+    #         # If defined, we may have changed columnar dtypes in IndexLevels, and cannot reuse blocks
+    #         if tuple(blocks.dtypes) != tuple(index.dtype for index in indices):
+    #             blocks = None #type: ignore
+    #             own_blocks = False
 
-        index_constructors = cls._build_index_constructors(index_constructors, depth=depth)
+    #     index_constructors = cls._build_index_constructors(index_constructors, depth=depth)
 
-        hash_maps: tp.List[tp.Dict[tp.Hashable, int]] = [{} for _ in range(depth)]
-        indexers: tp.List[np.ndarray] = [np.full(size, -1, np.intp) for _ in range(depth)]
+    #     hash_maps: tp.List[tp.Dict[tp.Hashable, int]] = [{} for _ in range(depth)]
+    #     indexers: tp.List[np.ndarray] = [np.full(size, -1, np.intp) for _ in range(depth)]
 
-        for (irow, icol), val in blocks.element_items():
-            hash_map = hash_maps[icol]
-            if val not in hash_map:
-                idx = len(hash_map)
-                hash_map[val] = irow
-            else:
-                idx = hash_map[val]
+    #     for (irow, icol), val in blocks.element_items():
+    #         hash_map = hash_maps[icol]
+    #         if val not in hash_map:
+    #             idx = len(hash_map)
+    #             hash_map[val] = irow
+    #         else:
+    #             idx = hash_map[val]
 
-            indexers[icol][irow] = idx
+    #         indexers[icol][irow] = idx
 
-        # If all increaing, it means the labels are already lexigraphically sorted
-        sort_order = np.lexsort(indexers[::-1])
-        treelike = np.all(sort_order[1:] >= sort_order[:-1])
+    #     # If all increaing, it means the labels are already lexigraphically sorted
+    #     sort_order = np.lexsort(indexers[::-1])
+    #     treelike = np.all(sort_order[1:] >= sort_order[:-1])
 
-        del sort_order
+    #     del sort_order
 
-        for i in range(depth):
-            indexers[i].flags.writeable = False # type: ignore
+    #     for i in range(depth):
+    #         indexers[i].flags.writeable = False # type: ignore
 
-        indices = [
-            constructor(hash_map)
-            for constructor, hash_map
-            in zip(index_constructors, hash_maps)
-        ]
+    #     indices = [
+    #         constructor(hash_map)
+    #         for constructor, hash_map
+    #         in zip(index_constructors, hash_maps)
+    #     ]
 
-        if name is None:
-            name = cls._build_name_from_indices(indices)
+    #     if name is None:
+    #         name = cls._build_name_from_indices(indices)
 
-        return cls(
-                indices=indices,
-                indexers=indexers,
-                name=name,
-                blocks=blocks,
-                own_blocks=own_blocks,
-                treelike=treelike,
-                )
+    #     return cls(
+    #             indices=indices,
+    #             indexers=indexers,
+    #             name=name,
+    #             blocks=blocks,
+    #             own_blocks=own_blocks,
+    #             treelike=treelike,
+    #             )
 
     # NOTE: could have a _from_fields (or similar) that takes a sequence of column iterables/arrays
 
@@ -1444,10 +1444,8 @@ class IndexHierarchy(IndexBase):
                         )
             return isin(indexer_at_depth, key_iloc)
 
-        """
-        If our internal structure is tree-like, then we can return a slice.
-        Otherwise, we must return a mask
-        """
+        # If our internal structure is tree-like, then we can return a slice.
+        # Otherwise, we must return a mask
         if self._treelike and depth == 0:
             idx = self._widths_at_outer_level.index.loc_to_iloc(key_at_depth)
 

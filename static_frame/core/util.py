@@ -907,7 +907,7 @@ def ufunc_unique1d_counts(array: np.ndarray,
 
         if not sortable:
             # Use a dict to retain order; this will break for non hashables
-            store = Counter(array)
+            store: tp.Dict[tp.Hashable, int] = Counter(array)
 
             counts = np.empty(len(store), dtype=np.intp)
             array = np.empty(len(store), dtype=object)
