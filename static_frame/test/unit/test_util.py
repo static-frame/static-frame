@@ -2557,9 +2557,23 @@ class TestUnit(TestCase):
 
 
     def test_dtype_from_element_a(self) -> None:
-        dt = dtype_from_element([1, 2, 3])
+        dt1 = dtype_from_element([1, 2, 3])
+        self.assertEqual(dt1, np.dtype(object))
 
-        # import ipdb; ipdb.set_trace()
+        dt2 = dtype_from_element((1, 2, 3))
+        self.assertEqual(dt2, np.dtype(object))
+
+        dt3 = dtype_from_element(np.array([]))
+        self.assertEqual(dt3, np.dtype(object))
+
+        dt4 = dtype_from_element(None)
+        self.assertEqual(dt4, np.dtype(object))
+
+        dt5 = dtype_from_element('foo')
+        self.assertEqual(dt5, np.array('foo').dtype)
+
+        dt6 = dtype_from_element(1.5)
+        self.assertEqual(dt6, np.dtype(float))
 
 
 if __name__ == '__main__':

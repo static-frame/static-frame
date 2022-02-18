@@ -582,13 +582,12 @@ def dtype_from_element(
         return DTYPE_FLOAT_DEFAULT
     if value is None:
         return DTYPE_OBJECT
-    if hasattr(value, 'dtype'):
+    # we want to match np.array elements; they have __len__ but it raises when called
+    if value.__class__ is np.ndarray and value.ndim == 0:
         return value.dtype #type: ignore
-    # if isinstance(value, tuple): # should this include all iterables, i.e., has atter __len__ and is not str?
-    #     return DTYPE_OBJECT
+    # all arrays, or SF containers, should be treated as objects when elements
     if hasattr(value, '__len__') and not isinstance(value, str):
         return DTYPE_OBJECT
-
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
     return np.array(value).dtype
 
