@@ -20,6 +20,7 @@ from static_frame.core.display import (
     DisplayHeader,
 )
 from static_frame.core.util import array_to_duplicated
+from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import arrays_equal
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
@@ -1516,19 +1517,33 @@ class IndexHierarchy(IndexBase):
         else:
             # If the key is a series, key_from_container_key will invoke IndexCorrespondence
             # logic that eventually calls _loc_to_iloc on all the indices of that series.
-            key = key_from_container_key(self, key)
-            if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
-                return PositionsAllocator.get(len(key))[key]
+            sanitized_key = key_from_container_key(self, key)
 
-            key = tuple(key)
+            if key is sanitized_key:
+                if len(key) != self.depth:
+                    raise RuntimeError(f'Invalid key length for {key}; must be length {self.depth}.')
 
-        if any(isinstance(k, tuple) for k in key):
-            return [self._loc_to_iloc(k) for k in key]
+                if any(isinstance(subkey, KEY_MULTIPLE_TYPES) for subkey in key): # type: ignore
+                    raise RuntimeError(f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].')
+
+            else:
+                key = sanitized_key
+                if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
+                    return PositionsAllocator.get(len(key))[key]
+
+                key = tuple(key)
+
+                for subkey in key:
+                    if len(subkey) != self.depth:
+                        raise RuntimeError(f'Invalid key length for {subkey}; must be length {self.depth}.')
+
+        if any(isinstance(k, tuple) for k in key): # type: ignore
+            return [self._loc_to_iloc(k) for k in key] # type: ignore
 
         meaningful_selections = {depth: not (isinstance(k, slice) and k == NULL_SLICE) for depth, k in enumerate(key)}
 
         can_return_element = all(
-                meaningful and (isinstance(key[depth], str) or not hasattr(key[depth], "__len__"))
+                meaningful and (isinstance(key[depth], str) or not hasattr(key[depth], "__len__")) # type: ignore
                 for depth, meaningful
                 in meaningful_selections.items()
                 )

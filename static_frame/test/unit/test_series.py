@@ -1576,11 +1576,12 @@ class TestUnit(TestCase):
                 index=sf.IndexHierarchy.from_labels(
                 (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
 
-        post = s.loc['a', :] #pylint: disable=W0104
-        self.assertEqual(post.to_pairs(), ((('a', 'a'), 0), (('a', 'b'), 1)))
+        # Raw getitem selection must be given a tuple or HLoc!
+        with self.assertRaises(RuntimeError):
+            s.loc['a', :]
 
-        post = s.loc[['a', 'b'], 'b'] #pylint: disable=W0104
-        self.assertEqual(post.to_pairs(), ((('a', 'b'), 1), (('b', 'b'), 3)))
+        with self.assertRaises(RuntimeError):
+            s.loc[['a', 'b'], 'b']
 
     def test_series_loc_extract_e(self) -> None:
         s1 = sf.Series(range(4), index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))

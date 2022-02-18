@@ -1176,6 +1176,33 @@ class TestUnit(TestCase):
         [[a],[b],[c]] = ih2._indices
         self.assertEqual((a, b, c), (1, "dd", 0))
 
+    def test_hierarchy_loc_c(self) -> None:
+        ih1 = IndexHierarchy.from_labels([(1,'dd',0),(1,'b',0),(2,'cc',0),(2,'ee',0)])
+
+        with self.assertRaises(RuntimeError):
+            ih1.loc[1, "dd"]
+
+        with self.assertRaises(RuntimeError):
+            ih1.loc[1, :]
+
+        with self.assertRaises(RuntimeError):
+            ih1.loc[:, "dd"]
+
+        with self.assertRaises(RuntimeError):
+            ih1.loc[:, :, 0]
+
+        with self.assertRaises(RuntimeError):
+            ih1.loc[(1, "dd")]
+
+        with self.assertRaises(RuntimeError):
+            ih1.loc[(1, "dd"):]
+
+        with self.assertRaises(RuntimeError):
+            ih1.loc[Index([(1, "dd")])]
+
+        with self.assertRaises(RuntimeError):
+            ih1.loc[Series([(1, "dd")])]
+
     def test_hierarchy_series_a(self) -> None:
         f1 = IndexHierarchy.from_tree
         tree = dict(a=(1,2,3))
