@@ -1180,22 +1180,22 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels([(1,'dd',0),(1,'b',0),(2,'cc',0),(2,'ee',0)])
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[1, "dd"]
+            ih1.loc[1, "dd"] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[1, :]
+            ih1.loc[1, :] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[:, "dd"]
+            ih1.loc[:, "dd"] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[:, :, 0]
+            ih1.loc[:, :, 0] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[(1, "dd")]
+            ih1.loc[(1, "dd")] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[(1, "dd"):]
+            ih1.loc[(1, "dd"):] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
             ih1.loc[Index([(1, "dd")])]
