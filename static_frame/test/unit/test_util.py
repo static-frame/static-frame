@@ -67,6 +67,7 @@ from static_frame.core.util import list_to_tuple
 from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
+from static_frame.core.util import ufunc_unique1d_counts
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 
@@ -2553,8 +2554,22 @@ class TestUnit(TestCase):
         self.assertEqual(pos.tolist(), [2, 0, 1])
         self.assertEqual(indexer.tolist(), [1, 2, 0, 2, 1])
 
+    #---------------------------------------------------------------------------
 
-        # import ipdb; ipdb.set_trace()
+    def test_ufunc_unique1d_positions_a(self) -> None:
+        pos, counts = ufunc_unique1d_counts(np.array([3, 2, 3, 2, 5, 3]))
+        self.assertEqual(pos.tolist(), [2, 3, 5])
+        self.assertEqual(counts.tolist(), [2, 3, 1])
+
+    def test_ufunc_unique1d_positions_b(self) -> None:
+        pos, counts = ufunc_unique1d_counts(np.array([3, 3, 2, 2, 3], dtype=object))
+        self.assertEqual(pos.tolist(), [2, 3])
+        self.assertEqual(counts.tolist(), [2, 3])
+
+    def test_ufunc_unique1d_positions_c(self) -> None:
+        pos, counts = ufunc_unique1d_counts(np.array([None, 'foo', 3, 'foo', None], dtype=object))
+        self.assertEqual(pos.tolist(), [None, 'foo', 3])
+        self.assertEqual(counts.tolist(), [2, 2, 1])
 
 
 if __name__ == '__main__':

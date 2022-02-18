@@ -836,9 +836,6 @@ def rehierarch_from_index_hierarchy(*,
     '''
     Alternate interface that updates IndexHierarchy cache before rehierarch.
     '''
-    if labels._recache:
-        labels._update_array_cache()
-
     return rehierarch_from_type_blocks(
             labels=labels._blocks,
             depth_map=depth_map,
