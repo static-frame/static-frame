@@ -573,7 +573,7 @@ def _gen_skip_middle(
 
 
 def dtype_from_element(
-        value: tp.Optional[tp.Hashable],
+        value: tp.Any,
         ) -> np.dtype:
     '''Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object.
     '''
@@ -584,7 +584,7 @@ def dtype_from_element(
         return DTYPE_OBJECT
     # we want to match np.array elements; they have __len__ but it raises when called
     if value.__class__ is np.ndarray and value.ndim == 0:
-        return value.dtype #type: ignore
+        return value.dtype
     # all arrays, or SF containers, should be treated as objects when elements
     if hasattr(value, '__len__') and not isinstance(value, str):
         return DTYPE_OBJECT
