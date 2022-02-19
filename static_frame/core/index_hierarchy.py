@@ -1,92 +1,85 @@
 import functools
 import itertools
 import typing as tp
-from copy import deepcopy
 from ast import literal_eval
+from copy import deepcopy
 
 import numpy as np
-from arraykit import (
-    name_filter,
-)
-from static_frame.core.container_util import (
-    key_from_container_key,
-    matmul,
-    rehierarch_from_type_blocks,
-    sort_index_for_order,
-)
-from static_frame.core.display import (
-    Display,
-    DisplayActive,
-    DisplayHeader,
-)
-from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import arrays_equal
+from arraykit import name_filter
+
+from static_frame.core.container_util import matmul
+from static_frame.core.container_util import rehierarch_from_type_blocks
+from static_frame.core.container_util import key_from_container_key
+from static_frame.core.container_util import sort_index_for_order
+
+from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
+from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.exception import ErrorInitIndex, ErrorInitIndexNonUnique
+
+from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.hloc import HLoc
-from static_frame.core.index import (
-    ILoc,
-    Index,
-    IndexGO,
-    immutable_index_filter,
-)
+from static_frame.core.index import ILoc
+from static_frame.core.index import Index
+from static_frame.core.index import IndexGO
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import PositionsAllocator
 from static_frame.core.index import mutable_immutable_index_filter
-from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_base import IndexBase
-from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_level import TreeNodeT
+from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.node_dt import InterfaceDatetime
-from static_frame.core.node_iter import (
-    IterNodeApplyType,
-    IterNodeDepthLevel,
-    IterNodeType,
-)
-from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import (
-    InterfaceAsType,
-    InterfaceGetItem,
-    TContainer,
-)
+from static_frame.core.node_iter import IterNodeApplyType
+from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
-from static_frame.core.style_config import StyleConfig
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import (
-    CONTINUATION_TOKEN_INACTIVE,
-    DEFAULT_SORT_KIND,
-    DTYPE_BOOL,
-    DTYPE_OBJECT,
-    INT_TYPES,
-    NAME_DEFAULT,
-    NULL_SLICE,
-    BoolOrBools,
-    DepthLevelSpecifier,
-    DtypeSpecifier,
-    GetItemKeyType,
-    IndexConstructor,
-    IndexConstructors,
-    IndexInitializer,
-    NameType,
-    PositionsAllocator,
-    UFunc,
-    array2d_to_array1d,
-    array2d_to_tuples,
-    array_sample,
-    intersect2d,
-    isin,
-    isin_array,
-    isna_array,
-    iterable_to_array_1d,
-    iterable_to_array_2d,
-    key_to_datetime_key,
-    setdiff2d,
-    union2d,
-    ufunc_unique,
-    ufunc_unique1d_counts,
-    ufunc_unique1d_indexer,
-)
+
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import KEY_MULTIPLE_TYPES
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import intersect2d
+from static_frame.core.util import isin
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import NameType
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import setdiff2d
+from static_frame.core.util import UFunc
+from static_frame.core.util import union2d
+from static_frame.core.util import array2d_to_array1d
+from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import iterable_to_array_2d
+from static_frame.core.util import array_sample
+from static_frame.core.util import arrays_equal
+from static_frame.core.util import array_to_duplicated
+from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
+from static_frame.core.util import BoolOrBools
+from static_frame.core.util import isna_array
+from static_frame.core.util import isin_array
+from static_frame.core.util import ufunc_unique
+from static_frame.core.util import ufunc_unique1d_counts
+from static_frame.core.util import ufunc_unique1d_indexer
+
+from static_frame.core.style_config import StyleConfig
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -366,7 +359,7 @@ class IndexHierarchy(IndexBase):
                 raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
             return cls(
-                indices=[cls._INDEX_CONSTRUCTOR(()) for _ in range(depth_reference)],
+                indices=[cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE) for _ in range(depth_reference)],
                 indexers=[PositionsAllocator.get(0) for _ in range(depth_reference)],
                 name=name
             )
@@ -381,7 +374,7 @@ class IndexHierarchy(IndexBase):
         hash_maps: tp.List[tp.Dict[tp.Hashable, int]] = [{} for _ in range(depth)]
         indexers: tp.List[tp.List[int]] = [[] for _ in range(depth)]
 
-        prev_row: tp.Sequence[tp.Hashable] = ()
+        prev_row: tp.Sequence[tp.Hashable] = EMPTY_TUPLE
 
         while True:
             for i_zip, (hash_map, indexer, val) in enumerate(zip(hash_maps, indexers, label_row)):
@@ -484,7 +477,7 @@ class IndexHierarchy(IndexBase):
         if not depth_1_index:
             assert depth_2_index is None
             return cls(
-                indices=[cls._INDEX_CONSTRUCTOR(()) for _ in range(2)],
+                indices=[cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE) for _ in range(2)],
                 indexers=[PositionsAllocator.get(0) for _ in range(2)],
                 name=name,
                 treelike=True,
@@ -563,7 +556,7 @@ class IndexHierarchy(IndexBase):
             raise ErrorInitIndex("names must be non-empty.")
 
         return cls(
-            indices=[cls._INDEX_CONSTRUCTOR((), name=name) for name in names],
+            indices=[cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE, name=name) for name in names],
             indexers=[PositionsAllocator.get(0) for _ in names],
             name=name,
             treelike=True,
@@ -723,7 +716,7 @@ class IndexHierarchy(IndexBase):
     def __init__(self,
             indices: tp.Union["IndexHierarchy", tp.List[Index]],
             *,
-            indexers: tp.List[np.ndarray] = (), # type: ignore
+            indexers: tp.List[np.ndarray] = EMPTY_TUPLE, # type: ignore
             name: NameType = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
@@ -1072,7 +1065,7 @@ class IndexHierarchy(IndexBase):
                 return self if self.STATIC else self.copy()
             elif func is self.__class__._UFUNC_DIFFERENCE:
                 # we will no longer have type associations per depth
-                return self.__class__.from_labels((), depth_reference=self.depth)
+                return self.__class__.from_labels(EMPTY_TUPLE, depth_reference=self.depth)
 
         if isinstance(other, np.ndarray):
             operand = other

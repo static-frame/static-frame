@@ -2524,7 +2524,6 @@ class TestUnit(TestCase):
         # NOTE: this tests the final fall through
         self.assertIs(ufunc_dtype_to_dtype(np.cumsum, np.dtype(np.datetime64)), None)
 
-
     #---------------------------------------------------------------------------
 
     def test_list_to_tuple_a(self) -> None:
@@ -2575,7 +2574,6 @@ class TestUnit(TestCase):
 
         dt6 = dtype_from_element(1.5)
         self.assertEqual(dt6, np.dtype(float))
-
 
     #---------------------------------------------------------------------------
 

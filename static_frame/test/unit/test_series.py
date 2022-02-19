@@ -1578,10 +1578,10 @@ class TestUnit(TestCase):
 
         # leaf loc selection must be terminal; using a slice or list is an exception
         with self.assertRaises(RuntimeError):
-            s.loc['a', :] # pylint: disable=W0104
+            s.loc['a', :] #pylint: disable=W0104
 
         with self.assertRaises(RuntimeError):
-            s.loc[['a', 'b'], 'b'] # pylint: disable=W0104
+            s.loc[['a', 'b'], 'b'] #pylint: disable=W0104
 
     def test_series_loc_extract_e(self) -> None:
         s1 = sf.Series(range(4), index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
