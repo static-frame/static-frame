@@ -66,8 +66,9 @@ from static_frame.core.util import UFUNC_MAP
 from static_frame.core.util import list_to_tuple
 from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import ufunc_unique2d_indexer
-from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import ufunc_unique1d_counts
+from static_frame.core.util import ufunc_unique1d_positions
+from static_frame.core.util import dtype_from_element
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 
@@ -2553,6 +2554,28 @@ class TestUnit(TestCase):
         pos, indexer = ufunc_unique1d_positions(np.array([None, 'foo', 3, 'foo', None], dtype=object))
         self.assertEqual(pos.tolist(), [2, 0, 1])
         self.assertEqual(indexer.tolist(), [1, 2, 0, 2, 1])
+
+    #---------------------------------------------------------------------------
+
+    def test_dtype_from_element_a(self) -> None:
+        dt1 = dtype_from_element([1, 2, 3])
+        self.assertEqual(dt1, np.dtype(object))
+
+        dt2 = dtype_from_element((1, 2, 3))
+        self.assertEqual(dt2, np.dtype(object))
+
+        dt3 = dtype_from_element(np.array([]))
+        self.assertEqual(dt3, np.dtype(object))
+
+        dt4 = dtype_from_element(None)
+        self.assertEqual(dt4, np.dtype(object))
+
+        dt5 = dtype_from_element('foo')
+        self.assertEqual(dt5, np.array('foo').dtype)
+
+        dt6 = dtype_from_element(1.5)
+        self.assertEqual(dt6, np.dtype(float))
+
 
     #---------------------------------------------------------------------------
 

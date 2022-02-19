@@ -573,7 +573,9 @@ def _gen_skip_middle(
     yield from reversed(values)
 
 
-def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
+def dtype_from_element(
+        value: tp.Any,
+        ) -> np.dtype:
     '''Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object.
     '''
     if value is np.nan:
@@ -581,10 +583,12 @@ def dtype_from_element(value: tp.Optional[tp.Hashable]) -> np.dtype:
         return DTYPE_FLOAT_DEFAULT
     if value is None:
         return DTYPE_OBJECT
-    if isinstance(value, tuple): # should this include all iterables, i.e., has atter __len__ and is not str?
+    # we want to match np.array elements; they have __len__ but it raises when called
+    if value.__class__ is np.ndarray and value.ndim == 0:
+        return value.dtype
+    # all arrays, or SF containers, should be treated as objects when elements
+    if hasattr(value, '__len__') and not isinstance(value, str):
         return DTYPE_OBJECT
-    if hasattr(value, 'dtype'):
-        return value.dtype #type: ignore
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
     return np.array(value).dtype
 
@@ -696,28 +700,37 @@ def full_for_fill(
         dtype: tp.Optional[np.dtype],
         shape: tp.Union[int, tp.Tuple[int, ...]],
         fill_value: object,
+        resolve_fill_value_dtype: bool = True,
         ) -> np.ndarray:
     '''
     Return a "full" NP array for the given fill_value
     Args:
         dtype: target dtype, which may or may not be possible given the fill_value. This can be set to None to only use the fill_value to determine dtype.
     '''
-    dtype_element = dtype_from_element(fill_value)
-    if dtype is not None:
-        dtype_final = resolve_dtype(dtype, dtype_element)
+    # NOTE: this will treat all no-str iterables as
+    if resolve_fill_value_dtype:
+        dtype_element = dtype_from_element(fill_value)
+        dtype_final = dtype_element if dtype is None else resolve_dtype(dtype, dtype_element)
     else:
-        dtype_final = dtype_element
+        assert dtype is not None
+        dtype_final = dtype
+
     # NOTE: we do not make this array immutable as we sometimes need to mutate it before adding it to TypeBlocks
     if dtype_final != DTYPE_OBJECT:
         return np.full(shape, fill_value, dtype=dtype_final)
 
     # for tuples and other objects, better to create and fill
-    array = np.empty(shape, dtype=dtype_final)
+    array = np.empty(shape, dtype=DTYPE_OBJECT)
     if fill_value is None:
         return array # None is already set for empty object arrays
 
-    for iloc in np.ndindex(shape):
-        array[iloc] = fill_value
+    # if we have a generator, None, string, or other simple types, can directly assign
+    if isinstance(fill_value, str) or not hasattr(fill_value, '__len__'):
+        array[NULL_SLICE] = fill_value
+    else:
+        for iloc in np.ndindex(shape):
+            array[iloc] = fill_value
+
     return array
 
 

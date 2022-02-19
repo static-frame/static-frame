@@ -2712,7 +2712,9 @@ class TestUnit(TestCase):
         f1 = sf.Frame.from_element(False, index=range(2), columns=tuple('ab'))
         f2 = f1.assign['a']([1.1, 2.1])
         self.assertEqual(f2._blocks.shapes.tolist(), [(2,), (2,1)])
+
         self.assertEqual(f2.dtypes.values.tolist(), [np.dtype('float64'), np.dtype('bool')])
+
         self.assertEqual(f2.to_pairs(0),
                 (('a', ((0, 1.1), (1, 2.1))), ('b', ((0, False), (1, False))))
                 )
