@@ -420,12 +420,12 @@ class TestUnit(TestCase):
 
         # Depth 2 != 3
         sel = IndexHierarchy.from_labels([(0, 1)])
-        with self.raises(KeyError):
+        with self.assertRaises(KeyError):
             ih1._loc_to_iloc(sel)
 
         # Depth 4 != 3
         sel = IndexHierarchy.from_labels([(0, 1, 2, 3)])
-        with self.raises(KeyError):
+        with self.assertRaises(KeyError):
             ih1._loc_to_iloc(sel)
 
     def test_hierarchy_loc_to_iloc_f(self) -> None:
@@ -1102,7 +1102,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             ih = IndexHierarchy._from_type_blocks(f1._blocks, index_constructors=Index)
 
-    def test_hierarchy_from_type_blocks_c(self) -> None:
+    def test_hierarchy_from_type_blocks_d(self) -> None:
         f1 = Frame.from_items((
                 ('a', tuple('ABAB')),
                 ('b', (1, 2, 1, 2)),
@@ -1127,7 +1127,7 @@ class TestUnit(TestCase):
         labels = (('I', 'A'), ('I', 'B'))
         ih = IndexHierarchy.from_labels(labels)
 
-        self.assertTrue(Index(labels) in ih)
+        self.assertTrue(Index(labels) in ih) # type: ignore
 
     def test_hierarchy_extract_a(self) -> None:
         idx = IndexHierarchy.from_product(['A', 'B'], [1, 2])
@@ -1408,7 +1408,76 @@ class TestUnit(TestCase):
                 )
 
     def test_hierarchy_index_go_b(self) -> None:
-        pass
+        labelsA = [
+            ("A", "D"),
+            ("A", "E"),
+            ("B", "D"),
+            ("A", "G"),
+            ("B", "E"),
+        ]
+        labelsB = [
+            ("A", "H"),
+            ("A", "F"),
+            ("B", "F"),
+            ("C", "D"),
+            ("B", "G"),
+        ]
+
+        ihgo = IndexHierarchyGO.from_labels(labelsA)
+        ih2 = IndexHierarchy.from_labels(labelsB)
+
+        ihgo.extend(ih2)
+
+        expected = IndexHierarchy.from_labels(labelsA + labelsB)
+        self.assertTrue(ihgo.equals(expected))
+
+    def test_hierarchy_index_go_c(self) -> None:
+        labelsA = [
+            ("A", "D"),
+            ("A", "E"),
+            ("A", "F"),
+            ("B", "D"),
+            ("B", "E"),
+        ]
+        labelsB = [
+            ("A", "G"),
+            ("A", "H"),
+            ("A", "I"),
+            ("B", "F"),
+            ("B", "G"),
+        ]
+
+        ihgo = IndexHierarchyGO.from_labels(labelsA)
+        ih2 = IndexHierarchy.from_labels(labelsB)
+
+        ihgo.extend(ih2)
+
+        expected = IndexHierarchy.from_labels(labelsA + labelsB)
+        self.assertTrue(ihgo.equals(expected))
+
+    def test_hierarchy_index_go_d(self) -> None:
+        labelsA = [
+            ("A", "D"),
+            ("A", "E"),
+            ("A", "F"),
+            ("B", "E"),
+            ("B", "D"),
+        ]
+        labelsB = [
+            ("B", "G"),
+            ("A", "G"),
+            ("A", "I"),
+            ("A", "H"),
+            ("B", "F"),
+        ]
+
+        ihgo = IndexHierarchyGO.from_labels(labelsA)
+        ih2 = IndexHierarchy.from_labels(labelsB)
+
+        ihgo.extend(ih2)
+
+        expected = IndexHierarchy.from_labels(labelsA + labelsB)
+        self.assertTrue(ihgo.equals(expected))
 
     #---------------------------------------------------------------------------
 

@@ -2556,17 +2556,17 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_ufunc_unique1d_positions_a(self) -> None:
+    def test_ufunc_unique1d_counts_a(self) -> None:
         pos, counts = ufunc_unique1d_counts(np.array([3, 2, 3, 2, 5, 3]))
         self.assertEqual(pos.tolist(), [2, 3, 5])
         self.assertEqual(counts.tolist(), [2, 3, 1])
 
-    def test_ufunc_unique1d_positions_b(self) -> None:
+    def test_ufunc_unique1d_counts_b(self) -> None:
         pos, counts = ufunc_unique1d_counts(np.array([3, 3, 2, 2, 3], dtype=object))
         self.assertEqual(pos.tolist(), [2, 3])
         self.assertEqual(counts.tolist(), [2, 3])
 
-    def test_ufunc_unique1d_positions_c(self) -> None:
+    def test_ufunc_unique1d_counts_c(self) -> None:
         pos, counts = ufunc_unique1d_counts(np.array([None, 'foo', 3, 'foo', None], dtype=object))
         self.assertEqual(pos.tolist(), [None, 'foo', 3])
         self.assertEqual(counts.tolist(), [2, 2, 1])

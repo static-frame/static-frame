@@ -260,10 +260,7 @@ class IndexHierarchy(IndexBase):
 
         index_constructors = cls._build_index_constructors(index_constructors, depth=len(levels))
 
-        for lvl, constructor in itertools.zip_longest(levels, index_constructors):
-            if constructor is None:
-                raise ErrorInitIndex(f'Levels and index_constructors must be the same length.')
-
+        for lvl, constructor in zip(levels, index_constructors):
             # we call the constructor on all lvl, even if it is already an Index
             # This will raise if any incoming levels are not unique
             if isinstance(lvl, Index):
@@ -2168,6 +2165,7 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         Append a single label to this index.
         '''
+        # TODO: Undo if something raises!
         if value in self: # type: ignore
             raise ErrorInitIndexNonUnique(f"The label '{value}' is already in the index.")
 
@@ -2196,6 +2194,7 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         Extend this IndexHiearchy in-place
         '''
+        # TODO: Undo if something raises!
         for depth, (self_index, other_index) in enumerate(zip(self._indices, other._indices)):
 
             intersection = self_index.intersection(other_index)
@@ -2232,29 +2231,35 @@ class IndexHierarchyGO(IndexHierarchy):
                 self._indexers[depth] = new_indexer
                 continue
 
-            starting_len = len(self_index)
+            # starting_len = len(self_index)
 
+            difference = other_index[~other_index.isin(intersection)]
             self_index.extend(other_index[~other_index.isin(intersection)])
+            # offset = len(difference)
+            del difference
 
             def remap(k: tp.Hashable) -> int:
+                iloc = self_index._loc_to_iloc(k)
                 if k in intersection:
-                    return self_index._loc_to_iloc(k) # type: ignore
-                return -1
+                    return iloc # type: ignore
 
-            offset = starting_len - len(intersection)
-            indexer_remap = other_index.iter_label().apply(remap)
+                # We use - as a flag to indicate that this needs to be remapped
+                return -iloc # type: ignore
+
+            #offset = starting_len - len(intersection)
+            other_index_remapped = other_index.iter_label().apply(remap)
             del intersection
 
-            remap_indexer = indexer_remap[other._indexers[depth]]
+            remap_indexer = other_index_remapped[other._indexers[depth]]
+            mask = remap_indexer < 0
 
-            mask = remap_indexer == -1
+            remap_indexer[mask] = -remap_indexer[mask]
 
-            remap_indexer[mask] = (other._indexers[depth][mask] + offset)
             new_indexer = np.hstack((self._indexers[depth], remap_indexer))
             new_indexer.flags.writeable = False
             self._indexers[depth] = new_indexer
 
-        # No need to ensure uniqueness! It's already been checked.
+
         self._blocks = self._gen_blocks_from_self()
         self._values = self._blocks.values
         self._ensure_uniqueness(self._indexers, self.values)
