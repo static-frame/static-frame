@@ -1111,8 +1111,8 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
 
     @property
-    def _index_constructors(self) -> tp.Tuple[tp.Type[Index], ...]:
-        return tuple(index.__class__ for index in self._indices)
+    def _index_constructors(self) -> tp.Iterator[tp.Type[Index]]:
+        yield from (index.__class__ for index in self._indices)
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'IndexHierarchy':
         '''Create a new index after removing the values specified by the loc key.
@@ -2106,7 +2106,7 @@ class IndexHierarchy(IndexBase):
 
         if count < 0: # remove from inner
             if count <= (1 - self.depth):
-                return self._index_constructors[-1](self._blocks.iloc[:,0].values.ravel(), name=name)
+                return self._indices[-1].__class__(self._blocks.iloc[:,0].values.ravel(), name=name)
 
             return self.__class__(
                     indices=self._indices[:count],
@@ -2118,7 +2118,7 @@ class IndexHierarchy(IndexBase):
 
         elif count > 0: # remove from outer
             if count >= (self.depth - 1):
-                return self._index_constructors[0](self._blocks.iloc[:,-1].values.ravel(), name=name)
+                return self._indices[0].__class__(self._blocks.iloc[:,-1].values.ravel(), name=name)
 
             return self.__class__(
                     indices=self._indices[count:],
