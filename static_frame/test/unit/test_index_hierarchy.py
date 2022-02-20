@@ -933,7 +933,14 @@ class TestUnit(TestCase):
         ih2 = IndexHierarchy.from_labels(labels, reorder_for_hierarchy=True)
         self.assertEqual(ih1.shape, ih2.shape)
         self.assertEqual(tuple(ih2.iter_label()),
-                (('II', 'A', 1), ('II', 'A', 2), ('II', 'B', 1), ('II', 'B', 2), ('I', 'A', 1), ('I', 'A', 2), ('I', 'B', 1), ('I', 'B', 2))
+                (('II', 'A', 1),
+                 ('II', 'A', 2),
+                 ('II', 'B', 2),
+                 ('II', 'B', 1),
+                 ('I', 'A', 2),
+                 ('I', 'A', 1),
+                 ('I', 'B', 1),
+                 ('I', 'B', 2))
                 )
 
     def test_hierarchy_from_labels_h(self) -> None:
@@ -951,9 +958,9 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(ih.iter_label()),
                 (('I', 'A', 1),
                  ('I', 'B', 1),
-                 ('II', 'A', 1),
                  ('II', 'A', 3),
                  ('II', 'A', 2),
+                 ('II', 'A', 1),
                  ('II', 'B', 1))
                 )
 

@@ -225,7 +225,7 @@ class IndexHierarchyTree(IndexBase):
             continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE
             ) -> IH:
         '''
-        Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
+        Construct an ``IndexHierarchy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
 
         Args:
             labels: an iterator or generator of tuples.

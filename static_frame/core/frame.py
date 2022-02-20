@@ -7132,7 +7132,7 @@ class Frame(ContainerOperand):
         '''
         Return an xarray Dataset.
 
-        In order to preserve columnar types, and following the precedent of Pandas, the :obj:`Frame`, with a 1D index, is translated as a Dataset of 1D arrays, where each DataArray is a 1D array. If the index is an :obj:`IndexHierarhcy`, each column is mapped into an ND array of shape equal to the unique values found at each depth of the index.
+        In order to preserve columnar types, and following the precedent of Pandas, the :obj:`Frame`, with a 1D index, is translated as a Dataset of 1D arrays, where each DataArray is a 1D array. If the index is an :obj:`IndexHierarchy`, each column is mapped into an ND array of shape equal to the unique values found at each depth of the index.
         '''
         import xarray
 

@@ -272,7 +272,7 @@ IndexSpecifier = tp.Union[int, tp.Hashable] # specify a postiion in an index
 IndexInitializer = tp.Union[
         'IndexBase',
         tp.Iterable[tp.Hashable],
-        tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarhcy
+        tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarchy
         ]
 
 IndexConstructor = tp.Optional[tp.Callable[..., 'IndexBase']]

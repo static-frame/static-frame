@@ -1215,10 +1215,7 @@ class IndexHierarchyLoc(Perf):
         # This is a one time cost to pay upfront since we are not timing init
         self.tree_large._update_array_cache()
 
-        meta_kwargs = dict(
-                perf_status=PerfStatus.EXPLAINED_WIN,
-                explanation="index/indexer paradigm outperforms tree paradigm"
-                )
+        meta_kwargs = dict(perf_status=PerfStatus.EXPLAINED_WIN)
 
         self.meta = dict(
                 large_element_loc=FunctionMetaData(**meta_kwargs),
@@ -1370,14 +1367,14 @@ class IndexHierarchyConstructors(Perf):
                 from_product_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 from_product_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 from_tree_small=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_WIN),
-                from_tree_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS),
+                from_tree_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="This constructor is most optimized for the tree index"),
                 from_labels_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 from_labels_small_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 from_labels_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 from_labels_large_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_index_items_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS),
-                from_index_items_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS),
-                from_index_names=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS),
+                from_index_items_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="The tree constructor simply reuses all these indexes. The new approach has to analyze them"),
+                from_index_items_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="The tree constructor simply reuses all these indexes. The new approach has to analyze them"),
+                from_index_names=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="We have a few empty lists to create each time that tree does not"),
                 from_type_blocks_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 from_type_blocks_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 )
