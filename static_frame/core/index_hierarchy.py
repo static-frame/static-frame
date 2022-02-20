@@ -389,7 +389,7 @@ class IndexHierarchy(IndexBase):
         '''
         try:
             _, depth = array.shape
-        except IndexError:
+        except ValueError:
             raise ErrorInitIndex("Array must be 2-dimensional.")
 
         if not array.size:
