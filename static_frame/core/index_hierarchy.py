@@ -379,6 +379,14 @@ class IndexHierarchy(IndexBase):
             depth_reference: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
             ) -> IH:
+        '''
+        Construct an :obj:`IndexHierarchy` from a 2D numpy array
+
+        Very similar implementation to :meth:`_from_type_blocks`
+
+        Returns:
+            :obj:`IndexHierarchy`
+        '''
         try:
             _, depth = array.shape
         except IndexError:
@@ -661,7 +669,7 @@ class IndexHierarchy(IndexBase):
             raise ErrorInitIndex("blocks must have at least two dimensions.")
 
         def gen_columns() -> tp.Iterator[np.ndarray]:
-            for block in blocks:
+            for block in blocks: # type: ignore
                 yield block.values.ravel()
 
         index_constructors_iter = cls._build_index_constructors(index_constructors, blocks.shape[1])
@@ -1053,10 +1061,10 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
     # set operations
 
-    def _ufunc_set(self,
+    def _ufunc_set(self: IH,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
             other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
-            ) -> 'IndexHierarchy':
+            ) -> IH:
         '''
         Utility function for preparing and collecting values for Indices to produce a new Index.
         '''
@@ -1123,7 +1131,7 @@ class IndexHierarchy(IndexBase):
     def _index_constructors(self) -> tp.Iterator[tp.Type[Index]]:
         yield from (index.__class__ for index in self._indices)
 
-    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexHierarchy':
+    def _drop_iloc(self: IH, key: GetItemKeyType) -> IH:
         '''Create a new index after removing the values specified by the loc key.
         '''
         blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
@@ -1134,7 +1142,7 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True,
                 )
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'IndexHierarchy':
+    def _drop_loc(self: IH, key: GetItemKeyType) -> IH:
         '''Create a new index after removing the values specified by the loc key.
         '''
         return self._drop_iloc(self._loc_to_iloc(key))
@@ -1244,7 +1252,7 @@ class IndexHierarchy(IndexBase):
         return self._index_types
 
     #---------------------------------------------------------------------------
-    def relabel(self, mapper: RelabelInput) -> 'IndexHierarchy':
+    def relabel(self: IH, mapper: RelabelInput) -> IH:
         '''
         Return a new IndexHierarchy with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
         '''
@@ -1629,14 +1637,14 @@ class IndexHierarchy(IndexBase):
                 treelike=treelike,
                 )
 
-    def _extract_loc(self,
+    def _extract_loc(self: IH,
             key: GetItemKeyType
-            ) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
+            ) -> tp.Union[IH, tp.Tuple[tp.Hashable]]:
         return self._extract_iloc(self._loc_to_iloc(key))
 
-    def __getitem__(self, #pylint: disable=E0102
+    def __getitem__(self: IH,
             key: GetItemKeyType
-            ) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
+            ) -> tp.Union[IH, tp.Tuple[tp.Hashable]]:
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
@@ -1839,7 +1847,7 @@ class IndexHierarchy(IndexBase):
             *,
             ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[['IndexHierarchy'], tp.Union[np.ndarray, 'IndexHierarchy']]] = None,
+            key: tp.Optional[tp.Callable[[IH], tp.Union[np.ndarray, IH]]] = None,
             ) -> IH:
         '''Return a new Index with the labels sorted.
 
@@ -1877,7 +1885,7 @@ class IndexHierarchy(IndexBase):
 
         return isin(self.flat().values, matches)
 
-    def roll(self, shift: int) -> 'IndexHierarchy':
+    def roll(self: IH, shift: int) -> IH:
         '''Return an :obj:`IndexHierarchy` with values rotated forward and wrapped around (with a positive shift) or backward and wrapped around (with a negative shift).
         '''
         blocks = TypeBlocks.from_blocks(
@@ -1891,7 +1899,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> 'IndexHierarchy':
+    def fillna(self: IH, value: tp.Any) -> IH:
         '''Return an :obj:`IndexHierarchy` after replacing NA (NaN or None) with the supplied value.
 
         Args:
@@ -1905,11 +1913,11 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True
                 )
 
-    def _sample_and_key(self,
+    def _sample_and_key(self: IH,
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple['IndexHierarchy', np.ndarray]:
+            ) -> tp.Tuple[IH, np.ndarray]:
 
         # sort to ensure hierarchability
         key = array_sample(self.positions, count=count, seed=seed, sort=True)
@@ -2096,9 +2104,9 @@ class IndexHierarchy(IndexBase):
             own_blocks=True,
         )
 
-    def level_drop(self,
+    def level_drop(self: IH,
             count: int = 1,
-            ) -> tp.Union[Index, 'IndexHierarchy']:
+            ) -> tp.Union[Index, IH]:
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the resulting index if the resulting levels are not unique.
 
         Args:

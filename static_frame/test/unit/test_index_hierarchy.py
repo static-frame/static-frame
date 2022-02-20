@@ -1136,7 +1136,7 @@ class TestUnit(TestCase):
                 ('I', 'A', 1),
                 ))
 
-        ih1 = IndexHierarchy.from_array(array)
+        ih1 = IndexHierarchy._from_array(array)
         self.assertTrue((np.array(tuple(ih1.iter_label())) == array).all())
 
     def test_hierarchy_from_array_b(self) -> None:
@@ -1144,7 +1144,7 @@ class TestUnit(TestCase):
         array = np.array([1, 2, 3])
 
         with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy.from_array(array) # Must be 2-D
+            _ = IndexHierarchy._from_array(array) # Must be 2-D
 
     #---------------------------------------------------------------------------
 
