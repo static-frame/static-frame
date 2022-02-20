@@ -1628,7 +1628,7 @@ class IndexHierarchyTree(IndexBase):
 
     def to_frame(self) -> 'Frame':
         '''
-        Return :obj:`Frame` version of this :obj:`IndexHiearchy`.
+        Return :obj:`Frame` version of this :obj:`IndexHierarchy`.
         '''
         from static_frame import Frame
         return self._to_frame(Frame)
@@ -1804,7 +1804,7 @@ class IndexHierarchyTreeGO(IndexHierarchyTree):
 
     def extend(self, other: IndexHierarchyTree) -> None:
         '''
-        Extend this IndexHiearchy in-place
+        Extend this IndexHierarchy in-place
         '''
         self._levels.extend(other._levels)
         self._recache = True

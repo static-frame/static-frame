@@ -694,8 +694,6 @@ class IndexHierarchy(IndexBase):
             treelike=treelike,
         )
 
-    # NOTE: could have a _from_fields (or similar) that takes a sequence of column iterables/arrays
-
     @staticmethod
     def _ensure_uniqueness(indexers: tp.List[np.ndarray], values: np.ndarray) -> None:
         expected_len = len(values)
@@ -739,7 +737,6 @@ class IndexHierarchy(IndexBase):
             indexers: list of indexer arrays
             name: name of the IndexHierarchy
         '''
-        # TODO: Really ugly hack. Better to create specialized constructor
         if isinstance(indices, IndexHierarchy):
             if indexers:
                 raise ErrorInitIndex('indexers must not be provided when copying an IndexHierarchy')
@@ -1136,6 +1133,8 @@ class IndexHierarchy(IndexBase):
         '''
         blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
 
+        # We could potentially re-use the same indices. Would that be worth it?
+
         return self.__class__._from_type_blocks(blocks,
                 index_constructors=self._index_constructors,
                 name=self._name,
@@ -1185,7 +1184,7 @@ class IndexHierarchy(IndexBase):
 
         return self._blocks._extract_array(column_key=sel)
 
-    # TODO: VERY SLOW!
+    # NOTE: This is much slower than IndexHierarchyTree. Not sure how to optimize.
     @doc_inject()
     def label_widths_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
@@ -1206,6 +1205,7 @@ class IndexHierarchy(IndexBase):
         if pos is None:
             raise NotImplementedError("selecting multiple depth levels is not yet implemented")
 
+        # Could this be memoized?
         def _extractor(arr: np.ndarray, pos: int) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
             unique, widths = ufunc_unique1d_counts(arr)
             labels = self._indices[pos].values[unique]
@@ -1368,6 +1368,8 @@ class IndexHierarchy(IndexBase):
             indexer = np.array([index_remap.get(i, i) for i in self._indexers[level]])
             indexer.flags.writeable = False
             new_indexers[level] = indexer
+
+        # TODO: Worth checking for treelike?
 
         return self.__class__(
                 indices=new_indices,
@@ -1667,8 +1669,7 @@ class IndexHierarchy(IndexBase):
             ) -> np.ndarray:
         '''Always return an NP array.
         '''
-        values = self._blocks.values
-        array = operator(values)
+        array = operator(self.values)
         array.flags.writeable = False
         return array
 
@@ -1751,7 +1752,6 @@ class IndexHierarchy(IndexBase):
     def __contains__(self, value: tp.Tuple[tp.Hashable]) -> bool: # type: ignore
         '''Determine if a leaf loc is contained in this Index.
         '''
-        # TODO: Can this be optimized, or is all the optimization already done in _loc_to_iloc?
         try:
             result = self._loc_to_iloc(value)
         except KeyError:
@@ -1836,6 +1836,7 @@ class IndexHierarchy(IndexBase):
                 if self_index.__class__ != other_index.__class__:
                     return False
 
+        # indices & indexers are encoded in values_at_depth
         for i in range(self.depth):
             if not arrays_equal(self.values_at_depth(i), other.values_at_depth(i), skipna=skipna):
                 return False
@@ -1919,7 +1920,6 @@ class IndexHierarchy(IndexBase):
             seed: tp.Optional[int] = None,
             ) -> tp.Tuple[IH, np.ndarray]:
 
-        # sort to ensure hierarchability
         key = array_sample(self.positions, count=count, seed=seed, sort=True)
         blocks = self._blocks._extract(row_key=key)
 
@@ -2009,7 +2009,6 @@ class IndexHierarchy(IndexBase):
     def _to_frame(self,
             constructor: tp.Type['Frame']
             ) -> 'Frame':
-
         return constructor(
                 self._blocks.copy(),
                 columns=None,
@@ -2019,7 +2018,7 @@ class IndexHierarchy(IndexBase):
 
     def to_frame(self) -> 'Frame':
         '''
-        Return :obj:`Frame` version of this :obj:`IndexHiearchy`.
+        Return :obj:`Frame` version of this :obj:`IndexHierarchy`.
         '''
         from static_frame import Frame
         return self._to_frame(Frame)
@@ -2088,7 +2087,7 @@ class IndexHierarchy(IndexBase):
             indices = [index_cls((level,)), *(idx.copy() for idx in self._indices)]
 
         # Indexers are always immutable
-        new_indexer = np.full(self.__len__(), 0, dtype=int)
+        new_indexer = np.zeros(self.__len__(), dtype=int)
         new_indexer.flags.writeable = False
         indexers = [new_indexer, *self._indexers]
 
@@ -2177,7 +2176,7 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         Append a single label to this index.
         '''
-        # TODO: Undo if something raises!
+        # TODO: How to handle corrupted instance state if an exception is raised?
         if value in self: # type: ignore
             raise ErrorInitIndexNonUnique(f"The label '{value}' is already in the index.")
 
@@ -2204,9 +2203,9 @@ class IndexHierarchyGO(IndexHierarchy):
 
     def extend(self, other: IndexHierarchy) -> None:
         '''
-        Extend this IndexHiearchy in-place
+        Extend this IndexHierarchy in-place
         '''
-        # TODO: Undo if something raises!
+        # TODO: How to handle corrupted instance state if an exception is raised?
         for depth, (self_index, other_index) in enumerate(zip(self._indices, other._indices)):
 
             intersection = self_index.intersection(other_index)
@@ -2270,7 +2269,6 @@ class IndexHierarchyGO(IndexHierarchy):
             new_indexer = np.hstack((self._indexers[depth], remap_indexer))
             new_indexer.flags.writeable = False
             self._indexers[depth] = new_indexer
-
 
         self._blocks = self._gen_blocks_from_self()
         self._values = self._blocks.values
