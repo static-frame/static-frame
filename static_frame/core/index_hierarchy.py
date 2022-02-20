@@ -152,6 +152,38 @@ def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
     return TypeBlocks.from_blocks(blocks).values
 
 
+def construct_indices_and_indexers_from_column_arrays(
+        column_iter: tp.Iterable[np.ndarray],
+        index_constructors: tp.Iterable[IndexConstructor],
+        ) -> tp.Tuple[tp.List[Index], tp.List[np.ndarray], bool]:
+    indices: tp.List[Index] = []
+    indexers: tp.List[np.ndarray] = []
+
+    for column, constructor in zip(column_iter, index_constructors):
+        positions, indexer = ufunc_unique1d_positions(column)
+        unsorted_unique = column[np.sort(positions)]
+        indexer_remap = ufunc_unique1d_indexer(unsorted_unique)[1]
+        indexer = indexer_remap[indexer]
+
+        # This would be faster, but since `ufunc_unique1d_indexer` gives back unique values sorted,
+        # then if might appear as if the blocks are not lexsorted even if they are
+        # ``unsorted_unique, indexer = ufunc_unique1d_indexer(block.values.ravel())``
+
+        # we call the constructor on all lvl, even if it is already an Index
+        indices.append(constructor(unsorted_unique))
+
+        indexer.flags.writeable = False
+        indexers.append(indexer)
+
+    # The innermost level is irrevelant in determining whether or not the index is treelike
+    sort_order = np.lexsort(indexers[:-1][::-1])
+
+    # If all increaing, it means the labels are already lexigraphically sorted
+    treelike = np.all(sort_order[1:] >= sort_order[:-1])
+
+    return indices, indexers, treelike
+
+
 # def _mask_to_slice_or_ilocs(mask: np.ndarray) -> tp.Union[slice, np.ndarray, int]:
 #     assert mask.dtype == DTYPE_BOOL
 
@@ -309,6 +341,63 @@ class IndexHierarchy(IndexBase):
         )
 
     @classmethod
+    def _from_empty(cls: tp.Type[IH],
+            empty_labels: tp.Iterable[tp.Sequence[tp.Hashable]],
+            *,
+            name: NameType = None,
+            depth_reference: tp.Optional[DepthLevelSpecifier] = None,
+            ) -> IH:
+        if isinstance(empty_labels, np.ndarray) and empty_labels.ndim == 2:
+            # if this is a 2D array, we can get the depth
+            depth = empty_labels.shape[1]
+
+            if depth == 0: # an empty 2D array can have 0 depth
+                pass # do not set depth_reference, assume it is set
+            elif ((depth_reference is None and depth > 1)
+                    or (depth_reference is not None and depth_reference == depth)):
+                depth_reference = depth
+            else:
+                raise ErrorInitIndex(f'depth_reference provided {depth_reference} does not match depth of supplied array {depth}')
+
+        if not isinstance(depth_reference, INT_TYPES):
+            raise ErrorInitIndex('depth_reference must be an integer when labels are empty.')
+
+        if depth_reference == 1:
+            raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
+
+        return cls(
+            indices=[cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE) for _ in range(depth_reference)],
+            indexers=[PositionsAllocator.get(0) for _ in range(depth_reference)],
+            name=name
+        )
+
+    @classmethod
+    def _from_array(cls: tp.Type[IH],
+            array: np.ndarray,
+            *,
+            name: NameType = None,
+            depth_reference: tp.Optional[DepthLevelSpecifier] = None,
+            index_constructors: IndexConstructors = None,
+            ) -> IH:
+        try:
+            _, depth = array.shape
+        except IndexError:
+            raise ErrorInitIndex("Array must be 2-dimensional.")
+
+        if not array.size:
+            return cls._from_empty(array, name=name, depth_reference=depth_reference)
+
+        index_constructors = cls._build_index_constructors( # type: ignore
+                index_constructors, depth=depth)
+
+        indices, indexers, treelike = construct_indices_and_indexers_from_column_arrays(
+                column_iter=array.T,
+                index_constructors=index_constructors,
+                )
+
+        return cls(indices=indices, indexers=indexers, name=name, treelike=treelike)
+
+    @classmethod
     def from_labels(cls: tp.Type[IH],
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
@@ -342,29 +431,7 @@ class IndexHierarchy(IndexBase):
             labels_are_empty = False
 
         if labels_are_empty:
-            if isinstance(labels, np.ndarray) and labels.ndim == 2:
-                # if this is a 2D array, we can get the depth
-                depth = labels.shape[1]
-
-                if depth == 0: # an empty 2D array can have 0 depth
-                    pass # do not set depth_reference, assume it is set
-                elif ((depth_reference is None and depth > 1)
-                        or (depth_reference is not None and depth_reference == depth)):
-                    depth_reference = depth
-                else:
-                    raise ErrorInitIndex(f'depth_reference provided {depth_reference} does not match depth of supplied array {depth}')
-
-            if not isinstance(depth_reference, INT_TYPES):
-                raise ErrorInitIndex('depth_reference must be an integer when labels are empty.')
-
-            if depth_reference == 1:
-                raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
-
-            return cls(
-                indices=[cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE) for _ in range(depth_reference)],
-                indexers=[PositionsAllocator.get(0) for _ in range(depth_reference)],
-                name=name
-            )
+            return cls._from_empty(labels, name=name, depth_reference=depth_reference)
 
         depth = len(label_row)
 
@@ -593,39 +660,22 @@ class IndexHierarchy(IndexBase):
         if blocks.shape[1] == 1:
             raise ErrorInitIndex("blocks must have at least two dimensions.")
 
-        indices: tp.List[Index] = []
-        indexers: tp.List[np.ndarray] = []
+        def gen_columns() -> tp.Iterator[np.ndarray]:
+            for block in blocks:
+                yield block.values.ravel()
 
         index_constructors_iter = cls._build_index_constructors(index_constructors, blocks.shape[1])
 
-        for i, (block, constructor) in enumerate(zip(blocks, index_constructors_iter)):
-            array = block.values.ravel()
-            positions, indexer = ufunc_unique1d_positions(array)
-            unsorted_unique = array[np.sort(positions)]
-            indexer_remap = ufunc_unique1d_indexer(unsorted_unique)[1]
-            indexer = indexer_remap[indexer]
-
-            # This would be faster, but since `ufunc_unique1d_indexer` gives back unique values sorted,
-            # then if might appear as if the blocks are not lexsorted even if they are
-            # ``unsorted_unique, indexer = ufunc_unique1d_indexer(block.values.ravel())``
-
-            # we call the constructor on all lvl, even if it is already an Index
-            indices.append(constructor(unsorted_unique))
-
-            indexer.flags.writeable = False
-            indexers.append(indexer)
+        indices,indexers , treelike = construct_indices_and_indexers_from_column_arrays(
+                column_iter=gen_columns(),
+                index_constructors=index_constructors_iter,
+                )
 
         if index_constructors is not None:
             # If defined, we may have changed columnar dtypes in IndexLevels, and cannot reuse blocks
             if tuple(blocks.dtypes) != tuple(index.dtype for index in indices):
                 blocks = None #type: ignore
                 own_blocks = False
-
-        # The innermost level is irrevelant in determining whether or not the index is treelike
-        sort_order = np.lexsort(indexers[:-1][::-1])
-
-        # If all increaing, it means the labels are already lexigraphically sorted
-        treelike = np.all(sort_order[1:] >= sort_order[:-1])
 
         return cls(
             indices=indices,
@@ -807,7 +857,7 @@ class IndexHierarchy(IndexBase):
             depth_level = list(range(self.depth))
 
         if isinstance(depth_level, INT_TYPES):
-            yield from self._blocks._extract_array(column_key=depth_level)
+            yield from self.values_at_depth(depth_level)
         else:
             yield from array2d_to_tuples(
                     self._blocks._extract_array(column_key=depth_level)
@@ -1020,6 +1070,8 @@ class IndexHierarchy(IndexBase):
             elif func is self.__class__._UFUNC_DIFFERENCE:
                 # we will no longer have type associations per depth
                 return self.__class__.from_labels(EMPTY_TUPLE, depth_reference=self.depth)
+            else:
+                raise NotImplementedError(f"Unsupported ufunc {func}") # pragma: no cover
 
         if isinstance(other, np.ndarray):
             operand = other
@@ -1058,9 +1110,12 @@ class IndexHierarchy(IndexBase):
             # if other is not an IndexHierarchy, do not try to propagate types
             index_constructors = None
 
-        return cls.from_labels(labels,
+        return cls._from_array(
+                labels,
+                name=self.name,
                 index_constructors=index_constructors,
-                depth_reference=self.depth)
+                depth_reference=self.depth,
+                )
 
     #---------------------------------------------------------------------------
 

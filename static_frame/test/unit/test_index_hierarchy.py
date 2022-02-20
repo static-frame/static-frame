@@ -1124,6 +1124,30 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_hierarchy_from_array_a(self) -> None:
+
+        array = np.array((('II', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'B', 2),
+                ('I', 'A', 2),
+                ('I', 'B', 2),
+                ('II', 'A', 2),
+                ('II', 'B', 1),
+                ('I', 'A', 1),
+                ))
+
+        ih1 = IndexHierarchy.from_array(array)
+        self.assertTrue((np.array(tuple(ih1.iter_label())) == array).all())
+
+    def test_hierarchy_from_array_b(self) -> None:
+
+        array = np.array([1, 2, 3])
+
+        with self.assertRaises(ErrorInitIndex):
+            _ = IndexHierarchy.from_array(array) # Must be 2-D
+
+    #---------------------------------------------------------------------------
+
     def test_hierarchy_contains_a(self) -> None:
         labels = (('I', 'A'), ('I', 'B'))
         ih = IndexHierarchy.from_labels(labels)
