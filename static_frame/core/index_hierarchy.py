@@ -3,7 +3,6 @@ import itertools
 import typing as tp
 from ast import literal_eval
 from copy import deepcopy
-import xxlimited
 
 import numpy as np
 from arraykit import name_filter
@@ -81,7 +80,6 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
-from static_frame.core.util import ufunc_unique2d
 
 from static_frame.core.style_config import StyleConfig
 
