@@ -598,11 +598,7 @@ class IndexHierarchy(IndexBase):
 
         index_constructors_iter = cls._build_index_constructors(index_constructors, blocks.shape[1])
 
-        for i, (block, constructor) in enumerate(itertools.zip_longest(blocks, index_constructors_iter)):
-
-            if block is None or constructor is None:
-                raise ErrorInitIndex(f'Levels and index_constructors must be the same length.')
-
+        for i, (block, constructor) in enumerate(zip(blocks, index_constructors_iter)):
             array = block.values.ravel()
             positions, indexer = ufunc_unique1d_positions(array)
             unsorted_unique = array[np.sort(positions)]
@@ -614,10 +610,7 @@ class IndexHierarchy(IndexBase):
             # ``unsorted_unique, indexer = ufunc_unique1d_indexer(block.values.ravel())``
 
             # we call the constructor on all lvl, even if it is already an Index
-            try:
-                indices.append(constructor(unsorted_unique))
-            except ValueError:
-                raise ErrorInitIndex(f'Could not construct {constructor.__name__} with values at depth {i}')
+            indices.append(constructor(unsorted_unique))
 
             indexer.flags.writeable = False
             indexers.append(indexer)
