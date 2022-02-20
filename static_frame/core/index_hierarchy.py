@@ -258,7 +258,8 @@ class IndexHierarchy(IndexBase):
 
         indices = [] # store in a list, where index is depth
 
-        index_constructors = cls._build_index_constructors(index_constructors, depth=len(levels))
+        index_constructors = cls._build_index_constructors( # type: ignore
+                index_constructors, depth=len(levels))
 
         for lvl, constructor in zip(levels, index_constructors):
             # we call the constructor on all lvl, even if it is already an Index
@@ -428,7 +429,8 @@ class IndexHierarchy(IndexBase):
         for i in range(depth):
             indexers[i].flags.writeable = False # type: ignore
 
-        index_constructors = cls._build_index_constructors(index_constructors, depth=depth)
+        index_constructors = cls._build_index_constructors( # type: ignore
+                index_constructors, depth=depth)
 
         indices = [
             constructor(hash_map)
@@ -486,7 +488,7 @@ class IndexHierarchy(IndexBase):
                 treelike=True,
             )
 
-        index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner)
+        index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner) # type: ignore
         assert index_inner is not None # mypy
 
         def _repeat(i_repeat_tuple: tp.Tuple[int, int]) -> np.ndarray:
@@ -505,7 +507,7 @@ class IndexHierarchy(IndexBase):
                     explicit_constructor=index_constructor)
 
         return cls(
-            indices=[index_outer, index_inner],
+            indices=[index_outer, index_inner], # type: ignore
             indexers=indexers,
             name=name,
             treelike=True,
@@ -713,7 +715,7 @@ class IndexHierarchy(IndexBase):
         if not all(isinstance(index, Index) for index in indices):
             raise ErrorInitIndex("indices must be Index's!")
 
-        self._indices = [mutable_immutable_index_filter(self.STATIC, idx) for idx in indices]
+        self._indices = [mutable_immutable_index_filter(self.STATIC, idx) for idx in indices] # type: ignore
         self._indexers = indexers
         self._name = None if name is NAME_DEFAULT else name_filter(name)
         self._treelike = treelike
@@ -1329,7 +1331,7 @@ class IndexHierarchy(IndexBase):
                 index_constructors=self._index_constructors,
                 depth_map=depth_map,
                 )
-        assert index._treelike
+        assert index._treelike #type: ignore
         return index #type: ignore
 
     def _get_outer_index_labels_in_order_they_appear(self) -> tp.Sequence[tp.Hashable]:
@@ -2015,7 +2017,7 @@ class IndexHierarchy(IndexBase):
     def flat(self) -> Index:
         '''Return a flat, one-dimensional index of tuples for each level.
         '''
-        return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name)
+        return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name) # type: ignore
 
     def level_add(self: IH,
             level: tp.Hashable,
