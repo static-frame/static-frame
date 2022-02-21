@@ -415,8 +415,8 @@ class TestUnit(TestCase):
         ih3 = IndexHierarchy.from_labels(labels[-3:])
 
         # selection with an IndexHierarchy
-        self.assertEqual(ih1._loc_to_iloc(ih2), [0, 1, 2])
-        self.assertEqual(ih1._loc_to_iloc(ih3), [3, 4, 5])
+        self.assertEqual(ih1._loc_to_iloc(ih2).tolist(), [0, 1, 2])
+        self.assertEqual(ih1._loc_to_iloc(ih3).tolist(), [3, 4, 5])
 
         # Depth 2 != 3
         sel = IndexHierarchy.from_labels([(0, 1)])
@@ -2865,7 +2865,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_index_hierarchy_pickle_a(self) -> None:
+    def test_hierarchy_pickle_a(self) -> None:
 
         a = IndexHierarchy.from_product((10, 20), (3, 7))
         b = IndexHierarchy.from_product(('a', 'b'), ('x', 'y'))
@@ -2882,7 +2882,7 @@ class TestUnit(TestCase):
                 self.assertEqual(index_new.loc[v], index.loc[v])
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_sort_a(self) -> None:
+    def test_hierarchy_sort_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
 
@@ -2890,7 +2890,7 @@ class TestUnit(TestCase):
             [[2, 70], [2, 30], [1, 70], [1, 30]]
             )
 
-    def test_index_hierarchy_sort_b(self) -> None:
+    def test_hierarchy_sort_b(self) -> None:
 
         ih1 = IndexHierarchy.from_labels(((1, 1000), (30, 25), (100, 3)))
 
@@ -2902,7 +2902,7 @@ class TestUnit(TestCase):
                 [[30, 25], [100, 3], [1, 1000]],
                 )
 
-    def test_index_hierarchy_sort_c(self) -> None:
+    def test_hierarchy_sort_c(self) -> None:
 
         ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4), ('y', 'z', 'x'))
 
@@ -2922,7 +2922,7 @@ class TestUnit(TestCase):
             )
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_isin_a(self) -> None:
+    def test_hierarchy_isin_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
 
@@ -2934,7 +2934,7 @@ class TestUnit(TestCase):
         extract = ih1.loc[post]
         self.assertEqual(extract.values.shape, (1, 3))
 
-    def test_index_hierarchy_isin_b(self) -> None:
+    def test_hierarchy_isin_b(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
 
@@ -2944,7 +2944,7 @@ class TestUnit(TestCase):
         post = ih1.isin(([3,4], [2,5,1,5]))
         self.assertEqual(post.sum(), 0)
 
-    def test_index_hierarchy_isin_c(self) -> None:
+    def test_hierarchy_isin_c(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
 
@@ -2957,7 +2957,7 @@ class TestUnit(TestCase):
         post2 = ih1.isin(ih1)
         self.assertEqual(post2.sum(), len(ih1))
 
-    def test_index_hierarchy_isin_d(self) -> None:
+    def test_hierarchy_isin_d(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
 
@@ -2973,7 +2973,7 @@ class TestUnit(TestCase):
         extract = ih1.loc[post]
         self.assertEqual(extract.values.shape, (2, 3))
 
-    def test_index_hierarchy_roll_a(self) -> None:
+    def test_hierarchy_roll_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
 
@@ -2985,7 +2985,7 @@ class TestUnit(TestCase):
             [[2, 30], [2, 70], [1, 30], [1, 70]]
             )
 
-    def test_index_hierarchy_roll_b(self) -> None:
+    def test_hierarchy_roll_b(self) -> None:
 
         ih1 = IndexHierarchy.from_labels((('a', 1), ('b', 20), ('c', 400), ('d', 50)))
 
@@ -2999,7 +2999,7 @@ class TestUnit(TestCase):
                 [['b', 20], ['c', 400], ['d', 50], ['a', 1]]
                 )
 
-    def test_index_hierarchy_dtypes_a(self) -> None:
+    def test_hierarchy_dtypes_a(self) -> None:
         idx1 = Index(('A', 'B'))
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
         idx3 = Index((1, 2))
@@ -3010,7 +3010,7 @@ class TestUnit(TestCase):
             [(0, 'U'), (1, 'M'), (2, 'i')]
             )
 
-    def test_index_hierarchy_dtypes_b(self) -> None:
+    def test_hierarchy_dtypes_b(self) -> None:
         idx1 = Index(('A', 'B'), name='a')
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08', name='b')
         idx3 = Index((1, 2), name='c')
@@ -3021,7 +3021,7 @@ class TestUnit(TestCase):
             [('a', 'U'), ('b', 'M'), ('c', 'i')]
             )
 
-    def test_index_hierarchy_index_types_a(self) -> None:
+    def test_hierarchy_index_types_a(self) -> None:
         idx1 = Index(('A', 'B'))
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
         idx3 = Index((1, 2))
@@ -3032,7 +3032,7 @@ class TestUnit(TestCase):
             [(0, 'Index'), (1, 'IndexDate'), (2, 'Index')]
             )
 
-    def test_index_hierarchy_index_types_b(self) -> None:
+    def test_hierarchy_index_types_b(self) -> None:
         idx1 = Index(('A', 'B'), name='a')
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08', name='b')
         idx3 = Index((1, 2), name='c')
@@ -3044,7 +3044,7 @@ class TestUnit(TestCase):
             )
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_label_widths_at_depth_a(self) -> None:
+    def test_hierarchy_label_widths_at_depth_a(self) -> None:
         idx1 = Index(('A', 'B'), name='a')
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08', name='b')
         idx3 = Index((1, 2), name='c')
@@ -3072,7 +3072,7 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(hidx.label_widths_at_depth(2)), tuple(hidx.label_widths_at_depth([2])))
 
 
-    def test_index_hierarchy_label_widths_at_depth_b(self) -> None:
+    def test_hierarchy_label_widths_at_depth_b(self) -> None:
         idx1 = Index(('A', 'B'), name='a')
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08', name='b')
         idx3 = Index((1, 2), name='c')
@@ -3086,7 +3086,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_index_hierarchy_astype_a(self) -> None:
+    def test_hierarchy_astype_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
 
@@ -3095,14 +3095,14 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.dtypes.values.tolist(),
                 [np.dtype('float64'), np.dtype('<U1'), np.dtype('float64')])
 
-    def test_index_hierarchy_astype_b(self) -> None:
+    def test_hierarchy_astype_b(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (100, 200))
         ih2 = ih1.astype(float)
         self.assertEqual(ih2.dtypes.values.tolist(),
                 [np.dtype('float64'), np.dtype('float64')])
 
-    def test_index_hierarchy_astype_c(self) -> None:
+    def test_hierarchy_astype_c(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
 
         self.assertEqual(
@@ -3110,7 +3110,7 @@ class TestUnit(TestCase):
                 ((0, np.dtype('float64')), (1, np.dtype('float64')), (2, np.dtype('<U7')))
                 )
 
-    def test_index_hierarchy_astype_d(self) -> None:
+    def test_hierarchy_astype_d(self) -> None:
         ih1 = IndexHierarchy.from_product(
             ('1945-01-02', '1843-07-07'), ('2020-01', '2020-03'))
 
@@ -3121,7 +3121,7 @@ class TestUnit(TestCase):
                 )
 
     @skip_win #type: ignore
-    def test_index_hierarchy_astype_e(self) -> None:
+    def test_hierarchy_astype_e(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
 
         self.assertEqual(
@@ -3149,7 +3149,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     @skip_win #type: ignore
-    def test_index_hierarchy_values_at_depth_a(self) -> None:
+    def test_hierarchy_values_at_depth_a(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
         post = ih1.values_at_depth([0, 1])
         self.assertEqual(post.shape, (8, 2))
@@ -3158,7 +3158,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_index_hierarchy_head_a(self) -> None:
+    def test_hierarchy_head_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
 
@@ -3166,7 +3166,7 @@ class TestUnit(TestCase):
             [[1, 'a', 2], [1, 'a', 5], [1, 'b', 2], [1, 'b', 5], [2, 'a', 2]]
             )
 
-    def test_index_hierarchy_tail_a(self) -> None:
+    def test_hierarchy_tail_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
 
@@ -3176,7 +3176,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_index_hierarchy_via_str_a(self) -> None:
+    def test_hierarchy_via_str_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product(('i', 'ii'), ('a', 'b'))
         ih2 = ih1.via_str.upper()
@@ -3185,7 +3185,7 @@ class TestUnit(TestCase):
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
                 )
 
-    def test_index_hierarchy_via_dt_a(self) -> None:
+    def test_hierarchy_via_dt_a(self) -> None:
         index_constructors = (IndexYearMonth, IndexDate)
 
         labels = (
@@ -3203,7 +3203,7 @@ class TestUnit(TestCase):
                 [[1, 1], [1, 2], [2, 1], [2, 2]]
                 )
 
-    def test_index_hierarchy_via_dt_b(self) -> None:
+    def test_hierarchy_via_dt_b(self) -> None:
         index_constructors = (IndexDate, IndexDate)
 
         labels = (
@@ -3234,7 +3234,7 @@ class TestUnit(TestCase):
             [['20|01|03', '19|01|01'], ['20|01|03', '19|02|01'], ['19|02|05', '19|01|01'], ['19|02|05', '19|02|01']]
             )
 
-    def test_index_hierarchy_via_re_a(self) -> None:
+    def test_hierarchy_via_re_a(self) -> None:
         index_constructors = (IndexYearMonth, IndexDate)
 
         labels = (
@@ -3257,7 +3257,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_index_hierarchy_equals_a(self) -> None:
+    def test_hierarchy_equals_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
         ih2 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
@@ -3274,7 +3274,7 @@ class TestUnit(TestCase):
         self.assertFalse(ih3.equals(ih4, compare_name=True))
         self.assertTrue(ih3.equals(ih4, compare_name=False))
 
-    def test_index_hierarchy_equals_b(self) -> None:
+    def test_hierarchy_equals_b(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), Index((2, 5), dtype=np.int64))
         ih2 = IndexHierarchy.from_product((1, 2), ('a', 'b'), Index((2, 5), dtype=np.int32))
@@ -3282,7 +3282,7 @@ class TestUnit(TestCase):
         self.assertFalse(ih1.equals(ih2, compare_dtype=True))
         self.assertTrue(ih1.equals(ih2, compare_dtype=False))
 
-    def test_index_hierarchy_equals_c(self) -> None:
+    def test_hierarchy_equals_c(self) -> None:
 
         idx = IndexDate.from_year_month_range('2020-01', '2020-02')
 
@@ -3293,7 +3293,7 @@ class TestUnit(TestCase):
         self.assertFalse(ih1.equals(ih2, compare_class=True))
         self.assertTrue(ih1.equals(ih2, compare_class=False))
 
-    def test_index_hierarchy_equals_d(self) -> None:
+    def test_hierarchy_equals_d(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
         ih2 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'), (2, 5))
@@ -3302,7 +3302,7 @@ class TestUnit(TestCase):
         self.assertTrue(ih1.equals(ih2, compare_class=False))
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_fillna_a(self) -> None:
+    def test_hierarchy_fillna_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, None))
         ih2 = ih1.fillna(20)
@@ -3310,7 +3310,7 @@ class TestUnit(TestCase):
                 [[1, 'a', 2], [1, 'a', 20], [1, 'b', 2], [1, 'b', 20], [2, 'a', 2], [2, 'a', 20], [2, 'b', 2], [2, 'b', 20]]
                 )
 
-    def test_index_hierarchy_fillna_b(self) -> None:
+    def test_hierarchy_fillna_b(self) -> None:
 
         ih1 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'), (2, np.nan))
         ih1.append((3, 'c', np.nan))
@@ -3321,7 +3321,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_from_names_a(self) -> None:
+    def test_hierarchy_from_names_a(self) -> None:
 
         ih1 = IndexHierarchy.from_names(('foo', 'bar'))
         self.assertEqual(ih1.name, ('foo', 'bar'))
@@ -3335,7 +3335,7 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
                 [['A', 10, False]])
 
-    def test_index_hierarchy_from_names_b(self) -> None:
+    def test_hierarchy_from_names_b(self) -> None:
         with self.assertRaises(ErrorInitIndex):
             IndexHierarchy.from_names(())
 
@@ -3386,7 +3386,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_sample_a(self) -> None:
+    def test_hierarchy_sample_a(self) -> None:
         idx1 = Index(('A', 'B'))
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
         idx3 = Index((1, 2))
@@ -3399,7 +3399,7 @@ class TestUnit(TestCase):
                 [Index, IndexDate, Index])
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_iloc_searchsorted_a(self) -> None:
+    def test_hierarchy_iloc_searchsorted_a(self) -> None:
 
         idx1 = Index(('A', 'B'))
         idx2 = Index((1, 2, 3))
@@ -3408,13 +3408,13 @@ class TestUnit(TestCase):
         self.assertEqual(hidx.iloc_searchsorted(('B', 1)).tolist(), 3)
         self.assertEqual(hidx.iloc_searchsorted([('A', 1), ('B', 2)]).tolist(), [0, 4])
 
-    def test_index_hierarchy_iloc_searchsorted_b(self) -> None:
+    def test_hierarchy_iloc_searchsorted_b(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
         with self.assertRaises(NotImplementedError):
             ih1.iloc_searchsorted(3)
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_loc_searchsorted_a(self) -> None:
+    def test_hierarchy_loc_searchsorted_a(self) -> None:
 
         idx1 = Index(('A', 'B'))
         idx2 = Index((1, 2, 3))
@@ -3424,7 +3424,7 @@ class TestUnit(TestCase):
         self.assertEqual(hidx.loc_searchsorted([('A', 1), ('B', 2)]).tolist(),
                 [('A', 1), ('B', 2)])
 
-    def test_index_hierarchy_loc_searchsorted_b(self) -> None:
+    def test_hierarchy_loc_searchsorted_b(self) -> None:
 
         idx1 = Index(('A', 'B'))
         idx2 = Index((1, 2, 3))
@@ -3439,7 +3439,7 @@ class TestUnit(TestCase):
                 fill_value=None).tolist(),
                 [('A', 2), None])
 
-    def test_index_hierarchy_loc_searchsorted_c(self) -> None:
+    def test_hierarchy_loc_searchsorted_c(self) -> None:
         idx1 = Index(('A', 'B'))
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
         idx3 = Index((1, 2))
@@ -3456,7 +3456,7 @@ class TestUnit(TestCase):
                 ('B', np.datetime64('2019-01-08'), 1)])
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_unique_a(self) -> None:
+    def test_hierarchy_unique_a(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
 
         self.assertEqual(ih1.unique(0).tolist(), [1, 2])
@@ -3467,12 +3467,12 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.unique((1, 2)).tolist(),
                 [('a', 2), ('a', 5), ('b', 2), ('b', 5)])
 
-    def test_index_hierarchy_unique_b(self) -> None:
+    def test_hierarchy_unique_b(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
         self.assertEqual(ih1.unique([1]).tolist(), ['a', 'b'])
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_union_a(self) -> None:
+    def test_hierarchy_union_a(self) -> None:
 
         ih1 = IndexHierarchy.from_labels(((1, '2020-01-01'), (1, '2020-01-02'), (1, '2020-01-03')),
                 index_constructors=(Index, IndexDate))

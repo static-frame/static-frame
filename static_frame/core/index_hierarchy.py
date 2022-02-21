@@ -80,6 +80,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
+from static_frame.core.util import view_2d_as_1d
 
 from static_frame.core.style_config import StyleConfig
 
@@ -1461,6 +1462,34 @@ class IndexHierarchy(IndexBase):
 
         return indexer_at_depth == key_iloc
 
+    def _loc_to_iloc_index_hierarchy(self: IH, key: IH) -> np.ndarray:
+        """
+        For small keys, this approach is outperformed by the naiive:
+
+            [self._loc_to_iloc(label) for label in key.iter_label()]
+
+        However, this approach quickly outperforms list comprehension as the key gets larger
+        """
+        if not key.depth == self.depth:
+            raise KeyError(f"Key must have the same depth as the index. {key}")
+
+        key_indexers = []
+        for key_index, self_index, key_indexer in zip(key._indices, self._indices, key._indexers):
+            indexer_remap = key_index.iter_label().apply(self_index._loc_to_iloc)
+            key_indexers.append(indexer_remap[key_indexer])
+
+        self_indexers = np.array(self._indexers).T
+        key_indexers = np.array(key_indexers).T
+
+        ilocs = np.intersect1d(
+                view_2d_as_1d(self_indexers),
+                view_2d_as_1d(key_indexers),
+                assume_unique=True,
+                return_indices=True,
+                )[1]
+
+        return ilocs
+
     def _loc_to_iloc(self, key: tp.Union[GetItemKeyType, HLoc]) -> GetItemKeyType:
         '''
         Given iterable (or instance) of GetItemKeyType, determine the equivalent iloc key.
@@ -1471,15 +1500,9 @@ class IndexHierarchy(IndexBase):
             return key.key
 
         if isinstance(key, IndexHierarchy):
-
-            if not key.depth == self.depth:
-                raise KeyError(f"Key must have the same depth as the index. {key}")
-
-            # TODO: Explore optimizations here
-            return [self._loc_to_iloc(label) for label in key.iter_label()]
+            return self._loc_to_iloc_index_hierarchy(key)
 
         if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
-            # TODO: Can I just return key?
             return self.positions[key]
 
         if isinstance(key, slice):
@@ -1533,7 +1556,7 @@ class IndexHierarchy(IndexBase):
             else:
                 key = sanitized_key
                 if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
-                    return PositionsAllocator.get(len(key))[key]
+                    return self.positions[key]
 
                 key = tuple(key)
 
@@ -1581,7 +1604,7 @@ class IndexHierarchy(IndexBase):
             mask = mask_2d.all(axis=1)
             del mask_2d
 
-        result = PositionsAllocator.get(len(mask))[mask]
+        result = self.positions[mask]
 
         # Even if there was one result, unless the HLoc specified all levels, we need to return a list
         if len(result) == 1 and can_return_element:
