@@ -33,6 +33,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import TreeNodeT
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_datetime import IndexDatetime
+from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
@@ -81,6 +82,8 @@ from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import slice_to_ascending_slice
+from static_frame.core.util import slice_to_inclusive_slice
 
 from static_frame.core.style_config import StyleConfig
 
@@ -91,6 +94,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series #pylint: disable=W0611,C0412 #pragma: no cover
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
+
+SingleLabelType = tp.Tuple[tp.Hashable, ...]
 
 
 def build_indexers_from_product(lists: tp.List[tp.Sequence[tp.Any]]) -> tp.List[np.ndarray]:
@@ -1506,47 +1511,32 @@ class IndexHierarchy(IndexBase):
             return self.positions[key]
 
         if isinstance(key, slice):
-            if key == NULL_SLICE:
-                return key
-
-            # reuse - slice_to_inclusive_slice and/or LocMap.map_slice_args
-            if key.start is not None:
-                start: tp.Optional[int] = self._loc_to_iloc(key.start) # type: ignore
-            else:
-                start = None
-
-            if key.step is not None and not isinstance(key.step, INT_TYPES):
-                raise TypeError(f"slice step must be an integer, not {type(key.step)}")
-
-            if key.stop is not None:
-                stop: tp.Optional[int] = self._loc_to_iloc(key.stop) + 1 # type: ignore
-            else:
-                stop = None
-
-            return slice(start, stop, key.step)
+            return slice(*LocMap.map_slice_args(self._loc_to_iloc, key))
 
         if isinstance(key, list):
             return [self._loc_to_iloc(k) for k in key]
 
-        if isinstance(key, np.ndarray) and key.dtype != DTYPE_BOOL and key.ndim == 2:
+        if isinstance(key, np.ndarray) and key.ndim == 2:
+            if key.dtype != DTYPE_OBJECT:
+                return np.intersect1d(
+                        view_2d_as_1d(self.values),
+                        view_2d_as_1d(key),
+                        assume_unique=False,
+                        return_indices=True,
+                        )[1]
+
             return [self._loc_to_iloc(k) for k in key]
 
         if key.__class__ is HLoc:
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
-            key = tuple(
-                    HLoc(
-                        tuple(
-                            key_from_container_key(self, k, expand_iloc=True)
-                            for k in key # type: ignore
-                        )
-                    )
-                )
+            key = tuple(HLoc(tuple(key_from_container_key(self, k, expand_iloc=True) for k in key))) # type: ignore
         else:
             # If the key is a series, key_from_container_key will invoke IndexCorrespondence
             # logic that eventually calls _loc_to_iloc on all the indices of that series.
             sanitized_key = key_from_container_key(self, key)
 
             if key is sanitized_key:
+                # This is always either a tuple, or a 1D numpy array
                 if len(key) != self.depth:
                     raise RuntimeError(f'Invalid key length for {key}; must be length {self.depth}.')
 
@@ -1556,6 +1546,7 @@ class IndexHierarchy(IndexBase):
             else:
                 key = sanitized_key
                 if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
+                    # When the key is a series with boolean values
                     return self.positions[key]
 
                 key = tuple(key)
@@ -1624,7 +1615,7 @@ class IndexHierarchy(IndexBase):
 
     def _extract_iloc(self: IH,
             key: GetItemKeyType,
-            ) -> tp.Union[IH, tp.Tuple[tp.Hashable]]:
+            ) -> tp.Union[IH, SingleLabelType]:
         '''Extract a new index given an iloc key
         '''
         if isinstance(key, INT_TYPES):
@@ -1664,12 +1655,12 @@ class IndexHierarchy(IndexBase):
 
     def _extract_loc(self: IH,
             key: GetItemKeyType
-            ) -> tp.Union[IH, tp.Tuple[tp.Hashable]]:
+            ) -> tp.Union[IH, SingleLabelType]:
         return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self: IH,
             key: GetItemKeyType
-            ) -> tp.Union[IH, tp.Tuple[tp.Hashable]]:
+            ) -> tp.Union[IH, SingleLabelType]:
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
@@ -1772,7 +1763,7 @@ class IndexHierarchy(IndexBase):
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
 
-    def __contains__(self, value: tp.Tuple[tp.Hashable]) -> bool: # type: ignore
+    def __contains__(self, value: SingleLabelType) -> bool: # type: ignore
         '''Determine if a leaf loc is contained in this Index.
         '''
         try:

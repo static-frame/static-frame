@@ -92,6 +92,8 @@ class LocMap:
                         pos += offset #type: ignore
                 else: # step
                     pos = attr # should be an integer
+                    if not isinstance(pos, int):
+                        raise TypeError(f'Step must be an integer, not {pos}')
                 if field == SLICE_STOP_ATTR:
                     # loc selections are inclusive, so iloc gets one more
                     pos += 1 #type: ignore
