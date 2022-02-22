@@ -1420,9 +1420,12 @@ class IndexHierarchy(IndexBase):
 
         return ilocs
 
-    def _loc_to_iloc_single_key(self: IH, key: tp.Hashable) -> int:
+    def _loc_to_iloc_single_key(self: IH, key: SingleLabelType) -> tp.Union[int, np.ndarray]:
         # We consider the NULL_SLICE to not be "meaningful", as it requires no filtering
-        meaningful_selections = {depth: not (isinstance(k, slice) and k == NULL_SLICE) for depth, k in enumerate(key)}
+        meaningful_selections = {
+                depth: not (isinstance(k, slice) and k == NULL_SLICE) # type: ignore
+                for depth, k in enumerate(key)
+                }
 
         # Return a slice wherever possible
         if sum(meaningful_selections.values()) == 1:
@@ -1452,7 +1455,7 @@ class IndexHierarchy(IndexBase):
         # Even if there was one result, unless the HLoc specified all levels, we need to return a list
         if len(result) == 1:
             if all(
-                    meaningful and (isinstance(key[depth], str) or not hasattr(key[depth], "__len__")) # type: ignore
+                    meaningful and (isinstance(key[depth], str) or not hasattr(key[depth], "__len__"))
                     for depth, meaningful
                     in meaningful_selections.items()
                     ):
@@ -1546,7 +1549,7 @@ class IndexHierarchy(IndexBase):
         if isinstance(key, INT_TYPES):
             # return a tuple if selecting a single row
             # NOTE: Selecting a single row may force type coercion before values are added to the tuple; i.e., a datetime64 will go to datetime.date before going to the tuple
-            return tuple(self._blocks._extract_array(row_key=key)) #type: ignore
+            return tuple(self._blocks._extract_array(row_key=key))
 
         if key is None:
             return self.copy()

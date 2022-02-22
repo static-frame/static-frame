@@ -415,8 +415,8 @@ class TestUnit(TestCase):
         ih3 = IndexHierarchy.from_labels(labels[-3:])
 
         # selection with an IndexHierarchy
-        self.assertEqual(ih1._loc_to_iloc(ih2).tolist(), [0, 1, 2])
-        self.assertEqual(ih1._loc_to_iloc(ih3).tolist(), [3, 4, 5])
+        self.assertEqual(ih1._loc_to_iloc(ih2).tolist(), [0, 1, 2]) # type: ignore
+        self.assertEqual(ih1._loc_to_iloc(ih3).tolist(), [3, 4, 5]) # type: ignore
 
         # Depth 2 != 3
         sel = IndexHierarchy.from_labels([(0, 1)])

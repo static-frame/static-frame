@@ -96,7 +96,7 @@ class LocMap:
                         raise TypeError(f'Step must be an integer, not {pos}')
                 if field == SLICE_STOP_ATTR:
                     # loc selections are inclusive, so iloc gets one more
-                    pos += 1 #type: ignore
+                    pos += 1
                 yield pos
 
     @classmethod
