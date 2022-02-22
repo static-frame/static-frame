@@ -1157,7 +1157,7 @@ class TestUnit(TestCase):
         labels = (('I', 'A'), ('I', 'B'))
         ih = IndexHierarchy.from_labels(labels)
 
-        self.assertTrue(Index(labels) in ih) # type: ignore
+        self.assertTrue(Index(labels) in ih)
 
     def test_hierarchy_extract_a(self) -> None:
         idx = IndexHierarchy.from_product(['A', 'B'], [1, 2])

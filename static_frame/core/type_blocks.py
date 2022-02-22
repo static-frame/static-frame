@@ -2612,6 +2612,9 @@ class TypeBlocks(ContainerOperand):
                 shape_reference=self._shape
                 )
 
+    def __iter__(self) -> tp.Iterator['TypeBlocks']:
+        for i in range(self.shape[1]):
+            yield self._extract(column_key=i)
 
     def __getitem__(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
         '''

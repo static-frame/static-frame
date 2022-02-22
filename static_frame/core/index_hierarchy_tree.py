@@ -246,14 +246,16 @@ class IndexHierarchyTree(IndexBase):
             from static_frame import Frame
             index_labels = Frame.from_records(labels)._blocks
             # this will reorder and create the index using this smae method, passed as cls.from_labels
-            index, _ = rehierarch_from_type_blocks(
+            rehierarched_blocks, _ = rehierarch_from_type_blocks(
                     labels=index_labels,
                     depth_map=range(index_labels.shape[1]), # keep order
-                    index_cls=cls,
-                    index_constructors=index_constructors,
-                    name=name,
                     )
-            return index #type: ignore
+            return cls._from_type_blocks(
+                    blocks=rehierarched_blocks,
+                    name=name,
+                    index_constructors=index_constructors,
+                    own_blocks=True,
+                    )
 
         labels_iter = iter(labels)
         try:
@@ -1155,13 +1157,15 @@ class IndexHierarchyTree(IndexBase):
 
         index_constructors = tuple(self._levels.index_types())
 
-        index, _ = rehierarch_from_type_blocks(
+        rehierarched_blocks, _ = rehierarch_from_type_blocks(
                 labels=self._blocks,
-                index_cls=self.__class__,
-                index_constructors=index_constructors,
                 depth_map=depth_map,
                 )
-        return index #type: ignore
+        return self.__class__._from_type_blocks(
+            blocks=rehierarched_blocks,
+            index_constructors=index_constructors,
+            own_blocks=True,
+            )
 
     #---------------------------------------------------------------------------
 

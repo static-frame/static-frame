@@ -5536,12 +5536,16 @@ class Frame(ContainerOperand):
         index_labels = self._blocks._extract(column_key=column_iloc)
 
         if reorder_for_hierarchy:
-            index, order_lex = rehierarch_from_type_blocks(
+            rehierarched_blocks, order_lex = rehierarch_from_type_blocks(
                     labels=index_labels,
                     depth_map=range(index_labels.shape[1]), # keep order
-                    index_cls=IndexHierarchy,
+                    )
+
+            index = IndexHierarchy._from_type_blocks(
+                    blocks=rehierarched_blocks,
                     index_constructors=index_constructors,
                     name=column_name,
+                    own_blocks=True,
                     )
             blocks_src = self._blocks._extract(row_key=order_lex)
         else:

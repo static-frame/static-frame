@@ -782,10 +782,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
 def rehierarch_from_type_blocks(*,
         labels: 'TypeBlocks',
         depth_map: tp.Sequence[int],
-        index_cls: tp.Type['IndexHierarchy'],
-        index_constructors: IndexConstructors = None,
-        name: tp.Optional[tp.Hashable] = None,
-        ) -> tp.Tuple['IndexBase', np.ndarray]:
+        ) -> tp.Tuple["TypeBlocks", np.ndarray]:
     '''
     Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
 
@@ -819,13 +816,8 @@ def rehierarch_from_type_blocks(*,
 
     labels_post = labels_post._extract(row_key=order_lex)
 
-    index = index_cls._from_type_blocks(
-            blocks=labels_post,
-            index_constructors=index_constructors,
-            name=name,
-            own_blocks=True,
-            )
-    return index, order_lex
+    return labels_post, order_lex
+
 
 def rehierarch_from_index_hierarchy(*,
         labels: 'IndexHierarchy',
@@ -836,13 +828,16 @@ def rehierarch_from_index_hierarchy(*,
     '''
     Alternate interface that updates IndexHierarchy cache before rehierarch.
     '''
-    return rehierarch_from_type_blocks(
+    rehierarched_blocks, index_iloc = rehierarch_from_type_blocks(
             labels=labels._blocks,
             depth_map=depth_map,
-            index_cls=labels.__class__,
+            )
+
+    return labels.__class__._from_type_blocks(
+            blocks=rehierarched_blocks,
             index_constructors=index_constructors,
             name=name,
-            )
+            ), index_iloc
 
 def array_from_value_iter(
         key: tp.Hashable,
