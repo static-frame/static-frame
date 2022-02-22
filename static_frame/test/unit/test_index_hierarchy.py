@@ -64,9 +64,7 @@ class TestUnit(TestCase):
 
     def test_hierarchy_init_a(self) -> None:
 
-        labels = (('I', 'A'),
-                ('I', 'B'),
-                )
+        labels = (('I', 'A'), ('I', 'B'))
 
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
         ih2 = IndexHierarchy(ih1)
@@ -175,9 +173,7 @@ class TestUnit(TestCase):
 
     def test_hierarchy_init_j(self) -> None:
 
-        labels = (('I', 'A'),
-                ('I', 'B'),
-                )
+        labels = (('I', 'A'), ('I', 'B'))
 
         ih1 = IndexHierarchy.from_labels(labels, name=('a', 'b', 'c'))
 
@@ -220,9 +216,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_hierarchy_mloc_a(self) -> None:
 
-        labels = (('I', 'A'),
-                ('I', 'B'),
-                )
+        labels = (('I', 'A'), ('I', 'B'))
 
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
         # per type block size
@@ -233,27 +227,22 @@ class TestUnit(TestCase):
 
     def test_hierarchy_mloc_b(self) -> None:
 
-        labels = (('I', 'A'),
-                ('I', 'B'),
-                )
+        labels = (('I', 'A'), ('I', 'B'))
+
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
         post = ih1.mloc
         self.assertEqual(post.tolist(), ih1._blocks.mloc.tolist())
 
     def test_hierarchy_size_a(self) -> None:
 
-        labels = (('I', 'A'),
-                ('I', 'B'),
-                )
+        labels = (('I', 'A'), ('I', 'B'))
 
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
         self.assertEqual(ih1.nbytes, 16)
 
     def test_hierarchy_bool_a(self) -> None:
 
-        labels = (('I', 'A'),
-                ('I', 'B'),
-                )
+        labels = (('I', 'A'), ('I', 'B'))
 
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
 
@@ -274,33 +263,40 @@ class TestUnit(TestCase):
         post = ih._loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
                 slice('2018-01-01', '2018-01-04'),
-                np.array(['x', 'y'])]
-                )
+                np.array(['x', 'y'])])
 
         # this will break if we recognize this can be a slice
-        self.assertEqual(post.tolist(), list(range(len(ih)))) # type: ignore
+        self.assertEqual(list(post), list(range(len(ih)))) # type: ignore
+
+        post = ih._loc_to_iloc(HLoc[
+                ['A', 'B', 'C'],
+                slice('2018-01-01', '2018-01-04'),
+                ['x', 'y']])
+
+        # this will break if we recognize this can be a slice
+        self.assertEqual(list(post), list(range(len(ih)))) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
                 slice(None, '2018-01-04'),
                 'x'])
 
-        self.assertEqual(post.tolist(), list(range(0, len(ih), 2))) # type: ignore
+        self.assertEqual(list(post), list(range(0, len(ih), 2))) # type: ignore
 
         post = ih._loc_to_iloc(HLoc['C', '2018-01-03', 'y'])
         self.assertEqual(post, 21)
 
         post = ih._loc_to_iloc(HLoc['B', '2018-01-03':, 'y'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
-        self.assertEqual(post.tolist(), [13, 15]) # type: ignore
+        self.assertEqual(list(post), [13, 15]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[['B', 'C'], '2018-01-03'])
-        self.assertEqual(post.tolist(), [12, 13, 20, 21]) # type: ignore
+        self.assertEqual(list(post), [12, 13, 20, 21]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[['A', 'C'], :, 'y'])
-        self.assertEqual(post.tolist(), [1, 3, 5, 7, 17, 19, 21, 23]) # type: ignore
+        self.assertEqual(list(post), [1, 3, 5, 7, 17, 19, 21, 23]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[['A', 'C'], :, 'x'])
-        self.assertEqual(post.tolist(), [0, 2, 4, 6, 16, 18, 20, 22]) # type: ignore
+        self.assertEqual(list(post), [0, 2, 4, 6, 16, 18, 20, 22]) # type: ignore
 
     def test_hierarchy_loc_to_iloc_b(self) -> None:
         OD = OrderedDict
@@ -466,7 +462,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
                 list(ih1._loc_to_iloc(HLoc[slice(None), ['A', 'C'], [-1, 3]])),
-                [0, 5],
+                [0, 5]
                 )
 
     def test_hierarchy_loc_to_iloc_h(self) -> None:
@@ -840,9 +836,7 @@ class TestUnit(TestCase):
 
     def test_hierarchy_from_labels_b(self) -> None:
 
-        labels = (('I', 'A'),
-                ('I', 'B'),
-                )
+        labels = (('I', 'A'), ('I', 'B'))
 
         ih = IndexHierarchy.from_labels(labels)
 
