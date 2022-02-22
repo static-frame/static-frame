@@ -91,6 +91,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series #pylint: disable=W0611,C0412 # pragma: no cover
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
+IHGO = tp.TypeVar('IHGO', bound='IndexHierarchyGO')
+IHAsType = tp.TypeVar('IHAsType', bound='IndexHierarchyAsType')
 
 SingleLabelType = tp.Tuple[tp.Hashable, ...]
 
@@ -878,11 +880,11 @@ class IndexHierarchy(IndexBase):
     # interfaces
 
     @property
-    def loc(self: IH) -> InterfaceGetItem[IH]:
+    def loc(self: IH) -> InterfaceGetItem['IndexHierarchy']:
         return InterfaceGetItem(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self: IH) -> InterfaceGetItem[IH]:
+    def iloc(self: IH) -> InterfaceGetItem['IndexHierarchy']:
         return InterfaceGetItem(self._extract_iloc) # type: ignore
 
     def _iter_label(self: IH,
@@ -957,7 +959,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     @property
-    def via_T(self: IH) -> InterfaceTranspose[IH]:
+    def via_T(self: IH) -> InterfaceTranspose['IndexHierarchy']:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
@@ -1368,7 +1370,7 @@ class IndexHierarchy(IndexBase):
 
     def relabel_at_depth(self: IH,
             mapper: RelabelInput,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: DepthLevelSpecifier = 0,
             ) -> IH:
         '''
         Return a new :obj:`IndexHierarchy` after applying `mapper` to a level or each individual level specified by `depth_level`.
@@ -1778,7 +1780,7 @@ class IndexHierarchy(IndexBase):
 
     def _extract_getitem_astype(self: IH,
             key: GetItemKeyType,
-            ) -> 'IndexHierarchyAsType':
+            ) -> "IndexHierarchyAsType":
         '''
         Given an iloc key (using integer positions for columns) return a configured IndexHierarchyAsType instance.
         '''
@@ -1791,7 +1793,7 @@ class IndexHierarchy(IndexBase):
     # operators
 
     def _ufunc_unary_operator(self: IH,
-            operator: UFunc
+            operator: UFunc,
             ) -> np.ndarray:
         '''
         Always return an NP array.
@@ -1841,7 +1843,7 @@ class IndexHierarchy(IndexBase):
             ufunc_skipna: UFunc,
             composable: bool,
             dtypes: tp.Tuple[np.dtype, ...],
-            size_one_unity: bool
+            size_one_unity: bool,
             ) -> np.ndarray:
         '''
         Returns:
@@ -1879,9 +1881,9 @@ class IndexHierarchy(IndexBase):
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
 
-    def __contains__(self: IH,
+    def __contains__(self: IH, # type: ignore
             value: SingleLabelType,
-            ) -> bool: # type: ignore
+            ) -> bool:
         '''
         Determine if a label `value` is contained in this Index.
         '''
@@ -2358,7 +2360,7 @@ class IndexHierarchyGO(IndexHierarchy):
 
     _indices: tp.List[IndexGO] # type: ignore
 
-    def append(self: IH,
+    def append(self: IHGO,
             value: tp.Sequence[tp.Hashable],
             ) -> None:
         '''
@@ -2389,7 +2391,7 @@ class IndexHierarchyGO(IndexHierarchy):
         self._blocks = self._gen_blocks_from_self()
         self._values = self._blocks.values
 
-    def extend(self: IH,
+    def extend(self: IHGO,
             other: IndexHierarchy,
             ) -> None:
         '''
@@ -2421,7 +2423,9 @@ class IndexHierarchyGO(IndexHierarchy):
                 if self_index.equals(other_index):
                     # Easy case! We just have to append the indexers; no change needed to the index
 
-                    new_indexer = np.hstack((self._indexers[depth], other._indexers[depth]))
+                    new_indexer = np.hstack(
+                        (self._indexers[depth], other._indexers[depth])
+                    )
                     new_indexer.flags.writeable = False
                     self._indexers[depth] = new_indexer
                     continue
@@ -2463,7 +2467,7 @@ class IndexHierarchyGO(IndexHierarchy):
         self._values = self._blocks.values
         self._ensure_uniqueness(self._indexers, self.values)
 
-    def __copy__(self: IH) -> IH:
+    def __copy__(self: IHGO) -> IHGO:
         '''
         Return a shallow copy of this IndexHierarchy.
         '''
@@ -2482,18 +2486,24 @@ IndexHierarchy._MUTABLE_CONSTRUCTOR = IndexHierarchyGO
 
 class IndexHierarchyAsType:
 
-    __slots__ = ('container', 'key',)
+    __slots__ = (
+            'container',
+            'key',
+            )
 
-    def __init__(self: IH,
+    container: IndexHierarchy
+    key: GetItemKeyType
+
+    def __init__(self: IHAsType,
             container: IndexHierarchy,
             key: GetItemKeyType
             ) -> None:
         self.container = container
         self.key = key
 
-    def __call__(self: IH,
+    def __call__(self: IHAsType,
             dtype: DtypeSpecifier,
-            ) -> IH:
+            ) -> IndexHierarchy:
         '''
         Entrypoint to `astype` the container
         '''
@@ -2522,5 +2532,5 @@ class IndexHierarchyAsType:
         return container.__class__._from_type_blocks(
                 blocks=blocks,
                 index_constructors=index_constructors,
-                own_blocks=True
+                own_blocks=True,
                 )
