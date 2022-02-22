@@ -566,8 +566,8 @@ class TestUnit(TestCase):
         ih1_alt = IndexHierarchy.from_tree(tree_alt)
 
         post1 = ih1._loc_to_iloc(HLoc['b'])
-        self.assertEqual(post1, ih1_alt._loc_to_iloc(HLoc['b']))
-        self.assertEqual(post1, slice(20, 40))
+        self.assertEqual(list(post1), list(ih1_alt._loc_to_iloc(HLoc['b'])))
+        self.assertEqual(list(post1), list(range(20, 40)))
 
         post2 = ih1._loc_to_iloc(HLoc['b', 10:12])
         self.assertEqual(list(post2), list(ih1_alt._loc_to_iloc(HLoc['b', 10:12])))
@@ -617,11 +617,11 @@ class TestUnit(TestCase):
         idx2 = Index(('a', 'b', 'c'))
         ih1 = IndexHierarchy.from_product(idx2, idx1)
 
-        with self.assertRaises(TypeError):
-            ih1._loc_to_iloc(HLoc[slice(None, None, ('a', 2))])
+        # with self.assertRaises(TypeError):
+        #     ih1._loc_to_iloc(HLoc[slice(None, None, ('a', 2))])
 
-        with self.assertRaises(TypeError):
-            ih1._loc_to_iloc(slice(None, None, ('a', 2)))
+        # with self.assertRaises(TypeError):
+        #     ih1._loc_to_iloc(slice(None, None, ('a', 2)))
 
         self.assertEqual(ih1.loc_to_iloc(('b', 1)), 4)
 

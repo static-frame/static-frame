@@ -80,10 +80,7 @@ from static_frame.core.util import isin_array
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_indexer
-from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import slice_to_ascending_slice
-from static_frame.core.util import slice_to_inclusive_slice
 
 from static_frame.core.style_config import StyleConfig
 
@@ -98,13 +95,11 @@ IH = tp.TypeVar('IH', bound='IndexHierarchy')
 SingleLabelType = tp.Tuple[tp.Hashable, ...]
 
 
-def build_indexers_from_product(lists: tp.List[tp.Sequence[tp.Any]]) -> tp.List[np.ndarray]:
+def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> tp.List[np.ndarray]:
     """
-    Creates a list of indexer arrays for the product of a list of lists.
+    Creates a list of indexer arrays given a sequence of `list_lengths`
 
-    Assumes the lists are unique.
-
-    This is equivalent to: ``np.array(list(itertools.product(*lists)))``
+    This is equivalent to: ``np.array(list(itertools.product(*(np.arange(l) for l in list_lengths))))``
     except it scales incredibly well.
 
     It observes that the indexers for a product will look like this:
@@ -112,14 +107,14 @@ def build_indexers_from_product(lists: tp.List[tp.Sequence[tp.Any]]) -> tp.List[
     Example:
 
     >>> lists = [[1, 2, 3], [4, 5, 6]]
-    >>> build_indexers_from_product(lists)
+    >>> build_indexers_from_product([3, 3])
     [
         array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
         array([0, 1, 2, 0, 1, 2, 0, 1, 2]),
     ]
 
     >>> lists = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-    >>> build_indexers_from_product(lists)
+    >>> build_indexers_from_product(tuple(map(len, lists)))
     [
         array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2]),
         array([0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1]),
@@ -127,8 +122,8 @@ def build_indexers_from_product(lists: tp.List[tp.Sequence[tp.Any]]) -> tp.List[
     ]
     """
 
-    padded_lengths = np.full(len(lists) + 2, 1, dtype=int)
-    padded_lengths[1:-1] = tuple(map(len, lists))
+    padded_lengths = np.full(len(list_lengths) + 2, 1, dtype=int)
+    padded_lengths[1:-1] = list_lengths
 
     all_group_reps = np.cumprod(padded_lengths)[:-2]
     all_index_reps = np.cumprod(padded_lengths[::-1])[-3::-1]
@@ -161,56 +156,31 @@ def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
 def construct_indices_and_indexers_from_column_arrays(
         column_iter: tp.Iterable[np.ndarray],
         index_constructors: tp.Iterable[IndexConstructor],
-        ) -> tp.Tuple[tp.List[Index], tp.List[np.ndarray], bool]:
+        ) -> tp.Tuple[tp.List[Index], tp.List[np.ndarray]]:
     indices: tp.List[Index] = []
     indexers: tp.List[np.ndarray] = []
 
     for column, constructor in zip(column_iter, index_constructors):
-        positions, indexer = ufunc_unique1d_positions(column)
-        unsorted_unique = column[np.sort(positions)]
-        indexer_remap = ufunc_unique1d_indexer(unsorted_unique)[1]
-        indexer = indexer_remap[indexer]
+        # Alternative approach that retains order
+        # positions, indexer = ufunc_unique1d_positions(column)
+        # unsorted_unique = column[np.sort(positions)]
+        # indexer_remap = ufunc_unique1d_indexer(unsorted_unique)[1]
+        # indexer = indexer_remap[indexer]
+        # unique_values = unsorted_unique
 
-        # This would be faster, but since `ufunc_unique1d_indexer` gives back unique values sorted,
-        # then if might appear as if the blocks are not lexsorted even if they are
-        # ``unsorted_unique, indexer = ufunc_unique1d_indexer(block.values.ravel())``
+        unique_values, indexer = ufunc_unique1d_indexer(column)
 
         # we call the constructor on all lvl, even if it is already an Index
-        indices.append(constructor(unsorted_unique))
+        indices.append(constructor(unique_values))
 
         indexer.flags.writeable = False
         indexers.append(indexer)
 
-    # The innermost level is irrevelant in determining whether or not the index is treelike
-    sort_order = np.lexsort(indexers[:-1][::-1])
-
-    # If all increaing, it means the labels are already lexigraphically sorted
-    treelike = np.all(sort_order[1:] >= sort_order[:-1])
-
-    return indices, indexers, treelike
-
-
-# def _mask_to_slice_or_ilocs(mask: np.ndarray) -> tp.Union[slice, np.ndarray, int]:
-#     assert mask.dtype == DTYPE_BOOL
-
-#     valid_ilocs = PositionsAllocator.get(len(mask))[mask]
-
-#     if len(valid_ilocs) == 1:
-#         return valid_ilocs[0]
-
-#     if len(valid_ilocs) == len(mask):
-#         return NULL_SLICE
-
-#     steps = ufunc_unique(valid_ilocs[1:] - valid_ilocs[:-1])
-
-#     if len(steps) == 1:
-#         [step] = steps
-#         return slice(valid_ilocs[0], valid_ilocs[-1] + 1, None if step == 1 else step)
-
-#     return valid_ilocs
+    return indices, indexers
 
 
 #-------------------------------------------------------------------------------
+
 class IndexHierarchy(IndexBase):
     '''A hierarchy of :obj:`Index` objects, defined as a strict tree of uniform depth across all branches.'''
 
@@ -221,18 +191,15 @@ class IndexHierarchy(IndexBase):
             '_blocks',
             '_values',
             '_recache',
-            '_treelike',
-            '__widths_at_outer_level',
             '_index_types',
             )
+
     _name: NameType
     _indices: tp.List[Index] # Of index objects
     _indexers: tp.List[np.ndarray] # integer arrays
     _blocks: TypeBlocks
     _values: np.ndarray
-    _treelike: bool
     _index_types: tp.Optional["Series"]
-    __widths_at_outer_level: tp.Optional["Series"]
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
@@ -308,14 +275,13 @@ class IndexHierarchy(IndexBase):
         if name is None:
             name = cls._build_name_from_indices(indices)
 
-        indexers = build_indexers_from_product(indices)
+        indexers = build_indexers_from_product(tuple(map(len, indices)))
 
         return cls(
-            name=name,
-            indices=indices,
-            indexers=indexers,
-            treelike=True,
-        )
+                name=name,
+                indices=indices,
+                indexers=indexers,
+                )
 
     @classmethod
     def _from_tree(cls, tree: TreeNodeT) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
@@ -341,10 +307,10 @@ class IndexHierarchy(IndexBase):
             :obj:`static_frame.IndexHierarchy`
         '''
         return cls.from_labels(
-            labels=cls._from_tree(tree),
-            name=name,
-            index_constructors=index_constructors,
-        )
+                labels=cls._from_tree(tree),
+                name=name,
+                index_constructors=index_constructors,
+                )
 
     @classmethod
     def _from_empty(cls: tp.Type[IH],
@@ -372,10 +338,10 @@ class IndexHierarchy(IndexBase):
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
         return cls(
-            indices=[cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE) for _ in range(depth_reference)],
-            indexers=[PositionsAllocator.get(0) for _ in range(depth_reference)],
-            name=name
-        )
+                indices=[cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE) for _ in range(depth_reference)],
+                indexers=[PositionsAllocator.get(0) for _ in range(depth_reference)],
+                name=name
+                )
 
     @classmethod
     def _from_array(cls: tp.Type[IH],
@@ -404,12 +370,12 @@ class IndexHierarchy(IndexBase):
         index_constructors = cls._build_index_constructors( # type: ignore
                 index_constructors, depth=depth)
 
-        indices, indexers, treelike = construct_indices_and_indexers_from_column_arrays(
+        indices, indexers = construct_indices_and_indexers_from_column_arrays(
                 column_iter=array.T,
                 index_constructors=index_constructors,
                 )
 
-        return cls(indices=indices, indexers=indexers, name=name, treelike=treelike)
+        return cls(indices=indices, indexers=indexers, name=name)
 
     @classmethod
     def from_labels(cls: tp.Type[IH],
@@ -490,20 +456,10 @@ class IndexHierarchy(IndexBase):
         for i in range(depth):
             indexers[i] = np.array(indexers[i], dtype=int)
 
-        # There are performance benefits downstream if we determine at init whether
-        # or not the hierarchy follows a tree pattern. Thus, we check here whether or
-        # not the observed indexers are lexsorted. We exclude the innermost depth,
-        # as that has no bearing on whether or not the hierarchy is a tree.
-        sort_order = np.lexsort(indexers[:-1][::-1])
 
         if reorder_for_hierarchy:
+            sort_order = np.lexsort(indexers[:-1][::-1])
             indexers = [indexer[sort_order] for indexer in indexers]
-            treelike = True
-        else:
-            # If all increaing, it means the labels are already lexigraphically sorted
-            treelike = np.all(sort_order[1:] >= sort_order[:-1])
-
-        del sort_order
 
         for i in range(depth):
             indexers[i].flags.writeable = False # type: ignore
@@ -520,7 +476,7 @@ class IndexHierarchy(IndexBase):
         if name is None:
             name = cls._build_name_from_indices(indices)
 
-        return cls(indices=indices, indexers=indexers, name=name, treelike=treelike)
+        return cls(indices=indices, indexers=indexers, name=name)
 
     @classmethod
     def from_index_items(cls: tp.Type[IH],
@@ -564,7 +520,6 @@ class IndexHierarchy(IndexBase):
                 indices=[cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE) for _ in range(2)],
                 indexers=[PositionsAllocator.get(0) for _ in range(2)],
                 name=name,
-                treelike=True,
             )
 
         index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner) # type: ignore
@@ -586,11 +541,10 @@ class IndexHierarchy(IndexBase):
                     explicit_constructor=index_constructor)
 
         return cls(
-            indices=[index_outer, index_inner], # type: ignore
-            indexers=indexers,
-            name=name,
-            treelike=True,
-        )
+                indices=[index_outer, index_inner], # type: ignore
+                indexers=indexers,
+                name=name,
+                )
 
     @classmethod
     def from_labels_delimited(cls: tp.Type[IH],
@@ -648,11 +602,10 @@ class IndexHierarchy(IndexBase):
             raise ErrorInitIndex("names must be non-empty.")
 
         return cls(
-            indices=[cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE, name=name) for name in names],
-            indexers=[PositionsAllocator.get(0) for _ in names],
-            name=name,
-            treelike=True,
-        )
+                indices=[cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE, name=name) for name in names],
+                indexers=[PositionsAllocator.get(0) for _ in names],
+                name=name,
+                )
 
     @classmethod
     def _from_type_blocks(cls: tp.Type[IH],
@@ -680,7 +633,7 @@ class IndexHierarchy(IndexBase):
 
         index_constructors_iter = cls._build_index_constructors(index_constructors, blocks.shape[1])
 
-        indices,indexers , treelike = construct_indices_and_indexers_from_column_arrays(
+        indices, indexers = construct_indices_and_indexers_from_column_arrays(
                 column_iter=gen_columns(),
                 index_constructors=index_constructors_iter,
                 )
@@ -692,13 +645,12 @@ class IndexHierarchy(IndexBase):
                 own_blocks = False
 
         return cls(
-            indices=indices,
-            indexers=indexers,
-            name=name,
-            blocks=blocks,
-            own_blocks=own_blocks,
-            treelike=treelike,
-        )
+                indices=indices,
+                indexers=indexers,
+                name=name,
+                blocks=blocks,
+                own_blocks=own_blocks,
+                )
 
     @staticmethod
     def _ensure_uniqueness(indexers: tp.List[np.ndarray], values: np.ndarray) -> None:
@@ -733,7 +685,6 @@ class IndexHierarchy(IndexBase):
             name: NameType = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
-            treelike: bool = False,
             ) -> None:
         '''
         Initializer.
@@ -753,8 +704,6 @@ class IndexHierarchy(IndexBase):
             self._indexers = indices._indexers
             self._name = indices._name
             self._blocks = indices._blocks
-            self._treelike = indices._treelike
-            self.__widths_at_outer_level = None
             self._index_types = None
             return
 
@@ -770,7 +719,6 @@ class IndexHierarchy(IndexBase):
         self._indices = [mutable_immutable_index_filter(self.STATIC, idx) for idx in indices] # type: ignore
         self._indexers = indexers
         self._name = None if name is NAME_DEFAULT else name_filter(name)
-        self._treelike = treelike
 
         if blocks is not None:
             if own_blocks:
@@ -785,7 +733,6 @@ class IndexHierarchy(IndexBase):
         self._ensure_uniqueness(self._indexers, self.values)
 
         self._recache = False
-        self.__widths_at_outer_level = None
         self._index_types = None
 
     def _update_array_cache(self) -> None:
@@ -800,8 +747,6 @@ class IndexHierarchy(IndexBase):
         obj._blocks = deepcopy(self._blocks, memo)
         obj._name = self._name # should be hashable/immutable
         obj._recache = False
-        obj._treelike = self._treelike
-        obj.__widths_at_outer_level = deepcopy(self.__widths_at_outer_level, memo)
         obj._index_types = deepcopy(self._index_types, memo)
 
         memo[id(self)] = obj
@@ -846,7 +791,6 @@ class IndexHierarchy(IndexBase):
                 name=name,
                 blocks=blocks,
                 own_blocks=True,
-                treelike=self._treelike,
                 )
 
     #---------------------------------------------------------------------------
@@ -1343,7 +1287,7 @@ class IndexHierarchy(IndexBase):
                     name=self._name,
                     index_constructors=self._index_constructors,
                     own_blocks=True
-                )
+                    )
 
         mapper_func = mapper if is_callable else mapper.__getitem__ # type: ignore
 
@@ -1375,8 +1319,6 @@ class IndexHierarchy(IndexBase):
             indexer.flags.writeable = False
             new_indexers[level] = indexer
 
-        # TODO: Worth checking for treelike?
-
         return self.__class__(
                 indices=new_indices,
                 indexers=new_indexers,
@@ -1393,7 +1335,6 @@ class IndexHierarchy(IndexBase):
                 index_constructors=self._index_constructors,
                 depth_map=depth_map,
                 )
-        assert index._treelike #type: ignore
         return index #type: ignore
 
     def _get_outer_index_labels_in_order_they_appear(self) -> tp.Sequence[tp.Hashable]:
@@ -1410,14 +1351,7 @@ class IndexHierarchy(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    @property
-    def _widths_at_outer_level(self) -> "Series":
-        if self.__widths_at_outer_level is None:
-            from static_frame.core.series import Series
-            self.__widths_at_outer_level = Series.from_items(self.label_widths_at_depth(0))
-        return self.__widths_at_outer_level
-
-    def _process_key_at_depth(self, depth: int, key: GetItemKeyType) -> tp.Union[slice, np.ndarray]:
+    def _process_key_at_depth(self, depth: int, key: GetItemKeyType) -> np.ndarray:
         if depth >= self.depth:
             raise RuntimeError(f'Invalid depth level for key={key} depth={depth}')
 
@@ -1456,15 +1390,6 @@ class IndexHierarchy(IndexBase):
         if hasattr(key_iloc, "__len__"):
             return isin(indexer_at_depth, key_iloc)
 
-        # If our internal structure is tree-like, then we can return a slice.
-        # Otherwise, we must return a mask
-        if self._treelike and depth == 0:
-            idx = self._widths_at_outer_level.index.loc_to_iloc(key_at_depth)
-
-            start = self._widths_at_outer_level.values[:idx].sum()
-            end = start + self._widths_at_outer_level.values[idx]
-            return slice(start, end)
-
         return indexer_at_depth == key_iloc
 
     def _loc_to_iloc_index_hierarchy(self: IH, key: IH) -> np.ndarray:
@@ -1494,6 +1419,45 @@ class IndexHierarchy(IndexBase):
                 )[1]
 
         return ilocs
+
+    def _loc_to_iloc_single_key(self: IH, key: tp.Hashable) -> int:
+        # We consider the NULL_SLICE to not be "meaningful", as it requires no filtering
+        meaningful_selections = {depth: not (isinstance(k, slice) and k == NULL_SLICE) for depth, k in enumerate(key)}
+
+        # Return a slice wherever possible
+        if sum(meaningful_selections.values()) == 1:
+
+            depth = next(i for i, meaningful in meaningful_selections.items() if meaningful)
+            mask = self._process_key_at_depth(depth=depth, key=key)
+        else:
+            mask_2d = np.full(self.shape, True, dtype=bool)
+
+            for depth, meaningful in meaningful_selections.items():
+                if not meaningful:
+                    continue
+
+                result = self._process_key_at_depth(depth=depth, key=key)
+
+                if isinstance(result, slice):
+                    mask_2d[:, depth] = False
+                    mask_2d[result, depth] = True
+                else:
+                    mask_2d[:, depth] = result
+
+            mask = mask_2d.all(axis=1)
+            del mask_2d
+
+        result = self.positions[mask]
+
+        # Even if there was one result, unless the HLoc specified all levels, we need to return a list
+        if len(result) == 1:
+            if all(
+                    meaningful and (isinstance(key[depth], str) or not hasattr(key[depth], "__len__")) # type: ignore
+                    for depth, meaningful
+                    in meaningful_selections.items()
+                    ):
+                return result[0]
+        return result
 
     def _loc_to_iloc(self, key: tp.Union[GetItemKeyType, HLoc]) -> GetItemKeyType:
         '''
@@ -1530,6 +1494,9 @@ class IndexHierarchy(IndexBase):
         if key.__class__ is HLoc:
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
             key = tuple(HLoc(tuple(key_from_container_key(self, k, expand_iloc=True) for k in key))) # type: ignore
+
+            if len(key) > self.depth:
+                raise RuntimeError(f"Too many depths specified for {key}. Expected: {self.depth}")
         else:
             # If the key is a series, key_from_container_key will invoke IndexCorrespondence
             # logic that eventually calls _loc_to_iloc on all the indices of that series.
@@ -1558,49 +1525,7 @@ class IndexHierarchy(IndexBase):
         if any(isinstance(k, tuple) for k in key): # type: ignore
             return [self._loc_to_iloc(k) for k in key] # type: ignore
 
-        meaningful_selections = {depth: not (isinstance(k, slice) and k == NULL_SLICE) for depth, k in enumerate(key)}
-
-        can_return_element = all(
-                meaningful and (isinstance(key[depth], str) or not hasattr(key[depth], "__len__")) # type: ignore
-                for depth, meaningful
-                in meaningful_selections.items()
-                )
-
-        meaningful_depths = sum(meaningful_selections.values())
-
-        # Return a slice wherever possible
-        if meaningful_depths == 1:
-
-            depth = next(i for i, meaningful in meaningful_selections.items() if meaningful)
-            mask = self._process_key_at_depth(depth=depth, key=key)
-
-            if isinstance(mask, slice):
-                return mask # Not actually a mask
-
-        else:
-            mask_2d = np.full(self.shape, True, dtype=bool)
-
-            for depth, meaningful in meaningful_selections.items():
-                if not meaningful:
-                    continue
-
-                result = self._process_key_at_depth(depth=depth, key=key)
-
-                if isinstance(result, slice):
-                    mask_2d[:, depth] = False
-                    mask_2d[result, depth] = True
-                else:
-                    mask_2d[:, depth] = result
-
-            mask = mask_2d.all(axis=1)
-            del mask_2d
-
-        result = self.positions[mask]
-
-        # Even if there was one result, unless the HLoc specified all levels, we need to return a list
-        if len(result) == 1 and can_return_element:
-            return result[0]
-        return result
+        return self._loc_to_iloc_single_key(key)
 
     def loc_to_iloc(self: IH,
             key: tp.Union[GetItemKeyType, HLoc]
@@ -1626,12 +1551,6 @@ class IndexHierarchy(IndexBase):
         if key is None:
             return self.copy()
 
-        if isinstance(key, slice) and key.step in (1, None):
-            treelike = True
-        else:
-            # There are times where this is not true, but I don't think it will be worth the check
-            treelike = False
-
         tb = self._blocks._extract(row_key=key)
         new_indices = []
         new_indexers = []
@@ -1650,7 +1569,6 @@ class IndexHierarchy(IndexBase):
                 name=self.name,
                 blocks=tb,
                 own_blocks=True,
-                treelike=treelike,
                 )
 
     def _extract_loc(self: IH,
@@ -1713,10 +1631,10 @@ class IndexHierarchy(IndexBase):
             other = other._blocks
 
         tb = self._blocks._ufunc_binary_operator(
-                operator=operator,
-                other=other,
-                axis=axis,
-                )
+                    operator=operator,
+                    other=other,
+                    axis=axis,
+                    )
         return tb.values
 
     def _ufunc_axis_skipna(self, *,
@@ -2110,12 +2028,12 @@ class IndexHierarchy(IndexBase):
             yield from self._blocks._blocks
 
         return self.__class__(
-            indices=indices,
-            indexers=indexers,
-            name=self.name,
-            blocks=TypeBlocks.from_blocks(gen_blocks()),
-            own_blocks=True,
-        )
+                indices=indices,
+                indexers=indexers,
+                name=self.name,
+                blocks=TypeBlocks.from_blocks(gen_blocks()),
+                own_blocks=True,
+                )
 
     def level_drop(self: IH,
             count: int = 1,
@@ -2180,8 +2098,6 @@ class IndexHierarchyGO(IndexHierarchy):
             '_blocks',
             '_values',
             '_recache',
-            '_treelike',
-            '__widths_at_outer_level',
             )
 
     _indices: tp.List[IndexGO] # type: ignore
@@ -2212,8 +2128,6 @@ class IndexHierarchyGO(IndexHierarchy):
         # No need to ensure uniqueness! It's already been checked.
         self._blocks = self._gen_blocks_from_self()
         self._values = self._blocks.values
-        self.__widths_at_outer_level = None
-        self._treelike = False
 
     def extend(self, other: IndexHierarchy) -> None:
         '''
@@ -2256,11 +2170,8 @@ class IndexHierarchyGO(IndexHierarchy):
                 self._indexers[depth] = new_indexer
                 continue
 
-            # starting_len = len(self_index)
-
             difference = other_index[~other_index.isin(intersection)]
             self_index.extend(other_index[~other_index.isin(intersection)])
-            # offset = len(difference)
             del difference
 
             def remap(k: tp.Hashable) -> int:
@@ -2268,10 +2179,9 @@ class IndexHierarchyGO(IndexHierarchy):
                 if k in intersection:
                     return iloc # type: ignore
 
-                # We use - as a flag to indicate that this needs to be remapped
+                # The negative value is used to indicate that the label is not in the intersection
                 return -iloc # type: ignore
 
-            #offset = starting_len - len(intersection)
             other_index_remapped = other_index.iter_label().apply(remap)
             del intersection
 
@@ -2287,8 +2197,6 @@ class IndexHierarchyGO(IndexHierarchy):
         self._blocks = self._gen_blocks_from_self()
         self._values = self._blocks.values
         self._ensure_uniqueness(self._indexers, self.values)
-        self.__widths_at_outer_level = None
-        self._treelike = False
 
     def __copy__(self: IH) -> IH:
         '''
