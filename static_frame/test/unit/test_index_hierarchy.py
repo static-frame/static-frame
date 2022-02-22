@@ -270,6 +270,14 @@ class TestUnit(TestCase):
 
         post = ih._loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
+                slice('2018-01-01', '2018-01-04', 2),
+                np.array(['x', 'y'])])
+
+        # this will break if we recognize this can be a slice
+        self.assertEqual(list(post), [0, 1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21]) # type: ignore
+
+        post = ih._loc_to_iloc(HLoc[
+                ['A', 'B', 'C'],
                 slice('2018-01-01', '2018-01-04'),
                 ['x', 'y']])
 

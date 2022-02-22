@@ -565,7 +565,7 @@ class IndexHierarchy(IndexBase):
             )
 
         index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner) # type: ignore
-        assert isinstance(index_inner, IndexGO) # mypy
+        assert isinstance(index_inner, Index) # mypy
 
         def _repeat(i_repeat_tuple: tp.Tuple[int, int]) -> np.ndarray:
             i, repeat = i_repeat_tuple
@@ -1538,8 +1538,8 @@ class IndexHierarchy(IndexBase):
             else:
                 stop = len(indexer_at_depth)
 
-            if key_at_depth.step is not None or key_at_depth.step == 1:
-                other = PositionsAllocator.get(stop)[start:] # MISSING COVERAGE
+            if key_at_depth.step is None or key_at_depth.step == 1:
+                other = PositionsAllocator.get(stop)[start:]
             else:
                 other = np.arange(start, stop, key_at_depth.step)
 
@@ -1622,12 +1622,7 @@ class IndexHierarchy(IndexBase):
                     continue
 
                 result = self._process_key_at_depth(depth=depth, key=key)
-
-                if isinstance(result, slice):
-                    mask_2d[:, depth] = False # MISSING COVERAGE
-                    mask_2d[result, depth] = True # MISSING COVERAGE
-                else:
-                    mask_2d[:, depth] = result
+                mask_2d[:, depth] = result
 
             mask = mask_2d.all(axis=1)
             del mask_2d
