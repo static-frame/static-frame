@@ -951,6 +951,118 @@ class Batch(ContainerOperand, StoreClientMixin):
                 fill_value=fill_value,
                 )
 
+    # ---------------------------------------------------------------------------
+    # na handling
+    def isna(self) -> "Batch":
+        """
+        Return a batch of same-indexed, Boolean Frames indicating True which values are NaN or None.
+        """
+        return self._apply_attr(attr="isna")
+
+    def notna(self) -> "Batch":
+        """
+        Return a batch of same-indexed, Boolean Frames indicating True which values are not NaN or None.
+        """
+        return self._apply_attr(attr="notna")
+
+    def dropna(
+        self, 
+        axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all
+    ) -> "Batch":
+        """ 
+        Return a new Batch of Frame(s) after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+        
+        Args:
+            axis:
+            condition:
+        """
+        return self._apply_attr(
+                attr="dropna", 
+                axis=axis, 
+                condition=condition
+                )
+
+    # ---------------------------------------------------------------------------
+    # falsy handling
+
+    def isfalsy(self) -> "Batch":
+        """
+        Return a batch of same-indexed, Boolean Frames indicating True which values are falsy.
+        """
+        return self._apply_attr(attr="isfalsy")
+
+    def notfalsy(self) -> "Batch":
+        """
+        Return a batch of same-indexed, Boolean Frames indicating True which values are not falsy.
+        """
+        return self._apply_attr(attr="notfalsy")
+
+    def dropfalsy(
+        self, 
+        axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all
+    ) -> "Batch":
+        """
+        Return a new Batch of Frame(s) after removing rows (axis 0) or columns (axis 1) where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isfalsy()``; the default is ``np.all``.
+        
+        Args:
+            axis:
+            condition:
+        """
+        return self._apply_attr(
+                attr="dropfalsy", 
+                axis=axis, 
+                condition=condition
+                )
+
+    # ---------------------------------------------------------------------------
+    # via interface?
+
+    # ---------------------------------------------------------------------------
+    # filling
+
+    def fillna(
+        self, 
+        value: tp.Any
+    ) -> "Batch":
+        return self._apply_attr(
+                attr='fillna',
+                value=value,
+                )
+
+    def fillfalsy(
+        self, 
+        value: tp.Any
+    ) -> "Batch":
+        return self._apply_attr(
+                attr='fillfalsy',
+                value=value,
+                )
+
+    def fillna_leading():
+        raise NotImplementedError
+
+    def fillna_trailing():
+        raise NotImplementedError
+
+    def fillfalsy_leading():
+        raise NotImplementedError
+
+    def fillfalsy_trailing():
+        raise NotImplementedError
+
+    def fillna_forward():
+        raise NotImplementedError
+
+    def fillna_backward():
+        raise NotImplementedError
+
+    def fillfalsy_forward():
+        raise NotImplementedError
+
+    def fillfalsy_backward():
+        raise NotImplementedError
+
+
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
 
