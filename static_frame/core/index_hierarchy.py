@@ -215,7 +215,11 @@ class IndexHierarchy(IndexBase):
     # constructors
 
     @classmethod
-    def _build_index_constructors(cls, index_constructors: IndexConstructors, depth: int) -> tp.Iterable[IndexConstructor]:
+    def _build_index_constructors(cls: tp.Type[IH],
+            *,
+            index_constructors: IndexConstructors,
+            depth: int,
+            ) -> tp.Iterable[IndexConstructor]:
         if index_constructors is None:
             return (cls._INDEX_CONSTRUCTOR for _ in range(depth))
 
@@ -225,12 +229,16 @@ class IndexHierarchy(IndexBase):
         index_constructors = tuple(index_constructors)
 
         if len(index_constructors) != depth:
-            raise ErrorInitIndex("When providing index constructors, number of index constructors must equal depth of IndexHierarchy.")
+            raise ErrorInitIndex(
+                "When providing index constructors, number of index constructors must equal depth of IndexHierarchy."
+            )
 
         return index_constructors
 
     @classmethod
-    def _build_name_from_indices(cls, indices: tp.List[Index]) -> tp.Optional[tp.Tuple[tp.Hashable, ...]]:
+    def _build_name_from_indices(cls: tp.Type[IH],
+            indices: tp.List[Index],
+            ) -> tp.Optional[tp.Tuple[tp.Hashable, ...]]:
         # build name from index names, assuming they are all specified
         name: tp.Tuple[tp.Hashable, ...] = tuple(index.name for index in indices)
         if any(n is None for n in name):
@@ -262,7 +270,9 @@ class IndexHierarchy(IndexBase):
         indices = [] # store in a list, where index is depth
 
         index_constructors = cls._build_index_constructors( # type: ignore
-                index_constructors, depth=len(levels))
+                index_constructors=index_constructors,
+                depth=len(levels),
+                )
 
         for lvl, constructor in zip(levels, index_constructors):
             # we call the constructor on all lvl, even if it is already an Index
@@ -325,14 +335,19 @@ class IndexHierarchy(IndexBase):
 
             if depth == 0: # an empty 2D array can have 0 depth
                 pass # do not set depth_reference, assume it is set
-            elif ((depth_reference is None and depth > 1)
-                    or (depth_reference is not None and depth_reference == depth)):
+            elif (depth_reference is None and depth > 1) or (
+                depth_reference is not None and depth_reference == depth
+            ):
                 depth_reference = depth
             else:
-                raise ErrorInitIndex(f'depth_reference provided {depth_reference} does not match depth of supplied array {depth}')
+                raise ErrorInitIndex(
+                    f'depth_reference provided {depth_reference} does not match depth of supplied array {depth}'
+                )
 
         if not isinstance(depth_reference, INT_TYPES):
-            raise ErrorInitIndex('depth_reference must be an integer when labels are empty.')
+            raise ErrorInitIndex(
+                'depth_reference must be an integer when labels are empty.'
+            )
 
         if depth_reference == 1:
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
@@ -368,7 +383,9 @@ class IndexHierarchy(IndexBase):
             return cls._from_empty(array, name=name, depth_reference=depth_reference)
 
         index_constructors = cls._build_index_constructors( # type: ignore
-                index_constructors, depth=depth)
+                index_constructors=index_constructors,
+                depth=depth,
+                )
 
         indices, indexers = construct_indices_and_indexers_from_column_arrays(
                 column_iter=array.T,
@@ -465,7 +482,9 @@ class IndexHierarchy(IndexBase):
             indexers[i].flags.writeable = False # type: ignore
 
         index_constructors = cls._build_index_constructors( # type: ignore
-                index_constructors, depth=depth)
+                index_constructors=index_constructors,
+                depth=depth,
+                )
 
         indices = [
             constructor(hash_map)
@@ -631,7 +650,10 @@ class IndexHierarchy(IndexBase):
             for block in blocks: # type: ignore
                 yield block.values.ravel()
 
-        index_constructors_iter = cls._build_index_constructors(index_constructors, blocks.shape[1])
+        index_constructors_iter = cls._build_index_constructors(
+                index_constructors=index_constructors,
+                depth=blocks.shape[1],
+                )
 
         indices, indexers = construct_indices_and_indexers_from_column_arrays(
                 column_iter=gen_columns(),
