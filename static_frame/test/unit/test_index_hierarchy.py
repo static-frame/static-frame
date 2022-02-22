@@ -54,9 +54,7 @@ class TestUnit(TestCase):
 
     def test_hierarchy_slotted_a(self) -> None:
 
-        labels = (('I', 'A'),
-                ('I', 'B'),
-                )
+        labels = (('I', 'A'), ('I', 'B'))
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
 
         with self.assertRaises(AttributeError):
@@ -617,11 +615,11 @@ class TestUnit(TestCase):
         idx2 = Index(('a', 'b', 'c'))
         ih1 = IndexHierarchy.from_product(idx2, idx1)
 
-        # with self.assertRaises(TypeError):
-        #     ih1._loc_to_iloc(HLoc[slice(None, None, ('a', 2))])
+        with self.assertRaises(TypeError):
+            ih1._loc_to_iloc(HLoc[slice(None, None, ('a', 2))])
 
-        # with self.assertRaises(TypeError):
-        #     ih1._loc_to_iloc(slice(None, None, ('a', 2)))
+        with self.assertRaises(TypeError):
+            ih1._loc_to_iloc(slice(None, None, ('a', 2)))
 
         self.assertEqual(ih1.loc_to_iloc(('b', 1)), 4)
 
@@ -633,6 +631,13 @@ class TestUnit(TestCase):
 
         self.assertEqual(ih1.loc_to_iloc(ih1.values_at_depth(1) == 1).tolist(), #type: ignore
                 [1, 4, 7])
+
+    def test_hierarchy_loc_to_iloc_q(self) -> None:
+        labels = (('I', 'A'), ('I', 'B'), ('II', 'A'), ('III', 'B'))
+        ih = IndexHierarchy.from_labels(labels, name='foo')
+
+        with self.assertRaises(TypeError):
+            ih._loc_to_iloc(HLoc[slice("I", "III", "?")])
 
     #---------------------------------------------------------------------------
 

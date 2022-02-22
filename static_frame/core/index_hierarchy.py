@@ -1352,9 +1352,6 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
 
     def _process_key_at_depth(self, depth: int, key: GetItemKeyType) -> np.ndarray:
-        if depth >= self.depth:
-            raise RuntimeError(f'Invalid depth level for key={key} depth={depth}')
-
         key_at_depth = key[depth] # type: ignore
 
         # Key is already a mask!
@@ -1378,10 +1375,15 @@ class IndexHierarchy(IndexBase):
             else:
                 stop = len(indexer_at_depth)
 
+            if key_at_depth.step is not None or key_at_depth.step == 1:
+                other = PositionsAllocator.get(stop)[start:]
+            else:
+                other = np.arange(start, stop, key_at_depth.step)
+
             return isin_array(
                     array=indexer_at_depth,
                     array_is_unique=False,
-                    other=np.arange(start, stop, key_at_depth.step),
+                    other=other,
                     other_is_unique=True
                     )
 
