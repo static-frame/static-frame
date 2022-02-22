@@ -552,7 +552,7 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
     def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
-        '''Create a new index after removing the values specified by the loc key.
+        '''Create a new index after removing the values specified by the iloc key.
         '''
         if self._recache:
             self._update_array_cache()
