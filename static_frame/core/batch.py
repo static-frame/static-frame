@@ -44,6 +44,7 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.exception import BatchIterableInvalid
+from static_frame.core.node_str import InterfaceBatchString
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -764,6 +765,18 @@ class Batch(ContainerOperand, StoreClientMixin):
                 dtypes=dtypes,
                 size_one_unity=size_one_unity,
                 )
+
+
+    #---------------------------------------------------------------------------
+    # via interfaces
+
+    @property
+    def via_str(self) -> InterfaceBatchString:
+        '''
+        Interface for applying string methods to elements in this container.
+        '''
+        return InterfaceBatchString(self.apply)
+
 
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality

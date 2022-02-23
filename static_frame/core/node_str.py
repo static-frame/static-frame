@@ -20,6 +20,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
 
 
 BlocksType = tp.Iterable[np.ndarray]
@@ -539,3 +540,24 @@ class InterfaceString(Interface[TContainer]):
         '''
         block_gen = self._process_blocks(self._blocks, npc.zfill, (width,))
         return self._blocks_to_container(block_gen)
+
+
+
+
+
+class InterfaceBatchString:
+
+    __slots__ = (
+            '_batch_apply',
+            )
+
+    def __init__(self,
+            batch_apply, # handle to batch function that will apply
+            ) -> None:
+        self._batch_apply = batch_apply
+
+    def lower(self) -> 'Batch':
+        '''
+        Return an array with the elements of self converted to lowercase.
+        '''
+        return self._batch_apply(lambda f: f.via_str.lower())

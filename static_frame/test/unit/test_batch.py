@@ -1257,6 +1257,18 @@ class TestUnit(TestCase):
             self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
 
 
+    #---------------------------------------------------------------------------
+    def test_batch_to_npz(self) -> None:
+        # assure processing of same named Frame
+        f1 = ff.parse('s(4,4)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)|i(I,int)').rename('b')
+
+        post = Batch.from_frames((f1, f2)).via_str.lower().iloc[-2:, -2:].to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zUvW', ((('a', 91301), 'zkuw'), (('a', 30205), 'zmvj'), (('b', 91301), 'zkuw'), (('b', 30205), 'zmvj'))), ('zkuW', ((('a', 91301), 'zce3'), (('a', 30205), 'zr4u'), (('b', 91301), 'zce3'), (('b', 30205), 'zr4u'))))
+                )
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
