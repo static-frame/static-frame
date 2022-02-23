@@ -67,9 +67,9 @@ class TestUnit(TestCase):
                 post = tuple(tb.axis_values(axis=axis, reverse=reverse))
                 for idx, array in enumerate(post):
                     self.assertTrue(len(array) == tb.shape[axis])
-                    if axis == 0 and not reverse: # colums
+                    if axis == 0 and not reverse: # columns
                         self.assertTrue(array.dtype == tb.dtypes[idx])
-                    elif axis == 0 and reverse: # colums
+                    elif axis == 0 and reverse: # columns
                         self.assertTrue(array.dtype == tb.dtypes[tb.shape[1] - 1 - idx])
                     else:
                         # NOTE: only checking kinde because found cases where byte-order deviates

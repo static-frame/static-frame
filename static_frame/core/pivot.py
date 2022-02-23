@@ -185,7 +185,7 @@ def pivot_records_items_to_blocks(*,
         else:
             arrays.append(np.empty(len(index_outer), dtype=dtype))
 
-    # try to use the dtype specifieid; fill values at end of necessary
+    # try to use the dtype specified; fill values at end if necessary
     iloc_found: tp.Set[int] = set()
     # each group forms a row, each label a value in the index
     for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
