@@ -1258,7 +1258,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_batch_to_npz(self) -> None:
+    def test_batch_via_str_lower(self) -> None:
         # assure processing of same named Frame
         f1 = ff.parse('s(4,4)|v(str)|c(I,str)|i(I,int)').rename('a')
         f2 = ff.parse('s(4,4)|v(str)|c(I,str)|i(I,int)').rename('b')

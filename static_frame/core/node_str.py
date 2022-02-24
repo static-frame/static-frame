@@ -13,6 +13,8 @@ from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import UFunc
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import AnyCallable
+
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -552,7 +554,7 @@ class InterfaceBatchString:
             )
 
     def __init__(self,
-            batch_apply, # handle to batch function that will apply
+            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
             ) -> None:
         self._batch_apply = batch_apply
 
