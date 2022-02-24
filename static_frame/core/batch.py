@@ -1016,7 +1016,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
 
     # ---------------------------------------------------------------------------
-    # filling
+    # na filling
 
     def fillna(
         self, 
@@ -1024,15 +1024,6 @@ class Batch(ContainerOperand, StoreClientMixin):
     ) -> "Batch":
         return self._apply_attr(
                 attr='fillna',
-                value=value,
-                )
-
-    def fillfalsy(
-        self, 
-        value: tp.Any
-    ) -> "Batch":
-        return self._apply_attr(
-                attr='fillfalsy',
                 value=value,
                 )
 
@@ -1073,41 +1064,6 @@ class Batch(ContainerOperand, StoreClientMixin):
             axis=axis
         )
 
-    def fillfalsy_leading(
-            self,
-            value: tp.Any
-        ) -> "Batch":
-
-        '''
-        Return a new ``Batch`` after filling leading (and only leading) falsy values with the provided ``value``.
-
-        Args:
-            {value}
-            {axis}
-        '''
-        return self._apply_attr(
-            attr='fillfalsy_leading',
-            value=value,
-        )
-
-    def fillfalsy_trailing(
-        self,
-        value: tp.Any,
-        axis: int = 0
-        ) -> 'Batch':
-        '''
-        Return a new ``Frame`` after filling trailing (and only trailing) falsy values with the provided ``value``.
-
-        Args:
-            {value}
-            {axis}
-        '''
-        return self._apply_attr(
-            attr='fillfalsy_trailing',
-            value=value,
-            axis=axis
-        )
-
     def fillna_forward(
         self,
         limit: int = 0,
@@ -1144,9 +1100,57 @@ class Batch(ContainerOperand, StoreClientMixin):
             axis=axis
         )
 
-    def fillfalsy_forward(
+    # ---------------------------------------------------------------------------
+    # falsy filling
+
+    def fillfalsy(
+        self, 
+        value: tp.Any
+    ) -> "Batch":
+        return self._apply_attr(
+                attr='fillfalsy',
+                value=value,
+                )
+
+    def fillfalsy_leading(
+            self,
+            value: tp.Any
+        ) -> "Batch":
+
+        '''
+        Return a new ``Batch`` after filling leading (and only leading) falsy values with the provided ``value``.
+
+        Args:
+            {value}
+            {axis}
+        '''
+        return self._apply_attr(
+            attr='fillfalsy_leading',
+            value=value,
+        )
+
+    def fillfalsy_trailing(
         self,
         value: tp.Any,
+        axis: int = 0
+        ) -> 'Batch':
+        '''
+        Return a new ``Frame`` after filling trailing (and only trailing) falsy values with the provided ``value``.
+
+        Args:
+            {value}
+            {axis}
+        '''
+        return self._apply_attr(
+            attr='fillfalsy_trailing',
+            value=value,
+            axis=axis
+        )
+
+
+    def fillfalsy_forward(
+        self,
+        limit: int = 0,
         axis: int = 0,
         ) -> 'Batch':
         '''
@@ -1158,7 +1162,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         return self._apply_attr(
             attr='fillfalsy_forward',
-            value=value,
+            limit=limit,
             axis=axis
         )
 
