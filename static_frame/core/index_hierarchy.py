@@ -50,6 +50,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import GetItemKeyType
@@ -102,7 +103,7 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> tp.List[np.nd
     '''
     Creates a list of indexer arrays given a sequence of `list_lengths`
 
-    This is equivalent to: ``np.array(list(itertools.product(*(np.arange(l) for l in list_lengths))))``
+    This is equivalent to: ``np.array(list(itertools.product(*(range(l) for l in list_lengths))))``
     except it scales incredibly well.
 
     It observes that the indexers for a product will look like this:
@@ -1500,7 +1501,7 @@ class IndexHierarchy(IndexBase):
         Index could be [A, B, C]
         Indexers could be [2, 0, 0, 2, 1]
 
-        This function return [C, A, B] # shoutout to my initials
+        This function return [C, A, B] -- shoutout to my initials
         '''
         # get the outer level, or just the unique frame labels needed
         labels = self.values_at_depth(0)
@@ -1569,7 +1570,7 @@ class IndexHierarchy(IndexBase):
         '''
         Returns the boolean mask for a key that is an IndexHierarchy.
 
-        For small keys, this approach is outperformed by the naiive:
+        For small keys, this approach is outperformed by the naive:
 
             [self._loc_to_iloc(label) for label in key.iter_label()]
 
@@ -1578,7 +1579,7 @@ class IndexHierarchy(IndexBase):
         if not key.depth == self.depth:
             raise KeyError(f'Key must have the same depth as the index. {key}')
 
-        key_indexers = []
+        key_indexers: tp.List[np.ndaray] = []
         for key_index, self_index, key_indexer in zip(
                 key._indices,
                 self._indices,
@@ -1627,13 +1628,13 @@ class IndexHierarchy(IndexBase):
                 if not meaningful:
                     continue
 
-                result = self._build_mask_for_key_at_depth(depth=depth, key=key)
-                mask_2d[:, depth] = result
+                mask = self._build_mask_for_key_at_depth(depth=depth, key=key)
+                mask_2d[:, depth] = mask
 
             mask = mask_2d.all(axis=1)
             del mask_2d
 
-        result = self.positions[mask]
+        result: np.ndarray = self.positions[mask]
 
         # Even if there was one result, unless the HLoc specified all levels, we need to return a list
         if len(result) == 1:
@@ -2411,6 +2412,8 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         Extend this IndexHierarchy in-place
         '''
+        mask_flags = np.array([1, -1], dtype=DTYPE_INT_DEFAULT) # False = n, True = -n
+
         # TODO: How to handle corrupted instance state if an exception is raised?
         for depth, (self_index, other_index) in enumerate(
                 zip(self._indices, other._indices)
@@ -2457,20 +2460,17 @@ class IndexHierarchyGO(IndexHierarchy):
                 continue
 
             # Hardest case; we have some new labels, and some re-used labels.
-            difference = other_index[~other_index.isin(intersection)]
-            self_index.extend(other_index[~other_index.isin(intersection)])
-            del difference
-
-            def remap(k: tp.Hashable) -> int:
-                iloc = tp.cast(int, self_index._loc_to_iloc(k))
-                if k in intersection:
-                    return iloc
-
-                # The negative value is used to indicate that the label is not in the intersection
-                return -iloc
-
-            other_index_remapped = other_index.iter_label().apply(remap)
+            difference = ~other_index.isin(intersection)
             del intersection
+
+            self_index.extend(other_index[difference])
+
+            # We use the mask_flags to signal what was in the intersection and what was not
+            # We can't use any existing masks, since the sizes will be different
+            other_index_remapped = other_index.iter_label().apply(
+                self_index._loc_to_iloc
+            ) * mask_flags[difference.astype(int)]
+            del difference
 
             remap_indexer = other_index_remapped[other._indexers[depth]]
             mask = remap_indexer < 0

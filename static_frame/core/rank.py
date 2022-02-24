@@ -3,6 +3,7 @@ import typing as tp
 from enum import Enum
 import numpy as np
 
+from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import DEFAULT_STABLE_SORT_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_BOOL
@@ -51,7 +52,7 @@ def rank_1d(
 
     index_sorted = np.argsort(array, kind=DEFAULT_STABLE_SORT_KIND)
     ordinal = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
-    ordinal[index_sorted] = np.arange(array.size, dtype=DTYPE_INT_DEFAULT)
+    ordinal[index_sorted] = PositionsAllocator.get(array.size)
 
     if method == RankMethod.ORDINAL:
         ranks0 = ordinal

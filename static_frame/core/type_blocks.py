@@ -1,5 +1,3 @@
-
-
 import typing as tp
 from itertools import zip_longest
 from itertools import chain
@@ -66,6 +64,7 @@ from static_frame.core.util import roll_1d
 from static_frame.core.util import ShapeType
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import PositionsAllocator
 
 
 from static_frame.core.style_config import StyleConfig
@@ -1635,7 +1634,7 @@ class TypeBlocks(ContainerOperand):
 
         if row_key.__class__ is np.ndarray and row_key.dtype == bool: #type: ignore
             # row_key is used with np.delete, which does not support Boolean arrays; instead, convert to an array of integers
-            row_key = np.arange(len(row_key))[row_key] #type: ignore
+            row_key = PositionsAllocator.get(len(row_key))[row_key] #type: ignore
 
         target_block_idx = target_slice = None
         targets_remain = True
