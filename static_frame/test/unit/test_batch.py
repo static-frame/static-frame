@@ -833,32 +833,46 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_isna(self): # also tests `notna()`
         f0 = ff.parse('v(str,str,bool,float)|s(9,4)').assign[3]([None,  100.0,  632.23, None,  12.5,  51526.002, None, None, 0.231])
-        f1, f2, f3 = f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
-        actual1 = Batch.from_frames((f1,f2,f3)).isna().to_frame()[3].values
-        actual2 = np.invert(Batch.from_frames((f1,f2,f3)).notna().to_frame()[3].values)
+
+        actual1 = Batch.from_frames((
+                f0.iloc[0:3].rename('1'), f0.iloc[3:6].rename('2'), f0.iloc[6:9].rename('3'),
+        )).isna().to_frame()[3].values
+        actual2 = np.invert(Batch.from_frames((
+                f0.iloc[0:3].rename('1'), f0.iloc[3:6].rename('2'), f0.iloc[6:9].rename('3'),
+        )).notna().to_frame()[3].values)
+
         expected = np.array([ True, False, False,  True, False, False,  True,  True,  False])
         self.assertTrue(((actual1 == actual2) & (actual2 == expected)).all())
 
     def test_isfalsy(self): # also tests `notfalsy()`
         f0 = ff.parse('v(str,str,bool,float)|s(9,4)')
-        f1, f2, f3 = f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
-        actual1 = Batch.from_frames((f1,f2,f3)).isfalsy().to_frame()[2].values
-        actual2 = np.invert(Batch.from_frames((f1,f2,f3)).notfalsy().to_frame()[2].values)
-        expected = np.array([False,  True,  True, False,  True,  True, False, False, False])
+
+        actual1 = Batch.from_frames((
+                f0.iloc[0:3].rename("1"), f0.iloc[6:9].rename("3"), f0.iloc[3:6].rename("2"), 
+        )).isfalsy().to_frame()[2].values
+        actual2 = np.invert(Batch.from_frames((
+                f0.iloc[0:3].rename("1"), f0.iloc[6:9].rename("3"), f0.iloc[3:6].rename("2"), 
+        )).notfalsy().to_frame()[2].values)
+
+        expected = np.array([False,  True,  True, False, False, False, False,  True,  True])
         self.assertTrue(((actual1 == actual2) & (actual2 == expected)).all())
 
     def test_dropna(self):
         f0 = ff.parse('v(str,str,bool,float)|s(9,4)').assign[3]([None,  100.0,  632.23, None,  12.5,  51526.002, None, None, 0.231])
-        f1, f2, f3 = f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
-        f4 = Batch.from_frames((f1,f2,f3)).dropna(condition=np.any).to_frame()
-        actual_index = f4.index.values[:,-1].astype(int)
+        f = Batch.from_frames((
+                f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
+        )).dropna(condition=np.any).to_frame()
+        
+        actual_index = f.index.values[:,-1].astype(int)
         expected_index = np.array([1,2,4,5,8])
         self.assertTrue(np.array_equal(actual_index, expected_index))
 
     def test_dropfalsy(self):
         f0 = ff.parse('v(str,str,bool,float)|s(9,4)')
-        f1, f2, f3 = f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
-        f4 = Batch.from_frames((f1,f2,f3)).dropfalsy(condition=np.any).to_frame()
+        f4 = Batch.from_frames((
+                f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
+        )).dropfalsy(condition=np.any).to_frame()
+
         actual_index = f4.index.values[:,-1].astype(int)
         expected_index = np.array([0,3,6,7,8])
         self.assertTrue(np.array_equal(actual_index, expected_index))
@@ -866,16 +880,20 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_fillna_leading(self):
         f0 = ff.parse('v(float,str,bool,str)|s(9,4)').assign[0]([None,  100.0,  632.23, None, 51526.002,  12.5,  None, 51526.002, None])
-        f1, f2, f3 = f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
-        f4 = Batch.from_frames((f1,f2,f3)).fillna_leading(value=123.321).to_frame()
+        f4 = Batch.from_frames((
+                f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
+        )).fillna_leading(value=123.321).to_frame()
+
         expected = np.array([123.321, 100.0, 632.23, 123.321, 51526.002, 12.5, 123.321, 51526.002, None], dtype=object)
         actual = f4[0].values
         self.assertTrue(np.array_equal(expected, actual))
     
     def test_fillna_trailing(self):
         f0 = ff.parse('v(float,str,bool,str)|s(9,4)').assign[3]([None,  100.0,  632.23, None, 51526.002,  12.5,  None, 51526.002, None])
-        f1, f2, f3 = f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
-        f4 = Batch.from_frames((f1,f2,f3)).fillna_leading(value=123.321).to_frame()
+        f4 = Batch.from_frames((
+                f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
+        )).fillna_leading(value=123.321).to_frame()
+
         expected = np.array([123.321, 100.0, 632.23, 123.321, 51526.002, 12.5, 123.321, 51526.002, None], dtype=object)
         actual = f4[3].values
         self.assertTrue(np.array_equal(expected, actual))
@@ -883,8 +901,10 @@ class TestUnit(TestCase):
     def test_fillfalsy_leading(self):
         f0 = ff.parse('v(int,str,float,str)|s(9,4)')
         f0 = f0.assign[0]([0 if i%3==0 else x for i,x in enumerate(f0[0].values)])
-        f1, f2, f3 = f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
-        f4 = Batch.from_frames((f1,f2,f3)).fillfalsy_leading(value=123).to_frame()
+        f4 = Batch.from_frames((
+                f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
+        )).fillfalsy_leading(value=123).to_frame()
+
         expected = np.array([123, 92867, 84967, 123, 175579, 58768, 123, 170440, 32395])
         actual = f4[0].values
         self.assertTrue(np.array_equal(expected, actual))
@@ -892,46 +912,42 @@ class TestUnit(TestCase):
     def test_fillfalsy_trailing(self):
         f0 = ff.parse('v(str,str,float,int)|s(9,4)')
         f0 = f0.assign[3]([0 if i%3==0 else x for i,x in enumerate(f0[3].values)])
-        f1, f2, f3 = f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
-        f4 = Batch.from_frames((f1,f2,f3)).fillfalsy_trailing(value=123).to_frame()
-        expected = np.array([123, 35021, 166924, 123, 197228, 105269, 123, 194224, 172133])
+        f4 = Batch.from_frames((
+                f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
+        )).fillfalsy_trailing(value=123).to_frame()
+
+        expected = np.array([0, 35021, 166924, 0, 197228, 105269, 0, 194224, 172133])
         actual = f4[3].values
         self.assertTrue(np.array_equal(expected, actual))
     
     def test_fillna_forward(self):
         f0 = ff.parse('v(float,str,bool,str)|s(9,4)').assign[0]([None,  100.0,  632.23, 51526.002, None, 12.5,  122.52, None, None])
         f = Batch.from_frames((
-                f0.iloc[0:3].rename("1"),
-                f0.iloc[3:6].rename("2"), 
-                f0.iloc[6:9].rename("3")
+                f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
         )).fillna_forward().to_frame()
+
         expected = np.array([None, 100.0, 632.23, 51526.002, 51526.002, 12.5, 122.52, 122.52,122.52], dtype=object)
         self.assertTrue(np.array_equal(expected, f[0].values))
     
     def test_fillna_backward(self):
         f0 = ff.parse('v(float,str,bool,str)|s(9,4)').assign[0]([None,  100.0,  632.23, 51526.002, None, 12.5,  122.52, None, None])
         f = Batch.from_frames((
-                f0.iloc[0:3].rename("1"),
-                f0.iloc[3:6].rename("2"), 
-                f0.iloc[6:9].rename("3")
+                f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
         )).fillna_forward().to_frame()
     
     def test_fillfalsy_forward(self):
         f0 = ff.parse('v(float,str,bool,str)|s(9,4)').assign[0]([None,  100.0,  632.23, 51526.002, None, 12.5,  122.52, None, None])
         f = Batch.from_frames((
-                f0.iloc[0:3].rename("1"),
-                f0.iloc[3:6].rename("2"), 
-                f0.iloc[6:9].rename("3")
+                f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
         )).fillna_forward().to_frame()
+        
         expected = np.array([None, 100.0, 632.23, 51526.002, 51526.002, 12.5, 122.52, 122.52,122.52], dtype=object)
         self.assertTrue(np.array_equal(expected, f[0].values))
     
     def test_fillfalsy_backward(self):
         f0 = ff.parse('v(float,str,bool,str)|s(9,4)').assign[0]([None,  100.0,  632.23, 51526.002, None, 12.5,  122.52, None, None])
         f = Batch.from_frames((
-                f0.iloc[0:3].rename("1"),
-                f0.iloc[3:6].rename("2"), 
-                f0.iloc[6:9].rename("3")
+                f0.iloc[0:3].rename("1"), f0.iloc[3:6].rename("2"), f0.iloc[6:9].rename("3")
         )).fillna_forward().to_frame()
 
     #---------------------------------------------------------------------------
