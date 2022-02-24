@@ -2575,6 +2575,9 @@ class TestUnit(TestCase):
         dt6 = dtype_from_element(1.5)
         self.assertEqual(dt6, np.dtype(float))
 
+        dt7 = dtype_from_element(np.array(1j+1))
+        self.assertEqual(dt7, np.dtype(complex))
+
     #---------------------------------------------------------------------------
 
     def test_ufunc_unique1d_counts_a(self) -> None:
