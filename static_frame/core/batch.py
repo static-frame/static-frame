@@ -1014,8 +1014,6 @@ class Batch(ContainerOperand, StoreClientMixin):
                 condition=condition
                 )
 
-    # ---------------------------------------------------------------------------
-    # via interface?
 
     # ---------------------------------------------------------------------------
     # filling
@@ -1038,31 +1036,204 @@ class Batch(ContainerOperand, StoreClientMixin):
                 value=value,
                 )
 
-    def fillna_leading():
+    def fillna_leading(
+            self,
+            value: tp.Any,
+            axis: int = 0
+        ) -> "Batch":
+        '''
+        Return a new ``Batch`` after filling leading (and only leading) null (NaN or None) with the provided ``value``.
+
+        Args:
+            {value}
+            {axis}
+        '''
+        
+        return self._apply_attr(
+                attr='fillna_leading',
+                value=value,
+                axis=axis
+        )
+
+    def fillna_trailing(
+            self,
+            value: tp.Any,
+            axis: int = 0
+        ) -> 'Batch':
+        '''
+        Return a new ``Batch`` after filling trailing (and only trailing) null (NaN or None) with the provided ``value``.
+
+        Args:
+            {value}
+            {axis}
+        '''
+        return self._apply_attr(
+            attr='fillna_trailing',
+            value=value,
+            axis=axis
+        )
+
+    def fillfalsy_leading(
+            self,
+            value: tp.Any
+        ) -> "Batch":
+
+        '''
+        Return a new ``Batch`` after filling leading (and only leading) falsy values with the provided ``value``.
+
+        Args:
+            {value}
+            {axis}
+        '''
+        return self._apply_attr(
+            attr='fillfalsy_leading',
+            value=value,
+        )
+
+    def fillfalsy_trailing(
+        self,
+        value: tp.Any,
+        axis: int = 0
+        ) -> 'Batch':
+        '''
+        Return a new ``Frame`` after filling trailing (and only trailing) falsy values with the provided ``value``.
+
+        Args:
+            {value}
+            {axis}
+        '''
+        return self._apply_attr(
+            attr='fillfalsy_trailing',
+            value=value,
+            axis=axis
+        )
+
+    def fillna_forward(
+        self,
+        limit: int = 0,
+        axis: int = 0,
+        ) -> 'Batch':
+        '''
+        Return a new ``Batch`` after filling forward null (NaN or None) with the last observed value.
+
+        Args:
+            {limit}
+            {axis}
+        '''
+        return self._apply_attr(
+            attr='fillna_forward',
+            limit=limit,
+            axis=axis
+        )
+
+    def fillna_backward(
+        self,
+        limit: int = 0,
+        axis: int = 0
+        ) -> 'Batch':
+        '''
+        Return a new ``Batch`` after filling backward null (NaN or None) with the first observed value.
+
+        Args:
+            {limit}
+            {axis}
+        '''
+        return self._apply_attr(
+            attr='fillna_backward',
+            limit=limit,
+            axis=axis
+        )
+
+    def fillfalsy_forward(
+        self,
+        value: tp.Any,
+        axis: int = 0,
+        ) -> 'Batch':
+        '''
+        Return a new ``Frame`` after filling forward falsy values with the last observed value.
+
+        Args:
+            {limit}
+            {axis}
+        '''
+        return self._apply_attr(
+            attr='fillfalsy_forward',
+            value=value,
+            axis=axis
+        )
+
+    def fillfalsy_backward(
+        self,
+        limit: int = 0,
+        axis: int = 0
+        ) -> 'Batch':
+        '''
+        Return a new ``Frame`` after filling backward falsy values with the first observed value.
+
+        Args:
+            {limit}
+            {axis}
+        '''
+        return self._apply_attr(
+            attr='fillfalsy_backward',
+            limit=limit,
+            axis=axis
+        )
+
+
+    # ---------------------------------------------------------------------------
+    # index and relabel
+
+    def set_index():
         raise NotImplementedError
 
-    def fillna_trailing():
+    def set_index_hierarchy():
         raise NotImplementedError
 
-    def fillfalsy_leading():
+    def unset_index():
         raise NotImplementedError
 
-    def fillfalsy_trailing():
+    def reindex():
         raise NotImplementedError
 
-    def fillna_forward():
+    def relabel():
         raise NotImplementedError
 
-    def fillna_backward():
+    def relabel_flat():
         raise NotImplementedError
 
-    def fillfalsy_forward():
+    def relabel_level_add():
         raise NotImplementedError
 
-    def fillfalsy_backward():
+    def relabel_level_drop():
+        raise NotImplementedError
+
+    def relabel_shift_in():
+        raise NotImplementedError
+
+    def relabel_shift_out():
         raise NotImplementedError
 
 
+    # ---------------------------------------------------------------------------
+    # rank
+
+    def rank_dense():
+        raise NotImplementedError
+
+    def rank_max():
+        raise NotImplementedError
+
+    def rank_mean():
+        raise NotImplementedError
+
+    def rank_min():
+        raise NotImplementedError
+
+    def rank_ordinal():
+        raise NotImplementedError
+
+        
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
 
