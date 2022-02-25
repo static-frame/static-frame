@@ -146,7 +146,8 @@ class IndexBase(ContainerOperand):
             indexers: tp.List[np.ndarray] = []
 
             for levels, codes in zip(value.levels, value.codes):
-                indexer = codes.values()
+                # Older versions of Pandas store codes in `FrozenNDArray`. Newer versions store codes in `np.ndarray`. This handles both cases properly and ensures we have a copy
+                indexer = np.array(codes)
                 indexer.flags.writeable = False
                 indexers.append(indexer)
                 indices.append(build_index(levels))
