@@ -1,4 +1,3 @@
-import unittest
 from io import StringIO
 import datetime
 
@@ -12,7 +11,6 @@ from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import DTYPE_COMPLEX_KIND
 from static_frame.core.util import DTYPE_FLOAT_KIND
 from static_frame.core.util import NAT
-
 
 from static_frame.core.frame import Frame
 
@@ -44,7 +42,6 @@ class TestUnit(TestCase):
         self.assertEqual(sfd.from_type_filter_array(a2).tolist(),
                 [False, True, False])
 
-
     def test_store_from_type_filter_array_c(self) -> None:
 
         a1 = np.array([1, 20, 1], dtype=int)
@@ -57,7 +54,6 @@ class TestUnit(TestCase):
         self.assertEqual(sfd.from_type_filter_array(a2).tolist(),
                 [1, 20, 1])
 
-
     def test_store_from_type_filter_array_d(self) -> None:
 
         a1 = np.array([1, None, np.nan, -np.inf, np.inf], dtype=object)
@@ -66,7 +62,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(sfd.from_type_filter_array(a1).tolist(),
             [1, 'None', '', '-inf', 'inf'])
-
 
     def test_store_from_type_filter_array_e(self) -> None:
 
@@ -93,7 +88,6 @@ class TestUnit(TestCase):
         self.assertEqual(a4.tolist(),
                 ['2012', '2013', ''])
 
-
     def test_store_from_type_filter_array_g(self) -> None:
 
         sfd = STORE_FILTER_DEFAULT
@@ -101,7 +95,6 @@ class TestUnit(TestCase):
         a2 = sfd.from_type_filter_array(a1)
         self.assertEqual(a2.tolist(),
                 [datetime.date(2012, 2, 5), datetime.date(2013, 5, 21), ''])
-
 
     def test_store_from_type_filter_array_h(self) -> None:
 
@@ -115,12 +108,12 @@ class TestUnit(TestCase):
                 ['1.20e+00', '3.40e+00'])
 
     #---------------------------------------------------------------------------
+
     def test_store_from_type_filter_element_a(self) -> None:
         sfd = STORE_FILTER_DEFAULT
 
         self.assertEqual(sfd.from_type_filter_element(None), 'None')
         self.assertEqual(sfd.from_type_filter_element(np.nan), '')
-
 
     def test_store_from_type_filter_element_b(self) -> None:
         sfd = STORE_FILTER_DEFAULT
@@ -148,7 +141,6 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(sf1.from_type_filter_element(1+4j), '1.00e+00+4.00e+00j')
 
-
     #---------------------------------------------------------------------------
 
     def test_store_to_type_filter_element_a(self) -> None:
@@ -167,7 +159,6 @@ class TestUnit(TestCase):
         self.assertEqual(sfd.to_type_filter_element('-inf'), '-inf')
         self.assertEqual(sfd.to_type_filter_element('None'), 'None')
 
-
     #---------------------------------------------------------------------------
 
     def test_store_to_type_filter_array_a(self) -> None:
@@ -176,13 +167,11 @@ class TestUnit(TestCase):
         post = sfd.to_type_filter_array(a1)
         self.assertAlmostEqualValues(post.tolist(), [1, None, np.nan, np.nan, np.inf])
 
-
     def test_store_to_type_filter_array_b(self) -> None:
         sfd = STORE_FILTER_DEFAULT
         a1 = np.array(['2012', '2013'], dtype=np.datetime64)
         post = sfd.to_type_filter_array(a1)
         self.assertAlmostEqualValues(post.tolist(), [datetime.date(2012, 1, 1), datetime.date(2013, 1, 1)])
-
 
     #---------------------------------------------------------------------------
 
@@ -193,7 +182,6 @@ class TestUnit(TestCase):
         f.to_csv(post, store_filter=store_filter, include_index=False)
         post.seek(0)
         self.assertEqual(post.read(), '0,1\n!,&\n*,@\n')
-
 
     #---------------------------------------------------------------------------
 
@@ -297,8 +285,8 @@ class TestUnit(TestCase):
                 0.4123-3j
                 )
 
-
     #---------------------------------------------------------------------------
+
     def test_store_filter_format_inexact_array_a(self) -> None:
         sf1 = StoreFilter(
                 value_format_float_positional='{:.8f}',
@@ -334,7 +322,6 @@ class TestUnit(TestCase):
         self.assertEqual(post6.tolist(),
                 ['0.41300000-0.00000059j', '0.41230000-0.59300000j', '0.83255500+0.00000000j', '20.00000000+3.00000000j'])
 
-
     def test_store_filter_format_inexact_array_b(self) -> None:
         sf1 = StoreFilter(
                 value_format_float_positional='{:.2e}',
@@ -357,7 +344,6 @@ class TestUnit(TestCase):
                 [['4.13e-01-5.93e-07j', '4.12e-01-5.93e-01j'],
                 ['8.33e-01+0.00e+00j', '2.00e+01+3.00e+00j']])
 
-
     def test_store_filter_format_inexact_array_c(self) -> None:
         sf1 = StoreFilter(
                 value_format_float_positional='{:.3f}',
@@ -379,6 +365,6 @@ class TestUnit(TestCase):
                 ['0.413-0.000j', '0.412-0.593j', 'foo', False, 100, '0.833', '20.000+3.000j'])
 
 
-
 if __name__ == '__main__':
+    import unittest
     unittest.main()

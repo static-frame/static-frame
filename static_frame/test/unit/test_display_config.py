@@ -1,13 +1,9 @@
-import unittest
-# import typing as tp
-
 from static_frame.test.test_case import TestCase
 
 from static_frame import DisplayConfig
 
 
 class TestUnit(TestCase):
-
 
     def test_display_config_a(self) -> None:
         post = DisplayConfig.interface
@@ -16,4 +12,5 @@ class TestUnit(TestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()

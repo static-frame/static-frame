@@ -1,7 +1,3 @@
-
-
-import unittest
-
 import numpy as np
 
 from static_frame.core.loc_map import LocMap
@@ -14,7 +10,6 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
 
     def test_loc_map_a(self) -> None:
         idx = Index(['a', 'b', 'c'])
@@ -60,9 +55,6 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(post2, [11, 13])
 
-
-
-
     def test_loc_map_slice_a(self) -> None:
         dt64 = np.datetime64
         idx = IndexDate.from_date_range('1985-01-01', '1985-01-08')
@@ -87,7 +79,6 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(post2, slice(0, 4, 2))
 
-
     def test_loc_map_slice_b(self) -> None:
         dt64 = np.datetime64
         idx = IndexDate.from_date_range('1985-01-01', '1985-01-08')
@@ -101,7 +92,6 @@ class TestUnit(TestCase):
                     offset=None,
                     partial_selection=False,
                     )
-
 
     def test_loc_map_slice_c(self) -> None:
         dt64 = np.datetime64
@@ -117,8 +107,6 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(post1, slice(2, 6, None))
 
-
-
     def test_loc_map_slice_d(self) -> None:
         dt64 = np.datetime64
         idx = IndexDate.from_date_range('1985-01-06', '1985-04-08')
@@ -133,6 +121,7 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(post1, slice(0, 85, None))
 
-if __name__ == '__main__':
-    unittest.main()
 
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

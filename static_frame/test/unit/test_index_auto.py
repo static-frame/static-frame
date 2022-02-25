@@ -1,5 +1,3 @@
-
-import unittest
 import datetime
 
 from static_frame.core.index import Index
@@ -9,6 +7,7 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame.test.test_case import TestCase
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultFactory
+
 
 class TestUnit(TestCase):
 
@@ -34,7 +33,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx1._map is None, True)
         self.assertEqual(len(idx1), 9)
 
-
     def test_index_auto_factory_c(self) -> None:
 
         idx1 = IndexAutoFactory.from_optional_constructor(5,
@@ -44,7 +42,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx1._map is None, False) #type: ignore
         self.assertEqual(len(idx1), 5)
         self.assertEqual(idx1.STATIC, True)
-
 
     def test_index_auto_factory_from_optional_constructor(self) -> None:
         initializer = 3
@@ -61,4 +58,5 @@ class TestUnit(TestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()

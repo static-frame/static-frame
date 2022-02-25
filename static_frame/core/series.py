@@ -70,7 +70,6 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
-from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_TUPLE
@@ -94,7 +93,7 @@ from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import ufunc_unique
+from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import BoolOrBools
@@ -161,16 +160,25 @@ class Series(ContainerOperand):
                     )
 
         length = len(index_final) #type: ignore
-        if hasattr(element, '__len__') and not isinstance(element, str):
-            array = np.empty(length, dtype=DTYPE_OBJECT)
-            # this is the only way to insert tuples
-            for i in range(length):
-                array[i] = element
-        else:
-            array = np.full(
-                    length,
-                    fill_value=element,
-                    dtype=dtype)
+
+        # if hasattr(element, '__len__') and not isinstance(element, str):
+        #     array = np.empty(length, dtype=DTYPE_OBJECT)
+        #     # this is the only way to insert tuples
+        #     for i in range(length):
+        #         array[i] = element
+        # else:
+        #     array = np.full(
+        #             length,
+        #             fill_value=element,
+        #             dtype=dtype)
+
+        dtype = None if dtype is None else np.dtype(dtype)
+        array = full_for_fill(
+                dtype,
+                length,
+                element,
+                resolve_fill_value_dtype=dtype is None, # True means derive from fill value
+                )
         array.flags.writeable = False
         return cls(array,
                 index=index_final,
@@ -1789,6 +1797,7 @@ class Series(ContainerOperand):
             raise AxisInvalid(f'invalid axis {axis}')
 
         groups, locations = array_to_groups_and_locations(self.values)
+
         for idx, g in enumerate(groups):
             selection = locations == idx
             yield g, self._extract_iloc(selection)
@@ -2461,9 +2470,9 @@ class Series(ContainerOperand):
             valid = ~isna_array(values)
 
         if unique and valid is None:
-            return len(ufunc_unique(values))
+            return len(ufunc_unique1d(values))
         elif unique and valid is not None: # valid is a Boolean array
-            return len(ufunc_unique(values[valid]))
+            return len(ufunc_unique1d(values[valid]))
         elif not unique and valid is not None:
             return valid.sum() #type: ignore [no-any-return]
         # not unique, valid is None, means no removals, handled above
@@ -2723,7 +2732,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`numpy.ndarray`
         '''
-        return ufunc_unique(self.values)
+        return ufunc_unique1d(self.values)
 
     @doc_inject()
     def equals(self,
