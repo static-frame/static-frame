@@ -1028,31 +1028,66 @@ class TestUnit(TestCase):
         expected = [-88017, 13448, 146284, 92867, 175579, 170440, 84967, 58768, 32395]
         self.assertTrue(actual == expected)
 
-
-    #---------------------------------------------------------------------------
-    def test_relabel_shift_in(self):
-        pass
-
-
     #---------------------------------------------------------------------------
     def test_rank_dense(self):
-        pass
+        f0 = Frame.from_items(
+            (
+                ("i",i:=(1,4,7,2,5,8,3,6,9)),
+                ("b",(b%2==0 for b in i))
+            )
+        )
+        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        b123 = Batch.from_frames(f123).rank_dense()
+        for i,f in enumerate(b123.items()):
+            self.assertTrue(np.array_equal(f[1].values, f123[i].rank_dense().values))
 
-    #---------------------------------------------------------------------------
     def test_rank_max(self):
-        pass
+        f0 = Frame.from_items(
+            (
+                ("i",i:=(1,4,7,2,5,8,3,6,9)),
+                ("b",(b%2==0 for b in i))
+            )
+        )
+        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        b123 = Batch.from_frames(f123).rank_max()
+        for i,f in enumerate(b123.items()):
+            self.assertTrue(np.array_equal(f[1].values, f123[i].rank_max().values))
 
-    #---------------------------------------------------------------------------
     def test_rank_mean(self):
-        pass
+        f0 = Frame.from_items(
+            (
+                ("i",i:=(1,4,7,2,5,8,3,6,9)),
+                ("b",(b%2==0 for b in i))
+            )
+        )
+        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        b123 = Batch.from_frames(f123).rank_mean()
+        for i,f in enumerate(b123.items()):
+            self.assertTrue(np.array_equal(f[1].values, f123[i].rank_mean().values))
 
-    #---------------------------------------------------------------------------
     def test_rank_min(self):
-        pass
+        f0 = Frame.from_items(
+            (
+                ("i",i:=(1,4,7,2,5,8,3,6,9)),
+                ("b",(b%2==0 for b in i))
+            )
+        )
+        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        b123 = Batch.from_frames(f123).rank_min()
+        for i,f in enumerate(b123.items()):
+            self.assertTrue(np.array_equal(f[1].values, f123[i].rank_min().values))
 
-    #---------------------------------------------------------------------------
     def test_rank_ordinal(self):
-        pass
+        f0 = Frame.from_items(
+            (
+                ("i",i:=(1,4,7,2,5,8,3,6,9)),
+                ("b",(b%2==0 for b in i))
+            )
+        )
+        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        b123 = Batch.from_frames(f123).rank_ordinal()
+        for i,f in enumerate(b123.items()):
+            self.assertTrue(np.array_equal(f[1].values, f123[i].rank_ordinal().values))    
 
     #---------------------------------------------------------------------------
     def test_batch_shift_a(self) -> None:

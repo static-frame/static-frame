@@ -32,6 +32,7 @@ from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.util import EMPTY_TUPLE, AnyCallable, IndexConstructor, IndexConstructors
 from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
@@ -1277,21 +1278,90 @@ class Batch(ContainerOperand, StoreClientMixin):
     # ---------------------------------------------------------------------------
     # rank
 
-    def rank_dense():
-        raise NotImplementedError
+    def rank_ordinal(self, *,
+        axis: int = 0,
+        skipna: bool = True,
+        ascending: BoolOrBools = True,
+        start: int = 0,
+        fill_value: tp.Any = np.nan
+        ) -> 'Batch':
+        
+        return self._apply_attr(
+            attr='rank_ordinal',
+            axis=axis,
+            skipna=skipna,
+            ascending=ascending,
+            start=start,
+            fill_value=fill_value
+        )
 
-    def rank_max():
-        raise NotImplementedError
+    def rank_dense(self,
+        axis: int = 0,
+        skipna: bool = True,
+        ascending: BoolOrBools = True,
+        start: int = 0,
+        fill_value: tp.Any = np.nan
+        ) -> 'Batch':
 
-    def rank_mean():
-        raise NotImplementedError
+        return self._apply_attr(
+            attr='rank_dense',
+            axis=axis,
+            skipna=skipna,
+            ascending=ascending,
+            start=start,
+            fill_value=fill_value
+        )
 
-    def rank_min():
-        raise NotImplementedError
+    def rank_min(self,
+        axis: int = 0,
+        skipna: bool = True,
+        ascending: BoolOrBools = True,
+        start: int = 0,
+        fill_value: tp.Any = np.nan
+        ) -> 'Batch':
+        
+        return self._apply_attr(
+            attr='rank_min',
+            axis=axis,
+            skipna=skipna,
+            ascending=ascending,
+            start=start,
+            fill_value=fill_value
+        )
 
-    def rank_ordinal():
-        raise NotImplementedError
+    def rank_max(self,
+        axis: int = 0,
+        skipna: bool = True,
+        ascending: BoolOrBools = True,
+        start: int = 0,
+        fill_value: tp.Any = np.nan
+        ) -> 'Batch':
+        
+        return self._apply_attr(
+            attr='rank_max',
+            axis=axis,
+            skipna=skipna,
+            ascending=ascending,
+            start=start,
+            fill_value=fill_value
+        )
 
+    def rank_mean(self,
+        axis: int = 0,
+        skipna: bool = True,
+        ascending: BoolOrBools = True,
+        start: int = 0,
+        fill_value: tp.Any = np.nan
+        ) -> 'Batch':
+        
+        return self._apply_attr(
+            attr='rank_mean',
+            axis=axis,
+            skipna=skipna,
+            ascending=ascending,
+            start=start,
+            fill_value=fill_value
+        )
         
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
