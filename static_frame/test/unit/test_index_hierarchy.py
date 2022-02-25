@@ -2787,7 +2787,7 @@ class TestUnit(TestCase):
         import pandas
 
         pdidx = pandas.MultiIndex.from_product(
-            ((datetime.date(2000, 1, 1), datetime.date(2000, 1, 2)), range(3)))
+            ((np.datetime64("2000-01-01"), np.datetime64("2000-01-02")), range(3)))
 
         idx = IndexHierarchyGO.from_pandas(pdidx)
         self.assertEqual([IndexNanosecondGO, IndexGO], idx.index_types.values.tolist())

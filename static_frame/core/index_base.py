@@ -133,6 +133,9 @@ class IndexBase(ContainerOperand):
             hierarchy_constructor = IndexHierarchy if cls.STATIC else IndexHierarchyGO
 
             def build_index(pd_idx: pandas.Index) -> Index:
+                # NOTE: Newer versions of pandas will not require Python date objects to live inside
+                # a DatetimeIndex. Instead, it will be a regular Index with dtype=object.
+                # Only numpy datetime objects are put into a DatetimeIndex.
                 if isinstance(pd_idx, pandas.DatetimeIndex):
                     constructor: tp.Type[Index] = IndexNanosecond
                 else:
