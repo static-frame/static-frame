@@ -990,44 +990,49 @@ class TestUnit(TestCase):
         self.assertTrue(np.array_equal(expected, f[0].values))
 
     #---------------------------------------------------------------------------
-    def test_set_index(self):
-        pass
-
-    #---------------------------------------------------------------------------
-    def test_set_index_hierarchy(self):
-        pass
-
-    #---------------------------------------------------------------------------
     def test_unset_index(self):
-        pass
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+        f = Batch.from_frames((
+            f0.iloc[0:2].rename("1"),
+            f0.iloc[2:5].rename("2"),
+            f0.iloc[5:9].rename("3"),
+        )).unset_index().to_frame()
+        actual = list(f.index.values[:,-1].astype(int))
+        expected = [*range(2), *range(3), *range(4)]
+        self.assertTrue(actual == expected)
 
     #---------------------------------------------------------------------------
     def test_reindex(self):
-        pass
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+        f = list(Batch.from_frames((
+            f0.iloc[0:2].rename("1"),
+            f0.iloc[2:5].rename("2"),
+            f0.iloc[5:9].rename("3"),
+        )).reindex(index=list(range(9))).items())
+        self.assertTrue([(a:=x[1].shape) for x in f].count(a) == 3)
 
     #---------------------------------------------------------------------------
-    def test_relabel(self):
-        pass
+    def test_all_relabel(self):
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+        f1 = Batch.from_frames((
+            f0.iloc[0:3].rename("1"),
+            f0.iloc[3:6].rename("2"),
+            f0.iloc[6:9].rename("3"),
+        )).relabel_level_add("idx").relabel_flat(index=True).to_frame()
+        f2 = list(Batch.from_frames((
+            f1.iloc[0:9:3].rename("1"),
+            f1.iloc[1:9:3].rename("2"),
+            f1.iloc[2:9:3].rename("3"),
+        )).relabel_level_drop(index=1).relabel_shift_in(3, axis=0).items())
+        actual = [*f2[0][1][0].values, *f2[1][1][0].values, *f2[2][1][0].values]
+        expected = [-88017, 13448, 146284, 92867, 175579, 170440, 84967, 58768, 32395]
+        self.assertTrue(actual == expected)
 
-    #---------------------------------------------------------------------------
-    def test_relabel_flat(self):
-        pass
-
-    #---------------------------------------------------------------------------
-    def test_relabel_level_add(self):
-        pass
-
-    #---------------------------------------------------------------------------
-    def test_relabel_level_drop(self):
-        pass
 
     #---------------------------------------------------------------------------
     def test_relabel_shift_in(self):
         pass
 
-    #---------------------------------------------------------------------------
-    def test_relabel_shift_out(self):
-        pass
 
     #---------------------------------------------------------------------------
     def test_rank_dense(self):

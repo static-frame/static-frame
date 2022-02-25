@@ -30,7 +30,7 @@ from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipNPZ
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import EMPTY_TUPLE, AnyCallable, IndexConstructor, IndexConstructors
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
@@ -1188,37 +1188,92 @@ class Batch(ContainerOperand, StoreClientMixin):
     # ---------------------------------------------------------------------------
     # index and relabel
 
-    def set_index():
-        raise NotImplementedError
+    def unset_index(
+        self,
+        names: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
+        consolidate_blocks: bool = False,
+        columns_constructors: IndexConstructors = None
+    ) -> 'Batch':
 
-    def set_index_hierarchy():
-        raise NotImplementedError
+        return self._apply_attr(
+            attr='unset_index',
+            names=names,
+            consolidate_blocks=consolidate_blocks,
+            columns_constructors=columns_constructors
+        )
 
-    def unset_index():
-        raise NotImplementedError
+    def reindex(
+        self,
+        index: tp.Optional[IndexInitializer] = None,
+        columns: tp.Optional[IndexInitializer] = None,
+        fill_value: object = np.nan,
+        own_index: bool = False,
+        own_columns: bool = False,
+        check_equals: bool = True,
+    ) -> 'Batch':
+        
+        return self._apply_attr(
+            attr='reindex',
+            index=index,
+            columns=columns,
+            fill_value=fill_value,
+            own_index=own_index,
+            own_columns=own_columns,
+            check_equals=check_equals,
+        )
 
-    def reindex():
-        raise NotImplementedError
+    def relabel_flat(
+        self,
+        index: bool = False,
+        columns: bool = False,
+        ) -> 'Batch':
 
-    def relabel():
-        raise NotImplementedError
+        return self._apply_attr(
+            attr='relabel_flat',
+            index=index,
+            columns=columns
+        )
 
-    def relabel_flat():
-        raise NotImplementedError
+    def relabel_level_add(
+        self,
+        index: tp.Hashable = None,
+        columns: tp.Hashable = None,
+        index_constructor: IndexConstructor = None,
+        columns_constructor: IndexConstructor = None
+        ) -> 'Batch':
 
-    def relabel_level_add():
-        raise NotImplementedError
+        return self._apply_attr(
+            attr='relabel_level_add',
+            index=index,
+            columns=columns,
+            index_constructor=index_constructor,
+            columns_constructor=columns_constructor,
+        )
 
-    def relabel_level_drop():
-        raise NotImplementedError
+    def relabel_level_drop(
+        self,
+        index: int = 0,
+        columns: int = 0
+        ) -> 'Batch':
 
-    def relabel_shift_in():
-        raise NotImplementedError
+        return self._apply_attr(
+            attr='relabel_level_drop',
+            index=index,
+            columns=columns
+        )
 
-    def relabel_shift_out():
-        raise NotImplementedError
+    def relabel_shift_in(
+        self,
+        key: GetItemKeyType,
+        axis: int = 0,
+        ) -> 'Batch':
 
-
+        return self._apply_attr(
+            attr='relabel_shift_in',
+            key=key,
+            axis=axis
+        )
+        
     # ---------------------------------------------------------------------------
     # rank
 
