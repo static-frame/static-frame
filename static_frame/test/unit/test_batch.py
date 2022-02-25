@@ -943,7 +943,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_fillfalsy_leading(self):
         f0 = ff.parse('v(str,str,float,str)|s(9,4)')
-        f0 = f0.assign[0]([' if i in (0,3,6) else x for i,x in enumerate(f0[0].values)])
+        f0 = f0.assign[0](['' if i in (0,3,6) else x for i,x in enumerate(f0[0].values)])
         f = Batch.from_frames((
             f0.iloc[0:3].rename('1'),
             f0.iloc[3:6].rename('2'),
@@ -956,7 +956,7 @@ class TestUnit(TestCase):
 
     def test_fillfalsy_trailing(self):
         f0 = ff.parse('v(str,str,float,int)|s(9,4)')
-        f0 = f0.assign[0]([' if i in (2,5,8) else x for i,x in enumerate(f0[0].values)])
+        f0 = f0.assign[0](['' if i in (2,5,8) else x for i,x in enumerate(f0[0].values)])
         f = Batch.from_frames((
             f0.iloc[0:3].rename('1'),
             f0.iloc[3:6].rename('2'),
