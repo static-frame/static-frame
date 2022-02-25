@@ -1226,16 +1226,18 @@ class Index(IndexBase):
 
         if index_constructor is None:
             # cannot assume new depth is the same index subclass
-            index_constructors = (cls_depth, self.__class__)
-        else:
-            index_constructors = (index_constructor, self.__class__) #type: ignore
+            index_constructor = cls_depth
 
-        return cls.from_tree(
-                {level: self.values},
+        indices = [index_constructor((level,)), self.copy()]
+        new_indexer = np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT)
+        new_indexer.flags.writeable = False
+        indexers = [new_indexer, PositionsAllocator.get(self.__len__())]
+
+        return cls(
+                indices=indices,
+                indexers=indexers,
                 name=self._name,
-                index_constructors=index_constructors,
                 )
-
 
     def to_pandas(self) -> 'pandas.Index':
         '''Return a Pandas Index.

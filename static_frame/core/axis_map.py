@@ -83,7 +83,6 @@ def buses_to_hierarchy(
     Given an iterable of named :obj:`Bus` derive a :obj:`Series` with an :obj:`IndexHierarchy`.
     '''
     # NOTE: for now, the Returned Series will have bus Names as values; this requires the Yarn to store a dict, not a list
-
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
     tree = {}

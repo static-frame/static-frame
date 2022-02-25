@@ -796,6 +796,9 @@ class IndexHierarchy(IndexBase):
         if not all(isinstance(index, Index) for index in indices):
             raise ErrorInitIndex("indices must all Index's!")
 
+        if len(indices) <= 1:
+            raise ErrorInitIndex('Index Hierarchies must have at least two levels!')
+
         self._indices = [
             mutable_immutable_index_filter(self.STATIC, idx) # type: ignore
             for idx in indices

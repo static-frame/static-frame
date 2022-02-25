@@ -590,7 +590,7 @@ def pivot_outer_index(
         index_inner = index_from_optional_constructor( # type: ignore
                 index_values,
                 default_constructor=partial(
-                        IndexHierarchy.from_labels,
+                        IndexHierarchy._from_array,
                         name=name,
                         ),
                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),

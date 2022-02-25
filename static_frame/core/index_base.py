@@ -120,20 +120,43 @@ class IndexBase(ContainerOperand):
         from static_frame.core.index_datetime import IndexDatetime
 
         if isinstance(value, pandas.MultiIndex):
+            if value.has_duplicates:
+                raise ErrorInitIndex(f'cannot create IndexHierarchy from a MultiIndex with duplicates: {value}')
+
             # iterating over a hierarchical index will iterate over labels
             name: tp.Optional[tp.Tuple[tp.Hashable, ...]] = tuple(value.names)
+
             # if not assigned Pandas returns None for all components, which will raise issue if trying to unset this index.
             if all(n is None for n in name): #type: ignore
                 name = None
-            depth = value.nlevels
 
-            if not cls.STATIC:
-                return IndexHierarchyGO.from_labels(value,
-                        name=name,
-                        depth_reference=depth)
-            return IndexHierarchy.from_labels(value,
+            hierarchy_constructor = IndexHierarchy if cls.STATIC else IndexHierarchyGO
+
+            def build_index(pd_idx: pandas.Index) -> Index:
+                if isinstance(pd_idx, pandas.DatetimeIndex):
+                    constructor: tp.Type[Index] = IndexNanosecond
+                else:
+                    constructor = Index
+
+                if cls.STATIC:
+                    return constructor(pd_idx, name=pd_idx.name)
+                return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx, name=pd_idx.name))
+
+            indices: tp.List[Index] = []
+            indexers: tp.List[np.ndarray] = []
+
+            for levels, codes in zip(value.levels, value.codes):
+                indexer = codes.values()
+                indexer.flags.writeable = False
+                indexers.append(indexer)
+                indices.append(build_index(levels))
+
+            return hierarchy_constructor(
+                    indices=indices,
+                    indexers=indexers,
                     name=name,
-                    depth_reference=depth)
+                    )
+
         elif isinstance(value, pandas.DatetimeIndex):
             # if IndexDatetime, use cls, else use IndexNanosecond
             if issubclass(cls, IndexDatetime):

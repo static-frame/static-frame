@@ -20,6 +20,8 @@ from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexYearMonth
 from static_frame import IndexYearMonthGO
+from static_frame import IndexNanosecond
+from static_frame import IndexNanosecondGO
 from static_frame import Series
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
@@ -2773,7 +2775,28 @@ class TestUnit(TestCase):
         self.assertEqual(idx.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A']])
 
+    def test_hierarchy_from_pandas_c(self) -> None:
+        import pandas
+
+        pdidx = pandas.MultiIndex.from_tuples((('I', 'II'), ('I', 'II')))
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchyGO.from_pandas(pdidx)
+
+    def test_hierarchy_from_pandas_d(self) -> None:
+        import pandas
+
+        pdidx = pandas.MultiIndex.from_product(
+            ((datetime.date(2000, 1, 1), datetime.date(2000, 1, 2)), range(3)))
+
+        idx = IndexHierarchyGO.from_pandas(pdidx)
+        self.assertEqual([IndexNanosecondGO, IndexGO], idx.index_types.values.tolist())
+
+        idx = IndexHierarchy.from_pandas(pdidx)
+        self.assertEqual([IndexNanosecond, Index], idx.index_types.values.tolist())
+
     #---------------------------------------------------------------------------
+
     def test_hierarchy_copy_a(self) -> None:
 
         labels = (
