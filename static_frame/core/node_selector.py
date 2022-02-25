@@ -41,6 +41,10 @@ class Interface(tp.Generic[TContainer]):
     __slots__ = EMPTY_TUPLE
     INTERFACE: tp.Tuple[str, ...] = EMPTY_TUPLE
 
+class InterfaceBatch:
+    # Batch interfaces are unique in that they always (?)] return a Batch
+    INTERFACE: tp.Tuple[str, ...] = EMPTY_TUPLE
+
 
 class InterfaceGetItem(Interface[TContainer]):
 
