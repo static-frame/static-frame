@@ -1,7 +1,6 @@
-
-import unittest
 import pydoc
 from static_frame.test.test_case import TestCase
+
 
 class TestUnit(TestCase):
 
@@ -12,6 +11,7 @@ class TestUnit(TestCase):
             post = pydoc.render_doc(target, renderer=pydoc.plaintext) # type: ignore
             self.assertTrue(len(post) > 0)
 
-if __name__ == '__main__':
-    unittest.main()
 
+if __name__ == '__main__':
+    import unittest
+    unittest.main()

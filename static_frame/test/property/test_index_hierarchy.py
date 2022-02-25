@@ -1,22 +1,15 @@
-
-# import typing as tp
-import unittest
-
-# import numpy as np
-
 from hypothesis import given
 from static_frame.test.test_case import TestCase
 
 from static_frame.test.property.strategies import get_index_hierarchy_any
 
-
 from static_frame import IndexHierarchy
-# from static_frame import IndexHierarchyGO
 
 
 class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
+
     @given(get_index_hierarchy_any())
     def test_index_display(self, ih: IndexHierarchy) -> None:
 
@@ -36,4 +29,5 @@ class TestUnit(TestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()

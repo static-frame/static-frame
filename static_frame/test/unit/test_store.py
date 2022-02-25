@@ -1,6 +1,4 @@
-import unittest
 from itertools import product
-# from io import StringIO
 import numpy as np
 
 from static_frame.core.store import Store
@@ -10,14 +8,11 @@ from static_frame.core.store import StoreConfigMap
 from static_frame.core.frame import Frame
 
 from static_frame.test.test_case import TestCase
-# from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.exception import StoreParameterConflict
 
 
-
 class TestUnit(TestCase):
-
 
     #---------------------------------------------------------------------------
 
@@ -79,7 +74,6 @@ class TestUnit(TestCase):
 
         sc1m = StoreConfigMap(maps2, default=default)
         self.assertEqual(sc1m.default.read_chunksize, 2)
-
 
     def test_store_config_map_init_e(self) -> None:
         maps1 = {'a': StoreConfig(write_max_workers=2),
@@ -164,7 +158,6 @@ class TestUnit(TestCase):
             self.assertEqual(config_he, config.to_store_config_he())
             self.assertTrue(isinstance(hash(config_he), int))
 
-
     def test_store_config_he_b(self) -> None:
 
         config1 = StoreConfigHE(index_depth=1)
@@ -194,7 +187,6 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             hash(StoreConfig())
 
-
     #---------------------------------------------------------------------------
     def test_store_config_map_a(self) -> None:
 
@@ -207,7 +199,6 @@ class TestUnit(TestCase):
         sc2m = StoreConfigMap.from_config(sc2)
         self.assertEqual(sc2m['a'].include_index, False)
         self.assertEqual(sc2m['b'].include_index, False)
-
 
     def test_store_config_map_b(self) -> None:
 
@@ -235,14 +226,12 @@ class TestUnit(TestCase):
         self.assertEqual(sc4m['a'].index_depth, 2)
         self.assertEqual(sc4m['b'].index_depth, 3)
 
-
     def test_store_config_map_d(self) -> None:
         with self.assertRaises(ErrorInitStoreConfig):
             _ = StoreConfigMap({'a': object()}) #type: ignore
 
         with self.assertRaises(ErrorInitStoreConfig):
             _ = StoreConfigMap(default=object()) #type: ignore
-
 
     def test_store_get_field_names_and_dtypes_a(self) -> None:
 
@@ -273,7 +262,6 @@ class TestUnit(TestCase):
         self.assertEqual(dtypes,
                 [np.dtype('<U1'), np.dtype('bool'), np.dtype('O')])
 
-
     def test_store_get_field_names_and_dtypes_c(self) -> None:
 
         f1 = Frame.from_records((('a', True, None),), index=(('a',)), columns=(('x', 'y', 'z'))).rename(columns='foo')
@@ -294,7 +282,6 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(field_names, ['foo', 'x', 'y', 'z'])
         self.assertTrue(len(field_names) == len(dtypes))
-
 
     def test_store_get_field_names_and_dtypes_d(self) -> None:
 
@@ -346,8 +333,7 @@ class TestUnit(TestCase):
         sc1m = StoreConfigMap.from_initializer(maps)
         self.assertTrue(sc1m.default == StoreConfigMap._DEFAULT)
 
-    #---------------------------------------------------------------------------
-
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()

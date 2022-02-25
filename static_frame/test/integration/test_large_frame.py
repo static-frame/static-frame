@@ -1,10 +1,9 @@
-import unittest
-
 import numpy as np
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.frame import Frame
 from static_frame.test.test_case import temp_file
+
 
 class TestUnit(TestCase):
 
@@ -19,7 +18,6 @@ class TestUnit(TestCase):
             # f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
 
-
 if __name__ == '__main__':
+    import unittest
     unittest.main()
-

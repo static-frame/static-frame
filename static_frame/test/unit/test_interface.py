@@ -1,6 +1,3 @@
-
-import unittest
-
 import numpy as np
 
 from doc.source.conf import DOCUMENTED_COMPONENTS
@@ -18,6 +15,7 @@ from static_frame.test.test_case import TestCase
 from static_frame import NPZ
 from static_frame import NPY
 
+
 class TestUnit(TestCase):
 
     def test_interface_summary_a(self) -> None:
@@ -25,7 +23,6 @@ class TestUnit(TestCase):
         for target in self.get_containers():
             t = InterfaceSummary.to_frame(target)
             self.assertTrue(len(t) > 30)
-
 
     def test_interface_summary_b(self) -> None:
 
@@ -45,7 +42,6 @@ class TestUnit(TestCase):
         counts_cls = s.__class__.interface.iter_group('group').apply(len)
 
         self.assertTrue((counts == counts_cls).all())
-
 
     def test_interface_get_signatures_a(self) -> None:
 
@@ -81,7 +77,6 @@ class TestUnit(TestCase):
         self.assertEqual(f.index.values.tolist(),
                 ['assign[key](value, *, fill_value)', 'assign[key].apply(func, *, fill_value)', 'assign.iloc[key](value, *, fill_value)', 'assign.iloc[key].apply(func, *, fill_value)', 'assign.loc[key](value, *, fill_value)', 'assign.loc[key].apply(func, *, fill_value)', 'assign.bloc[key](value, *, fill_value)', 'assign.bloc[key].apply(func, *, fill_value)'])
 
-
     def test_interface_via_re_signature_no_args(self) -> None:
         inter = InterfaceSummary.to_frame(Series,
                 minimized=False,
@@ -96,7 +91,6 @@ class TestUnit(TestCase):
             inter.loc[inter['group']==InterfaceGroup.AccessorRe, 'signature_no_args'].values.tolist(),
             ['via_re().search()', 'via_re().match()', 'via_re().fullmatch()', 'via_re().split()', 'via_re().findall()', 'via_re().sub()', 'via_re().subn()'])
 
-
     def test_interface_get_instance(self) -> None:
         for component in DOCUMENTED_COMPONENTS:
             post = InterfaceSummary.get_instance(component)
@@ -109,10 +103,7 @@ class TestUnit(TestCase):
                     StoreFilter,
                     )))
 
+
 if __name__ == '__main__':
+    import unittest
     unittest.main()
-
-
-
-
-
