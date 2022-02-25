@@ -851,9 +851,9 @@ class TestUnit(TestCase):
     def test_dropna(self):
         f0 = ff.parse('v(str,str,bool,float)|s(9,4)').assign[3]([None, 100.0, 632.23, None, 12.5, 51526.002, None, None, 0.231])
         f = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
         )).dropna(condition=np.any).to_frame()
         
         actual_index = f.index.values[:,-1].astype(int)
@@ -864,14 +864,14 @@ class TestUnit(TestCase):
     def test_isfalsy(self): # also tests `notfalsy()`
         f0 = ff.parse('v(str,str,bool,float)|s(9,4)')
         actual1 = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[6:9].rename("3"),
-            f0.iloc[3:6].rename("2"), 
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[6:9].rename('3'),
+            f0.iloc[3:6].rename('2'), 
         )).isfalsy().to_frame()[2].values
         actual2 = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[6:9].rename("3"),
-            f0.iloc[3:6].rename("2"), 
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[6:9].rename('3'),
+            f0.iloc[3:6].rename('2'), 
         )).notfalsy().to_frame()[2].values
         actual2 = np.invert(actual2)
 
@@ -881,9 +881,9 @@ class TestUnit(TestCase):
     def test_dropfalsy(self):
         f0 = ff.parse('v(str,str,bool,float)|s(9,4)')
         f4 = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
         )).dropfalsy(condition=np.any).to_frame()
         actual_index = f4.index.values[:,-1].astype(int)
         expected_index = np.array([0,3,6,7,8])
@@ -894,9 +894,9 @@ class TestUnit(TestCase):
         f0 = ff.parse('v(int,str,float,str)|s(9,4)')
         f0 = f0.assign[0]([None if i in (0,3,6) else x for i,x in enumerate(f0[0].values)])
         f = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
         )).fillna_leading(value=123456789).to_frame()
 
         expected = np.array([123456789, 92867, 84967, 123456789, 175579, 58768, 123456789, 170440, 32395])
@@ -907,9 +907,9 @@ class TestUnit(TestCase):
         f0 = ff.parse('v(int,str,float,str)|s(9,4)')
         f0 = f0.assign[0]([None if i in (2,5,8) else x for i,x in enumerate(f0[0].values)])
         f = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
         )).fillna_trailing(value=123456789).to_frame()
 
         expected = np.array([-88017, 92867, 123456789, 13448, 175579, 123456789, 146284, 170440, 123456789])
@@ -919,9 +919,9 @@ class TestUnit(TestCase):
     def test_fillna_forward(self):
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,None,3,4,None,6,7,None,9])
         f = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
         )).fillna_forward().to_frame()
 
         expected = np.array([1,1,3,4,4,6,7,7,9])
@@ -931,9 +931,9 @@ class TestUnit(TestCase):
     def test_fillna_backward(self):
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,None,3,4,None,6,7,None,9])
         f = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
         )).fillna_backward().to_frame()
 
         expected = np.array([1,3,3,4,6,6,7,9,9])
@@ -943,12 +943,12 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_fillfalsy_leading(self):
         f0 = ff.parse('v(str,str,float,str)|s(9,4)')
-        f0 = f0.assign[0](["" if i in (0,3,6) else x for i,x in enumerate(f0[0].values)])
+        f0 = f0.assign[0]([' if i in (0,3,6) else x for i,x in enumerate(f0[0].values)])
         f = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
-        )).fillfalsy_leading(value="--leading--").to_frame()
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillfalsy_leading(value='--leading--').to_frame()
 
         expected = np.array(['--leading--', 'zO5l', 'zEdH', '--leading--', 'zwIp', 'zDVQ', '--leading--', 'zyT8', 'zS6w'], dtype='<U11')
         actual = f[0].values
@@ -956,11 +956,11 @@ class TestUnit(TestCase):
 
     def test_fillfalsy_trailing(self):
         f0 = ff.parse('v(str,str,float,int)|s(9,4)')
-        f0 = f0.assign[0](["" if i in (2,5,8) else x for i,x in enumerate(f0[0].values)])
+        f0 = f0.assign[0]([' if i in (2,5,8) else x for i,x in enumerate(f0[0].values)])
         f = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
         )).fillfalsy_trailing(value='--trailing--').to_frame()
 
         expected = np.array(['zjZQ', 'zO5l', '--trailing--', 'zB7E', 'zwIp', '--trailing--', 'z5hI', 'zyT8', '--trailing--'], dtype='<U12')
@@ -970,9 +970,9 @@ class TestUnit(TestCase):
     def test_fillfalsy_forward(self):
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,0,3,4,0,6,7,0,9])
         f = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
         )).fillfalsy_forward().to_frame()
 
         expected = np.array([1,1,3,4,4,6,7,7,9])
@@ -981,9 +981,9 @@ class TestUnit(TestCase):
     def test_fillfalsy_backward(self):
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,0,3,4,0,6,7,0,9])
         f = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
         )).fillfalsy_backward().to_frame()
 
         expected = np.array([1,3,3,4,6,6,7,9,9])
@@ -993,9 +993,9 @@ class TestUnit(TestCase):
     def test_unset_index(self):
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
         f = Batch.from_frames((
-            f0.iloc[0:2].rename("1"),
-            f0.iloc[2:5].rename("2"),
-            f0.iloc[5:9].rename("3"),
+            f0.iloc[0:2].rename('1'),
+            f0.iloc[2:5].rename('2'),
+            f0.iloc[5:9].rename('3'),
         )).unset_index().to_frame()
         actual = list(f.index.values[:,-1].astype(int))
         expected = [*range(2), *range(3), *range(4)]
@@ -1005,9 +1005,9 @@ class TestUnit(TestCase):
     def test_reindex(self):
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
         f = list(Batch.from_frames((
-            f0.iloc[0:2].rename("1"),
-            f0.iloc[2:5].rename("2"),
-            f0.iloc[5:9].rename("3"),
+            f0.iloc[0:2].rename('1'),
+            f0.iloc[2:5].rename('2'),
+            f0.iloc[5:9].rename('3'),
         )).reindex(index=list(range(9))).items())
         self.assertTrue([(a:=x[1].shape) for x in f].count(a) == 3)
 
@@ -1015,14 +1015,14 @@ class TestUnit(TestCase):
     def test_all_relabel(self):
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
         f1 = Batch.from_frames((
-            f0.iloc[0:3].rename("1"),
-            f0.iloc[3:6].rename("2"),
-            f0.iloc[6:9].rename("3"),
-        )).relabel_level_add("idx").relabel_flat(index=True).to_frame()
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).relabel_level_add('idx').relabel_flat(index=True).to_frame()
         f2 = list(Batch.from_frames((
-            f1.iloc[0:9:3].rename("1"),
-            f1.iloc[1:9:3].rename("2"),
-            f1.iloc[2:9:3].rename("3"),
+            f1.iloc[0:9:3].rename('1'),
+            f1.iloc[1:9:3].rename('2'),
+            f1.iloc[2:9:3].rename('3'),
         )).relabel_level_drop(index=1).relabel_shift_in(3, axis=0).items())
         actual = [*f2[0][1][0].values, *f2[1][1][0].values, *f2[2][1][0].values]
         expected = [-88017, 13448, 146284, 92867, 175579, 170440, 84967, 58768, 32395]
@@ -1032,8 +1032,8 @@ class TestUnit(TestCase):
     def test_rank_dense(self):
         f0 = Frame.from_items(
             (
-                ("i",i:=(1,4,7,2,5,8,3,6,9)),
-                ("b",(b%2==0 for b in i))
+                ('i',i:=(1,4,7,2,5,8,3,6,9)),
+                ('b',(b%2==0 for b in i))
             )
         )
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
@@ -1044,8 +1044,8 @@ class TestUnit(TestCase):
     def test_rank_max(self):
         f0 = Frame.from_items(
             (
-                ("i",i:=(1,4,7,2,5,8,3,6,9)),
-                ("b",(b%2==0 for b in i))
+                ('i',i:=(1,4,7,2,5,8,3,6,9)),
+                ('b',(b%2==0 for b in i))
             )
         )
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
@@ -1056,8 +1056,8 @@ class TestUnit(TestCase):
     def test_rank_mean(self):
         f0 = Frame.from_items(
             (
-                ("i",i:=(1,4,7,2,5,8,3,6,9)),
-                ("b",(b%2==0 for b in i))
+                ('i',i:=(1,4,7,2,5,8,3,6,9)),
+                ('b',(b%2==0 for b in i))
             )
         )
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
@@ -1068,8 +1068,8 @@ class TestUnit(TestCase):
     def test_rank_min(self):
         f0 = Frame.from_items(
             (
-                ("i",i:=(1,4,7,2,5,8,3,6,9)),
-                ("b",(b%2==0 for b in i))
+                ('i',i:=(1,4,7,2,5,8,3,6,9)),
+                ('b',(b%2==0 for b in i))
             )
         )
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
@@ -1080,8 +1080,8 @@ class TestUnit(TestCase):
     def test_rank_ordinal(self):
         f0 = Frame.from_items(
             (
-                ("i",i:=(1,4,7,2,5,8,3,6,9)),
-                ("b",(b%2==0 for b in i))
+                ('i',i:=(1,4,7,2,5,8,3,6,9)),
+                ('b',(b%2==0 for b in i))
             )
         )
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
