@@ -15,6 +15,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactoryType
+from static_frame.core.index_auto import RelabelInput
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
@@ -985,7 +986,6 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     # ---------------------------------------------------------------------------
     # falsy handling
-
     def isfalsy(self) -> "Batch":
         """
         Return a batch of same-indexed, Boolean Frames indicating True which values are falsy.
@@ -1098,7 +1098,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(
             attr='fillna_backward',
             limit=limit,
-            axis=axis
+            axis=axis,
         )
 
     # ---------------------------------------------------------------------------
@@ -1145,7 +1145,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(
             attr='fillfalsy_trailing',
             value=value,
-            axis=axis
+            axis=axis,
         )
 
 
@@ -1164,7 +1164,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(
             attr='fillfalsy_forward',
             limit=limit,
-            axis=axis
+            axis=axis,
         )
 
     def fillfalsy_backward(
@@ -1182,12 +1182,28 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(
             attr='fillfalsy_backward',
             limit=limit,
-            axis=axis
+            axis=axis,
         )
 
 
     # ---------------------------------------------------------------------------
     # index and relabel
+    def relabel(
+        self,
+        index: tp.Optional[RelabelInput] = None,
+        columns: tp.Optional[RelabelInput] = None,
+        *,
+        index_constructor: IndexConstructor = None,
+        columns_constructor: IndexConstructor = None,
+    ) -> 'Batch':
+
+        return self._apply_attr(
+            attr='relabel',
+            index=index,
+            columns=columns,
+            index_constructor=index_constructor,
+            columns_constructor=columns_constructor,
+        )
 
     def unset_index(
         self,
