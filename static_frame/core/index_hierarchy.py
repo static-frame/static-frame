@@ -1587,8 +1587,8 @@ class IndexHierarchy(IndexBase):
             indexer_remap = key_index.iter_label().apply(self_index._loc_to_iloc)
             key_indexers.append(indexer_remap[key_indexer])
 
-        self_indexers = np.array(self._indexers).T
-        key_indexers = np.array(key_indexers).T
+        self_indexers = np.array(self._indexers, dtype=DTYPE_INT_DEFAULT).T
+        key_indexers = np.array(key_indexers, dtype=DTYPE_INT_DEFAULT).T
 
         ilocs = np.intersect1d(
                 view_2d_as_1d(self_indexers),
