@@ -3526,7 +3526,7 @@ class TestUnit(TestCase):
         ])
         self.assertTrue(np.array_equal(actual, expected))
 
-    def test_build_indexers_from_product_a(self) -> None:
+    def test_build_indexers_from_product_b(self) -> None:
         actual = build_indexers_from_product([3, 4, 2])
         expected = np.array([
             [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2],

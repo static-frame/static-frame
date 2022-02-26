@@ -349,9 +349,9 @@ class IndexHierarchy(IndexBase):
         '''
         Construct an IndexHierarchy from an iterable of empty labels.
         '''
-        if empty_labels.__class__ is np.ndarray and empty_labels.ndim == 2:
+        if empty_labels.__class__ is np.ndarray and empty_labels.ndim == 2: # type: ignore
             # if this is a 2D array, we can get the depth
-            depth = empty_labels.shape[1]
+            depth = empty_labels.shape[1] # type: ignore
 
             if depth == 0: # an empty 2D array can have 0 depth
                 pass # do not set depth_reference, assume it is set
@@ -586,7 +586,7 @@ class IndexHierarchy(IndexBase):
                 )
 
         return cls(
-                indices=[index_outer, index_inner],
+                indices=[index_outer, index_inner], # type: ignore
                 indexers=indexers,
                 name=name,
                 )
@@ -1106,7 +1106,7 @@ class IndexHierarchy(IndexBase):
             else:
                 sub_display.extend_iterable(col, header=header_sub)
 
-        return sub_display
+        return sub_display # type: ignore
 
     # --------------------------------------------------------------------------
     # set operations
@@ -2251,7 +2251,7 @@ class IndexHierarchy(IndexBase):
                 depth=0,
                 mask=np.ones(self.__len__(), dtype=bool),
                 )
-        return tree
+        return tree # type: ignore
 
     def flat(self: IH) -> Index:
         '''
@@ -2303,9 +2303,9 @@ class IndexHierarchy(IndexBase):
         # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
         if self._name_is_names():
             if count < 0:
-                name: NameType = self._name[:count]
+                name: NameType = self._name[:count] # type: ignore
             elif count > 0:
-                name = self._name[count:]
+                name = self._name[count:] # type: ignore
             if len(name) == 1:
                 name = name[0] # type: ignore
         else:
