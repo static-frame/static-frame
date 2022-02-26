@@ -1228,7 +1228,7 @@ class Index(IndexBase):
             # cannot assume new depth is the same index subclass
             index_constructor = cls_depth
 
-        indices = [index_constructor((level,)), self.copy()]
+        indices = [index_constructor((level,)), immutable_index_filter(self)]
         new_indexer = np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT)
         new_indexer.flags.writeable = False
         indexers = [new_indexer, PositionsAllocator.get(self.__len__())]

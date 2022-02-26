@@ -17,6 +17,7 @@ from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import INT_TYPES
 
 from static_frame.core.exception import LocEmpty
 
@@ -92,7 +93,7 @@ class LocMap:
                         pos += offset #type: ignore
                 else: # step
                     pos = attr # should be an integer
-                    if not isinstance(pos, int):
+                    if not isinstance(pos, INT_TYPES):
                         raise TypeError(f'Step must be an integer, not {pos}')
                 if field == SLICE_STOP_ATTR:
                     # loc selections are inclusive, so iloc gets one more

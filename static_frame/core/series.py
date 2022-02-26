@@ -2804,7 +2804,7 @@ class Series(ContainerOperand):
             tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]
         '''
         if isinstance(self._index, (IndexHierarchy, IndexHierarchyTree)):
-            index_values = array2d_to_tuples(self._index.values)
+            index_values = self._index.__iter__()
         else:
             index_values = self._index.values
 

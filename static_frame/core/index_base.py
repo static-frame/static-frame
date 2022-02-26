@@ -143,7 +143,7 @@ class IndexBase(ContainerOperand):
 
                 if cls.STATIC:
                     return constructor(pd_idx, name=pd_idx.name)
-                return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx, name=pd_idx.name))
+                return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx))
 
             indices: tp.List[Index] = []
             indexers: tp.List[np.ndarray] = []

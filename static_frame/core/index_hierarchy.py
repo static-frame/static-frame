@@ -1,5 +1,6 @@
 import functools
 import itertools
+import operator
 import typing as tp
 from ast import literal_eval
 from copy import deepcopy
@@ -25,7 +26,7 @@ from static_frame.core.hloc import HLoc
 from static_frame.core.index import ILoc
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import iterable_to_array_1d, ufunc_unique2d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index import immutable_index_filter
@@ -98,6 +99,8 @@ IHAsType = tp.TypeVar('IHAsType', bound='IndexHierarchyAsType')
 SingleLabelType = tp.Tuple[tp.Hashable, ...]
 TreeNodeT = tp.Dict[tp.Hashable, tp.Union[tp.Sequence[tp.Hashable], "TreeNodeT"]]
 
+_NBYTES_GETTER = operator.attrgetter('nbytes')
+
 
 def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> tp.List[np.ndarray]:
     '''
@@ -110,20 +113,20 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> tp.List[np.nd
 
     Example:
 
-    >>> lists = [[1, 2, 3], [4, 5, 6]]
-    >>> build_indexers_from_product([3, 3])
-    [
-        array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
-        array([0, 1, 2, 0, 1, 2, 0, 1, 2]),
-    ]
+    lengths: (3, 3, 3)
+    result:
+        [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2] # 0
+        [0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1] # 1
+        [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2] # 2
 
-    >>> lists = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-    >>> build_indexers_from_product(tuple(map(len, lists)))
-    [
-        array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2]),
-        array([0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1]),
-        array([0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2]),
-    ]
+    We can think of each depth level as repeating two parts: elements & groups.
+
+    For depth 0, each element is repeated 6x, each group 1x
+    For depth 1, each element is repeated 3x, each group 3x
+    For depth 2, each element is repeated 1x, each group 6x
+
+    We can take advantage of this clear pattern by using cumulative sums to
+    determine what those repetitions are, and then applying them.
     '''
 
     padded_lengths = np.full(len(list_lengths) + 2, 1, dtype=DTYPE_INT_DEFAULT)
@@ -177,8 +180,6 @@ def construct_indices_and_indexers_from_column_arrays(
 
         # we call the constructor on all lvl, even if it is already an Index
         indices.append(constructor(unique_values))
-
-        indexer.flags.writeable = False
         indexers.append(indexer)
 
     return indices, indexers
@@ -288,8 +289,6 @@ class IndexHierarchy(IndexBase):
                 )
 
         for lvl, constructor in zip(levels, index_constructors_iter):
-            # we call the constructor on all lvl, even if it is already an Index
-            # This will raise if any incoming levels are not unique
             if isinstance(lvl, Index):
                 indices.append(immutable_index_filter(lvl))
             else:
@@ -568,7 +567,6 @@ class IndexHierarchy(IndexBase):
             return cls._from_empty(EMPTY_TUPLE, name=name, depth_reference=2)
 
         index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner) # type: ignore
-        assert isinstance(index_inner, Index) # mypy
 
         def _repeat(i_repeat_tuple: tp.Tuple[int, int]) -> np.ndarray:
             i, repeat = i_repeat_tuple
@@ -586,7 +584,6 @@ class IndexHierarchy(IndexBase):
                 default_constructor=cls._INDEX_CONSTRUCTOR,
                 explicit_constructor=index_constructor,
                 )
-        assert isinstance(index_outer, Index) # mypy
 
         return cls(
                 indices=[index_outer, index_inner],
@@ -721,7 +718,7 @@ class IndexHierarchy(IndexBase):
         if expected_len <= 1:
             return # Not possible to be duplicated!
 
-        unique_len = len(np.unique(np.array(indexers).T, axis=0))
+        unique_len = len(ufunc_unique2d(np.array(indexers).T, axis=0))
 
         if unique_len != expected_len:
             # Is this too much work to do for an error message?
@@ -911,9 +908,7 @@ class IndexHierarchy(IndexBase):
         if isinstance(depth_level, INT_TYPES):
             yield from self.values_at_depth(depth_level)
         else:
-            yield from array2d_to_tuples(
-                    self._blocks._extract_array(column_key=depth_level)
-                    )
+            yield from zip(*map(self.values_at_depth, depth_level))
 
     def _iter_label_items(self: IH,
             depth_level: tp.Optional[DepthLevelSpecifier] = None,
@@ -1058,6 +1053,9 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`int`
         '''
+        total = sum(map(_NBYTES_GETTER, self._indices))
+        total += sum(map(_NBYTES_GETTER, self._indexers))
+        total += self._blocks.nbytes
         return self._blocks.nbytes
 
     # --------------------------------------------------------------------------
@@ -1108,7 +1106,6 @@ class IndexHierarchy(IndexBase):
             else:
                 sub_display.extend_iterable(col, header=header_sub)
 
-        assert sub_display is not None # mypy
         return sub_display
 
     # --------------------------------------------------------------------------
@@ -1760,7 +1757,6 @@ class IndexHierarchy(IndexBase):
 
         for index, indexer in zip(self._indices, self._indexers):
             unique_indexes, new_indexer = ufunc_unique1d_indexer(indexer[key])
-            new_indexer.flags.writeable = False
 
             new_indices.append(index.iloc[unique_indexes])
             new_indexers.append(new_indexer)
@@ -2255,7 +2251,6 @@ class IndexHierarchy(IndexBase):
                 depth=0,
                 mask=np.ones(self.__len__(), dtype=bool),
                 )
-        assert isinstance(tree, dict) # mypy
         return tree
 
     def flat(self: IH) -> Index:
@@ -2307,7 +2302,6 @@ class IndexHierarchy(IndexBase):
         '''
         # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
         if self._name_is_names():
-            assert isinstance(self._name, tuple) # mypy
             if count < 0:
                 name: NameType = self._name[:count]
             elif count > 0:

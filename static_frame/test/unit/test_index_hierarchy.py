@@ -25,6 +25,7 @@ from static_frame import IndexNanosecondGO
 from static_frame import Series
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
+from static_frame.core.index_hierarchy import build_indexers_from_product
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
@@ -3502,6 +3503,7 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.unique([1]).tolist(), ['a', 'b'])
 
     #---------------------------------------------------------------------------
+
     def test_hierarchy_union_a(self) -> None:
 
         ih1 = IndexHierarchy.from_labels(((1, '2020-01-01'), (1, '2020-01-02'), (1, '2020-01-03')),
@@ -3513,6 +3515,25 @@ class TestUnit(TestCase):
         ih3 = ih1.union(ih2)
         self.assertEqual(ih3.index_types.to_pairs(),
             ((0, Index), (1, IndexDate)))
+
+    #---------------------------------------------------------------------------
+
+    def test_build_indexers_from_product_a(self) -> None:
+        actual = build_indexers_from_product([3, 3])
+        expected = np.array([
+            [0, 0, 0, 1, 1, 1, 2, 2, 2],
+            [0, 1, 2, 0, 1, 2, 0, 1, 2],
+        ])
+        self.assertTrue(np.array_equal(actual, expected))
+
+    def test_build_indexers_from_product_a(self) -> None:
+        actual = build_indexers_from_product([3, 4, 2])
+        expected = np.array([
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2],
+            [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 1, 1, 2, 2, 3, 3],
+            [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        ])
+        self.assertTrue(np.array_equal(actual, expected))
 
 
 if __name__ == '__main__':

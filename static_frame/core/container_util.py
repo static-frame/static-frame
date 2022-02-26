@@ -1098,7 +1098,7 @@ def _index_many_to_one(
     # if IndexHierarchy, collect index_types generators
     if index.ndim == 2:
         depth_first = index.depth
-        index_types_gen = [index.index_types.values.tolist()]
+        index_types_gen = [index.index_types.values]
         index_types_aligned = True
     else: # for 1D we ignore this
         index_types_aligned = False
@@ -1113,7 +1113,7 @@ def _index_many_to_one(
             index_auto_aligned = False
 
         if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
-            index_types_gen.append(index.index_types.values.tolist())
+            index_types_gen.append(index.index_types.values)
         else:
             index_types_aligned = False
 

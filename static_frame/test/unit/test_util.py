@@ -2595,6 +2595,9 @@ class TestUnit(TestCase):
         self.assertEqual(pos.tolist(), [None, 'foo', 3])
         self.assertEqual(counts.tolist(), [2, 2, 1])
 
+        with self.assertRaises(TypeError):
+            ufunc_unique1d_counts(np.array(['foo', []], dtype=object))
+
 
 if __name__ == '__main__':
     unittest.main()

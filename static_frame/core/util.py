@@ -872,6 +872,7 @@ def ufunc_unique1d_indexer(array: np.ndarray,
 
     indexer = np.empty(mask.shape, dtype=np.intp)
     indexer[positions] = np.cumsum(mask) - 1
+    indexer.flags.writeable = False
 
     return array[mask], indexer
 
@@ -902,6 +903,7 @@ def ufunc_unique1d_positions(array: np.ndarray,
 
     indexer = np.empty(mask.shape, dtype=np.intp)
     indexer[positions] = np.cumsum(mask) - 1
+    indexer.flags.writeable = False
 
     return positions[mask], indexer
 
@@ -913,7 +915,7 @@ def ufunc_unique1d_counts(array: np.ndarray,
     '''
     if array.dtype.kind == 'O':
         try: # some 1D object arrays are sortable
-            array = np.sort(array)
+            array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
             sortable = True
         except TypeError: # if unorderable types
             sortable = False
@@ -930,7 +932,7 @@ def ufunc_unique1d_counts(array: np.ndarray,
 
             return array, counts
     else:
-        array = np.sort(array)
+        array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
 
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
