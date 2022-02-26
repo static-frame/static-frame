@@ -68,7 +68,6 @@ from static_frame.core.util import setdiff2d
 from static_frame.core.util import UFunc
 from static_frame.core.util import union2d
 from static_frame.core.util import array2d_to_array1d
-from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import array_sample
 from static_frame.core.util import arrays_equal
