@@ -185,7 +185,7 @@ class TestUnit(TestCase):
             Batch(frame.iter_window(size=3)).std(ddof=1).to_frame()
 
     def test_batch_i(self) -> None:
-        # assure processing of same named Frame
+
         f1 = ff.parse('s(3,2)|v(bool)|c(I,str)|i(I,int)')
         f2 = ff.parse('s(3,5)|v(bool)|c(I,str)|i(I,int)')
 
@@ -1244,7 +1244,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     def test_batch_to_npz(self) -> None:
-        # assure processing of same named Frame
+
         f1 = ff.parse('s(3,2)|v(bool)|c(I,str)|i(I,int)').rename('a')
         f2 = ff.parse('s(3,5)|v(bool)|c(I,str)|i(I,int)').rename('b')
 
@@ -1258,14 +1258,297 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_batch_via_str_lower(self) -> None:
-        # assure processing of same named Frame
-        f1 = ff.parse('s(4,4)|v(str)|c(I,str)|i(I,int)').rename('a')
-        f2 = ff.parse('s(4,4)|v(str)|c(I,str)|i(I,int)').rename('b')
-
-        post = Batch.from_frames((f1, f2)).via_str.lower().iloc[-2:, -2:].to_frame()
+    def test_batch_via_str_getitem(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str[-1].to_frame()
         self.assertEqual(post.to_pairs(),
-                (('zUvW', ((('a', 91301), 'zkuw'), (('a', 30205), 'zmvj'), (('b', 91301), 'zkuw'), (('b', 30205), 'zmvj'))), ('zkuW', ((('a', 91301), 'zce3'), (('a', 30205), 'zr4u'), (('b', 91301), 'zce3'), (('b', 30205), 'zr4u'))))
+                (('zZbu', ((('a', 34715), 'Q'), (('a', -3648), 'l'), (('b', 34715), 'Q'), (('b', -3648), 'l'))), ('ztsv', ((('a', 34715), 'i'), (('a', -3648), 'C'), (('b', 34715), 'i'), (('b', -3648), 'C'))), ('zUvW', ((('a', 34715), 'v'), (('a', -3648), 'W'), (('b', 34715), 'v'), (('b', -3648), 'W'))))
+                )
+
+    def test_batch_via_str_capitalize(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.capitalize().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'Zjzq'), (('a', -3648), 'Zo5l'), (('b', 34715), 'Zjzq'), (('b', -3648), 'Zo5l'))), ('ztsv', ((('a', 34715), 'Zaji'), (('a', -3648), 'Zjnc'), (('b', 34715), 'Zaji'), (('b', -3648), 'Zjnc'))), ('zUvW', ((('a', 34715), 'Ztsv'), (('a', -3648), 'Zuvw'), (('b', 34715), 'Ztsv'), (('b', -3648), 'Zuvw')))))
+
+    def test_batch_via_str_center(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.center(8, '-').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), '--zjZQ--'), (('a', -3648), '--zO5l--'), (('b', 34715), '--zjZQ--'), (('b', -3648), '--zO5l--'))), ('ztsv', ((('a', 34715), '--zaji--'), (('a', -3648), '--zJnC--'), (('b', 34715), '--zaji--'), (('b', -3648), '--zJnC--'))), ('zUvW', ((('a', 34715), '--ztsv--'), (('a', -3648), '--zUvW--'), (('b', 34715), '--ztsv--'), (('b', -3648), '--zUvW--')))))
+
+    def test_batch_via_str_count(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.count('z').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 1), (('a', -3648), 1), (('b', 34715), 1), (('b', -3648), 1))), ('ztsv', ((('a', 34715), 1), (('a', -3648), 1), (('b', 34715), 1), (('b', -3648), 1))), ('zUvW', ((('a', 34715), 1), (('a', -3648), 1), (('b', 34715), 1), (('b', -3648), 1))))
+                )
+
+    def test_batch_via_str_decode(self) -> None:
+        f1 = ff.parse('s(2,3)|v(object)|c(I,str)|i(I,int)').rename('a').astype(bytes)
+        f2 = ff.parse('s(2,3)|v(object)|c(I,str)|i(I,int)').rename('b').astype(bytes)
+        post = Batch.from_frames((f1, f2)).via_str.decode('utf-8').to_frame()
+        self.assertEqual([dt.kind for dt in post.dtypes.values], ['U', 'U', 'U'])
+
+    def test_batch_via_str_encode(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a').astype(object)
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b').astype(object)
+        post = Batch.from_frames((f1, f2)).via_str.encode('ascii').to_frame()
+        self.assertEqual([dt.kind for dt in post.dtypes.values], ['S', 'S', 'S'])
+
+    def test_batch_via_str_endswith(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.endswith('v').to_frame()
+
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('ztsv', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('zUvW', ((('a', 34715), True), (('a', -3648), False), (('b', 34715), True), (('b', -3648), False))))
+                )
+
+    def test_batch_via_str_find(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.find('v').to_frame()
+
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), -1), (('a', -3648), -1), (('b', 34715), -1), (('b', -3648), -1))), ('ztsv', ((('a', 34715), -1), (('a', -3648), -1), (('b', 34715), -1), (('b', -3648), -1))), ('zUvW', ((('a', 34715), 3), (('a', -3648), 2), (('b', 34715), 3), (('b', -3648), 2)))))
+
+    def test_batch_via_str_index(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+
+        with self.assertRaises(ValueError):
+            post = Batch.from_frames((f1, f2)).via_str.index('v').to_frame()
+
+    def test_batch_via_str_isalnum(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_str.isalnum().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), True))), ('ztsv', ((('a', 34715), True), (('a', -3648), False), (('b', 34715), True), (('b', -3648), False))), ('zUvW', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), True)))))
+
+    def test_batch_via_str_isalpha(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.isalpha().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), True), (('a', -3648), False), (('b', 34715), True), (('b', -3648), False))), ('ztsv', ((('a', 34715), True), (('a', -3648), True), (('b', 34715), True), (('b', -3648), True))), ('zUvW', ((('a', 34715), True), (('a', -3648), True), (('b', 34715), True), (('b', -3648), True)))))
+
+    def test_batch_via_str_isdecimal(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_str.isdecimal().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), True))), ('ztsv', ((('a', 34715), True), (('a', -3648), False), (('b', 34715), True), (('b', -3648), False))), ('zUvW', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), True))))
+                )
+
+    def test_batch_via_str_isdigit(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_str.isdigit().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), True))), ('ztsv', ((('a', 34715), True), (('a', -3648), False), (('b', 34715), True), (('b', -3648), False))), ('zUvW', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), True))))
+                )
+
+    def test_batch_via_str_islower(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.islower().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('ztsv', ((('a', 34715), True), (('a', -3648), False), (('b', 34715), True), (('b', -3648), False))), ('zUvW', ((('a', 34715), True), (('a', -3648), False), (('b', 34715), True), (('b', -3648), False))))
+                )
+
+    def test_batch_via_str_isnumeric(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_str.isnumeric().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), True))), ('ztsv', ((('a', 34715), True), (('a', -3648), False), (('b', 34715), True), (('b', -3648), False))), ('zUvW', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), True))))
+                )
+
+    def test_batch_via_str_isspace(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)'
+                ).iter_element().apply(lambda e: ' ' if e % 2 else e).rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_str.isspace().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), True), (('a', -3648), True), (('b', 34715), False), (('b', -3648), False))), ('ztsv', ((('a', 34715), True), (('a', -3648), True), (('b', 34715), False), (('b', -3648), False))), ('zUvW', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), False))))
+                )
+
+    def test_batch_via_str_istitle(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.istitle().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('ztsv', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('zUvW', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))))
+                )
+
+    def test_batch_via_str_isupper(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.isupper().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('ztsv', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('zUvW', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))))
+                )
+
+    def test_batch_via_str_len(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.len().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 4), (('a', -3648), 4), (('b', 34715), 4), (('b', -3648), 4))), ('ztsv', ((('a', 34715), 4), (('a', -3648), 4), (('b', 34715), 4), (('b', -3648), 4))), ('zUvW', ((('a', 34715), 4), (('a', -3648), 4), (('b', 34715), 4), (('b', -3648), 4)))))
+
+    def test_batch_via_str_ljust(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.ljust(6, '-').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'zjZQ--'), (('a', -3648), 'zO5l--'), (('b', 34715), 'zjZQ--'), (('b', -3648), 'zO5l--'))), ('ztsv', ((('a', 34715), 'zaji--'), (('a', -3648), 'zJnC--'), (('b', 34715), 'zaji--'), (('b', -3648), 'zJnC--'))), ('zUvW', ((('a', 34715), 'ztsv--'), (('a', -3648), 'zUvW--'), (('b', 34715), 'ztsv--'), (('b', -3648), 'zUvW--'))))
+                )
+
+    def test_batch_via_str_lower(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.lower().to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'zjzq'), (('a', -3648), 'zo5l'), (('b', 34715), 'zjzq'), (('b', -3648), 'zo5l'))), ('ztsv', ((('a', 34715), 'zaji'), (('a', -3648), 'zjnc'), (('b', 34715), 'zaji'), (('b', -3648), 'zjnc'))), ('zUvW', ((('a', 34715), 'ztsv'), (('a', -3648), 'zuvw'), (('b', 34715), 'ztsv'), (('b', -3648), 'zuvw'))))
+                )
+
+    def test_batch_via_str_lstrip(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.lstrip('z').to_frame()
+
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'jZQ'), (('a', -3648), 'O5l'), (('b', 34715), 'jZQ'), (('b', -3648), 'O5l'))), ('ztsv', ((('a', 34715), 'aji'), (('a', -3648), 'JnC'), (('b', 34715), 'aji'), (('b', -3648), 'JnC'))), ('zUvW', ((('a', 34715), 'tsv'), (('a', -3648), 'UvW'), (('b', 34715), 'tsv'), (('b', -3648), 'UvW'))))
+                )
+
+    def test_batch_via_str_partition(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.partition('n').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), ('zjZQ', '', '')), (('a', -3648), ('zO5l', '', '')), (('b', 34715), ('zjZQ', '', '')), (('b', -3648), ('zO5l', '', '')))), ('ztsv', ((('a', 34715), ('zaji', '', '')), (('a', -3648), ('zJ', 'n', 'C')), (('b', 34715), ('zaji', '', '')), (('b', -3648), ('zJ', 'n', 'C')))), ('zUvW', ((('a', 34715), ('ztsv', '', '')), (('a', -3648), ('zUvW', '', '')), (('b', 34715), ('ztsv', '', '')), (('b', -3648), ('zUvW', '', '')))))
+                )
+
+    def test_batch_via_str_replace(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.replace('z', '9').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), '9jZQ'), (('a', -3648), '9O5l'), (('b', 34715), '9jZQ'), (('b', -3648), '9O5l'))), ('ztsv', ((('a', 34715), '9aji'), (('a', -3648), '9JnC'), (('b', 34715), '9aji'), (('b', -3648), '9JnC'))), ('zUvW', ((('a', 34715), '9tsv'), (('a', -3648), '9UvW'), (('b', 34715), '9tsv'), (('b', -3648), '9UvW'))))
+                )
+
+    def test_batch_via_str_rfind(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.rfind('C').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), -1), (('a', -3648), -1), (('b', 34715), -1), (('b', -3648), -1))), ('ztsv', ((('a', 34715), -1), (('a', -3648), 3), (('b', 34715), -1), (('b', -3648), 3))), ('zUvW', ((('a', 34715), -1), (('a', -3648), -1), (('b', 34715), -1), (('b', -3648), -1))))
+                )
+
+    def test_batch_via_str_rindex(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        with self.assertRaises(ValueError):
+            _ = Batch.from_frames((f1, f2)).via_str.rindex('C').to_frame()
+
+    def test_batch_via_str_rjust(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.rjust(6, '-').to_frame()
+
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), '--zjZQ'), (('a', -3648), '--zO5l'), (('b', 34715), '--zjZQ'), (('b', -3648), '--zO5l'))), ('ztsv', ((('a', 34715), '--zaji'), (('a', -3648), '--zJnC'), (('b', 34715), '--zaji'), (('b', -3648), '--zJnC'))), ('zUvW', ((('a', 34715), '--ztsv'), (('a', -3648), '--zUvW'), (('b', 34715), '--ztsv'), (('b', -3648), '--zUvW'))))
+                )
+
+    def test_batch_via_str_rpartition(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.rpartition('j').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), ('z', 'j', 'ZQ')), (('a', -3648), ('', '', 'zO5l')), (('b', 34715), ('z', 'j', 'ZQ')), (('b', -3648), ('', '', 'zO5l')))), ('ztsv', ((('a', 34715), ('za', 'j', 'i')), (('a', -3648), ('', '', 'zJnC')), (('b', 34715), ('za', 'j', 'i')), (('b', -3648), ('', '', 'zJnC')))), ('zUvW', ((('a', 34715), ('', '', 'ztsv')), (('a', -3648), ('', '', 'zUvW')), (('b', 34715), ('', '', 'ztsv')), (('b', -3648), ('', '', 'zUvW')))))
+                )
+
+    def test_batch_via_str_rsplit(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.rsplit('j').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), ('z', 'ZQ')), (('a', -3648), ('zO5l',)), (('b', 34715), ('z', 'ZQ')), (('b', -3648), ('zO5l',)))), ('ztsv', ((('a', 34715), ('za', 'i')), (('a', -3648), ('zJnC',)), (('b', 34715), ('za', 'i')), (('b', -3648), ('zJnC',)))), ('zUvW', ((('a', 34715), ('ztsv',)), (('a', -3648), ('zUvW',)), (('b', 34715), ('ztsv',)), (('b', -3648), ('zUvW',)))))
+                )
+
+    def test_batch_via_str_rstrip(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.rstrip('Q').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'zjZ'), (('a', -3648), 'zO5l'), (('b', 34715), 'zjZ'), (('b', -3648), 'zO5l'))), ('ztsv', ((('a', 34715), 'zaji'), (('a', -3648), 'zJnC'), (('b', 34715), 'zaji'), (('b', -3648), 'zJnC'))), ('zUvW', ((('a', 34715), 'ztsv'), (('a', -3648), 'zUvW'), (('b', 34715), 'ztsv'), (('b', -3648), 'zUvW'))))
+                )
+
+    def test_batch_via_str_split(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.split('j').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), ('z', 'ZQ')), (('a', -3648), ('zO5l',)), (('b', 34715), ('z', 'ZQ')), (('b', -3648), ('zO5l',)))), ('ztsv', ((('a', 34715), ('za', 'i')), (('a', -3648), ('zJnC',)), (('b', 34715), ('za', 'i')), (('b', -3648), ('zJnC',)))), ('zUvW', ((('a', 34715), ('ztsv',)), (('a', -3648), ('zUvW',)), (('b', 34715), ('ztsv',)), (('b', -3648), ('zUvW',)))))
+                )
+
+    def test_batch_via_str_startswith(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.startswith('z').to_frame()
+
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), True), (('a', -3648), True), (('b', 34715), True), (('b', -3648), True))), ('ztsv', ((('a', 34715), True), (('a', -3648), True), (('b', 34715), True), (('b', -3648), True))), ('zUvW', ((('a', 34715), True), (('a', -3648), True), (('b', 34715), True), (('b', -3648), True))))
+                )
+
+    def test_batch_via_str_strip(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.strip('z').to_frame()
+
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'jZQ'), (('a', -3648), 'O5l'), (('b', 34715), 'jZQ'), (('b', -3648), 'O5l'))), ('ztsv', ((('a', 34715), 'aji'), (('a', -3648), 'JnC'), (('b', 34715), 'aji'), (('b', -3648), 'JnC'))), ('zUvW', ((('a', 34715), 'tsv'), (('a', -3648), 'UvW'), (('b', 34715), 'tsv'), (('b', -3648), 'UvW'))))
+                )
+
+    def test_batch_via_str_swapcase(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.swapcase().to_frame()
+
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'ZJzq'), (('a', -3648), 'Zo5L'), (('b', 34715), 'ZJzq'), (('b', -3648), 'Zo5L'))), ('ztsv', ((('a', 34715), 'ZAJI'), (('a', -3648), 'ZjNc'), (('b', 34715), 'ZAJI'), (('b', -3648), 'ZjNc'))), ('zUvW', ((('a', 34715), 'ZTSV'), (('a', -3648), 'ZuVw'), (('b', 34715), 'ZTSV'), (('b', -3648), 'ZuVw'))))
+                )
+
+    def test_batch_via_str_title(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.title().to_frame()
+
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'Zjzq'), (('a', -3648), 'Zo5L'), (('b', 34715), 'Zjzq'), (('b', -3648), 'Zo5L'))), ('ztsv', ((('a', 34715), 'Zaji'), (('a', -3648), 'Zjnc'), (('b', 34715), 'Zaji'), (('b', -3648), 'Zjnc'))), ('zUvW', ((('a', 34715), 'Ztsv'), (('a', -3648), 'Zuvw'), (('b', 34715), 'Ztsv'), (('b', -3648), 'Zuvw'))))
+                )
+
+    def test_batch_via_str_upper(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.upper().to_frame()
+
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'ZJZQ'), (('a', -3648), 'ZO5L'), (('b', 34715), 'ZJZQ'), (('b', -3648), 'ZO5L'))), ('ztsv', ((('a', 34715), 'ZAJI'), (('a', -3648), 'ZJNC'), (('b', 34715), 'ZAJI'), (('b', -3648), 'ZJNC'))), ('zUvW', ((('a', 34715), 'ZTSV'), (('a', -3648), 'ZUVW'), (('b', 34715), 'ZTSV'), (('b', -3648), 'ZUVW')))))
+
+    def test_batch_via_str_zfill(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.zfill(6).to_frame()
+
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), '00zjZQ'), (('a', -3648), '00zO5l'), (('b', 34715), '00zjZQ'), (('b', -3648), '00zO5l'))), ('ztsv', ((('a', 34715), '00zaji'), (('a', -3648), '00zJnC'), (('b', 34715), '00zaji'), (('b', -3648), '00zJnC'))), ('zUvW', ((('a', 34715), '00ztsv'), (('a', -3648), '00zUvW'), (('b', 34715), '00ztsv'), (('b', -3648), '00zUvW'))))
                 )
 
 

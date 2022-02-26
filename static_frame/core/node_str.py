@@ -648,7 +648,6 @@ class InterfaceBatchString(InterfaceBatch):
         '''
         return self._batch_apply(lambda c: c.via_str.isalnum())
 
-
     def isalpha(self) -> TContainer:
         '''
         Returns true for each element if all characters in the string are alphabetic and there is at least one character, false otherwise.
@@ -718,14 +717,13 @@ class InterfaceBatchString(InterfaceBatch):
         '''
         return self._batch_apply(lambda c: c.via_str.lower())
 
-
     def lstrip(self,
             chars: tp.Optional[str] = None,
             ) -> TContainer:
         '''
         For each element, return a copy with the leading characters removed.
         '''
-        return self._batch_apply(lambda c: c.via_str.lstrip())
+        return self._batch_apply(lambda c: c.via_str.lstrip(chars))
 
     def partition(self,
             sep: str,
