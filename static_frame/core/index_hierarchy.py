@@ -126,7 +126,7 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> tp.List[np.nd
     ]
     '''
 
-    padded_lengths = np.full(len(list_lengths) + 2, 1, dtype=int)
+    padded_lengths = np.full(len(list_lengths) + 2, 1, dtype=DTYPE_INT_DEFAULT)
     padded_lengths[1:-1] = list_lengths
 
     all_group_reps = np.cumprod(padded_lengths)[:-2]
@@ -350,7 +350,7 @@ class IndexHierarchy(IndexBase):
         '''
         Construct an IndexHierarchy from an iterable of empty labels.
         '''
-        if isinstance(empty_labels, np.ndarray) and empty_labels.ndim == 2:
+        if empty_labels.__class__ is np.ndarray and empty_labels.ndim == 2:
             # if this is a 2D array, we can get the depth
             depth = empty_labels.shape[1]
 
@@ -498,7 +498,7 @@ class IndexHierarchy(IndexBase):
 
         # Convert to numpy arrays
         for i in range(depth):
-            indexers[i] = np.array(indexers[i], dtype=int)
+            indexers[i] = np.array(indexers[i], dtype=DTYPE_INT_DEFAULT)
 
         if reorder_for_hierarchy:
             # The innermost level (i.e. [:-1]) is irrelavant to lexsorting
@@ -787,7 +787,7 @@ class IndexHierarchy(IndexBase):
             self._index_types = None
             return
 
-        if not all(isinstance(arr, np.ndarray) for arr in indexers):
+        if not all(arr.__class__ is np.ndarray for arr in indexers):
             raise ErrorInitIndex('indexers must be numpy arrays.')
 
         if not all(not arr.flags.writeable for arr in indexers):
@@ -2472,7 +2472,7 @@ class IndexHierarchyGO(IndexHierarchy):
             # We can't use any existing masks, since the sizes will be different
             other_index_remapped = other_index.iter_label().apply(
                 self_index._loc_to_iloc
-            ) * mask_flags[difference.astype(int)]
+            ) * mask_flags[difference.astype(DTYPE_INT_DEFAULT)]
             del difference
 
             remap_indexer = other_index_remapped[other._indexers[depth]]

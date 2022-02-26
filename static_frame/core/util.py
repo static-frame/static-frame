@@ -922,11 +922,11 @@ def ufunc_unique1d_counts(array: np.ndarray,
             # Use a dict to retain order; this will break for non hashables
             store: tp.Dict[tp.Hashable, int] = Counter(array)
 
-            counts = np.empty(len(store), dtype=np.intp)
-            array = np.empty(len(store), dtype=object)
+            counts = np.empty(len(store), dtype=DTYPE_INT_DEFAULT)
+            array = np.empty(len(store), dtype=DTYPE_OBJECT)
 
-            counts[:] = tuple(store.values())
-            array[:] = tuple(store)
+            counts[NULL_SLICE] = tuple(store.values())
+            array[NULL_SLICE] = tuple(store)
 
             return array, counts
     else:
