@@ -176,6 +176,7 @@ class InterfaceFillValue(Interface[TContainer]):
             column_key = NULL_SLICE
         return self._extract_loc2d(row_key, column_key)
 
+    #---------------------------------------------------------------------------
     @property
     def loc(self) -> InterfaceGetItem['Frame']:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
