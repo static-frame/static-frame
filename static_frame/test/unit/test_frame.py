@@ -11168,7 +11168,7 @@ class TestUnit(TestCase):
         f1 = sf.Frame.from_records([[0, 'A'],[1, None], [2, 'B']])
         f2 = f1.pivot(1)
         self.assertEqual(f2.to_pairs(0),
-                ((0, (('A', 0), ('B', 2), (None, 1))),))
+                ((0, (('A', 0), (None, 1), ('B', 2))),))
 
     def test_frame_pivot_r(self) -> None:
         f1 = sf.Frame.from_records([[0, 'A', False],[1, None, True], [2, 'B', False]])
@@ -11272,7 +11272,7 @@ class TestUnit(TestCase):
         f3 = sf.Frame.from_records([[0, 'A', 10],[1, None, 20], [2, 'B', 30]])
         f4 = f3.pivot(1, func=None)
         self.assertEqual(f4.to_pairs(),
-            ((0, (('A', 0), ('B', 2), (None, 1))), (2, (('A', 10), ('B', 30), (None, 20)))))
+            ((0, (('A', 0), (None, 1), ('B', 2))), (2, (('A', 10), (None, 20), ('B', 30)))))
 
     @skip_win #type: ignore
     def test_frame_pivot_x(self) -> None:

@@ -2551,8 +2551,8 @@ class TestUnit(TestCase):
 
     def test_ufunc_unique1d_positions_c(self) -> None:
         pos, indexer = ufunc_unique1d_positions(np.array([None, 'foo', 3, 'foo', None], dtype=object))
-        self.assertEqual(pos.tolist(), [2, 0, 1])
-        self.assertEqual(indexer.tolist(), [1, 2, 0, 2, 1])
+        self.assertEqual(pos.tolist(), [0, 1, 2])
+        self.assertEqual(indexer.tolist(), [0, 1, 2, 1, 0])
 
     #---------------------------------------------------------------------------
 

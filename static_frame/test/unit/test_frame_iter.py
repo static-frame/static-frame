@@ -913,14 +913,13 @@ class TestUnit(TestCase):
         self.assertEqual(post[0][1].to_pairs(0),
                 (('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73)))))
 
-        self.assertEqual(post[1][0], False)
+        self.assertEqual(post[1][0], 'a')
         self.assertEqual(post[1][1].to_pairs(0),
-                (('s', (('w', False), ('x', True), ('y', False), ('z', True))), ('t', (('w', False), ('x', False), ('y', False), ('z', True)))))
-
-        self.assertEqual(post[2][0], 'a')
-
-        self.assertEqual(post[2][1].to_pairs(0),
                 (('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))),))
+
+        self.assertEqual(post[2][0], False)
+        self.assertEqual(post[2][1].to_pairs(0),
+                (('s', (('w', False), ('x', True), ('y', False), ('z', True))), ('t', (('w', False), ('x', False), ('y', False), ('z', True)))))
 
     def test_frame_group_c(self) -> None:
         f = ff.parse('s(10,3)|v(int,str,bool)').assign[0].apply(lambda s: s % 4)

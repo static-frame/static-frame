@@ -1518,6 +1518,18 @@ class TestUnit(TestCase):
             (idx2.values_at_depth(0) == np.array(['2012', '2012', '2012'], dtype='datetime64[Y]')).all()
             )
 
+    #---------------------------------------------------------------------------
+
+    def test_index_iloc_map_a(self) -> None:
+
+        ih1 = Index(tuple("QafDeHbdc"))
+        ih2 = Index(tuple("ABcdHebDEsaQf"))
+
+        post = ih1._index_iloc_map(ih2)
+        expected= ih1.iter_label().apply(ih2._loc_to_iloc)
+        self.assertEqual(post.tolist(), expected.tolist())
+        self.assertEqual([11, 10, 12, 7, 5, 4, 6, 3, 2], post.tolist())
+
 
 if __name__ == '__main__':
     unittest.main()

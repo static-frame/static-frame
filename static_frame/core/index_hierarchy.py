@@ -556,7 +556,7 @@ class IndexHierarchy(IndexBase):
                 if new_labels.size:
                     index_inner.extend(new_labels.values)
 
-                new_indexer = index.iter_label().apply(index_inner._loc_to_iloc)
+                new_indexer = index._index_iloc_map(index_inner)
 
             indexers_inner.append(new_indexer)
             repeats.append(len(index))
@@ -1584,7 +1584,7 @@ class IndexHierarchy(IndexBase):
                 self._indices,
                 key._indexers,
                 ):
-            indexer_remap = key_index.iter_label().apply(self_index._loc_to_iloc)
+            indexer_remap = key_index._index_iloc_map(self_index)
             key_indexers.append(indexer_remap[key_indexer])
 
         self_indexers = np.array(self._indexers, dtype=DTYPE_INT_DEFAULT).T
@@ -2447,7 +2447,7 @@ class IndexHierarchyGO(IndexHierarchy):
                     continue
 
                 # Same labels, but different order. We have to remap the indexers.
-                indexer_remap = other_index.iter_label().apply(self_index._loc_to_iloc)
+                indexer_remap = other_index._index_iloc_map(self_index)
 
                 remap_indexer = indexer_remap[other._indexers[depth]]
                 new_indexer = np.hstack((self._indexers[depth], remap_indexer))
@@ -2463,9 +2463,9 @@ class IndexHierarchyGO(IndexHierarchy):
 
             # We use the mask_flags to signal what was in the intersection and what was not
             # We can't use any existing masks, since the sizes will be different
-            other_index_remapped = other_index.iter_label().apply(
-                self_index._loc_to_iloc
-            ) * mask_flags[difference.astype(DTYPE_INT_DEFAULT)]
+            other_index_remapped = other_index._index_iloc_map(self_index) * (
+                mask_flags[difference.astype(DTYPE_INT_DEFAULT)]
+            )
             del difference
 
             remap_indexer = other_index_remapped[other._indexers[depth]]

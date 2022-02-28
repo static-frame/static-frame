@@ -72,6 +72,8 @@ from static_frame.core.util import to_datetime64
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import union1d
+from static_frame.core.util import argsort_array
+from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import DTYPE_OBJECT
@@ -725,6 +727,33 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
         return self._positions
+
+    def _index_iloc_map(self: I, other: I) -> np.ndarray:
+        '''
+        Return an array of index locations to map from this array to another
+
+        Equivalent to: self.iter_label().apply(other._loc_to_iloc)
+        '''
+        if self.__len__() == 0:
+            return EMPTY_ARRAY
+
+        ar1 = self.values
+        ar2 = other.values
+
+        ar1, ar1_indexer = ufunc_unique1d_indexer(ar1)
+
+        aux = np.concatenate((ar1, ar2))
+        aux_sort_indices = argsort_array(aux)
+        aux = aux[aux_sort_indices]
+
+        mask = aux[1:] == aux[:-1]
+
+        indexer = aux_sort_indices[1:][mask] - ar1.size
+
+        # We want to return these indices to match ar1 before it was sorted
+        indexer = indexer[ar1_indexer]
+        indexer.flags.writeable = False
+        return indexer
 
     @staticmethod
     def _depth_level_validate(depth_level: DepthLevelSpecifier) -> None:

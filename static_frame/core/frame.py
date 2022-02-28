@@ -8071,7 +8071,7 @@ class FrameAssignBLoc(FrameAssign):
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
-        # get Bollean key of normalized shape; in most cases this will be a new, mutable array
+        # get Boolean key of normalized shape; in most cases this will be a new, mutable array
         key = bloc_key_normalize(
                 key=self.key,
                 container=self.container

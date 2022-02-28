@@ -1653,9 +1653,10 @@ class TestUnit(TestCase):
 
 
         self.assertEqual([g[0] for g in groups],
-                [20, 'bar', 'foo'])
+                ['foo', 'bar', 20])
         self.assertEqual([g[1].to_pairs() for g in groups],
-                [(('d', 20), ('e', 20)), (('b', 'bar'),), (('a', 'foo'), ('c', 'foo'))])
+                [(('a', 'foo'), ('c', 'foo')), (('b', 'bar'),), (('d', 20), ('e', 20))]
+                )
 
     def test_series_group_c(self) -> None:
 

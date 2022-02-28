@@ -821,6 +821,26 @@ def array_ufunc_axis_skipna(
 #-------------------------------------------------------------------------------
 # unique value discovery; based on NP's arraysetops.py
 
+def argsort_array(array: np.ndarray, sort_kind: str = DEFAULT_STABLE_SORT_KIND) -> np.ndarray:
+    # NOTE: must use stable sort when returning positions
+    if array.dtype.kind == 'O':
+        try:
+            return array.argsort(kind=sort_kind)
+        except TypeError: # if unorderable types
+            pass
+
+        array_sortable = np.empty(array.shape, dtype=np.int64)
+
+        indices: tp.Dict[tp.Any, int] = {}
+        for i, v in enumerate(array):
+            array_sortable[i] = indices.setdefault(v, len(indices))
+        del indices
+
+        return np.argsort(array_sortable, kind=sort_kind)
+
+    return array.argsort(kind=sort_kind)
+
+
 def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     '''
     Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
@@ -852,17 +872,8 @@ def ufunc_unique1d_indexer(array: np.ndarray,
     '''
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as index positions of those values in the original array.
     '''
-    if array.dtype.kind == 'O':
-        try:
-            positions = array.argsort()
-            sortable = True
-        except TypeError: # if unorderable types
-            sortable = False
-        # if not sortable, we cannot do anything else but a string
-        if not sortable:
-            positions = array.astype(str).argsort()
-    else:
-        positions = array.argsort()
+    positions = argsort_array(array)
+
     # get the sorted array
     array = array[positions]
 
@@ -882,20 +893,9 @@ def ufunc_unique1d_positions(array: np.ndarray,
     '''
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Does not return the unqiue values, but the positions in the original index of those values, as well as the locations of the unique values.
     '''
-    # NOTE: must use stable sort when returning positions
-    if array.dtype.kind == 'O':
-        try:
-            positions = array.argsort(kind=DEFAULT_STABLE_SORT_KIND)
-            sortable = True
-        except TypeError: # if unorderable types
-            sortable = False
-        if not sortable:
-            # NOTE: using string here could lead to None, 'None' being evaluated the same;  could repalce values with tuples of value as string, type as string, but that might also have collisions
-            positions = array.astype(str).argsort(kind=DEFAULT_STABLE_SORT_KIND)
-    else:
-        positions = array.argsort(kind=DEFAULT_STABLE_SORT_KIND)
-    array = array[positions]
+    positions = argsort_array(array)
 
+    array = array[positions]
 
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True

@@ -1,4 +1,5 @@
 import typing as tp
+from arraykit import isna_element
 
 import numpy as np
 
@@ -97,6 +98,24 @@ class TestUnit(TestCase):
     def test_index_to_series(self, index: Index) -> None:
         s1 = index.to_series()
         self.assertEqual(len(s1), len(index))
+
+    #---------------------------------------------------------------------------
+
+    @given(get_index_any())
+    def test_index_iloc_map_a(self, index: Index) -> None:
+        # We can't handle NaNs
+        if any(map(isna_element, index.values)):
+            return
+
+        np.random.seed(0)
+        ilocs = np.arange(len(index)) # Need new array, will shuffle in-place
+        np.random.shuffle(ilocs)
+
+        other = tp.cast(Index, index.iloc[ilocs])
+
+        expected = index.iter_label().apply(other._loc_to_iloc)
+        post = index._index_iloc_map(other)
+        self.assertEqual(post.tolist(), expected.tolist())
 
 
 if __name__ == '__main__':
