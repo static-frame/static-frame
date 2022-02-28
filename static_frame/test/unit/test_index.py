@@ -1530,6 +1530,17 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), expected.tolist())
         self.assertEqual([11, 10, 12, 7, 5, 4, 6, 3, 2], post.tolist())
 
+    def test_index_iloc_map_b(self) -> None:
+
+        ih1 = Index(tuple("abcdefg"))
+        ih2 = Index(tuple("bcdefg"))
+
+        with self.assertRaises(KeyError):
+            ih1._index_iloc_map(ih2)
+
+        with self.assertRaises(KeyError):
+            ih1.iter_label().apply(ih2._loc_to_iloc)
+
 
 if __name__ == '__main__':
     unittest.main()

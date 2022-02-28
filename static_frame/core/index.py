@@ -751,7 +751,11 @@ class Index(IndexBase):
         indexer = aux_sort_indices[1:][mask] - ar1.size
 
         # We want to return these indices to match ar1 before it was sorted
-        indexer = indexer[ar1_indexer]
+        try:
+            indexer = indexer[ar1_indexer]
+        except IndexError:
+            raise KeyError(f"{other} is not a subset of {self}")
+
         indexer.flags.writeable = False
         return indexer
 
