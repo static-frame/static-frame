@@ -420,7 +420,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
     INTERFACE = (
             'loc',
             '__getitem__',
-            'via_T',
+            # 'via_T',
             '__add__',
             '__sub__',
             '__mul__',
@@ -497,22 +497,125 @@ class InterfaceBatchFillValue(InterfaceBatch):
             lambda c: c.via_fill_value(self._fill_value)[key]
             )
 
-        # import ipdb; ipdb.set_trace()
-
     #---------------------------------------------------------------------------
-    def __add__(self, other: tp.Any) -> tp.Any:
+    def __add__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
             lambda c: c.via_fill_value(self._fill_value).__add__(other)
             )
 
-    def __sub__(self, other: tp.Any) -> tp.Any:
+    def __sub__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
             lambda c: c.via_fill_value(self._fill_value).__sub__(other)
             )
 
-    def __mul__(self, other: tp.Any) -> tp.Any:
+    def __mul__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
             lambda c: c.via_fill_value(self._fill_value).__mul__(other)
+            )
+
+    # def __matmul__(self, other: tp.Any) -> 'Batch':
+
+    def __truediv__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__truediv__(other)
+            )
+
+    def __floordiv__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__floordiv__(other)
+            )
+
+    def __mod__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__mod__(other)
+            )
+
+    def __pow__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__pow__(other)
+            )
+
+    def __lshift__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__lshift__(other)
+            )
+
+    def __rshift__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__rshift__(other)
+            )
+
+    def __and__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__and__(other)
+            )
+
+    def __xor__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__xor__(other)
+            )
+
+    def __or__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__or__(other)
+            )
+
+    def __lt__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__lt__(other)
+            )
+
+    def __le__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__le__(other)
+            )
+
+    def __eq__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__eq__(other)
+            )
+
+    def __ne__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__ne__(other)
+            )
+
+    def __gt__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__gt__(other)
+            )
+
+    def __ge__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__ge__(other)
+            )
+
+    #---------------------------------------------------------------------------
+    def __radd__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__radd__(other)
+            )
+
+    def __rsub__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__rsub__(other)
+            )
+
+    def __rmul__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__rmul__(other)
+            )
+
+    # def __rmatmul__(self, other: tp.Any) -> 'Batch':
+
+    def __rtruediv__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__rtruediv__(other)
+            )
+
+    def __rfloordiv__(self, other: tp.Any) -> 'Batch':
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__rfloordiv__(other)
             )
 
 
