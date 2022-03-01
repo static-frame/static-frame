@@ -571,12 +571,12 @@ class InterfaceBatchFillValue(InterfaceBatch):
             lambda c: c.via_fill_value(self._fill_value).__le__(other)
             )
 
-    def __eq__(self, other: tp.Any) -> 'Batch':
+    def __eq__(self, other: tp.Any) -> 'Batch': #type: ignore
         return self._batch_apply(
             lambda c: c.via_fill_value(self._fill_value).__eq__(other)
             )
 
-    def __ne__(self, other: tp.Any) -> 'Batch':
+    def __ne__(self, other: tp.Any) -> 'Batch': #type: ignore
         return self._batch_apply(
             lambda c: c.via_fill_value(self._fill_value).__ne__(other)
             )
