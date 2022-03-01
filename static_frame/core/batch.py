@@ -778,12 +778,15 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         return InterfaceBatchString(self.apply)
 
-    # @property
-    # def via_fill_value(self) -> InterfaceBatchString:
-    #     '''
-    #     Interface for applying string methods to elements in this container.
-    #     '''
-    #     return InterfaceBatchFillValue(self.apply)
+    def via_fill_value(self,
+            fill_value: object = np.nan,
+            ) -> InterfaceBatchString:
+        '''
+        Interface for using binary operators and methods with a pre-defined fill value.
+        '''
+        return InterfaceBatchFillValue(self.apply,
+                fill_value=fill_value,
+                )
 
 
     #---------------------------------------------------------------------------

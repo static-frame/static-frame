@@ -10,6 +10,7 @@ from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import AnyCallable
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -448,15 +449,71 @@ class InterfaceBatchFillValue(InterfaceBatch):
             )
 
 
-    # #---------------------------------------------------------------------------
-    # @property
-    # def loc(self) -> InterfaceGetItem['Frame']:
-    #     '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
-    #     '''
-    #     pass
+    __slots__ = (
+            '_batch_apply',
+            '_fill_value',
+            '_axis',
+            )
 
-    # def __getitem__(self,  key: GetItemKeyType) -> tp.Union['Frame', 'Series']:
-    #     '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
+    def __init__(self,
+            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            fill_value: object = np.nan,
+            axis: int = 0,
+            ) -> None:
+        self._batch_apply = batch_apply
+        self._fill_value = fill_value
+        self._axis = axis
+
+
+    #---------------------------------------------------------------------------
+    # @property
+    # def via_T(self) -> "InterfaceTranspose[Frame]":
     #     '''
-    #     pass
+    #     Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
+    #     '''
+    #     from static_frame.core.node_transpose import InterfaceTranspose
+    #     from static_frame.core.frame import Frame
+    #     assert isinstance(self._container, Frame)
+    #     return InterfaceTranspose(
+    #             container=self._container,
+    #             fill_value=self._fill_value,
+    #             )
+
+    #---------------------------------------------------------------------------
+    @property
+    def loc(self) -> InterfaceGetItem['Frame']:
+        '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
+        '''
+        def func(key: GetItemKeyType) -> 'Batch':
+            return self._batch_apply(
+                lambda c: c.via_fill_value(self._fill_value).loc[key]
+                )
+        return InterfaceGetItem(func)
+
+    def __getitem__(self,  key: GetItemKeyType) -> 'Batch':
+        '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
+        '''
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value)[key]
+            )
+
+        # import ipdb; ipdb.set_trace()
+
+    #---------------------------------------------------------------------------
+    def __add__(self, other: tp.Any) -> tp.Any:
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__add__(other)
+            )
+
+    def __sub__(self, other: tp.Any) -> tp.Any:
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__sub__(other)
+            )
+
+    def __mul__(self, other: tp.Any) -> tp.Any:
+        return self._batch_apply(
+            lambda c: c.via_fill_value(self._fill_value).__mul__(other)
+            )
+
+
 
