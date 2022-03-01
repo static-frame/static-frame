@@ -1052,21 +1052,32 @@ class TestUnit(TestCase):
         
 
     #---------------------------------------------------------------------------
-    def test_batch_all_relabel(self) -> None:
+    def test_batch_relabel_level_add_drop(self) -> None:
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
-        f1 = Batch.from_frames((
+        f123 = list(Batch.from_frames((
             f0.iloc[0:3].rename('1'),
             f0.iloc[3:6].rename('2'),
             f0.iloc[6:9].rename('3'),
-        )).relabel_level_add('idx').relabel_flat(index=True).to_frame()
-        f2 = list(Batch.from_frames((
-            f1.iloc[0:9:3].rename('1'),
-            f1.iloc[1:9:3].rename('2'),
-            f1.iloc[2:9:3].rename('3'),
-        )).relabel_level_drop(index=1).relabel_shift_in(3, axis=0).items())
-        actual = [*f2[0][1][0].values, *f2[1][1][0].values, *f2[2][1][0].values]
-        expected = [-88017, 13448, 146284, 92867, 175579, 170440, 84967, 58768, 32395]
-        self.assertTrue(actual == expected)
+        )).relabel_level_add('removeme').items())
+        expected = [['removeme', i] for i in range(9)]
+        actual = [*f123[0][1].index.values.tolist(), *f123[1][1].index.values.tolist(), *f123[2][1].index.values.tolist()]
+        self.assertEqual(expected, actual)
+        f123 = list(Batch.from_frames(np.array(f123)[:,-1]).relabel_level_drop(index=1).items())
+        expected = list(range(9))
+        actual = [*f123[0][1].index.values.tolist(), *f123[1][1].index.values.tolist(), *f123[2][1].index.values.tolist()]
+        self.assertEqual(expected, actual)
+
+
+    def test_batch_relabel_shift_flat(self):
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+        f123 = list(Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).relabel_shift_in(2, axis=0).relabel_flat(index=1).items())
+        expected = [(i,bool(x)) for i,x in enumerate([1,0,0,1,0,0,1,1,1])]
+        actual = [*f123[0][1].index.values.tolist(), *f123[1][1].index.values.tolist(), *f123[2][1].index.values.tolist()]
+        self.assertEqual(expected, actual)
 
     #---------------------------------------------------------------------------
     def test_batch_rank_dense(self) -> None:
