@@ -780,7 +780,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def via_fill_value(self,
             fill_value: object = np.nan,
-            ) -> InterfaceBatchString:
+            ) -> InterfaceBatchFillValue:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
