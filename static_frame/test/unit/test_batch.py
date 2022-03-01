@@ -1594,14 +1594,151 @@ class TestUnit(TestCase):
                 )
 
     def test_batch_via_fill_value_mul(self) -> None:
-        f1 = ff.parse('s(2,2)|v(int)').rename('a')
-        f2 = ff.parse('s(2,2)|v(int)').rename('b')
-        f3 = ff.parse('s(1,2)|v(int)|c(I,str)').relabel(columns=(1,4))
+        f1 = ff.parse('s(2,2)|v(int64)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int64)').rename('b')
+        f3 = ff.parse('s(1,2)|v(int64)|c(I,str)').relabel(columns=(1,4))
         post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) * f3).to_frame()
 
         self.assertEqual(post1.to_pairs(),
                 ((0, ((('a', 0), 0), (('a', 1), 0), (('b', 0), 0), (('b', 1), 0))), (1, ((('a', 0), -14276093349), (('a', 1), 0), (('b', 0), -14276093349), (('b', 1), 0))), (4, ((('a', 0), 0), (('a', 1), 0), (('b', 0), 0), (('b', 1), 0))))
                 )
+
+    def test_batch_via_fill_value_truediv(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)')
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) / f3).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), 1.0), (('a', 1), 1.0), (('b', 0), 1.0), (('b', 1), 1.0))), (1, ((('a', 0), 1.0), (('a', 1), 1.0), (('b', 0), 1.0), (('b', 1), 1.0))), (2, ((('a', 0), -0.0), (('a', 1), 0.0), (('b', 0), -0.0), (('b', 1), 0.0))))
+            )
+
+    def test_batch_via_fill_value_floordiv(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)')
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) // f3).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), 1), (('a', 1), 1), (('b', 0), 1), (('b', 1), 1))), (1, ((('a', 0), 1), (('a', 1), 1), (('b', 0), 1), (('b', 1), 1))), (2, ((('a', 0), 0), (('a', 1), 0), (('b', 0), 0), (('b', 1), 0))))
+            )
+
+    def test_batch_via_fill_value_mod(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)') % 3 + 1
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) % f3).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), 0), (('a', 1), 2), (('b', 0), 0), (('b', 1), 2))), (1, ((('a', 0), 2), (('a', 1), 0), (('b', 0), 2), (('b', 1), 0))), (2, ((('a', 0), 0), (('a', 1), 0), (('b', 0), 0), (('b', 1), 0))))
+            )
+
+    def test_batch_via_fill_value_pow(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int64)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int64)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int64)') % 2 + 1
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) ** f3).to_frame()
+
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), 7746992289), (('a', 1), 8624279689), (('b', 0), 7746992289), (('b', 1), 8624279689))), (1, ((('a', 0), 26307866809), (('a', 1), 1693898649), (('b', 0), 26307866809), (('b', 1), 1693898649))), (2, ((('a', 0), 0), (('a', 1), 0), (('b', 0), 0), (('b', 1), 0))))
+            )
+
+    def test_batch_via_fill_value_lshift(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)') % 2 + 1
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) << f3).to_frame()
+
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), -352068), (('a', 1), 371468), (('b', 0), -352068), (('b', 1), 371468))), (1, ((('a', 0), 648788), (('a', 1), -164628), (('b', 0), 648788), (('b', 1), -164628))), (2, ((('a', 0), 0), (('a', 1), 0), (('b', 0), 0), (('b', 1), 0))))
+            )
+
+    def test_batch_via_fill_value_rshift(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)') % 2 + 1
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) >> f3).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), -22005), (('a', 1), 23216), (('b', 0), -22005), (('b', 1), 23216))), (1, ((('a', 0), 40549), (('a', 1), -10290), (('b', 0), 40549), (('b', 1), -10290))), (2, ((('a', 0), 0), (('a', 1), 0), (('b', 0), 0), (('b', 1), 0))))
+            )
+
+    def test_batch_via_fill_value_and(self) -> None:
+        f1 = ff.parse('s(2,2)|v(bool)').rename('a')
+        f2 = ~ff.parse('s(2,2)|v(bool)').rename('b')
+        f3 = ~ff.parse('s(2,3)|v(bool)')
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(False) & f3).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), True), (('b', 1), True))), (1, ((('a', 0), False), (('a', 1), False), (('b', 0), True), (('b', 1), True))), (2, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False)))))
+
+    def test_batch_via_fill_value_xor(self) -> None:
+        f1 = ff.parse('s(2,2)|v(bool)').rename('a')
+        f2 = ~ff.parse('s(2,2)|v(bool)').rename('b')
+        f3 = ~ff.parse('s(2,3)|v(bool)')
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(False) ^ f3).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), True), (('a', 1), True), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), True), (('a', 1), True), (('b', 0), False), (('b', 1), False))), (2, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))))
+            )
+
+    def test_batch_via_fill_value_or(self) -> None:
+        f1 = ff.parse('s(2,2)|v(bool)').rename('a')
+        f2 = ~ff.parse('s(2,2)|v(bool)').rename('b')
+        f3 = ~ff.parse('s(2,3)|v(bool)')
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(False) | f3).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), True), (('a', 1), True), (('b', 0), True), (('b', 1), True))), (1, ((('a', 0), True), (('a', 1), True), (('b', 0), True), (('b', 1), True))), (2, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))))
+            )
+
+    def test_batch_via_fill_value_lt(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = -ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)') * 2
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) < f3).to_frame()
+
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))), (1, ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))), (2, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))))
+            )
+
+    def test_batch_via_fill_value_le(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = -ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)')
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) <= f3).to_frame()
+
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), True), (('a', 1), True), (('b', 0), False), (('b', 1), True))), (1, ((('a', 0), True), (('a', 1), True), (('b', 0), True), (('b', 1), False))), (2, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))))
+            )
+
+    def test_batch_via_fill_value_eq(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = -ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)')
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) == f3).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), True), (('a', 1), True), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), True), (('a', 1), True), (('b', 0), False), (('b', 1), False))), (2, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False)))))
+
+    def test_batch_via_fill_value_ne(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = -ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)')
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) != f3).to_frame()
+        self.assertEqual( post1.to_pairs(),
+            ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), True), (('b', 1), True))), (1, ((('a', 0), False), (('a', 1), False), (('b', 0), True), (('b', 1), True))), (2, ((('a', 0), True), (('a', 1), True), (('b', 0), True), (('b', 1), True))))
+            )
+
+    def test_batch_via_fill_value_gt(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = -ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)') * 2
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) > f3).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))), (1, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))), (2, ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))))
+            )
+
+    def test_batch_via_fill_value_ge(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = -ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)') * 2
+        post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) >= f3).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))), (1, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))), (2, ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))))
+            )
 
 if __name__ == '__main__':
     import unittest
