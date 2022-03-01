@@ -552,14 +552,6 @@ class InterfaceString(Interface[TContainer]):
 class InterfaceBatchString(InterfaceBatch):
     '''Alternate string interface specialized for the :obj:`Batch`.
     '''
-    __slots__ = (
-            '_batch_apply',
-            )
-
-    def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
-            ) -> None:
-        self._batch_apply = batch_apply
 
     #---------------------------------------------------------------------------
     def __getitem__(self,  key: GetItemKeyType) -> 'Batch':

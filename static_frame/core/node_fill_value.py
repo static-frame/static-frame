@@ -5,6 +5,7 @@ import numpy as np
 from static_frame.core.node_selector import Interface
 from static_frame.core.util import OPERATORS
 from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
@@ -407,4 +408,55 @@ class InterfaceFillValueGO(InterfaceFillValue[TContainer]): # only type is Frame
             value: tp.Any,
             ) -> None:
         self._container.__setitem__(key, value, self._fill_value) #type: ignore
+
+#---------------------------------------------------------------------------
+
+
+class InterfaceBatchFillValue(InterfaceBatch):
+    '''Alternate string interface specialized for the :obj:`Batch`.
+    '''
+
+    INTERFACE = (
+            'loc',
+            '__getitem__',
+            'via_T',
+            '__add__',
+            '__sub__',
+            '__mul__',
+            # '__matmul__',
+            '__truediv__',
+            '__floordiv__',
+            '__mod__',
+            '__pow__',
+            '__lshift__',
+            '__rshift__',
+            '__and__',
+            '__xor__',
+            '__or__',
+            '__lt__',
+            '__le__',
+            '__eq__',
+            '__ne__',
+            '__gt__',
+            '__ge__',
+            '__radd__',
+            '__rsub__',
+            '__rmul__',
+            # '__rmatmul__',
+            '__rtruediv__',
+            '__rfloordiv__',
+            )
+
+
+    # #---------------------------------------------------------------------------
+    # @property
+    # def loc(self) -> InterfaceGetItem['Frame']:
+    #     '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
+    #     '''
+    #     pass
+
+    # def __getitem__(self,  key: GetItemKeyType) -> tp.Union['Frame', 'Series']:
+    #     '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
+    #     '''
+    #     pass
 

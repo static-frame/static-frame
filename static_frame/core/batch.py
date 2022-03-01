@@ -45,6 +45,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.node_str import InterfaceBatchString
+from static_frame.core.node_fill_value import InterfaceBatchFillValue
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -776,6 +777,13 @@ class Batch(ContainerOperand, StoreClientMixin):
         Interface for applying string methods to elements in this container.
         '''
         return InterfaceBatchString(self.apply)
+
+    # @property
+    # def via_fill_value(self) -> InterfaceBatchString:
+    #     '''
+    #     Interface for applying string methods to elements in this container.
+    #     '''
+    #     return InterfaceBatchFillValue(self.apply)
 
 
     #---------------------------------------------------------------------------
