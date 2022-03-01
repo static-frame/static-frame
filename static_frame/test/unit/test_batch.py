@@ -843,17 +843,6 @@ class TestUnit(TestCase):
 
         expected = np.array([True, False, False, True, False, False, True, True, False])
         self.assertTrue(((actual1 == actual2) & (actual2 == expected)).all())
-    
-    def test_batch_fillna(self) -> None:
-        f0 = ff.parse('v(str,str,bool,int)|s(9,4)').assign[3]([None, 100, 632, None, 12, 51526, None, None, 231])
-        f1 = Batch.from_frames((
-            f0.iloc[0:3].rename('1'),
-            f0.iloc[3:6].rename('2'),
-            f0.iloc[6:9].rename('3'),
-        )).fillna(0).to_frame()
-        expected = [0, 100, 632, 0, 12, 51526, 0, 0, 231]
-        actual = f1[3].values.tolist()
-        self.assertEqual(expected, actual)
 
     def test_batch_dropna(self) -> None:
         f0 = ff.parse('v(str,str,bool,float)|s(9,4)').assign[3]([None, 100.0, 632.23, None, 12.5, 51526.002, None, None, 0.231])
@@ -862,7 +851,7 @@ class TestUnit(TestCase):
             f0.iloc[3:6].rename('2'),
             f0.iloc[6:9].rename('3'),
         )).dropna(condition=np.any).to_frame()
-        
+
         actual_index = f.index.values[:,-1].astype(int)
         expected_index = np.array([1,2,4,5,8])
         self.assertTrue(np.array_equal(actual_index, expected_index))
@@ -873,19 +862,19 @@ class TestUnit(TestCase):
         actual1 = Batch.from_frames((
             f0.iloc[0:3].rename('1'),
             f0.iloc[6:9].rename('3'),
-            f0.iloc[3:6].rename('2'), 
+            f0.iloc[3:6].rename('2'),
         )).isfalsy().to_frame()[2].values
         actual2 = Batch.from_frames((
             f0.iloc[0:3].rename('1'),
             f0.iloc[6:9].rename('3'),
-            f0.iloc[3:6].rename('2'), 
+            f0.iloc[3:6].rename('2'),
         )).notfalsy().to_frame()[2].values
         actual2 = np.invert(actual2)
 
         expected = np.array([False, True, True, False, False, False, False, True, True])
         self.assertTrue(((actual1 == actual2) & (actual2 == expected)).all())
 
-    def test_batch_fillna(self) -> None:
+    def test_batch_fillna_a(self) -> None:
         f0 = ff.parse('v(str,str,bool,int)|s(9,4)').assign.loc[4:,0]('')
         f1 = Batch.from_frames((
             f0.iloc[0:3].rename('1'),
@@ -894,6 +883,17 @@ class TestUnit(TestCase):
         )).fillfalsy('filled').to_frame()
         expected = ['zjZQ', 'zO5l', 'zEdH', 'zB7E', 'filled', 'filled', 'filled', 'filled', 'filled']
         actual = f1[0].values.tolist()
+        self.assertEqual(expected, actual)
+
+    def test_batch_fillna_b(self) -> None:
+        f0 = ff.parse('v(str,str,bool,int)|s(9,4)').assign[3]([None, 100, 632, None, 12, 51526, None, None, 231])
+        f1 = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillna(0).to_frame()
+        expected = [0, 100, 632, 0, 12, 51526, 0, 0, 231]
+        actual = f1[3].values.tolist()
         self.assertEqual(expected, actual)
 
     def test_batch_dropfalsy(self) -> None:
@@ -906,7 +906,7 @@ class TestUnit(TestCase):
         actual_index = f4.index.values[:,-1].astype(int)
         expected_index = np.array([0,3,6,7,8])
         self.assertTrue(np.array_equal(actual_index, expected_index))
-        
+
     #---------------------------------------------------------------------------
     def test_batch_fillna_leading(self) -> None:
         f0 = ff.parse('v(int,str,float,str)|s(9,4)')
@@ -945,7 +945,7 @@ class TestUnit(TestCase):
         expected = np.array([1,1,3,4,4,6,7,7,9])
         actual = f[0].values.astype(int)
         self.assertTrue(np.array_equal(expected, actual))
-    
+
     def test_batch_fillna_backward(self) -> None:
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,None,3,4,None,6,7,None,9])
         f = Batch.from_frames((
@@ -984,7 +984,7 @@ class TestUnit(TestCase):
         expected = np.array(['zjZQ', 'zO5l', '--trailing--', 'zB7E', 'zwIp', '--trailing--', 'z5hI', 'zyT8', '--trailing--'], dtype='<U12')
         actual = f[0].values
         self.assertTrue(np.array_equal(expected, actual))
-    
+
     def test_batch_fillfalsy_forward(self) -> None:
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,0,3,4,0,6,7,0,9])
         f = Batch.from_frames((
@@ -995,7 +995,7 @@ class TestUnit(TestCase):
 
         expected = np.array([1,1,3,4,4,6,7,7,9])
         self.assertTrue(np.array_equal(expected, f[0].values))
-    
+
     def test_batch_fillfalsy_backward(self) -> None:
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,0,3,4,0,6,7,0,9])
         f = Batch.from_frames((
@@ -1037,11 +1037,11 @@ class TestUnit(TestCase):
             f0.iloc[0:3].rename('1'),
             f0.iloc[3:6].rename('2'),
             f0.iloc[6:9].rename('3'),
-        )).relabel(columns={2:"two"}).to_frame()   
+        )).relabel(columns={2:"two"}).to_frame()
         actual = f1.columns.values.tolist()
         expected = [0, 1, 'two', 3]
         self.assertEqual(expected, actual)
-    
+
     def test_batch_relabel_b(self) -> None:
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
         with self.assertRaises(ErrorInitFrame):
@@ -1049,7 +1049,7 @@ class TestUnit(TestCase):
                 f0.iloc[0:2].rename('1'),
                 f0.iloc[2:8].rename('2'),
             )).relabel(index=("a", "b")).to_frame()
-        
+
 
     #---------------------------------------------------------------------------
     def test_batch_relabel_level_add_drop(self) -> None:
@@ -1068,7 +1068,7 @@ class TestUnit(TestCase):
         self.assertEqual(expected, actual)
 
 
-    def test_batch_relabel_shift_flat(self):
+    def test_batch_relabel_shift_flat(self) -> None:
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
         f123 = list(Batch.from_frames((
             f0.iloc[0:3].rename('1'),
@@ -1090,8 +1090,8 @@ class TestUnit(TestCase):
         )
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_dense()
-        for i,f in enumerate(b123.items()):
-            self.assertTrue(np.array_equal(f[1].values, f123[i].rank_dense().values))
+        for i,(_, f) in enumerate(b123.items()): # type: ignore
+            self.assertTrue(np.array_equal(f.values, f123[i].rank_dense().values))
 
     def test_batch_rank_max(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1103,8 +1103,8 @@ class TestUnit(TestCase):
         )
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_max()
-        for i,f in enumerate(b123.items()):
-            self.assertTrue(np.array_equal(f[1].values, f123[i].rank_max().values))
+        for i,(_, f) in enumerate(b123.items()): # type: ignore
+            self.assertTrue(np.array_equal(f.values, f123[i].rank_max().values))
 
     def test_batch_rank_mean(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1116,8 +1116,8 @@ class TestUnit(TestCase):
         )
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_mean()
-        for i,f in enumerate(b123.items()):
-            self.assertTrue(np.array_equal(f[1].values, f123[i].rank_mean().values))
+        for i,(_, f) in enumerate(b123.items()): # type: ignore
+            self.assertTrue(np.array_equal(f.values, f123[i].rank_mean().values))
 
     def test_batch_rank_min(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1129,8 +1129,8 @@ class TestUnit(TestCase):
         )
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_min()
-        for i,f in enumerate(b123.items()):
-            self.assertTrue(np.array_equal(f[1].values, f123[i].rank_min().values))
+        for i,(_, f) in enumerate(b123.items()): # type: ignore
+            self.assertTrue(np.array_equal(f.values, f123[i].rank_min().values))
 
     def test_batch_rank_ordinal(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1142,8 +1142,8 @@ class TestUnit(TestCase):
         )
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_ordinal()
-        for i,f in enumerate(b123.items()):
-            self.assertTrue(np.array_equal(f[1].values, f123[i].rank_ordinal().values))    
+        for i,(_, f) in enumerate(b123.items()): # type: ignore
+            self.assertTrue(np.array_equal(f.values, f123[i].rank_ordinal().values))
 
     #---------------------------------------------------------------------------
     def test_batch_shift_a(self) -> None:

@@ -968,19 +968,19 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(attr="notna")
 
     def dropna(
-        self, 
+        self,
         axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all
     ) -> "Batch":
-        """ 
+        """
         Return a new Batch of Frame(s) after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
-        
+
         Args:
             axis:
             condition:
         """
         return self._apply_attr(
-                attr="dropna", 
-                axis=axis, 
+                attr="dropna",
+                axis=axis,
                 condition=condition
                 )
 
@@ -999,19 +999,19 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(attr="notfalsy")
 
     def dropfalsy(
-        self, 
+        self,
         axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all
     ) -> "Batch":
         """
         Return a new Batch of Frame(s) after removing rows (axis 0) or columns (axis 1) where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isfalsy()``; the default is ``np.all``.
-        
+
         Args:
             axis:
             condition:
         """
         return self._apply_attr(
-                attr="dropfalsy", 
-                axis=axis, 
+                attr="dropfalsy",
+                axis=axis,
                 condition=condition
                 )
 
@@ -1020,7 +1020,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     # na filling
 
     def fillna(
-        self, 
+        self,
         value: tp.Any
     ) -> "Batch":
         return self._apply_attr(
@@ -1041,7 +1041,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             {value}
             {axis}
         '''
-        
+
         return self._apply_attr(
                 attr='fillna_leading',
                 value=value,
@@ -1109,7 +1109,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     # falsy filling
 
     def fillfalsy(
-        self, 
+        self,
         value: tp.Any
     ) -> "Batch":
         return self._apply_attr(
@@ -1239,7 +1239,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         own_columns: bool = False,
         check_equals: bool = True,
     ) -> 'Batch':
-        
+
         return self._apply_attr(
             attr='reindex',
             index=index,
@@ -1303,7 +1303,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             key=key,
             axis=axis
         )
-        
+
     # ---------------------------------------------------------------------------
     # rank
 
@@ -1316,7 +1316,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         start: int = 0,
         fill_value: tp.Any = np.nan
         ) -> 'Batch':
-        
+
         return self._apply_attr(
             attr='rank_ordinal',
             axis=axis,
@@ -1354,7 +1354,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         start: int = 0,
         fill_value: tp.Any = np.nan
         ) -> 'Batch':
-        
+
         return self._apply_attr(
             attr='rank_min',
             axis=axis,
@@ -1373,7 +1373,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         start: int = 0,
         fill_value: tp.Any = np.nan
         ) -> 'Batch':
-        
+
         return self._apply_attr(
             attr='rank_max',
             axis=axis,
@@ -1392,7 +1392,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         start: int = 0,
         fill_value: tp.Any = np.nan
         ) -> 'Batch':
-        
+
         return self._apply_attr(
             attr='rank_mean',
             axis=axis,
@@ -1401,7 +1401,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             start=start,
             fill_value=fill_value
         )
-        
+
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
 
