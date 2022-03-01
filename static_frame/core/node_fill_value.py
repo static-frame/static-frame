@@ -13,6 +13,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import AnyCallable
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import FrameGO  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  #pylint: disable = W0611 #pragma: no cover

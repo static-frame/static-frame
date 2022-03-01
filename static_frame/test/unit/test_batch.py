@@ -1560,7 +1560,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 ((0, ((('a', 0), 'zjZQ'), (('a', 2), ''), (('b', 0), 'zjZQ'), (('b', 2), ''))), (1, ((('a', 0), 'zaji'), (('a', 2), ''), (('b', 0), 'zaji'), (('b', 2), '')))))
 
-    def test_batch_via_fill_value_loc(self) -> None:
+    def test_batch_via_fill_value_getitem(self) -> None:
 
         f1 = ff.parse('s(2,2)|v(str)').rename('a')
         f2 = ff.parse('s(2,2)|v(str)').rename('b')
