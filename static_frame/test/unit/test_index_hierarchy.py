@@ -1168,7 +1168,7 @@ class TestUnit(TestCase):
         labels = (('I', 'A'), ('I', 'B'))
         ih = IndexHierarchy.from_labels(labels)
 
-        self.assertTrue(Index(labels) in ih)
+        self.assertFalse(Index(labels) in ih)
 
     def test_hierarchy_extract_a(self) -> None:
         idx = IndexHierarchy.from_product(['A', 'B'], [1, 2])
@@ -1511,13 +1511,62 @@ class TestUnit(TestCase):
             ("A", "H"),
             ("B", "F"),
         ]
+        labelsC = [
+            ("C", "G"),
+            ("D", "G"),
+            ("C", "I"),
+            ("C", "H"),
+            ("F", "F"),
+        ]
 
         ihgo = IndexHierarchyGO.from_labels(labelsA)
         ih2 = IndexHierarchy.from_labels(labelsB)
+        ih3 = IndexHierarchy.from_labels(labelsC)
 
         ihgo.extend(ih2)
+        ihgo.extend(ih3)
 
-        expected = IndexHierarchy.from_labels(labelsA + labelsB)
+        expected = IndexHierarchy.from_labels(labelsA + labelsB + labelsC)
+        self.assertTrue(ihgo.equals(expected))
+
+    def test_hierarchy_index_go_e(self) -> None:
+        labelsA = [
+            ("A", "D"),
+            ("A", "E"),
+            ("A", "F"),
+            ("B", "E"),
+            ("B", "D"),
+        ]
+
+        labelB = ("C", "C")
+        labelsC = [
+            ("B", "G"),
+            ("A", "G"),
+            ("A", "I"),
+            ("A", "H"),
+            ("B", "F"),
+        ]
+        labelD = ("C", "B")
+        labelsE = [
+            ("C", "G"),
+            ("D", "G"),
+            ("C", "I"),
+            ("C", "H"),
+            ("F", "F"),
+        ]
+        labelF = ("C", "A")
+
+        ihgo = IndexHierarchyGO.from_labels(labelsA)
+        ih2 = IndexHierarchy.from_labels(labelsC)
+        ih3 = IndexHierarchy.from_labels(labelsE)
+
+        ihgo.append(labelB)
+        ihgo.extend(ih2)
+        ihgo.append(labelD)
+        ihgo.extend(ih3)
+        ihgo.append(labelF)
+
+        expected = IndexHierarchy.from_labels(labelsA + [labelB] + labelsC + [labelD] + labelsE + [labelF])
         self.assertTrue(ihgo.equals(expected))
 
     #---------------------------------------------------------------------------

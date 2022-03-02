@@ -184,6 +184,40 @@ def construct_indices_and_indexers_from_column_arrays(
     return indices, indexers
 
 
+class PendingGroup:
+    """
+    Encapsulates multiple records that need to be added to indexers
+
+    For example:
+    [np.array([0, 0, 1]), np.array([0, 1, 0]), np.array([1, 0, 0])]
+    """
+    def __init__(self, indexers: tp.List[np.ndarray]) -> None:
+        self.indexers = indexers
+
+    def __len__(self) -> int:
+        return len(self.indexers[0])
+
+    def __iter__(self) -> tp.Iterator[int]:
+        yield from self.indexers
+
+
+class PendingRow:
+    """
+    Encapsulates a single record that needs to be added to indexers
+
+    For example:
+    [0, 0, 1]
+    """
+    def __init__(self, row: tp.List[int]) -> None:
+        self.row = row
+
+    def __len__(self) -> int:
+        return 1
+
+    def __iter__(self) -> tp.Iterator[int]:
+        yield from self.row
+
+
 # ------------------------------------------------------------------------------
 
 class IndexHierarchy(IndexBase):
@@ -199,6 +233,7 @@ class IndexHierarchy(IndexBase):
             '_values',
             '_recache',
             '_index_types',
+            '_pending_extensions',
             )
 
     _indices: tp.List[Index] # Of index objects
@@ -208,6 +243,7 @@ class IndexHierarchy(IndexBase):
     _values: np.ndarray
     _recache: bool
     _index_types: tp.Optional['Series'] # Used to cache the property `index_types`
+    _pending_extensions: tp.Optional[tp.List[tp.Union[PendingGroup, PendingRow]]]
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
@@ -762,6 +798,10 @@ class IndexHierarchy(IndexBase):
             blocks:
             own_blocks:
         '''
+        self._recache = False
+        self._index_types = None
+        self._pending_extensions = None
+
         if isinstance(indices, IndexHierarchy):
             if indexers:
                 raise ErrorInitIndex(
@@ -779,8 +819,6 @@ class IndexHierarchy(IndexBase):
             self._indexers = list(indices._indexers)
             self._name = indices._name
             self._blocks = indices._blocks
-            self._recache = False
-            self._index_types = None
             return
 
         if not all(arr.__class__ is np.ndarray for arr in indexers):
@@ -813,12 +851,51 @@ class IndexHierarchy(IndexBase):
         self._values = self._blocks.values
         self._ensure_uniqueness(self._indexers, self.values)
 
-        self._recache = False
-        self._index_types = None
 
     def _update_array_cache(self: IH) -> None:
-        # This is never hit because we are by definition updated
-        pass # pragma: no cover
+
+        if self._pending_extensions is None:
+            return
+
+        new_indexers = [np.empty(self.__len__(), DTYPE_INT_DEFAULT) for _ in range(self.depth)]
+
+        current_size = len(self._blocks)
+
+        for depth, indexer in enumerate(self._indexers):
+            new_indexers[depth][:current_size] = indexer
+
+        self._indexers.clear()
+
+        offset = current_size
+        unique_check_required = False
+
+        for pending in self._pending_extensions: # pylint: disable=not-an-iterable
+            if isinstance(pending, PendingRow):
+                for depth, val in enumerate(pending):
+                    new_indexers[depth][offset] = val
+
+                offset += 1
+            else:
+                # TODO: How to better check this in `.extend`?
+                unique_check_required = True
+                group_size = len(pending)
+
+                for depth, indexer in enumerate(pending):
+                    new_indexers[depth][offset:offset + group_size] = indexer
+
+                offset += group_size
+
+        for indexer in new_indexers:
+            indexer.flags.writeable = False
+
+        self._indexers = new_indexers
+
+        self._blocks = self._create_blocks_from_self()
+        self._pending_extensions.clear()
+        self._recache = False
+
+        if unique_check_required:
+            self._ensure_uniqueness(self._indexers, self.values)
 
     # --------------------------------------------------------------------------
 
@@ -835,6 +912,7 @@ class IndexHierarchy(IndexBase):
         obj._name = self._name # should be hashable/immutable
         obj._recache = False
         obj._index_types = deepcopy(self._index_types, memo)
+        obj._pending_extensions = deepcopy(self._pending_extensions, memo)
 
         memo[id(self)] = obj
         return obj
@@ -843,6 +921,9 @@ class IndexHierarchy(IndexBase):
         '''
         Return a shallow copy of this IndexHierarchy.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         blocks = self._blocks.copy()
         return self.__class__(
                 indices=self._indices,
@@ -947,6 +1028,9 @@ class IndexHierarchy(IndexBase):
         '''
         Interface for applying string methods to elements in this container.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         return InterfaceString(
                 blocks=self._blocks._blocks,
                 blocks_to_container=blocks_to_container,
@@ -957,6 +1041,9 @@ class IndexHierarchy(IndexBase):
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         return InterfaceDatetime(
                 blocks=self._blocks._blocks,
                 blocks_to_container=blocks_to_container,
@@ -976,6 +1063,9 @@ class IndexHierarchy(IndexBase):
         '''
         Interface for applying regular expressions to elements in this container.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         return InterfaceRe(
                 blocks=self._blocks._blocks,
                 blocks_to_container=blocks_to_container,
@@ -991,6 +1081,9 @@ class IndexHierarchy(IndexBase):
         '''
         {doc_int}
         '''
+        if self._recache:
+            self._update_array_cache()
+
         return self._blocks.mloc
 
     @property
@@ -1012,7 +1105,7 @@ class IndexHierarchy(IndexBase):
         else:
             labels = None
 
-        return Series(self._blocks.dtypes, index=labels)
+        return Series((index.dtype for index in self._indices), index=labels)
 
     @property
     def shape(self: IH) -> tp.Tuple[int, ...]:
@@ -1022,6 +1115,9 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`tp.Tuple[int]`
         '''
+        if self._recache:
+            return self.__len__(), self.depth
+
         return self._blocks._shape
 
     @property
@@ -1042,6 +1138,9 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`int`
         '''
+        if self._recache:
+            self._update_array_cache()
+
         return self._blocks.size
 
     @property
@@ -1052,6 +1151,9 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`int`
         '''
+        if self._recache:
+            self._update_array_cache()
+
         total = sum(map(_NBYTES_GETTER, self._indices))
         total += sum(map(_NBYTES_GETTER, self._indexers))
         total += self._blocks.nbytes
@@ -1060,6 +1162,14 @@ class IndexHierarchy(IndexBase):
     # --------------------------------------------------------------------------
 
     def __len__(self: IH) -> int:
+        if self._recache:
+            size = self._blocks.__len__()
+
+            if self._pending_extensions:
+                size += sum(map(len, self._pending_extensions))
+
+            return size
+
         return self._blocks.__len__()
 
     @doc_inject()
@@ -1074,6 +1184,9 @@ class IndexHierarchy(IndexBase):
         Args:
             {config}
         '''
+        if self._recache:
+            self._update_array_cache()
+
         config = config or DisplayActive.get()
 
         sub_display: tp.Optional[Display] = None
@@ -1117,7 +1230,6 @@ class IndexHierarchy(IndexBase):
         '''
         Utility function for preparing and collecting values for Indices to produce a new Index.
         '''
-        # can compare equality without cache update
         if self.equals(other, compare_dtype=True):
             # compare dtype as result should be resolved, even if values are the same
             if (
@@ -1131,6 +1243,9 @@ class IndexHierarchy(IndexBase):
                 return self._from_empty(EMPTY_TUPLE, depth_reference=self.depth)
             else:
                 raise NotImplementedError(f'Unsupported ufunc {func}') # pragma: no cover
+
+        if self._recache:
+            self._update_array_cache()
 
         if isinstance(other, np.ndarray):
             operand = other
@@ -1198,6 +1313,9 @@ class IndexHierarchy(IndexBase):
         '''
         Create a new index after removing the values specified by the iloc key.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
 
         # We could potentially re-use the same indices. Would that be worth it?
@@ -1225,6 +1343,9 @@ class IndexHierarchy(IndexBase):
         '''
         {}
         '''
+        if self._recache:
+            self._update_array_cache()
+
         return self._blocks.values
 
     @property
@@ -1250,6 +1371,9 @@ class IndexHierarchy(IndexBase):
         Args:
             depth_level: a single depth level, or iterable depth of depth levels.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         sel: GetItemKeyType
 
         if isinstance(depth_level, INT_TYPES):
@@ -1283,6 +1407,9 @@ class IndexHierarchy(IndexBase):
             raise NotImplementedError(
                 'selecting multiple depth levels is not yet implemented'
             )
+
+        if self._recache:
+            self._update_array_cache()
 
         # Could this be memoized?
         def _extract_counts(
@@ -1355,6 +1482,9 @@ class IndexHierarchy(IndexBase):
         '''
         Return a new IndexHierarchy with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         if not callable(mapper):
             # if a mapper, it must support both __getitem__ and __contains__
             getitem = getattr(mapper, 'get')
@@ -1417,6 +1547,9 @@ class IndexHierarchy(IndexBase):
             raise ValueError(
                 f'Invalid depth level found. Valid levels: [0-{self.depth - 1}]'
             )
+
+        if self._recache:
+            self._update_array_cache()
 
         is_callable = callable(mapper)
 
@@ -1485,6 +1618,9 @@ class IndexHierarchy(IndexBase):
         '''
         Return a new :obj:`IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         rehierarched_blocks, _ = rehierarch_from_type_blocks(
                 labels=self._blocks,
                 depth_map=depth_map,
@@ -1516,6 +1652,8 @@ class IndexHierarchy(IndexBase):
         '''
         Determines the indexer mask for `key` at `depth`.
         '''
+        # Assumes caller has recached!
+
         key_at_depth = key[depth]
 
         # Key is already a mask!
@@ -1575,6 +1713,8 @@ class IndexHierarchy(IndexBase):
 
         However, this approach quickly outperforms list comprehension as the key gets larger
         '''
+        # Assumes caller has recached!
+
         if not key.depth == self.depth:
             raise KeyError(f'Key must have the same depth as the index. {key}')
 
@@ -1607,6 +1747,8 @@ class IndexHierarchy(IndexBase):
 
         Will return a single integer for single, non-HLoc keys. Otherwise, returns a boolean mask.
         '''
+        # Assumes caller has recached!
+
         # We consider the NULL_SLICE to not be "meaningful", as it requires no filtering
         meaningful_selections = {
                 depth: not (isinstance(k, slice) and k == NULL_SLICE)
@@ -1655,6 +1797,9 @@ class IndexHierarchy(IndexBase):
         '''
         if isinstance(key, ILoc):
             return key.key
+
+        if self._recache:
+            self._update_array_cache()
 
         if isinstance(key, IndexHierarchy):
             return self._loc_to_iloc_index_hierarchy(key)
@@ -1742,6 +1887,9 @@ class IndexHierarchy(IndexBase):
         '''
         Extract a new index given an iloc key
         '''
+        if self._recache:
+            self._update_array_cache()
+
         if isinstance(key, INT_TYPES):
             # return a tuple if selecting a single row
             # NOTE: Selecting a single row may force type coercion before values are added to the tuple; i.e., a datetime64 will go to datetime.date before going to the tuple
@@ -1795,6 +1943,7 @@ class IndexHierarchy(IndexBase):
         # key is an iloc key
         if isinstance(key, tuple):
             raise KeyError('__getitem__ does not support multiple indexers')
+
         return IndexHierarchyAsType(self, key=key)
 
     # --------------------------------------------------------------------------
@@ -1806,6 +1955,9 @@ class IndexHierarchy(IndexBase):
         '''
         Always return an NP array.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         array = operator(self.values)
         array.flags.writeable = False
         return array
@@ -1825,6 +1977,9 @@ class IndexHierarchy(IndexBase):
 
         if isinstance(other, (Series, Frame)):
             raise ValueError('cannot use labelled container as an operand.')
+
+        if self._recache:
+            self._update_array_cache()
 
         if operator.__name__ == 'matmul':
             return matmul(self._blocks.values, other)
@@ -1857,6 +2012,9 @@ class IndexHierarchy(IndexBase):
         Returns:
             immutable NumPy array.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         dtype = None if not dtypes else dtypes[0] # must be a tuple
         values = self._blocks.values
 
@@ -1886,6 +2044,9 @@ class IndexHierarchy(IndexBase):
         '''
         Returns a reverse iterator on the index labels.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
 
@@ -1895,15 +2056,47 @@ class IndexHierarchy(IndexBase):
         '''
         Determine if a label `value` is contained in this Index.
         '''
-        try:
-            result = self._loc_to_iloc(value)
-        except KeyError:
+        # This very intentionally MUST not recache, as this is how IndexHierarchyGO
+        # determines whether or not it can add an incoming labell
+        if len(value) != self.depth:
+            raise RuntimeError(f'Key must have the same depth as the index. {value}')
+
+        # If the labels exist in `indices`, we will need to check the indexers
+        ilocs: tp.List[int] = []
+
+        for depth, (key_at_depth, index_at_depth) in enumerate(zip(value, self._indices)): # type: ignore
+            if key_at_depth not in index_at_depth:
+                return False
+
+            ilocs.append(index_at_depth._loc_to_iloc(key_at_depth))
+
+        # Check the actual indexers!
+        mask = np.full(self.__len__(), True, dtype=bool)
+
+        for depth, iloc in enumerate(ilocs):
+            mask &= self._indexers[depth] == iloc
+
+        if mask.any():
+            return True
+
+        if not self._pending_extensions:
             return False
 
-        if isinstance(result, (np.ndarray, list)):
-            return bool(len(result))
+        # Check pending indexers!
+        for pending in self._pending_extensions: # pylint: disable=not-an-iterable
+            if isinstance(pending, PendingRow):
+                if ilocs == pending.row:
+                    return True
+            else:
+                mask = np.full(len(pending), True, dtype=bool)
 
-        return True
+                for depth, (iloc, indexer) in enumerate(zip(ilocs, pending)):
+                    mask &= indexer == iloc
+
+                if mask.any():
+                    return True
+
+        return False
 
     # --------------------------------------------------------------------------
     # utility functions
@@ -2002,6 +2195,9 @@ class IndexHierarchy(IndexBase):
             {kind}
             {key}
         '''
+        if self._recache:
+            self._update_array_cache()
+
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
 
         blocks = self._blocks._extract(row_key=order)
@@ -2034,6 +2230,9 @@ class IndexHierarchy(IndexBase):
         if not matches:
             return np.full(self.__len__(), False, dtype=bool)
 
+        if self._recache:
+            self._update_array_cache()
+
         return isin(self.flat().values, matches)
 
     def roll(self: IH,
@@ -2042,6 +2241,9 @@ class IndexHierarchy(IndexBase):
         '''
         Return an :obj:`IndexHierarchy` with values rotated forward and wrapped around (with a positive shift) or backward and wrapped around (with a negative shift).
         '''
+        if self._recache:
+            self._update_array_cache()
+
         blocks = TypeBlocks.from_blocks(
                 self._blocks._shift_blocks(row_shift=shift, wrap=True)
                 )
@@ -2063,6 +2265,9 @@ class IndexHierarchy(IndexBase):
         Args:
             {value}
         '''
+        if self._recache:
+            self._update_array_cache()
+
         blocks = self._blocks.fill_missing_by_unit(value, None, func=isna_array)
 
         return self.__class__._from_type_blocks(
@@ -2084,6 +2289,9 @@ class IndexHierarchy(IndexBase):
             The sampled IndexHierarchy
             An integer array of sampled iloc values
         '''
+        if self._recache:
+            self._update_array_cache()
+
         key = array_sample(self.positions, count=count, seed=seed, sort=True)
         blocks = self._blocks._extract(row_key=key)
 
@@ -2182,6 +2390,9 @@ class IndexHierarchy(IndexBase):
     def _to_frame(self: IH,
             constructor: tp.Type['Frame'],
             ) -> 'Frame':
+        if self._recache:
+            self._update_array_cache()
+
         return constructor(
                 self._blocks.copy(),
                 columns=None,
@@ -2209,6 +2420,9 @@ class IndexHierarchy(IndexBase):
         '''
         import pandas
 
+        if self._recache:
+            self._update_array_cache()
+
         # must copy to get a mutable array
         mi = pandas.MultiIndex(
                 levels=[index.values.copy() for index in self._indices],
@@ -2225,6 +2439,8 @@ class IndexHierarchy(IndexBase):
         '''
         Recursively build a tree of :obj:`TreeNodeT` at `depth` given `mask`
         '''
+        # Assumes caller has recached!
+
         if depth == self.depth - 1:
             values = self._indices[depth][self._indexers[depth][mask]]
             return self._indices[depth].__class__(values)
@@ -2246,6 +2462,9 @@ class IndexHierarchy(IndexBase):
         '''
         Returns the tree representation of an IndexHierarchy
         '''
+        if self._recache:
+            self._update_array_cache()
+
         tree = self._build_tree_at_depth_from_mask(
                 depth=0,
                 mask=np.ones(self.__len__(), dtype=bool),
@@ -2266,6 +2485,9 @@ class IndexHierarchy(IndexBase):
         '''
         Return an IndexHierarchy with a new root (outer) level added.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         index_cls = self._INDEX_CONSTRUCTOR if index_constructor is None else index_constructor._MUTABLE_CONSTRUCTOR # type: ignore
 
         if self.STATIC:
@@ -2299,6 +2521,9 @@ class IndexHierarchy(IndexBase):
         Args:
             count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative value is the number of depths to remove from the leaf (inner) side of the hierarchy.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
         if self._name_is_names():
             if count < 0:
@@ -2377,13 +2602,12 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         Append a single label to this index.
         '''
-        # TODO: How to handle corrupted instance state if an exception is raised?
         if value in self:
             raise ErrorInitIndexNonUnique(
                 f"The label '{value}' is already in the index."
             )
 
-        label_indexers = []
+        ilocs: tp.List[int] = []
 
         for depth, label_at_depth in enumerate(value):
             if label_at_depth in self._indices[depth]:
@@ -2392,15 +2616,13 @@ class IndexHierarchyGO(IndexHierarchy):
                 label_index = len(self._indices[depth])
                 self._indices[depth].append(label_at_depth)
 
-            label_indexers.append(label_index)
+            ilocs.append(label_index)
 
-        for i, label_index in enumerate(label_indexers):
-            self._indexers[i] = np.append(self._indexers[i], label_index)
-            self._indexers[i].flags.writeable = False
+        if self._pending_extensions is None:
+            self._pending_extensions = []
 
-        # No need to ensure uniqueness! It's already been checked.
-        self._blocks = self._create_blocks_from_self()
-        self._values = self._blocks.values
+        self._pending_extensions.append(PendingRow(ilocs))
+        self._recache = True
 
     def extend(self: IHGO,
             other: IndexHierarchy,
@@ -2409,6 +2631,8 @@ class IndexHierarchyGO(IndexHierarchy):
         Extend this IndexHierarchy in-place
         '''
         mask_flags = np.array([1, -1], dtype=DTYPE_INT_DEFAULT) # False = n, True = -n
+
+        new_indexers = []
 
         # TODO: How to handle corrupted instance state if an exception is raised?
         for depth, (self_index, other_index) in enumerate(
@@ -2424,11 +2648,7 @@ class IndexHierarchyGO(IndexHierarchy):
 
                 self_index.extend(other_index)
 
-                new_indexer = np.hstack(
-                    (self._indexers[depth], other._indexers[depth] + starting_len)
-                    )
-                new_indexer.flags.writeable = False
-                self._indexers[depth] = new_indexer
+                new_indexers.append(other._indexers[depth] + starting_len)
                 continue
 
             if len(intersection) == len(self_index) == len(other_index):
@@ -2439,20 +2659,14 @@ class IndexHierarchyGO(IndexHierarchy):
                 if self_index.equals(other_index):
                     # Easiest case, no need to remap the indexer since the order is the same
 
-                    new_indexer = np.hstack(
-                        (self._indexers[depth], other._indexers[depth])
-                    )
-                    new_indexer.flags.writeable = False
-                    self._indexers[depth] = new_indexer
+                    new_indexers.append(other._indexers[depth])
                     continue
 
                 # Same labels, but different order. We have to remap the indexers.
                 indexer_remap = other_index._index_iloc_map(self_index)
 
                 remap_indexer = indexer_remap[other._indexers[depth]]
-                new_indexer = np.hstack((self._indexers[depth], remap_indexer))
-                new_indexer.flags.writeable = False
-                self._indexers[depth] = new_indexer
+                new_indexers.append(remap_indexer)
                 continue
 
             # Hardest case; we have some new labels, and some re-used labels.
@@ -2473,18 +2687,21 @@ class IndexHierarchyGO(IndexHierarchy):
 
             remap_indexer[mask] = -remap_indexer[mask]
 
-            new_indexer = np.hstack((self._indexers[depth], remap_indexer))
-            new_indexer.flags.writeable = False
-            self._indexers[depth] = new_indexer
+            new_indexers.append(remap_indexer)
 
-        self._blocks = self._create_blocks_from_self()
-        self._values = self._blocks.values
-        self._ensure_uniqueness(self._indexers, self.values)
+        if self._pending_extensions is None:
+            self._pending_extensions = []
+
+        self._pending_extensions.append(PendingGroup(new_indexers))
+        self._recache = True
 
     def __copy__(self: IHGO) -> IHGO:
         '''
         Return a shallow copy of this IndexHierarchy.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         return self.__class__(
                 indices=[index.copy() for index in self._indices],
                 indexers=self._indexers,
