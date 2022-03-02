@@ -1449,6 +1449,71 @@ class IndexHierarchyConstructors_R(IndexHierarchyConstructors, Reference):
 
 
 #-------------------------------------------------------------------------------
+
+class IndexHierarchyGOAppend(Perf):
+
+    NUMBER = 5
+
+    @property
+    def _index_cls(self) -> tp.Union[tp.Type[sf.IndexHierarchy], tp.Type[sf.IndexHierarchyTree]]:
+        raise NotImplementedError()
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.ih1 = self._index_cls.from_product(range(20, 60), range(20, 60), range(20, 60))
+        self.ih2 = self._index_cls.from_product(range(60, 70), range(60, 70), range(60, 70))
+        self.ih3 = self._index_cls.from_product(range(70, 80), range(70, 80), range(70, 80))
+        self.ih4 = self._index_cls.from_product(range(80, 90), range(80, 90), range(80, 90))
+        self.ih5 = self._index_cls.from_product(range(90, 200), range(90, 200), range(90, 200))
+
+        self.meta = dict(
+                append=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                )
+
+    def append(self) -> None:
+        self.ihgo = self._index_cls._MUTABLE_CONSTRUCTOR.from_product(range(20), range(20), range(20))
+
+        split = len(self.ih1) // 5
+
+        for label in self.ih1.iloc[:split]:
+            self.ihgo.append(label)
+
+        self.ihgo.extend(self.ih2)
+
+        for label in self.ih1.iloc[split:split*2]:
+            self.ihgo.append(label)
+
+        self.ihgo.extend(self.ih3)
+
+        for label in self.ih1.iloc[split*2:split*3]:
+            self.ihgo.append(label)
+
+        self.ihgo.extend(self.ih4)
+
+        for label in self.ih1.iloc[split*3:split*4]:
+            self.ihgo.append(label)
+
+        self.ihgo.extend(self.ih5)
+
+        for label in self.ih1.iloc[split*4:]:
+            self.ihgo.append(label)
+
+class IndexHierarchyGOAppend_N(IndexHierarchyGOAppend, Native):
+
+    @property
+    def _index_cls(self) -> tp.Type[sf.IndexHierarchy]:
+        return sf.IndexHierarchy
+
+
+class IndexHierarchyGOAppend_R(IndexHierarchyGOAppend, Reference):
+
+    @property
+    def _index_cls(self) -> tp.Type[sf.IndexHierarchyTree]:
+        return sf.IndexHierarchyTree
+
+
+#-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 def get_arg_parser() -> argparse.ArgumentParser:

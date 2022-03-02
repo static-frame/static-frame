@@ -867,7 +867,6 @@ class IndexHierarchy(IndexBase):
         self._indexers.clear()
 
         offset = current_size
-        unique_check_required = False
 
         for pending in self._pending_extensions: # pylint: disable=not-an-iterable
             if isinstance(pending, PendingRow):
@@ -876,8 +875,6 @@ class IndexHierarchy(IndexBase):
 
                 offset += 1
             else:
-                # TODO: How to better check this in `.extend`?
-                unique_check_required = True
                 group_size = len(pending)
 
                 for depth, indexer in enumerate(pending):
@@ -894,8 +891,7 @@ class IndexHierarchy(IndexBase):
         self._pending_extensions.clear()
         self._recache = False
 
-        if unique_check_required:
-            self._ensure_uniqueness(self._indexers, self.values)
+        self._ensure_uniqueness(self._indexers, self.values)
 
     # --------------------------------------------------------------------------
 
@@ -2056,47 +2052,15 @@ class IndexHierarchy(IndexBase):
         '''
         Determine if a label `value` is contained in this Index.
         '''
-        # This very intentionally MUST not recache, as this is how IndexHierarchyGO
-        # determines whether or not it can add an incoming labell
-        if len(value) != self.depth:
-            raise RuntimeError(f'Key must have the same depth as the index. {value}')
-
-        # If the labels exist in `indices`, we will need to check the indexers
-        ilocs: tp.List[int] = []
-
-        for depth, (key_at_depth, index_at_depth) in enumerate(zip(value, self._indices)): # type: ignore
-            if key_at_depth not in index_at_depth:
-                return False
-
-            ilocs.append(index_at_depth._loc_to_iloc(key_at_depth))
-
-        # Check the actual indexers!
-        mask = np.full(self.__len__(), True, dtype=bool)
-
-        for depth, iloc in enumerate(ilocs):
-            mask &= self._indexers[depth] == iloc
-
-        if mask.any():
-            return True
-
-        if not self._pending_extensions:
+        try:
+            result = self._loc_to_iloc(value)
+        except KeyError:
             return False
 
-        # Check pending indexers!
-        for pending in self._pending_extensions: # pylint: disable=not-an-iterable
-            if isinstance(pending, PendingRow):
-                if ilocs == pending.row:
-                    return True
-            else:
-                mask = np.full(len(pending), True, dtype=bool)
+        if isinstance(result, (np.ndarray, list)):
+            return bool(len(result))
 
-                for depth, (iloc, indexer) in enumerate(zip(ilocs, pending)):
-                    mask &= indexer == iloc
-
-                if mask.any():
-                    return True
-
-        return False
+        return True
 
     # --------------------------------------------------------------------------
     # utility functions
@@ -2602,10 +2566,8 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         Append a single label to this index.
         '''
-        if value in self:
-            raise ErrorInitIndexNonUnique(
-                f"The label '{value}' is already in the index."
-            )
+        # We do not check whether nor the key exists, as that is too expensive.
+        # Instead, we delay failure until _recache
 
         ilocs: tp.List[int] = []
 
