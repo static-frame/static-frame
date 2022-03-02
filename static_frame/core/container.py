@@ -20,6 +20,7 @@ from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
 from static_frame.core.util import OPERATORS
 from static_frame.core.style_config import StyleConfig
+from static_frame.core.node_fill_value import InterfaceBatchFillValue
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
@@ -154,6 +155,8 @@ class ContainerOperand(ContainerBase):
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
+        if other.__class__ is InterfaceBatchFillValue:
+            return other.__radd__(self)
         return self._ufunc_binary_operator(operator=OPERATORS['__add__'], other=other)
 
     def __sub__(self, other: tp.Any) -> tp.Any:
