@@ -2612,8 +2612,7 @@ class TypeBlocks(ContainerOperand):
                 )
 
     def __iter__(self) -> tp.Iterator['TypeBlocks']:
-        for i in range(self.shape[1]):
-            yield self._extract(column_key=i)
+        raise NotImplementedError("Amibigous whether or not to return np array or TypeBlocks")
 
     def __getitem__(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
         '''

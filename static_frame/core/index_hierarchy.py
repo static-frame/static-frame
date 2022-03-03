@@ -691,7 +691,8 @@ class IndexHierarchy(IndexBase):
             raise ErrorInitIndex('blocks must have at least two dimensions.')
 
         def gen_columns() -> tp.Iterator[np.ndarray]:
-            for block in blocks:
+            for i in range(blocks.shape[1]):
+                block = blocks._extract(column_key=i)
                 yield block.values.reshape(size)
 
         index_constructors_iter = cls._build_index_constructors(
