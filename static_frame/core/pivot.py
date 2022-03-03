@@ -186,11 +186,12 @@ def pivot_records_items_to_blocks(*,
             arrays.append(np.empty(len(index_outer), dtype=dtype))
 
     # try to use the dtype specified; fill values at end if necessary
-    iloc_found: tp.Set[int] = set()
+    # collect all possible ilocs, and remove as observerd; if any remain, we have fill targets
+    iloc_not_found: tp.Set[int] = set(range(len(index_outer)))
     # each group forms a row, each label a value in the index
     for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
         iloc: int = index_outer._loc_to_iloc(label) #type: ignore
-        iloc_found.add(iloc)
+        iloc_not_found.remove(iloc)
         if func_no:
             if len(part) != 1:
                 raise RuntimeError('pivot requires aggregation of values; provide a `func` argument.')
@@ -208,10 +209,10 @@ def pivot_records_items_to_blocks(*,
                     arrays[arrays_key][iloc] = func(values)
                     arrays_key += 1
 
-    if len(iloc_found) != len(index_outer):
+    if iloc_not_found:
         # we did not fill all arrrays and have values that need to be filled
         # order does not matter
-        fill_targets = list(set(range(len(index_outer))) - iloc_found)
+        fill_targets = list(iloc_not_found)
         # mutate in place then make immutable
         for arrays_key in range(len(arrays)): #pylint: disable=C0200
             array = arrays[arrays_key]
