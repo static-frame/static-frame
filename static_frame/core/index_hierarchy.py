@@ -686,12 +686,13 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`IndexHierarchy`
         '''
-        if blocks.shape[1] == 1:
+        size, depth = blocks.shape
+        if depth == 1:
             raise ErrorInitIndex('blocks must have at least two dimensions.')
 
         def gen_columns() -> tp.Iterator[np.ndarray]:
             for block in blocks:
-                yield block.values.ravel()
+                yield block.values.reshape(size)
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -1606,7 +1607,8 @@ class IndexHierarchy(IndexBase):
         '''
         # get the outer level, or just the unique frame labels needed
         labels = self.values_at_depth(0)
-        label_indexes = sorted(ufunc_unique1d_positions(labels)[0])
+        label_indexes = ufunc_unique1d_positions(labels)[0]
+        label_indexes.sort()
         return labels[label_indexes] # type: ignore
 
     # --------------------------------------------------------------------------
@@ -2458,7 +2460,7 @@ class IndexHierarchy(IndexBase):
                 # When the removal equals or exceeds the depth of the hierarchy, we just return the outermost index
                 # NOTE: We can't copy the index directly, since the index order might not match.
                 return self._indices[0].__class__(
-                        self._blocks.iloc[:,0].values.ravel(),
+                        self._blocks.iloc[:,0].values.reshape(self.__len__()),
                         name=name,
                         )
 
@@ -2476,7 +2478,7 @@ class IndexHierarchy(IndexBase):
                 # When the removal equals or exceeds the depth of the hierarchy, we just return the innermost index
                 # NOTE: We can't copy the index directly, since the index order might not match.
                 return self._indices[-1].__class__(
-                        self._blocks.iloc[:,-1].values.ravel(),
+                        self._blocks.iloc[:,-1].values.reshape(self.__len__()),
                         name=name,
                         )
 
