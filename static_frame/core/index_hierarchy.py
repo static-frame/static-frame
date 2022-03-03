@@ -184,37 +184,17 @@ def construct_indices_and_indexers_from_column_arrays(
     return indices, indexers
 
 
-class PendingGroup:
-    """
-    Encapsulates multiple records that need to be added to indexers
-
-    For example:
-    [np.array([0, 0, 1]), np.array([0, 1, 0]), np.array([1, 0, 0])]
-    """
-    def __init__(self, indexers: tp.List[np.ndarray]) -> None:
-        self.indexers = indexers
-
-    def __len__(self) -> int:
-        return len(self.indexers[0])
-
-    def __iter__(self) -> tp.Iterator[int]:
-        yield from self.indexers
-
-
 class PendingRow:
     """
-    Encapsulates a single record that needs to be added to indexers
-
-    For example:
-    [0, 0, 1]
+    Encapsulates a new label row that has yet to be inserted into a IndexHierarchy.
     """
-    def __init__(self, row: tp.List[int]) -> None:
+    def __init__(self, row: SingleLabelType) -> None:
         self.row = row
 
     def __len__(self) -> int:
         return 1
 
-    def __iter__(self) -> tp.Iterator[int]:
+    def __iter__(self) -> tp.Iterator[tp.Hashable]:
         yield from self.row
 
 
@@ -243,7 +223,7 @@ class IndexHierarchy(IndexBase):
     _values: np.ndarray
     _recache: bool
     _index_types: tp.Optional['Series'] # Used to cache the property `index_types`
-    _pending_extensions: tp.Optional[tp.List[tp.Union[PendingGroup, PendingRow]]]
+    _pending_extensions: tp.Optional[tp.List[tp.Union[SingleLabelType, IH]]]
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
@@ -851,6 +831,20 @@ class IndexHierarchy(IndexBase):
         self._values = self._blocks.values
         self._ensure_uniqueness(self._indexers, self.values)
 
+    def _append(self: IH,
+            row: SingleLabelType,
+            indexers: tp.List[np.ndarray],
+            offset: int,
+            ) -> None:
+        raise NotImplementedError("Must be implemented on IndexHierarchyGO only")
+
+    def _extend(self: IH,
+            other: IH,
+            indexers: tp.List[np.ndarray],
+            offset: int,
+            size: int,
+            ) -> None:
+        raise NotImplementedError("Must be implemented on IndexHierarchyGO only")
 
     def _update_array_cache(self: IH) -> None:
 
@@ -870,16 +864,11 @@ class IndexHierarchy(IndexBase):
 
         for pending in self._pending_extensions: # pylint: disable=not-an-iterable
             if isinstance(pending, PendingRow):
-                for depth, val in enumerate(pending):
-                    new_indexers[depth][offset] = val
-
+                self._append(pending, new_indexers, offset)
                 offset += 1
             else:
                 group_size = len(pending)
-
-                for depth, indexer in enumerate(pending):
-                    new_indexers[depth][offset:offset + group_size] = indexer
-
+                self._extend(pending, new_indexers, offset, group_size)
                 offset += group_size
 
         for indexer in new_indexers:
@@ -2560,6 +2549,35 @@ class IndexHierarchyGO(IndexHierarchy):
 
     _indices: tp.List[IndexGO] # type: ignore
 
+    def _append(self: IH,
+            row: SingleLabelType,
+            indexers: tp.List[np.ndarray],
+            offset: int,
+            ) -> None:
+        for depth, label_at_depth in enumerate(row):
+            label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
+            indexers[depth][offset] = label_index
+
+    def _extend(self: IH,
+            other: IH,
+            indexers: tp.List[np.ndarray],
+            offset: int,
+            size: int,
+            ) -> None:
+        '''
+        Extend this IndexHierarchy in-place
+        '''
+        for depth, (self_index, other_index) in enumerate(
+                zip(self._indices, other._indices)
+                ):
+
+            # We have already grown all the indices, so all labels in `other` exist in `self`
+            # We just need to remap them
+            remapped_indexers_unordered = other_index._index_iloc_map(self_index)
+            remapped_indexers_ordered = remapped_indexers_unordered[other._indexers[depth]]
+
+            indexers[depth][offset:offset+size] = remapped_indexers_ordered
+
     def append(self: IHGO,
             value: tp.Sequence[tp.Hashable],
             ) -> None:
@@ -2569,21 +2587,14 @@ class IndexHierarchyGO(IndexHierarchy):
         # We do not check whether nor the key exists, as that is too expensive.
         # Instead, we delay failure until _recache
 
-        ilocs: tp.List[int] = []
-
         for depth, label_at_depth in enumerate(value):
-            if label_at_depth in self._indices[depth]:
-                label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
-            else:
-                label_index = len(self._indices[depth])
+            if label_at_depth not in self._indices[depth]:
                 self._indices[depth].append(label_at_depth)
-
-            ilocs.append(label_index)
 
         if self._pending_extensions is None:
             self._pending_extensions = []
 
-        self._pending_extensions.append(PendingRow(ilocs))
+        self._pending_extensions.append(PendingRow(value))
         self._recache = True
 
     def extend(self: IHGO,
@@ -2592,69 +2603,16 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         Extend this IndexHierarchy in-place
         '''
-        mask_flags = np.array([1, -1], dtype=DTYPE_INT_DEFAULT) # False = n, True = -n
-
-        new_indexers = []
-
-        # TODO: How to handle corrupted instance state if an exception is raised?
-        for depth, (self_index, other_index) in enumerate(
-                zip(self._indices, other._indices)
-                ):
-            intersection = self_index.intersection(other_index)
-            if not intersection.size:
-                # Easy case; all of the values at this level are not in self, so we
-                # can easily extend both the index & the indexer
-                del intersection
-
-                starting_len = len(self_index)
-
-                self_index.extend(other_index)
-
-                new_indexers.append(other._indexers[depth] + starting_len)
-                continue
-
-            if len(intersection) == len(self_index) == len(other_index):
-                # Easy case; every single label in the incoming index is also in self, so we
-                # just have to extend the indexer
-                del intersection
-
-                if self_index.equals(other_index):
-                    # Easiest case, no need to remap the indexer since the order is the same
-
-                    new_indexers.append(other._indexers[depth])
-                    continue
-
-                # Same labels, but different order. We have to remap the indexers.
-                indexer_remap = other_index._index_iloc_map(self_index)
-
-                remap_indexer = indexer_remap[other._indexers[depth]]
-                new_indexers.append(remap_indexer)
-                continue
-
-            # Hardest case; we have some new labels, and some re-used labels.
-            difference = ~other_index.isin(intersection)
-            del intersection
-
-            self_index.extend(other_index[difference])
-
-            # We use the mask_flags to signal what was in the intersection and what was not
-            # We can't use any existing masks, since the sizes will be different
-            other_index_remapped = other_index._index_iloc_map(self_index) * (
-                mask_flags[difference.astype(DTYPE_INT_DEFAULT)]
-            )
-            del difference
-
-            remap_indexer = other_index_remapped[other._indexers[depth]]
-            mask = remap_indexer < 0
-
-            remap_indexer[mask] = -remap_indexer[mask]
-
-            new_indexers.append(remap_indexer)
+        # We do not check whether nor the key exists, as that is too expensive.
+        # Instead, we delay failure until _recache
+        #
+        for self_index, other_index in zip(self._indices, other._indices):
+            self_index.extend(other_index)
 
         if self._pending_extensions is None:
             self._pending_extensions = []
 
-        self._pending_extensions.append(PendingGroup(new_indexers))
+        self._pending_extensions.append(other)
         self._recache = True
 
     def __copy__(self: IHGO) -> IHGO:
