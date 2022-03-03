@@ -5174,6 +5174,50 @@ class TestUnit(TestCase):
                 (((1, 'a'), (((100, True), 1), ((100, False), 30), ((200, True), 54), ((200, False), 65))), ((1, 'b'), (((100, True), 'a'), ((100, False), 'b'), ((200, True), 'c'), ((200, False), 'd'))), ((2, 'a'), (((100, True), 2), ((100, False), 34), ((200, True), 95), ((200, False), 73))), ((2, 'b'), (((100, True), False), ((100, False), True), ((200, True), False), ((200, False), True))))
                 )
 
+    def test_frame_rehierarch_d(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = FrameGO.from_records(records,
+                columns=columns,
+                index=index)
+
+        f1[("b", 3)] = "new"
+
+        f3 = f1.rehierarch(columns=(1,0))
+        self.assertEqual(f3.to_pairs(0),
+                (((1, 'a'),
+                 (((100, True), 1),
+                 ((100, False), 30),
+                 ((200, True), 54),
+                 ((200, False), 65))),
+                ((1, 'b'),
+                 (((100, True), 'a'),
+                 ((100, False), 'b'),
+                 ((200, True), 'c'),
+                 ((200, False), 'd'))),
+                ((2, 'a'),
+                 (((100, True), 2),
+                 ((100, False), 34),
+                 ((200, True), 95),
+                 ((200, False), 73))),
+                ((2, 'b'),
+                 (((100, True), False),
+                 ((100, False), True),
+                 ((200, True), False),
+                 ((200, False), True))),
+                ((3, 'b'),
+                 (((100, True), 'new'),
+                 ((100, False), 'new'),
+                 ((200, True), 'new'),
+                 ((200, False), 'new'))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_get_a(self) -> None:
@@ -13093,6 +13137,27 @@ class TestUnit(TestCase):
                 ((('zZbu', 105269, 'zO5l'), ((34715, 'zjZQ'), (91301, 'zEdH'))), (('zZbu', 119909, 'zJnC'), ((34715, 'zaji'), (91301, 'zDdR'))), (('ztsv', 194224, 'zUvW'), ((34715, 'ztsv'), (91301, 'zkuW'))), (('ztsv', 172133, 'z5l6'), ((34715, 'z2Oo'), (91301, 'zCE3'))))
                 )
 
+    def test_frame_relabel_shift_in_f(self) -> None:
+
+        f1 = ff.parse('f(Fg)|s(3,4)|i(I,int)|c(IHg,(str,int))|v(str)').rename(index='a', columns=('x', 'y'))
+
+        f1[("AAAA", 999999)] = "abcd"
+
+        f2 = f1.relabel_shift_in(('zZbu', 119909), axis=0)
+        self.assertEqual(f2.index.name, ('a', ('zZbu', 119909)))
+        self.assertTrue(f2.__class__, FrameGO)
+
+        f3 = f1.relabel_shift_in(-3648, axis=1)
+        self.assertEqual(f3.columns.name, ('x', 'y', -3648))
+
+        self.assertEqual(f3.to_pairs(),
+                ((('zZbu', 105269, 'zO5l'), ((34715, 'zjZQ'), (91301, 'zEdH'))),
+                 (('zZbu', 119909, 'zJnC'), ((34715, 'zaji'), (91301, 'zDdR'))),
+                 (('ztsv', 194224, 'zUvW'), ((34715, 'ztsv'), (91301, 'zkuW'))),
+                 (('ztsv', 172133, 'z5l6'), ((34715, 'z2Oo'), (91301, 'zCE3'))),
+                 (('AAAA', 999999, 'abcd'), ((34715, 'abcd'), (91301, 'abcd'))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_relabel_shift_out_a(self) -> None:
@@ -13163,8 +13228,50 @@ class TestUnit(TestCase):
                 index=('a', 'b'), columns=('x', 'y'))
         f2 = f1.relabel_shift_out([0, 1], axis=0)
         self.assertEqual(f2.index.depth, 2)
+        self.assertEqual(f2.columns.depth, 1)
         self.assertEqual(f2.to_pairs(),
                 (('__index0__', (((58768, 'zoUj'), 34715), ((58768, 'zjDm'), 34715), ((146284, 'zFB6'), 34715))), ('__index1__', (((58768, 'zoUj'), 'zOyq'), ((58768, 'zjDm'), 'zOyq'), ((146284, 'zFB6'), 'zOyq'))), ('zZbu', (((58768, 'zoUj'), 'zjZQ'), ((58768, 'zjDm'), 'zO5l'), ((146284, 'zFB6'), 'zEdH'))), ('ztsv', (((58768, 'zoUj'), 'zaji'), ((58768, 'zjDm'), 'zJnC'), ((146284, 'zFB6'), 'zDdR'))), ('zUvW', (((58768, 'zoUj'), 'ztsv'), ((58768, 'zjDm'), 'zUvW'), ((146284, 'zFB6'), 'zkuW'))), ('zkuW', (((58768, 'zoUj'), 'z2Oo'), ((58768, 'zjDm'), 'z5l6'), ((146284, 'zFB6'), 'zCE3'))))
+                )
+
+    def test_frame_relabel_shift_out_e(self) -> None:
+
+        f1 = ff.parse('f(Fg)|s(3,4)|c(IHg,(int,str,int,str))|i(I,str)|v(str)').rename(
+                index=('a', 'b'), columns=('x', 'y'))
+        f1[(12345, "abcd", 67890, "efgh")] = "ijkl"
+        f2 = f1.relabel_shift_out([0, 1], axis=1)
+        self.assertEqual(f2.index.depth, 1)
+        self.assertEqual(f2.columns.depth, 2)
+        self.assertEqual(f2.to_pairs(),
+                (((58768, 'zoUj'),
+                 (('__index0__', 34715),
+                  ('__index1__', 'zOyq'),
+                  ('zZbu', 'zjZQ'),
+                  ('ztsv', 'zO5l'),
+                  ('zUvW', 'zEdH'))),
+                ((58768, 'zjDm'),
+                 (('__index0__', 34715),
+                  ('__index1__', 'zOyq'),
+                  ('zZbu', 'zaji'),
+                  ('ztsv', 'zJnC'),
+                  ('zUvW', 'zDdR'))),
+                ((146284, 'zFB6'),
+                 (('__index0__', 34715),
+                  ('__index1__', 'zOyq'),
+                  ('zZbu', 'ztsv'),
+                  ('ztsv', 'zUvW'),
+                  ('zUvW', 'zkuW'))),
+                ((146284, 'zneC'),
+                 (('__index0__', 34715),
+                  ('__index1__', 'zOyq'),
+                  ('zZbu', 'z2Oo'),
+                  ('ztsv', 'z5l6'),
+                  ('zUvW', 'zCE3'))),
+                ((67890, 'efgh'),
+                 (('__index0__', 12345),
+                  ('__index1__', 'abcd'),
+                  ('zZbu', 'ijkl'),
+                  ('ztsv', 'ijkl'),
+                  ('zUvW', 'ijkl'))))
                 )
 
     #---------------------------------------------------------------------------

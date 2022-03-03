@@ -1450,9 +1450,9 @@ class IndexHierarchyConstructors_R(IndexHierarchyConstructors, Reference):
 
 #-------------------------------------------------------------------------------
 
-class IndexHierarchyGOAppend(Perf):
+class IndexHierarchyGO(Perf):
 
-    NUMBER = 5
+    NUMBER = 10
 
     @property
     def _index_cls(self) -> tp.Union[tp.Type[sf.IndexHierarchy], tp.Type[sf.IndexHierarchyTree]]:
@@ -1461,57 +1461,175 @@ class IndexHierarchyGOAppend(Perf):
     def __init__(self) -> None:
         super().__init__()
 
-        self.ih1 = self._index_cls.from_product(range(20, 60), range(20, 60), range(20, 60))
-        self.ih2 = self._index_cls.from_product(range(60, 70), range(60, 70), range(60, 70))
-        self.ih3 = self._index_cls.from_product(range(70, 80), range(70, 80), range(70, 80))
-        self.ih4 = self._index_cls.from_product(range(80, 90), range(80, 90), range(80, 90))
-        self.ih5 = self._index_cls.from_product(range(90, 200), range(90, 200), range(90, 200))
+        RANGE0 = range(10), range(10), range(10)
+        RANGE1 = range(10, 20), range(10, 20), range(10, 20)
+        RANGE2 = range(20, 30), range(20, 30), range(20, 30)
+        RANGE3 = range(30, 40), range(30, 40), range(30, 40)
+        RANGE4 = range(40, 50), range(40, 50), range(40, 50)
+        RANGE5 = range(50, 60), range(50, 60), range(50, 60)
+
+        self.ihgo = sf.IndexHierarchyGO.from_product(*RANGE0)
+        self.ih1 = sf.IndexHierarchy.from_product(*RANGE1)
+        self.ih2 = sf.IndexHierarchy.from_product(*RANGE2)
+        self.ih3 = sf.IndexHierarchy.from_product(*RANGE3)
+        self.ih4 = sf.IndexHierarchy.from_product(*RANGE4)
+        self.ih5 = sf.IndexHierarchy.from_product(*RANGE5)
+
+        self.migo = pd.MultiIndex.from_product(RANGE0)
+        self.mi1 = pd.MultiIndex.from_product(RANGE1)
+        self.mi2 = pd.MultiIndex.from_product(RANGE2)
+        self.mi3 = pd.MultiIndex.from_product(RANGE3)
+        self.mi4 = pd.MultiIndex.from_product(RANGE4)
+        self.mi5 = pd.MultiIndex.from_product(RANGE5)
 
         self.meta = dict(
-                append=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                extend_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="Pandas does not require unique labels"),
+                append_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                append_and_extend_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                extend_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                append_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                append_and_extend_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 )
 
-    def append(self) -> None:
-        self.ihgo = self._index_cls._MUTABLE_CONSTRUCTOR.from_product(range(20), range(20), range(20))
+
+class IndexHierarchyGO_N(IndexHierarchyGO, Native):
+
+    def _append_and_extend(self, recache: bool) -> None:
+        ihgo = self.ihgo.copy()
 
         split = len(self.ih1) // 5
 
         for label in self.ih1.iloc[:split]:
-            self.ihgo.append(label)
+            ihgo.append(label)
 
-        self.ihgo.extend(self.ih2)
+        ihgo.extend(self.ih2)
 
         for label in self.ih1.iloc[split:split*2]:
-            self.ihgo.append(label)
+            ihgo.append(label)
 
-        self.ihgo.extend(self.ih3)
+        ihgo.extend(self.ih3)
 
         for label in self.ih1.iloc[split*2:split*3]:
-            self.ihgo.append(label)
+            ihgo.append(label)
 
-        self.ihgo.extend(self.ih4)
+        ihgo.extend(self.ih4)
 
         for label in self.ih1.iloc[split*3:split*4]:
-            self.ihgo.append(label)
+            ihgo.append(label)
 
-        self.ihgo.extend(self.ih5)
+        ihgo.extend(self.ih5)
 
         for label in self.ih1.iloc[split*4:]:
-            self.ihgo.append(label)
+            ihgo.append(label)
 
-class IndexHierarchyGOAppend_N(IndexHierarchyGOAppend, Native):
+        if recache:
+            ihgo._update_array_cache()
 
-    @property
-    def _index_cls(self) -> tp.Type[sf.IndexHierarchy]:
-        return sf.IndexHierarchy
+    def append_and_extend_recache(self) -> None:
+        self._append_and_extend(recache=True)
+
+    def append_and_extend_no_recache(self) -> None:
+        self._append_and_extend(recache=False)
+
+    def _extend_only(self, recache: bool) -> None:
+        ihgo = self.ihgo.copy()
+
+        ihgo.extend(self.ih1)
+        ihgo.extend(self.ih2)
+        ihgo.extend(self.ih3)
+        ihgo.extend(self.ih4)
+        ihgo.extend(self.ih5)
+
+        if recache:
+            ihgo._update_array_cache()
+
+    def extend_only_recache(self) -> None:
+        self._extend_only(recache=True)
+
+    def extend_only_no_recache(self) -> None:
+        self._extend_only(recache=False)
+
+    def _append_only(self, recache: bool) -> None:
+        ihgo = self.ihgo.copy()
+
+        for ih in (self.ih1, self.ih2, self.ih3, self.ih4, self.ih5):
+            for label in ih:
+                ihgo.append(label)
+
+        if recache:
+            ihgo._update_array_cache()
+
+    def append_only_recache(self) -> None:
+        self._append_only(recache=True)
+
+    def append_only_no_recache(self) -> None:
+        self._append_only(recache=False)
 
 
-class IndexHierarchyGOAppend_R(IndexHierarchyGOAppend, Reference):
+class IndexHierarchyGO_R(IndexHierarchyGO, Reference):
 
-    @property
-    def _index_cls(self) -> tp.Type[sf.IndexHierarchyTree]:
-        return sf.IndexHierarchyTree
+    def append_and_extend_recache(self) -> None:
+        migo = self.migo.copy()
 
+        split = len(self.mi1) // 5
+
+        offset = len(migo)
+
+        for label in self.mi1[:split]:
+            migo = migo.insert(offset, label)
+            offset += 1
+
+        migo = migo.append(self.mi2)
+        offset += len(self.mi2)
+
+        for label in self.mi1[split:split*2]:
+            migo = migo.insert(offset, label)
+            offset += 1
+
+        migo = migo.append(self.mi3)
+        offset += len(self.mi3)
+
+        for label in self.mi1[split*2:split*3]:
+            migo = migo.insert(offset, label)
+            offset += 1
+
+        migo = migo.append(self.mi4)
+        offset += len(self.mi4)
+
+        for label in self.mi1[split*3:split*4]:
+            migo = migo.insert(offset, label)
+            offset += 1
+
+        migo = migo.append(self.mi5)
+        offset += len(self.mi5)
+
+        for label in self.mi1[split*4:]:
+            migo = migo.insert(offset, label)
+            offset += 1
+
+    append_and_extend_no_recache = append_and_extend_recache
+
+    def extend_only_recache(self) -> None:
+        migo = self.migo.copy()
+
+        migo = self.migo.append(self.mi1)
+        migo = self.migo.append(self.mi2)
+        migo = self.migo.append(self.mi3)
+        migo = self.migo.append(self.mi4)
+        migo = self.migo.append(self.mi5)
+
+    extend_only_no_recache = extend_only_recache
+
+    def append_only_recache(self) -> None:
+        migo = self.migo.copy()
+
+        i = 0
+        for mi in (self.mi1, self.mi2, self.mi3, self.mi4, self.mi5):
+            for label in mi:
+                migo = migo.insert(i, label)
+                i += 1
+
+    append_only_no_recache = append_only_recache
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
