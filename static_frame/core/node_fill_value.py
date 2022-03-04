@@ -27,6 +27,37 @@ TContainer = tp.TypeVar('TContainer',
         'Frame',
         'Series',
         )
+INTERFACE_FILL_VALUE = (
+        'loc',
+        '__getitem__',
+        'via_T',
+        '__add__',
+        '__sub__',
+        '__mul__',
+        # '__matmul__',
+        '__truediv__',
+        '__floordiv__',
+        '__mod__',
+        '__pow__',
+        '__lshift__',
+        '__rshift__',
+        '__and__',
+        '__xor__',
+        '__or__',
+        '__lt__',
+        '__le__',
+        '__eq__',
+        '__ne__',
+        '__gt__',
+        '__ge__',
+        '__radd__',
+        '__rsub__',
+        '__rmul__',
+        # '__rmatmul__',
+        '__rtruediv__',
+        '__rfloordiv__',
+        )
+
 
 class InterfaceFillValue(Interface[TContainer]):
 
@@ -35,36 +66,8 @@ class InterfaceFillValue(Interface[TContainer]):
             '_fill_value',
             '_axis',
             )
-    INTERFACE = (
-            'loc',
-            '__getitem__',
-            'via_T',
-            '__add__',
-            '__sub__',
-            '__mul__',
-            # '__matmul__',
-            '__truediv__',
-            '__floordiv__',
-            '__mod__',
-            '__pow__',
-            '__lshift__',
-            '__rshift__',
-            '__and__',
-            '__xor__',
-            '__or__',
-            '__lt__',
-            '__le__',
-            '__eq__',
-            '__ne__',
-            '__gt__',
-            '__ge__',
-            '__radd__',
-            '__rsub__',
-            '__rmul__',
-            # '__rmatmul__',
-            '__rtruediv__',
-            '__rfloordiv__',
-            )
+
+    INTERFACE = INTERFACE_FILL_VALUE
 
     def __init__(self,
             container: TContainer,
@@ -417,38 +420,7 @@ class InterfaceFillValueGO(InterfaceFillValue[TContainer]): # only type is Frame
 class InterfaceBatchFillValue(InterfaceBatch):
     '''Alternate string interface specialized for the :obj:`Batch`.
     '''
-
-    INTERFACE = (
-            'loc',
-            '__getitem__',
-            # 'via_T',
-            '__add__',
-            '__sub__',
-            '__mul__',
-            # '__matmul__',
-            '__truediv__',
-            '__floordiv__',
-            '__mod__',
-            '__pow__',
-            '__lshift__',
-            '__rshift__',
-            '__and__',
-            '__xor__',
-            '__or__',
-            '__lt__',
-            '__le__',
-            '__eq__',
-            '__ne__',
-            '__gt__',
-            '__ge__',
-            '__radd__',
-            '__rsub__',
-            '__rmul__',
-            # '__rmatmul__',
-            '__rtruediv__',
-            '__rfloordiv__',
-            )
-
+    INTERFACE = INTERFACE_FILL_VALUE
 
     __slots__ = (
             '_batch_apply',

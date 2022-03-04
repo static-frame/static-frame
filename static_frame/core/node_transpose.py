@@ -4,10 +4,12 @@ import typing as tp
 import numpy as np
 
 from static_frame.core.node_selector import Interface
+from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.util import OPERATORS
-
+from static_frame.core.util import AnyCallable
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
@@ -20,42 +22,42 @@ TContainer = tp.TypeVar('TContainer',
         'IndexHierarchy',
         )
 
-class InterfaceTranspose(Interface[TContainer]):
+INTERFACE_TRANSPOSE = (
+        'via_fill_value',
+        '__add__',
+        '__sub__',
+        '__mul__',
+        # '__matmul__',
+        '__truediv__',
+        '__floordiv__',
+        '__mod__',
+        '__pow__',
+        '__lshift__',
+        '__rshift__',
+        '__and__',
+        '__xor__',
+        '__or__',
+        '__lt__',
+        '__le__',
+        '__eq__',
+        '__ne__',
+        '__gt__',
+        '__ge__',
+        '__radd__',
+        '__rsub__',
+        '__rmul__',
+        # '__rmatmul__',
+        '__rtruediv__',
+        '__rfloordiv__',
+        )
 
+class InterfaceTranspose(Interface[TContainer]):
 
     __slots__ = (
             '_container',
             '_fill_value',
             )
-    INTERFACE = (
-            'via_fill_value',
-            '__add__',
-            '__sub__',
-            '__mul__',
-            # '__matmul__',
-            '__truediv__',
-            '__floordiv__',
-            '__mod__',
-            '__pow__',
-            '__lshift__',
-            '__rshift__',
-            '__and__',
-            '__xor__',
-            '__or__',
-            '__lt__',
-            '__le__',
-            '__eq__',
-            '__ne__',
-            '__gt__',
-            '__ge__',
-            '__radd__',
-            '__rsub__',
-            '__rmul__',
-            # '__rmatmul__',
-            '__rtruediv__',
-            '__rfloordiv__',
-            )
-
+    INTERFACE = INTERFACE_TRANSPOSE
 
     def __init__(self,
             container: TContainer,
@@ -64,7 +66,6 @@ class InterfaceTranspose(Interface[TContainer]):
             ) -> None:
         self._container: TContainer = container
         self._fill_value = fill_value
-
 
     #---------------------------------------------------------------------------
     def via_fill_value(self,
@@ -281,4 +282,115 @@ class InterfaceTranspose(Interface[TContainer]):
                 axis=1,
                 fill_value=self._fill_value,
                 )
+
+
+
+class InterfaceBatchTranspose(InterfaceBatch):
+
+    __slots__ = (
+            '_batch_apply',
+            '_fill_value',
+            )
+    INTERFACE = INTERFACE_TRANSPOSE
+
+    def __init__(self,
+            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            fill_value: object = np.nan,
+            ) -> None:
+
+        self._batch_apply = batch_apply
+        self._fill_value = fill_value
+
+    #---------------------------------------------------------------------------
+#     def via_fill_value(self,
+#             fill_value: object,
+#             ) -> "InterfaceFillValue[Frame]":
+#         '''
+#         Interface for using binary operators and methods with a pre-defined fill value.
+#         '''
+
+    #---------------------------------------------------------------------------
+    def __add__(self, other: tp.Any) -> tp.Any:
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__add__(other)
+                )
+
+    def __sub__(self, other: tp.Any) -> tp.Any:
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__sub__(other)
+                )
+
+    def __mul__(self, other: tp.Any) -> tp.Any:
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__mul__(other)
+                )
+
+    # def __matmul__(self, other: tp.Any) -> tp.Any:
+        # pass
+
+    def __truediv__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __floordiv__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __mod__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __pow__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __lshift__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __rshift__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __and__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __xor__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __or__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __lt__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __le__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __eq__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __ne__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __gt__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __ge__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    #---------------------------------------------------------------------------
+    def __radd__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __rsub__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __rmul__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    # def __rmatmul__(self, other: tp.Any) -> tp.Any:
+        # pass
+
+    def __rtruediv__(self, other: tp.Any) -> tp.Any:
+        pass
+
+    def __rfloordiv__(self, other: tp.Any) -> tp.Any:
+        pass
+
+
 
