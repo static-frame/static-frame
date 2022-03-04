@@ -550,7 +550,6 @@ class InterfaceString(Interface[TContainer]):
 class InterfaceBatchString(InterfaceBatch):
     '''Alternate string interface specialized for the :obj:`Batch`.
     '''
-
     __slots__ = (
             '_batch_apply',
             )

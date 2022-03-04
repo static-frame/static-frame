@@ -47,6 +47,7 @@ from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
+from static_frame.core.node_dt import InterfaceBatchDatetime
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -779,11 +780,12 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         return InterfaceBatchString(self.apply)
 
-    # @property
-    # def via_dt(self) -> InterfaceDatetime['Frame']:
-    #     '''
-    #     Interface for applying datetime properties and methods to elements in this container.
-    #     '''
+    @property
+    def via_dt(self) -> InterfaceBatchDatetime:
+        '''
+        Interface for applying datetime properties and methods to elements in this container.
+        '''
+        return InterfaceBatchDatetime(self.apply)
 
     # @property
     # def via_T(self) -> InterfaceTranspose['Frame']:

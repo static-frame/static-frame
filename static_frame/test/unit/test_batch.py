@@ -1851,6 +1851,130 @@ class TestUnit(TestCase):
             ((0, ((('a', 0), ('-----017', 2)), (('a', 1), ('92--67', 1)), (('b', 0), ('-----017', 2)), (('b', 1), ('92--67', 1)))), (1, ((('a', 0), ('162197', 0)), (('a', 1), ('-41157', 0)), (('b', 0), ('162197', 0)), (('b', 1), ('-41157', 0)))))
             )
 
+    #---------------------------------------------------------------------------
+    def test_batch_via_dt_year(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.year.to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), 2210), (('a', 1), 2224), (('b', 0), 2210), (('b', 1), 2224))), (1, ((('a', 0), 2414), (('a', 1), 2082), (('b', 0), 2414), (('b', 1), 2082))))
+                )
+
+    def test_batch_via_dt_month(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.month.to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), 12), (('a', 1), 4), (('b', 0), 12), (('b', 1), 4))), (1, ((('a', 0), 1), (('a', 1), 9), (('b', 0), 1), (('b', 1), 9))))
+                )
+
+    def test_batch_via_dt_day(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.day.to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), 26), (('a', 1), 6), (('b', 0), 26), (('b', 1), 6))), (1, ((('a', 0), 30), (('a', 1), 7), (('b', 0), 30), (('b', 1), 7))))
+                )
+
+    def test_batch_via_dt_hour(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.hour.to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), 0), (('a', 1), 1), (('b', 0), 0), (('b', 1), 1))), (1, ((('a', 0), 21), (('a', 1), 11), (('b', 0), 21), (('b', 1), 11))))
+                )
+
+    def test_batch_via_dt_minute(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.minute.to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), 26), (('a', 1), 47), (('b', 0), 26), (('b', 1), 47))), (1, ((('a', 0), 3), (('a', 1), 25), (('b', 0), 3), (('b', 1), 25))))
+                )
+
+    def test_batch_via_dt_second(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.second.to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), 57), (('a', 1), 47), (('b', 0), 57), (('b', 1), 47))), (1, ((('a', 0), 17), (('a', 1), 57), (('b', 0), 17), (('b', 1), 57))))
+                )
+
+    def test_batch_via_dt_weekday(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.weekday().to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), 4), (('a', 1), 4), (('b', 0), 4), (('b', 1), 4))), (1, ((('a', 0), 4), (('a', 1), 3), (('b', 0), 4), (('b', 1), 3))))
+                )
+
+    def test_batch_via_dt_quarter(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.quarter().to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), 1), (('a', 1), 1), (('b', 0), 1), (('b', 1), 1))), (1, ((('a', 0), 1), (('a', 1), 1), (('b', 0), 1), (('b', 1), 1))))
+                )
+
+    def test_batch_via_dt_is_month_end(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.is_month_end().to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))))
+                )
+
+    def test_batch_via_dt_is_month_start(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.is_month_start().to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))))
+                )
+
+    def test_batch_via_dt_is_year_end(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.is_year_end().to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))))
+                )
+
+    def test_batch_via_dt_is_year_start(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.is_year_start().to_frame()
+        self.assertEqual( post.to_pairs(),
+                ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True)))))
+
+    def test_batch_via_dt_is_quarter_end(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.is_quarter_end().to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False)))))
+
+    def test_batch_via_dt_is_quarter_start(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.is_quarter_start().to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))))
+                )
 
 if __name__ == '__main__':
     import unittest
