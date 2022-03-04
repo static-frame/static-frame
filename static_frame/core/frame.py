@@ -3652,7 +3652,8 @@ class Frame(ContainerOperand):
             ih_blocks = TypeBlocks.from_blocks((index_target.values,))
             name_prior = index_target.names if index_target.name is None else (index_target.name,)
         else:
-            index_target._update_array_cache()
+            if index_target._recache:
+                index_target._update_array_cache()
 
             ih_blocks = index_target._blocks.copy() # will mutate copied blocks
             # only use string form of labels if we are not storing a correctly sized tuple
@@ -3728,7 +3729,8 @@ class Frame(ContainerOperand):
             add_blocks = (index_target.values,)
             new_labels = index_target.names if index_target.name is None else (index_target.name,)
         else:
-            index_target._update_array_cache()
+            if index_target._recache:
+                index_target._update_array_cache()
 
             label_src = index_target.name if index_target._name_is_names() else index_target.names
             if isinstance(depth_level, INT_TYPES):
@@ -5605,7 +5607,8 @@ class Frame(ContainerOperand):
             if self._index.ndim == 1:
                 yield self._index.values
             else:
-                self._index._update_array_cache()
+                if self._index._recache:
+                    self._index._update_array_cache()
 
                 yield from self._index._blocks._blocks
             for b in self._blocks._blocks:
@@ -7101,7 +7104,8 @@ class Frame(ContainerOperand):
                             b'index':packb(obj.index),
                             b'columns':packb(obj.columns)}
                 elif isinstance(obj, IndexHierarchy):
-                    obj._update_array_cache()
+                    if obj._recache:
+                        obj._update_array_cache()
 
                     return {b'sf':clsname,
                             b'name':obj.name,
