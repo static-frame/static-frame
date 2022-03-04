@@ -6,10 +6,12 @@ from datetime import date
 import numpy as np
 
 from static_frame.core.node_selector import Interface
+from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import TContainer
 from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
 from static_frame.core.util import array_from_element_apply
+from static_frame.core.util import AnyCallable
 from static_frame.core.util import DT64_AS
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_FS
@@ -30,7 +32,7 @@ from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_STR_KINDS
 
 if tp.TYPE_CHECKING:
-
+    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
@@ -42,24 +44,36 @@ ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
 #https://docs.python.org/3/library/datetime.html
 
+INTERFACE_DT = (
+            'year',
+            'month',
+            'day',
+            'hour',
+            'minute',
+            'second',
+            'weekday',
+            'quarter',
+            'is_month_end',
+            'is_month_start',
+            'is_year_end',
+            'is_year_start',
+            'is_quarter_end',
+            'is_quarter_start',
+            'timetuple',
+            'isoformat',
+            'fromisoformat',
+            'strftime',
+            'strptime',
+            'strpdate',
+            )
+
 class InterfaceDatetime(Interface[TContainer]):
 
     __slots__ = (
             '_blocks', # function that returns iterable of arrays
             '_blocks_to_container', # partialed function that will return a new container
             )
-    INTERFACE = (
-            'year',
-            'month',
-            'day',
-            'weekday',
-            'timetuple',
-            'fromisoformat',
-            'isoformat',
-            'strftime',
-            'strptime',
-            'strpdate',
-            )
+    INTERFACE = INTERFACE_DT
 
     DT64_EXCLUDE_YEAR = (DT64_YEAR,)
     DT64_EXCLUDE_YEAR_MONTH = (DT64_YEAR, DT64_MONTH)
@@ -610,6 +624,154 @@ class InterfaceDatetime(Interface[TContainer]):
 
 
 
+#-------------------------------------------------------------------------------
+
+class InterfaceBatchDatetime(InterfaceBatch):
+    '''Alternate datetime interface specialized for the :obj:`Batch`.
+    '''
+    __slots__ = (
+            '_batch_apply',
+            )
+    INTERFACE = INTERFACE_DT
+
+    def __init__(self,
+            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            ) -> None:
+        self._batch_apply = batch_apply
+
+    #---------------------------------------------------------------------------
+    # date, datetime attributes
+
+    @property
+    def year(self) -> 'Batch':
+        'Return the year of each element.'
+        return self._batch_apply(lambda c: c.via_dt.year)
+
+    @property
+    def month(self) -> 'Batch':
+        '''
+        Return the month of each element, between 1 and 12 inclusive.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.month)
+
+    @property
+    def day(self) -> 'Batch':
+        '''
+        Return the day of each element, between 1 and the number of days in the given month of the given year.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.day)
+
+    #---------------------------------------------------------------------------
+    # datetime attributes
+
+    @property
+    def hour(self) -> 'Batch':
+        '''
+        Return the hour of each element, between 0 and 24.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.hour)
+
+    @property
+    def minute(self) -> 'Batch':
+        '''
+        Return the minute of each element, between 0 and 60.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.minute)
+
+    @property
+    def second(self) -> 'Batch':
+        '''
+        Return the second of each element, between 0 and 60.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.second)
+
+    #---------------------------------------------------------------------------
+
+    # replace: akward to implement, as cannot provide None for the parameters that you do not want to set
+
+    def weekday(self) -> 'Batch':
+        '''
+        Return the day of the week as an integer, where Monday is 0 and Sunday is 6.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.weekday())
+
+    def quarter(self) -> 'Batch':
+        '''
+        Return the quarter of the year as an integer, where January through March is quarter 1.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.quarter())
+
+    #---------------------------------------------------------------------------
+    # boolean matches
+
+    def is_month_end(self) -> 'Batch':
+        '''Return Boolean indicators if the day is the month end.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.is_month_end())
+
+    def is_month_start(self) -> 'Batch':
+        '''Return Boolean indicators if the day is the month start.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.is_month_start())
+
+    def is_year_end(self) -> 'Batch':
+        '''Return Boolean indicators if the day is the year end.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.is_year_end())
+
+    def is_year_start(self) -> 'Batch':
+        '''Return Boolean indicators if the day is the year start.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.is_year_start())
+
+    def is_quarter_end(self) -> 'Batch':
+        '''Return Boolean indicators if the day is the quarter end.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.is_quarter_end())
+
+    def is_quarter_start(self) -> 'Batch':
+        '''Return Boolean indicators if the day is the quarter start.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.is_quarter_start())
+
+    #---------------------------------------------------------------------------
+    # time methods
+
+    def timetuple(self) -> 'Batch':
+        '''
+        Return a ``time.struct_time`` such as returned by time.localtime().
+        '''
+        return self._batch_apply(lambda c: c.via_dt.timetuple())
+
+    def isoformat(self, sep: str = 'T', timespec: str = 'auto') -> 'Batch':
+        '''
+        Return a string representing the date in ISO 8601 format, YYYY-MM-DD.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.isoformat(sep, timespec))
+
+    def fromisoformat(self) -> 'Batch':
+        '''
+        Return a :obj:`datetime.date` object from an ISO 8601 format.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.fromisoformat())
+
+    def strftime(self, format: str) -> 'Batch':
+        '''
+        Return a string representing the date, controlled by an explicit ``format`` string.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.strftime(format))
+
+    def strptime(self, format: str) -> 'Batch':
+        '''
+        Return a Python datetime object from parsing a string defined with ``format``.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.strptime(format))
+
+    def strpdate(self, format: str) -> 'Batch':
+        '''
+        Return a Python date object from parsing a string defined with ``format``.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.strpdate(format))
 
 
 
