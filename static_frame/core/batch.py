@@ -804,7 +804,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceBatchFillValue:
+            ) -> InterfaceBatchRe:
         '''
         Interface for applying regular expressions to elements in this container.
         '''
