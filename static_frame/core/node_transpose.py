@@ -310,86 +310,86 @@ class InterfaceBatchTranspose(InterfaceBatch):
 #         '''
 
     #---------------------------------------------------------------------------
-    def __add__(self, other: tp.Any) -> tp.Any:
+    def __add__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
                 lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__add__(other)
                 )
 
-    def __sub__(self, other: tp.Any) -> tp.Any:
+    def __sub__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
                 lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__sub__(other)
                 )
 
-    def __mul__(self, other: tp.Any) -> tp.Any:
+    def __mul__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
                 lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__mul__(other)
                 )
 
-    # def __matmul__(self, other: tp.Any) -> tp.Any:
+    # def __matmul__(self, other: tp.Any) -> 'Batch':
         # pass
 
-    def __truediv__(self, other: tp.Any) -> tp.Any:
+    def __truediv__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __floordiv__(self, other: tp.Any) -> tp.Any:
+    def __floordiv__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __mod__(self, other: tp.Any) -> tp.Any:
+    def __mod__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __pow__(self, other: tp.Any) -> tp.Any:
+    def __pow__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __lshift__(self, other: tp.Any) -> tp.Any:
+    def __lshift__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __rshift__(self, other: tp.Any) -> tp.Any:
+    def __rshift__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __and__(self, other: tp.Any) -> tp.Any:
+    def __and__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __xor__(self, other: tp.Any) -> tp.Any:
+    def __xor__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __or__(self, other: tp.Any) -> tp.Any:
+    def __or__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __lt__(self, other: tp.Any) -> tp.Any:
+    def __lt__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __le__(self, other: tp.Any) -> tp.Any:
+    def __le__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __eq__(self, other: tp.Any) -> tp.Any:
+    def __eq__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __ne__(self, other: tp.Any) -> tp.Any:
+    def __ne__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __gt__(self, other: tp.Any) -> tp.Any:
+    def __gt__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __ge__(self, other: tp.Any) -> tp.Any:
+    def __ge__(self, other: tp.Any) -> 'Batch':
         pass
 
     #---------------------------------------------------------------------------
-    def __radd__(self, other: tp.Any) -> tp.Any:
+    def __radd__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __rsub__(self, other: tp.Any) -> tp.Any:
+    def __rsub__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __rmul__(self, other: tp.Any) -> tp.Any:
+    def __rmul__(self, other: tp.Any) -> 'Batch':
         pass
 
-    # def __rmatmul__(self, other: tp.Any) -> tp.Any:
+    # def __rmatmul__(self, other: tp.Any) -> 'Batch':
         # pass
 
-    def __rtruediv__(self, other: tp.Any) -> tp.Any:
+    def __rtruediv__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __rfloordiv__(self, other: tp.Any) -> tp.Any:
+    def __rfloordiv__(self, other: tp.Any) -> 'Batch':
         pass
 
 
