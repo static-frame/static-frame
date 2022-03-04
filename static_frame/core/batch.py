@@ -46,6 +46,7 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
+from static_frame.core.node_re import InterfaceBatchRe
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -778,6 +779,18 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         return InterfaceBatchString(self.apply)
 
+    # @property
+    # def via_dt(self) -> InterfaceDatetime['Frame']:
+    #     '''
+    #     Interface for applying datetime properties and methods to elements in this container.
+    #     '''
+
+    # @property
+    # def via_T(self) -> InterfaceTranspose['Frame']:
+    #     '''
+    #     Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
+    #     '''
+
     def via_fill_value(self,
             fill_value: object = np.nan,
             ) -> InterfaceBatchFillValue:
@@ -788,6 +801,17 @@ class Batch(ContainerOperand, StoreClientMixin):
                 fill_value=fill_value,
                 )
 
+    def via_re(self,
+            pattern: str,
+            flags: int = 0,
+            ) -> InterfaceBatchFillValue:
+        '''
+        Interface for applying regular expressions to elements in this container.
+        '''
+        return InterfaceBatchRe(self.apply,
+                pattern=pattern,
+                flags=flags,
+                )
 
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality

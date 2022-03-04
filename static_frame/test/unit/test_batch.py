@@ -1785,7 +1785,71 @@ class TestUnit(TestCase):
             ((0, ((('a', 0), 1), (('a', 1), 1), (('b', 0), 1), (('b', 1), 1))), (1, ((('a', 0), 1), (('a', 1), 1), (('b', 0), 1), (('b', 1), 1))), (2, ((('a', 0), -3648), (('a', 1), 91301), (('b', 0), -3648), (('b', 1), 91301))))
             )
 
-        # import ipdb; ipdb.set_trace()
+
+
+    #---------------------------------------------------------------------------
+    def test_batch_via_re_search(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,2)|v(int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_re('[23]').search(2).to_frame()
+        self.assertEqual(post.to_pairs(),
+            ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))))
+            )
+
+    def test_batch_via_re_match(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,2)|v(int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_re('928').match().to_frame()
+        self.assertEqual(post.to_pairs(),
+            ((0, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))), (1, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))))
+            )
+
+    def test_batch_via_re_fullmatch(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,2)|v(int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_re('162197').fullmatch().to_frame()
+        self.assertEqual(post.to_pairs(),
+            ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))))
+            )
+
+    def test_batch_via_re_split(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,2)|v(int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_re('8').split(1).to_frame()
+        self.assertEqual(post.to_pairs(),
+            ((0, ((('a', 0), ('-', '8017')), (('a', 1), ('92', '67')), (('b', 0), ('-', '8017')), (('b', 1), ('92', '67')))), (1, ((('a', 0), ('162197',)), (('a', 1), ('-41157',)), (('b', 0), ('162197',)), (('b', 1), ('-41157',)))))
+            )
+
+    def test_batch_via_re_findall(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,2)|v(int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_re('8').findall(1).to_frame()
+        self.assertEqual(post.to_pairs(),
+            ((0, ((('a', 0), ('8', '8')), (('a', 1), ('8',)), (('b', 0), ('8', '8')), (('b', 1), ('8',)))), (1, ((('a', 0), ()), (('a', 1), ()), (('b', 0), ()), (('b', 1), ()))))
+            )
+
+    def test_batch_via_re_sub(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,2)|v(int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_re('8').sub('--', 2).to_frame()
+        self.assertEqual(post.to_pairs(),
+            ((0, ((('a', 0), '-----017'), (('a', 1), '92--67'), (('b', 0), '-----017'), (('b', 1), '92--67'))), (1, ((('a', 0), '162197'), (('a', 1), '-41157'), (('b', 0), '162197'), (('b', 1), '-41157'))))
+            )
+
+    def test_batch_via_re_subn(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(int)').rename('a').astype(str)
+        f2 = ff.parse('s(2,2)|v(int)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_re('8').subn('--').to_frame()
+        self.assertEqual(post.to_pairs(),
+            ((0, ((('a', 0), ('-----017', 2)), (('a', 1), ('92--67', 1)), (('b', 0), ('-----017', 2)), (('b', 1), ('92--67', 1)))), (1, ((('a', 0), ('162197', 0)), (('a', 1), ('-41157', 0)), (('b', 0), ('162197', 0)), (('b', 1), ('-41157', 0)))))
+            )
 
 
 if __name__ == '__main__':

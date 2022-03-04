@@ -461,6 +461,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
             fill_value: object = np.nan,
             axis: int = 0,
             ) -> None:
+
         self._batch_apply = batch_apply
         self._fill_value = fill_value
         self._axis = axis
