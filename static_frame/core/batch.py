@@ -955,62 +955,62 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     # ---------------------------------------------------------------------------
     # na handling
-    def isna(self) -> "Batch":
-        """
-        Return a batch of same-indexed, Boolean Frames indicating True which values are NaN or None.
-        """
-        return self._apply_attr(attr="isna")
+    def isna(self) -> 'Batch':
+        '''
+        Return a :obj:`Batch` with contained, same-indexed :obj:`Frame` indicating True which values are NaN or None.
+        '''
+        return self._apply_attr(attr='isna')
 
-    def notna(self) -> "Batch":
-        """
-        Return a batch of same-indexed, Boolean Frames indicating True which values are not NaN or None.
-        """
-        return self._apply_attr(attr="notna")
+    def notna(self) -> 'Batch':
+        '''
+        Return a :obj:`Batch` with contained, same-indexed :obj:`Frame` indicating True which values are not NaN or None.
+        '''
+        return self._apply_attr(attr='notna')
 
     def dropna(
         self,
         axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all
-    ) -> "Batch":
-        """
-        Return a new Batch of Frame(s) after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+    ) -> 'Batch':
+        '''
+        Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
         Args:
             axis:
             condition:
-        """
+        '''
         return self._apply_attr(
-                attr="dropna",
+                attr='dropna',
                 axis=axis,
                 condition=condition
                 )
 
     # ---------------------------------------------------------------------------
     # falsy handling
-    def isfalsy(self) -> "Batch":
-        """
-        Return a batch of same-indexed, Boolean Frames indicating True which values are falsy.
-        """
-        return self._apply_attr(attr="isfalsy")
+    def isfalsy(self) -> 'Batch':
+        '''
+        Return a :obj:`Batch` with contained, same-indexed :obj:`Frame` indicating True which values are Falsy.
+        '''
+        return self._apply_attr(attr='isfalsy')
 
-    def notfalsy(self) -> "Batch":
-        """
-        Return a batch of same-indexed, Boolean Frames indicating True which values are not falsy.
-        """
-        return self._apply_attr(attr="notfalsy")
+    def notfalsy(self) -> 'Batch':
+        '''
+        Return a :obj:`Batch` with contained, same-indexed :obj:`Frame` indicating True which values are not Falsy.
+        '''
+        return self._apply_attr(attr='notfalsy')
 
     def dropfalsy(
         self,
         axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all
-    ) -> "Batch":
-        """
-        Return a new Batch of Frame(s) after removing rows (axis 0) or columns (axis 1) where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isfalsy()``; the default is ``np.all``.
+    ) -> 'Batch':
+        '''
+        Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
         Args:
             axis:
             condition:
-        """
+        '''
         return self._apply_attr(
-                attr="dropfalsy",
+                attr='dropfalsy',
                 axis=axis,
                 condition=condition
                 )
@@ -1022,7 +1022,10 @@ class Batch(ContainerOperand, StoreClientMixin):
     def fillna(
         self,
         value: tp.Any
-    ) -> "Batch":
+    ) -> 'Batch':
+        '''
+        Return a new :obj:`Batch` with contained :obj:`Frame` after filling null (NaN or None) with the provided ``value``.
+        '''
         return self._apply_attr(
                 attr='fillna',
                 value=value,
@@ -1033,9 +1036,9 @@ class Batch(ContainerOperand, StoreClientMixin):
             value: tp.Any,
             *,
             axis: int = 0
-        ) -> "Batch":
+        ) -> 'Batch':
         '''
-        Return a new ``Batch`` after filling leading (and only leading) null (NaN or None) with the provided ``value``.
+        Return a new :obj:`Batch` with contained :obj:`Frame` after filling leading (and only leading) null (NaN or None) with the provided ``value``.
 
         Args:
             {value}
@@ -1055,7 +1058,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             axis: int = 0,
         ) -> 'Batch':
         '''
-        Return a new ``Batch`` after filling trailing (and only trailing) null (NaN or None) with the provided ``value``.
+        Return a new :obj:`Batch` with contained :obj:`Frame` after filling trailing (and only trailing) null (NaN or None) with the provided ``value``.
 
         Args:
             {value}
@@ -1074,7 +1077,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         axis: int = 0,
         ) -> 'Batch':
         '''
-        Return a new ``Batch`` after filling forward null (NaN or None) with the last observed value.
+        Return a new :obj:`Batch` with contained :obj:`Frame` after filling forward null (NaN or None) with the last observed value.
 
         Args:
             {limit}
@@ -1093,7 +1096,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         axis: int = 0,
         ) -> 'Batch':
         '''
-        Return a new ``Batch`` after filling backward null (NaN or None) with the first observed value.
+        Return a new :obj:`Batch` with contained :obj:`Frame` after filling backward null (NaN or None) with the first observed value.
 
         Args:
             {limit}
@@ -1111,7 +1114,10 @@ class Batch(ContainerOperand, StoreClientMixin):
     def fillfalsy(
         self,
         value: tp.Any
-    ) -> "Batch":
+    ) -> 'Batch':
+        '''
+        Return a new :obj:`Batch` with contained :obj:`Frame` after filling falsy values with the provided ``value``.
+        '''
         return self._apply_attr(
                 attr='fillfalsy',
                 value=value,
@@ -1122,10 +1128,10 @@ class Batch(ContainerOperand, StoreClientMixin):
             value: tp.Any,
             *,
             axis: int = 0,
-        ) -> "Batch":
+        ) -> 'Batch':
 
         '''
-        Return a new ``Batch`` after filling leading (and only leading) falsy values with the provided ``value``.
+        Return a new :obj:`Batch` with contained :obj:`Frame` after filling leading (and only leading) falsy values with the provided ``value``.
 
         Args:
             {value}
@@ -1144,7 +1150,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         axis: int = 0,
         ) -> 'Batch':
         '''
-        Return a new ``Frame`` after filling trailing (and only trailing) falsy values with the provided ``value``.
+        Return a new :obj:`Batch` with contained :obj:`Frame` after filling trailing (and only trailing) falsy values with the provided ``value``.
 
         Args:
             {value}
@@ -1163,7 +1169,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         axis: int = 0,
         ) -> 'Batch':
         '''
-        Return a new ``Frame`` after filling forward falsy values with the last observed value.
+        Return a new :obj:`Batch` with contained :obj:`Frame` after filling forward falsy values with the last observed value.
 
         Args:
             {limit}
@@ -1182,7 +1188,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         axis: int = 0
         ) -> 'Batch':
         '''
-        Return a new ``Frame`` after filling backward falsy values with the first observed value.
+        Return a new :obj:`Batch` with contained :obj:`Frame` after filling backward falsy values with the first observed value.
 
         Args:
             {limit}
@@ -1631,5 +1637,3 @@ class Batch(ContainerOperand, StoreClientMixin):
                 dtype=DTYPE_OBJECT)
 
         return Bus(series, config=self._config)
-
-

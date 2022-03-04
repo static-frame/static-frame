@@ -181,7 +181,7 @@ class TestUnit(TestCase):
 
     def test_batch_h(self) -> None:
 
-        frame = ff.parse("s(10,3)")
+        frame = ff.parse('s(10,3)')
         with self.assertRaises(BatchIterableInvalid):
             Batch(frame.iter_window(size=3)).std(ddof=1).to_frame()
 
@@ -1037,7 +1037,7 @@ class TestUnit(TestCase):
             f0.iloc[0:3].rename('1'),
             f0.iloc[3:6].rename('2'),
             f0.iloc[6:9].rename('3'),
-        )).relabel(columns={2:"two"}).to_frame()
+        )).relabel(columns={2:'two'}).to_frame()
         actual = f1.columns.values.tolist()
         expected = [0, 1, 'two', 3]
         self.assertEqual(expected, actual)
@@ -1048,7 +1048,7 @@ class TestUnit(TestCase):
             f1 = Batch.from_frames((
                 f0.iloc[0:2].rename('1'),
                 f0.iloc[2:8].rename('2'),
-            )).relabel(index=("a", "b")).to_frame()
+            )).relabel(index=('a', 'b')).to_frame()
 
 
     #---------------------------------------------------------------------------
