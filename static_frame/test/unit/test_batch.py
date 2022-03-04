@@ -1,3 +1,5 @@
+import time
+import datetime
 import typing as tp
 
 import numpy as np
@@ -1974,6 +1976,60 @@ class TestUnit(TestCase):
         post = Batch.from_frames((f1, f2)).via_dt.is_quarter_start().to_frame()
         self.assertEqual(post.to_pairs(),
                 ((0, ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), (1, ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))))
+                )
+
+    def test_batch_via_dt_timetuple(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dts)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dts)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.timetuple().to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), time.struct_time((1970, 1, 2, 0, 26, 57, 4, 2, -1))), (('a', 1), time.struct_time((1970, 1, 2, 1, 47, 47, 4, 2, -1))), (('b', 0), time.struct_time((1970, 1, 2, 0, 26, 57, 4, 2, -1))), (('b', 1), time.struct_time((1970, 1, 2, 1, 47, 47, 4, 2, -1))))), (1, ((('a', 0), time.struct_time((1970, 1, 2, 21, 3, 17, 4, 2, -1))), (('a', 1), time.struct_time((1970, 1, 1, 11, 25,57, 3, 1, -1))), (('b', 0), time.struct_time((1970, 1, 2, 21, 3, 17, 4, 2, -1))), (('b', 1), time.struct_time((1970, 1, 1, 11, 25, 57, 3, 1, -1))))))
+                )
+
+    def test_batch_via_dt_isoformat(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.isoformat().to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), '2210-12-26'), (('a', 1), '2224-04-06'), (('b', 0), '2210-12-26'), (('b', 1), '2224-04-06'))), (1, ((('a', 0), '2414-01-30'), (('a', 1), '2082-09-07'), (('b', 0), '2414-01-30'), (('b', 1), '2082-09-07'))))
+                )
+
+    def test_batch_via_dt_fromisoformat(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a').astype(str)
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_dt.fromisoformat().to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), datetime.date(2210, 12, 26)), (('a', 1), datetime.date(2224, 4, 6)), (('b', 0), datetime.date(2210, 12, 26)), (('b', 1), datetime.date(2224, 4, 6)))), (1, ((('a', 0), datetime.date(2414, 1, 30)), (('a', 1), datetime.date(2082, 9, 7)), (('b', 0), datetime.date(2414, 1, 30)), (('b', 1), datetime.date(2082, 9, 7)))))
+                )
+
+    def test_batch_via_dt_strftime(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.strftime('%Y**%m').to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), '2210**12'), (('a', 1), '2224**04'), (('b', 0), '2210**12'), (('b', 1), '2224**04'))), (1, ((('a', 0), '2414**01'), (('a', 1), '2082**09'), (('b', 0), '2414**01'), (('b', 1), '2082**09'))))
+                )
+
+    def test_batch_via_dt_strptime(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a').astype(str)
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_dt.strptime('%Y-%m-%d').to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), datetime.datetime(2210, 12, 26, 0, 0)), (('a', 1), datetime.datetime(2224, 4, 6, 0, 0)), (('b', 0), datetime.datetime(2210, 12, 26, 0, 0)), (('b', 1), datetime.datetime(2224, 4, 6, 0, 0)))), (1, ((('a', 0), datetime.datetime(2414, 1, 30, 0, 0)), (('a', 1), datetime.datetime(2082, 9, 7, 0, 0)), (('b', 0), datetime.datetime(2414, 1, 30, 0, 0)), (('b', 1), datetime.datetime(2082, 9, 7, 0, 0)))))
+                )
+
+    def test_batch_via_dt_strpdate(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a').astype(str)
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b').astype(str)
+        post = Batch.from_frames((f1, f2)).via_dt.strpdate('%Y-%m-%d').to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), datetime.date(2210, 12, 26)), (('a', 1), datetime.date(2224, 4, 6)), (('b', 0), datetime.date(2210, 12, 26)), (('b', 1), datetime.date(2224, 4, 6)))), (1, ((('a', 0), datetime.date(2414, 1, 30)), (('a', 1), datetime.date(2082, 9, 7)), (('b', 0), datetime.date(2414, 1, 30)), (('b', 1), datetime.date(2082, 9, 7)))))
                 )
 
 if __name__ == '__main__':
