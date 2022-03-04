@@ -1757,26 +1757,35 @@ class TestUnit(TestCase):
         self.assertEqual(post1.to_pairs(),
                 ((0, ((('a', 0), 88017), (('a', 1), -92867), (('b', 0), 88017), (('b', 1), -92867))), (1, ((('a', 0), -250214), (('a', 1), 41157), (('b', 0), -250214), (('b', 1), 41157))), (4, ((('a', 0), 162197), (('a', 1), 0), (('b', 0), 162197), (('b', 1), 0))))
                 )
+
+    def test_batch_via_fill_value_rmul(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int64)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int64)').rename('b')
+        f3 = ff.parse('s(1,2)|v(int64)|c(I,str)').relabel(columns=(1,4))
+        post1 = (f3 * Batch.from_frames((f1, f2)).via_fill_value(0)).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), 0), (('a', 1), 0), (('b', 0), 0), (('b', 1), 0))), (1, ((('a', 0), -14276093349), (('a', 1), 0), (('b', 0), -14276093349), (('b', 1), 0))), (4, ((('a', 0), 0), (('a', 1), 0), (('b', 0), 0), (('b', 1), 0))))
+            )
+
+    def test_batch_via_fill_value_rtruediv(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)')
+        post1 = (f3 / Batch.from_frames((f1, f2)).via_fill_value(1)).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), 1.0), (('a', 1), 1.0), (('b', 0), 1.0), (('b', 1), 1.0))), (1, ((('a', 0), 1.0), (('a', 1), 1.0), (('b', 0), 1.0), (('b', 1), 1.0))), (2, ((('a', 0), -3648.0), (('a', 1), 91301.0), (('b', 0), -3648.0), (('b', 1), 91301.0))))
+            )
+
+    def test_batch_via_fill_value_rfloordiv(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int)').rename('b')
+        f3 = ff.parse('s(2,3)|v(int)')
+        post1 = (f3 // Batch.from_frames((f1, f2)).via_fill_value(1)).to_frame()
+        self.assertEqual(post1.to_pairs(),
+            ((0, ((('a', 0), 1), (('a', 1), 1), (('b', 0), 1), (('b', 1), 1))), (1, ((('a', 0), 1), (('a', 1), 1), (('b', 0), 1), (('b', 1), 1))), (2, ((('a', 0), -3648), (('a', 1), 91301), (('b', 0), -3648), (('b', 1), 91301))))
+            )
+
         # import ipdb; ipdb.set_trace()
-
-#     def test_batch_via_fill_value_rmul(self) -> None:
-#         f1 = ff.parse('s(2,2)|v(int64)').rename('a')
-#         f2 = ff.parse('s(2,2)|v(int64)').rename('b')
-#         f3 = ff.parse('s(1,2)|v(int64)|c(I,str)').relabel(columns=(1,4))
-#         post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) * f3).to_frame()
-
-#     def test_batch_via_fill_value_rtruediv(self) -> None:
-#         f1 = ff.parse('s(2,2)|v(int)').rename('a')
-#         f2 = ff.parse('s(2,2)|v(int)').rename('b')
-#         f3 = ff.parse('s(2,3)|v(int)')
-#         post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) / f3).to_frame()
-
-#     def test_batch_via_fill_value_rfloordiv(self) -> None:
-#         f1 = ff.parse('s(2,2)|v(int)').rename('a')
-#         f2 = ff.parse('s(2,2)|v(int)').rename('b')
-#         f3 = ff.parse('s(2,3)|v(int)')
-#         post1 = (Batch.from_frames((f1, f2)).via_fill_value(0) // f3).to_frame()
-
 
 
 if __name__ == '__main__':
