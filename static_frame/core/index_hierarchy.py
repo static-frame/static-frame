@@ -213,6 +213,7 @@ class IndexHierarchy(IndexBase):
             '_name',
             '_blocks',
             '_recache',
+            '_values',
             '_index_types',
             '_pending_extensions',
             )
@@ -222,6 +223,7 @@ class IndexHierarchy(IndexBase):
     _name: NameType
     _blocks: TypeBlocks
     _recache: bool
+    _values: np.ndarray # Used to cache the property `values`
     _index_types: tp.Optional['Series'] # Used to cache the property `index_types`
     _pending_extensions: tp.Optional[tp.List[tp.Union[SingleLabelType, 'IndexHierarchy']]]
 
@@ -710,6 +712,7 @@ class IndexHierarchy(IndexBase):
         init_blocks: tp.Optional[TypeBlocks] = blocks
 
         if index_constructors is not None:
+            # TODO: Does this logic carry over?
             # If defined, we may have changed columnar dtypes in IndexLevels, and cannot reuse blocks
             if tuple(blocks.dtypes) != tuple(index.dtype for index in indices):
                 init_blocks = None
@@ -804,8 +807,9 @@ class IndexHierarchy(IndexBase):
                 for index in indices._indices
             ]
             self._indexers = list(indices._indexers)
-            self._name = name if name is not None else indices._name
+            self._name = name if name is not NAME_DEFAULT else indices._name
             self._blocks = indices._blocks
+            self._values = indices._values
             return
 
         if not all(arr.__class__ is np.ndarray for arr in indexers):
@@ -835,7 +839,9 @@ class IndexHierarchy(IndexBase):
         else:
             self._blocks = self._create_blocks_from_self()
 
-        self._ensure_uniqueness(self._indexers, self.values)
+        self._values = self._blocks.values
+
+        self._ensure_uniqueness(self._indexers, self._values)
 
     def _append(self: IH,
             row: SingleLabelType,
@@ -882,11 +888,20 @@ class IndexHierarchy(IndexBase):
         self._indexers = new_indexers
 
         self._blocks = self._create_blocks_from_self()
-        self._ensure_uniqueness(self._indexers, self.values)
+        self._values = self._blocks.values
+        self._ensure_uniqueness(self._indexers, self._values)
 
         self._recache = False
 
     # --------------------------------------------------------------------------
+
+    def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
+        '''
+        Ensure that reanimated NP arrays are set not writeable.
+        '''
+        for key, value in state[1].items():
+            setattr(self, key, value)
+        self._values.flags.writeable = False
 
     def __deepcopy__(self: IH,
             memo: tp.Dict[int, tp.Any],
@@ -899,6 +914,7 @@ class IndexHierarchy(IndexBase):
         obj._indices = deepcopy(self._indices, memo)
         obj._indexers = deepcopy(self._indexers, memo)
         obj._blocks = deepcopy(self._blocks, memo)
+        obj._values = obj._blocks.values
         obj._name = self._name # should be hashable/immutable
         obj._recache = self._recache
         obj._index_types = deepcopy(self._index_types, memo)
@@ -1139,10 +1155,7 @@ class IndexHierarchy(IndexBase):
     def __len__(self: IH) -> int:
         if self._recache:
             size = self._blocks.__len__()
-
-            if self._pending_extensions:
-                size += sum(map(len, self._pending_extensions))
-
+            size += sum(map(len, self._pending_extensions))
             return size
 
         return self._blocks.__len__()
@@ -1222,7 +1235,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        if isinstance(other, np.ndarray):
+        if other.__class__ is np.ndarray:
             operand = other
             assume_unique = False
         elif isinstance(other, IndexBase):
@@ -1234,11 +1247,11 @@ class IndexHierarchy(IndexBase):
 
         both_sized = len(operand) > 0 and self.__len__() > 0
 
-        if operand.ndim != 2:
+        if operand.ndim != 2: # type: ignore
             raise ErrorInitIndex(
                 'operand in IndexHierarchy set operations must ndim of 2'
             )
-        if both_sized and self.shape[1] != operand.shape[1]:
+        if both_sized and self.shape[1] != operand.shape[1]: # type: ignore
             raise ErrorInitIndex(
                 'operands in IndexHierarchy set operations must have matching depth'
             )
@@ -1293,8 +1306,7 @@ class IndexHierarchy(IndexBase):
 
         blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
 
-        # We could potentially re-use the same indices. Would that be worth it?
-
+        # TODO: We could potentially re-use the same indices. Would that be worth it?
         return self.__class__._from_type_blocks(
                 blocks=blocks,
                 index_constructors=self._index_constructors,
@@ -1321,7 +1333,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        return self._blocks.values
+        return self._values
 
     @property
     def positions(self: IH) -> np.ndarray:
@@ -1402,10 +1414,9 @@ class IndexHierarchy(IndexBase):
             return
 
         def gen()-> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
-            # We need to build up masks for each depth level. This requires the combination
-            # of all depths above it. We do not care about order since we are only
-            # determining counts. As such, we simply walk from 1 -> len(level) for each outer
-            # level
+            # We need to build up masks for each depth level. This requires the combination of
+            # all depths above it. We do not care about order since we are only determining
+            # counts. As such, we simply walk from 1 -> len(level) for each outer level
             ranges = tuple(map(range, map(len, self._indices[:pos])))
 
             for outer_level_idxs in itertools.product(*ranges):
@@ -1628,12 +1639,12 @@ class IndexHierarchy(IndexBase):
         '''
         Determines the indexer mask for `key` at `depth`.
         '''
-        # Assumes caller has recached!
+        assert not self._recache # Sanity check for private internal method!
 
         key_at_depth = key[depth]
 
         # Key is already a mask!
-        if isinstance(key_at_depth, np.ndarray) and key_at_depth.dtype == DTYPE_BOOL:
+        if key_at_depth.__class__ is np.ndarray and key_at_depth.dtype == DTYPE_BOOL: # type: ignore
             return key_at_depth
 
         index_at_depth = self._indices[depth]
@@ -1689,7 +1700,7 @@ class IndexHierarchy(IndexBase):
 
         However, this approach quickly outperforms list comprehension as the key gets larger
         '''
-        # Assumes caller has recached!
+        assert not self._recache # Sanity check for private internal method!
 
         if not key.depth == self.depth:
             raise KeyError(f'Key must have the same depth as the index. {key}')
@@ -1723,7 +1734,7 @@ class IndexHierarchy(IndexBase):
 
         Will return a single integer for single, non-HLoc keys. Otherwise, returns a boolean mask.
         '''
-        # Assumes caller has recached!
+        assert not self._recache # Sanity check for private internal method!
 
         # We consider the NULL_SLICE to not be "meaningful", as it requires no filtering
         meaningful_selections = {
@@ -1780,7 +1791,7 @@ class IndexHierarchy(IndexBase):
         if isinstance(key, IndexHierarchy):
             return self._loc_to_iloc_index_hierarchy(key)
 
-        if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
+        if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL: # type: ignore
             return self.positions[key]
 
         if isinstance(key, slice):
@@ -1789,8 +1800,8 @@ class IndexHierarchy(IndexBase):
         if isinstance(key, list):
             return [self._loc_to_iloc(k) for k in key]
 
-        if isinstance(key, np.ndarray) and key.ndim == 2:
-            if key.dtype != DTYPE_OBJECT:
+        if key.__class__ is np.ndarray and key.ndim == 2: # type: ignore
+            if key.dtype != DTYPE_OBJECT: # type: ignore
                 return np.intersect1d(
                         view_2d_as_1d(self.values),
                         view_2d_as_1d(key),
@@ -1798,7 +1809,7 @@ class IndexHierarchy(IndexBase):
                         return_indices=True,
                         )[1]
 
-            return [self._loc_to_iloc(k) for k in key]
+            return [self._loc_to_iloc(k) for k in key] # type: ignore
 
         if isinstance(key, HLoc):
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
@@ -1827,7 +1838,7 @@ class IndexHierarchy(IndexBase):
 
             else:
                 key = sanitized_key
-                if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
+                if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL: # type: ignore
                     # When the key is a series with boolean values
                     return self.positions[key]
 
@@ -1954,13 +1965,13 @@ class IndexHierarchy(IndexBase):
         if isinstance(other, (Series, Frame)):
             raise ValueError('cannot use labelled container as an operand.')
 
+        if operator.__name__ == 'matmul':
+            return matmul(self.values, other)
+        elif operator.__name__ == 'rmatmul':
+            return matmul(other, self.values)
+
         if self._recache:
             self._update_array_cache()
-
-        if operator.__name__ == 'matmul':
-            return matmul(self._blocks.values, other)
-        elif operator.__name__ == 'rmatmul':
-            return matmul(other, self._blocks.values)
 
         if isinstance(other, Index):
             other = other.values
@@ -1988,16 +1999,12 @@ class IndexHierarchy(IndexBase):
         Returns:
             immutable NumPy array.
         '''
-        if self._recache:
-            self._update_array_cache()
-
         dtype = None if not dtypes else dtypes[0] # must be a tuple
-        values = self._blocks.values
 
         if skipna:
-            post = ufunc_skipna(values, axis=axis, dtype=dtype)
+            post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
         else:
-            post = ufunc(values, axis=axis, dtype=dtype)
+            post = ufunc(self.values, axis=axis, dtype=dtype)
 
         post.flags.writeable = False
         return post
@@ -2383,7 +2390,7 @@ class IndexHierarchy(IndexBase):
         '''
         Recursively build a tree of :obj:`TreeNodeT` at `depth` given `mask`
         '''
-        # Assumes caller has recached!
+        assert not self._recache # Sanity check for private internal method!
 
         if depth == self.depth - 1:
             values = self._indices[depth][self._indexers[depth][mask]]
@@ -2528,15 +2535,6 @@ class IndexHierarchyGO(IndexHierarchy):
     _IMMUTABLE_CONSTRUCTOR = IndexHierarchy
     _INDEX_CONSTRUCTOR = IndexGO
 
-    __slots__ = (
-            '_indices',
-            '_indexers',
-            '_name',
-            '_blocks',
-            '_recache',
-            '_index_type',
-            )
-
     _indices: tp.List[IndexGO] # type: ignore
 
     def _append(self: IH,
@@ -2653,6 +2651,9 @@ class IndexHierarchyAsType:
         '''
         from static_frame.core.index_datetime import dtype_to_index_cls
         container = self.container
+
+        if container._recache:
+            container._update_array_cache()
 
         # use TypeBlocks in both situations to avoid double casting
         blocks = TypeBlocks.from_blocks(
