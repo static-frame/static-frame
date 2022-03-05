@@ -361,10 +361,10 @@ class InterfaceBatchTranspose(InterfaceBatch):
     def __le__(self, other: tp.Any) -> 'Batch':
         pass
 
-    def __eq__(self, other: tp.Any) -> 'Batch':
+    def __eq__(self, other: tp.Any) -> 'Batch': #type: ignore
         pass
 
-    def __ne__(self, other: tp.Any) -> 'Batch':
+    def __ne__(self, other: tp.Any) -> 'Batch': #type: ignore
         pass
 
     def __gt__(self, other: tp.Any) -> 'Batch':
