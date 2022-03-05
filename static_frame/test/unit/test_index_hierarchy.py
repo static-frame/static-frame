@@ -666,6 +666,33 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             ih._loc_to_iloc(HLoc[slice("I", "III", "?")])
 
+    def test_hierarchy_loc_to_iloc_q(self) -> None:
+        labels = [
+                (1, 'dd', 0),
+                (1, 'b', 0),
+                (2, 'cc', 0),
+                (2, 'ee', 0),
+                ]
+
+        ih = IndexHierarchy.from_labels(labels)
+        selections = [
+                ih.loc[HLoc[1,'dd']],
+                ih.loc[HLoc[(1,'dd')]],
+
+                ih.loc[HLoc[[1],'dd']],
+                ih.loc[HLoc[([1],'dd')]],
+
+                ih.loc[HLoc[1,['dd']]],
+                ih.loc[HLoc[(1,['dd'])]],
+
+                ih.loc[HLoc[[1],['dd']]],
+                ih.loc[HLoc[([1],['dd'])]],
+                ]
+
+        for i in range(len(selections) - 1):
+            for j in range(i, len(selections)):
+                self.assertTrue(selections[i].equals(selections[j]), msg=(i, j))
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_iloc_a(self) -> None:

@@ -1714,6 +1714,7 @@ class IndexHierarchy(IndexBase):
             indexer_remap = key_index._index_iloc_map(self_index)
             key_indexers.append(indexer_remap[key_indexer])
 
+        # TODO: Should self._indexers be a numpy 2d array?
         self_indexers = np.array(self._indexers, dtype=DTYPE_INT_DEFAULT).T
         key_indexers = np.array(key_indexers, dtype=DTYPE_INT_DEFAULT).T
 
@@ -1737,25 +1738,18 @@ class IndexHierarchy(IndexBase):
         assert not self._recache # Sanity check for private internal method!
 
         # We consider the NULL_SLICE to not be "meaningful", as it requires no filtering
-        meaningful_selections = {
-                depth: not (isinstance(k, slice) and k == NULL_SLICE)
-                for depth, k in enumerate(key)
-                }
+        meaningful_depths = [
+                depth for depth, k in enumerate(key)
+                if not (isinstance(k, slice) and k == NULL_SLICE)
+                ]
 
-        if sum(meaningful_selections.values()) == 1:
+        if len(meaningful_depths) == 1:
             # Prefer to avoid construction of a 2D mask
-
-            depth = next(
-                i for i, meaningful in meaningful_selections.items() if meaningful
-            )
-            mask = self._build_mask_for_key_at_depth(depth=depth, key=key)
+            mask = self._build_mask_for_key_at_depth(depth=meaningful_depths[0], key=key)
         else:
             mask_2d = np.full(self.shape, True, dtype=bool)
 
-            for depth, meaningful in meaningful_selections.items():
-                if not meaningful:
-                    continue
-
+            for depth in meaningful_depths:
                 mask = self._build_mask_for_key_at_depth(depth=depth, key=key)
                 mask_2d[:, depth] = mask
 
@@ -1764,14 +1758,16 @@ class IndexHierarchy(IndexBase):
 
         result: np.ndarray = self.positions[mask]
 
-        # Even if there was one result, unless the HLoc specified all levels, we need to return a list
-        if len(result) == 1:
-            if all(
-                    meaningful
-                    and (isinstance(key[depth], str) or not hasattr(key[depth], '__len__'))
-                    for depth, meaningful in meaningful_selections.items()
-                    ):
-                return result[0]
+        def is_element(obj: tp.Hashable):
+            return not hasattr(obj, "__len__") or isinstance(obj, str)
+
+        if (
+            len(result) == 1 and # Can only return a single element if there is one element!
+            len(meaningful_depths) == self.depth and # Keys with missing depths force a return of a mask
+            all(is_element(k) for k in key) # Keys with nested sequences force a return of a mask
+            ):
+            return result[0]
+
         return result
 
     def _loc_to_iloc(self: IH,

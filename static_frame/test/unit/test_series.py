@@ -1562,7 +1562,6 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
 
         # this selection returns just a single value
-        # import ipdb; ipdb.set_trace()
         s2 = s.loc[sf.HLoc[:, 'c']]
         self.assertEqual(s2.__class__, s.__class__)
         self.assertEqual(s2.to_pairs(), ((('b', 'c'), 4),))
