@@ -45,6 +45,3 @@ class HLoc(metaclass=HLocMeta):
 
     def has_key_multiple(self) -> bool:
         return any(isinstance(k, KEY_MULTIPLE_TYPES) for k in self.key)
-
-    def __repr__(self) -> str:
-        return f'HLoc<{self.key}>'
