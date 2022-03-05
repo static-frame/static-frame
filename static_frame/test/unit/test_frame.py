@@ -1500,7 +1500,10 @@ class TestUnit(TestCase):
     def test_frame_from_msgpack_f(self) -> None:
         ih1 = sf.IndexHierarchy.from_product(tuple('ABCD'), tuple('1234'))
         ih2 = sf.IndexHierarchy.from_product(tuple('EFGH'), tuple('5678'))
-        f1 = sf.Frame(np.arange(256).reshape(16, 16), index=ih1, columns=ih2)
+        f1 = sf.FrameGO(np.arange(256).reshape(16, 16), index=ih1, columns=ih2)
+
+        f1[("A", "1")] = 999.99
+
         msg = f1.to_msgpack()
 
         f2 = Frame.from_msgpack(msg)

@@ -3652,9 +3652,7 @@ class Frame(ContainerOperand):
             ih_blocks = TypeBlocks.from_blocks((index_target.values,))
             name_prior = index_target.names if index_target.name is None else (index_target.name,)
         else:
-            if index_target._recache:
-                index_target._update_array_cache()
-
+            # No recache is needed as it's not possible for an index to be GO
             ih_blocks = index_target._blocks.copy() # will mutate copied blocks
             # only use string form of labels if we are not storing a correctly sized tuple
             name_prior = index_target.name if index_target._name_is_names() else index_target.names
@@ -5600,13 +5598,12 @@ class Frame(ContainerOperand):
             consolidate_blocks:
             columns_constructors:
         '''
-        from static_frame.core.index_level import IndexLevel
-
         def blocks() -> tp.Iterator[np.ndarray]:
             # yield index as columns, then remaining blocks currently in Frame
             if self._index.ndim == 1:
                 yield self._index.values
             else:
+                # No recache is needed as it's not possible for an index to be GO
                 if self._index._recache:
                     self._index._update_array_cache()
 

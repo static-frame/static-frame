@@ -800,7 +800,7 @@ class IndexHierarchy(IndexBase):
                 )
 
             if indices._recache:
-                indices._update_array_cache()
+                indices._update_array_cache() # pragma: no-cover
 
             self._indices = [
                 mutable_immutable_index_filter(self.STATIC, index)
@@ -1302,7 +1302,7 @@ class IndexHierarchy(IndexBase):
         Create a new index after removing the values specified by the iloc key.
         '''
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
 
@@ -1535,7 +1535,7 @@ class IndexHierarchy(IndexBase):
             )
 
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         is_callable = callable(mapper)
 
@@ -1605,7 +1605,7 @@ class IndexHierarchy(IndexBase):
         Return a new :obj:`IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
         '''
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         rehierarched_blocks, _ = rehierarch_from_type_blocks(
                 labels=self._blocks,
@@ -1639,7 +1639,7 @@ class IndexHierarchy(IndexBase):
         '''
         Determines the indexer mask for `key` at `depth`.
         '''
-        assert not self._recache # Sanity check for private internal method!
+        # This private internal method assumes recache has already been checked for!
 
         key_at_depth = key[depth]
 
@@ -1700,7 +1700,7 @@ class IndexHierarchy(IndexBase):
 
         However, this approach quickly outperforms list comprehension as the key gets larger
         '''
-        assert not self._recache # Sanity check for private internal method!
+        # This private internal method assumes recache has already been checked for!
 
         if not key.depth == self.depth:
             raise KeyError(f'Key must have the same depth as the index. {key}')
@@ -1735,7 +1735,7 @@ class IndexHierarchy(IndexBase):
 
         Will return a single integer for single, non-HLoc keys. Otherwise, returns a boolean mask.
         '''
-        assert not self._recache # Sanity check for private internal method!
+        # This private internal method assumes recache has already been checked for!
 
         # We consider the NULL_SLICE to not be "meaningful", as it requires no filtering
         meaningful_depths = [
@@ -1871,7 +1871,7 @@ class IndexHierarchy(IndexBase):
         Extract a new index given an iloc key
         '''
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         if isinstance(key, INT_TYPES):
             # return a tuple if selecting a single row
@@ -1964,13 +1964,13 @@ class IndexHierarchy(IndexBase):
             return matmul(other, self.values)
 
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         if isinstance(other, Index):
             other = other.values
         elif isinstance(other, IndexHierarchy):
             if other._recache:
-                other._update_array_cache()
+                other._update_array_cache() # pragma: no cover
             other = other._blocks
 
         tb = self._blocks._ufunc_binary_operator(
@@ -2023,7 +2023,7 @@ class IndexHierarchy(IndexBase):
         Returns a reverse iterator on the index labels.
         '''
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
@@ -2142,7 +2142,7 @@ class IndexHierarchy(IndexBase):
             {key}
         '''
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
 
@@ -2185,7 +2185,7 @@ class IndexHierarchy(IndexBase):
         Return an :obj:`IndexHierarchy` with values rotated forward and wrapped around (with a positive shift) or backward and wrapped around (with a negative shift).
         '''
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         blocks = TypeBlocks.from_blocks(
                 self._blocks._shift_blocks(row_shift=shift, wrap=True)
@@ -2233,7 +2233,7 @@ class IndexHierarchy(IndexBase):
             An integer array of sampled iloc values
         '''
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         key = array_sample(self.positions, count=count, seed=seed, sort=True)
         blocks = self._blocks._extract(row_key=key)
@@ -2334,7 +2334,7 @@ class IndexHierarchy(IndexBase):
             constructor: tp.Type['Frame'],
             ) -> 'Frame':
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         return constructor(
                 self._blocks.copy(),
@@ -2364,7 +2364,7 @@ class IndexHierarchy(IndexBase):
         import pandas
 
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         # must copy to get a mutable array
         mi = pandas.MultiIndex(
@@ -2382,7 +2382,7 @@ class IndexHierarchy(IndexBase):
         '''
         Recursively build a tree of :obj:`TreeNodeT` at `depth` given `mask`
         '''
-        assert not self._recache # Sanity check for private internal method!
+        # This private internal method assumes recache has already been checked for!
 
         index_at_depth = self._indices[depth]
         indexer_at_depth = self._indexers[depth]
@@ -2406,7 +2406,7 @@ class IndexHierarchy(IndexBase):
         Returns the tree representation of an IndexHierarchy
         '''
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         tree = self._build_tree_at_depth_from_mask(
                 depth=0,
@@ -2466,7 +2466,7 @@ class IndexHierarchy(IndexBase):
             count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative value is the number of depths to remove from the leaf (inner) side of the hierarchy.
         '''
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
         if self._name_is_names():
@@ -2606,7 +2606,7 @@ class IndexHierarchyGO(IndexHierarchy):
         Return a shallow copy of this IndexHierarchy.
         '''
         if self._recache:
-            self._update_array_cache()
+            self._update_array_cache() # pragma: no cover
 
         return self.__class__(
                 indices=[index.copy() for index in self._indices],
@@ -2648,7 +2648,7 @@ class IndexHierarchyAsType:
         container = self.container
 
         if container._recache:
-            container._update_array_cache()
+            container._update_array_cache() # pragma: no cover
 
         # use TypeBlocks in both situations to avoid double casting
         blocks = TypeBlocks.from_blocks(
