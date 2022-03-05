@@ -2246,7 +2246,7 @@ class TestUnit(TestCase):
         # force TB creation
         part = ih1.iloc[1:]
         ih2 = ih1.level_add('x')
-        # proove we reused the underlying block arrays
+        # prove we reused the underlying block arrays
         self.assertEqual(ih1._blocks.mloc.tolist(), ih2._blocks.mloc[1:].tolist())
 
 

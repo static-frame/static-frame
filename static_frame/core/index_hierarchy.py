@@ -845,14 +845,14 @@ class IndexHierarchy(IndexBase):
 
     def _append(self: IH,
             row: SingleLabelType,
-            indexers: tp.List[np.ndarray],
+            target_indexers: tp.List[np.ndarray],
             offset: int,
             ) -> None:
         raise NotImplementedError('Must be implemented on IndexHierarchyGO only') # pragma: no cover
 
     def _extend(self: IH,
             other: IH,
-            indexers: tp.List[np.ndarray],
+            target_indexers: tp.List[np.ndarray],
             offset: int,
             size: int,
             ) -> None:
@@ -909,7 +909,7 @@ class IndexHierarchy(IndexBase):
         '''
         Return a deep copy of this IndexHierarchy.
         '''
-        # TODO: Should self recache, or do an exact copy at this current point in time.
+        # TODO: Should self recache, or do an exact copy at this current point in time?
         obj: IH = self.__new__(self.__class__)
         obj._indices = deepcopy(self._indices, memo)
         obj._indexers = deepcopy(self._indexers, memo)
@@ -1758,7 +1758,7 @@ class IndexHierarchy(IndexBase):
 
         result: np.ndarray = self.positions[mask]
 
-        def is_element(obj: tp.Hashable):
+        def is_element(obj: tp.Hashable) -> bool:
             return not hasattr(obj, "__len__") or isinstance(obj, str)
 
         if (
@@ -1776,10 +1776,10 @@ class IndexHierarchy(IndexBase):
         '''
         Given iterable (or instance) of GetItemKeyType, determine the equivalent iloc key.
 
-        When possible, prefer slices.
+        When possible, prefer slice or single elements
         '''
-        if isinstance(key, ILoc):
-            return key.key
+        if key.__class__ is ILoc:
+            return key.key # type: ignore
 
         if self._recache:
             self._update_array_cache()
@@ -1938,9 +1938,6 @@ class IndexHierarchy(IndexBase):
         '''
         Always return an NP array.
         '''
-        if self._recache:
-            self._update_array_cache()
-
         array = operator(self.values)
         array.flags.writeable = False
         return array
@@ -1972,6 +1969,8 @@ class IndexHierarchy(IndexBase):
         if isinstance(other, Index):
             other = other.values
         elif isinstance(other, IndexHierarchy):
+            if other._recache:
+                other._update_array_cache()
             other = other._blocks
 
         tb = self._blocks._ufunc_binary_operator(
@@ -2176,9 +2175,6 @@ class IndexHierarchy(IndexBase):
 
         if not matches:
             return np.full(self.__len__(), False, dtype=bool)
-
-        if self._recache:
-            self._update_array_cache()
 
         return isin(self.flat().values, matches)
 
@@ -2388,14 +2384,14 @@ class IndexHierarchy(IndexBase):
         '''
         assert not self._recache # Sanity check for private internal method!
 
-        if depth == self.depth - 1:
-            values = self._indices[depth][self._indexers[depth][mask]]
-            return self._indices[depth].__class__(values)
-
-        tree: TreeNodeT = {}
-
         index_at_depth = self._indices[depth]
         indexer_at_depth = self._indexers[depth]
+
+        if depth == self.depth - 1:
+            values = index_at_depth[indexer_at_depth[mask]]
+            return index_at_depth.__class__(values)
+
+        tree: TreeNodeT = {}
 
         for i in ufunc_unique(indexer_at_depth[mask]):
             tree[index_at_depth[i]] = self._build_tree_at_depth_from_mask(
@@ -2448,7 +2444,8 @@ class IndexHierarchy(IndexBase):
         indexers = [new_indexer, *self._indexers]
 
         def gen_blocks() -> tp.Iterator[np.ndarray]:
-            yield np.full(self.__len__(), indices[0].values)
+            # First index only has one value. Extract from array (instead of using `level`) since the constructor might have modified its type
+            yield np.full(self.__len__(), indices[0][0])
             yield from self._blocks._blocks
 
         return self.__class__(
@@ -2535,38 +2532,40 @@ class IndexHierarchyGO(IndexHierarchy):
 
     def _append(self: IH,
             row: SingleLabelType,
-            indexers: tp.List[np.ndarray],
+            target_indexers: tp.List[np.ndarray],
             offset: int,
             ) -> None:
+        '''
+        `target_indexers` is modified in-place
+        '''
         for depth, label_at_depth in enumerate(row):
+
+            # We have already grown all the indices, so all labels in `other` exist in `self` - we just need to remap them
+
             label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
-            indexers[depth][offset] = label_index
+            target_indexers[depth][offset] = label_index
 
     def _extend(self: IH,
             other: IH,
-            indexers: tp.List[np.ndarray],
+            target_indexers: tp.List[np.ndarray],
             offset: int,
             size: int,
             ) -> None:
         '''
-        Extend this IndexHierarchy in-place
+        `target_indexers` is modified in-place
         '''
-        for depth, (self_index, other_index) in enumerate(
-                zip(self._indices, other._indices)
-                ):
-
-            # We have already grown all the indices, so all labels in `other` exist in `self`
-            # We just need to remap them
+        for depth, (self_index, other_index) in enumerate(zip(self._indices, other._indices)):
+            # We have already grown all the indices, so all labels in `other` exist in `self` - we just need to remap them
             remapped_indexers_unordered = other_index._index_iloc_map(self_index)
             remapped_indexers_ordered = remapped_indexers_unordered[other._indexers[depth]]
 
-            indexers[depth][offset:offset+size] = remapped_indexers_ordered
+            target_indexers[depth][offset:offset + size] = remapped_indexers_ordered
 
     def append(self: IHGO,
             value: tp.Sequence[tp.Hashable],
             ) -> None:
         '''
-        Append a single label to this index.
+        Append a single label to this IndexHierarchy in-place
         '''
         # We do not check whether nor the key exists, as that is too expensive.
         # Instead, we delay failure until _recache

@@ -666,7 +666,7 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             ih._loc_to_iloc(HLoc[slice("I", "III", "?")])
 
-    def test_hierarchy_loc_to_iloc_q(self) -> None:
+    def test_hierarchy_loc_to_iloc_r(self) -> None:
         labels = [
                 (1, 'dd', 0),
                 (1, 'b', 0),
@@ -2503,27 +2503,15 @@ class TestUnit(TestCase):
 
     def test_hierarchy_add_level_c(self) -> None:
 
-        labels = (
-                (1, 'A'),
-                (1, 'B'),
-                (2, 'A'),
-                (2, 'B'),
-                )
+        labels = ((1, 'A'), (1, 'B'), (2, 'A'), (2, 'B'))
 
         ih1 = IndexHierarchyGO.from_labels(labels)
-        # force TB creation
-        part = ih1.iloc[1:]
         ih2 = ih1.level_add('x')
-        # proove we reused the underlying block arrays
+        # prove we reused the underlying block arrays
         self.assertEqual(ih1._blocks.mloc.tolist(), ih2._blocks.mloc[1:].tolist())
 
     def test_hierarchy_add_level_d(self) -> None:
-        labels = (
-                (1, 'A'),
-                (1, 'B'),
-                (2, 'A'),
-                (2, 'B'),
-                )
+        labels = ((1, 'A'), (1, 'B'), (2, 'A'), (2, 'B'))
         ih1 = IndexHierarchyGO.from_labels(labels)
         ih2 = ih1.level_add('1542-02', index_constructor=IndexYearMonth)
 
@@ -2535,12 +2523,7 @@ class TestUnit(TestCase):
                 )
 
     def test_hierarchy_add_level_e(self) -> None:
-        labels = (
-                (1, 'A'),
-                (1, 'B'),
-                (2, 'A'),
-                (2, 'B'),
-                )
+        labels = ((1, 'A'), (1, 'B'), (2, 'A'), (2, 'B'))
         ih1 = IndexHierarchyGO.from_labels(labels)
         ih1.append(labels[0])
 
