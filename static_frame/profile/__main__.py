@@ -1292,6 +1292,9 @@ class IndexHierarchyConstructors(Perf):
     def _index_cls(self) -> tp.Union[tp.Type[sf.IndexHierarchy], tp.Type[sf.IndexHierarchyTree]]:
         raise NotImplementedError()
 
+    def _create(self, ih: tp.Union[sf.IndexHierarchy, sf.IndexHierarchyTree]) -> None:
+        raise NotImplementedError()
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -1374,64 +1377,64 @@ class IndexHierarchyConstructors(Perf):
                 from_labels_large_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 from_index_items_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="The tree constructor simply reuses all these indexes. The new approach has to analyze them"),
                 from_index_items_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="The tree constructor simply reuses all these indexes. The new approach has to analyze them"),
-                from_index_names=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="We have a few empty lists to create each time that tree does not"),
+                from_index_names=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="We have a few empty lists to _create each time that tree does not"),
                 from_type_blocks_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 from_type_blocks_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 )
 
     def from_product_small(self) -> None:
         for _ in range(1000):
-            self._index_cls.from_product(*self.from_product_small_data)._update_array_cache()
-            self._index_cls.from_product(*self.from_product_small_data, name=tuple("ABC"))._update_array_cache()
+            self._create(self._index_cls.from_product(*self.from_product_small_data))
+            self._create(self._index_cls.from_product(*self.from_product_small_data, name=tuple("ABC")))
 
     def from_product_large(self) -> None:
-        self._index_cls.from_product(*self.from_product_large_data)._update_array_cache()
-        self._index_cls.from_product(*self.from_product_large_data, name=tuple("ABC"))._update_array_cache()
+        self._create(self._index_cls.from_product(*self.from_product_large_data))
+        self._create(self._index_cls.from_product(*self.from_product_large_data, name=tuple("ABC")))
 
     def from_tree_small(self) -> None:
         for _ in range(1000):
-            self._index_cls.from_tree(self.from_tree_small_data)._update_array_cache()
-            self._index_cls.from_tree(self.from_tree_small_data, name=tuple("ABCD"))._update_array_cache()
+            self._create(self._index_cls.from_tree(self.from_tree_small_data))
+            self._create(self._index_cls.from_tree(self.from_tree_small_data, name=tuple("ABCD")))
 
     def from_tree_large(self) -> None:
-        self._index_cls.from_tree(self.from_tree_large_data)._update_array_cache()
-        self._index_cls.from_tree(self.from_tree_large_data, name=tuple("ABCDE"))._update_array_cache()
+        self._create(self._index_cls.from_tree(self.from_tree_large_data))
+        self._create(self._index_cls.from_tree(self.from_tree_large_data, name=tuple("ABCDE")))
 
     def from_labels_small(self) -> None:
         for _ in range(1000):
-            self._index_cls.from_labels(self.labels_small_order_data)._update_array_cache()
+            self._create(self._index_cls.from_labels(self.labels_small_order_data))
 
     def from_labels_small_reorder(self) -> None:
         for _ in range(1000):
-            self._index_cls.from_labels(self.labels_small_data_shuffled, reorder_for_hierarchy=True)._update_array_cache()
+            self._create(self._index_cls.from_labels(self.labels_small_data_shuffled, reorder_for_hierarchy=True))
 
     def from_labels_large(self) -> None:
-        self._index_cls.from_labels(self.labels_large_order_data)._update_array_cache()
+        self._create(self._index_cls.from_labels(self.labels_large_order_data))
 
     def from_labels_large_reorder(self) -> None:
-        self._index_cls.from_labels(self.labels_large_data_shuffled, reorder_for_hierarchy=True)._update_array_cache()
+        self._create(self._index_cls.from_labels(self.labels_large_data_shuffled, reorder_for_hierarchy=True))
 
     def from_index_items_small(self) -> None:
         for _ in range(1000):
-            self._index_cls.from_index_items(self.from_index_items_small_data)._update_array_cache()
-            self._index_cls.from_index_items(self.from_index_items_small_data, name=tuple("AB"))._update_array_cache()
+            self._create(self._index_cls.from_index_items(self.from_index_items_small_data))
+            self._create(self._index_cls.from_index_items(self.from_index_items_small_data, name=tuple("AB")))
 
     def from_index_items_large(self) -> None:
-        self._index_cls.from_index_items(self.from_index_items_large_data)._update_array_cache()
-        self._index_cls.from_index_items(self.from_index_items_large_data, name=tuple("ABC"))._update_array_cache()
+        self._create(self._index_cls.from_index_items(self.from_index_items_large_data))
+        self._create(self._index_cls.from_index_items(self.from_index_items_large_data, name=tuple("ABC")))
 
     def from_index_names(self) -> None:
         for _ in range(100_000):
-            self._index_cls.from_names(self.from_names_data)._update_array_cache()
+            self._create(self._index_cls.from_names(self.from_names_data))
 
     def from_type_blocks_small(self) -> None:
         for _ in range(1000):
-            self._index_cls._from_type_blocks(self.from_type_blocks_small_data, own_blocks=False)._update_array_cache()
-            self._index_cls._from_type_blocks(self.from_type_blocks_small_data, own_blocks=True)._update_array_cache()
+            self._create(self._index_cls._from_type_blocks(self.from_type_blocks_small_data, own_blocks=False))
+            self._create(self._index_cls._from_type_blocks(self.from_type_blocks_small_data, own_blocks=True))
 
     def from_type_blocks_large(self) -> None:
-        self._index_cls._from_type_blocks(self.from_type_blocks_large_data, own_blocks=False)._update_array_cache()
-        self._index_cls._from_type_blocks(self.from_type_blocks_large_data, own_blocks=True)._update_array_cache()
+        self._create(self._index_cls._from_type_blocks(self.from_type_blocks_large_data, own_blocks=False))
+        self._create(self._index_cls._from_type_blocks(self.from_type_blocks_large_data, own_blocks=True))
 
 
 class IndexHierarchyConstructors_N(IndexHierarchyConstructors, Native):
@@ -1440,12 +1443,17 @@ class IndexHierarchyConstructors_N(IndexHierarchyConstructors, Native):
     def _index_cls(self) -> tp.Type[sf.IndexHierarchy]:
         return sf.IndexHierarchy
 
+    def _create(self, ih: sf.IndexHierarchy) -> None:
+        return
 
 class IndexHierarchyConstructors_R(IndexHierarchyConstructors, Reference):
 
     @property
     def _index_cls(self) -> tp.Type[sf.IndexHierarchyTree]:
         return sf.IndexHierarchyTree
+
+    def _create(self, ih: sf.IndexHierarchyTree) -> None:
+        ih._update_array_cache()
 
 
 #-------------------------------------------------------------------------------
