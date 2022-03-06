@@ -48,6 +48,7 @@ from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_dt import InterfaceBatchDatetime
+from static_frame.core.node_transpose import InterfaceBatchTranspose
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -787,11 +788,12 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         return InterfaceBatchDatetime(self.apply)
 
-    # @property
-    # def via_T(self) -> InterfaceTranspose['Frame']:
-    #     '''
-    #     Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
-    #     '''
+    @property
+    def via_T(self) -> InterfaceBatchTranspose:
+        '''
+        Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
+        '''
+        return InterfaceBatchTranspose(self.apply)
 
     def via_fill_value(self,
             fill_value: object = np.nan,

@@ -16,6 +16,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.node_fill_value import InterfaceFillValue #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.node_fill_value import InterfaceBatchFillValue #pylint: disable = W0611 #pragma: no cover
+
 
 TContainer = tp.TypeVar('TContainer',
         'Frame',
@@ -302,12 +304,18 @@ class InterfaceBatchTranspose(InterfaceBatch):
         self._fill_value = fill_value
 
     #---------------------------------------------------------------------------
-#     def via_fill_value(self,
-#             fill_value: object,
-#             ) -> "InterfaceFillValue[Frame]":
-#         '''
-#         Interface for using binary operators and methods with a pre-defined fill value.
-#         '''
+    def via_fill_value(self,
+            fill_value: object,
+            ) -> "InterfaceBatchFillValue":
+        '''
+        Interface for using binary operators and methods with a pre-defined fill value.
+        '''
+        from static_frame.core.node_fill_value import InterfaceBatchFillValue
+        return InterfaceBatchFillValue(
+                batch_apply=self._batch_apply,
+                fill_value=fill_value,
+                axis=1,
+                )
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> 'Batch':
@@ -329,68 +337,108 @@ class InterfaceBatchTranspose(InterfaceBatch):
         # pass
 
     def __truediv__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__truediv__(other)
+                )
 
     def __floordiv__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__floordiv__(other)
+                )
 
     def __mod__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__mod__(other)
+                )
 
     def __pow__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__pow__(other)
+                )
 
     def __lshift__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__lshift__(other)
+                )
 
     def __rshift__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__rshift__(other)
+                )
 
     def __and__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__and__(other)
+                )
 
     def __xor__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__xor__(other)
+                )
 
     def __or__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__or__(other)
+                )
 
     def __lt__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__lt__(other)
+                )
 
     def __le__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__le__(other)
+                )
 
     def __eq__(self, other: tp.Any) -> 'Batch': #type: ignore
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__eq__(other)
+                )
 
     def __ne__(self, other: tp.Any) -> 'Batch': #type: ignore
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__ne__(other)
+                )
 
     def __gt__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__gt__(other)
+                )
 
     def __ge__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__ge__(other)
+                )
 
     #---------------------------------------------------------------------------
     def __radd__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__radd__(other)
+                )
 
     def __rsub__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__rsub__(other)
+                )
 
     def __rmul__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__rmul__(other)
+                )
 
     # def __rmatmul__(self, other: tp.Any) -> 'Batch':
         # pass
 
     def __rtruediv__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__rtruediv__(other)
+                )
 
     def __rfloordiv__(self, other: tp.Any) -> 'Batch':
-        pass
+        return self._batch_apply(
+                lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__rfloordiv__(other)
+                )
 
 
 

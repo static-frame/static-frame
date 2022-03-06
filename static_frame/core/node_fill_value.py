@@ -22,6 +22,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.node_transpose import InterfaceTranspose #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.node_transpose import InterfaceBatchTranspose #pylint: disable = W0611 #pragma: no cover
 
 TContainer = tp.TypeVar('TContainer',
         'Frame',
@@ -440,18 +441,16 @@ class InterfaceBatchFillValue(InterfaceBatch):
 
 
     #---------------------------------------------------------------------------
-    # @property
-    # def via_T(self) -> "InterfaceTranspose[Frame]":
-    #     '''
-    #     Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
-    #     '''
-    #     from static_frame.core.node_transpose import InterfaceTranspose
-    #     from static_frame.core.frame import Frame
-    #     assert isinstance(self._container, Frame)
-    #     return InterfaceTranspose(
-    #             container=self._container,
-    #             fill_value=self._fill_value,
-    #             )
+    @property
+    def via_T(self) -> "InterfaceBatchTranspose":
+        '''
+        Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
+        '''
+        from static_frame.core.node_transpose import InterfaceBatchTranspose
+        return InterfaceBatchTranspose(
+                batch_apply=self._batch_apply,
+                fill_value=self._fill_value,
+                )
 
     #---------------------------------------------------------------------------
     @property
