@@ -822,7 +822,7 @@ class IndexHierarchy(IndexBase):
                 )
 
             if indices._recache:
-                indices._update_array_cache() # pragma: no-cover
+                indices._update_array_cache() # pragma: no cover
 
             self._indices = [
                 mutable_immutable_index_filter(self.STATIC, index)

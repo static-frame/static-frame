@@ -1443,7 +1443,7 @@ class IndexHierarchyConstructors_N(IndexHierarchyConstructors, Native):
     def _index_cls(self) -> tp.Type[sf.IndexHierarchy]:
         return sf.IndexHierarchy
 
-    def _create(self, ih: sf.IndexHierarchy) -> None:
+    def _create(self, ih: sf.IndexHierarchy) -> None: # type: ignore
         return
 
 class IndexHierarchyConstructors_R(IndexHierarchyConstructors, Reference):
@@ -1452,7 +1452,7 @@ class IndexHierarchyConstructors_R(IndexHierarchyConstructors, Reference):
     def _index_cls(self) -> tp.Type[sf.IndexHierarchyTree]:
         return sf.IndexHierarchyTree
 
-    def _create(self, ih: sf.IndexHierarchyTree) -> None:
+    def _create(self, ih: sf.IndexHierarchyTree) -> None: # type: ignore
         ih._update_array_cache()
 
 
