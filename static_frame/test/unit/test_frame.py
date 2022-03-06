@@ -10684,7 +10684,7 @@ class TestUnit(TestCase):
                 columns=columns,
                 index=index)
 
-        with self.assertRaises(ErrorInitIndex):
+        with self.assertRaises(RuntimeError):
             f1.unset_index()
 
     def test_frame_unset_index_c(self) -> None:

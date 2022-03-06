@@ -534,6 +534,7 @@ class ArchiveIndexConverter:
             index = cls_index._from_type_blocks(index_tb, # type: ignore
                     name=name,
                     index_constructors=index_constructors,
+                    assume_unique=True, # Is it even possible for someone to make a msgpack object with a non-unique IndexHierarchy?
                     )
         return index
 

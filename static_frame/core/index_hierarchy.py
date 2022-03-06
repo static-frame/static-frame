@@ -2,6 +2,7 @@ import functools
 import itertools
 import operator
 import typing as tp
+from collections import abc
 from ast import literal_eval
 from copy import deepcopy
 
@@ -321,6 +322,7 @@ class IndexHierarchy(IndexBase):
                 name=name,
                 indices=indices,
                 indexers=indexers,
+                assume_unique=True, # Axiomatic
                 )
 
     @classmethod
@@ -355,6 +357,7 @@ class IndexHierarchy(IndexBase):
                 labels=cls._from_tree(tree),
                 name=name,
                 index_constructors=index_constructors,
+                assume_unique=True, # Axiomatic
                 )
 
     @classmethod
@@ -395,7 +398,8 @@ class IndexHierarchy(IndexBase):
                     cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE) for _ in range(depth_reference)
                 ],
                 indexers=[PositionsAllocator.get(0) for _ in range(depth_reference)],
-                name=name
+                name=name,
+                assume_unique=True, # Axiomatic
                 )
 
     @classmethod
@@ -405,6 +409,7 @@ class IndexHierarchy(IndexBase):
             name: NameType = None,
             depth_reference: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
+            assume_unique: bool = False,
             ) -> IH:
         '''
         Construct an :obj:`IndexHierarchy` from a 2D numpy array
@@ -432,7 +437,12 @@ class IndexHierarchy(IndexBase):
                 index_constructors_iter=index_constructors_iter,
                 )
 
-        return cls(indices=indices, indexers=indexers, name=name)
+        return cls(
+                indices=indices,
+                indexers=indexers,
+                name=name,
+                assume_unique=assume_unique,
+                )
 
     @classmethod
     def from_labels(cls: tp.Type[IH],
@@ -442,7 +452,8 @@ class IndexHierarchy(IndexBase):
             reorder_for_hierarchy: bool = False,
             index_constructors: IndexConstructors = None,
             depth_reference: tp.Optional[DepthLevelSpecifier] = None,
-            continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE
+            continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            assume_unique: bool = False,
             ) -> IH:
         '''
         Construct an ``IndexHierarchy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
@@ -539,7 +550,12 @@ class IndexHierarchy(IndexBase):
         if name is None:
             name = cls._build_name_from_indices(indices)
 
-        return cls(indices=indices, indexers=indexers, name=name)
+        return cls(
+                indices=indices,
+                indexers=indexers,
+                name=name,
+                assume_unique=assume_unique,
+                )
 
     @classmethod
     def from_index_items(cls: tp.Type[IH],
@@ -607,6 +623,9 @@ class IndexHierarchy(IndexBase):
                 indices=[index_outer, index_inner], # type: ignore
                 indexers=indexers,
                 name=name,
+                # _ensure_uniqueness is heavy. It's worth another iteration over `labels` to avoid if possible
+                # Plus, majority of calls come from dictionaries, so we will short-circuit here most times
+                assume_unique=isinstance(items, abc.ItemsView) or len(index_outer) == len(set(labels)),
                 )
 
     @classmethod
@@ -679,6 +698,7 @@ class IndexHierarchy(IndexBase):
             name: NameType = None,
             index_constructors: IndexConstructors = None,
             own_blocks: bool = False,
+            assume_unique: bool = False,
             ) -> IH:
         '''
         Construct an :obj:`IndexHierarchy` from a :obj:`TypeBlocks` instance.
@@ -724,6 +744,7 @@ class IndexHierarchy(IndexBase):
                 name=name,
                 blocks=init_blocks,
                 own_blocks=own_blocks,
+                assume_unique=assume_unique,
                 )
 
     @staticmethod
@@ -774,6 +795,7 @@ class IndexHierarchy(IndexBase):
             name: NameType = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
+            assume_unique: bool = False,
             ) -> None:
         '''
         Initializer.
@@ -841,7 +863,8 @@ class IndexHierarchy(IndexBase):
 
         self._values = self._blocks.values
 
-        self._ensure_uniqueness(self._indexers, self._values)
+        if not assume_unique:
+            self._ensure_uniqueness(self._indexers, self._values)
 
     def _append(self: IH,
             row: SingleLabelType,
@@ -889,6 +912,8 @@ class IndexHierarchy(IndexBase):
 
         self._blocks = self._create_blocks_from_self()
         self._values = self._blocks.values
+
+        # _append/_extend do not check for uniqueness, so we do it here
         self._ensure_uniqueness(self._indexers, self._values)
 
         self._recache = False
@@ -935,6 +960,7 @@ class IndexHierarchy(IndexBase):
                 name=self._name,
                 blocks=blocks,
                 own_blocks=True,
+                assume_unique=True, # Axiomatic
                 )
 
     def copy(self: IH) -> IH:
@@ -952,7 +978,7 @@ class IndexHierarchy(IndexBase):
         '''
         Return a new IndexHierarchy with an updated name attribute.
         '''
-        return self.__class__(self, name=name)
+        return self.__class__(self, name=name, assume_unique=True)
 
     # --------------------------------------------------------------------------
     # interfaces
@@ -1213,7 +1239,7 @@ class IndexHierarchy(IndexBase):
 
     def _ufunc_set(self: IH,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
+            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]],
             ) -> IH:
         '''
         Utility function for preparing and collecting values for Indices to produce a new Index.
@@ -1284,6 +1310,7 @@ class IndexHierarchy(IndexBase):
                 name=self.name,
                 index_constructors=index_constructors,
                 depth_reference=self.depth,
+                assume_unique=True, # All sets are unique!
                 )
 
     # --------------------------------------------------------------------------
@@ -1312,6 +1339,7 @@ class IndexHierarchy(IndexBase):
                 index_constructors=self._index_constructors,
                 name=self._name,
                 own_blocks=True,
+                assume_unique=True, # Pure subset
                 )
 
     def _drop_loc(self: IH,
@@ -1557,7 +1585,7 @@ class IndexHierarchy(IndexBase):
                     TypeBlocks.from_blocks(gen()),
                     name=self._name,
                     index_constructors=self._index_constructors,
-                    own_blocks=True
+                    own_blocks=True,
                     )
 
         mapper_func = mapper if is_callable else mapper.__getitem__ # type: ignore
@@ -1615,6 +1643,7 @@ class IndexHierarchy(IndexBase):
             blocks=rehierarched_blocks,
             index_constructors=self._index_constructors,
             own_blocks=True,
+            assume_unique=True, # Shuffling around depths has no effect on uniqueness
             )
 
     def _get_outer_index_labels_in_order_they_appear(self: IH) -> tp.Sequence[tp.Hashable]:
@@ -1897,6 +1926,7 @@ class IndexHierarchy(IndexBase):
                 name=self.name,
                 blocks=tb,
                 own_blocks=True,
+                assume_unique=True, # Pure subset
                 )
 
     def _extract_loc(self: IH,
@@ -2153,6 +2183,7 @@ class IndexHierarchy(IndexBase):
                 index_constructors=self._index_constructors,
                 name=self._name,
                 own_blocks=True,
+                assume_unique=True, # Rearranging has no effect on uniqueness
                 )
 
     def isin(self: IH,
@@ -2196,6 +2227,7 @@ class IndexHierarchy(IndexBase):
                 index_constructors=self._index_constructors,
                 name=self._name,
                 own_blocks=True,
+                assume_unique=True, # Rearranging has no effect on uniqueness
                 )
 
     @doc_inject(selector='fillna')
@@ -2243,6 +2275,7 @@ class IndexHierarchy(IndexBase):
                 index_constructors=self._index_constructors,
                 name=self._name,
                 own_blocks=True,
+                assume_unique=True, # Pure subset
                 )
         return container, key
 
@@ -2454,6 +2487,7 @@ class IndexHierarchy(IndexBase):
                 name=self.name,
                 blocks=TypeBlocks.from_blocks(gen_blocks()),
                 own_blocks=True,
+                assume_unique=True, # Not possible for an added level to introduct duplicates
                 )
 
     def level_drop(self: IH,
@@ -2614,6 +2648,7 @@ class IndexHierarchyGO(IndexHierarchy):
                 name=self._name,
                 blocks=self._blocks.copy(),
                 own_blocks=True,
+                assume_unique=True, # Axiomatic
                 )
 
 

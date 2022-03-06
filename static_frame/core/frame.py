@@ -2755,7 +2755,9 @@ class Frame(ContainerOperand):
                             blocks=blocks,
                             name=obj[b'name'],
                             index_constructors=index_constructors,
-                            own_blocks=True)
+                            own_blocks=True,
+                            assume_unique=True, # Is it even possible for someone to make a msgpack object with a non-unique IndexHierarchy?
+                            )
                 elif issubclass(cls, Index):
                     data = unpackb(obj[b'data'])
                     return cls(
@@ -3673,7 +3675,11 @@ class Frame(ContainerOperand):
                     shape_reference=(self.shape[0], len(index_opposite)),
                     )
 
-            index = IndexHierarchy._from_type_blocks(ih_blocks, name=ih_name)
+            index = IndexHierarchy._from_type_blocks(
+                    ih_blocks,
+                    name=ih_name,
+                    assume_unique=index_target.depth == 2, # If our index is an IndexHierarchy, add more depths will always be unique
+                    )
             columns = index_opposite
         else: # select from index, add to columns
             ih_blocks.extend(self._blocks._extract(row_key=iloc_key).transpose())
@@ -3683,7 +3689,11 @@ class Frame(ContainerOperand):
                     )
 
             index = index_opposite
-            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(ih_blocks, name=ih_name)
+            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
+                    ih_blocks,
+                    name=ih_name,
+                    assume_unique=index_target.depth == 2, # If our index is an IndexHierarchy, add more depths will always be unique
+                    )
 
         return self.__class__(
                 frame_blocks, # does not copy arrays
@@ -3756,7 +3766,7 @@ class Frame(ContainerOperand):
             else:
                 new_target = target_hctor._from_type_blocks(
                         remain_blocks,
-                        name=remain_labels
+                        name=remain_labels,
                         )
 
         if axis == 0: # select from index, remove from index
@@ -5615,6 +5625,11 @@ class Frame(ContainerOperand):
 
         if not names:
             names = self._index.names
+            if self._index.depth > 1 and self._columns.depth > 1:
+                raise RuntimeError(
+                    "Must provide `names` when both the index and columns are IndexHierarchies"
+                )
+
         names_t = zip(*names)
 
         # self._columns._blocks may be None until array cache is updated.
@@ -5628,7 +5643,8 @@ class Frame(ContainerOperand):
                     )
             columns_default_constructor = partial(
                     self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
-                    own_blocks=True)
+                    own_blocks=True,
+                    )
 
         else:
             columns_labels = chain(names, self._columns.values)

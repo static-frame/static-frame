@@ -593,6 +593,7 @@ def pivot_outer_index(
                 default_constructor=partial(
                         IndexHierarchy._from_array,
                         name=name,
+                        assume_unique=True, # `index_values` is unique!
                         ),
                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
                 ).flat()
