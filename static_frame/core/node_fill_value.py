@@ -459,137 +459,184 @@ class InterfaceBatchFillValue(InterfaceBatch):
         '''
         def func(key: GetItemKeyType) -> 'Batch':
             return self._batch_apply(
-                lambda c: c.via_fill_value(self._fill_value).loc[key]
-                )
+                    lambda c: InterfaceFillValue(c,
+                            fill_value=self._fill_value,
+                            axis=self._axis).loc[key]
+                    )
         return InterfaceGetItem(func)
 
     def __getitem__(self,  key: GetItemKeyType) -> 'Batch':
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value)[key]
-            )
+                lambda c: InterfaceFillValue(c,
+                        fill_value=self._fill_value,
+                        axis=self._axis).__getitem__(key)
+                )
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__add__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__add__(other)
             )
 
     def __sub__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__sub__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__sub__(other)
             )
 
     def __mul__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__mul__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__mul__(other)
             )
 
     # def __matmul__(self, other: tp.Any) -> 'Batch':
 
     def __truediv__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__truediv__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__truediv__(other)
             )
 
     def __floordiv__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__floordiv__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__floordiv__(other)
             )
 
     def __mod__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__mod__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__mod__(other)
             )
 
     def __pow__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__pow__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__pow__(other)
             )
 
     def __lshift__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__lshift__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__lshift__(other)
             )
 
     def __rshift__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__rshift__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__rshift__(other)
             )
 
     def __and__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__and__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__and__(other)
             )
 
     def __xor__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__xor__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__xor__(other)
             )
 
     def __or__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__or__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__or__(other)
             )
 
     def __lt__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__lt__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__lt__(other)
             )
 
     def __le__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__le__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__le__(other)
             )
 
     def __eq__(self, other: tp.Any) -> 'Batch': #type: ignore
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__eq__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__eq__(other)
             )
 
     def __ne__(self, other: tp.Any) -> 'Batch': #type: ignore
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__ne__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__ne__(other)
             )
 
     def __gt__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__gt__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__gt__(other)
             )
 
     def __ge__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__ge__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__ge__(other)
             )
 
     #---------------------------------------------------------------------------
     def __radd__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__radd__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__radd__(other)
             )
 
     def __rsub__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__rsub__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__rsub__(other)
             )
 
     def __rmul__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__rmul__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__rmul__(other)
             )
 
     # def __rmatmul__(self, other: tp.Any) -> 'Batch':
 
     def __rtruediv__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__rtruediv__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__rtruediv__(other)
             )
 
     def __rfloordiv__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: c.via_fill_value(self._fill_value).__rfloordiv__(other)
+            lambda c: InterfaceFillValue(c,
+                    fill_value=self._fill_value,
+                    axis=self._axis).__rfloordiv__(other)
             )
-
-
-

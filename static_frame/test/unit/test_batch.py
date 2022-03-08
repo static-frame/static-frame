@@ -2241,7 +2241,23 @@ class TestUnit(TestCase):
                 (('zZbu', ((('a', 0), -1), (('a', 1), 0), (('b', 0), -1), (('b', 1), 0))), ('ztsv', ((('a', 0), 0), (('a', 1), -1), (('b', 0), 0), (('b', 1), -1))), ('zUvW', ((('a', 0), -1), (('a', 1), 0), (('b', 0), -1), (('b', 1), 0))))
                 )
 
+    def test_batch_via_transpose_via_fill_value(self) -> None:
 
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Batch.from_frames((f1, f2)).via_T.via_fill_value(0) * Series((1,))).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), -88017), (('a', 1), 0), (('b', 0), -88017), (('b', 1), 0))), ('ztsv', ((('a', 0), 162197), (('a', 1), 0), (('b', 0), 162197), (('b', 1), 0))), ('zUvW', ((('a', 0), -3648), (('a', 1), 0), (('b', 0), -3648), (('b', 1), 0))))
+                )
+
+    def test_batch_via_fill_value_via_transpose(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Batch.from_frames((f1, f2)).via_fill_value(0).via_T * Series((1,))).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), -88017), (('a', 1), 0), (('b', 0), -88017), (('b', 1), 0))), ('ztsv', ((('a', 0), 162197), (('a', 1), 0), (('b', 0), 162197), (('b', 1), 0))), ('zUvW', ((('a', 0), -3648), (('a', 1), 0), (('b', 0), -3648), (('b', 1), 0))))
+                )
 
 if __name__ == '__main__':
     import unittest
