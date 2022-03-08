@@ -866,21 +866,6 @@ class IndexHierarchy(IndexBase):
         if not assume_unique:
             self._ensure_uniqueness(self._indexers, self._values)
 
-    def _append(self: IH,
-            row: SingleLabelType,
-            target_indexers: tp.List[np.ndarray],
-            offset: int,
-            ) -> None:
-        raise NotImplementedError('Must be implemented on IndexHierarchyGO only') # pragma: no cover
-
-    def _extend(self: IH,
-            other: IH,
-            target_indexers: tp.List[np.ndarray],
-            offset: int,
-            size: int,
-            ) -> None:
-        raise NotImplementedError('Must be implemented on IndexHierarchyGO only') # pragma: no cover
-
     def _update_array_cache(self: IH) -> None:
         new_indexers = [np.empty(self.__len__(), DTYPE_INT_DEFAULT) for _ in range(self.depth)]
 
@@ -890,17 +875,32 @@ class IndexHierarchy(IndexBase):
             new_indexers[depth][:current_size] = indexer
 
         self._indexers.clear()
+
         # TODO: What if an error is raised anywhere onward in this method?
 
         offset = current_size
 
+        # For all these extensions, we have already update self._indices - we now need to map indexers
         for pending in self._pending_extensions: # type: ignore
             if isinstance(pending, PendingRow):
-                self._append(pending, new_indexers, offset)
+                for depth, label_at_depth in enumerate(pending):
+                    label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
+                    new_indexers[depth][offset] = label_index
+
                 offset += 1
             else:
                 group_size = len(pending)
-                self._extend(pending, new_indexers, offset, group_size)
+
+                for depth, (self_index, other_index) in enumerate(
+                        zip(self._indices, pending._indices)
+                    ):
+                    remapped_indexers_unordered = other_index._index_iloc_map(self_index)
+                    remapped_indexers_ordered = remapped_indexers_unordered[
+                        pending._indexers[depth]
+                    ]
+
+                    new_indexers[depth][offset:offset + group_size] = remapped_indexers_ordered
+
                 offset += group_size
 
         self._pending_extensions.clear() # type: ignore
@@ -913,7 +913,7 @@ class IndexHierarchy(IndexBase):
         self._blocks = self._create_blocks_from_self()
         self._values = self._blocks.values
 
-        # _append/_extend do not check for uniqueness, so we do it here
+        # append/extend do not check for uniqueness, so we do it here
         self._ensure_uniqueness(self._indexers, self._values)
 
         self._recache = False
@@ -2563,37 +2563,6 @@ class IndexHierarchyGO(IndexHierarchy):
     _INDEX_CONSTRUCTOR = IndexGO
 
     _indices: tp.List[IndexGO] # type: ignore
-
-    def _append(self: IH,
-            row: SingleLabelType,
-            target_indexers: tp.List[np.ndarray],
-            offset: int,
-            ) -> None:
-        '''
-        `target_indexers` is modified in-place
-        '''
-        for depth, label_at_depth in enumerate(row):
-
-            # We have already grown all the indices, so all labels in `other` exist in `self` - we just need to remap them
-
-            label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
-            target_indexers[depth][offset] = label_index
-
-    def _extend(self: IH,
-            other: IH,
-            target_indexers: tp.List[np.ndarray],
-            offset: int,
-            size: int,
-            ) -> None:
-        '''
-        `target_indexers` is modified in-place
-        '''
-        for depth, (self_index, other_index) in enumerate(zip(self._indices, other._indices)):
-            # We have already grown all the indices, so all labels in `other` exist in `self` - we just need to remap them
-            remapped_indexers_unordered = other_index._index_iloc_map(self_index)
-            remapped_indexers_ordered = remapped_indexers_unordered[other._indexers[depth]]
-
-            target_indexers[depth][offset:offset + size] = remapped_indexers_ordered
 
     def append(self: IHGO,
             value: tp.Sequence[tp.Hashable],
