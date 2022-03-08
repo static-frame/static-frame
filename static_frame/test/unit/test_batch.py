@@ -2196,9 +2196,51 @@ class TestUnit(TestCase):
                 (('zZbu', ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))), ('ztsv', ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))), ('zUvW', ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))))
                 )
 
+    def test_batch_via_transpose_radd(self) -> None:
 
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Series((0, 92867)) + Batch.from_frames((f1, f2)).via_T).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), -88017), (('a', 1), 185734), (('b', 0), -88017), (('b', 1), 185734))), ('ztsv', ((('a', 0), 162197), (('a', 1), 51710), (('b', 0), 162197), (('b', 1), 51710))), ('zUvW', ((('a', 0), -3648), (('a', 1), 184168), (('b', 0), -3648), (('b', 1), 184168))))
+                )
 
-        # import ipdb; ipdb.set_trace()
+    def test_batch_via_transpose_rsub(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Series((0, 92867)) - Batch.from_frames((f1, f2)).via_T).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), 88017), (('a', 1), 0), (('b', 0), 88017), (('b', 1), 0))), ('ztsv', ((('a', 0), -162197), (('a', 1), 134024), (('b', 0), -162197), (('b', 1), 134024))), ('zUvW', ((('a', 0), 3648), (('a', 1), 1566), (('b', 0), 3648), (('b', 1), 1566))))
+                )
+
+    def test_batch_via_transpose_rmul(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Series((0, 1)) * Batch.from_frames((f1, f2)).via_T).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), 0), (('a', 1), 92867), (('b', 0), 0), (('b', 1), 92867))), ('ztsv', ((('a', 0), 0), (('a', 1), -41157), (('b', 0), 0), (('b', 1), -41157))), ('zUvW', ((('a', 0), 0), (('a', 1), 91301), (('b', 0), 0), (('b', 1), 91301))))
+                )
+
+    def test_batch_via_transpose_rtruediv(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int64)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int64)|c(I,str)').rename('b')
+        post = (Series((92867, 10000)) / Batch.from_frames((f1, f2)).via_T).to_frame()
+        self.assertEqual(round(post, 2).to_pairs(),
+                (('zZbu', ((('a', 0), -1.06), (('a', 1), 0.11), (('b', 0), -1.06), (('b', 1), 0.11))), ('ztsv', ((('a', 0), 0.57), (('a', 1), -0.24), (('b', 0), 0.57), (('b', 1), -0.24))), ('zUvW', ((('a', 0), -25.46), (('a', 1), 0.11), (('b', 0), -25.46), (('b', 1), 0.11))))
+                )
+
+    def test_batch_via_transpose_rfloordiv(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Series((1, 2)) // Batch.from_frames((f1, f2)).via_T).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), -1), (('a', 1), 0), (('b', 0), -1), (('b', 1), 0))), ('ztsv', ((('a', 0), 0), (('a', 1), -1), (('b', 0), 0), (('b', 1), -1))), ('zUvW', ((('a', 0), -1), (('a', 1), 0), (('b', 0), -1), (('b', 1), 0))))
+                )
+
 
 
 if __name__ == '__main__':
