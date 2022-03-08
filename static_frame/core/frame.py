@@ -2756,7 +2756,6 @@ class Frame(ContainerOperand):
                             name=obj[b'name'],
                             index_constructors=index_constructors,
                             own_blocks=True,
-                            assume_unique=True, # Is it even possible for someone to make a msgpack object with a non-unique IndexHierarchy?
                             )
                 elif issubclass(cls, Index):
                     data = unpackb(obj[b'data'])
@@ -3678,7 +3677,6 @@ class Frame(ContainerOperand):
             index = IndexHierarchy._from_type_blocks(
                     ih_blocks,
                     name=ih_name,
-                    assume_unique=index_target.depth == 2, # If our index is an IndexHierarchy, add more depths will always be unique
                     )
             columns = index_opposite
         else: # select from index, add to columns
@@ -3692,7 +3690,6 @@ class Frame(ContainerOperand):
             columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
                     ih_blocks,
                     name=ih_name,
-                    assume_unique=index_target.depth == 2, # If our index is an IndexHierarchy, add more depths will always be unique
                     )
 
         return self.__class__(

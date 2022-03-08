@@ -1663,9 +1663,7 @@ class IH_Constructors_MI(Perf):
                 from_labels_large_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="pandas does not check unique"),
                 from_index_names=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 from_arrays_small=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_WIN),
-                from_arrays_small_unique=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_WIN),
                 from_arrays_large=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_LOSS, explanation="cython?"),
-                from_arrays_large_unique=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_LOSS, explanation="cython?"),
                 )
 
 
@@ -1701,18 +1699,9 @@ class IH_Constructors_MI_N(IH_Constructors_MI, Native):
             sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_small), own_blocks=False)
             sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_small), own_blocks=True)
 
-    def from_arrays_small_unique(self) -> None:
-        for _ in range(1000):
-            sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_small), own_blocks=False, assume_unique=True)
-            sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_small), own_blocks=True, assume_unique=True)
-
     def from_arrays_large(self) -> None:
         sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_large), own_blocks=False)
         sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_large), own_blocks=True)
-
-    def from_arrays_large_unique(self) -> None:
-        sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_large), own_blocks=False, assume_unique=True)
-        sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_large), own_blocks=True, assume_unique=True)
 
 
 class IH_Constructors_MI_R(IH_Constructors_MI, Reference):
@@ -1747,18 +1736,10 @@ class IH_Constructors_MI_R(IH_Constructors_MI, Reference):
             pd.MultiIndex.from_arrays(self.arrays_small)
             pd.MultiIndex.from_arrays(self.arrays_small)
 
-    def from_arrays_small_unique(self) -> None:
-        for _ in range(1000):
-            pd.MultiIndex.from_arrays(self.arrays_small)
-            pd.MultiIndex.from_arrays(self.arrays_small)
-
     def from_arrays_large(self) -> None:
         pd.MultiIndex.from_arrays(self.arrays_large)
         pd.MultiIndex.from_arrays(self.arrays_large)
 
-    def from_arrays_large_unique(self) -> None:
-        pd.MultiIndex.from_arrays(self.arrays_large)
-        pd.MultiIndex.from_arrays(self.arrays_large)
 
 
 #-------------------------------------------------------------------------------
