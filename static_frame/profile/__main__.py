@@ -1284,7 +1284,7 @@ class IH_Loc_Tree_R(IH_Loc_Tree, Reference):
 
 class IH_Loc_MI(Perf):
 
-    NUMBER = 5
+    NUMBER = 50
 
     def __init__(self) -> None:
         super().__init__()
@@ -1306,7 +1306,6 @@ class IH_Loc_MI(Perf):
                 [True, False, None, self.obj],
                 ))
 
-
         self.ih_large = sf.IndexHierarchy.from_product(
                 range(300),
                 tuple(string.printable),
@@ -1319,21 +1318,31 @@ class IH_Loc_MI(Perf):
                 ))
 
         self.meta = dict(
-                large_element_loc=FunctionMetaData(PerfStatus.UNEXPLAINED_LOSS, explanation="cython?"),
-                large_element_hloc=FunctionMetaData(PerfStatus.EXPLAINED_WIN),
-                small_element_loc=FunctionMetaData(PerfStatus.UNEXPLAINED_LOSS, explanation="cython?"),
-                small_element_hloc=FunctionMetaData(PerfStatus.EXPLAINED_WIN),
+                large_element_loc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation='We handle more variety of inputs and have more checks'),
+                large_element_hloc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                small_element_loc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation='We handle more variety of inputs and have more checks'),
+                small_element_hloc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 )
 
 
 class IH_Loc_MI_N(IH_Loc_MI, Native):
 
     def large_element_loc(self) -> None:
-        self.ih_large._loc_to_iloc((100, "A", True))
-        self.ih_large._loc_to_iloc(self.ih_large.iloc[12839])
-        self.ih_large._loc_to_iloc(slice(None, (199, "z", None)))
-        self.ih_large._loc_to_iloc(slice((0, "5", False)))
-        self.ih_large._loc_to_iloc(slice((19, ".", True), (100, "B",  self.obj)))
+        for _ in range(100):
+            self.ih_large._loc_to_iloc((100, "A", True))
+            self.ih_large._loc_to_iloc(self.ih_large.iloc[12839])
+            # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
+            slice(
+                None,
+                self.ih_large._loc_to_iloc((199, "z", None)),
+            )
+            slice(
+                self.ih_large._loc_to_iloc((0, "5", False)),
+            )
+            slice(
+                self.ih_large._loc_to_iloc((19, ".", True)),
+                self.ih_large._loc_to_iloc((100, "B",  self.obj)),
+            )
 
     def large_element_hloc(self) -> None:
         self.ih_large._loc_to_iloc(sf.HLoc[100, "A", True])
@@ -1348,9 +1357,17 @@ class IH_Loc_MI_N(IH_Loc_MI, Native):
         for _ in range(100):
             self.ih_small._loc_to_iloc((1, "a", True))
             self.ih_small._loc_to_iloc(self.ih_small.iloc[25])
-            self.ih_small._loc_to_iloc(slice(None, (9, "g", None)))
-            self.ih_small._loc_to_iloc(slice((0, "c", False)))
-            self.ih_small._loc_to_iloc(slice((3, "b", True), (5, "e",  self.obj)))
+            slice(
+                None,
+                self.ih_small._loc_to_iloc((9, "g", None)),
+            )
+            slice(
+                self.ih_small._loc_to_iloc((0, "c", False)),
+            )
+            slice(
+                self.ih_small._loc_to_iloc((3, "b", True)),
+                self.ih_small._loc_to_iloc((5, "e",  self.obj)),
+            )
 
     def small_element_hloc(self) -> None:
         for _ in range(100):
@@ -1366,20 +1383,21 @@ class IH_Loc_MI_N(IH_Loc_MI, Native):
 class IH_Loc_MI_R(IH_Loc_MI, Reference):
 
     def large_element_loc(self) -> None:
-        self.mi_large.get_loc((100, "A", True))
-        self.mi_large.get_loc(self.mi_large[12839])
-        # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
-        slice(
-            None,
-            self.mi_large.get_loc((199, "z", None)),
-        )
-        slice(
-            self.mi_large.get_loc((0, "5", False)),
-        )
-        slice(
-            self.mi_large.get_loc((19, ".", True)),
-            self.mi_large.get_loc((100, "B",  self.obj)),
-        )
+        for _ in range(100):
+            self.mi_large.get_loc((100, "A", True))
+            self.mi_large.get_loc(self.mi_large[12839])
+            # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
+            slice(
+                None,
+                self.mi_large.get_loc((199, "z", None)),
+            )
+            slice(
+                self.mi_large.get_loc((0, "5", False)),
+            )
+            slice(
+                self.mi_large.get_loc((19, ".", True)),
+                self.mi_large.get_loc((100, "B",  self.obj)),
+            )
 
     def large_element_hloc(self) -> None:
         self.mi_large.get_loc(pd.IndexSlice[100, "A", True])

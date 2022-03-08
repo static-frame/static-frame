@@ -3,6 +3,7 @@ import itertools
 import operator
 import typing as tp
 from collections import abc
+from automap import FrozenAutoMap
 from ast import literal_eval
 from copy import deepcopy
 
@@ -215,6 +216,9 @@ class IndexHierarchy(IndexBase):
             '_blocks',
             '_recache',
             '_values',
+            '_offsets',
+            '_overflow',
+            '_levels_index',
             '_index_types',
             '_pending_extensions',
             )
@@ -225,6 +229,9 @@ class IndexHierarchy(IndexBase):
     _blocks: TypeBlocks
     _recache: bool
     _values: np.ndarray # Used to cache the property `values`
+    _offsets: np.ndarray
+    _overflow: bool
+    _levels_index: FrozenAutoMap
     _index_types: tp.Optional['Series'] # Used to cache the property `index_types`
     _pending_extensions: tp.Optional[tp.List[tp.Union[SingleLabelType, 'IndexHierarchy']]]
 
@@ -775,6 +782,8 @@ class IndexHierarchy(IndexBase):
             msg = f'Labels have {sum(duplicates)} non-unique values, including {tuple(first_duplicate)}.'
             raise ErrorInitIndexNonUnique(msg)
 
+    # --------------------------------------------------------------------------
+
     def _create_blocks_from_self(self: IH) -> TypeBlocks:
         '''
         Create a :obj:`TypeBlocks` instance from values respresented by `self._indices` and `self._indexers`.
@@ -785,6 +794,28 @@ class IndexHierarchy(IndexBase):
                 yield index.values[indexer]
 
         return TypeBlocks.from_blocks(gen_blocks())
+
+    def _build_offsets_and_overflow_from_self(self: IH) -> tp.Tuple[np.ndarray, bool]:
+        '''
+        Builds the offsets and overflow arrays from the values in `self._blocks`.
+        '''
+        sizes = np.ceil(np.log2(list(map(len, self._indices))))
+
+        lev_bits = np.cumsum(sizes[::-1])[::-1]
+
+        offsets = np.concatenate([lev_bits[1:], [0]]).astype(np.uint64)
+        return offsets, lev_bits[0] > 64
+
+    def _build_levels_index_from_self(self: IH) -> FrozenAutoMap:
+        if self._overflow:
+            indexers = np.array(self._indexers, dtype=object).T
+        else:
+            indexers = np.array(self._indexers, dtype=np.uint64).T
+
+        indexers <<= self._offsets
+
+        hashmap = np.bitwise_or.reduce(indexers, axis=1)
+        return FrozenAutoMap(hashmap)
 
     # --------------------------------------------------------------------------
 
@@ -832,6 +863,8 @@ class IndexHierarchy(IndexBase):
             self._name = name if name is not NAME_DEFAULT else indices._name
             self._blocks = indices._blocks
             self._values = indices._values
+            self._offsets = indices._offsets
+            self._overflow = indices._overflow
             return
 
         if not all(arr.__class__ is np.ndarray for arr in indexers):
@@ -862,9 +895,27 @@ class IndexHierarchy(IndexBase):
             self._blocks = self._create_blocks_from_self()
 
         self._values = self._blocks.values
+        self._offsets, self._overflow = self._build_offsets_and_overflow_from_self()
+        self._levels_index = self._build_levels_index_from_self()
 
         if not assume_unique:
             self._ensure_uniqueness(self._indexers, self._values)
+
+    # --------------------------------------------------------------------------
+
+    def super_fast_loc_to_iloc(self, key: SingleLabelType) -> int:
+        key_indexers = np.empty(self.depth, dtype=np.uint64)
+
+        for depth, (key_at_depth, index_at_depth) in enumerate(zip(key, self._indices)):
+            key_indexers[depth] = index_at_depth._loc_to_iloc(key_at_depth)
+
+        if self._overflow:
+            key_indexers = key_indexers.astype(object)
+
+        key_indexers <<= self._offsets
+
+        iloc_key = np.bitwise_or.reduce(key_indexers)
+        return self._levels_index.get(iloc_key)
 
     def _update_array_cache(self: IH) -> None:
         new_indexers = [np.empty(self.__len__(), DTYPE_INT_DEFAULT) for _ in range(self.depth)]
@@ -1775,15 +1826,17 @@ class IndexHierarchy(IndexBase):
         if len(meaningful_depths) == 1:
             # Prefer to avoid construction of a 2D mask
             mask = self._build_mask_for_key_at_depth(depth=meaningful_depths[0], key=key)
-        else:
-            mask_2d = np.full(self.shape, True, dtype=bool)
+        elif len(meaningful_depths) == self.depth:
+            return self.super_fast_loc_to_iloc(key)
 
-            for depth in meaningful_depths:
-                mask = self._build_mask_for_key_at_depth(depth=depth, key=key)
-                mask_2d[:, depth] = mask
+        mask_2d = np.full(self.shape, True, dtype=bool)
 
-            mask = mask_2d.all(axis=1)
-            del mask_2d
+        for depth in meaningful_depths:
+            mask = self._build_mask_for_key_at_depth(depth=depth, key=key)
+            mask_2d[:, depth] = mask
+
+        mask = mask_2d.all(axis=1)
+        del mask_2d
 
         result: np.ndarray = self.positions[mask]
 
