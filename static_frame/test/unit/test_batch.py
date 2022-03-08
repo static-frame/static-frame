@@ -2141,6 +2141,65 @@ class TestUnit(TestCase):
                 (('zZbu', ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))), ('ztsv', ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))))
                 )
 
+    def test_batch_via_transpose_lt(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Batch.from_frames((f1, f2)).via_T < Series((0, 10000))).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))), ('ztsv', ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))), ('zUvW', ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))))
+                )
+
+    def test_batch_via_transpose_le(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Batch.from_frames((f1, f2)).via_T <= Series((0, 92867))).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), True), (('a', 1), True), (('b', 0), True), (('b', 1), True))), ('ztsv', ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))), ('zUvW', ((('a', 0), True), (('a', 1), True), (('b', 0), True), (('b', 1), True))))
+                )
+
+    def test_batch_via_transpose_eq(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Batch.from_frames((f1, f2)).via_T == Series((0, 92867))).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))), ('ztsv', ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), ('zUvW', ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))))
+                )
+
+    def test_batch_via_transpose_ne(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Batch.from_frames((f1, f2)).via_T != Series((0, 92867))).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))), ('ztsv', ((('a', 0), True), (('a', 1), True), (('b', 0), True), (('b', 1), True))), ('zUvW', ((('a', 0), True), (('a', 1), True), (('b', 0), True), (('b', 1), True))))
+                )
+
+
+    def test_batch_via_transpose_gt(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Batch.from_frames((f1, f2)).via_T > Series((0, 92867))).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))), ('ztsv', ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))), ('zUvW', ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))))
+                )
+
+    def test_batch_via_transpose_ge(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = (Batch.from_frames((f1, f2)).via_T >= Series((0, 92867))).to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), False), (('a', 1), True), (('b', 0), False), (('b', 1), True))), ('ztsv', ((('a', 0), True), (('a', 1), False), (('b', 0), True), (('b', 1), False))), ('zUvW', ((('a', 0), False), (('a', 1), False), (('b', 0), False), (('b', 1), False))))
+                )
+
+
+
+        # import ipdb; ipdb.set_trace()
+
 
 if __name__ == '__main__':
     import unittest
