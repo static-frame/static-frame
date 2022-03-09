@@ -26,6 +26,7 @@ from static_frame import Series
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.index_hierarchy import build_indexers_from_product
+from static_frame.core.util import PositionsAllocator
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
@@ -35,9 +36,9 @@ SelfT = tp.TypeVar('SelfT')
 
 
 def run_with_static_and_grow_only(func: tp.Callable[[SelfT, tp.Type[IndexHierarchy]], None]) -> tp.Callable[[SelfT], None]:
-    """
+    '''
     Run a unit test using both `IndexHierarchy` and `IndexHierarchyGO`
-    """
+    '''
     @wraps(func)
     def inner(self: SelfT) -> None:
         func(self, IndexHierarchy)
@@ -198,12 +199,24 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             _ = IndexHierarchy(ih1, indexers=ih1._indexers)
 
+        # Cannot provide indexers in this case
+        with self.assertRaises(ErrorInitIndex):
+            _ = IndexHierarchy(ih1, bit_offset_encoders=ih1._bit_offset_encoders)
+
+        # Cannot provide indexers in this case
+        with self.assertRaises(ErrorInitIndex):
+            _ = IndexHierarchy(ih1, encoding_can_overflow=ih1._encoding_can_overflow)
+
+        # Cannot provide indexers in this case
+        with self.assertRaises(ErrorInitIndex):
+            _ = IndexHierarchy(ih1, encoded_indexer_map=ih1._encoded_indexer_map)
+
         ih2 = IndexHierarchy(ih1)
         self.assertTrue(ih2.equals(ih1, compare_dtype=True))
 
     def test_hierarchy_init_l(self) -> None:
 
-        indices = [Index(tuple("ABC")) for _ in range(2)]
+        indices = [Index(tuple('ABC')) for _ in range(2)]
         indexers = [[0, 1, 2], [0, 1, 2]]
 
         # Indexers must be numpy arrays
@@ -664,7 +677,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_labels(labels, name='foo')
 
         with self.assertRaises(TypeError):
-            ih._loc_to_iloc(HLoc[slice("I", "III", "?")])
+            ih._loc_to_iloc(HLoc[slice('I', 'III', '?')])
 
     def test_hierarchy_loc_to_iloc_r(self) -> None:
         labels = [
@@ -1345,34 +1358,34 @@ class TestUnit(TestCase):
         self.assertEqual((a, b, c), (0, 0, 0))
 
         [[a],[b],[c]] = ih2._indices
-        self.assertEqual((a, b, c), (1, "dd", 0))
+        self.assertEqual((a, b, c), (1, 'dd', 0))
 
     def test_hierarchy_loc_c(self) -> None:
         ih1 = IndexHierarchy.from_labels([(1,'dd',0),(1,'b',0),(2,'cc',0),(2,'ee',0)])
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[1, "dd"] # pylint: disable=pointless-statement
+            ih1.loc[1, 'dd'] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
             ih1.loc[1, :] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[:, "dd"] # pylint: disable=pointless-statement
+            ih1.loc[:, 'dd'] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
             ih1.loc[:, :, 0] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[(1, "dd")] # pylint: disable=pointless-statement
+            ih1.loc[(1, 'dd')] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[(1, "dd"):] # pylint: disable=pointless-statement
+            ih1.loc[(1, 'dd'):] # pylint: disable=pointless-statement
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[Index([(1, "dd")])]
+            ih1.loc[Index([(1, 'dd')])]
 
         with self.assertRaises(RuntimeError):
-            ih1.loc[Series([(1, "dd")])]
+            ih1.loc[Series([(1, 'dd')])]
 
     def test_hierarchy_series_a(self) -> None:
         f1 = IndexHierarchy.from_tree
@@ -1497,18 +1510,18 @@ class TestUnit(TestCase):
 
     def test_hierarchy_index_go_b(self) -> None:
         labelsA = [
-            ("A", "D"),
-            ("A", "E"),
-            ("B", "D"),
-            ("A", "G"),
-            ("B", "E"),
+            ('A', 'D'),
+            ('A', 'E'),
+            ('B', 'D'),
+            ('A', 'G'),
+            ('B', 'E'),
         ]
         labelsB = [
-            ("A", "H"),
-            ("A", "F"),
-            ("B", "F"),
-            ("C", "D"),
-            ("B", "G"),
+            ('A', 'H'),
+            ('A', 'F'),
+            ('B', 'F'),
+            ('C', 'D'),
+            ('B', 'G'),
         ]
 
         ihgo = IndexHierarchyGO.from_labels(labelsA)
@@ -1521,18 +1534,18 @@ class TestUnit(TestCase):
 
     def test_hierarchy_index_go_c(self) -> None:
         labelsA = [
-            ("A", "D"),
-            ("A", "E"),
-            ("A", "F"),
-            ("B", "D"),
-            ("B", "E"),
+            ('A', 'D'),
+            ('A', 'E'),
+            ('A', 'F'),
+            ('B', 'D'),
+            ('B', 'E'),
         ]
         labelsB = [
-            ("A", "G"),
-            ("A", "H"),
-            ("A", "I"),
-            ("B", "F"),
-            ("B", "G"),
+            ('A', 'G'),
+            ('A', 'H'),
+            ('A', 'I'),
+            ('B', 'F'),
+            ('B', 'G'),
         ]
 
         ihgo = IndexHierarchyGO.from_labels(labelsA)
@@ -1545,25 +1558,25 @@ class TestUnit(TestCase):
 
     def test_hierarchy_index_go_d(self) -> None:
         labelsA = [
-            ("A", "D"),
-            ("A", "E"),
-            ("A", "F"),
-            ("B", "E"),
-            ("B", "D"),
+            ('A', 'D'),
+            ('A', 'E'),
+            ('A', 'F'),
+            ('B', 'E'),
+            ('B', 'D'),
         ]
         labelsB = [
-            ("B", "G"),
-            ("A", "G"),
-            ("A", "I"),
-            ("A", "H"),
-            ("B", "F"),
+            ('B', 'G'),
+            ('A', 'G'),
+            ('A', 'I'),
+            ('A', 'H'),
+            ('B', 'F'),
         ]
         labelsC = [
-            ("C", "G"),
-            ("D", "G"),
-            ("C", "I"),
-            ("C", "H"),
-            ("F", "F"),
+            ('C', 'G'),
+            ('D', 'G'),
+            ('C', 'I'),
+            ('C', 'H'),
+            ('F', 'F'),
         ]
 
         ihgo = IndexHierarchyGO.from_labels(labelsA)
@@ -1578,30 +1591,30 @@ class TestUnit(TestCase):
 
     def test_hierarchy_index_go_e(self) -> None:
         labelsA = [
-            ("A", "D"),
-            ("A", "E"),
-            ("A", "F"),
-            ("B", "E"),
-            ("B", "D"),
+            ('A', 'D'),
+            ('A', 'E'),
+            ('A', 'F'),
+            ('B', 'E'),
+            ('B', 'D'),
         ]
 
-        labelB = ("C", "C")
+        labelB = ('C', 'C')
         labelsC = [
-            ("B", "G"),
-            ("A", "G"),
-            ("A", "I"),
-            ("A", "H"),
-            ("B", "F"),
+            ('B', 'G'),
+            ('A', 'G'),
+            ('A', 'I'),
+            ('A', 'H'),
+            ('B', 'F'),
         ]
-        labelD = ("C", "B")
+        labelD = ('C', 'B')
         labelsE = [
-            ("C", "G"),
-            ("D", "G"),
-            ("C", "I"),
-            ("C", "H"),
-            ("F", "F"),
+            ('C', 'G'),
+            ('D', 'G'),
+            ('C', 'I'),
+            ('C', 'H'),
+            ('F', 'F'),
         ]
-        labelF = ("C", "A")
+        labelF = ('C', 'A')
 
         ihgo = IndexHierarchyGO.from_labels(labelsA)
         ih2 = IndexHierarchy.from_labels(labelsC)
@@ -1615,6 +1628,23 @@ class TestUnit(TestCase):
 
         expected = IndexHierarchy.from_labels(labelsA + [labelB] + labelsC + [labelD] + labelsE + [labelF])
         self.assertTrue(ihgo.equals(expected))
+
+    def test_hierarchy_index_go_f(self) -> None:
+        labels = [
+            ('A', 'D'),
+            ('A', 'E'),
+            ('A', 'F'),
+            ('B', 'E'),
+            ('B', 'D'),
+        ]
+
+        ihgo = IndexHierarchyGO.from_labels(labels)
+
+        with self.assertRaises(RuntimeError):
+            ihgo.append(('A', ))
+
+        with self.assertRaises(RuntimeError):
+            ihgo.append(('A', 'B', 'C'))
 
     #---------------------------------------------------------------------------
 
@@ -1668,7 +1698,7 @@ class TestUnit(TestCase):
             ) -> None:
 
         idx1 = Index((True, False))
-        idx2 = Index(tuple("abcde"))
+        idx2 = Index(tuple('abcde'))
         idx3 = Index(range(10))
 
         ih = index_class.from_product(idx1, idx2, idx3)
@@ -2903,7 +2933,7 @@ class TestUnit(TestCase):
         import pandas
 
         pdidx = pandas.MultiIndex.from_product(
-            ((np.datetime64("2000-01-01"), np.datetime64("2000-01-02")), range(3)))
+            ((np.datetime64('2000-01-01'), np.datetime64('2000-01-02')), range(3)))
 
         idx = IndexHierarchyGO.from_pandas(pdidx)
         self.assertEqual([IndexNanosecondGO, IndexGO], idx.index_types.values.tolist())
@@ -3204,7 +3234,7 @@ class TestUnit(TestCase):
         idx3 = Index((1, 2), name='c')
         hidx = IndexHierarchyGO.from_product(idx1, idx2, idx3)
 
-        hidx.append(("B", np.datetime64('2019-01-05'), 3))
+        hidx.append(('B', np.datetime64('2019-01-05'), 3))
 
         self.assertEqual(tuple(hidx.label_widths_at_depth(0)),
                 (('A', 8), ('B', 9))
@@ -3710,6 +3740,75 @@ class TestUnit(TestCase):
             [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
         ])
         self.assertTrue(np.array_equal(actual, expected))
+
+    #---------------------------------------------------------------------------
+
+    def test_build_offsets_and_overflow_a(self) -> None:
+        def check(sizes: tp.List[int], offsets: tp.List[int], overflow: bool) -> None:
+            actual_offset, actual_overflow = IndexHierarchy._build_offsets_and_overflow(sizes)
+            self.assertListEqual(actual_offset.tolist(), offsets)
+            self.assertEqual(actual_overflow, overflow)
+
+        check([17, 99], [0, 5], False)
+        check([1, 1], [0, 1], False)
+        check([1, 2, 4, 8, 16, 32], [0, 1, 3, 6, 10, 15], False)
+        check([2**30, 2, 3, 4], [0, 31, 33, 35], False)
+        check([2**40, 2**18, 15], [0, 41, 60], False)
+        check([2**40, 2**18, 16], [0, 41, 60], True)
+
+    #---------------------------------------------------------------------------
+
+    def test_build_encoded_indexers_map_a(self) -> None:
+        sizes = [188, 5, 77]
+        indexers = build_indexers_from_product(sizes)
+
+        offset, overflow = IndexHierarchy._build_offsets_and_overflow(sizes)
+
+        self.assertListEqual(offset.tolist(), [0, 8, 11])
+        self.assertFalse(overflow)
+
+        result = IndexHierarchy._build_encoded_indexers_map(
+                indexers=indexers,
+                bit_offset_encoders=offset,
+                encoding_can_overflow=overflow,
+                )
+        self.assertEqual(len(result), len(indexers[0]))
+
+        self.assertEqual(min(result), 0)
+        self.assertEqual(max(result), 156859)
+
+        # Manually check every element to ensure it encodes to the same value
+        for i, row in enumerate(np.array(indexers).T):
+            encoded = np.bitwise_or.reduce(row.astype(np.uint64) << offset)
+            self.assertEqual(i, result[encoded])
+
+    def test_build_encoded_indexers_map_b(self) -> None:
+        size = 2**20
+        sizes = [size for _ in range(4)]
+
+        arr = PositionsAllocator.get(size)
+        indexers = [arr for _ in range(4)]
+
+        offset, overflow = IndexHierarchy._build_offsets_and_overflow(sizes)
+
+        self.assertListEqual(offset.tolist(), [0, 21, 42, 63])
+        self.assertTrue(overflow)
+
+        result = IndexHierarchy._build_encoded_indexers_map(
+                indexers=indexers,
+                bit_offset_encoders=offset,
+                encoding_can_overflow=overflow,
+                )
+        self.assertEqual(len(result), len(indexers[0]))
+
+        self.assertEqual(min(result), 0)
+        self.assertEqual(max(result), 9671401945228815945957375)
+
+        # Manually encode the last row to ensure it matches!
+        indexer = np.array([size - 1 for _ in range(4)], dtype=object)
+        encoded = np.bitwise_or.reduce(indexer << offset)
+        self.assertEqual(max(result), encoded)
+
 
 
 if __name__ == '__main__':

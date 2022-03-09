@@ -2,13 +2,12 @@ import functools
 import itertools
 import operator
 import typing as tp
-from collections import abc
-from automap import FrozenAutoMap
 from ast import literal_eval
 from copy import deepcopy
 
 import numpy as np
 from arraykit import name_filter
+from automap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
@@ -214,9 +213,9 @@ class IndexHierarchy(IndexBase):
             '_blocks',
             '_recache',
             '_values',
-            '_offsets',
-            '_overflow',
-            '_levels_index',
+            '_bit_offset_encoders',
+            '_encoding_can_overflow',
+            '_encoded_indexer_map',
             '_index_types',
             '_pending_extensions',
             )
@@ -227,9 +226,9 @@ class IndexHierarchy(IndexBase):
     _blocks: TypeBlocks
     _recache: bool
     _values: np.ndarray # Used to cache the property `values`
-    _offsets: np.ndarray
-    _overflow: bool
-    _levels_index: FrozenAutoMap
+    _bit_offset_encoders: np.ndarray
+    _encoding_can_overflow: bool
+    _encoded_indexer_map: FrozenAutoMap
     _index_types: tp.Optional['Series'] # Used to cache the property `index_types`
     _pending_extensions: tp.Optional[tp.List[tp.Union[SingleLabelType, 'IndexHierarchy']]]
 
@@ -753,29 +752,95 @@ class IndexHierarchy(IndexBase):
 
         return TypeBlocks.from_blocks(gen_blocks())
 
-    def _build_offsets_and_overflow_from_self(self: IH) -> tp.Tuple[np.ndarray, bool]:
+    @staticmethod
+    def _build_offsets_and_overflow(
+            num_unique_elements_per_depth: tp.List[int],
+            ) -> tp.Tuple[np.ndarray, bool]:
         '''
-        Builds the offsets and overflow arrays from the values in `self._blocks`.
+        Builds the offsets and overflow flag from information about self`.
         '''
-        sizes = np.ceil(np.log2(list(map(len, self._indices))))
+        # `bit_sizes` is an array that shows how many bits are needed to contain the max indexer per depth
+        #
+        # For example, lets say there are 3 levels, and number of unique elements per depth is [71, 5, 13].
+        # `bit_sizes` will become: [7, 3, 4], which mean that we can fit the indexer for each depth into 7, 3, and 4 bits, respectively.
+        #    (i.e.) all valid indexers at depth N can be represented with bit_sizes[N] bits!
+        #
+        # We see this: [2**power for power in [7,3,4]] = [128, 8, 16]
+        # We can prove this: list(map(len, self._indices)) >= [2**bit_size for bit_size in bit_sizes]
+        bit_sizes = np.floor(np.log2(num_unique_elements_per_depth)) + 1
 
-        bit_offset_per_level = np.cumsum(sizes[::-1])[::-1]
+        # Based on bit_sizes, we cumsum to determine the successive number of total bits needed for each depth
+        # Using the previous example, this would look like: [7, 10, 14]
+        # This means:
+        #  - depth 0 ends at bit offset 7.
+        #  - depth 1 ends at bit offset 10. (depth 1 needs 3 bits!)
+        #  - depth 2 ends at bit offset 14. (depth 2 needs 4 bits!)
+        bit_end_positions = np.cumsum(bit_sizes)
 
-        offsets = np.concatenate([bit_offset_per_level[1:], [0]]).astype(np.uint64)
-        return offsets, bit_offset_per_level[0] > 64
+        # However, since we ultimately need these values to bitshift, we want them to offset based on start position, not end.
+        # This means:
+        #  - depth 0 starts at bit offset 0.
+        #  - depth 1 starts at bit offset 7. (depth 0 needed 7 bits!)
+        #  - depth 2 starts at bit offset 10. (depth 1 needed 3 bits!)
+        bit_start_positions = np.concatenate(([0], bit_end_positions))[:-1].astype(np.uint64)
+        bit_start_positions.flags.writeable = False
 
-    def _build_levels_index_from_self(self: IH) -> FrozenAutoMap:
-        if self._overflow:
-            indexers = np.array(self._indexers, dtype=object).T
+        # We now return these offsets, and whether or not we have overflow.
+        # If the last end bit is greater than 64, then it means we cannot encode a label's indexer into a uint64.
+        return bit_start_positions, bit_end_positions[-1] > 64
+
+    @staticmethod
+    def _build_encoded_indexers_map(
+            *,
+            indexers: tp.List[np.ndarray],
+            bit_offset_encoders: np.ndarray,
+            encoding_can_overflow: bool,
+            ) -> FrozenAutoMap:
+        '''
+        Builds up a mapping from indexers to iloc positions using their encoded values
+        '''
+        # We previously determined we cannot encode indexers into uint64. Cast to object to rely on Python's bigint
+        if encoding_can_overflow:
+            indexers = np.array(indexers, dtype=object).T
         else:
-            indexers = np.array(self._indexers, dtype=np.uint64).T
+            indexers = np.array(indexers, dtype=np.uint64).T
 
-        indexers <<= self._offsets
+        # Encode indexers into uint64
+        # indexers: (n, m), offsets: (m,)
+        # This bitshifts all indexers by the offset, resulting in numbers that are ready to be OR'd
+        # We need to reverse in order to have depth 0
+        # Example:
+        #  indexers:      bitshift         (Bit representation)
+        #                                    d0, d1 d0, d2 d1 d0  (d = depth)
+        #    [0, 1, 2] => [0, 4, 32]       ([00, 01 00, 10 00 00])
+        #    [0, 2, 0] => [0, 8,  0]       ([00, 10 00, 00 00 00])
+        #    [2, 2, 0] => [2, 8,  0]       ([10, 10 00, 00 00 00])
+        #    [1, 0, 1] => [1, 0, 16]       ([01, 00 00, 01 00 00])
+        encoded_indexers = indexers << bit_offset_encoders
 
-        hashmap = np.bitwise_or.reduce(indexers, axis=1)
+        # Finally, we bitwise OR all them together to encode them into a single, unique uint64 for each iloc
+        #  encoded_indexers   bitwise OR   (Bit representation)
+        #                                    d0 d1 d2  (d = depth)
+        #    [2, 4,  0]    => [36]         ([10 01 00])
+        #    [0, 8,  0]    => [ 8]         ([00 10 00])
+        #    [0, 8, 32]    => [10]         ([00 10 10])
+        #    [1, 0, 16]    => [17]         ([01 00 01])
+        encoded_indexers = np.bitwise_or.reduce(encoded_indexers, axis=1)
 
+        # Success! We have now successfully encoded each indexer into a single, unique uint64.
+        #    [0, 1, 2] => [36]
+        #    [0, 2, 0] => [ 8]
+        #    [2, 2, 0] => [10]
+        #    [1, 0, 1] => [17]
+
+        # Finally, we create a mapping from encoded indexers to ilocs.
+        #    [0, 1, 2] => [36] => [0]
+        #    [0, 2, 0] => [ 8] => [1]
+        #    [2, 2, 0] => [10] => [2]
+        #    [1, 0, 1] => [17] => [3]
+        # len(encoded_indexers) == len(self)!
         try:
-            return FrozenAutoMap(hashmap)
+            return FrozenAutoMap(encoded_indexers.tolist()) # Automap is faster with Python lists :(
         except ValueError as e:
             raise ErrorInitIndexNonUnique(*e.args) from None
 
@@ -788,6 +853,9 @@ class IndexHierarchy(IndexBase):
             name: NameType = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
+            bit_offset_encoders: tp.Optional[np.ndarray] = None,
+            encoding_can_overflow: tp.Optional[bool] = None,
+            encoded_indexer_map: tp.Optional[FrozenAutoMap] = None,
             ) -> None:
         '''
         Initializer.
@@ -798,6 +866,9 @@ class IndexHierarchy(IndexBase):
             name: name of the IndexHierarchy
             blocks:
             own_blocks:
+            bit_offset_encoders:
+            encoding_can_overflow:
+            encoded_indexer_map:
         '''
         self._recache = False
         self._index_types = None
@@ -812,6 +883,18 @@ class IndexHierarchy(IndexBase):
                 raise ErrorInitIndex(
                     'blocks must not be provided when copying an IndexHierarchy'
                 )
+            if bit_offset_encoders is not None:
+                raise ErrorInitIndex(
+                    'bit_offset_encoders must not be provided when copying an IndexHierarchy'
+                )
+            if encoding_can_overflow is not None:
+                raise ErrorInitIndex(
+                    'encoding_can_overflow must not be provided when copying an IndexHierarchy'
+                )
+            if encoded_indexer_map is not None:
+                raise ErrorInitIndex(
+                    'encoded_indexer_map must not be provided when copying an IndexHierarchy'
+                )
 
             if indices._recache:
                 indices._update_array_cache() # pragma: no cover
@@ -824,9 +907,9 @@ class IndexHierarchy(IndexBase):
             self._name = name if name is not NAME_DEFAULT else indices._name
             self._blocks = indices._blocks
             self._values = indices._values
-            self._offsets = indices._offsets
-            self._overflow = indices._overflow
-            self._levels_index = indices._levels_index
+            self._bit_offset_encoders = indices._bit_offset_encoders
+            self._encoding_can_overflow = indices._encoding_can_overflow
+            self._encoded_indexer_map = indices._encoded_indexer_map
             return
 
         if not all(arr.__class__ is np.ndarray for arr in indexers):
@@ -857,29 +940,32 @@ class IndexHierarchy(IndexBase):
             self._blocks = self._create_blocks_from_self()
 
         self._values = self._blocks.values
-        self._offsets, self._overflow = self._build_offsets_and_overflow_from_self()
-        self._levels_index = self._build_levels_index_from_self()
-
-    # --------------------------------------------------------------------------
-
-    def super_fast_loc_to_iloc(self, key: SingleLabelType) -> int:
-        # 1. Map key to indexers
-        key_indexers = np.empty(self.depth, dtype=np.uint64)
-
-        for depth, (key_at_depth, index_at_depth) in enumerate(zip(key, self._indices)):
-            key_indexers[depth] = index_at_depth._loc_to_iloc(key_at_depth)
-
-        if self._overflow:
-            key_indexers = key_indexers.astype(object)
-
-        # 2. Hash the indexers
-        key_indexers <<= self._offsets
-        iloc_key = np.bitwise_or.reduce(key_indexers)
-
-        # 3. Lookup
-        return self._levels_index[iloc_key]
+        if (
+                bit_offset_encoders is not None and
+                encoding_can_overflow is not None and
+                encoded_indexer_map is not None
+        ):
+            self._bit_offset_encoders = bit_offset_encoders
+            self._encoding_can_overflow = encoding_can_overflow
+            self._encoded_indexer_map = encoded_indexer_map
+        elif len(self._values) == 0:
+            self._bit_offset_encoders = np.full(self.depth, 0, dtype=np.uint64)
+            self._encoding_can_overflow = False
+            self._encoded_indexer_map = FrozenAutoMap()
+        else:
+            self._bit_offset_encoders, self._encoding_can_overflow = self._build_offsets_and_overflow(
+                    num_unique_elements_per_depth=list(map(len, self._indices))
+                    )
+            self._encoded_indexer_map = self._build_encoded_indexers_map(
+                    indexers=self._indexers,
+                    bit_offset_encoders=self._bit_offset_encoders,
+                    encoding_can_overflow=self._encoding_can_overflow,
+                    )
 
     def _update_array_cache(self: IH) -> None:
+        # This MUST be set before entering this context
+        assert self._pending_extensions is not None
+
         new_indexers = [np.empty(self.__len__(), DTYPE_INT_DEFAULT) for _ in range(self.depth)]
 
         current_size = len(self._blocks)
@@ -894,7 +980,7 @@ class IndexHierarchy(IndexBase):
         offset = current_size
 
         # For all these extensions, we have already update self._indices - we now need to map indexers
-        for pending in self._pending_extensions: # type: ignore
+        for pending in self._pending_extensions: # pylint: disable = E1133
             if isinstance(pending, PendingRow):
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
@@ -905,18 +991,18 @@ class IndexHierarchy(IndexBase):
                 group_size = len(pending)
 
                 for depth, (self_index, other_index) in enumerate(
-                        zip(self._indices, pending._indices)
+                        zip(self._indices, pending._indices) # type: ignore
                     ):
                     remapped_indexers_unordered = other_index._index_iloc_map(self_index)
                     remapped_indexers_ordered = remapped_indexers_unordered[
-                        pending._indexers[depth]
+                        pending._indexers[depth] # type: ignore
                     ]
 
                     new_indexers[depth][offset:offset + group_size] = remapped_indexers_ordered
 
                 offset += group_size
 
-        self._pending_extensions.clear() # type: ignore
+        self._pending_extensions.clear()
 
         for indexer in new_indexers:
             indexer.flags.writeable = False
@@ -925,10 +1011,15 @@ class IndexHierarchy(IndexBase):
 
         self._blocks = self._create_blocks_from_self()
         self._values = self._blocks.values
-        self._offsets, self._overflow = self._build_offsets_and_overflow_from_self()
-
+        self._bit_offset_encoders, self._encoding_can_overflow = self._build_offsets_and_overflow(
+            num_unique_elements_per_depth=list(map(len, self._indices))
+            )
         # This is what guarantees uniqueness
-        self._levels_index = self._build_levels_index_from_self()
+        self._encoded_indexer_map = self._build_encoded_indexers_map(
+                indexers=self._indexers,
+                bit_offset_encoders=self._bit_offset_encoders,
+                encoding_can_overflow=self._encoding_can_overflow,
+                )
 
         self._recache = False
 
@@ -958,9 +1049,9 @@ class IndexHierarchy(IndexBase):
         obj._recache = self._recache
         obj._index_types = deepcopy(self._index_types, memo)
         obj._pending_extensions = deepcopy(self._pending_extensions, memo)
-        obj._offsets = deepcopy(self._offsets, memo)
-        obj._overflow = self._overflow
-        obj._levels_index = deepcopy(self._levels_index, memo)
+        obj._bit_offset_encoders = deepcopy(self._bit_offset_encoders, memo)
+        obj._encoding_can_overflow = self._encoding_can_overflow
+        obj._encoded_indexer_map = deepcopy(self._encoded_indexer_map, memo)
 
         memo[id(self)] = obj
         return obj
@@ -977,6 +1068,9 @@ class IndexHierarchy(IndexBase):
                 name=self._name,
                 blocks=blocks,
                 own_blocks=True,
+                bit_offset_encoders=self._bit_offset_encoders,
+                encoding_can_overflow=self._encoding_can_overflow,
+                encoded_indexer_map=self._encoded_indexer_map,
                 )
 
     def copy(self: IH) -> IH:
@@ -1190,7 +1284,7 @@ class IndexHierarchy(IndexBase):
         total = sum(map(_NBYTES_GETTER, self._indices))
         total += sum(map(_NBYTES_GETTER, self._indexers))
         total += self._blocks.nbytes
-        # total += sizeof(self._levels_index)
+        # total += sizeof(self._encoded_indexer_map)
         return self._blocks.nbytes
 
     # --------------------------------------------------------------------------
@@ -1769,6 +1863,23 @@ class IndexHierarchy(IndexBase):
 
         return ilocs
 
+    def _loc_to_iloc_fast_lookup(self, key: SingleLabelType) -> int:
+        # 1. Map key labels to their indexers
+        key_indexers = np.empty(self.depth, dtype=np.uint64)
+
+        for depth, (key_at_depth, index_at_depth) in enumerate(zip(key, self._indices)):
+            key_indexers[depth] = index_at_depth._loc_to_iloc(key_at_depth)
+
+        if self._encoding_can_overflow:
+            key_indexers = key_indexers.astype(object) # pragma: no cover
+
+        # 2. Encode the indexers. See `_build_encoded_indexers_map` for detailed comments.
+        key_indexers <<= self._bit_offset_encoders
+        key_indexers_encoded: int = np.bitwise_or.reduce(key_indexers)
+
+        # 3. Lookup
+        return self._encoded_indexer_map[key_indexers_encoded] # type: ignore
+
     def _loc_to_iloc_single_key(self: IH,
             key: tp.Tuple[tp.Union[tp.Hashable, slice, np.ndarray, tp.List[tp.Hashable]], ...],
             ) -> tp.Union[int, np.ndarray]:
@@ -1779,14 +1890,14 @@ class IndexHierarchy(IndexBase):
         '''
         # This private internal method assumes recache has already been checked for!
 
-        # We consider the NULL_SLICE to not be "meaningful", as it requires no filtering
+        # We consider the NULL_SLICE to not be 'meaningful', as it requires no filtering
         meaningful_depths = [
                 depth for depth, k in enumerate(key)
                 if not (isinstance(k, slice) and k == NULL_SLICE)
                 ]
 
         def is_element(obj: tp.Hashable) -> bool:
-            return (not hasattr(obj, "__len__") or isinstance(obj, str)) and not obj.__class__ is slice
+            return (not hasattr(obj, '__len__') or isinstance(obj, str)) and not obj.__class__ is slice # type: ignore
 
         maps_to_single_iloc = all(map(is_element, key))
 
@@ -1794,7 +1905,7 @@ class IndexHierarchy(IndexBase):
             # Prefer to avoid construction of a 2D mask
             mask = self._build_mask_for_key_at_depth(depth=meaningful_depths[0], key=key)
         elif len(meaningful_depths) == self.depth and maps_to_single_iloc:
-            return self.super_fast_loc_to_iloc(key)
+            return self._loc_to_iloc_fast_lookup(key)
         else:
             mask_2d = np.full(self.shape, True, dtype=bool)
 
@@ -2571,10 +2682,14 @@ class IndexHierarchyGO(IndexHierarchy):
             value: tp.Sequence[tp.Hashable],
             ) -> None:
         '''
-        Append a single label to this IndexHierarchy in-place
+        Append a single label to this IndexHierarchyGO in-place
         '''
         # We do not check whether nor the key exists, as that is too expensive.
         # Instead, we delay failure until _recache
+        if len(value) != self.depth:
+            raise RuntimeError(
+                f'key length ({len(value)}) does not match hierarchy depth ({self.depth})'
+            )
 
         for depth, label_at_depth in enumerate(value):
             if label_at_depth not in self._indices[depth]:
@@ -2590,7 +2705,7 @@ class IndexHierarchyGO(IndexHierarchy):
             other: IndexHierarchy,
             ) -> None:
         '''
-        Extend this IndexHierarchy in-place
+        Extend this IndexHierarchyGO in-place
         '''
         # We do not check whether nor the key exists, as that is too expensive.
         # Instead, we delay failure until _recache
@@ -2620,6 +2735,9 @@ class IndexHierarchyGO(IndexHierarchy):
                 name=self._name,
                 blocks=self._blocks.copy(),
                 own_blocks=True,
+                bit_offset_encoders=self._bit_offset_encoders,
+                encoding_can_overflow=self._encoding_can_overflow,
+                encoded_indexer_map=self._encoded_indexer_map,
                 )
 
 
