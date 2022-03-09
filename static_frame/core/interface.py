@@ -22,6 +22,7 @@ from static_frame.core.index_datetime import IndexYear
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_iter import IterNodeDelegate
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceAssignQuartet
@@ -32,9 +33,13 @@ from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
@@ -540,18 +545,18 @@ class InterfaceRecord(tp.NamedTuple):
             max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
-        if cls_interface is InterfaceString:
+        if cls_interface is InterfaceString or cls_interface is InterfaceBatchString:
             group = InterfaceGroup.AccessorString
-        elif cls_interface is InterfaceDatetime:
+        elif cls_interface is InterfaceDatetime or cls_interface is InterfaceBatchDatetime:
             group = InterfaceGroup.AccessorDatetime
-        elif cls_interface is InterfaceTranspose:
+        elif cls_interface is InterfaceTranspose or cls_interface is InterfaceBatchTranspose:
             group = InterfaceGroup.AccessorTranspose
-        elif cls_interface is InterfaceFillValue:
+        elif cls_interface is InterfaceFillValue or cls_interface is InterfaceBatchFillValue:
             group = InterfaceGroup.AccessorFillValue
-        elif cls_interface is InterfaceRe:
+        elif cls_interface is InterfaceRe or cls_interface is InterfaceBatchRe:
             group = InterfaceGroup.AccessorRe
         else:
-            raise NotImplementedError() #pragma: no cover
+            raise NotImplementedError(cls_interface) #pragma: no cover
 
         terminus_name_no_args: tp.Optional[str]
 
@@ -923,7 +928,10 @@ class InterfaceSummary(Features):
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
                 yield from InterfaceRecord.from_getitem(**kwargs)
 
-            elif obj.__class__ in (InterfaceString, InterfaceDatetime, InterfaceTranspose):
+            elif obj.__class__ in (
+                    InterfaceString, InterfaceDatetime, InterfaceTranspose,
+                    InterfaceBatchString, InterfaceBatchDatetime, InterfaceBatchTranspose,
+                    ):
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=obj.__class__,
                         **kwargs,
