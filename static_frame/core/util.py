@@ -10,6 +10,7 @@ from itertools import zip_longest
 from os import PathLike
 from urllib import request
 from copy import deepcopy
+from types import TracebackType
 
 import contextlib
 import datetime
@@ -17,6 +18,7 @@ import operator
 import os
 import tempfile
 import typing as tp
+import warnings
 
 from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
@@ -2906,6 +2908,26 @@ def file_like_manager(
     finally:
         if is_file:
             f.close()
+
+
+class WarningsSilent:
+    '''Alternate context manager for silencing warnings with less overhead.
+    '''
+    __slots__ = ('previous_warnings',)
+
+    FILTER = [('ignore', None, Warning, None, 0)]
+
+    def __enter__(self) -> None:
+        self.previous_warnings = warnings.filters
+        warnings.filters = self.FILTER
+
+    def __exit__(self,
+            type: tp.Type[BaseException],
+            value: BaseException,
+            traceback: TracebackType,
+            ) -> None:
+        warnings.filters = self.previous_warnings
+
 
 #-------------------------------------------------------------------------------
 # trivial, non NP util
