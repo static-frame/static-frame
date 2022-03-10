@@ -108,7 +108,8 @@ def test(context,
     else:
         fp = 'static_frame/test'
 
-    cmd = f'pytest -s --color no --disable-pytest-warnings --tb=native {fp}'
+    # cmd = f'pytest -s --color no --disable-pytest-warnings --tb=native {fp}'
+    cmd = f'pytest -s --color no --tb=native {fp}'
 
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
