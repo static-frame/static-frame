@@ -122,7 +122,8 @@ def coverage(context):
     '''
     Perform code coverage, and open report HTML.
     '''
-    cmd = 'pytest -s --color no --disable-pytest-warnings --cov=static_frame/core --cov-report html'
+    # cmd = 'pytest -s --color no --disable-pytest-warnings --cov=static_frame/core --cov-report html'
+    cmd = 'pytest -s --color no --cov=static_frame/core --cov-report html'
     print(cmd)
     context.run(cmd)
     import webbrowser
