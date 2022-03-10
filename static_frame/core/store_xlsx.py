@@ -30,6 +30,7 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import WarningsSilent
 
 if tp.TYPE_CHECKING:
     from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
@@ -268,7 +269,8 @@ class StoreXLSX(Store):
                 col = index_depth_effective # start after index
                 for label, width in frame._columns.label_widths_at_depth(depth):
                     # TODO: use store_filter
-                    ws.merge_range(row, col, row, col + width - 1, label, format_columns)
+                    if width > 1:
+                        ws.merge_range(row, col, row, col + width - 1, label, format_columns)
                     col += width
 
         if include_index and merge_hierarchical_labels and index_depth > 1:
@@ -277,7 +279,8 @@ class StoreXLSX(Store):
                 col = depth
                 for label, width in frame._index.label_widths_at_depth(depth):
                     # TODO: use store_filter
-                    ws.merge_range(row, col, row + width - 1, col, label, format_index)
+                    if width > 1:
+                        ws.merge_range(row, col, row + width - 1, col, label, format_index)
                     row += width
 
     @store_coherent_write
