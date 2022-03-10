@@ -7,8 +7,8 @@ from static_frame.test.test_case import TestCase
 from static_frame.core.bus import Bus
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_level import TreeNodeT
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import AxisInvalid
