@@ -2918,15 +2918,15 @@ class WarningsSilent:
     FILTER = [('ignore', None, Warning, None, 0)]
 
     def __enter__(self) -> None:
-        self.previous_warnings = warnings.filters
-        warnings.filters = self.FILTER
+        self.previous_warnings = warnings.filters #type: ignore
+        warnings.filters = self.FILTER #type: ignore
 
     def __exit__(self,
             type: tp.Type[BaseException],
             value: BaseException,
             traceback: TracebackType,
             ) -> None:
-        warnings.filters = self.previous_warnings
+        warnings.filters = self.previous_warnings #type: ignore
 
 
 #-------------------------------------------------------------------------------

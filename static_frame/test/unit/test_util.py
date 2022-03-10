@@ -2582,10 +2582,10 @@ class TestUnit(TestCase):
         self.assertEqual(dt7, np.dtype(complex))
 
     def test_warnings_silent_a(self) -> None:
-        post = warnings.filters
+        post = warnings.filters #type: ignore
         with WarningsSilent():
             warnings.warn('foo')
-        self.assertIs(post, warnings.filters)
+        self.assertIs(post, warnings.filters) #type: ignore
 
 
 if __name__ == '__main__':
