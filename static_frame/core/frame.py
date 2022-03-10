@@ -21,7 +21,6 @@ from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 
-
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container import container_opperand_map
@@ -6459,8 +6458,8 @@ class Frame(ContainerOperand):
         # NOTE: this could be optimized by always iterating over the shorter target
         for idx_left, row_left in enumerate(target_left):
             # Get 1D vector showing matches along right's full heigh
-            # WARNING_RAISED
-            matched = row_left == target_right
+            with WarningsSilent():
+                matched = row_left == target_right
             if matched is False:
                 continue
             matched = matched.all(axis=1)

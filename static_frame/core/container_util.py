@@ -43,6 +43,7 @@ from static_frame.core.util import is_mapping
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import WarningsSilent
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -911,10 +912,13 @@ def apply_binary_operator(*,
             result = npc.add(other, values)
         elif operator_name == 'mul' or operator_name == 'rmul':
             result = npc.multiply(values, other)
-        else: # WARNING_RAISED
-            result = operator(values, other)
+        else:
+            with WarningsSilent():
+                result = operator(values, other)
     else:
-        result = operator(values, other)
+        with WarningsSilent():
+            # FutureWarning: elementwise comparison failed
+            result = operator(values, other)
 
     if result is False or result is True:
         if not other_is_array and (
