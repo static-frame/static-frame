@@ -49,6 +49,11 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.exception import BatchIterableInvalid
+from static_frame.core.node_str import InterfaceBatchString
+from static_frame.core.node_fill_value import InterfaceBatchFillValue
+from static_frame.core.node_re import InterfaceBatchRe
+from static_frame.core.node_dt import InterfaceBatchDatetime
+from static_frame.core.node_transpose import InterfaceBatchTranspose
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -768,6 +773,53 @@ class Batch(ContainerOperand, StoreClientMixin):
                 composable=composable,
                 dtypes=dtypes,
                 size_one_unity=size_one_unity,
+                )
+
+
+    #---------------------------------------------------------------------------
+    # via interfaces
+
+    @property
+    def via_str(self) -> InterfaceBatchString:
+        '''
+        Interface for applying string methods to elements in this container.
+        '''
+        return InterfaceBatchString(self.apply)
+
+    @property
+    def via_dt(self) -> InterfaceBatchDatetime:
+        '''
+        Interface for applying datetime properties and methods to elements in this container.
+        '''
+        return InterfaceBatchDatetime(self.apply)
+
+    @property
+    def via_T(self) -> InterfaceBatchTranspose:
+        '''
+        Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
+        '''
+        return InterfaceBatchTranspose(self.apply)
+
+    def via_fill_value(self,
+            fill_value: object = np.nan,
+            ) -> InterfaceBatchFillValue:
+        '''
+        Interface for using binary operators and methods with a pre-defined fill value.
+        '''
+        return InterfaceBatchFillValue(self.apply,
+                fill_value=fill_value,
+                )
+
+    def via_re(self,
+            pattern: str,
+            flags: int = 0,
+            ) -> InterfaceBatchRe:
+        '''
+        Interface for applying regular expressions to elements in this container.
+        '''
+        return InterfaceBatchRe(self.apply,
+                pattern=pattern,
+                flags=flags,
                 )
 
     #---------------------------------------------------------------------------
