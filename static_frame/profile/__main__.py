@@ -11,7 +11,7 @@ import sys
 import datetime
 import tempfile
 from enum import Enum
-import warnings
+# import warnings
 
 from pyinstrument import Profiler #type: ignore
 from line_profiler import LineProfiler #type: ignore
