@@ -312,7 +312,7 @@ class IndexHierarchy(IndexBase):
 
         for lvl, constructor in zip(levels, index_constructors_iter):
             if isinstance(lvl, Index):
-                # TODO: This is slighly different behavior from IndexHierarchyTree, as it called `constructor` for both cases
+                # TODO: This is slighly different behavior from old impl, as it called `constructor` for both cases
                 indices.append(immutable_index_filter(lvl))
             else:
                 indices.append(constructor(lvl))
@@ -1507,7 +1507,7 @@ class IndexHierarchy(IndexBase):
 
         return self._blocks._extract_array(column_key=sel)
 
-    # NOTE: This is much slower than IndexHierarchyTree. Not sure how to optimize.
+    # NOTE: This is much slower than old impl. Not sure how to optimize.
     @doc_inject()
     def label_widths_at_depth(self: IH,
             depth_level: DepthLevelSpecifier = 0

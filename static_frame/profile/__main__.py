@@ -1189,123 +1189,7 @@ class FrameFromConcat_R(FrameFromConcat, Reference):
 
 #-------------------------------------------------------------------------------
 
-class IH_Loc_Tree(Perf):
-
-    NUMBER = 5
-
-    @property
-    def large(self) -> IndexBase:
-        raise NotImplementedError()
-
-    @property
-    def small(self) -> IndexBase:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super().__init__()
-
-        class Obj:
-            def __repr__(self) -> str:
-                return f'Obj({id(self)})'
-
-        self.obj = Obj()
-
-        self.ih_small = sf.IndexHierarchy.from_product(
-                range(10),
-                tuple("abcdefg"),
-                [True, False, None, self.obj],
-                )
-        self.tree_small = sf.IndexHierarchyTree.from_product(
-                range(10),
-                tuple("abcdefg"),
-                [True, False, None, self.obj],
-                )
-        # This is a one time cost to pay upfront since we are not timing init
-        self.tree_small._update_array_cache()
-
-
-        self.ih_large = sf.IndexHierarchy.from_product(
-                range(300),
-                tuple(string.printable),
-                [True, False, None, self.obj]
-                )
-        self.tree_large = sf.IndexHierarchyTree.from_product(
-                range(300),
-                tuple(string.printable),
-                [True, False, None, self.obj]
-                )
-        # This is a one time cost to pay upfront since we are not timing init
-        self.tree_large._update_array_cache()
-
-        meta_kwargs = dict(perf_status=PerfStatus.EXPLAINED_WIN)
-
-        self.meta = dict(
-                large_element_loc=FunctionMetaData(**meta_kwargs),
-                large_element_hloc=FunctionMetaData(**meta_kwargs),
-                small_element_loc=FunctionMetaData(**meta_kwargs),
-                small_element_hloc=FunctionMetaData(**meta_kwargs),
-                )
-
-    def large_element_loc(self) -> None:
-        self.large.loc[(100, "A", True)]
-        self.large.loc[self.large.iloc[12839]]
-        self.large.loc[:(199, "z", None)]
-        self.large.loc[(0, "5", False):]
-        self.large.loc[(19, ".", True):(100, "B",  self.obj)]
-
-    def large_element_hloc(self) -> None:
-        self.large.loc[sf.HLoc[100, "A", True]]
-        self.large.loc[sf.HLoc[144]]
-        self.large.loc[sf.HLoc[:, "|"]]
-        self.large.loc[sf.HLoc[:, :, self.obj]]
-        self.large.loc[sf.HLoc[100, "{"]]
-        self.large.loc[sf.HLoc[113, :, False]]
-        self.large.loc[sf.HLoc[:, "H", None]]
-
-    def small_element_loc(self) -> None:
-        for _ in range(100):
-            self.small.loc[(1, "a", True)]
-            self.small.loc[self.small.iloc[25]]
-            self.small.loc[:(9, "g", None)]
-            self.small.loc[(0, "c", False):]
-            self.small.loc[(3, "b", True):(5, "e",  self.obj)]
-
-    def small_element_hloc(self) -> None:
-        for _ in range(100):
-            self.small.loc[sf.HLoc[2, "b", True]]
-            self.small.loc[sf.HLoc[4]]
-            self.small.loc[sf.HLoc[:, "a"]]
-            self.small.loc[sf.HLoc[:, :, self.obj]]
-            self.small.loc[sf.HLoc[0, "f"]]
-            self.small.loc[sf.HLoc[8, :, False]]
-            self.small.loc[sf.HLoc[:, "c", None]]
-
-
-class IH_Loc_Tree_N(IH_Loc_Tree, Native):
-
-    @property
-    def large(self) -> IndexBase:
-        return self.ih_large
-
-    @property
-    def small(self) -> IndexBase:
-        return self.ih_small
-
-
-class IH_Loc_Tree_R(IH_Loc_Tree, Reference):
-
-    @property
-    def large(self) -> IndexBase:
-        return self.tree_large
-
-    @property
-    def small(self) -> IndexBase:
-        return self.tree_small
-
-
-#-------------------------------------------------------------------------------
-
-class IH_Loc_MI(Perf):
+class IndexHierarchyLoc(Perf):
 
     NUMBER = 50
 
@@ -1348,7 +1232,7 @@ class IH_Loc_MI(Perf):
                 )
 
 
-class IH_Loc_MI_N(IH_Loc_MI, Native):
+class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
 
     def large_element_loc(self) -> None:
         for _ in range(100):
@@ -1403,7 +1287,7 @@ class IH_Loc_MI_N(IH_Loc_MI, Native):
             self.ih_small._loc_to_iloc(sf.HLoc[:, "c", None])
 
 
-class IH_Loc_MI_R(IH_Loc_MI, Reference):
+class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
 
     def large_element_loc(self) -> None:
         for _ in range(100):
@@ -1460,182 +1344,7 @@ class IH_Loc_MI_R(IH_Loc_MI, Reference):
 
 #-------------------------------------------------------------------------------
 
-class IH_Constructors_Tree(Perf):
-
-    NUMBER = 1
-
-    @property
-    def _index_cls(self) -> tp.Union[tp.Type[sf.IndexHierarchy], tp.Type[sf.IndexHierarchyTree]]:
-        raise NotImplementedError()
-
-    def _create(self, ih: tp.Union[sf.IndexHierarchy, sf.IndexHierarchyTree]) -> None:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super().__init__()
-
-        class Obj:
-            def __repr__(self) -> str:
-                return f'Obj({id(self)})'
-
-        self.obj = Obj()
-        self.from_product_small_data = ( # (280, 3)
-                range(10),
-                tuple("abcdefg"),
-                [True, False, None, self.obj],
-                )
-        self.from_product_large_data = ( # (360000, 3)
-                range(900),
-                tuple(string.printable),
-                [True, False, None, self.obj]
-                )
-
-        ih_small = sf.IndexHierarchy.from_product(*self.from_product_small_data)
-        ih_large = sf.IndexHierarchy.from_product(*self.from_product_large_data)
-
-        self.from_tree_small_data = { # (54, 4)
-                k1: {
-                    k2: {
-                        k3: [1,2,3]
-                            for k3 in [True, False, None]
-                        } for k2 in range(3)
-                    } for k1 in "ab"
-                }
-        self.from_tree_large_data = { # (416000, 5)
-                k1: {
-                    k2: {
-                        k3: {
-                            k4: sf.Index(tuple(string.ascii_letters))
-                                for k4 in [True, False, None, self.obj]
-                            } for k3 in range(20)
-                        } for k2 in range(20)
-                    } for k1 in range(5)
-                }
-
-        # Same as from_product*
-        self.labels_small_order_data = list(ih_small.iter_label())
-        self.labels_large_order_data = list(ih_large.iter_label())
-        self.labels_small_data_shuffled = list(ih_small.iter_label())
-        self.labels_large_data_shuffled = list(ih_large.iter_label())
-
-        random.seed(0)
-        random.shuffle(self.labels_small_data_shuffled)
-        random.shuffle(self.labels_large_data_shuffled)
-
-        self.from_index_items_small_data = [ # (20, 2)
-                ('a', sf.Index(range(10))),
-                ('b', sf.Index(range(10)))
-                ]
-        self.from_index_items_large_data = [ # (300000, 3)
-                ('a', sf.Index(range(100_000))),
-                ('b', sf.Index(range(100_000))),
-                ('c', sf.Index(range(100_000)))
-                ]
-
-        # NOTE: `from_labels_delimited`, as the only implementation difference is that of
-        # `from_labels`, which has already been tested
-
-        # Construction of empty index hierarchy
-        self.from_names_data = list("ABCD")
-
-        # Same as from_product*
-        self.from_type_blocks_small_data = ih_small._blocks.copy()
-        self.from_type_blocks_large_data = ih_large._blocks.copy()
-
-        self.meta = dict(
-                from_product_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_product_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_tree_small=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_WIN),
-                from_tree_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="This constructor is most optimized for the tree index"),
-                from_labels_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_labels_small_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_labels_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_labels_large_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_index_items_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="The tree constructor simply reuses all these indexes. The new approach has to analyze them"),
-                from_index_items_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="The tree constructor simply reuses all these indexes. The new approach has to analyze them"),
-                from_index_names=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_type_blocks_small=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_type_blocks_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                )
-
-    def from_product_small(self) -> None:
-        for _ in range(1000):
-            self._create(self._index_cls.from_product(*self.from_product_small_data))
-            self._create(self._index_cls.from_product(*self.from_product_small_data, name=tuple("ABC")))
-
-    def from_product_large(self) -> None:
-        self._create(self._index_cls.from_product(*self.from_product_large_data))
-        self._create(self._index_cls.from_product(*self.from_product_large_data, name=tuple("ABC")))
-
-    def from_tree_small(self) -> None:
-        for _ in range(1000):
-            self._create(self._index_cls.from_tree(self.from_tree_small_data))
-            self._create(self._index_cls.from_tree(self.from_tree_small_data, name=tuple("ABCD")))
-
-    def from_tree_large(self) -> None:
-        self._create(self._index_cls.from_tree(self.from_tree_large_data))
-        self._create(self._index_cls.from_tree(self.from_tree_large_data, name=tuple("ABCDE")))
-
-    def from_labels_small(self) -> None:
-        for _ in range(1000):
-            self._create(self._index_cls.from_labels(self.labels_small_order_data))
-
-    def from_labels_small_reorder(self) -> None:
-        for _ in range(1000):
-            self._create(self._index_cls.from_labels(self.labels_small_data_shuffled, reorder_for_hierarchy=True))
-
-    def from_labels_large(self) -> None:
-        self._create(self._index_cls.from_labels(self.labels_large_order_data))
-
-    def from_labels_large_reorder(self) -> None:
-        self._create(self._index_cls.from_labels(self.labels_large_data_shuffled, reorder_for_hierarchy=True))
-
-    def from_index_items_small(self) -> None:
-        for _ in range(1000):
-            self._create(self._index_cls.from_index_items(self.from_index_items_small_data))
-            self._create(self._index_cls.from_index_items(self.from_index_items_small_data, name=tuple("AB")))
-
-    def from_index_items_large(self) -> None:
-        self._create(self._index_cls.from_index_items(self.from_index_items_large_data))
-        self._create(self._index_cls.from_index_items(self.from_index_items_large_data, name=tuple("ABC")))
-
-    def from_index_names(self) -> None:
-        for _ in range(100_000):
-            self._create(self._index_cls.from_names(self.from_names_data))
-
-    def from_type_blocks_small(self) -> None:
-        for _ in range(1000):
-            self._create(self._index_cls._from_type_blocks(self.from_type_blocks_small_data, own_blocks=False))
-            self._create(self._index_cls._from_type_blocks(self.from_type_blocks_small_data, own_blocks=True))
-
-    def from_type_blocks_large(self) -> None:
-        self._create(self._index_cls._from_type_blocks(self.from_type_blocks_large_data, own_blocks=False))
-        self._create(self._index_cls._from_type_blocks(self.from_type_blocks_large_data, own_blocks=True))
-
-
-class IH_Constructors_Tree_N(IH_Constructors_Tree, Native):
-
-    @property
-    def _index_cls(self) -> tp.Type[sf.IndexHierarchy]:
-        return sf.IndexHierarchy
-
-    def _create(self, ih: sf.IndexHierarchy) -> None: # type: ignore
-        return
-
-
-class IH_Constructors_Tree_R(IH_Constructors_Tree, Reference):
-
-    @property
-    def _index_cls(self) -> tp.Type[sf.IndexHierarchyTree]:
-        return sf.IndexHierarchyTree
-
-    def _create(self, ih: sf.IndexHierarchyTree) -> None: # type: ignore
-        ih._update_array_cache()
-
-
-#-------------------------------------------------------------------------------
-
-class IH_Constructors_MI(Perf):
+class IndexHierarchyConstruction(Perf):
 
     NUMBER = 1
 
@@ -1690,7 +1399,7 @@ class IH_Constructors_MI(Perf):
                 )
 
 
-class IH_Constructors_MI_N(IH_Constructors_MI, Native):
+class IndexHierarchyConstruction_N(IndexHierarchyConstruction, Native):
 
     def from_product_small(self) -> None:
         for _ in range(1000):
@@ -1727,7 +1436,7 @@ class IH_Constructors_MI_N(IH_Constructors_MI, Native):
         sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_large), own_blocks=True)
 
 
-class IH_Constructors_MI_R(IH_Constructors_MI, Reference):
+class IndexHierarchyConstruction_R(IndexHierarchyConstruction, Reference):
 
     def from_product_small(self) -> None:
         for _ in range(1000):
@@ -1764,205 +1473,9 @@ class IH_Constructors_MI_R(IH_Constructors_MI, Reference):
         pd.MultiIndex.from_arrays(self.arrays_large)
 
 
-
 #-------------------------------------------------------------------------------
 
-class IH_Grow_Tree(Perf):
-
-    NUMBER = 10
-
-    def __init__(self) -> None:
-        super().__init__()
-
-        RANGE0 = range(10), range(10), range(10)
-        RANGE1 = range(10, 20), range(10, 20), range(10, 20)
-        RANGE2 = range(20, 30), range(20, 30), range(20, 30)
-        RANGE3 = range(30, 40), range(30, 40), range(30, 40)
-        RANGE4 = range(40, 50), range(40, 50), range(40, 50)
-        RANGE5 = range(50, 60), range(50, 60), range(50, 60)
-
-        self.ihgo = sf.IndexHierarchyGO.from_product(*RANGE0)
-        self.ih1 = sf.IndexHierarchy.from_product(*RANGE1)
-        self.ih2 = sf.IndexHierarchy.from_product(*RANGE2)
-        self.ih3 = sf.IndexHierarchy.from_product(*RANGE3)
-        self.ih4 = sf.IndexHierarchy.from_product(*RANGE4)
-        self.ih5 = sf.IndexHierarchy.from_product(*RANGE5)
-
-        self.treego = sf.IndexHierarchyTreeGO.from_product(*RANGE0)
-        self.tree1 = sf.IndexHierarchyTree.from_product(*RANGE1)
-        self.tree2 = sf.IndexHierarchyTree.from_product(*RANGE2)
-        self.tree3 = sf.IndexHierarchyTree.from_product(*RANGE3)
-        self.tree4 = sf.IndexHierarchyTree.from_product(*RANGE4)
-        self.tree5 = sf.IndexHierarchyTree.from_product(*RANGE5)
-        self.treego._update_array_cache()
-        self.tree1._update_array_cache()
-        self.tree2._update_array_cache()
-        self.tree3._update_array_cache()
-        self.tree4._update_array_cache()
-        self.tree5._update_array_cache()
-
-        self.meta = dict(
-                extend_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                append_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                append_and_extend_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                extend_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                append_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                append_and_extend_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                )
-
-
-class IH_Grow_Tree_N(IH_Grow_Tree, Native):
-
-    def _append_and_extend(self, recache: bool) -> None:
-        ihgo = self.ihgo.copy()
-
-        split = len(self.ih1) // 5
-
-        for label in self.ih1.iloc[:split]:
-            ihgo.append(label)
-
-        ihgo.extend(self.ih2)
-
-        for label in self.ih1.iloc[split:split*2]:
-            ihgo.append(label)
-
-        ihgo.extend(self.ih3)
-
-        for label in self.ih1.iloc[split*2:split*3]:
-            ihgo.append(label)
-
-        ihgo.extend(self.ih4)
-
-        for label in self.ih1.iloc[split*3:split*4]:
-            ihgo.append(label)
-
-        ihgo.extend(self.ih5)
-
-        for label in self.ih1.iloc[split*4:]:
-            ihgo.append(label)
-
-        if recache:
-            ihgo._update_array_cache()
-
-    def append_and_extend_recache(self) -> None:
-        self._append_and_extend(recache=True)
-
-    def append_and_extend_no_recache(self) -> None:
-        self._append_and_extend(recache=False)
-
-    def _extend_only(self, recache: bool) -> None:
-        ihgo = self.ihgo.copy()
-
-        ihgo.extend(self.ih1)
-        ihgo.extend(self.ih2)
-        ihgo.extend(self.ih3)
-        ihgo.extend(self.ih4)
-        ihgo.extend(self.ih5)
-
-        if recache:
-            ihgo._update_array_cache()
-
-    def extend_only_recache(self) -> None:
-        self._extend_only(recache=True)
-
-    def extend_only_no_recache(self) -> None:
-        self._extend_only(recache=False)
-
-    def _append_only(self, recache: bool) -> None:
-        ihgo = self.ihgo.copy()
-
-        for ih in (self.ih1, self.ih2, self.ih3, self.ih4, self.ih5):
-            for label in ih:
-                ihgo.append(label)
-
-        if recache:
-            ihgo._update_array_cache()
-
-    def append_only_recache(self) -> None:
-        self._append_only(recache=True)
-
-    def append_only_no_recache(self) -> None:
-        self._append_only(recache=False)
-
-
-class IH_Grow_Tree_R(IH_Grow_Tree, Reference):
-
-    def _append_and_extend(self, recache: bool) -> None:
-        treego = self.treego.copy()
-
-        split = len(self.tree1) // 5
-
-        for label in self.tree1.iloc[:split]:
-            treego.append(label)
-
-        treego.extend(self.tree2)
-
-        for label in self.tree1.iloc[split:split*2]:
-            treego.append(label)
-
-        treego.extend(self.tree3)
-
-        for label in self.tree1.iloc[split*2:split*3]:
-            treego.append(label)
-
-        treego.extend(self.tree4)
-
-        for label in self.tree1.iloc[split*3:split*4]:
-            treego.append(label)
-
-        treego.extend(self.tree5)
-
-        for label in self.tree1.iloc[split*4:]:
-            treego.append(label)
-
-        if recache:
-            treego._update_array_cache()
-
-    def append_and_extend_recache(self) -> None:
-        self._append_and_extend(recache=True)
-
-    def append_and_extend_no_recache(self) -> None:
-        self._append_and_extend(recache=False)
-
-    def _extend_only(self, recache: bool) -> None:
-        treego = self.treego.copy()
-
-        treego.extend(self.tree1)
-        treego.extend(self.tree2)
-        treego.extend(self.tree3)
-        treego.extend(self.tree4)
-        treego.extend(self.tree5)
-
-        if recache:
-            treego._update_array_cache()
-
-    def extend_only_recache(self) -> None:
-        self._extend_only(recache=True)
-
-    def extend_only_no_recache(self) -> None:
-        self._extend_only(recache=False)
-
-    def _append_only(self, recache: bool) -> None:
-        treego = self.treego.copy()
-
-        for ih in (self.tree1, self.tree2, self.tree3, self.tree4, self.tree5):
-            for label in ih:
-                treego.append(label)
-
-        if recache:
-            treego._update_array_cache()
-
-    def append_only_recache(self) -> None:
-        self._append_only(recache=True)
-
-    def append_only_no_recache(self) -> None:
-        self._append_only(recache=False)
-
-
-
-#-------------------------------------------------------------------------------
-
-class IH_Grow_MI(Perf):
+class IndexHierarchyGO(Perf):
 
     NUMBER = 10
 
@@ -2000,7 +1513,7 @@ class IH_Grow_MI(Perf):
                 )
 
 
-class IH_Grow_MI_N(IH_Grow_MI, Native):
+class IndexHierarchyGO_N(IndexHierarchyGO, Native):
 
     def _append_and_extend(self, recache: bool) -> None:
         ihgo = self.ihgo.copy()
@@ -2074,7 +1587,7 @@ class IH_Grow_MI_N(IH_Grow_MI, Native):
         self._append_only(recache=False)
 
 
-class IH_Grow_MI_R(IH_Grow_MI, Reference):
+class IndexHierarchyGO_R(IndexHierarchyGO, Reference):
 
     def append_and_extend_recache(self) -> None:
         migo = self.migo.copy()
