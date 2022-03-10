@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Extended interface of ``Batch`` to include all methods for handling missing values.
 
+Silenced all NumPy warnings where the issue raised in the warning is being explicitly handled in the code.
+
 
 0.8.35
 ----------
