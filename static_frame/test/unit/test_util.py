@@ -1,6 +1,8 @@
 import unittest
 import datetime
 import typing as tp
+import warnings
+
 from enum import Enum
 
 import numpy as np
@@ -69,6 +71,7 @@ from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import dtype_from_element
+from static_frame.core.util import WarningsSilent
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 
@@ -2597,6 +2600,12 @@ class TestUnit(TestCase):
 
         with self.assertRaises(TypeError):
             ufunc_unique1d_counts(np.array(['foo', []], dtype=object))
+
+    def test_warnings_silent_a(self) -> None:
+        post = warnings.filters #type: ignore
+        with WarningsSilent():
+            warnings.warn('foo')
+        self.assertIs(post, warnings.filters) #type: ignore
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ from static_frame.test.test_case import temp_file
 from static_frame.core.store import StoreConfig
 from static_frame.core.batch import normalize_container
 from static_frame.core.exception import BatchIterableInvalid
+from static_frame.core.exception import ErrorInitFrame
 
 nan = np.nan
 
@@ -180,7 +181,7 @@ class TestUnit(TestCase):
 
     def test_batch_h(self) -> None:
 
-        frame = ff.parse("s(10,3)")
+        frame = ff.parse('s(10,3)')
         with self.assertRaises(BatchIterableInvalid):
             Batch(frame.iter_window(size=3)).std(ddof=1).to_frame()
 
@@ -826,7 +827,326 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_batch_isna(self) -> None: # also tests `notna()`
+        f0 = ff.parse('v(str,str,bool,float)|s(9,4)').assign[3]([None, 100.0, 632.23, None, 12.5, 51526.002, None, None, 0.231])
+        actual1 = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).isna().to_frame()[3].values.tolist()
+        actual2 = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).notna().to_frame()[3].values
+        actual2 = np.invert(actual2).tolist()
 
+        expected = [True, False, False, True, False, False, True, True, False]
+        self.assertEqual(actual1, actual2)
+        self.assertEqual(actual2, expected)
+
+    def test_batch_dropna(self) -> None:
+        f0 = ff.parse('v(str,str,bool,float)|s(9,4)').assign[3]([None, 100.0, 632.23, None, 12.5, 51526.002, None, None, 0.231])
+        f = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).dropna(condition=np.any).to_frame()
+
+        actual_index = f.index.values[:,-1].astype(int).tolist()
+        expected_index = [1,2,4,5,8]
+        self.assertEqual(actual_index, expected_index)
+
+    #---------------------------------------------------------------------------
+    def test_batch_isfalsy(self) -> None: # also tests `notfalsy()`
+        f0 = ff.parse('v(str,str,bool,float)|s(9,4)')
+        actual1 = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[6:9].rename('3'),
+            f0.iloc[3:6].rename('2'),
+        )).isfalsy().to_frame()[2].values.tolist()
+        actual2 = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[6:9].rename('3'),
+            f0.iloc[3:6].rename('2'),
+        )).notfalsy().to_frame()[2].values
+        actual2 = np.invert(actual2).tolist()
+
+        expected = [False, True, True, False, False, False, False, True, True]
+        self.assertEqual(actual1, actual2)
+        self.assertEqual(actual2, expected)
+
+    def test_batch_fillna_a(self) -> None:
+        f0 = ff.parse('v(str,str,bool,int)|s(9,4)').assign.loc[4:,0]('')
+        f1 = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillfalsy('filled').to_frame()
+        expected = ['zjZQ', 'zO5l', 'zEdH', 'zB7E', 'filled', 'filled', 'filled', 'filled', 'filled']
+        actual = f1[0].values.tolist()
+        self.assertEqual(expected, actual)
+
+    def test_batch_fillna_b(self) -> None:
+        f0 = ff.parse('v(str,str,bool,int)|s(9,4)').assign[3]([None, 100, 632, None, 12, 51526, None, None, 231])
+        f1 = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillna(0).to_frame()
+        expected = [0, 100, 632, 0, 12, 51526, 0, 0, 231]
+        actual = f1[3].values.tolist()
+        self.assertEqual(expected, actual)
+
+    def test_batch_dropfalsy(self) -> None:
+        f0 = ff.parse('v(str,str,bool,float)|s(9,4)')
+        f4 = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).dropfalsy(condition=np.any).to_frame()
+        actual_index = f4.index.values[:,-1].astype(int).tolist()
+        expected_index = [0,3,6,7,8]
+        self.assertEqual(actual_index, expected_index)
+
+    #---------------------------------------------------------------------------
+    def test_batch_fillna_leading(self) -> None:
+        f0 = ff.parse('v(int,str,float,str)|s(9,4)')
+        f0 = f0.assign[0]([None if i in (0,3,6) else x for i,x in enumerate(f0[0].values)])
+        f = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillna_leading(value=123456789).to_frame()
+
+        expected = [123456789, 92867, 84967, 123456789, 175579, 58768, 123456789, 170440, 32395]
+        actual = f[0].values.astype(int).tolist()
+        self.assertEqual(expected, actual)
+
+    def test_batch_fillna_trailing(self) -> None:
+        f0 = ff.parse('v(int,str,float,str)|s(9,4)')
+        f0 = f0.assign[0]([None if i in (2,5,8) else x for i,x in enumerate(f0[0].values)])
+        f = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillna_trailing(value=123456789).to_frame()
+
+        expected = [-88017, 92867, 123456789, 13448, 175579, 123456789, 146284, 170440, 123456789]
+        actual = f[0].values.astype(int).tolist()
+        self.assertEqual(expected, actual)
+
+    def test_batch_fillna_forward(self) -> None:
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,None,3,4,None,6,7,None,9])
+        f = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillna_forward().to_frame()
+
+        expected = [1,1,3,4,4,6,7,7,9]
+        actual = f[0].values.astype(int).tolist()
+        self.assertEqual(expected, actual)
+
+    def test_batch_fillna_backward(self) -> None:
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,None,3,4,None,6,7,None,9])
+        f = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillna_backward().to_frame()
+
+        expected = [1,3,3,4,6,6,7,9,9]
+        actual = f[0].values.astype(int).tolist()
+        self.assertEqual(expected, actual)
+
+    #---------------------------------------------------------------------------
+    def test_batch_fillfalsy_leading(self) -> None:
+        f0 = ff.parse('v(str,str,float,str)|s(9,4)')
+        f0 = f0.assign[0](['' if i in (0,3,6) else x for i,x in enumerate(f0[0].values)])
+        f = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillfalsy_leading(value='--leading--').to_frame()
+
+        expected = ['--leading--', 'zO5l', 'zEdH', '--leading--', 'zwIp', 'zDVQ', '--leading--', 'zyT8', 'zS6w']
+        actual = f[0].values.tolist()
+        self.assertEqual(expected, actual)
+
+    def test_batch_fillfalsy_trailing(self) -> None:
+        f0 = ff.parse('v(str,str,float,int)|s(9,4)')
+        f0 = f0.assign[0](['' if i in (2,5,8) else x for i,x in enumerate(f0[0].values)])
+        f = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillfalsy_trailing(value='--trailing--').to_frame()
+
+        expected = ['zjZQ', 'zO5l', '--trailing--', 'zB7E', 'zwIp', '--trailing--', 'z5hI', 'zyT8', '--trailing--']
+        actual = f[0].values.tolist()
+        self.assertEqual(expected, actual)
+
+    def test_batch_fillfalsy_forward(self) -> None:
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,0,3,4,0,6,7,0,9])
+        f = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillfalsy_forward().to_frame()
+
+        expected = [1,1,3,4,4,6,7,7,9]
+        self.assertEqual(expected, f[0].values.tolist())
+
+    def test_batch_fillfalsy_backward(self) -> None:
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1,0,3,4,0,6,7,0,9])
+        f = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).fillfalsy_backward().to_frame()
+
+        expected = [1,3,3,4,6,6,7,9,9]
+        self.assertEqual(expected, f[0].values.tolist())
+
+    #---------------------------------------------------------------------------
+    def test_batch_unset_index(self) -> None:
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+        f = Batch.from_frames((
+            f0.iloc[0:2].rename('1'),
+            f0.iloc[2:5].rename('2'),
+            f0.iloc[5:9].rename('3'),
+        )).unset_index().to_frame()
+        actual = f.index.values[:,-1].astype(int).tolist()
+        expected = [*range(2), *range(3), *range(4)]
+        self.assertEqual(actual, expected)
+
+    #---------------------------------------------------------------------------
+    def test_batch_reindex(self) -> None:
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+        f = list(Batch.from_frames((
+            f0.iloc[0:2].rename('1'),
+            f0.iloc[2:5].rename('2'),
+            f0.iloc[5:9].rename('3'),
+        )).reindex(index=list(range(9))).items())
+        a = [(x[1].shape) for x in f]
+        self.assertTrue(a.count(a[0]) == 3)
+
+    #---------------------------------------------------------------------------
+    def test_batch_relabel_a(self) -> None:
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+        f1 = Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).relabel(columns={2:'two'}).to_frame()
+        actual = f1.columns.values.tolist()
+        expected = [0, 1, 'two', 3]
+        self.assertEqual(expected, actual)
+
+    def test_batch_relabel_b(self) -> None:
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+        with self.assertRaises(ErrorInitFrame):
+            f1 = Batch.from_frames((
+                f0.iloc[0:2].rename('1'),
+                f0.iloc[2:8].rename('2'),
+            )).relabel(index=('a', 'b')).to_frame()
+
+    #---------------------------------------------------------------------------
+    def test_batch_relabel_level_add_drop(self) -> None:
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+        f123 = list(Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).relabel_level_add('removeme').items())
+        expected = [['removeme', i] for i in range(9)]
+        actual = [*f123[0][1].index.values.tolist(), *f123[1][1].index.values.tolist(), *f123[2][1].index.values.tolist()]
+        self.assertEqual(expected, actual)
+        f123 = list(Batch.from_frames(np.array(f123)[:,-1]).relabel_level_drop(index=1).items())
+        expected = list(range(9))
+        actual = [*f123[0][1].index.values.tolist(), *f123[1][1].index.values.tolist(), *f123[2][1].index.values.tolist()]
+        self.assertEqual(expected, actual)
+
+
+    def test_batch_relabel_shift_flat(self) -> None:
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+        f123 = list(Batch.from_frames((
+            f0.iloc[0:3].rename('1'),
+            f0.iloc[3:6].rename('2'),
+            f0.iloc[6:9].rename('3'),
+        )).relabel_shift_in(2, axis=0).relabel_flat(index=1).items())
+        expected = [(i,bool(x)) for i,x in enumerate([1,0,0,1,0,0,1,1,1])]
+        actual = [*f123[0][1].index.values.tolist(), *f123[1][1].index.values.tolist(), *f123[2][1].index.values.tolist()]
+        self.assertEqual(expected, actual)
+
+    #---------------------------------------------------------------------------
+    def test_batch_rank_dense(self) -> None:
+        i = [1,4,7,2,5,8,3,6,9]
+        f0 = Frame.from_items(
+            (
+                ('i',i),
+                ('b',(b%2==0 for b in i))
+            )
+        )
+        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        b123 = Batch.from_frames(f123).rank_dense()
+        for i,(_, f) in enumerate(b123.items()): # type: ignore
+            self.assertEqual(f.values.tolist(), f123[i].rank_dense().values.tolist())
+
+    def test_batch_rank_max(self) -> None:
+        i = [1,4,7,2,5,8,3,6,9]
+        f0 = Frame.from_items(
+            (
+                ('i',i),
+                ('b',(b%2==0 for b in i))
+            )
+        )
+        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        b123 = Batch.from_frames(f123).rank_max()
+        for i,(_, f) in enumerate(b123.items()): # type: ignore
+            self.assertEqual(f.values.tolist(), f123[i].rank_max().values.tolist())
+
+    def test_batch_rank_mean(self) -> None:
+        i = [1,4,7,2,5,8,3,6,9]
+        f0 = Frame.from_items(
+            (
+                ('i',i),
+                ('b',(b%2==0 for b in i))
+            )
+        )
+        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        b123 = Batch.from_frames(f123).rank_mean()
+        for i,(_, f) in enumerate(b123.items()): # type: ignore
+            self.assertEqual(f.values.tolist(), f123[i].rank_mean().values.tolist())
+
+    def test_batch_rank_min(self) -> None:
+        i = [1,4,7,2,5,8,3,6,9]
+        f0 = Frame.from_items(
+            (
+                ('i',i),
+                ('b',(b%2==0 for b in i))
+            )
+        )
+        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        b123 = Batch.from_frames(f123).rank_min()
+        for i,(_, f) in enumerate(b123.items()): # type: ignore
+            self.assertEqual(f.values.tolist(), f123[i].rank_min().values.tolist())
+
+    def test_batch_rank_ordinal(self) -> None:
+        i = [1,4,7,2,5,8,3,6,9]
+        f0 = Frame.from_items(
+            (
+                ('i',i),
+                ('b',(b%2==0 for b in i))
+            )
+        )
+        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        b123 = Batch.from_frames(f123).rank_ordinal()
+        for i,(_, f) in enumerate(b123.items()): # type: ignore
+            self.assertEqual(f.values.tolist(), f123[i].rank_ordinal().values.tolist())
+
+    #---------------------------------------------------------------------------
     def test_batch_shift_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(b=(20,20,0), a=(20,20,50)),

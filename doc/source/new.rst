@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.8.36
+----------
+
+Extended interface of ``Batch`` to include all methods for handling missing values.
+
+
 0.8.35
 ----------
 

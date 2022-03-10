@@ -515,7 +515,7 @@ class TestUnit(TestCase):
 
             npy = NPY(fp, 'r')
             post = npy.contents
-            self.assertEquals(post.shape, (5, 4))
+            self.assertEqual(post.shape, (5, 4))
             self.assertEqual(post['size'].sum(), npy.nbytes)
 
     def test_archive_components_npy_contents_b(self) -> None:
@@ -532,7 +532,7 @@ class TestUnit(TestCase):
         with temp_file('.zip') as fp:
             f1.to_npz(fp)
             post = NPZ(fp).contents
-            self.assertEquals(post.shape, (5, 4))
+            self.assertEqual(post.shape, (5, 4))
             self.assertTrue(post['size'].sum() > 0)
 
     def test_archive_components_npy_nbytes_a(self) -> None:

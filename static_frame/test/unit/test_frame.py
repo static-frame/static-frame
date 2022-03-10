@@ -48,6 +48,7 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import iloc_to_insertion_iloc
+from static_frame.core.util import WarningsSilent
 
 from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import skip_win
@@ -7146,9 +7147,9 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('u', 'v', 'w', 'x', 'y', 'z'))
 
-        with temp_file('.xlsx') as fp:
+        # for an unexplained reason, openpyxl raises a ResourceWarning here
+        with temp_file('.xlsx') as fp, WarningsSilent():
             f1.to_xlsx(fp)
-
             f2 = Frame.from_xlsx(fp,
                     columns_depth=0,
                     skip_header=4, # include the column that was added

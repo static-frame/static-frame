@@ -11,6 +11,7 @@ from itertools import zip_longest
 from os import PathLike
 from urllib import request
 from copy import deepcopy
+from types import TracebackType
 
 import contextlib
 import datetime
@@ -18,6 +19,7 @@ import operator
 import os
 import tempfile
 import typing as tp
+import warnings
 
 from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
@@ -345,6 +347,25 @@ for attr in ('__add__', '__sub__', '__mul__', '__matmul__', '__truediv__', '__fl
     rfunc.__name__ = 'r' + func.__name__
     rattr = '__r' + attr[2:]
     OPERATORS[rattr] = rfunc
+
+#-------------------------------------------------------------------------------
+class WarningsSilent:
+    '''Alternate context manager for silencing warnings with less overhead.
+    '''
+    __slots__ = ('previous_warnings',)
+
+    FILTER = [('ignore', None, Warning, None, 0)]
+
+    def __enter__(self) -> None:
+        self.previous_warnings = warnings.filters #type: ignore
+        warnings.filters = self.FILTER #type: ignore
+
+    def __exit__(self,
+            type: tp.Type[BaseException],
+            value: BaseException,
+            traceback: TracebackType,
+            ) -> None:
+        warnings.filters = self.previous_warnings #type: ignore
 
 #-------------------------------------------------------------------------------
 class UFuncCategory(Enum):
@@ -1680,8 +1701,9 @@ def arrays_equal(array: np.ndarray,
             # do not permit True result between 2021 and 2021-01-01
             return False
 
-    # WARNING_RAISED: FutureWarning: elementwise comparison failed; returning scalar instead...
-    eq = array == other
+    with WarningsSilent():
+        # FutureWarning: elementwise comparison failed; returning scalar instead...
+        eq = array == other
 
     # NOTE: will only be False, or an array
     if eq is False:
@@ -2098,7 +2120,8 @@ def _ufunc_set_1d(
 
         if len(array) == len(other):
             # NOTE: if these are both dt64 of different units but "aligned" they will return equal
-            compare = array == other
+            with WarningsSilent():
+                compare = array == other
             # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it will always be False
             if compare.__class__ is np.ndarray and compare.all(axis=None):
                 if is_difference:
@@ -2201,7 +2224,8 @@ def _ufunc_set_2d(
 
         if array.shape == other.shape:
             arrays_are_equal = False
-            compare = array == other
+            with WarningsSilent():
+                compare = array == other
             # will not match a 2D array of integers and 1D array of tuples containing integers (would have to do a post-set comparison, but would loose order)
             if isinstance(compare, BOOL_TYPES) and compare:
                 arrays_are_equal = True #pragma: no cover
@@ -2466,7 +2490,10 @@ def isin_array(*,
     assume_unique = array_is_unique and other_is_unique
     func = np.in1d if array.ndim == 1 else np.isin
 
-    result = func(array, other, assume_unique=assume_unique) #type: ignore
+    with WarningsSilent():
+        # FutureWarning: elementwise comparison failed;
+        result = func(array, other, assume_unique=assume_unique) #type: ignore
+
     result.flags.writeable = False
 
     return result
