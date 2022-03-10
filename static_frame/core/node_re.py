@@ -4,6 +4,8 @@ import re
 import numpy as np
 
 from static_frame.core.node_selector import Interface
+from static_frame.core.node_selector import InterfaceBatch
+
 from static_frame.core.node_selector import TContainer
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import DTYPE_STR
@@ -13,6 +15,7 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
@@ -22,6 +25,18 @@ if tp.TYPE_CHECKING:
 BlocksType = tp.Iterable[np.ndarray]
 ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
+INTERFACE_RE = (
+        'search',
+        'match',
+        'fullmatch',
+        'split',
+        'findall',
+        'sub',
+        'subn',
+        )
+
+
+
 class InterfaceRe(Interface[TContainer]):
 
     __slots__ = (
@@ -29,15 +44,7 @@ class InterfaceRe(Interface[TContainer]):
             '_blocks_to_container',
             '_pattern',
             )
-    INTERFACE = (
-            'search',
-            'match',
-            'fullmatch',
-            'split',
-            'findall',
-            'sub',
-            'subn',
-            )
+    INTERFACE = INTERFACE_RE
 
     def __init__(self,
             blocks: BlocksType,
@@ -212,4 +219,121 @@ class InterfaceRe(Interface[TContainer]):
                 dtype=DTYPE_OBJECT, # returns tuples
                 )
         return self._blocks_to_container(block_gen)
+
+
+#-------------------------------------------------------------------------------
+class InterfaceBatchRe(InterfaceBatch):
+    '''Alternate re interface specialized for the :obj:`Batch`.
+    '''
+
+    __slots__ = (
+            '_batch_apply',
+            '_pattern',
+            '_flags',
+            )
+    INTERFACE = INTERFACE_RE
+
+    def __init__(self,
+            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            pattern: str,
+            flags: int = 0,
+            ) -> None:
+
+        self._batch_apply = batch_apply
+        self._pattern = pattern
+        self._flags = flags
+
+    #---------------------------------------------------------------------------
+    def search(self, pos: int = 0, endpos: tp.Optional[int] = None) -> 'Batch':
+        '''
+        Scan through string looking for the first location where this regular expression produces a match and return True, else False. Note that this is different from finding a zero-length match at some point in the string.
+
+        Args:
+            pos: Gives an index in the string where the search is to start; it defaults to 0.
+            endpos: Limits how far the string will be searched; it will be as if the string is endpos characters long.
+        '''
+        return self._batch_apply(
+            lambda c: c.via_re(self._pattern, self._flags).search(pos, endpos)
+            )
+
+    def match(self, pos: int = 0, endpos: tp.Optional[int] = None) -> 'Batch':
+        '''
+        If zero or more characters at the beginning of string match this regular expression return True, else False. Note that this is different from a zero-length match.
+
+        Args:
+            pos: Gives an index in the string where the search is to start; it defaults to 0.
+            endpos: Limits how far the string will be searched; it will be as if the string is endpos characters long.
+        '''
+        return self._batch_apply(
+            lambda c: c.via_re(self._pattern, self._flags).match(pos, endpos)
+            )
+
+    def fullmatch(self, pos: int = 0, endpos: tp.Optional[int] = None) -> 'Batch':
+        '''
+        If the whole string matches this regular expression, return True, else False. Note that this is different from a zero-length match.
+
+        Args:
+            pos: Gives an index in the string where the search is to start; it defaults to 0.
+            endpos: Limits how far the string will be searched; it will be as if the string is endpos characters long.
+        '''
+        return self._batch_apply(
+            lambda c: c.via_re(self._pattern, self._flags).fullmatch(pos, endpos)
+            )
+
+    def split(self, maxsplit: int = 0) -> 'Batch':
+        '''
+        Split string by the occurrences of pattern. If capturing parentheses are used in pattern, then the text of all groups in the pattern are also returned as part of the resulting tuple.
+
+        Args:
+            maxsplit: If nonzero, at most maxsplit splits occur, and the remainder of the string is returned as the final element of the tuple.
+        '''
+        return self._batch_apply(
+            lambda c: c.via_re(self._pattern, self._flags).split(maxsplit)
+            )
+
+    def findall(self, pos: int = 0, endpos: tp.Optional[int] = None) -> 'Batch':
+        '''
+        Return all non-overlapping matches of pattern in string, as a tuple of strings. The string is scanned left-to-right, and matches are returned in the order found. If one or more groups are present in the pattern, return a tuple of groups; this will be a tuple of tuples if the pattern has more than one group. Empty matches are included in the result.
+
+        Args:
+            pos: Gives an index in the string where the search is to start; it defaults to 0.
+            endpos: Limits how far the string will be searched; it will be as if the string is endpos characters long.
+        '''
+        return self._batch_apply(
+            lambda c: c.via_re(self._pattern, self._flags).findall(pos, endpos)
+            )
+
+    def sub(self, repl: str, count: int = 0) -> 'Batch':
+        '''
+        Return the string obtained by replacing the leftmost non-overlapping occurrences of pattern in string by the replacement ``repl``. If the pattern is not found, the string is returned unchanged.
+
+        Args:
+            repl: A string or a function; if it is a string, any backslash escapes in it are processed.
+            count: The optional argument count is the maximum number of pattern occurrences to be replaced; count must be a non-negative integer. If omitted or zero, all occurrences will be replaced.
+        '''
+        return self._batch_apply(
+            lambda c: c.via_re(self._pattern, self._flags).sub(repl, count)
+            )
+
+    def subn(self, repl: str, count: int = 0) -> 'Batch':
+        '''
+        Perform the same operation as sub(), but return a tuple (new_string, number_of_subs_made).
+
+        Args:
+            repl: A string or a function; if it is a string, any backslash escapes in it are processed.
+            count: The optional argument count is the maximum number of pattern occurrences to be replaced; count must be a non-negative integer. If omitted or zero, all occurrences will be replaced.
+        '''
+        return self._batch_apply(
+            lambda c: c.via_re(self._pattern, self._flags).subn(repl, count)
+            )
+
+
+
+
+
+
+
+
+
+
 

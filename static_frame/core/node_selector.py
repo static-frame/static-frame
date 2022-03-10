@@ -7,6 +7,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
+# from static_frame.core.util import AnyCallable
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
@@ -41,6 +42,9 @@ class Interface(tp.Generic[TContainer]):
     __slots__ = EMPTY_TUPLE
     INTERFACE: tp.Tuple[str, ...] = EMPTY_TUPLE
 
+class InterfaceBatch:
+    # Batch interfaces are unique in that they always (?) return a Batch
+    INTERFACE: tp.Tuple[str, ...] = EMPTY_TUPLE
 
 class InterfaceGetItem(Interface[TContainer]):
 
