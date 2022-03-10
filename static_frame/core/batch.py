@@ -31,7 +31,10 @@ from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipNPZ
-from static_frame.core.util import EMPTY_TUPLE, AnyCallable, IndexConstructor, IndexConstructors
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DEFAULT_SORT_KIND
@@ -968,9 +971,9 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(attr='notna')
 
     def dropna(
-        self,
-        axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all
-    ) -> 'Batch':
+            self,
+            axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all,
+            ) -> 'Batch':
         '''
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
@@ -998,10 +1001,9 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         return self._apply_attr(attr='notfalsy')
 
-    def dropfalsy(
-        self,
-        axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all
-    ) -> 'Batch':
+    def dropfalsy(self,
+            axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all,
+            ) -> 'Batch':
         '''
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
@@ -1019,10 +1021,9 @@ class Batch(ContainerOperand, StoreClientMixin):
     # ---------------------------------------------------------------------------
     # na filling
 
-    def fillna(
-        self,
-        value: tp.Any
-    ) -> 'Batch':
+    def fillna(self,
+            value: tp.Any
+            ) -> 'Batch':
         '''
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling null (NaN or None) with the provided ``value``.
         '''
@@ -1031,12 +1032,11 @@ class Batch(ContainerOperand, StoreClientMixin):
                 value=value,
                 )
 
-    def fillna_leading(
-            self,
+    def fillna_leading(self,
             value: tp.Any,
             *,
             axis: int = 0
-        ) -> 'Batch':
+            ) -> 'Batch':
         '''
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling leading (and only leading) null (NaN or None) with the provided ``value``.
 
@@ -1049,14 +1049,13 @@ class Batch(ContainerOperand, StoreClientMixin):
                 attr='fillna_leading',
                 value=value,
                 axis=axis
-        )
+                )
 
-    def fillna_trailing(
-            self,
+    def fillna_trailing(self,
             value: tp.Any,
             *,
             axis: int = 0,
-        ) -> 'Batch':
+            ) -> 'Batch':
         '''
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling trailing (and only trailing) null (NaN or None) with the provided ``value``.
 
@@ -1068,14 +1067,13 @@ class Batch(ContainerOperand, StoreClientMixin):
             attr='fillna_trailing',
             value=value,
             axis=axis
-        )
+            )
 
-    def fillna_forward(
-        self,
-        limit: int = 0,
-        *,
-        axis: int = 0,
-        ) -> 'Batch':
+    def fillna_forward(self,
+            limit: int = 0,
+            *,
+            axis: int = 0,
+            ) -> 'Batch':
         '''
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling forward null (NaN or None) with the last observed value.
 
@@ -1086,15 +1084,14 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(
             attr='fillna_forward',
             limit=limit,
-            axis=axis
-        )
+            axis=axis,
+            )
 
-    def fillna_backward(
-        self,
-        limit: int = 0,
-        *,
-        axis: int = 0,
-        ) -> 'Batch':
+    def fillna_backward(self,
+            limit: int = 0,
+            *,
+            axis: int = 0,
+            ) -> 'Batch':
         '''
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling backward null (NaN or None) with the first observed value.
 
@@ -1106,15 +1103,14 @@ class Batch(ContainerOperand, StoreClientMixin):
             attr='fillna_backward',
             limit=limit,
             axis=axis,
-        )
+            )
 
     # ---------------------------------------------------------------------------
     # falsy filling
 
-    def fillfalsy(
-        self,
-        value: tp.Any
-    ) -> 'Batch':
+    def fillfalsy(self,
+            value: tp.Any
+            ) -> 'Batch':
         '''
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling falsy values with the provided ``value``.
         '''
@@ -1123,13 +1119,11 @@ class Batch(ContainerOperand, StoreClientMixin):
                 value=value,
                 )
 
-    def fillfalsy_leading(
-            self,
+    def fillfalsy_leading(self,
             value: tp.Any,
             *,
             axis: int = 0,
-        ) -> 'Batch':
-
+            ) -> 'Batch':
         '''
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling leading (and only leading) falsy values with the provided ``value``.
 
@@ -1141,14 +1135,13 @@ class Batch(ContainerOperand, StoreClientMixin):
             attr='fillfalsy_leading',
             value=value,
             axis=axis,
-        )
+            )
 
-    def fillfalsy_trailing(
-        self,
-        value: tp.Any,
-        *,
-        axis: int = 0,
-        ) -> 'Batch':
+    def fillfalsy_trailing(self,
+            value: tp.Any,
+            *,
+            axis: int = 0,
+            ) -> 'Batch':
         '''
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling trailing (and only trailing) falsy values with the provided ``value``.
 
@@ -1160,14 +1153,12 @@ class Batch(ContainerOperand, StoreClientMixin):
             attr='fillfalsy_trailing',
             value=value,
             axis=axis,
-        )
+            )
 
-
-    def fillfalsy_forward(
-        self,
-        limit: int = 0,
-        axis: int = 0,
-        ) -> 'Batch':
+    def fillfalsy_forward(self,
+            limit: int = 0,
+            axis: int = 0,
+            ) -> 'Batch':
         '''
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling forward falsy values with the last observed value.
 
@@ -1179,14 +1170,13 @@ class Batch(ContainerOperand, StoreClientMixin):
             attr='fillfalsy_forward',
             limit=limit,
             axis=axis,
-        )
+            )
 
-    def fillfalsy_backward(
-        self,
-        limit: int = 0,
-        *,
-        axis: int = 0
-        ) -> 'Batch':
+    def fillfalsy_backward(self,
+            limit: int = 0,
+            *,
+            axis: int = 0
+            ) -> 'Batch':
         '''
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling backward falsy values with the first observed value.
 
@@ -1198,19 +1188,18 @@ class Batch(ContainerOperand, StoreClientMixin):
             attr='fillfalsy_backward',
             limit=limit,
             axis=axis,
-        )
+            )
 
 
     # ---------------------------------------------------------------------------
     # index and relabel
-    def relabel(
-        self,
-        index: tp.Optional[RelabelInput] = None,
-        columns: tp.Optional[RelabelInput] = None,
-        *,
-        index_constructor: IndexConstructor = None,
-        columns_constructor: IndexConstructor = None,
-    ) -> 'Batch':
+    def relabel(self,
+            index: tp.Optional[RelabelInput] = None,
+            columns: tp.Optional[RelabelInput] = None,
+            *,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='relabel',
@@ -1218,33 +1207,31 @@ class Batch(ContainerOperand, StoreClientMixin):
             columns=columns,
             index_constructor=index_constructor,
             columns_constructor=columns_constructor,
-        )
+            )
 
-    def unset_index(
-        self,
-        *,
-        names: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
-        consolidate_blocks: bool = False,
-        columns_constructors: IndexConstructors = None
-    ) -> 'Batch':
+    def unset_index(self,
+            *,
+            names: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
+            consolidate_blocks: bool = False,
+            columns_constructors: IndexConstructors = None
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='unset_index',
             names=names,
             consolidate_blocks=consolidate_blocks,
             columns_constructors=columns_constructors
-        )
+            )
 
-    def reindex(
-        self,
-        index: tp.Optional[IndexInitializer] = None,
-        columns: tp.Optional[IndexInitializer] = None,
-        *,
-        fill_value: object = np.nan,
-        own_index: bool = False,
-        own_columns: bool = False,
-        check_equals: bool = True,
-    ) -> 'Batch':
+    def reindex(self,
+            index: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[IndexInitializer] = None,
+            *,
+            fill_value: object = np.nan,
+            own_index: bool = False,
+            own_columns: bool = False,
+            check_equals: bool = True,
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='reindex',
@@ -1254,28 +1241,26 @@ class Batch(ContainerOperand, StoreClientMixin):
             own_index=own_index,
             own_columns=own_columns,
             check_equals=check_equals,
-        )
+            )
 
-    def relabel_flat(
-        self,
-        index: bool = False,
-        columns: bool = False,
-        ) -> 'Batch':
+    def relabel_flat(self,
+            index: bool = False,
+            columns: bool = False,
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='relabel_flat',
             index=index,
             columns=columns
-        )
+            )
 
-    def relabel_level_add(
-        self,
-        index: tp.Hashable = None,
-        columns: tp.Hashable = None,
-        *,
-        index_constructor: IndexConstructor = None,
-        columns_constructor: IndexConstructor = None
-        ) -> 'Batch':
+    def relabel_level_add(self,
+            index: tp.Hashable = None,
+            columns: tp.Hashable = None,
+            *,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='relabel_level_add',
@@ -1285,43 +1270,40 @@ class Batch(ContainerOperand, StoreClientMixin):
             columns_constructor=columns_constructor,
         )
 
-    def relabel_level_drop(
-        self,
-        index: int = 0,
-        columns: int = 0
-        ) -> 'Batch':
+    def relabel_level_drop(self,
+            index: int = 0,
+            columns: int = 0
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='relabel_level_drop',
             index=index,
             columns=columns
-        )
+            )
 
-    def relabel_shift_in(
-        self,
-        key: GetItemKeyType,
-        *,
-        axis: int = 0,
-        ) -> 'Batch':
+    def relabel_shift_in(self,
+            key: GetItemKeyType,
+            *,
+            axis: int = 0,
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='relabel_shift_in',
             key=key,
             axis=axis
-        )
+            )
 
     # ---------------------------------------------------------------------------
     # rank
 
-    def rank_ordinal(
-        self,
-        *,
-        axis: int = 0,
-        skipna: bool = True,
-        ascending: BoolOrBools = True,
-        start: int = 0,
-        fill_value: tp.Any = np.nan
-        ) -> 'Batch':
+    def rank_ordinal(self,
+            *,
+            axis: int = 0,
+            skipna: bool = True,
+            ascending: BoolOrBools = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='rank_ordinal',
@@ -1330,17 +1312,16 @@ class Batch(ContainerOperand, StoreClientMixin):
             ascending=ascending,
             start=start,
             fill_value=fill_value
-        )
+            )
 
-    def rank_dense(
-        self,
-        *,
-        axis: int = 0,
-        skipna: bool = True,
-        ascending: BoolOrBools = True,
-        start: int = 0,
-        fill_value: tp.Any = np.nan
-        ) -> 'Batch':
+    def rank_dense(self,
+            *,
+            axis: int = 0,
+            skipna: bool = True,
+            ascending: BoolOrBools = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='rank_dense',
@@ -1349,17 +1330,16 @@ class Batch(ContainerOperand, StoreClientMixin):
             ascending=ascending,
             start=start,
             fill_value=fill_value
-        )
+            )
 
-    def rank_min(
-        self,
-        *,
-        axis: int = 0,
-        skipna: bool = True,
-        ascending: BoolOrBools = True,
-        start: int = 0,
-        fill_value: tp.Any = np.nan
-        ) -> 'Batch':
+    def rank_min(self,
+            *,
+            axis: int = 0,
+            skipna: bool = True,
+            ascending: BoolOrBools = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='rank_min',
@@ -1368,17 +1348,16 @@ class Batch(ContainerOperand, StoreClientMixin):
             ascending=ascending,
             start=start,
             fill_value=fill_value
-        )
+            )
 
-    def rank_max(
-        self,
-        *,
-        axis: int = 0,
-        skipna: bool = True,
-        ascending: BoolOrBools = True,
-        start: int = 0,
-        fill_value: tp.Any = np.nan
-        ) -> 'Batch':
+    def rank_max(self,
+            *,
+            axis: int = 0,
+            skipna: bool = True,
+            ascending: BoolOrBools = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='rank_max',
@@ -1387,17 +1366,16 @@ class Batch(ContainerOperand, StoreClientMixin):
             ascending=ascending,
             start=start,
             fill_value=fill_value
-        )
+            )
 
-    def rank_mean(
-        self,
-        *,
-        axis: int = 0,
-        skipna: bool = True,
-        ascending: BoolOrBools = True,
-        start: int = 0,
-        fill_value: tp.Any = np.nan
-        ) -> 'Batch':
+    def rank_mean(self,
+            *,
+            axis: int = 0,
+            skipna: bool = True,
+            ascending: BoolOrBools = True,
+            start: int = 0,
+            fill_value: tp.Any = np.nan
+            ) -> 'Batch':
 
         return self._apply_attr(
             attr='rank_mean',
@@ -1406,7 +1384,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             ascending=ascending,
             start=start,
             fill_value=fill_value
-        )
+            )
 
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
