@@ -11,8 +11,7 @@ import sys
 import datetime
 import tempfile
 from enum import Enum
-import shutil
-
+# import warnings
 
 from pyinstrument import Profiler #type: ignore
 from line_profiler import LineProfiler #type: ignore
@@ -27,7 +26,9 @@ sys.path.append(os.getcwd())
 
 import static_frame as sf
 from static_frame.core.display_color import HexColor
-from static_frame.core.util import AnyCallable, isin
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import isin
+from static_frame.core.util import WarningsSilent
 from static_frame.test.test_case import temp_file
 
 
@@ -1111,6 +1112,26 @@ class Group_R(Group, Reference):
         assert len(post) == 100
 
 
+
+
+
+#-------------------------------------------------------------------------------
+# class Warnings(Perf):
+#     NUMBER = 50_000
+
+#     def __init__(self) -> None:
+#         super().__init__()
+
+# class WarningsSilent_N(Warnings, Native):
+#     def warnings_context(self) -> None:
+#         with WarningsSilent():
+#             warnings.warn('foo')
+
+# class WarningsSilent_R(Warnings, Reference):
+#     def warnings_context(self) -> None:
+#         with warnings.catch_warnings():
+#             warnings.simplefilter("ignore")
+#             warnings.warn('foo')
 
 
 #-------------------------------------------------------------------------------

@@ -12,7 +12,6 @@ import csv
 import json
 import sqlite3
 import typing as tp
-import warnings
 import pickle
 
 import numpy as np
@@ -21,7 +20,6 @@ from arraykit import column_1d_filter
 from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
-
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -174,6 +172,7 @@ from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import full_for_fill
+from static_frame.core.util import WarningsSilent
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -1882,9 +1881,8 @@ class Frame(ContainerOperand):
 
         # genfromtxt takes missing_values, but this can only be a list, and does not work under some condition (i.e., a cell with no value). thus, this is deferred to from_sructured_array
 
-        with warnings.catch_warnings():
+        with WarningsSilent():
             # silence: UserWarning: genfromtxt: Empty input file
-            warnings.simplefilter('ignore', UserWarning)
 
             array = np.genfromtxt(
                     row_source(),
@@ -6460,8 +6458,8 @@ class Frame(ContainerOperand):
         # NOTE: this could be optimized by always iterating over the shorter target
         for idx_left, row_left in enumerate(target_left):
             # Get 1D vector showing matches along right's full heigh
-            # WARNING_RAISED
-            matched = row_left == target_right
+            with WarningsSilent():
+                matched = row_left == target_right
             if matched is False:
                 continue
             matched = matched.all(axis=1)
@@ -7006,8 +7004,7 @@ class Frame(ContainerOperand):
             df = pandas.DataFrame(index=self._index.to_pandas())
             # use integer columns for initial loading, then replace
             # NOTE: alternative approach of trying to assign blocks (wrapped in a DF) is not faster than single column assignment
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore')
+            with WarningsSilent():
                 # Pandas issues: PerformanceWarning: DataFrame is highly fragmented.
                 for i, array in enumerate(self._blocks.axis_values(0)):
                     df[i] = array
