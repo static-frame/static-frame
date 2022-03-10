@@ -20,6 +20,8 @@ from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
 from static_frame.core.util import OPERATORS
 from static_frame.core.style_config import StyleConfig
+from static_frame.core.node_fill_value import InterfaceBatchFillValue
+from static_frame.core.node_transpose import InterfaceBatchTranspose
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
@@ -154,21 +156,31 @@ class ContainerOperand(ContainerBase):
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
+        if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
+            return other.__radd__(self)
         return self._ufunc_binary_operator(operator=OPERATORS['__add__'], other=other)
 
     def __sub__(self, other: tp.Any) -> tp.Any:
+        if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
+            return other.__rsub__(self)
         return self._ufunc_binary_operator(operator=OPERATORS['__sub__'], other=other)
 
     def __mul__(self, other: tp.Any) -> tp.Any:
+        if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
+            return other.__rmul__(self)
         return self._ufunc_binary_operator(operator=OPERATORS['__mul__'], other=other)
 
     def __matmul__(self, other: tp.Any) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__matmul__'], other=other)
 
     def __truediv__(self, other: tp.Any) -> tp.Any:
+        if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
+            return other.__rtruediv__(self)
         return self._ufunc_binary_operator(operator=OPERATORS['__truediv__'], other=other)
 
     def __floordiv__(self, other: tp.Any) -> tp.Any:
+        if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
+            return other.__rfloordiv__(self)
         return self._ufunc_binary_operator(operator=OPERATORS['__floordiv__'], other=other)
 
     def __mod__(self, other: tp.Any) -> tp.Any:
