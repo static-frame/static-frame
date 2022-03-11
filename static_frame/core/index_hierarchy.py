@@ -757,7 +757,7 @@ class IndexHierarchy(IndexBase):
             num_unique_elements_per_depth: tp.List[int],
             ) -> tp.Tuple[np.ndarray, bool]:
         '''
-        Builds the offsets and overflow flag from information about self`.
+        Derive the offsets and the overflow flag from the number of unique values per depth
         '''
         # `bit_sizes` is an array that shows how many bits are needed to contain the max indexer per depth
         #
@@ -766,7 +766,7 @@ class IndexHierarchy(IndexBase):
         #    (i.e.) all valid indexers at depth N can be represented with bit_sizes[N] bits!
         #
         # We see this: [2**power for power in [7,3,4]] = [128, 8, 16]
-        # We can prove this: list(map(len, self._indices)) >= [2**bit_size for bit_size in bit_sizes]
+        # We can prove this: num_unique_elements_per_depth <= [2**bit_size for bit_size in bit_sizes]
         bit_sizes = np.floor(np.log2(num_unique_elements_per_depth)) + 1
 
         # Based on bit_sizes, we cumsum to determine the successive number of total bits needed for each depth
@@ -807,7 +807,7 @@ class IndexHierarchy(IndexBase):
 
         # Encode indexers into uint64
         # indexers: (n, m), offsets: (m,)
-        # This bitshifts all indexers by the offset, resulting in numbers that are ready to be OR'd
+        # This bitshifts all indexers by the offset, resulting in numbers that are ready to be bitwise OR'd
         # We need to reverse in order to have depth 0
         # Example:
         #  indexers:      bitshift         (Bit representation)

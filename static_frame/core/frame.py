@@ -3756,7 +3756,8 @@ class Frame(ContainerOperand):
             else:
                 new_target = target_hctor._from_type_blocks(
                         remain_blocks,
-                        name=remain_labels)
+                        name=remain_labels
+                        )
 
         if axis == 0: # select from index, remove from index
             blocks = TypeBlocks.from_blocks(chain(add_blocks,
