@@ -1,16 +1,11 @@
 import typing as tp
 
-
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import NULL_SLICE
 
 
 class HLocMeta(type):
 
-    def __getitem__(cls,
-            key: GetItemKeyType
-            ) -> 'HLoc':
+    def __getitem__(cls, key: GetItemKeyType) -> 'HLoc':
         if not isinstance(key, tuple):
             key = (key,)
         return cls(key) #type: ignore [no-any-return]
