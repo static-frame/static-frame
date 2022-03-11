@@ -1,6 +1,3 @@
-
-import unittest
-
 import numpy as np
 
 from doc.source.conf import DOCUMENTED_COMPONENTS
@@ -18,6 +15,7 @@ from static_frame.test.test_case import TestCase
 from static_frame import NPZ
 from static_frame import NPY
 
+
 class TestUnit(TestCase):
 
     def test_interface_summary_a(self) -> None:
@@ -26,7 +24,6 @@ class TestUnit(TestCase):
             t = InterfaceSummary.to_frame(target)
             self.assertTrue(len(t) > 30)
 
-
     def test_interface_summary_b(self) -> None:
 
         post = FrameGO.interface
@@ -34,7 +31,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Accessor Datetime', 10), ('Accessor Fill Value', 24), ('Accessor Regular Expression', 7), ('Accessor String', 37), ('Accessor Transpose', 24), ('Assignment', 8), ('Attribute', 11), ('Constructor', 34), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 26), ('Iterator', 224), ('Method', 83), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+            (('Accessor Datetime', 20), ('Accessor Fill Value', 26), ('Accessor Regular Expression', 7), ('Accessor String', 37), ('Accessor Transpose', 24), ('Assignment', 8), ('Attribute', 11), ('Constructor', 34), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 26), ('Iterator', 224), ('Method', 83), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
         )
 
     def test_interface_summary_c(self) -> None:
@@ -45,7 +42,6 @@ class TestUnit(TestCase):
         counts_cls = s.__class__.interface.iter_group('group').apply(len)
 
         self.assertTrue((counts == counts_cls).all())
-
 
     def test_interface_get_signatures_a(self) -> None:
 
@@ -81,22 +77,19 @@ class TestUnit(TestCase):
         self.assertEqual(f.index.values.tolist(),
                 ['assign[key](value, *, fill_value)', 'assign[key].apply(func, *, fill_value)', 'assign.iloc[key](value, *, fill_value)', 'assign.iloc[key].apply(func, *, fill_value)', 'assign.loc[key](value, *, fill_value)', 'assign.loc[key].apply(func, *, fill_value)', 'assign.bloc[key](value, *, fill_value)', 'assign.bloc[key].apply(func, *, fill_value)'])
 
-
     def test_interface_via_re_signature_no_args(self) -> None:
         inter = InterfaceSummary.to_frame(Series,
                 minimized=False,
                 max_args=99, # +inf, but keep as int
                 )
-
         self.assertEqual(
             inter.loc[inter['group']==InterfaceGroup.AccessorFillValue, 'signature_no_args'].values.tolist(),
-            ['via_fill_value(fill_value).via_T', 'via_fill_value().__add__()', 'via_fill_value().__sub__()', 'via_fill_value().__mul__()', 'via_fill_value().__truediv__()', 'via_fill_value().__floordiv__()', 'via_fill_value().__mod__()', 'via_fill_value().__pow__()', 'via_fill_value().__lshift__()', 'via_fill_value().__rshift__()', 'via_fill_value().__and__()', 'via_fill_value().__xor__()', 'via_fill_value().__or__()', 'via_fill_value().__lt__()', 'via_fill_value().__le__()', 'via_fill_value().__eq__()', 'via_fill_value().__ne__()', 'via_fill_value().__gt__()', 'via_fill_value().__ge__()', 'via_fill_value().__radd__()', 'via_fill_value().__rsub__()', 'via_fill_value().__rmul__()', 'via_fill_value().__rtruediv__()', 'via_fill_value().__rfloordiv__()']
+            ['via_fill_value(fill_value).loc', 'via_fill_value().__getitem__()', 'via_fill_value(fill_value).via_T', 'via_fill_value().__add__()', 'via_fill_value().__sub__()', 'via_fill_value().__mul__()', 'via_fill_value().__truediv__()', 'via_fill_value().__floordiv__()', 'via_fill_value().__mod__()', 'via_fill_value().__pow__()', 'via_fill_value().__lshift__()', 'via_fill_value().__rshift__()', 'via_fill_value().__and__()', 'via_fill_value().__xor__()', 'via_fill_value().__or__()', 'via_fill_value().__lt__()', 'via_fill_value().__le__()', 'via_fill_value().__eq__()', 'via_fill_value().__ne__()', 'via_fill_value().__gt__()', 'via_fill_value().__ge__()', 'via_fill_value().__radd__()', 'via_fill_value().__rsub__()', 'via_fill_value().__rmul__()', 'via_fill_value().__rtruediv__()', 'via_fill_value().__rfloordiv__()']
             )
 
         self.assertEqual(
             inter.loc[inter['group']==InterfaceGroup.AccessorRe, 'signature_no_args'].values.tolist(),
             ['via_re().search()', 'via_re().match()', 'via_re().fullmatch()', 'via_re().split()', 'via_re().findall()', 'via_re().sub()', 'via_re().subn()'])
-
 
     def test_interface_get_instance(self) -> None:
         for component in DOCUMENTED_COMPONENTS:
@@ -110,10 +103,7 @@ class TestUnit(TestCase):
                     StoreFilter,
                     )))
 
+
 if __name__ == '__main__':
+    import unittest
     unittest.main()
-
-
-
-
-

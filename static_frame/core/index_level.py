@@ -616,7 +616,7 @@ class IndexLevel:
         '''
         from static_frame.core.series import Series
 
-        if isinstance(key, slice):
+        if key.__class__ is slice:
             # given a top-level definition of a slice (and if that slice results in a single value), we can get a value range
             return slice(*LocMap.map_slice_args(self.leaf_loc_to_iloc, key))
 
@@ -625,7 +625,7 @@ class IndexLevel:
                 return key # keep as Boolean
             return [self.leaf_loc_to_iloc(x) for x in key]
 
-        if not isinstance(key, HLoc): # assume a leaf loc tuple
+        if not key.__class__ is HLoc: # assume a leaf loc tuple
             if not isinstance(key, tuple):
                 raise KeyError(f'{key} cannot be used for loc selection from IndexHierarchy; try HLoc')
             return self.leaf_loc_to_iloc(key)
@@ -637,14 +637,14 @@ class IndexLevel:
         while levels:
             level, depth, offset = levels.popleft()
 
-            depth_key = key[depth]
+            depth_key = key[depth] # type: ignore
             # NOTE: depth_key should not be Series or Index at this point; IndexHierarchy is responsible for unpacking / reindexing prior to this call
             next_offset = offset + level.offset
 
             if depth_key.__class__ is np.ndarray and depth_key.dtype == DTYPE_BOOL: #type: ignore
                 # NOTE: use length of level, not length of index, as need to observe all leafs covered at this node.
                 depth_key = depth_key[next_offset: next_offset + len(level)] #type: ignore
-                if len(depth_key) > len(level.index): #type: ignore
+                if len(depth_key) > len(level.index):
                     # given leaf-Boolean, determine what upper nodes to select
                     depth_key = level.values_at_depth(0)[depth_key]
                     if len(depth_key) > 1:
@@ -681,15 +681,15 @@ class IndexLevel:
         if iloc_count == 0:
             raise KeyError('no matching keys across all levels')
 
-        if iloc_count == 1 and not key.has_key_multiple():
+        if iloc_count == 1 and not key.has_key_multiple(): # type: ignore
             return ilocs[0] # drop to a single iloc selection
 
         # NOTE: might be able to combine contiguous ilocs into a single slice
         iloc_flat: tp.List[GetItemKeyType] = [] # combine into one flat iloc
         length = self.__len__()
         for part in ilocs:
-            if isinstance(part, slice):
-                iloc_flat.extend(range(*part.indices(length)))
+            if part.__class__ is slice:
+                iloc_flat.extend(range(*part.indices(length))) # type: ignore
             elif isinstance(part, INT_TYPES):
                 iloc_flat.append(part)
             else: # assume it is an iterable

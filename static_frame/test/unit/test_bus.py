@@ -1,4 +1,3 @@
-import unittest
 from datetime import date
 from datetime import datetime
 # from io import StringIO
@@ -53,6 +52,7 @@ class TestUnit(TestCase):
             b1.__dict__ #pylint: disable=W0104
 
     #---------------------------------------------------------------------------
+
     def test_bus_init_a(self) -> None:
 
         f1 = Frame.from_dict(
@@ -99,7 +99,6 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitBus):
             Bus(Series([3, 4], index=('a', 'b'), dtype=object))
 
-
     def test_bus_init_c(self) -> None:
 
         f1 = Frame.from_dict(
@@ -128,6 +127,7 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f2, f2_loaded)
 
     #---------------------------------------------------------------------------
+
     def test_bus_from_frames_a(self) -> None:
 
         f1 = Frame.from_dict(
@@ -143,6 +143,7 @@ class TestUnit(TestCase):
             _ = Bus.from_frames((f1, f2))
 
     #---------------------------------------------------------------------------
+
     def test_bus_from_series_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -153,6 +154,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+
     def test_bus_rename_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -170,6 +172,7 @@ class TestUnit(TestCase):
         self.assertEqual(b2.name, 'bar')
 
     #---------------------------------------------------------------------------
+
     def test_bus_from_items_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -183,8 +186,8 @@ class TestUnit(TestCase):
         b1 = Bus.from_items((('a', f1), ('b', f2)))
         self.assertEqual(b1.index.values.tolist(), ['a', 'b'])
 
-
     #---------------------------------------------------------------------------
+
     def test_bus_shapes_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -251,7 +254,6 @@ class TestUnit(TestCase):
 
             self.assertEqual(b2.nbytes, 112)
 
-
     @skip_win # type: ignore
     def test_bus_dtypes_a(self) -> None:
         f1 = Frame.from_dict(
@@ -287,7 +289,6 @@ class TestUnit(TestCase):
                     (('b', (('f1', None), ('f2', np.dtype('int64')), ('f3', np.dtype('int64')))), ('c', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))), ('d', (('f1', None), ('f2', None), ('f3', np.dtype('int64')))))
                     )
 
-
     @skip_win # type: ignore
     def test_bus_status_a(self) -> None:
         f1 = Frame.from_dict(
@@ -317,7 +318,6 @@ class TestUnit(TestCase):
             self.assertEqual(
                     b2.status.to_pairs(0),                                                           (('loaded', (('f1', True), ('f2', True), ('f3', True))), ('size', (('f1', 4.0), ('f2', 6.0), ('f3', 4.0))), ('nbytes', (('f1', 32.0), ('f2', 48.0), ('f3', 32.0))),('shape', (('f1', (2, 2)), ('f2', (3, 2)), ('f3', (2, 2)))))
             )
-
 
     def test_bus_keys_a(self) -> None:
         f1 = Frame.from_dict(
@@ -353,7 +353,6 @@ class TestUnit(TestCase):
             self.assertEqual(b2.values[2].name, 'f3')
             self.assertTrue(b2._loaded_all)
 
-
     def test_bus_reversed_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -370,7 +369,6 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3))
         self.assertEqual(list(reversed(b1)), ['f3', 'f2', 'f1'])
-
 
     def test_bus_display_a(self) -> None:
         f1 = Frame.from_dict(
@@ -407,9 +405,8 @@ class TestUnit(TestCase):
                 include_index=False)).to_rows()
         self.assertEqual(rows2, ['Frame', 'Frame', 'Frame'])
 
-
-
     #---------------------------------------------------------------------------
+
     def test_bus_iloc_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -474,7 +471,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(b2), 2)
         self.assertEqual(b2.index.values.tolist(), ['f2', 'f3'])
 
-
     def test_bus_getitem_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -500,6 +496,7 @@ class TestUnit(TestCase):
                     )
 
     #---------------------------------------------------------------------------
+
     def test_bus_to_xlsx_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -532,7 +529,6 @@ class TestUnit(TestCase):
         for frame in (f1, f2, f3):
             self.assertEqualFrames(frame, b2[frame.name])
 
-
     def test_bus_to_xlsx_b(self) -> None:
 
         f1 = Frame.from_dict(
@@ -555,8 +551,6 @@ class TestUnit(TestCase):
 
         for frame in (f1, f2):
             self.assertEqualFrames(frame, b2[frame.name])
-
-
 
     def test_bus_to_xlsx_c(self) -> None:
         '''
@@ -585,7 +579,6 @@ class TestUnit(TestCase):
             with self.assertRaises((StoreFileMutation, KeyError)):
                 tuple(b2.items())
 
-
     def test_bus_to_xlsx_d(self) -> None:
         '''
         Test manipulating a file behind the Bus.
@@ -605,7 +598,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(StoreFileMutation):
             tuple(b2.items())
-
 
     def test_bus_to_xlsx_e(self) -> None:
 
@@ -629,7 +621,6 @@ class TestUnit(TestCase):
 
         for frame in (f1, f2):
             self.assertTrue(frame.equals(b2[frame.name]))
-
 
     def test_bus_to_xlsx_f(self) -> None:
         f = Frame.from_records([
@@ -694,6 +685,7 @@ class TestUnit(TestCase):
             self.assertEqualFrames(frame, b2[frame.name])
 
     #---------------------------------------------------------------------------
+
     def test_bus_to_sqlite_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -720,7 +712,6 @@ class TestUnit(TestCase):
         for frame in frames:
             self.assertEqualFrames(frame, b2[frame.name])
 
-
     def test_bus_to_sqlite_b(self) -> None:
         '''
         Test manipulating a file behind the Bus.
@@ -740,7 +731,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(StoreFileMutation):
             tuple(b2.items())
-
 
     def test_bus_to_sqlite_c(self) -> None:
 
@@ -775,9 +765,8 @@ class TestUnit(TestCase):
         for frame in (f1, f2):
             self.assertEqualFrames(frame, b2[frame.name])
 
-
-
     #---------------------------------------------------------------------------
+
     def test_bus_to_hdf5_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -803,7 +792,6 @@ class TestUnit(TestCase):
 
         for frame in frames:
             self.assertEqualFrames(frame, b2[frame.name])
-
 
     def test_bus_to_hdf5_b(self) -> None:
         '''
@@ -856,7 +844,6 @@ class TestUnit(TestCase):
             self.assertEqualFrames(frame, b2[frame.name])
 
     #---------------------------------------------------------------------------
-
 
     def test_bus_equals_a(self) -> None:
 
@@ -933,7 +920,6 @@ class TestUnit(TestCase):
         self.assertTrue(b1.equals(b2, compare_class=False))
         self.assertFalse(b1.equals('foo', compare_class=False))
 
-
     def test_bus_equals_c(self) -> None:
 
         f1 = Frame.from_dict(
@@ -954,9 +940,7 @@ class TestUnit(TestCase):
         self.assertTrue(b1.equals(b2))
         self.assertFalse(b1.equals(b2, compare_name=True))
 
-
     #---------------------------------------------------------------------------
-
 
     def test_bus_interface_b(self) -> None:
         f1 = Frame.from_dict(
@@ -977,7 +961,6 @@ class TestUnit(TestCase):
         self.assertTrue(isinstance(post2, Frame))
         self.assertTrue(post2.shape, (41, 3)) #type: ignore
 
-
     #---------------------------------------------------------------------------
 
     def test_bus_mloc_a(self) -> None:
@@ -997,7 +980,6 @@ class TestUnit(TestCase):
 
             self.assertEqual(mloc.to_pairs(),
                     (('f1', None),))
-
 
     def test_bus_mloc_b(self) -> None:
 
@@ -1053,6 +1035,7 @@ class TestUnit(TestCase):
             self.assertEqual(mloc1['f2'], b2.mloc.loc['f2'])
 
     #---------------------------------------------------------------------------
+
     def test_bus_update_series_cache_iloc(self) -> None:
 
         f1 = Frame.from_dict(
@@ -1071,6 +1054,7 @@ class TestUnit(TestCase):
             b1._update_series_cache_iloc(1)
 
     #---------------------------------------------------------------------------
+
     def test_bus_extract_loc_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1111,8 +1095,8 @@ class TestUnit(TestCase):
             self.assertEqual(b3.index.values.tolist(),
                     [('a', 1), ('b', 2), ('b', 1)])
 
-
     #---------------------------------------------------------------------------
+
     def test_bus_values_a(self) -> None:
 
         f1 = Frame.from_dict(
@@ -1130,6 +1114,7 @@ class TestUnit(TestCase):
         self.assertTrue(f2.equals(post[1]))
 
     #---------------------------------------------------------------------------
+
     def test_bus_to_parquet_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1161,7 +1146,6 @@ class TestUnit(TestCase):
         for frame in (f1, f2, f3):
             # parquet brings in characters as objects, thus forcing different dtypes
             self.assertEqualFrames(frame, b2[frame.name], compare_dtype=False)
-
 
     def test_bus_to_parquet_b(self) -> None:
 
@@ -1221,8 +1205,8 @@ class TestUnit(TestCase):
             self.assertIs(b2['a'].index.__class__, IndexDate)
             self.assertIs(b2['b'].index.__class__, IndexDate)
 
-
     #---------------------------------------------------------------------------
+
     def test_bus_max_persist_a(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(20):
@@ -1249,7 +1233,6 @@ class TestUnit(TestCase):
             # after iteration only the last three are loaded
             self.assertEqual(b2._loaded.tolist(),
                     [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, True])
-
 
     def test_bus_max_persist_b(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
@@ -1331,8 +1314,6 @@ class TestUnit(TestCase):
             self.assertEqual(b3._loaded.tolist(),
                     [True, False, True, True])
 
-
-
     def test_bus_max_persist_d(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(5):
@@ -1384,7 +1365,6 @@ class TestUnit(TestCase):
             _ = b2.iloc[[3, 4]]
             self.assertEqual(b2._loaded.tolist(),
                     [True, False, False, True, True])
-
 
     def test_bus_max_persist_e(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
@@ -1483,7 +1463,6 @@ class TestUnit(TestCase):
             # max_persist cannot be less than the number of already loaded Frames
             Bus(s1, max_persist=2)
 
-
     def test_bus_max_persist_i(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -1537,6 +1516,7 @@ class TestUnit(TestCase):
             self.assertTrue(all([f.__class__ is Frame for f in a1]))
 
     #---------------------------------------------------------------------------
+
     def test_bus_sort_index_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1572,6 +1552,7 @@ class TestUnit(TestCase):
                     (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4)))))
 
     #---------------------------------------------------------------------------
+
     def test_bus_sort_values_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(30000,4)),
@@ -1598,6 +1579,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+
     def test_bus_iter_element_apply_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(30000,4)),
@@ -1621,6 +1603,7 @@ class TestUnit(TestCase):
         self.assertEqual(id(b1.index), id(b2.index))
 
     #---------------------------------------------------------------------------
+
     def test_bus_drop_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1647,6 +1630,7 @@ class TestUnit(TestCase):
                     )
 
     #---------------------------------------------------------------------------
+
     def test_bus_from_dict_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1662,6 +1646,7 @@ class TestUnit(TestCase):
                 ['a', 'b'])
 
     #---------------------------------------------------------------------------
+
     def test_bus_iter_element_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1755,6 +1740,7 @@ class TestUnit(TestCase):
             self.assertEqual( b2.status['loaded'].sum(), 6)
 
     #---------------------------------------------------------------------------
+
     def test_bus_iter_element_items_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1773,6 +1759,7 @@ class TestUnit(TestCase):
         self.assertTrue(post[1][1].equals(f2))
 
     #---------------------------------------------------------------------------
+
     def test_bus_reindex_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1791,7 +1778,6 @@ class TestUnit(TestCase):
         b2 = b1.reindex(('f1', 'f2', 'f4'), fill_value=f3)
         self.assertTrue(b2['f4'].equals(f3))
         self.assertTrue(b2.__class__ is Bus)
-
 
     def test_bus_reindex_b(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
@@ -1822,8 +1808,8 @@ class TestUnit(TestCase):
             self.assertEqual(b3._store, None)
             self.assertEqual(b2._max_persist, 1)
 
-
     #---------------------------------------------------------------------------
+
     def test_bus_relabel_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1845,6 +1831,7 @@ class TestUnit(TestCase):
         self.assertTrue(b2.__class__ is Bus)
 
     #---------------------------------------------------------------------------
+
     def test_bus_relabel_flat_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1868,6 +1855,7 @@ class TestUnit(TestCase):
         self.assertTrue(b2.__class__ is Bus)
 
     #---------------------------------------------------------------------------
+
     def test_bus_relabel_level_drop_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1889,6 +1877,7 @@ class TestUnit(TestCase):
         self.assertTrue(b3.index.equals(b1.index))
 
     #---------------------------------------------------------------------------
+
     def test_bus_relabel_rehierarch_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1910,6 +1899,7 @@ class TestUnit(TestCase):
                 [['f3', 'X'], ['f2', 'X'], ['f1', 'X']])
 
     #---------------------------------------------------------------------------
+
     def test_bus_roll_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1931,9 +1921,8 @@ class TestUnit(TestCase):
                 )
         self.assertTrue(b2['f2'].equals(b1['f2']))
 
-
-
     #---------------------------------------------------------------------------
+
     def test_bus_shift_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1954,8 +1943,8 @@ class TestUnit(TestCase):
         self.assertTrue(b2['f2'].equals(b1['f1']))
         self.assertTrue(b2['f1'].equals(b1['f1']))
 
-
     #---------------------------------------------------------------------------
+
     def test_bus_from_concat_a(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(5):
@@ -1990,7 +1979,6 @@ class TestUnit(TestCase):
             self.assertEqual(b5.status['loaded'].to_pairs(),
                     ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True), (6, True), (7, True), (8, True), (9, True)))
             self.assertEqual(b5.name, 'foo')
-
 
     def test_bus_from_concat_b(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
@@ -2051,6 +2039,7 @@ class TestUnit(TestCase):
                     )
 
     #---------------------------------------------------------------------------
+
     def test_bus_contains_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -2060,6 +2049,7 @@ class TestUnit(TestCase):
         self.assertFalse('f3' in b1)
 
     #---------------------------------------------------------------------------
+
     def test_bus_get_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -2069,6 +2059,7 @@ class TestUnit(TestCase):
         self.assertEqual(b1.get('f3'), None)
 
     #---------------------------------------------------------------------------
+
     def test_bus_head_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -2082,6 +2073,7 @@ class TestUnit(TestCase):
         self.assertEqual(b1.head().index.values.tolist(), ['f1', 'f2', 'f3', 'f4', 'f5'])
 
     #---------------------------------------------------------------------------
+
     def test_bus_tail_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -2095,6 +2087,7 @@ class TestUnit(TestCase):
         self.assertEqual(b1.tail().index.values.tolist(), ['f2', 'f3', 'f4', 'f5', 'f6'])
 
     #---------------------------------------------------------------------------
+
     def test_bus_unpersist_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -2191,6 +2184,7 @@ class TestUnit(TestCase):
             self.assertEqual(b2.status['loaded'].sum(), 0)
 
     #---------------------------------------------------------------------------
+
     def test_bus_npz_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -2212,7 +2206,7 @@ class TestUnit(TestCase):
                 ((0, ((0, 1930.4), (1, -1760.34), (2, 1857.34), (3, 1699.34))), (1, ((0, -610.8), (1, 3243.94), (2, -823.14), (3, 114.58))), (2, ((0, 694.3), (1, -72.96), (2, 1826.02), (3, 604.1))), (3, ((0, 1080.4), (1, 2580.34), (2, 700.42), (3, 3338.48))))
                 )
 
+
 if __name__ == '__main__':
-
+    import unittest
     unittest.main()
-

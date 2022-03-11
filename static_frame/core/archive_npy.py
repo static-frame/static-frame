@@ -51,8 +51,8 @@ class NPYConverter:
     MAGIC_PREFIX = b'\x93NUMPY' + bytes((1, 0)) # version 1.0
     MAGIC_LEN = len(MAGIC_PREFIX)
     ARRAY_ALIGN = 64
-    STRUCT_FMT = '<H' # version 1.0
-    STRUCT_FMT_SIZE = struct.calcsize(STRUCT_FMT)
+    STRUCT_FMT = '<H' # version 1.0, unsigned short
+    STRUCT_FMT_SIZE = struct.calcsize(STRUCT_FMT) # 2 bytes
     ENCODING = 'latin1' # version 1.0
     BUFFERSIZE_NUMERATOR = 16 * 1024 ** 2 # ~16 MB
     NDITER_FLAGS = ('external_loop', 'buffered', 'zerosize_ok')
@@ -75,7 +75,7 @@ class NPYConverter:
 
     @classmethod
     def to_npy(cls, file: tp.IO[bytes], array: np.ndarray) -> None:
-        '''Write an NPY 3.0 file to the open, writeable, binary file given by ``file``.
+        '''Write an NPY 1.0 file to the open, writeable, binary file given by ``file``. NPY 1.0 is used as structured arrays are not supported.
         '''
         dtype = array.dtype
         if dtype.kind == DTYPE_OBJECT_KIND:
@@ -96,7 +96,6 @@ class NPYConverter:
         file.write(cls._header_encode(header))
 
         # NOTE: this works but forces copying everything in memory
-
         # if flags.f_contiguous and not flags.c_contiguous:
         #     file.write(array.T.tobytes())
         # else:
@@ -135,9 +134,11 @@ class NPYConverter:
         '''Extract and decode the header.
         '''
         length_size = file.read(cls.STRUCT_FMT_SIZE)
-        length_header = struct.unpack(cls.STRUCT_FMT, length_size)[0]
+        # unpack tuple of one element
+        length_header, = struct.unpack(cls.STRUCT_FMT, length_size)
         header = file.read(length_header)
         if header not in header_decode_cache:
+            # eval dict and strip values, relying on order
             dtype_str, fortran_order, shape = literal_eval(
                     header.decode(cls.ENCODING)
                     ).values()

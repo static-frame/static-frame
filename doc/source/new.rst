@@ -1,6 +1,26 @@
 What is New in Static Frame
 ===============================
 
+0.8.36
+----------
+
+Extended interface of ``Batch`` to include all methods for handling missing values, as well as all ``via_*`` interfaces.
+
+Silenced all NumPy warnings where the issue raised in the warning is being explicitly handled in the code.
+
+
+0.8.35
+----------
+
+Performance enhancements to ``Frame.pivot()``, ``Frame.iter_group()``, and ``Frame.iter_group_items()``.
+
+``Frame.pivot()`` ``func`` parameter can now be set to ``None`` to perform no aggregation.
+
+Extended ``Series.from_overlay()`` and ``Frame.from_overlay()`` to support ``func`` and ``fill_value`` arguments; ``func`` can be used to optionally specify what elements are available for assignment in overlay.
+
+Extended ``via_fill_value()`` interfaces to implement ``__getitem__`` and ``loc`` selection interfaces on :obj:`Series` and :obj:`Frame` for selections that potentially contain new labels filled with the fill value.
+
+
 0.8.34
 ----------
 

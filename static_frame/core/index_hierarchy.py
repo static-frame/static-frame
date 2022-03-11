@@ -1179,21 +1179,21 @@ class IndexHierarchy(IndexBase):
         '''
         from static_frame.core.series import Series
 
-        if isinstance(key, ILoc):
-            return key.key
+        if key.__class__ is ILoc:
+            return key.key # type: ignore
 
         if isinstance(key, IndexHierarchy):
             # default iteration of IH is as tuple
             return [self._levels.leaf_loc_to_iloc(k) for k in key]
 
-        if isinstance(key, np.ndarray) and key.dtype == DTYPE_BOOL:
+        if (key.__class__ is np.ndarray) and key.dtype == DTYPE_BOOL: # type: ignore
             return self.positions[key]
 
-        if isinstance(key, HLoc):
+        if key.__class__ is HLoc:
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
             key = HLoc(tuple(
                     key_from_container_key(self, k, expand_iloc=True)
-                    for k in key))
+                    for k in key)) # type: ignore
         else:
             key = key_from_container_key(self, key)
 

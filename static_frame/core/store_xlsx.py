@@ -268,7 +268,8 @@ class StoreXLSX(Store):
                 col = index_depth_effective # start after index
                 for label, width in frame._columns.label_widths_at_depth(depth):
                     # TODO: use store_filter
-                    ws.merge_range(row, col, row, col + width - 1, label, format_columns)
+                    if width > 1:
+                        ws.merge_range(row, col, row, col + width - 1, label, format_columns)
                     col += width
 
         if include_index and merge_hierarchical_labels and index_depth > 1:
@@ -277,7 +278,8 @@ class StoreXLSX(Store):
                 col = depth
                 for label, width in frame._index.label_widths_at_depth(depth):
                     # TODO: use store_filter
-                    ws.merge_range(row, col, row + width - 1, col, label, format_index)
+                    if width > 1:
+                        ws.merge_range(row, col, row + width - 1, col, label, format_index)
                     row += width
 
     @store_coherent_write

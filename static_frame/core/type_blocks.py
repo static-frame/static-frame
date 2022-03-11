@@ -65,6 +65,7 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import roll_1d
 from static_frame.core.util import ShapeType
 from static_frame.core.util import ufunc_dtype_to_dtype
+from static_frame.core.util import view_2d_as_1d
 
 
 from static_frame.core.style_config import StyleConfig
@@ -75,6 +76,7 @@ def group_match(
         axis: int,
         key: GetItemKeyTypeCompound,
         drop: bool = False,
+        extract: tp.Optional[int] = None,
         ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
     '''
     Args:
@@ -122,6 +124,24 @@ def group_match(
         drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
         drop_mask[key] = False
 
+    column_key: tp.Union[int, np.ndarray, None]
+    row_key: tp.Union[int, np.ndarray, None]
+    # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
+    if axis == 0:
+        if extract is not None:
+            column_key = extract
+            func = blocks._extract_array
+        else:
+            column_key = None if not drop else drop_mask
+            func = blocks._extract
+    else:
+        if extract is not None:
+            row_key = extract
+            func = blocks._extract_array
+        else:
+            row_key = None if not drop else drop_mask
+            func = blocks._extract
+
     # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
     selection = np.empty(len(locations), dtype=DTYPE_BOOL)
 
@@ -130,26 +150,26 @@ def group_match(
         np.equal(locations, idx, out=selection)
 
         if axis == 0: # return row
-            column_key = None if not drop else drop_mask
-            yield g, selection, blocks._extract(
+            yield g, selection, func(
                     row_key=selection,
                     column_key=column_key,
                     )
         else: # return columns extractions
-            row_key = None if not drop else drop_mask
-            yield g, selection, blocks._extract(
+            yield g, selection, func(
                     row_key=row_key,
                     column_key=selection,
                     )
 
-def group_sort(
+def group_sorted(
         blocks: 'TypeBlocks',
         axis: int,
         key: int,
         drop: bool = False,
-        ) -> tp.Iterator[tp.Tuple[np.ndarray, slice, 'TypeBlocks']]:
+        extract: tp.Optional[int] = None,
+        ) -> tp.Iterator[tp.Tuple[np.ndarray, slice, tp.Union['TypeBlocks', np.ndarray]]]:
     '''
     This method must be called on sorted TypeBlocks instance.
+
     Args:
         blocks: sorted TypeBlocks
         order: args
@@ -170,10 +190,12 @@ def group_sort(
 
     if axis == 0:
         # axis 0 means we return row groups; key is a column key
-        group_source = blocks._extract_array_column(key)
+        group_source = blocks._extract_array(column_key=key)
     elif axis == 1:
         # axis 1 means we return column groups; key is a row key
         group_source = blocks._extract_array(row_key=key)
+        # for ndim==2, must present values from top to bottom
+        group_source = group_source.T
     else:
         raise AxisInvalid(f'invalid axis: {axis}')
 
@@ -183,43 +205,62 @@ def group_sort(
         drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
         drop_mask[key] = False
 
+    column_key: tp.Union[int, np.ndarray, None]
+    row_key: tp.Union[int, np.ndarray, None]
+
+    # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
+    if axis == 0:
+        if extract is not None:
+            column_key = extract
+            func = blocks._extract_array
+        else:
+            column_key = None if not drop else drop_mask
+            func = blocks._extract
+    else:
+        if extract is not None:
+            row_key = extract
+            func = blocks._extract_array
+        else:
+            row_key = None if not drop else drop_mask
+            func = blocks._extract
+
     # find iloc positions where new value is not equal to previous; drop the first as roll wraps
-    transitions = np.flatnonzero(group_source != roll_1d(group_source, 1))[1:]
+    if group_source.ndim == 2:
+        group_to_tuple = True
+        if group_source.dtype == DTYPE_OBJECT:
+            # NOTE: cannot get view of object; use string
+            consolidated = view_2d_as_1d(group_source.astype(str))
+        else:
+            consolidated = view_2d_as_1d(group_source)
+        transitions = np.flatnonzero(consolidated != roll_1d(consolidated, 1))[1:]
+    else:
+        group_to_tuple = False
+        transitions = np.flatnonzero(group_source != roll_1d(group_source, 1))[1:]
+
     start = 0
     for t in transitions:
         slc = slice(start, t)
         # slice order to get elemtns in original ordering that are selected
-
         if axis == 0:
-            column_key = None if not drop else drop_mask
-            yield group_source[start], slc, blocks._extract(
-                    row_key=slc,
-                    column_key=column_key,
-                    )
+            chunk = func(row_key=slc, column_key=column_key)
         else:
-            row_key = None if not drop else drop_mask
-            yield group_source[start], slc, blocks._extract(
-                    row_key=row_key,
-                    column_key=slc,
-                    )
+            chunk = func(row_key=row_key, column_key=slc)
+        if group_to_tuple:
+            yield tuple(group_source[start]), slc, chunk
+        else:
+            yield group_source[start], slc, chunk
         start = t
 
     if start < len(group_source):
         slc = slice(start, None)
-
         if axis == 0:
-            column_key = None if not drop else drop_mask
-            yield group_source[start], slc, blocks._extract(
-                    row_key=slc,
-                    column_key=column_key,
-                    )
+            chunk = func(row_key=slc, column_key=column_key)
         else:
-            row_key = None if not drop else drop_mask
-            yield group_source[start], slc, blocks._extract(
-                    row_key=row_key,
-                    column_key=slc,
-                    )
-
+            chunk = func(row_key=row_key, column_key=slc)
+        if group_to_tuple:
+            yield tuple(group_source[start]), slc, chunk
+        else:
+            yield group_source[start], slc, chunk
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -491,7 +532,7 @@ class TypeBlocks(ContainerOperand):
         Return an immutable array that, for each realizable column (not each block), the dtype is given.
         '''
         # this creates a new array every time it is called; could cache
-        a = np.array(self._dtypes, dtype=np.dtype)
+        a = np.array(self._dtypes, dtype=DTYPE_OBJECT)
         a.flags.writeable = False
         return a
 
@@ -500,7 +541,7 @@ class TypeBlocks(ContainerOperand):
         '''
         Return an immutable array that, for each block, reports the shape as a tuple.
         '''
-        a = np.empty(len(self._blocks), dtype=object)
+        a = np.empty(len(self._blocks), dtype=DTYPE_OBJECT)
         a[:] = [b.shape for b in self._blocks]
         a.flags.writeable = False
         return a
@@ -944,7 +985,6 @@ class TypeBlocks(ContainerOperand):
                             values.flags.writeable = False
                             yield values
 
-
     def sort(self,
             axis: int,
             key: GetItemKeyTypeCompound,
@@ -991,33 +1031,75 @@ class TypeBlocks(ContainerOperand):
             return self._extract(column_key=order), order # order columns
         return self._extract(row_key=order), order
 
-
     def group(self,
             axis: int,
-            key: int,
+            key: GetItemKeyType,
             drop: bool = False,
+            kind: str = DEFAULT_SORT_KIND,
             ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
         '''
-        NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering
-        '''
+        Axis 0 groups on column values, axis 1 groups on row values
 
+        NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
+        '''
+        # might unpack keys that are lists of one element
+        # key_is_int = isinstance(key, INT_TYPES)
+
+        # NOTE: using a stable sort is necssary for groups to retain initial ordering.
+        # use_sort = True
+        # if key_is_int and axis == 0 and self.dtypes[key] != DTYPE_OBJECT:
+        #     use_sort = True
+        # elif key_is_int and axis == 1 and self._row_dtype != DTYPE_OBJECT:
+        #     use_sort = True
+        # else:
+        #     use_sort = False
+
+        try:
+            blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
+            use_sorted = True
+        except TypeError: # raised on sorting issue
+            use_sorted = False
+
+        if use_sorted:
+            yield from group_sorted(blocks, axis, key, drop)
+        else:
+            yield from group_match(self, axis, key, drop)
+
+
+    def group_extract(self,
+            axis: int,
+            key: int,
+            extract: int,
+            kind: str = DEFAULT_SORT_KIND,
+            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+        '''
+        This interface will do an extraction on the opposite axis if the extraction is a single row/column.
+
+        NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
+        '''
         # might unpack keys that are lists of one element
         key_is_int = isinstance(key, INT_TYPES)
 
         # NOTE: using a stable sort is necssary for groups to retain initial ordering.
 
-        if key_is_int and axis == 0 and self.dtypes[key] != DTYPE_OBJECT:
-            use_sort = True
-        elif key_is_int and axis == 1 and self._row_dtype != DTYPE_OBJECT:
-            use_sort = True
-        else:
-            use_sort = False
+        # if key_is_int and axis == 0 and self.dtypes[key] != DTYPE_OBJECT:
+        #     use_sort = True
+        # elif key_is_int and axis == 1 and self._row_dtype != DTYPE_OBJECT:
+        #     use_sort = True
+        # else:
+        #     use_sort = False
 
-        if use_sort:
-            blocks, _ = self.sort(key=key, axis=not axis, kind=DEFAULT_SORT_KIND)
-            yield from group_sort(blocks, axis, key, drop)
+        try:
+            blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
+            use_sorted = True
+        except TypeError:
+            use_sorted = False
+
+        if use_sorted:
+            yield from group_sorted(blocks, axis, key, drop=False, extract=extract)
         else:
-            yield from group_match(self, axis, key, drop)
+            yield from group_match(self, axis, key, drop=False, extract=extract)
+
 
 
     #---------------------------------------------------------------------------
@@ -1782,8 +1864,14 @@ class TypeBlocks(ContainerOperand):
         Args:
             column_key: must be sorted in ascending order.
         '''
-        value_dtype = dtype_from_element(value)
-
+        if value.__class__ is np.ndarray:
+            value_dtype = value.dtype #type: ignore
+        elif hasattr(value, '__len__') and not isinstance(value, str):
+            value, _ = iterable_to_array_1d(value)
+            value_dtype = value.dtype #type: ignore
+        else:
+            value_dtype = dtype_from_element(value)
+        # import ipdb; ipdb.set_trace()
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = self._key_to_block_slices(
                 column_key,
@@ -2208,6 +2296,7 @@ class TypeBlocks(ContainerOperand):
         elif isinstance(row_key, INT_TYPES):
             single_row = True
         elif row_key.__class__ is slice:
+            # NOTE: NULL_SLICE already handled above
             # need to determine if there is only one index returned by range (after getting indices from the slice); do this without creating a list/tuple, or walking through the entire range; get constant time look-up of range length after uses slice.indicies
             if len(range(*row_key.indices(self._shape[0]))) == 1: #type: ignore
                 single_row = True
@@ -2230,7 +2319,7 @@ class TypeBlocks(ContainerOperand):
             else:
                 for b in self._blocks:
                     # selection work for both 1D and 2D
-                    block_sliced = b[row_key] # PERF: slow from line profiler
+                    block_sliced = b[row_key] # PERF: most time from line profiler
                     if block_sliced.__class__ is np.ndarray:
                         if single_row and block_sliced.ndim == 1:
                             block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
@@ -2239,7 +2328,7 @@ class TypeBlocks(ContainerOperand):
                     yield block_sliced
         else:
             # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
-            for block_idx, slc in self._key_to_block_slices(column_key): # PERF: slow from line profiler
+            for block_idx, slc in self._key_to_block_slices(column_key): # PERF: most time from line profiler
                 b = self._blocks[block_idx]
                 if b.ndim == 1: # given 1D array, our row key is all we need
                     if row_key_null:
@@ -2306,8 +2395,14 @@ class TypeBlocks(ContainerOperand):
                 columns += b.shape[1]
             blocks.append(b)
 
-        row_dtype = resolve_dtype_iter(b.dtype for b in blocks)
         row_multiple = row_key is None or isinstance(row_key, KEY_MULTIPLE_TYPES)
+
+        if len(blocks) == 1:
+            if not row_multiple:
+                return row_1d_filter(blocks[0])
+            return column_2d_filter(blocks[0])
+
+        row_dtype = resolve_dtype_iter(b.dtype for b in blocks)
 
         return self._blocks_to_array(
                 blocks=blocks,
@@ -2664,6 +2759,16 @@ class TypeBlocks(ContainerOperand):
         array = np.concatenate(blocks)
         array.flags.writeable = False # keep this array
         return self.from_blocks(array)
+
+    #---------------------------------------------------------------------------
+    #
+    def boolean_apply_any(self, func: tp.Callable[[np.ndarray], np.ndarray]) -> bool:
+        '''Apply a Boolean-returning function to TypeBlocks and return a Boolean if any values are True. This takes advantage of short-circuiting and avoiding intermediary containers for better performance.
+        '''
+        for b in self._blocks:
+            if func(b).any():
+                return True
+        return False
 
     #---------------------------------------------------------------------------
     # na handling

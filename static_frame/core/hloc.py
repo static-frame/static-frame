@@ -37,7 +37,7 @@ class HLoc(metaclass=HLocMeta):
 
     def __getitem__(self, key: int) -> GetItemKeyType:
         '''
-        Each key reprsents a hierarchical level; if a key is not specified, the default should be to return the null slice.
+        Each key represents a hierarchical level; if a key is not specified, the default should be to return the null slice.
         '''
         if key >= len(self.key):
             return NULL_SLICE

@@ -1,4 +1,3 @@
-import unittest
 from fractions import Fraction
 import typing as tp
 
@@ -138,7 +137,6 @@ class TestUnit(TestCase):
                     (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
                     )
 
-
     def test_store_sqlite_write_f(self) -> None:
 
         f1 = Frame.from_dict(
@@ -162,7 +160,6 @@ class TestUnit(TestCase):
             self.assertEqual(list(st2.labels()), ['f2'])
 
     #---------------------------------------------------------------------------
-
 
     def test_store_sqlite_read_many_a(self) -> None:
 
@@ -220,9 +217,5 @@ class TestUnit(TestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
-
-
-
-
-

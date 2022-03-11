@@ -3,22 +3,12 @@
 About StaticFrame
 *******************
 
-StaticFrame is not a drop-in replacement for Pandas. While some conventions and API components are directly borrowed from Pandas, some are completely different, either by necessity (due to the immutable data model) or by choice (offering more uniform, less redundant, and more explicit interfaces). As StaticFrame does not support in-place mutation, architectures that made significant use of mutability in Pandas will require refactoring.
-
-For more comparisons to Pandas, see `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_.
-
-For a concise overview of StaticFrame interfaces, start with :ref:`api-overview-Frame`.
-
-StaticFrame does not aspire to be an all-in-one framework for all aspects of data processing and visualization. StaticFrame focuses on providing efficient and powerful data structures with consistent, clear, and stable interfaces.
-
-StaticFrame targets comparable or better performance than Pandas. While this is already the case for many core operations, other operations are, for now, still more performant in Pandas (such as reading delimited text files via ``pd.read_csv``). StaticFrame provides easy conversion to and from Pandas to bridge needed functionality or performance.
-
-StaticFrame relies entirely on NumPy for types and numeric computation routines. NumPy offers desirable stability in performance and interface. For working with SciPy and related tools, StaticFrame exposes easy access to NumPy arrays, conversion to and from Pandas and Arrow, and support for reading from and writing to a wide variety of storage formats.
+StaticFrame is an alternative dataframe library built on an immutable data model. StaticFrame is not a drop-in replacement for Pandas. While some conventions and API components are directly borrowed from Pandas, some are completely different, either by necessity (due to the immutable data model) or by choice (offering more uniform, less redundant, and more explicit interfaces). As StaticFrame does not support in-place mutation, architectures that made significant use of mutability in Pandas will require refactoring.
 
 Please assist in development by reporting bugs or requesting features. We are a welcoming community and appreciate all feedback! Visit `GitHub Issues <https://github.com/InvestmentSystems/static-frame/issues>`_. To get started contributing to StaticFrame, see :ref:`contributing`.
 
 
-Immutability
+About Immutability
 ***********************************
 
 The :obj:`Series` and :obj:`Frame` store data in immutable NumPy arrays. Once created, array values cannot be changed. StaticFrame manages NumPy arrays, setting the ``ndarray.flags.writeable`` attribute to False on all managed and returned NumPy arrays.
@@ -43,11 +33,21 @@ Immutable data has the overwhelming benefit of providing the confidence that a c
 There is no guarantee that using immutable data will produce correct code or more resilient and robust libraries. It is true, however, that using immutable data removes countless opportunities for introducing flaws in data processing routines and libraries.
 
 
-
 History
 ***********************************
 
 The ideas behind StaticFrame developed out of years of work with Pandas and related tabular data structures by the Investment Systems team at Research Affiliates, LLC. In May of 2017 Christopher Ariza proposed the basic model to the Investment Systems team and began implementation. The first public release was in May 2018.
+
+
+Articles
+************
+
+2022: `StaticFrame from the Ground Up: Getting Started with Immutable DataFrames <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
+
+2022: `Using Higher-Order Containers to Efficiently Process 7,163 (or More) DataFrames <https://towardsdatascience.com/using-higher-order-containers-to-efficiently-process-7-163-or-more-dataframes-964da8b0c679>`_.
+
+2020: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_.
+
 
 
 Presentations
@@ -63,6 +63,7 @@ The following presentations and interviews describe StaticFrame in greater depth
 - PyData LA 2018: "StaticFrame: An Immutable Alternative to Pandas": https://pyvideo.org/pydata-la-2018/staticframe-an-immutable-alternative-to-pandas.html
 
 
+
 Contributors
 ***********************************
 
@@ -72,6 +73,7 @@ These members of the Investment Systems team have contributed greatly to the des
 - Charles Burkland
 - Guru Devanla
 - John Hawk
+- John McCloskey
 - Adam Kay
 - Mark LeMoine
 - Myrl Marmarelis

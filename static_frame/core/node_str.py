@@ -5,6 +5,7 @@ import numpy as np
 from numpy import char as npc
 
 from static_frame.core.node_selector import Interface
+from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import TContainer
 from static_frame.core.util import array_from_element_method
 from static_frame.core.util import DTYPE_STR
@@ -13,8 +14,11 @@ from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import UFunc
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import AnyCallable
+
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
@@ -25,6 +29,46 @@ if tp.TYPE_CHECKING:
 BlocksType = tp.Iterable[np.ndarray]
 ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
+INTERFACE_STR = (
+        '__getitem__',
+        'capitalize',
+        'center',
+        'count',
+        'decode',
+        'encode',
+        'endswith',
+        'find',
+        'index',
+        'isalnum',
+        'isalpha',
+        'isdecimal',
+        'isdigit',
+        'islower',
+        'isnumeric',
+        'isspace',
+        'istitle',
+        'isupper',
+        'ljust',
+        'len',
+        'lower',
+        'lstrip',
+        'partition',
+        'replace',
+        'rfind',
+        'rindex',
+        'rjust',
+        'rpartition',
+        'rsplit',
+        'rstrip',
+        'split',
+        'startswith',
+        'strip',
+        'swapcase',
+        'title',
+        'upper',
+        'zfill',
+)
+
 
 class InterfaceString(Interface[TContainer]):
 
@@ -34,46 +78,7 @@ class InterfaceString(Interface[TContainer]):
             '_blocks',
             '_blocks_to_container',
             )
-    INTERFACE = (
-            '__getitem__',
-            'capitalize',
-            'center',
-            'count',
-            'decode',
-            'encode',
-            'endswith',
-            'find',
-            'index',
-            'isalnum',
-            'isalpha',
-            'isdecimal',
-            'isdigit',
-            'islower',
-            'isnumeric',
-            'isspace',
-            'istitle',
-            'isupper',
-            'ljust',
-            'len',
-            'lower',
-            'lstrip',
-            'partition',
-            'replace',
-            'rfind',
-            'rindex',
-            'rjust',
-            'rpartition',
-            'rsplit',
-            'rstrip',
-            'split',
-            'startswith',
-            'strip',
-            'swapcase',
-            'title',
-            'upper',
-            'zfill',
-    )
-
+    INTERFACE = INTERFACE_STR
 
     def __init__(self,
             blocks: BlocksType,
@@ -539,3 +544,312 @@ class InterfaceString(Interface[TContainer]):
         '''
         block_gen = self._process_blocks(self._blocks, npc.zfill, (width,))
         return self._blocks_to_container(block_gen)
+
+
+
+class InterfaceBatchString(InterfaceBatch):
+    '''Alternate string interface specialized for the :obj:`Batch`.
+    '''
+    __slots__ = (
+            '_batch_apply',
+            )
+    INTERFACE = INTERFACE_STR
+
+    def __init__(self,
+            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            ) -> None:
+        self._batch_apply = batch_apply
+
+    #---------------------------------------------------------------------------
+    def __getitem__(self,  key: GetItemKeyType) -> 'Batch':
+        '''
+        Return a container with the provided selection or slice of each element.
+        '''
+        return self._batch_apply(lambda c: c.via_str.__getitem__(key))
+
+
+    def capitalize(self) -> 'Batch':
+        '''
+        Return a container with only the first character of each element capitalized.
+        '''
+        return self._batch_apply(lambda c: c.via_str.capitalize())
+
+    def center(self,
+            width: int,
+            fillchar: str = ' '
+            ) -> 'Batch':
+        '''
+        Return a container with its elements centered in a string of length ``width``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.center(width, fillchar))
+
+    def count(self,
+            sub: str,
+            start: tp.Optional[int] = None,
+            end: tp.Optional[int] = None
+            ) -> 'Batch':
+        '''
+        Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.count(sub, start, end))
+
+    def decode(self,
+            encoding: tp.Optional[str] = None,
+            errors: tp.Optional[str] = None,
+            ) -> 'Batch':
+        '''
+        Apply str.decode() to each element. Elements must be bytes.
+        '''
+        return self._batch_apply(lambda c: c.via_str.decode(encoding, errors))
+
+    def encode(self,
+            encoding: tp.Optional[str] = None,
+            errors: tp.Optional[str] = None,
+            ) -> 'Batch':
+        '''
+        Apply str.encode() to each element. Elements must be strings.
+        '''
+        return self._batch_apply(lambda c: c.via_str.encode(encoding, errors))
+
+    def endswith(self,
+            suffix: tp.Union[str, tp.Iterable[str]],
+            start: tp.Optional[int] = None,
+            end: tp.Optional[int] = None
+            ) -> 'Batch':
+        '''
+        Returns a container with the number of non-overlapping occurrences of substring ``suffix`` (or an interable of suffixes) in the optional range ``start``, ``end``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.endswith(suffix, start, end))
+
+    def find(self,
+            sub: str,
+            start: tp.Optional[int] = None,
+            end: tp.Optional[int] = None
+            ) -> 'Batch':
+        '''
+        For each element, return the lowest index in the string where substring ``sub`` is found.
+        '''
+        return self._batch_apply(lambda c: c.via_str.find(sub, start, end))
+
+    def index(self,
+            sub: str,
+            start: tp.Optional[int] = None,
+            end: tp.Optional[int] = None
+            ) -> 'Batch':
+        '''
+        Like ``find``, but raises ``ValueError`` when the substring is not found.
+        '''
+        return self._batch_apply(lambda c: c.via_str.index(sub, start, end))
+
+    def isalnum(self) -> 'Batch':
+        '''
+        Returns true for each element if all characters in the string are alphanumeric and there is at least one character, false otherwise.
+        '''
+        return self._batch_apply(lambda c: c.via_str.isalnum())
+
+    def isalpha(self) -> 'Batch':
+        '''
+        Returns true for each element if all characters in the string are alphabetic and there is at least one character, false otherwise.
+        '''
+        return self._batch_apply(lambda c: c.via_str.isalpha())
+
+    def isdecimal(self) -> 'Batch':
+        '''
+        For each element, return True if there are only decimal characters in the element.
+        '''
+        return self._batch_apply(lambda c: c.via_str.isdecimal())
+
+    def isdigit(self) -> 'Batch':
+        '''
+        Returns true for each element if all characters in the string are digits and there is at least one character, false otherwise.
+        '''
+        return self._batch_apply(lambda c: c.via_str.isdigit())
+
+    def islower(self) -> 'Batch':
+        '''
+        Returns true for each element if all cased characters in the string are lowercase and there is at least one cased character, false otherwise.
+        '''
+        return self._batch_apply(lambda c: c.via_str.islower())
+
+    def isnumeric(self) -> 'Batch':
+        '''
+        For each element in self, return True if there are only numeric characters in the element.
+        '''
+        return self._batch_apply(lambda c: c.via_str.isnumeric())
+
+    def isspace(self) -> 'Batch':
+        '''
+        Returns true for each element if there are only whitespace characters in the string and there is at least one character, false otherwise.
+        '''
+        return self._batch_apply(lambda c: c.via_str.isspace())
+
+    def istitle(self) -> 'Batch':
+        '''
+        Returns true for each element if the element is a titlecased string and there is at least one character, false otherwise.
+        '''
+        return self._batch_apply(lambda c: c.via_str.istitle())
+
+    def isupper(self) -> 'Batch':
+        '''
+        Returns true for each element if all cased characters in the string are uppercase and there is at least one character, false otherwise.
+        '''
+        return self._batch_apply(lambda c: c.via_str.isupper())
+
+    def len(self) -> 'Batch':
+        '''
+        Return the length of the string.
+        '''
+        return self._batch_apply(lambda c: c.via_str.len())
+
+    def ljust(self,
+            width: int,
+            fillchar: str = ' '
+            ) -> 'Batch':
+        '''
+        Return a container with its elements ljusted in a string of length ``width``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.ljust(width, fillchar))
+
+    def lower(self) -> 'Batch':
+        '''
+        Return an array with the elements of self converted to lowercase.
+        '''
+        return self._batch_apply(lambda c: c.via_str.lower())
+
+    def lstrip(self,
+            chars: tp.Optional[str] = None,
+            ) -> 'Batch':
+        '''
+        For each element, return a copy with the leading characters removed.
+        '''
+        return self._batch_apply(lambda c: c.via_str.lstrip(chars))
+
+    def partition(self,
+            sep: str,
+            ) -> 'Batch':
+        '''
+        Partition each element around ``sep``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.partition(sep))
+
+    def replace(self,
+            old: str,
+            new: str,
+            count: tp.Optional[int] = None,
+            ) -> 'Batch':
+        '''
+        Return a container with its elements replaced in a string of length ``width``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.replace(old, new, count))
+
+    def rfind(self,
+            sub: str,
+            start: tp.Optional[int] = None,
+            end: tp.Optional[int] = None
+            ) -> 'Batch':
+        '''
+        For each element, return the highest index in the string where substring ``sub`` is found, such that sub is contained within ``start``, ``end``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.rfind(sub, start, end))
+
+    def rindex(self,
+            sub: str,
+            start: tp.Optional[int] = None,
+            end: tp.Optional[int] = None
+            ) -> 'Batch':
+        '''
+        Like ``rfind``, but raises ``ValueError`` when the substring ``sub`` is not found.
+        '''
+        return self._batch_apply(lambda c: c.via_str.rindex(sub, start, end))
+
+    def rjust(self,
+            width: int,
+            fillchar: str = ' '
+            ) -> 'Batch':
+        '''
+        Return a container with its elements rjusted in a string of length ``width``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.rjust(width, fillchar))
+
+    def rpartition(self,
+            sep: str,
+            ) -> 'Batch':
+        '''
+        Partition (split) each element around the right-most separator.
+        '''
+        return self._batch_apply(lambda c: c.via_str.rpartition(sep))
+
+    def rsplit(self,
+            sep: str,
+            maxsplit: int = -1,
+            ) -> 'Batch':
+        '''
+        For each element, return a tuple of the words in the string, using sep as the delimiter string.
+        '''
+        return self._batch_apply(lambda c: c.via_str.rsplit(sep, maxsplit))
+
+    def rstrip(self,
+            chars: tp.Optional[str] = None,
+            ) -> 'Batch':
+        '''
+        For each element, return a copy with the trailing characters removed.
+        '''
+        return self._batch_apply(lambda c: c.via_str.rstrip(chars))
+
+    def split(self,
+            sep: str,
+            maxsplit: int = -1,
+            ) -> 'Batch':
+        '''
+        For each element, return a tuple of the words in the string, using sep as the delimiter string.
+        '''
+        return self._batch_apply(lambda c: c.via_str.split(sep, maxsplit))
+
+    #splitlines: not likely useful
+
+    def startswith(self,
+            prefix: tp.Union[str, tp.Iterable[str]],
+            start: tp.Optional[int] = None,
+            end: tp.Optional[int] = None
+            ) -> 'Batch':
+        '''
+        Returns a container with the number of non-overlapping occurrences of substring `prefix` (or an interable of prefixes) in the optional range ``start``, ``end``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.startswith(prefix, start, end))
+
+    def strip(self,
+            chars: tp.Optional[str] = None,
+            ) -> 'Batch':
+        '''
+        For each element, return a copy with the leading and trailing characters removed.
+        '''
+        return self._batch_apply(lambda c: c.via_str.strip(chars))
+
+    def swapcase(self) -> 'Batch':
+        '''
+        Return a container with uppercase characters converted to lowercase and vice versa.
+        '''
+        return self._batch_apply(lambda c: c.via_str.swapcase())
+
+    def title(self) -> 'Batch':
+        '''
+        Return a container with uppercase characters converted to lowercase and vice versa.
+        '''
+        return self._batch_apply(lambda c: c.via_str.title())
+
+    # translate: akward input
+
+    def upper(self) -> 'Batch':
+        '''
+        Return a container with uppercase characters converted to lowercase and vice versa.
+        '''
+        return self._batch_apply(lambda c: c.via_str.upper())
+
+    def zfill(self,
+            width: int,
+            ) -> 'Batch':
+        '''
+        Return the string left-filled with zeros.
+        '''
+        return self._batch_apply(lambda c: c.via_str.zfill(width))
+

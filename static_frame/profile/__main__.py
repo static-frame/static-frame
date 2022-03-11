@@ -11,8 +11,7 @@ import sys
 import datetime
 import tempfile
 from enum import Enum
-import shutil
-
+# import warnings
 
 from pyinstrument import Profiler #type: ignore
 from line_profiler import LineProfiler #type: ignore
@@ -21,10 +20,15 @@ import gprof2dot #type: ignore
 import numpy as np
 import pandas as pd
 import frame_fixtures as ff
-import static_frame as sf
 
+
+sys.path.append(os.getcwd())
+
+import static_frame as sf
 from static_frame.core.display_color import HexColor
-from static_frame.core.util import AnyCallable, isin
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import isin
+from static_frame.core.util import WarningsSilent
 from static_frame.test.test_case import temp_file
 
 
@@ -821,23 +825,45 @@ class Pivot(Perf):
                 )
         self.pdf2 = self.sff2.to_pandas()
 
-        # more than one data fields
+        # index2_columns0_data1
         self.sff3 = ff.parse('s(100_000,4)|v(int,int,int,int)').assign[0].apply(
                 lambda s: s % 6).assign[1].apply(
-                lambda s: s % 12
+                lambda s: s % 3).assign[2].apply(
+                lambda s: s % 5
                 )
+        self.pdf3 = self.sff3.to_pandas()
 
-        from static_frame.core.pivot import pivot_outer_index
-        from static_frame import TypeBlocks
-        from static_frame.core.util import array_to_groups_and_locations
+        self.sff4 = ff.parse('s(100_000,6)|v(int,int,int,float,int,float)').assign[0].apply(
+                lambda s: s % 6).assign[1].apply(
+                lambda s: s % 3).assign[2].apply(
+                lambda s: s % 5
+                )
+        self.pdf4 = self.sff4.to_pandas()
+
+        # from static_frame.core.pivot import pivot_outer_index
+        # from static_frame.core.pivot import pivot_core
+        # from static_frame.core.pivot import pivot_items_to_block
+        # from static_frame.core.pivot import pivot_items_to_frame
+        # from static_frame import TypeBlocks
+        # from static_frame.core.type_blocks import group_sorted
+        # from static_frame.core.util import array_to_groups_and_locations
+
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                line_target=array_to_groups_and_locations,
+                # line_target=array_to_groups_and_locations,
                 ),
             'index1_columns1_data1': FunctionMetaData(
-                line_target=pivot_outer_index,
+                # line_target=pivot_outer_index,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
+                ),
+            'index2_columns0_data1': FunctionMetaData(
+                # line_target=pivot_items_to_frame,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                ),
+            'index1_columns1_data3': FunctionMetaData(
+                # line_target=pivot_items_to_frame,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
             }
 
@@ -851,6 +877,14 @@ class Pivot_N(Pivot, Native):
         post = self.sff2.pivot(index_fields=0, columns_fields=1)
         assert post.shape == (6, 12)
 
+    def index2_columns0_data1(self) -> None:
+        post = self.sff3.pivot(index_fields=(0, 1), data_fields=3)
+        assert post.shape == (18, 1)
+
+    def index1_columns1_data3(self) -> None:
+        post = self.sff4.pivot(index_fields=0, columns_fields=1, data_fields=(3, 4, 5))
+        assert post.shape == (6, 9)
+
 
 class Pivot_R(Pivot, Reference):
 
@@ -861,6 +895,15 @@ class Pivot_R(Pivot, Reference):
     def index1_columns1_data1(self) -> None:
         post = self.pdf2.pivot_table(index=0, columns=1, aggfunc=np.nansum)
         assert post.shape == (6, 12)
+
+    def index2_columns0_data1(self) -> None:
+        post = self.pdf3.pivot_table(index=(0, 1), values=3, aggfunc=np.nansum)
+        assert post.shape == (18, 1)
+
+    def index1_columns1_data3(self) -> None:
+        post = self.pdf4.pivot_table(index=0, columns=1, values=[3, 4, 5], aggfunc=np.nansum)
+        assert post.shape == (6, 9)
+
 
 #-------------------------------------------------------------------------------
 class BusItemsZipPickle(Perf):
@@ -990,12 +1033,14 @@ class FrameFromNPZ(Perf):
         _, self.fp_parquet = tempfile.mkstemp(suffix='.parquet')
         self.sff1.to_parquet(self.fp_parquet)
 
-        # self.meta = {
-        #     'int_index_str_double': FunctionMetaData(
-        #         perf_status=PerfStatus.EXPLAINED_LOSS,
-        #         None
-        #         ),
-        #     }
+        from static_frame.core.archive_npy import NPYConverter
+
+        self.meta = {
+            'wide_mixed_index_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=NPYConverter._header_decode,
+                ),
+            }
 
     def __del__(self) -> None:
         os.unlink(self.fp_npz)
@@ -1015,7 +1060,7 @@ class FrameFromNPZ_R(FrameFromNPZ, Reference):
 
 #-------------------------------------------------------------------------------
 class Group(Perf):
-    NUMBER = 150
+    NUMBER = 200
 
     def __init__(self) -> None:
         super().__init__()
@@ -1067,6 +1112,26 @@ class Group_R(Group, Reference):
         assert len(post) == 100
 
 
+
+
+
+#-------------------------------------------------------------------------------
+# class Warnings(Perf):
+#     NUMBER = 50_000
+
+#     def __init__(self) -> None:
+#         super().__init__()
+
+# class WarningsSilent_N(Warnings, Native):
+#     def warnings_context(self) -> None:
+#         with WarningsSilent():
+#             warnings.warn('foo')
+
+# class WarningsSilent_R(Warnings, Reference):
+#     def warnings_context(self) -> None:
+#         with warnings.catch_warnings():
+#             warnings.simplefilter("ignore")
+#             warnings.warn('foo')
 
 
 #-------------------------------------------------------------------------------
@@ -1139,8 +1204,9 @@ Profiling outpout for static-frame dropna:
 python3 test_performance.py SeriesIntFloat_dropna --profile
             '''
             )
+    choices = sorted(str(x).replace("<class '__main__.","").replace("'>", "") for x in Perf.__subclasses__())
     p.add_argument('patterns',
-            help='Names of classes to match using fn_match syntax',
+            help=f'Names of classes to match using fn_match syntax ({choices})',
             nargs='+',
             )
     # p.add_argument('--modules',
@@ -1394,8 +1460,10 @@ def performance_tables_from_records(
             frame[fields].median().rename('median'),
             frame[fields].std(ddof=1).rename('std')
             )).rename(index='name').unset_index()
-    # import ipdb; ipdb.set_trace()
-    composit = sf.Frame.from_concat((frame, stats), columns=frame.columns, index=sf.IndexAutoFactory)
+    if len(frame) < 9:
+        composit = frame.relabel(columns=frame.columns, index=sf.IndexAutoFactory)
+    else:
+        composit = sf.Frame.from_concat((frame, stats), columns=frame.columns, index=sf.IndexAutoFactory)
     display = composit.iter_element_items().apply(format)
     # display = display[display.columns.drop.loc['status'].values.tolist() + ['status']]
     # display = display[[c for c in display.columns if '/' not in c]]
@@ -1450,12 +1518,16 @@ def main() -> None:
                 print(c)
                 print(alt[c].sort_values().display(config))
 
-        # import ipdb; ipdb.set_trace()
         # if 'sf/pd' in frame.columns:
         #     print('mean: {}'.format(round(frame['sf/pd'].mean(), 6)))
         #     print('wins: {}/{}'.format((frame['sf/pd'] < 1.05).sum(), len(frame)))
 
 
+        # getting an Markdown table
+
+        # print(display[display.columns.iloc[:-2]].to_markdown(config=sf.DisplayConfig(include_index=False, cell_max_width=np.inf, cell_max_width_leftmost=np.inf, type_show=False, display_rows=np.inf)))
+
 
 if __name__ == '__main__':
     main()
+

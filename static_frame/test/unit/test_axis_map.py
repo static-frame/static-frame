@@ -1,5 +1,4 @@
 import typing as tp
-import unittest
 
 import numpy as np
 import frame_fixtures as ff
@@ -174,4 +173,5 @@ class TestUnit(TestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
