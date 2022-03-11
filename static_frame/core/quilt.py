@@ -898,7 +898,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if isinstance(axis_map_sub, tuple): # type: ignore
             bus_keys = (axis_map_sub[0],) #type: ignore
         else:
-            bus_keys = axis_map_sub._get_outer_index_labels_in_order_they_appear()
+            bus_keys = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
 
         for key_count, key in enumerate(bus_keys):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
@@ -983,7 +983,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             frame_labels = (axis_map_sub[0],) #type: ignore
         else:
             # get the outer level, or just the unique frame labels needed
-            frame_labels = axis_map_sub._get_outer_index_labels_in_order_they_appear()
+            frame_labels = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
 
         for key_count, key in enumerate(frame_labels):
             # get Boolean segment for this Frame

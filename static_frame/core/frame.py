@@ -2753,8 +2753,7 @@ class Frame(ContainerOperand):
                             blocks=blocks,
                             name=obj[b'name'],
                             index_constructors=index_constructors,
-                            own_blocks=True,
-                            )
+                            own_blocks=True)
                 elif issubclass(cls, Index):
                     data = unpackb(obj[b'data'])
                     return cls(
@@ -3586,10 +3585,12 @@ class Frame(ContainerOperand):
             index_constructor:
             columns_constructor:
         '''
-        index = (self._index.level_add(index, index_constructor=index_constructor)
+        index = (self._index.level_add(
+                index, index_constructor=index_constructor)
                 if index is not None else self._index
                 )
-        columns = (self._columns.level_add(columns, index_constructor=columns_constructor)
+        columns = (self._columns.level_add(
+                columns, index_constructor=columns_constructor)
                 if columns is not None else self._columns
                 )
 
@@ -3672,10 +3673,7 @@ class Frame(ContainerOperand):
                     shape_reference=(self.shape[0], len(index_opposite)),
                     )
 
-            index = IndexHierarchy._from_type_blocks(
-                    ih_blocks,
-                    name=ih_name,
-                    )
+            index = IndexHierarchy._from_type_blocks(ih_blocks, name=ih_name)
             columns = index_opposite
         else: # select from index, add to columns
             ih_blocks.extend(self._blocks._extract(row_key=iloc_key).transpose())
@@ -3685,10 +3683,7 @@ class Frame(ContainerOperand):
                     )
 
             index = index_opposite
-            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
-                    ih_blocks,
-                    name=ih_name,
-                    )
+            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(ih_blocks, name=ih_name)
 
         return self.__class__(
                 frame_blocks, # does not copy arrays
@@ -3761,8 +3756,7 @@ class Frame(ContainerOperand):
             else:
                 new_target = target_hctor._from_type_blocks(
                         remain_blocks,
-                        name=remain_labels,
-                        )
+                        name=remain_labels)
 
         if axis == 0: # select from index, remove from index
             blocks = TypeBlocks.from_blocks(chain(add_blocks,
@@ -5638,8 +5632,7 @@ class Frame(ContainerOperand):
                     )
             columns_default_constructor = partial(
                     self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
-                    own_blocks=True,
-                    )
+                    own_blocks=True)
 
         else:
             columns_labels = chain(names, self._columns.values)
@@ -7110,7 +7103,6 @@ class Frame(ContainerOperand):
                 elif isinstance(obj, IndexHierarchy):
                     if obj._recache:
                         obj._update_array_cache()
-
                     return {b'sf':clsname,
                             b'name':obj.name,
                             b'index_constructors': packb([

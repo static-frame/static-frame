@@ -1754,7 +1754,9 @@ class IndexHierarchy(IndexBase):
             own_blocks=True,
             )
 
-    def _get_outer_index_labels_in_order_they_appear(self: IH) -> tp.Sequence[tp.Hashable]:
+    def _get_unique_labels_in_occurence_order(self: IH,
+            depth: int = 0,
+            ) -> tp.Sequence[tp.Hashable]:
         '''
         Index could be [A, B, C]
         Indexers could be [2, 0, 0, 2, 1]
@@ -1762,7 +1764,7 @@ class IndexHierarchy(IndexBase):
         This function return [C, A, B] -- shoutout to my initials
         '''
         # get the outer level, or just the unique frame labels needed
-        labels = self.values_at_depth(0)
+        labels = self.values_at_depth(depth)
         label_indexes = ufunc_unique1d_positions(labels)[0]
         label_indexes.sort()
         return labels[label_indexes] # type: ignore
