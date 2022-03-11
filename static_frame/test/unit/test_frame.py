@@ -1897,12 +1897,11 @@ class TestUnit(TestCase):
         self.assertEqual(len(f1.columns), 3)
 
     def test_frame_setitem_n(self) -> None:
-
         f = sf.FrameGO.from_element('a',
                 index=range(3),
                 columns=sf.IndexHierarchy.from_labels((('a', 'b'),)))
         with self.assertRaises(RuntimeError):
-            f['s'] = f #type: ignore
+            f[('s', 'b')] = f #type: ignore
 
     def test_frame_setitem_o(self) -> None:
         import pandas as pd

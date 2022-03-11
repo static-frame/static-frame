@@ -860,26 +860,11 @@ class Index(IndexBase):
             return key
 
         if self._map is None and offset is not None: # loc_is_iloc
-            if key.__class__ is slice:
-                if key == NULL_SLICE:
-                    return slice(offset, self.__len__() + offset)
-                return slice_to_inclusive_slice(key, offset) #type: ignore
+            # PERF: isolate for usage of _positions
+            if self._recache:
+                self._update_array_cache()
 
-            if key.__class__ is np.ndarray:
-                # PERF: isolate for usage of _positions
-                if self._recache:
-                    self._update_array_cache()
-
-                if key.dtype == DTYPE_BOOL: #type: ignore
-                    return self._positions[key] + offset
-                if key.dtype != DTYPE_INT_DEFAULT: #type: ignore
-                    key = key.astype(DTYPE_INT_DEFAULT) #type: ignore
-                return key + offset
-
-            if isinstance(key, list):
-                return [k + offset for k in key]
-            # a single element
-            return key + offset # type: ignore
+            return self._positions[key] + offset
 
         if key_transform:
             key = key_transform(key)

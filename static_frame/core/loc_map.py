@@ -38,7 +38,7 @@ class LocMap:
         Args:
             label_to_pos: callable into mapping (can be a get() method from a dictionary)
         '''
-        # NOTE: it is expected that NULL_SLICE is alreayd identified
+        # NOTE: it is expected that NULL_SLICE is already identified
         offset_apply = not offset is None
         labels_astype: tp.Optional[np.ndarray] = None
 
@@ -123,11 +123,8 @@ class LocMap:
 
         if key.__class__ is slice:
             if key == NULL_SLICE:
-                if offset_apply:
-                    # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explicit slice relative to the offset
-                    return slice(offset, len(positions) + offset) #type: ignore
-                else:
-                    return NULL_SLICE
+                return NULL_SLICE
+
             try:
                 return slice(*cls.map_slice_args(
                         label_to_pos.get, #type: ignore
@@ -170,16 +167,12 @@ class LocMap:
                     key = reduce(OPERATORS['__or__'], (labels_ref == k for k in key)) # type: ignore
 
             if is_array and key.dtype == DTYPE_BOOL: #type: ignore
-                if offset_apply:
-                    return positions[key] + offset
                 return positions[key]
 
             # map labels to integer positions, return a list of integer positions
             # NOTE: we may miss the opportunity to identify contiguous keys and extract a slice
             # NOTE: we do more branching here to optimize performance
             if partial_selection:
-                if offset_apply:
-                    return [label_to_pos[k] + offset for k in key if k in label_to_pos] #type: ignore
                 return [label_to_pos[k] for k in key if k in label_to_pos] # type: ignore
             if offset_apply:
                 return [label_to_pos[k] + offset for k in key] #type: ignore
