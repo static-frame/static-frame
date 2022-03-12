@@ -841,6 +841,46 @@ class TestUnit(TestCase):
 
     #--------------------------------------------------------------------------
 
+    def test_hierarchy_from_empty(self) -> None:
+        ih1 = IndexHierarchy._from_empty(
+            (),
+            depth_reference=2,
+        )
+        self.assertEqual(ih1.shape, (0, 2))
+
+        ih2 = IndexHierarchy._from_empty(
+            (),
+            name=tuple("ABC"),
+            depth_reference=3,
+        )
+        self.assertEqual(ih2.shape, (0, 3))
+
+        ih3 = IndexHierarchy._from_empty(
+            np.array(()),
+            name=tuple("ABC"),
+            depth_reference=3,
+        )
+        self.assertEqual(ih3.shape, (0, 3))
+
+        ih4 = IndexHierarchy._from_empty(
+            IndexHierarchy._from_empty((), depth_reference=2).values
+        )
+        self.assertEqual(ih4.shape, (0, 2))
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy._from_empty(())
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy._from_empty((), depth_reference=1)
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy._from_empty(np.array(()))
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy._from_empty(np.array((), ndmin=2))
+
+    #--------------------------------------------------------------------------
+
     def test_hierarchy_from_tree_a(self) -> None:
         OD = OrderedDict
         tree = OD([('A', (1, 2, 3, 4)), ('B', (1, 2))])
@@ -1196,25 +1236,35 @@ class TestUnit(TestCase):
 
     def test_hierarchy_from_array_a(self) -> None:
 
-        array = np.array((('II', 'A', 1),
-                ('I', 'B', 1),
-                ('II', 'B', 2),
-                ('I', 'A', 2),
-                ('I', 'B', 2),
-                ('II', 'A', 2),
-                ('II', 'B', 1),
-                ('I', 'A', 1),
+        # NOTE: This will consolidate dtypes
+        arrays1 = np.array((
+                ('II', 'A', '1'),
+                ('I', 'B', '1'),
+                ('II', 'B', '2'),
+                ('I', 'A', '2'),
+                ('I', 'B', '2'),
+                ('II', 'A', '2'),
+                ('II', 'B', '1'),
+                ('I', 'A', '1'),
                 ))
 
-        ih1 = IndexHierarchy._from_array(array)
-        self.assertTrue((np.array(tuple(ih1.iter_label())) == array).all())
+        ih1 = IndexHierarchy._from_arrays(arrays1)
+        self.assertTrue((np.array(tuple(ih1.iter_label())) == arrays1).all())
+
+        arrays2 = [
+            np.array(['II', 'I', 'II', 'I', 'I', 'II', 'II', 'I']),
+            np.array(['A', 'B', 'B', 'A', 'B', 'A', 'B', 'A']),
+            np.array(['1', '1', '2', '2', '2', '2', '1', '1']),
+        ]
+        ih2 = IndexHierarchy._from_arrays(arrays2)
+        self.assertTrue(ih1.equals(ih2))
 
     def test_hierarchy_from_array_b(self) -> None:
 
-        array = np.array([1, 2, 3])
+        arrays = [(1, 2), (1,)]
 
         with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy._from_array(array) # Must be 2-D
+            _ = IndexHierarchy._from_arrays(arrays)
 
     #---------------------------------------------------------------------------
 
@@ -3809,6 +3859,38 @@ class TestUnit(TestCase):
         encoded = np.bitwise_or.reduce(indexer << offset)
         self.assertEqual(max(result), encoded)
 
+    #---------------------------------------------------------------------------
+
+    def test_build_key_indexers_from_key(self) -> None:
+        ih = IndexHierarchy.from_product(range(3), range(4, 7), tuple("ABC"))
+
+        ih_overflow = IndexHierarchy.from_product(range(3), range(4, 7), tuple("ABC"))
+        ih_overflow._encoding_can_overflow = True
+
+        def check(
+                key: tuple, # type: ignore
+                expected: tp.List[tp.List[int]],
+                ) -> None:
+            resultA = ih._build_key_indexers_from_key(key)
+            self.assertEqual(resultA.dtype, np.uint64)
+            self.assertListEqual(resultA.tolist(), expected)
+
+            resultB = ih_overflow._build_key_indexers_from_key(key)
+            self.assertEqual(resultB.dtype, object)
+            self.assertListEqual(resultB.tolist(), expected)
+
+        check((0, 5, 'A'), [0, 1, 0]) # type: ignore
+        check((0, 5, ['A']), [[0, 1, 0]])
+        check(([0, 1],  5, ['B']), [[0, 1, 1],
+                                    [1, 1, 1]])
+        check(([0, 1], 5, 'A'), [[0, 1, 0],
+                                 [1, 1, 0]])
+        check(([0, 1], [4, 5, 6], 'C'), [[0, 0, 2],
+                                         [0, 1, 2],
+                                         [0, 2, 2],
+                                         [1, 0, 2],
+                                         [1, 1, 2],
+                                         [1, 2, 2]])
 
 
 if __name__ == '__main__':

@@ -1,4 +1,5 @@
 import io
+import itertools
 import os
 import argparse
 import typing as tp
@@ -25,12 +26,8 @@ import frame_fixtures as ff
 sys.path.append(os.getcwd())
 
 import static_frame as sf
-from static_frame.core.index_base import IndexBase
 from static_frame.core.display_color import HexColor
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import isin
-from static_frame.core.util import WarningsSilent
-from static_frame.test.test_case import temp_file
 
 
 class PerfStatus(Enum):
@@ -1191,7 +1188,7 @@ class FrameFromConcat_R(FrameFromConcat, Reference):
 
 class IndexHierarchyLoc(Perf):
 
-    NUMBER = 50
+    NUMBER = 5000
 
     def __init__(self) -> None:
         super().__init__()
@@ -1224,6 +1221,8 @@ class IndexHierarchyLoc(Perf):
                 [True, False, None, self.obj]
                 ))
 
+        self.i = 0
+
         self.meta = dict(
                 large_element_loc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation='We handle more variety of inputs and have more checks'),
                 large_element_hloc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
@@ -1235,23 +1234,25 @@ class IndexHierarchyLoc(Perf):
 class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
 
     def large_element_loc(self) -> None:
-        for _ in range(100):
-            self.ih_large._loc_to_iloc((100, "A", True))
-            self.ih_large._loc_to_iloc(self.ih_large.iloc[12839])
-            # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
-            slice(
-                None,
-                self.ih_large._loc_to_iloc((199, "z", None)),
-            )
-            slice(
-                self.ih_large._loc_to_iloc((0, "5", False)),
-            )
-            slice(
-                self.ih_large._loc_to_iloc((19, ".", True)),
-                self.ih_large._loc_to_iloc((100, "B",  self.obj)),
-            )
+        self.ih_large._loc_to_iloc((100, "A", True))
+        self.ih_large._loc_to_iloc(self.ih_large.iloc[12839])
+        # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
+        slice(
+            None,
+            self.ih_large._loc_to_iloc((199, "z", None)),
+        )
+        slice(
+            self.ih_large._loc_to_iloc((0, "5", False)),
+        )
+        slice(
+            self.ih_large._loc_to_iloc((19, ".", True)),
+            self.ih_large._loc_to_iloc((100, "B",  self.obj)),
+        )
 
     def large_element_hloc(self) -> None:
+        self.i += 1
+        if self.i % 60 != 0:
+            return
         self.ih_large._loc_to_iloc(sf.HLoc[100, "A", True])
         self.ih_large._loc_to_iloc(sf.HLoc[144])
         self.ih_large._loc_to_iloc(sf.HLoc[:, "|"])
@@ -1261,52 +1262,52 @@ class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
         self.ih_large._loc_to_iloc(sf.HLoc[:, "H", None])
 
     def small_element_loc(self) -> None:
-        for _ in range(100):
-            self.ih_small._loc_to_iloc((1, "a", True))
-            self.ih_small._loc_to_iloc(self.ih_small.iloc[25])
-            slice(
-                None,
-                self.ih_small._loc_to_iloc((9, "g", None)),
-            )
-            slice(
-                self.ih_small._loc_to_iloc((0, "c", False)),
-            )
-            slice(
-                self.ih_small._loc_to_iloc((3, "b", True)),
-                self.ih_small._loc_to_iloc((5, "e",  self.obj)),
-            )
+        self.ih_small._loc_to_iloc((1, "a", True))
+        self.ih_small._loc_to_iloc(self.ih_small.iloc[25])
+        slice(
+            None,
+            self.ih_small._loc_to_iloc((9, "g", None)),
+        )
+        slice(
+            self.ih_small._loc_to_iloc((0, "c", False)),
+        )
+        slice(
+            self.ih_small._loc_to_iloc((3, "b", True)),
+            self.ih_small._loc_to_iloc((5, "e",  self.obj)),
+        )
 
     def small_element_hloc(self) -> None:
-        for _ in range(100):
-            self.ih_small._loc_to_iloc(sf.HLoc[2, "b", True])
-            self.ih_small._loc_to_iloc(sf.HLoc[4])
-            self.ih_small._loc_to_iloc(sf.HLoc[:, "a"])
-            self.ih_small._loc_to_iloc(sf.HLoc[:, :, self.obj])
-            self.ih_small._loc_to_iloc(sf.HLoc[0, "f"])
-            self.ih_small._loc_to_iloc(sf.HLoc[8, :, False])
-            self.ih_small._loc_to_iloc(sf.HLoc[:, "c", None])
+        self.ih_small._loc_to_iloc(sf.HLoc[2, "b", True])
+        self.ih_small._loc_to_iloc(sf.HLoc[4])
+        self.ih_small._loc_to_iloc(sf.HLoc[:, "a"])
+        self.ih_small._loc_to_iloc(sf.HLoc[:, :, self.obj])
+        self.ih_small._loc_to_iloc(sf.HLoc[0, "f"])
+        self.ih_small._loc_to_iloc(sf.HLoc[8, :, False])
+        self.ih_small._loc_to_iloc(sf.HLoc[:, "c", None])
 
 
 class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
 
     def large_element_loc(self) -> None:
-        for _ in range(100):
-            self.mi_large.get_loc((100, "A", True))
-            self.mi_large.get_loc(self.mi_large[12839])
-            # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
-            slice(
-                None,
-                self.mi_large.get_loc((199, "z", None)),
-            )
-            slice(
-                self.mi_large.get_loc((0, "5", False)),
-            )
-            slice(
-                self.mi_large.get_loc((19, ".", True)),
-                self.mi_large.get_loc((100, "B",  self.obj)),
-            )
+        self.mi_large.get_loc((100, "A", True))
+        self.mi_large.get_loc(self.mi_large[12839])
+        # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
+        slice(
+            None,
+            self.mi_large.get_loc((199, "z", None)),
+        )
+        slice(
+            self.mi_large.get_loc((0, "5", False)),
+        )
+        slice(
+            self.mi_large.get_loc((19, ".", True)),
+            self.mi_large.get_loc((100, "B",  self.obj)),
+        )
 
     def large_element_hloc(self) -> None:
+        self.i += 1
+        if self.i % 60 != 0:
+            return
         self.mi_large.get_loc(pd.IndexSlice[100, "A", True])
         self.mi_large.get_loc(pd.IndexSlice[144])
         self.mi_large.get_locs(pd.IndexSlice[:, "|"])
@@ -1316,195 +1317,185 @@ class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
         self.mi_large.get_locs(pd.IndexSlice[:, "H", None])
 
     def small_element_loc(self) -> None:
-        for _ in range(100):
-            self.mi_small.get_loc((1, "a", True))
-            self.mi_small.get_loc(self.mi_small[25])
-            slice(
-                None,
-                self.mi_small.get_loc((9, "g", None)),
-            )
-            slice(
-                self.mi_small.get_loc((0, "c", False)),
-            )
-            slice(
-                self.mi_small.get_loc((3, "b", True)),
-                self.mi_small.get_loc((5, "e",  self.obj)),
-            )
+        self.mi_small.get_loc((1, "a", True))
+        self.mi_small.get_loc(self.mi_small[25])
+        slice(
+            None,
+            self.mi_small.get_loc((9, "g", None)),
+        )
+        slice(
+            self.mi_small.get_loc((0, "c", False)),
+        )
+        slice(
+            self.mi_small.get_loc((3, "b", True)),
+            self.mi_small.get_loc((5, "e",  self.obj)),
+        )
 
     def small_element_hloc(self) -> None:
-        for _ in range(100):
-            self.mi_small.get_loc(pd.IndexSlice[2, "b", True])
-            self.mi_small.get_loc(pd.IndexSlice[4])
-            self.mi_small.get_locs(pd.IndexSlice[:, "a"])
-            self.mi_small.get_locs(pd.IndexSlice[:, :, self.obj])
-            self.mi_small.get_locs(pd.IndexSlice[0, "f"])
-            self.mi_small.get_locs(pd.IndexSlice[8, :, False])
-            self.mi_small.get_locs(pd.IndexSlice[:, "c", None])
+        self.mi_small.get_loc(pd.IndexSlice[2, "b", True])
+        self.mi_small.get_loc(pd.IndexSlice[4])
+        self.mi_small.get_locs(pd.IndexSlice[:, "a"])
+        self.mi_small.get_locs(pd.IndexSlice[:, :, self.obj])
+        self.mi_small.get_locs(pd.IndexSlice[0, "f"])
+        self.mi_small.get_locs(pd.IndexSlice[8, :, False])
+        self.mi_small.get_locs(pd.IndexSlice[:, "c", None])
 
 
 #-------------------------------------------------------------------------------
 
-class IndexHierarchyConstruction(Perf):
+class _IndexHierarchyConstructionMixin:
 
-    NUMBER = 1
+    def _get_product_data(self) -> tp.Tuple[tp.Sequence[tp.Hashable], ...]:
+        raise NotImplementedError()
 
     def __init__(self) -> None:
-        super().__init__()
+        self.product_data = self._get_product_data()
 
-        class Obj:
-            def __repr__(self) -> str:
-                return f'Obj({id(self)})'
-
-        self.obj = Obj()
-        self.from_product_small_data = ( # (280, 3)
-                range(10),
-                tuple("abcdefg"),
-                [True, False, None, self.obj],
-                )
-        self.from_product_large_data = ( # (360000, 3)
-                range(900),
-                tuple(string.printable),
-                [True, False, None, self.obj]
-                )
-
-        ih_small = sf.IndexHierarchy.from_product(*self.from_product_small_data)
-        ih_large = sf.IndexHierarchy.from_product(*self.from_product_large_data)
-
-        # Same as from_product*
-        self.labels_small_order_data = list(ih_small.iter_label())
-        self.labels_large_order_data = list(ih_large.iter_label())
-        self.labels_small_data_shuffled = list(ih_small.iter_label())
-        self.labels_large_data_shuffled = list(ih_large.iter_label())
+        self.labels = list(itertools.product(*self.product_data))
+        self.labels_shuffled = list(self.labels)
 
         random.seed(0)
-        random.shuffle(self.labels_small_data_shuffled)
-        random.shuffle(self.labels_large_data_shuffled)
+        random.shuffle(self.labels_shuffled)
 
-        # Construction of empty index hierarchy
-        self.from_names_data = list("ABCD")
+        self.arrays = [
+            np.array([row[depth] for row in self.labels])
+            for depth in range(len(self.labels[0]))
+        ]
 
-        self.arrays_small = [ih_small.values_at_depth(i) for i in range(3)]
-        self.arrays_large = [ih_large.values_at_depth(i) for i in range(3)]
+
+class _IndexHierarchyConstructionMixin_N(_IndexHierarchyConstructionMixin):
+
+    def from_product(self) -> None:
+        sf.IndexHierarchy.from_product(*self.product_data)
+
+    def from_labels(self) -> None:
+        sf.IndexHierarchy.from_labels(self.labels)
+
+    def from_labels_reorder(self) -> None:
+        sf.IndexHierarchy.from_labels(self.labels_shuffled, reorder_for_hierarchy=True)
+
+    def from_arrays(self) -> None:
+        sf.IndexHierarchy._from_arrays(self.arrays)
+
+
+class _IndexHierarchyConstructionMixin_R(_IndexHierarchyConstructionMixin):
+
+    def from_product(self) -> None:
+        pd.MultiIndex.from_product(self.product_data).has_duplicates
+
+    def from_labels(self) -> None:
+        pd.MultiIndex.from_tuples(self.labels).has_duplicates
+
+    def from_labels_reorder(self) -> None:
+        pd.MultiIndex.from_tuples(self.labels_shuffled).sortlevel()[0].has_duplicates
+
+    def from_arrays(self) -> None:
+        pd.MultiIndex.from_arrays(self.arrays).has_duplicates
+
+
+class IndexHierarchyConstructionSmall(Perf, _IndexHierarchyConstructionMixin):
+
+    NUMBER = 1000
+
+    def _get_product_data(self) -> tp.Tuple[tp.Sequence[tp.Hashable], ...]:
+        return ( # (280, 3)
+                range(10),
+                tuple("abcdefg"),
+                [True, False, None, object()],
+                )
+
+    def __init__(self) -> None:
+        Perf.__init__(self)
+        _IndexHierarchyConstructionMixin.__init__(self)
 
         self.meta = dict(
-                from_product_small=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_WIN),
-                from_product_large=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_LOSS, explanation="cython?"),
-                from_labels_small=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_WIN),
-                from_labels_small_reorder=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_WIN),
-                from_labels_large=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="pandas does not check unique"),
-                from_labels_large_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="pandas does not check unique"),
-                from_index_names=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_arrays_small=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_WIN),
-                from_arrays_large=FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_LOSS, explanation="cython?"),
+                from_product=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                from_labels=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                from_labels_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                from_arrays=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 )
 
 
-class IndexHierarchyConstruction_N(IndexHierarchyConstruction, Native):
-
-    def from_product_small(self) -> None:
-        for _ in range(1000):
-            sf.IndexHierarchy.from_product(*self.from_product_small_data)
-
-    def from_product_large(self) -> None:
-        sf.IndexHierarchy.from_product(*self.from_product_large_data)
-
-    def from_labels_small(self) -> None:
-        for _ in range(1000):
-            sf.IndexHierarchy.from_labels(self.labels_small_order_data)
-
-    def from_labels_small_reorder(self) -> None:
-        for _ in range(1000):
-            sf.IndexHierarchy.from_labels(self.labels_small_data_shuffled, reorder_for_hierarchy=True)
-
-    def from_labels_large(self) -> None:
-        sf.IndexHierarchy.from_labels(self.labels_large_order_data)
-
-    def from_labels_large_reorder(self) -> None:
-        sf.IndexHierarchy.from_labels(self.labels_large_data_shuffled, reorder_for_hierarchy=True)
-
-    def from_index_names(self) -> None:
-        for _ in range(100_000):
-            sf.IndexHierarchy.from_names(self.from_names_data)
-
-    def from_arrays_small(self) -> None:
-        for _ in range(1000):
-            sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_small), own_blocks=False)
-            sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_small), own_blocks=True)
-
-    def from_arrays_large(self) -> None:
-        sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_large), own_blocks=False)
-        sf.IndexHierarchy._from_type_blocks(sf.TypeBlocks.from_blocks(self.arrays_large), own_blocks=True)
+class IndexHierarchyConstructionSmall_N(
+        IndexHierarchyConstructionSmall,
+        _IndexHierarchyConstructionMixin_N,
+        Native,
+        ):
+    pass
 
 
-class IndexHierarchyConstruction_R(IndexHierarchyConstruction, Reference):
+class IndexHierarchyConstructionSmall_R(
+        IndexHierarchyConstructionSmall,
+        _IndexHierarchyConstructionMixin_R,
+        Reference,
+        ):
+    pass
 
-    def from_product_small(self) -> None:
-        for _ in range(1000):
-            pd.MultiIndex.from_product(self.from_product_small_data)
 
-    def from_product_large(self) -> None:
-        pd.MultiIndex.from_product(self.from_product_large_data)
+class IndexHierarchyConstructionLarge(Perf, _IndexHierarchyConstructionMixin):
 
-    def from_labels_small(self) -> None:
-        for _ in range(1000):
-            pd.MultiIndex.from_tuples(self.labels_small_order_data)
+    NUMBER = 10
 
-    def from_labels_small_reorder(self) -> None:
-        for _ in range(1000):
-            pd.MultiIndex.from_tuples(self.labels_small_data_shuffled).sortlevel([0, 1])
+    def _get_product_data(self) -> tp.Tuple[tp.Sequence[tp.Hashable], ...]:
+        return ( # (360000, 3)
+                range(900),
+                tuple(string.printable),
+                [True, False, None, object()]
+                )
 
-    def from_labels_large(self) -> None:
-        pd.MultiIndex.from_tuples(self.labels_large_order_data)
+    def __init__(self) -> None:
+        Perf.__init__(self)
+        _IndexHierarchyConstructionMixin.__init__(self)
 
-    def from_labels_large_reorder(self) -> None:
-        pd.MultiIndex.from_tuples(self.labels_large_data_shuffled).sortlevel([0, 1])
+        meta_kwargs = dict(perf_status=PerfStatus.EXPLAINED_LOSS)
 
-    def from_index_names(self) -> None:
-        for _ in range(100_000):
-            pd.MultiIndex.from_tuples((), names=self.from_names_data)
+        self.meta = dict(
+                from_product=FunctionMetaData(**meta_kwargs, explanation='Blocks & _encoded_indexer_map construction'),
+                from_labels=FunctionMetaData(**meta_kwargs, explanation='Vectorization outperforms at larger N'),
+                from_labels_reorder=FunctionMetaData(**meta_kwargs, explanation='Vectorization outperforms at larger N'),
+                from_arrays=FunctionMetaData(**meta_kwargs, explanation='At larger scales, Pandas hash engine outperforms numpy sorting'),
+                )
 
-    def from_arrays_small(self) -> None:
-        for _ in range(1000):
-            pd.MultiIndex.from_arrays(self.arrays_small)
-            pd.MultiIndex.from_arrays(self.arrays_small)
 
-    def from_arrays_large(self) -> None:
-        pd.MultiIndex.from_arrays(self.arrays_large)
-        pd.MultiIndex.from_arrays(self.arrays_large)
+class IndexHierarchyConstructionLarge_N(
+        IndexHierarchyConstructionLarge,
+        _IndexHierarchyConstructionMixin_N,
+        Native,
+        ):
+    pass
+
+
+class IndexHierarchyConstructionLarge_R(
+        IndexHierarchyConstructionLarge,
+        _IndexHierarchyConstructionMixin_R,
+        Reference,
+        ):
+    pass
 
 
 #-------------------------------------------------------------------------------
 
 class IndexHierarchyGO(Perf):
 
-    NUMBER = 10
+    NUMBER = 500
 
     def __init__(self) -> None:
         super().__init__()
 
-        RANGE0 = range(10), range(10), range(10)
-        RANGE1 = range(10, 20), range(10, 20), range(10, 20)
-        RANGE2 = range(20, 30), range(20, 30), range(20, 30)
-        RANGE3 = range(30, 40), range(30, 40), range(30, 40)
-        RANGE4 = range(40, 50), range(40, 50), range(40, 50)
-        RANGE5 = range(50, 60), range(50, 60), range(50, 60)
+        RANGE0 = range(5), range(5), range(5)
+        RANGE1 = range(5, 10), range(5, 10), range(5, 10)
+        RANGE2 = range(10, 15), range(10, 15), range(10, 15)
 
         self.ihgo = sf.IndexHierarchyGO.from_product(*RANGE0)
         self.ih1 = sf.IndexHierarchy.from_product(*RANGE1)
         self.ih2 = sf.IndexHierarchy.from_product(*RANGE2)
-        self.ih3 = sf.IndexHierarchy.from_product(*RANGE3)
-        self.ih4 = sf.IndexHierarchy.from_product(*RANGE4)
-        self.ih5 = sf.IndexHierarchy.from_product(*RANGE5)
 
         self.migo = pd.MultiIndex.from_product(RANGE0)
         self.mi1 = pd.MultiIndex.from_product(RANGE1)
         self.mi2 = pd.MultiIndex.from_product(RANGE2)
-        self.mi3 = pd.MultiIndex.from_product(RANGE3)
-        self.mi4 = pd.MultiIndex.from_product(RANGE4)
-        self.mi5 = pd.MultiIndex.from_product(RANGE5)
 
         self.meta = dict(
-                extend_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation="Pandas does not require unique labels"),
+                extend_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 append_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 append_and_extend_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
                 extend_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
@@ -1518,30 +1509,10 @@ class IndexHierarchyGO_N(IndexHierarchyGO, Native):
     def _append_and_extend(self, recache: bool) -> None:
         ihgo = self.ihgo.copy()
 
-        split = len(self.ih1) // 5
-
-        for label in self.ih1.iloc[:split]:
+        for label in self.ih1:
             ihgo.append(label)
 
         ihgo.extend(self.ih2)
-
-        for label in self.ih1.iloc[split:split*2]:
-            ihgo.append(label)
-
-        ihgo.extend(self.ih3)
-
-        for label in self.ih1.iloc[split*2:split*3]:
-            ihgo.append(label)
-
-        ihgo.extend(self.ih4)
-
-        for label in self.ih1.iloc[split*3:split*4]:
-            ihgo.append(label)
-
-        ihgo.extend(self.ih5)
-
-        for label in self.ih1.iloc[split*4:]:
-            ihgo.append(label)
 
         if recache:
             ihgo._update_array_cache()
@@ -1557,9 +1528,6 @@ class IndexHierarchyGO_N(IndexHierarchyGO, Native):
 
         ihgo.extend(self.ih1)
         ihgo.extend(self.ih2)
-        ihgo.extend(self.ih3)
-        ihgo.extend(self.ih4)
-        ihgo.extend(self.ih5)
 
         if recache:
             ihgo._update_array_cache()
@@ -1573,9 +1541,8 @@ class IndexHierarchyGO_N(IndexHierarchyGO, Native):
     def _append_only(self, recache: bool) -> None:
         ihgo = self.ihgo.copy()
 
-        for ih in (self.ih1, self.ih2, self.ih3, self.ih4, self.ih5):
-            for label in ih:
-                ihgo.append(label)
+        for label in self.ih1:
+            ihgo.append(label)
 
         if recache:
             ihgo._update_array_cache()
@@ -1592,64 +1559,30 @@ class IndexHierarchyGO_R(IndexHierarchyGO, Reference):
     def append_and_extend_recache(self) -> None:
         migo = self.migo.copy()
 
-        split = len(self.mi1) // 5
-
         offset = len(migo)
 
-        for label in self.mi1[:split]:
+        for label in self.mi1:
             migo = migo.insert(offset, label)
             offset += 1
 
         migo = migo.append(self.mi2)
-        offset += len(self.mi2)
-
-        for label in self.mi1[split:split*2]:
-            migo = migo.insert(offset, label)
-            offset += 1
-
-        migo = migo.append(self.mi3)
-        offset += len(self.mi3)
-
-        for label in self.mi1[split*2:split*3]:
-            migo = migo.insert(offset, label)
-            offset += 1
-
-        migo = migo.append(self.mi4)
-        offset += len(self.mi4)
-
-        for label in self.mi1[split*3:split*4]:
-            migo = migo.insert(offset, label)
-            offset += 1
-
-        migo = migo.append(self.mi5)
-        offset += len(self.mi5)
-
-        for label in self.mi1[split*4:]:
-            migo = migo.insert(offset, label)
-            offset += 1
-
-    append_and_extend_no_recache = append_and_extend_recache
 
     def extend_only_recache(self) -> None:
         migo = self.migo.copy()
 
-        migo = self.migo.append(self.mi1)
-        migo = self.migo.append(self.mi2)
-        migo = self.migo.append(self.mi3)
-        migo = self.migo.append(self.mi4)
-        migo = self.migo.append(self.mi5)
-
-    extend_only_no_recache = extend_only_recache
+        migo = migo.append(self.mi1)
+        migo = migo.append(self.mi2)
 
     def append_only_recache(self) -> None:
         migo = self.migo.copy()
 
-        i = 0
-        for mi in (self.mi1, self.mi2, self.mi3, self.mi4, self.mi5):
-            for label in mi:
-                migo = migo.insert(i, label)
-                i += 1
+        i = len(migo)
+        for label in self.mi1:
+            migo = migo.insert(i, label)
+            i += 1
 
+    append_and_extend_no_recache = append_and_extend_recache
+    extend_only_no_recache = extend_only_recache
     append_only_no_recache = append_only_recache
 
 

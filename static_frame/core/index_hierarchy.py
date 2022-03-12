@@ -1,4 +1,3 @@
-import functools
 import itertools
 import operator
 import typing as tp
@@ -105,7 +104,7 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> tp.List[np.nd
     '''
     Creates a list of indexer arrays given a sequence of `list_lengths`
 
-    This is equivalent to: ``np.array(list(itertools.product(*(range(l) for l in list_lengths))))``
+    This is equivalent to: ``np.array(list(itertools.product(*(map(range, list_lengths))))).T``
     except it scales incredibly well.
 
     It observes that the indexers for a product will look like this:
@@ -127,30 +126,24 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> tp.List[np.nd
     We can take advantage of this clear pattern by using cumulative sums to
     determine what those repetitions are, and then apply them.
     '''
-
     padded_lengths = np.full(len(list_lengths) + 2, 1, dtype=DTYPE_INT_DEFAULT)
     padded_lengths[1:-1] = list_lengths
 
     all_group_reps = np.cumprod(padded_lengths)[:-2]
     all_index_reps = np.cumprod(padded_lengths[::-1])[-3::-1]
 
-    result = []
+    # Impl borrowed from pandas/core/reshape/util.py:cartesian_product
+    result = [
+            np.tile(
+                    np.repeat(PositionsAllocator.get(list_length), repeats=all_index_reps[i]),
+                    reps=np.product(all_group_reps[i])
+                    )
+            for i, list_length
+            in enumerate(list_lengths)
+            ]
 
-    for i, (group_reps, index_reps) in enumerate(zip(all_group_reps, all_index_reps)):
-        group = np.hstack(
-            tuple(
-                map(
-                    # Repeat each index (i.e. element) `index_reps` times
-                    functools.partial(np.tile, reps=index_reps),
-                    range(padded_lengths[i+1]),
-                )
-            )
-        )
-
-        # Repeat each group `group_reps` times
-        indexer = np.tile(group, reps=group_reps)
-        indexer.flags.writeable = False
-        result.append(indexer)
+    for arr in result:
+        arr.flags.writeable = False
 
     return result
 
@@ -159,6 +152,8 @@ def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
     return TypeBlocks.from_blocks(blocks).values
 
 
+# 71% of from_arrays_small
+# 83% of from_arrays_large (83% ufunc_unique1d_indexer)
 def construct_indices_and_indexers_from_column_arrays(
         *,
         column_iter: tp.Iterable[np.ndarray],
@@ -320,7 +315,7 @@ class IndexHierarchy(IndexBase):
         if name is None:
             name = cls._build_name_from_indices(indices)
 
-        indexers = build_indexers_from_product(tuple(map(len, indices)))
+        indexers = build_indexers_from_product(list(map(len, indices)))
 
         return cls(
                 name=name,
@@ -404,8 +399,8 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def _from_array(cls: tp.Type[IH],
-            array: np.ndarray,
+    def _from_arrays(cls: tp.Type[IH],
+            arrays: tp.Sequence[np.ndarray],
             *,
             name: NameType = None,
             depth_reference: tp.Optional[DepthLevelSpecifier] = None,
@@ -419,13 +414,20 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`IndexHierarchy`
         '''
-        try:
-            _, depth = array.shape
-        except ValueError:
-            raise ErrorInitIndex('Array must be 2-dimensional.')
+        if arrays.__class__ is np.ndarray:
+            size, depth = arrays.shape # type: ignore
+            column_iter = arrays.T # type: ignore
+        else:
+            try:
+                [size] = set(map(len, arrays))
+            except ValueError:
+                raise ErrorInitIndex('All arrays must have the same length')
 
-        if not array.size:
-            return cls._from_empty(array, name=name, depth_reference=depth_reference)
+            depth = len(arrays)
+            column_iter = arrays
+
+        if not size:
+            return cls._from_empty(EMPTY_TUPLE, name=name, depth_reference=depth_reference)
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -433,7 +435,7 @@ class IndexHierarchy(IndexBase):
                 )
 
         indices, indexers = construct_indices_and_indexers_from_column_arrays(
-                column_iter=array.T,
+                column_iter=column_iter,
                 index_constructors_iter=index_constructors_iter,
                 )
 
@@ -983,7 +985,7 @@ class IndexHierarchy(IndexBase):
         for pending in self._pending_extensions: # pylint: disable = E1133
             if isinstance(pending, PendingRow):
                 for depth, label_at_depth in enumerate(pending):
-                    label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
+                    label_index = self._indices[depth]._loc_to_iloc(label_at_depth) # TODO: A lot of runtime
                     new_indexers[depth][offset] = label_index
 
                 offset += 1
@@ -1416,7 +1418,7 @@ class IndexHierarchy(IndexBase):
             # if other is not an IndexHierarchy, do not try to propagate types
             index_constructors = None
 
-        return cls._from_array(
+        return cls._from_arrays(
                 labels,
                 name=self.name,
                 index_constructors=index_constructors,
@@ -1865,22 +1867,51 @@ class IndexHierarchy(IndexBase):
 
         return ilocs
 
-    def _loc_to_iloc_fast_lookup(self, key: SingleLabelType) -> int:
-        # 1. Map key labels to their indexers
-        key_indexers = np.empty(self.depth, dtype=np.uint64)
+    @staticmethod
+    def _is_element(obj: tp.Hashable) -> bool:
+        return (not hasattr(obj, '__len__') or isinstance(obj, str)) and not obj.__class__ is slice # type: ignore
 
-        for depth, (key_at_depth, index_at_depth) in enumerate(zip(key, self._indices)):
-            key_indexers[depth] = index_at_depth._loc_to_iloc(key_at_depth)
+    # TODO: Update typehints for all loc-related functions
+
+    def _build_key_indexers_from_key(self, key) -> np.ndarray: # type: ignore
+        key_indexers: tp.List[tp.Sequence[int]] = []
+
+        is_single_key = True
+
+        # 1. Perform label resolution
+        for key_at_depth, index_at_depth in zip(key, self._indices):
+            if self._is_element(key_at_depth):
+                key_indexers.append((index_at_depth._loc_to_iloc(key_at_depth),)) # Heavy
+            else:
+                is_single_key = False
+                subkey_indexers: tp.List[int] = []
+                for sub_key in key_at_depth:
+                    subkey_indexers.append(index_at_depth._loc_to_iloc(sub_key)) # Heavy
+                key_indexers.append(subkey_indexers)
+
+        # 2. Convert to numpy array
+        combinations = np.array(list(itertools.product(*key_indexers)), dtype=np.uint64)
+        if is_single_key and len(combinations) == 1:
+            [combinations] = combinations
 
         if self._encoding_can_overflow:
-            key_indexers = key_indexers.astype(object) # pragma: no cover
+            combinations = combinations.astype(object)
+
+        return combinations
+
+    def _loc_to_iloc_fast_lookup(self, key: SingleLabelType) -> int:
+        key_indexers = self._build_key_indexers_from_key(key)
 
         # 2. Encode the indexers. See `_build_encoded_indexers_map` for detailed comments.
         key_indexers <<= self._bit_offset_encoders
-        key_indexers_encoded: int = np.bitwise_or.reduce(key_indexers)
 
-        # 3. Lookup
-        return self._encoded_indexer_map[key_indexers_encoded] # type: ignore
+        if key_indexers.ndim == 2:
+            key_indexers = np.bitwise_or.reduce(key_indexers, axis=1)
+            return list(map(self._encoded_indexer_map.__getitem__, key_indexers)) # type: ignore
+        else:
+            key_indexers = np.bitwise_or.reduce(key_indexers)
+
+        return self._encoded_indexer_map[key_indexers] # type: ignore
 
     def _loc_to_iloc_single_key(self: IH,
             key: tp.Tuple[tp.Union[tp.Hashable, slice, np.ndarray, tp.List[tp.Hashable]], ...],
@@ -1895,27 +1926,28 @@ class IndexHierarchy(IndexBase):
         # We consider the NULL_SLICE to not be 'meaningful', as it requires no filtering
         meaningful_depths = [
                 depth for depth, k in enumerate(key)
-                if not (isinstance(k, slice) and k == NULL_SLICE)
+                if not (k.__class__ is slice and k == NULL_SLICE)
                 ]
 
-        def is_element(obj: tp.Hashable) -> bool:
-            return (not hasattr(obj, '__len__') or isinstance(obj, str)) and not obj.__class__ is slice # type: ignore
-
-        maps_to_single_iloc = all(map(is_element, key))
+        def not_slice_or_mask(obj: tp.Hashable) -> bool:
+            return not (obj.__class__ is np.ndarray and obj.dtype == DTYPE_BOOL) and not obj.__class__ is slice # type: ignore
 
         if len(meaningful_depths) == 1:
             # Prefer to avoid construction of a 2D mask
             mask = self._build_mask_for_key_at_depth(depth=meaningful_depths[0], key=key)
-        elif len(meaningful_depths) == self.depth and maps_to_single_iloc:
-            return self._loc_to_iloc_fast_lookup(key)
         else:
+            can_perform_fast_lookup = all(map(not_slice_or_mask, key))
+
+            if len(meaningful_depths) == self.depth and can_perform_fast_lookup:
+                return self._loc_to_iloc_fast_lookup(key)
+
             mask_2d = np.full(self.shape, True, dtype=bool)
 
             for depth in meaningful_depths:
                 mask = self._build_mask_for_key_at_depth(depth=depth, key=key)
                 mask_2d[:, depth] = mask
 
-            mask = mask_2d.all(axis=1)
+            mask = mask_2d.all(axis=1) # TODO: Heavy?
             del mask_2d
 
         return self.positions[mask]
@@ -2703,6 +2735,8 @@ class IndexHierarchyGO(IndexHierarchy):
         self._pending_extensions.append(PendingRow(value))
         self._recache = True
 
+    # 2/3 index.difference
+    # 1/3 index.extend
     def extend(self: IHGO,
             other: IndexHierarchy,
             ) -> None:
