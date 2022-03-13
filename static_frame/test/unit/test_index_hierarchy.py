@@ -199,17 +199,9 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             _ = IndexHierarchy(ih1, indexers=ih1._indexers)
 
-        # Cannot provide indexers in this case
+        # Cannot provide engine in this case
         with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy(ih1, bit_offset_encoders=ih1._bit_offset_encoders)
-
-        # Cannot provide indexers in this case
-        with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy(ih1, encoding_can_overflow=ih1._encoding_can_overflow)
-
-        # Cannot provide indexers in this case
-        with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy(ih1, encoded_indexer_map=ih1._encoded_indexer_map)
+            _ = IndexHierarchy(ih1, engine=ih1._engine)
 
         ih2 = IndexHierarchy(ih1)
         self.assertTrue(ih2.equals(ih1, compare_dtype=True))
@@ -3790,107 +3782,6 @@ class TestUnit(TestCase):
             [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
         ])
         self.assertTrue(np.array_equal(actual, expected))
-
-    #---------------------------------------------------------------------------
-
-    def test_build_offsets_and_overflow_a(self) -> None:
-        def check(sizes: tp.List[int], offsets: tp.List[int], overflow: bool) -> None:
-            actual_offset, actual_overflow = IndexHierarchy._build_offsets_and_overflow(sizes)
-            self.assertListEqual(actual_offset.tolist(), offsets)
-            self.assertEqual(actual_overflow, overflow)
-
-        check([17, 99], [0, 5], False)
-        check([1, 1], [0, 1], False)
-        check([1, 2, 4, 8, 16, 32], [0, 1, 3, 6, 10, 15], False)
-        check([2**30, 2, 3, 4], [0, 31, 33, 35], False)
-        check([2**40, 2**18, 15], [0, 41, 60], False)
-        check([2**40, 2**18, 16], [0, 41, 60], True)
-
-    #---------------------------------------------------------------------------
-
-    def test_build_encoded_indexers_map_a(self) -> None:
-        sizes = [188, 5, 77]
-        indexers = build_indexers_from_product(sizes)
-
-        offset, overflow = IndexHierarchy._build_offsets_and_overflow(sizes)
-
-        self.assertListEqual(offset.tolist(), [0, 8, 11])
-        self.assertFalse(overflow)
-
-        result = IndexHierarchy._build_encoded_indexers_map(
-                indexers=indexers,
-                bit_offset_encoders=offset,
-                encoding_can_overflow=overflow,
-                )
-        self.assertEqual(len(result), len(indexers[0]))
-
-        self.assertEqual(min(result), 0)
-        self.assertEqual(max(result), 156859)
-
-        # Manually check every element to ensure it encodes to the same value
-        for i, row in enumerate(np.array(indexers).T):
-            encoded = np.bitwise_or.reduce(row.astype(np.uint64) << offset)
-            self.assertEqual(i, result[encoded])
-
-    def test_build_encoded_indexers_map_b(self) -> None:
-        size = 2**20
-        sizes = [size for _ in range(4)]
-
-        arr = PositionsAllocator.get(size)
-        indexers = [arr for _ in range(4)]
-
-        offset, overflow = IndexHierarchy._build_offsets_and_overflow(sizes)
-
-        self.assertListEqual(offset.tolist(), [0, 21, 42, 63])
-        self.assertTrue(overflow)
-
-        result = IndexHierarchy._build_encoded_indexers_map(
-                indexers=indexers,
-                bit_offset_encoders=offset,
-                encoding_can_overflow=overflow,
-                )
-        self.assertEqual(len(result), len(indexers[0]))
-
-        self.assertEqual(min(result), 0)
-        self.assertEqual(max(result), 9671401945228815945957375)
-
-        # Manually encode the last row to ensure it matches!
-        indexer = np.array([size - 1 for _ in range(4)], dtype=object)
-        encoded = np.bitwise_or.reduce(indexer << offset)
-        self.assertEqual(max(result), encoded)
-
-    #---------------------------------------------------------------------------
-
-    def test_build_key_indexers_from_key(self) -> None:
-        ih = IndexHierarchy.from_product(range(3), range(4, 7), tuple("ABC"))
-
-        ih_overflow = IndexHierarchy.from_product(range(3), range(4, 7), tuple("ABC"))
-        ih_overflow._encoding_can_overflow = True
-
-        def check(
-                key: tuple, # type: ignore
-                expected: tp.List[tp.List[int]],
-                ) -> None:
-            resultA = ih._build_key_indexers_from_key(key)
-            self.assertEqual(resultA.dtype, np.uint64)
-            self.assertListEqual(resultA.tolist(), expected)
-
-            resultB = ih_overflow._build_key_indexers_from_key(key)
-            self.assertEqual(resultB.dtype, object)
-            self.assertListEqual(resultB.tolist(), expected)
-
-        check((0, 5, 'A'), [0, 1, 0]) # type: ignore
-        check((0, 5, ['A']), [[0, 1, 0]])
-        check(([0, 1],  5, ['B']), [[0, 1, 1],
-                                    [1, 1, 1]])
-        check(([0, 1], 5, 'A'), [[0, 1, 0],
-                                 [1, 1, 0]])
-        check(([0, 1], [4, 5, 6], 'C'), [[0, 0, 2],
-                                         [0, 1, 2],
-                                         [0, 2, 2],
-                                         [1, 0, 2],
-                                         [1, 1, 2],
-                                         [1, 2, 2]])
 
 
 if __name__ == '__main__':
