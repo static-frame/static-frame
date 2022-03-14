@@ -26,7 +26,6 @@ from static_frame import Series
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.index_hierarchy import build_indexers_from_product
-from static_frame.core.util import PositionsAllocator
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
