@@ -108,6 +108,7 @@ DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
 DTYPE_STR = np.dtype(str)
 DTYPE_INT_DEFAULT = np.dtype(np.int64)
+DTYPE_UINT_DEFAULT = np.dtype(np.uint64)
 # DTYPE_INT_PLATFORM = np.dtype(int) # 32 on windows
 
 DTYPE_FLOAT_DEFAULT = np.dtype(np.float64)
@@ -902,7 +903,7 @@ def ufunc_unique1d_indexer(array: np.ndarray,
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
 
-    indexer = np.empty(mask.shape, dtype=np.intp)
+    indexer = np.empty(mask.shape, dtype=DTYPE_INT_DEFAULT)
     indexer[positions] = np.cumsum(mask) - 1
     indexer.flags.writeable = False
 
@@ -1567,7 +1568,7 @@ def _slice_to_datetime_slice_args(key: slice,
         value = getattr(key, attr)
         if value is None:
             yield None
-        elif attr == SLICE_STEP_ATTR:
+        elif attr is SLICE_STEP_ATTR:
             # steps are never transformed
             yield value
         else:

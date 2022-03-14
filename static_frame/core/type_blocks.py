@@ -512,7 +512,7 @@ class TypeBlocks(ContainerOperand):
         return self.__class__(
                 blocks=[b for b in self._blocks],
                 dtypes=self._dtypes.copy(), # list
-                index=self._index.copy(),
+                index=self._index.copy(), # list
                 shape=self._shape,
                 )
 

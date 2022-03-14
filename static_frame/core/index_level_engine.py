@@ -8,6 +8,8 @@ from automap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.index import Index
+from static_frame.core.util import DTYPE_UINT_DEFAULT
+from static_frame.core.util import array_deepcopy
 
 KeyForEngine = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[tp.Hashable], tp.Hashable], ...]]
 
@@ -36,7 +38,7 @@ class IndexLevelEngine:
             ) -> None:
 
         if not len(indexers[0]):
-            self.bit_offset_encoders = np.full(len(indices), 0, dtype=np.uint64)
+            self.bit_offset_encoders = np.full(len(indices), 0, dtype=DTYPE_UINT_DEFAULT)
             self.encoding_can_overflow = False
             self.encoded_indexer_map = FrozenAutoMap()
             return
@@ -53,7 +55,7 @@ class IndexLevelEngine:
         Return a deep copy of this IndexHierarchy.
         '''
         obj: _Engine = self.__new__(self.__class__)
-        obj.bit_offset_encoders = deepcopy(self.bit_offset_encoders, memo)
+        obj.bit_offset_encoders = array_deepcopy(self.bit_offset_encoders, memo)
         obj.encoding_can_overflow = self.encoding_can_overflow
         obj.encoded_indexer_map = deepcopy(self.encoded_indexer_map, memo)
 
@@ -98,7 +100,7 @@ class IndexLevelEngine:
         #  - depth 0 starts at bit offset 0.
         #  - depth 1 starts at bit offset 7. (depth 0 needed 7 bits!)
         #  - depth 2 starts at bit offset 10. (depth 1 needed 3 bits!)
-        bit_start_positions = np.concatenate(([0], bit_end_positions))[:-1].astype(np.uint64)
+        bit_start_positions = np.concatenate(([0], bit_end_positions))[:-1].astype(DTYPE_UINT_DEFAULT)
         bit_start_positions.flags.writeable = False
 
         # We now return these offsets, and whether or not we have overflow.
@@ -113,9 +115,9 @@ class IndexLevelEngine:
         '''
         # We previously determined we cannot encode indexers into uint64. Cast to object to rely on Python's bigint
         if self.encoding_can_overflow:
-            indexers = np.array(indexers, dtype=object).T
+            indexers = indexers.astype(object).T
         else:
-            indexers = np.array(indexers, dtype=np.uint64).T
+            indexers = indexers.astype(DTYPE_UINT_DEFAULT).T
 
         # Encode indexers into uint64
         # indexers: (n, m), offsets: (m,)
@@ -180,7 +182,7 @@ class IndexLevelEngine:
                 key_indexers.append(subkey_indexers)
 
         # 2. Convert to numpy array
-        combinations = np.array(list(itertools.product(*key_indexers)), dtype=np.uint64)
+        combinations = np.array(list(itertools.product(*key_indexers)), dtype=DTYPE_UINT_DEFAULT)
         if is_single_key and len(combinations) == 1:
             [combinations] = combinations
 

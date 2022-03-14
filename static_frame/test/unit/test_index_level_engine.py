@@ -23,10 +23,12 @@ class TestUnit(TestCase):
                 Index(np.arange(5)),
                 Index(tuple("ABCDE")),
                 ]
-        indexers = [
-                np.array([3, 3, 0, 1, 4, 0, 3, 2, 2, 0]),
-                np.array([4, 2, 1, 0, 3, 0, 3, 2, 0, 4]),
-                ]
+        indexers = np.array(
+            [
+                [3, 3, 0, 1, 4, 0, 3, 2, 2, 0],
+                [4, 2, 1, 0, 3, 0, 3, 2, 0, 4],
+            ]
+        )
 
         engine = IndexLevelEngine(indices=indices, indexers=indexers)
 
@@ -46,10 +48,12 @@ class TestUnit(TestCase):
 
     def test_init_c(self) -> None:
         indices = [Index((0, 1)), Index((0, 1))]
-        indexers = [
-                np.array([0, 0, 1, 1, 1]),
-                np.array([0, 1, 0, 1, 1]),
-                ]
+        indexers = np.array(
+            [
+                [0, 0, 1, 1, 1],
+                [0, 1, 0, 1, 1],
+            ]
+        )
 
         with self.assertRaises(ErrorInitIndexNonUnique):
             IndexLevelEngine(indices=indices, indexers=indexers)
@@ -100,7 +104,7 @@ class TestUnit(TestCase):
         sizes = [size for _ in range(4)]
 
         arr = PositionsAllocator.get(size)
-        indexers = [arr for _ in range(4)]
+        indexers = np.array([arr for _ in range(4)])
 
         offset, overflow = IndexLevelEngine.build_offsets_and_overflow(sizes)
 
@@ -177,10 +181,12 @@ class TestUnit(TestCase):
                 Index(np.arange(5)),
                 Index(tuple("ABCDE")),
                 ]
-        indexers = [
-                np.array([3, 3, 0, 1, 4, 0, 3, 2, 2, 0]),
-                np.array([4, 2, 1, 0, 3, 0, 3, 2, 0, 4]),
-                ]
+        indexers = np.array(
+            [
+                [3, 3, 0, 1, 4, 0, 3, 2, 2, 0],
+                [4, 2, 1, 0, 3, 0, 3, 2, 0, 4],
+            ]
+        )
 
         engine = IndexLevelEngine(indices=indices, indexers=indexers)
 
@@ -201,10 +207,12 @@ class TestUnit(TestCase):
                 Index(np.arange(5)),
                 Index(tuple("ABCDE")),
                 ]
-        indexers = [
-                np.array([3, 3, 0, 1, 4, 0, 3, 2, 2, 0]),
-                np.array([4, 2, 1, 0, 3, 0, 3, 2, 0, 4]),
-                ]
+        indexers = np.array(
+            [
+                [3, 3, 0, 1, 4, 0, 3, 2, 2, 0],
+                [4, 2, 1, 0, 3, 0, 3, 2, 0, 4],
+            ]
+        )
 
         engine = IndexLevelEngine(indices=indices, indexers=indexers)
 
@@ -224,10 +232,12 @@ class TestUnit(TestCase):
                 Index(np.arange(5)),
                 Index(tuple("ABCDE")),
                 ]
-        indexers = [
-                np.array([3, 3, 0, 1, 4, 0, 3, 2, 2, 0]),
-                np.array([4, 2, 1, 0, 3, 0, 3, 2, 0, 4]),
-                ]
+        indexers = np.array(
+            [
+                [3, 3, 0, 1, 4, 0, 3, 2, 2, 0],
+                [4, 2, 1, 0, 3, 0, 3, 2, 0, 4],
+            ]
+        )
 
         engine = IndexLevelEngine(indices=indices, indexers=indexers)
 
@@ -240,10 +250,12 @@ class TestUnit(TestCase):
                 Index(np.arange(5)),
                 Index(tuple("ABCDE")),
                 ]
-        indexers = [
-                np.array([3, 3, 0, 1, 4, 0, 3, 2, 2, 0]),
-                np.array([4, 2, 1, 0, 3, 0, 3, 2, 0, 4]),
-                ]
+        indexers = np.array(
+            [
+                [3, 3, 0, 1, 4, 0, 3, 2, 2, 0],
+                [4, 2, 1, 0, 3, 0, 3, 2, 0, 4],
+            ]
+        )
 
         engine = IndexLevelEngine(indices=indices, indexers=indexers)
 

@@ -24,8 +24,10 @@ from static_frame.core.hloc import HLoc
 from static_frame.core.index import ILoc
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
+from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import array_deepcopy
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_base import IndexBase
@@ -99,9 +101,9 @@ TreeNodeT = tp.Dict[tp.Hashable, tp.Union[tp.Sequence[tp.Hashable], 'TreeNodeT']
 _NBYTES_GETTER = operator.attrgetter('nbytes')
 
 
-def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> tp.List[np.ndarray]:
+def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> np.ndarray:
     '''
-    Creates a list of indexer arrays given a sequence of `list_lengths`
+    Creates a 2D indexer array given a sequence of `list_lengths`
 
     This is equivalent to: ``np.array(list(itertools.product(*(map(range, list_lengths))))).T``
     except it scales incredibly well.
@@ -132,17 +134,17 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> tp.List[np.nd
     all_index_reps = np.cumprod(padded_lengths[::-1])[-3::-1]
 
     # Impl borrowed from pandas/core/reshape/util.py:cartesian_product
-    result = [
+    result = np.array(
+        [
             np.tile(
                     np.repeat(PositionsAllocator.get(list_length), repeats=all_index_reps[i]),
                     reps=np.product(all_group_reps[i])
                     )
             for i, list_length
             in enumerate(list_lengths)
-            ]
-
-    for arr in result:
-        arr.flags.writeable = False
+        ]
+    )
+    result.flags.writeable = False
 
     return result
 
@@ -157,7 +159,7 @@ def construct_indices_and_indexers_from_column_arrays(
         *,
         column_iter: tp.Iterable[np.ndarray],
         index_constructors_iter: tp.Iterable[IndexConstructor],
-        ) -> tp.Tuple[tp.List[Index], tp.List[np.ndarray]]:
+        ) -> tp.Tuple[tp.List[Index], np.ndarray]:
     indices: tp.List[Index] = []
     indexers: tp.List[np.ndarray] = []
 
@@ -174,6 +176,9 @@ def construct_indices_and_indexers_from_column_arrays(
         # we call the constructor on all lvl, even if it is already an Index
         indices.append(constructor(unique_values))
         indexers.append(indexer)
+
+    indexers = np.array(indexers) # type: ignore
+    indexers.flags.writeable = False # type: ignore
 
     return indices, indexers
 
@@ -213,7 +218,7 @@ class IndexHierarchy(IndexBase):
             )
 
     _indices: tp.List[Index] # Of index objects
-    _indexers: tp.List[np.ndarray] # integer arrays
+    _indexers: np.ndarray # 2D - integer arrays
     _name: NameType
     _blocks: TypeBlocks
     _recache: bool
@@ -385,11 +390,14 @@ class IndexHierarchy(IndexBase):
         if depth_reference == 1:
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
+        indexers = np.array([EMPTY_ARRAY_INT for _ in range(depth_reference)], dtype=DTYPE_INT_DEFAULT)
+        indexers.flags.writeable = False
+
         return cls(
                 indices=[
                     cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE) for _ in range(depth_reference)
                 ],
-                indexers=[PositionsAllocator.get(0) for _ in range(depth_reference)],
+                indexers=indexers,
                 name=name,
                 )
 
@@ -519,18 +527,16 @@ class IndexHierarchy(IndexBase):
             if len(label_row) != depth:
                 raise ErrorInitIndex('All labels must have the same depth.')
 
-        # Convert to numpy arrays
-        for i in range(depth):
-            indexers[i] = np.array(indexers[i], dtype=DTYPE_INT_DEFAULT)
+        # Convert to numpy array
+        indexers = np.array(indexers, dtype=DTYPE_INT_DEFAULT)
 
         if reorder_for_hierarchy:
             # The innermost level (i.e. [:-1]) is irrelavant to lexsorting
             # We sort lexsort from right to left (i.e. [::-1])
             sort_order = np.lexsort(indexers[:-1][::-1])
-            indexers = [indexer[sort_order] for indexer in indexers]
+            indexers = indexers[:, sort_order]
 
-        for i in range(depth):
-            indexers[i].flags.writeable = False # type: ignore
+        indexers.flags.writeable = False # type: ignore
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -600,12 +606,13 @@ class IndexHierarchy(IndexBase):
             i, repeat = i_repeat_tuple
             return np.tile(i, reps=repeat)
 
-        indexers: tp.List[np.ndarray] = []
-        indexers.append(np.hstack(tuple(map(_repeat, enumerate(repeats))))) # outermost level
-        indexers.append(np.hstack(indexers_inner)) # innermost level
-
-        indexers[0].flags.writeable = False
-        indexers[1].flags.writeable = False
+        indexers: np.ndarray = np.array(
+                [
+                    np.hstack(tuple(map(_repeat, enumerate(repeats)))),
+                    np.hstack(indexers_inner),
+                ]
+        )
+        indexers.flags.writeable = False
 
         index_outer = index_from_optional_constructor(
                 labels,
@@ -743,8 +750,7 @@ class IndexHierarchy(IndexBase):
         Create a :obj:`TypeBlocks` instance from values respresented by `self._indices` and `self._indexers`.
         '''
         def gen_blocks() -> tp.Iterator[np.ndarray]:
-            for i, index in enumerate(self._indices):
-                indexer = self._indexers[i]
+            for index, indexer in zip(self._indices, self._indexers):
                 yield index.values[indexer]
 
         return TypeBlocks.from_blocks(gen_blocks())
@@ -754,7 +760,7 @@ class IndexHierarchy(IndexBase):
     def __init__(self: IH,
             indices: tp.Union[IH, tp.List[Index]],
             *,
-            indexers: tp.List[np.ndarray] = EMPTY_TUPLE, # type: ignore
+            indexers: np.ndarray = EMPTY_ARRAY_INT,
             name: NameType = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
@@ -765,7 +771,7 @@ class IndexHierarchy(IndexBase):
 
         Args:
             indices: list of :obj:`Index` objects
-            indexers: list of indexer arrays
+            indexers: a 2D indexer array
             name: name of the IndexHierarchy
             blocks:
             own_blocks:
@@ -776,7 +782,7 @@ class IndexHierarchy(IndexBase):
         self._pending_extensions = None
 
         if isinstance(indices, IndexHierarchy):
-            if indexers:
+            if indexers is not EMPTY_ARRAY_INT:
                 raise ErrorInitIndex(
                     'indexers must not be provided when copying an IndexHierarchy'
                 )
@@ -796,18 +802,15 @@ class IndexHierarchy(IndexBase):
                 mutable_immutable_index_filter(self.STATIC, index)
                 for index in indices._indices
             ]
-            self._indexers = list(indices._indexers)
+            self._indexers = indices._indexers
             self._name = name if name is not NAME_DEFAULT else indices._name
             self._blocks = indices._blocks
             self._values = indices._values
             self._engine = indices._engine
             return
 
-        if not all(arr.__class__ is np.ndarray for arr in indexers):
-            raise ErrorInitIndex('indexers must be numpy arrays.')
-
-        if not all(not arr.flags.writeable for arr in indexers):
-            raise ErrorInitIndex('indexers must be read-only.')
+        if not (indexers.__class__ is np.ndarray and not indexers.flags.writeable):
+            raise ErrorInitIndex('indexers must be a read-only numpy array.')
 
         if not all(isinstance(index, Index) for index in indices):
             raise ErrorInitIndex("indices must all Index's!")
@@ -844,8 +847,7 @@ class IndexHierarchy(IndexBase):
         for depth, indexer in enumerate(self._indexers):
             new_indexers[depth][:current_size] = indexer
 
-        self._indexers.clear()
-
+        # TODO: Do we need to clear self._indexers?
         # TODO: What if an error is raised anywhere onward in this method?
 
         offset = current_size
@@ -854,7 +856,7 @@ class IndexHierarchy(IndexBase):
         for pending in self._pending_extensions: # pylint: disable = E1133
             if isinstance(pending, PendingRow):
                 for depth, label_at_depth in enumerate(pending):
-                    label_index = self._indices[depth]._loc_to_iloc(label_at_depth) # TODO: A lot of runtime
+                    label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
                     new_indexers[depth][offset] = label_index
 
                 offset += 1
@@ -875,10 +877,8 @@ class IndexHierarchy(IndexBase):
 
         self._pending_extensions.clear()
 
-        for indexer in new_indexers:
-            indexer.flags.writeable = False
-
-        self._indexers = new_indexers
+        self._indexers = np.array(new_indexers)
+        self._indexers.flags.writeable = False
 
         self._blocks = self._create_blocks_from_self()
         self._values = self._blocks.values
@@ -904,17 +904,19 @@ class IndexHierarchy(IndexBase):
         '''
         Return a deep copy of this IndexHierarchy.
         '''
-        # TODO: Should self recache, or do an exact copy at this current point in time?
+        if self._recache:
+            self._update_array_cache() # pragma: no cove
+
         obj: IH = self.__new__(self.__class__)
         obj._indices = deepcopy(self._indices, memo)
-        obj._indexers = deepcopy(self._indexers, memo)
-        obj._blocks = deepcopy(self._blocks, memo)
+        obj._indexers = array_deepcopy(self._indexers, memo)
+        obj._blocks = self._blocks.__deepcopy__(memo)
         obj._values = obj._blocks.values
         obj._name = self._name # should be hashable/immutable
-        obj._recache = self._recache
+        obj._recache = False
         obj._index_types = deepcopy(self._index_types, memo)
-        obj._pending_extensions = deepcopy(self._pending_extensions, memo)
-        obj._engine = deepcopy(self._engine, memo)
+        obj._pending_extensions = [] # this must be an empty list after recache
+        obj._engine = self._engine.__deepcopy__(memo)
 
         memo[id(self)] = obj
         return obj
@@ -923,16 +925,10 @@ class IndexHierarchy(IndexBase):
         '''
         Return a shallow copy of this IndexHierarchy.
         '''
-        # We don't recache here since IndexHierarchyGO overrides __copy__
-        blocks = self._blocks.copy()
-        return self.__class__(
-                indices=list(self._indices),
-                indexers=list(self._indexers),
-                name=self._name,
-                blocks=blocks,
-                own_blocks=True,
-                engine=self._engine,
-                )
+        if self._recache:
+            self._update_array_cache() # pragma: no cover
+
+        return self.__class__(self)
 
     def copy(self: IH) -> IH:
         '''
@@ -1304,7 +1300,6 @@ class IndexHierarchy(IndexBase):
 
         blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
 
-        # TODO: We could potentially re-use the same indices. Would that be worth it?
         return self.__class__._from_type_blocks(
                 blocks=blocks,
                 index_constructors=self._index_constructors,
@@ -1568,7 +1563,7 @@ class IndexHierarchy(IndexBase):
         # depth_level might not contain all depths, so we will re-use our
         # indices/indexers for all those cases.
         new_indices = list(self._indices)
-        new_indexers = list(self._indexers)
+        new_indexers = self._indexers.copy()
 
         for level in depth_level:
             index = self._indices[level]
@@ -1587,8 +1582,9 @@ class IndexHierarchy(IndexBase):
             new_indices[level] = index.__class__(new_index)
 
             indexer = np.array([index_remap.get(i, i) for i in self._indexers[level]])
-            indexer.flags.writeable = False
             new_indexers[level] = indexer
+
+        new_indexers.flags.writeable = False
 
         return self.__class__(
                 indices=new_indices,
@@ -1716,12 +1712,10 @@ class IndexHierarchy(IndexBase):
             indexer_remap = key_index._index_iloc_map(self_index)
             key_indexers.append(indexer_remap[key_indexer])
 
-        # TODO: Should self._indexers be a numpy 2d array?
-        self_indexers = np.array(self._indexers).T
         key_indexers = np.array(key_indexers).T
 
         ilocs = np.intersect1d(
-                view_2d_as_1d(self_indexers),
+                view_2d_as_1d(self._indexers.T),
                 view_2d_as_1d(key_indexers),
                 return_indices=True,
                 )[1]
@@ -1762,7 +1756,7 @@ class IndexHierarchy(IndexBase):
                 mask = self._build_mask_for_key_at_depth(depth=depth, key=key)
                 mask_2d[:, depth] = mask
 
-            mask = mask_2d.all(axis=1) # TODO: Heavy?
+            mask = mask_2d.all(axis=1)
             del mask_2d
 
         return self.positions[mask]
@@ -1880,13 +1874,15 @@ class IndexHierarchy(IndexBase):
 
         tb = self._blocks._extract(row_key=key)
         new_indices: tp.List[Index] = []
-        new_indexers: tp.List[np.ndarray] = []
+        new_indexers: np.ndarray = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
 
-        for index, indexer in zip(self._indices, self._indexers):
+        for i, (index, indexer) in enumerate(zip(self._indices, self._indexers)):
             unique_indexes, new_indexer = ufunc_unique1d_indexer(indexer[key])
 
             new_indices.append(index.iloc[unique_indexes])
-            new_indexers.append(new_indexer)
+            new_indexers[i] = new_indexer
+
+        new_indexers.flags.writeable = False
 
         return self.__class__(
                 indices=new_indices,
@@ -2435,10 +2431,13 @@ class IndexHierarchy(IndexBase):
         else:
             indices = [index_cls((level,)), *(idx.copy() for idx in self._indices)]
 
-        # Indexers are always immutable
-        new_indexer = np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT)
-        new_indexer.flags.writeable = False
-        indexers = [new_indexer, *self._indexers]
+        indexers = np.array(
+                [
+                    np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT),
+                    *self._indexers
+                ]
+        )
+        indexers.flags.writeable = False
 
         def gen_blocks() -> tp.Iterator[np.ndarray]:
             # First index only has one value. Extract from array (instead of using `level`) since the constructor might have modified its type
@@ -2572,22 +2571,6 @@ class IndexHierarchyGO(IndexHierarchy):
 
         self._pending_extensions.append(other)
         self._recache = True
-
-    def __copy__(self: IHGO) -> IHGO:
-        '''
-        Return a shallow copy of this IndexHierarchy.
-        '''
-        if self._recache:
-            self._update_array_cache() # pragma: no cover
-
-        return self.__class__(
-                indices=[index.copy() for index in self._indices],
-                indexers=list(self._indexers),
-                name=self._name,
-                blocks=self._blocks.copy(),
-                own_blocks=True,
-                engine=self._engine,
-                )
 
 
 # update class attr on Index after class initialization

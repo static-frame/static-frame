@@ -38,7 +38,7 @@ class LocMap:
         Args:
             label_to_pos: callable into mapping (can be a get() method from a dictionary)
         '''
-        # NOTE: it is expected that NULL_SLICE is already identified
+        # NOTE: it is expected that NULL_SLICE is already identifiedE
         offset_apply = not offset is None
         labels_astype: tp.Optional[np.ndarray] = None
 
@@ -48,7 +48,7 @@ class LocMap:
                 yield None
 
             elif attr.__class__ is np.datetime64:
-                if field == SLICE_STEP_ATTR:
+                if field is SLICE_STEP_ATTR:
                     raise RuntimeError(f'Step cannot be {attr}')
                 # if we match the same dt64 unit, simply use label_to_pos, increment stop
                 if attr.dtype == labels.dtype: # type: ignore
@@ -56,9 +56,9 @@ class LocMap:
                     if pos is None:
                         # if same type, and that atter is not in labels, we fail, just as we do in then non-datetime64 case. Only when datetimes are given in a different unit are we "loose" about matching.
                         raise LocInvalid('Invalid loc given in a slice', attr, field)
-                    if field == SLICE_STOP_ATTR:
+                    if field is SLICE_STOP_ATTR:
                         pos += 1 # stop is inclusive
-                elif field == SLICE_START_ATTR:
+                elif field is SLICE_START_ATTR:
                     # NOTE: as an optimization only for the start attr, we can try to convert attr to labels unit and see if there is a match; this avoids astyping the entire labels array
                     pos: TypePos = label_to_pos(attr.astype(labels.dtype)) #type: ignore
                     if pos is None: # we did not find a start position
@@ -68,7 +68,7 @@ class LocMap:
                             pos = matches[0]
                         else:
                             raise LocEmptyInstance
-                elif field == SLICE_STOP_ATTR:
+                elif field is SLICE_STOP_ATTR:
                     # NOTE: we do not want to convert attr to labels dtype and take the match as we want to get the last of all possible matches of labels at the attr unit
                     # NOTE: try to re-use labels_astype if possible
                     if labels_astype is None or labels_astype.dtype != attr.dtype:
@@ -84,7 +84,7 @@ class LocMap:
                 yield pos
 
             else:
-                if field != SLICE_STEP_ATTR:
+                if field is not SLICE_STEP_ATTR:
                     pos = label_to_pos(attr)
                     if pos is None:
                         # NOTE: could raise LocEmpty() to silently handle this
@@ -95,7 +95,7 @@ class LocMap:
                     pos = attr # should be an integer
                     if not isinstance(pos, INT_TYPES):
                         raise TypeError(f'Step must be an integer, not {pos}')
-                if field == SLICE_STOP_ATTR:
+                if field is SLICE_STOP_ATTR:
                     # loc selections are inclusive, so iloc gets one more
                     pos += 1
                 yield pos

@@ -350,9 +350,8 @@ class Index(IndexBase):
             deprecated('Creating an Index with a datetime64 array is deprecated and will be removed in v0.9; use an Index subclass (e.g. IndexDate) or supply an `index_constructors` argument') #pragma: no cover
             # raise ErrorInitIndex('Cannot create an Index with a datetime64 array; use an Index subclass (e.g. IndexDate) or supply an `index_constructors` argument')
 
-
-
     #---------------------------------------------------------------------------
+
     def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
         '''
         Ensure that reanimated NP arrays are set not writeable.
@@ -1247,9 +1246,14 @@ class Index(IndexBase):
             index_constructor = cls_depth
 
         indices = [index_constructor((level,)), immutable_index_filter(self)]
-        new_indexer = np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT)
-        new_indexer.flags.writeable = False
-        indexers = [new_indexer, PositionsAllocator.get(self.__len__())]
+
+        indexers = np.array(
+                [
+                    np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT),
+                    PositionsAllocator.get(self.__len__())
+                ]
+        )
+        indexers.flags.writeable = False
 
         return cls(
                 indices=indices,

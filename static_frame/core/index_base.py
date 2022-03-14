@@ -19,6 +19,7 @@ from static_frame.core.util import write_optional_file
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import DTYPE_INT_DEFAULT
 
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
@@ -146,14 +147,13 @@ class IndexBase(ContainerOperand):
                 return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx))
 
             indices: tp.List[Index] = []
-            indexers: tp.List[np.ndarray] = []
+            indexers: np.ndarray = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
 
-            for levels, codes in zip(value.levels, value.codes):
-                # Older versions of Pandas store codes in `FrozenNDArray`. Newer versions store codes in `np.ndarray`. This handles both cases properly and ensures we have a copy
-                indexer = np.array(codes)
-                indexer.flags.writeable = False
-                indexers.append(indexer)
+            for i, (levels, codes) in enumerate(zip(value.levels, value.codes)):
+                indexers[i] = codes
                 indices.append(build_index(levels))
+
+            indexers.flags.writeable = False
 
             return hierarchy_constructor(
                     indices=indices,
