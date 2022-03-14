@@ -177,7 +177,7 @@ def construct_indices_and_indexers_from_column_arrays(
         indices.append(constructor(unique_values))
         indexers.append(indexer)
 
-    indexers = np.array(indexers) # type: ignore
+    indexers = np.array(indexers)
     indexers.flags.writeable = False # type: ignore
 
     return indices, indexers
@@ -534,7 +534,7 @@ class IndexHierarchy(IndexBase):
             # The innermost level (i.e. [:-1]) is irrelavant to lexsorting
             # We sort lexsort from right to left (i.e. [::-1])
             sort_order = np.lexsort(indexers[:-1][::-1])
-            indexers = indexers[:, sort_order]
+            indexers = indexers[:, sort_order] # type: ignore
 
         indexers.flags.writeable = False # type: ignore
 
@@ -1418,7 +1418,7 @@ class IndexHierarchy(IndexBase):
                 for i, outer_level_idx in enumerate(outer_level_idxs):
                     screen &= self._indexers[i] == outer_level_idx
 
-                occurrences: np.ndarray = self._indexers[pos][screen] # type: ignore
+                occurrences: np.ndarray = self._indexers[pos][screen]
                 yield from _extract_counts(occurrences, pos)
 
         yield from gen()

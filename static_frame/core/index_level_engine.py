@@ -108,7 +108,7 @@ class IndexLevelEngine:
         return bit_start_positions, bit_end_positions[-1] > 64
 
     def build_encoded_indexers_map(self: _Engine,
-            indexers: tp.List[np.ndarray],
+            indexers: np.ndarray,
             ) -> FrozenAutoMap:
         '''
         Builds up a mapping from indexers to iloc positions using their encoded values
