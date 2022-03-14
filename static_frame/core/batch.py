@@ -1685,12 +1685,24 @@ class Batch(ContainerOperand, StoreClientMixin):
             f = f.relabel(index=index, columns=columns)
         return f
 
-    def to_bus(self) -> 'Bus':
+    def to_bus(self,
+            *,
+            index_constructor: IndexConstructor = None,
+            ) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''
-        series = Series.from_items(
-                self.items(),
-                name=self._name,
-                dtype=DTYPE_OBJECT)
+        # series = Series.from_items(
+        #         self.items(),
+        #         name=self._name,
+        #         dtype=DTYPE_OBJECT)
+        frames = []
+        index = []
+        for i, f in self.items():
+            index.append(i)
+            frames.append(f)
 
-        return Bus(series, config=self._config)
+        return Bus(frames,
+                index=index,
+                index_constructor=index_constructor,
+                config=self._config,
+                )

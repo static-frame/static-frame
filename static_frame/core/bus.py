@@ -47,7 +47,8 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.style_config import StyleConfig
 # from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
-
+from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.index import Index
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
@@ -91,43 +92,21 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     STATIC = False
     _NDIM: int = 1
 
-    @staticmethod
-    def _deferred_series(
-            labels: tp.Iterable[tp.Hashable],
-            *,
-            index_constructor: IndexConstructor = None,
-            ) -> Series:
-        '''
-        Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
-        '''
-        # NOTE: need to accept an  IndexConstructor to support reanimating Index subtypes, IH
-        return Series.from_element(FrameDeferred,
-                index=labels,
-                dtype=DTYPE_OBJECT,
-                index_constructor=index_constructor,
-                )
-
-    @classmethod
-    def from_frames(cls,
-            frames: tp.Iterable[Frame],
-            *,
-            index_constructor: IndexConstructor = None,
-            config: StoreConfigMapInitializer = None,
-            name: NameType = None,
-            ) -> 'Bus':
-        '''Return a :obj:`Bus` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
-        '''
-        try:
-            series = Series.from_items(
-                        ((f.name, f) for f in frames),
-                        dtype=DTYPE_OBJECT,
-                        name=name,
-                        index_constructor=index_constructor,
-                        )
-        except ErrorInitIndexNonUnique:
-            raise ErrorInitIndexNonUnique("Frames do not have unique names.") from None
-
-        return cls(series, config=config, own_data=True)
+    # @staticmethod
+    # def _deferred_series(
+    #         labels: tp.Iterable[tp.Hashable],
+    #         *,
+    #         index_constructor: IndexConstructor = None,
+    #         ) -> Series:
+    #     '''
+    #     Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
+    #     '''
+    #     # NOTE: need to accept an  IndexConstructor to support reanimating Index subtypes, IH
+    #     return Series.from_element(FrameDeferred,
+    #             index=labels,
+    #             dtype=DTYPE_OBJECT,
+    #             index_constructor=index_constructor,
+    #             )
 
     @classmethod
     def from_items(cls,
@@ -142,50 +121,80 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Bus`
         '''
-        series = Series.from_items(pairs,
-                dtype=DTYPE_OBJECT,
-                name=name,
+        # series = Series.from_items(pairs,
+        #         dtype=DTYPE_OBJECT,
+        #         name=name,
+        #         index_constructor=index_constructor,
+        #         )
+        frames = []
+        index = []
+        for i, f in pairs:
+            index.append(i)
+            frames.append(f)
+
+        return cls(frames,
+                index=index,
                 index_constructor=index_constructor,
+                name=name,
+                config=config,
                 )
-        return cls(series, config=config, own_data=True)
+
+    @classmethod
+    def from_frames(cls,
+            frames: tp.Iterable[Frame],
+            *,
+            index_constructor: IndexConstructor = None,
+            config: StoreConfigMapInitializer = None,
+            name: NameType = None,
+            ) -> 'Bus':
+        '''Return a :obj:`Bus` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
+        '''
+        # try:
+        #     series = Series.from_items(
+        #                 ((f.name, f) for f in frames),
+        #                 dtype=DTYPE_OBJECT,
+        #                 name=name,
+        #                 index_constructor=index_constructor,
+        #                 )
+        # except ErrorInitIndexNonUnique:
+        #     raise ErrorInitIndexNonUnique("Frames do not have unique names.") from None
+
+        # return cls(series, config=config, own_data=True)
+
+        return cls.from_items(((f.name, f) for f in frames),
+                index_constructor=index_constructor,
+                config=config,
+                name=name,
+                )
 
     @classmethod
     def from_dict(cls,
-            mapping: tp.Dict[tp.Hashable, tp.Any],
+            mapping: tp.Dict[tp.Hashable, Frame],
             *,
             config: StoreConfigMapInitializer = None,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> 'Bus':
-        '''Bus construction from a dictionary, where the first pair value is the index and the second is the value.
+        '''Bus construction from a mapping of labels and :obj:`Frame`.
 
         Args:
             mapping: a dictionary or similar mapping interface.
-            dtype: dtype or valid dtype specifier.
 
         Returns:
             :obj:`Bus`
         '''
-        series = Series.from_dict(mapping,
-                dtype=DTYPE_OBJECT,
-                name=name,
-                index_constructor=index_constructor,
-                )
-        return cls(series, config=config, own_data=True)
+        # series = Series.from_dict(mapping,
+        #         dtype=DTYPE_OBJECT,
+        #         name=name,
+        #         index_constructor=index_constructor,
+        #         )
+        # return cls(series, config=config, own_data=True)
 
-    @classmethod
-    def from_concat(cls,
-            containers: tp.Iterable['Bus'],
-            *,
-            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
-            name: NameType = NAME_DEFAULT,
-            ) -> 'Bus':
-        '''
-        Concatenate multiple :obj:`Bus` into a new :obj:`Bus`. All :obj:`Bus` will load all :obj:`Frame` into memory if any are deferred.
-        '''
-        # will extract .values, .index from Bus, which will correct load from Store as needed
-        series = Series.from_concat(containers, index=index, name=name)
-        return cls(series, own_data=True)
+        return cls.from_items(mapping.items(),
+                index_constructor=index_constructor,
+                config=config,
+                name=name,
+                )
 
     @classmethod
     def from_series(cls,
@@ -200,12 +209,29 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Create a :obj:`Bus` from a :obj:`Series` of :obj:`Frame`.
         '''
         # NOTE: this interface is for 0.9 after the default Bus no longer accepts a Series
-        return cls(series,
+        return cls(series.values,
+                index=series.index,
                 store=store,
                 config=config,
                 max_persist=max_persist,
                 own_data=own_data,
+                own_index=True,
+                name=series.name,
                 )
+
+    @classmethod
+    def from_concat(cls,
+            containers: tp.Iterable['Bus'],
+            *,
+            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            name: NameType = NAME_DEFAULT,
+            ) -> 'Bus':
+        '''
+        Concatenate multiple :obj:`Bus` into a new :obj:`Bus`. All :obj:`Bus` will load all :obj:`Frame` into memory if any are deferred.
+        '''
+        # will extract .values, .index from Bus, which will correct load from Store as needed
+        series = Series.from_concat(containers, index=index, name=name)
+        return cls.from_series(series, own_data=True)
 
     #---------------------------------------------------------------------------
     # constructors by data format
@@ -217,10 +243,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             max_persist: tp.Optional[int] = None,
             index_constructor: IndexConstructor = None,
             ) -> 'Bus':
-        return cls(cls._deferred_series(
-                        store.labels(config=config),
-                        index_constructor=index_constructor,
-                        ),
+        return cls(None,
+                index=store.labels(config=config),
+                index_constructor=index_constructor,
                 store=store,
                 config=config,
                 max_persist=max_persist,
@@ -397,51 +422,91 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
 
     #---------------------------------------------------------------------------
-    @doc_inject(selector='bus_init')
+    # @doc_inject(selector='bus_init')
+    # def __init__(self,
+    #         series: Series,
+    #         *,
+    #         store: tp.Optional[Store] = None,
+    #         config: StoreConfigMapInitializer = None,
+    #         max_persist: tp.Optional[int] = None,
+    #         own_data: bool = False,
+    #         ):
     def __init__(self,
-            series: Series,
+            frames: tp.Optional[tp.Iterable[Frame]],
             *,
+            index: IndexInitializer,
+            index_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             store: tp.Optional[Store] = None,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
+            own_index: bool = False,
             own_data: bool = False,
             ):
+
         '''
         Default Bus constructor.
 
         {args}
         '''
-        if series.dtype != DTYPE_OBJECT:
-            raise ErrorInitBus(
-                    f'Series passed to initializer must have dtype object, not {series.dtype}')
+        # if series.dtype != DTYPE_OBJECT:
+        #     raise ErrorInitBus(
+        #             f'Series passed to initializer must have dtype object, not {series.dtype}')
 
         if max_persist is not None:
             # use an (ordered) dictionary to give use an ordered set, simply pointing to None for all keys
             self._last_accessed: tp.Dict[str, None] = {}
 
-        # do a one time iteration of series
-        def gen() -> tp.Iterator[bool]:
-            for label, value in series.items():
-                if isinstance(value, Frame):
+        if own_index:
+            self._index = index
+        else:
+            self._index = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+        count = len(self._index)
+
+        if frames is None:
+            if store is None:
+                raise ErrorInitBus('Cannot initialize a :obj:`Bus` with neither `frames` not `store`.')
+            self._values_mutable = np.full(count, FrameDeferred, dtype=DTYPE_OBJECT)
+            self._loaded = np.full(count, False, dtype=DTYPE_BOOL)
+            self._loaded_all = False
+        else:
+            if frames.__class__ is np.ndarray:
+                frames_array = frames
+                load_array = False
+            else:
+                if not hasattr(frames, '__len__'):
+                    # need to realize generator as must get array size
+                    frames = list(frames)
+                frames_array = np.empty(count, dtype=DTYPE_OBJECT)
+                load_array = True
+
+            self._loaded = np.empty(count, dtype=DTYPE_BOOL)
+            # do a one time iteration of series
+            for i, (label, value) in enumerate(zip(index, frames)):
+                if load_array:
+                    frames_array[i] = value
+
+                if value is FrameDeferred:
+                    self._loaded[i] = False
+                elif isinstance(value, Frame): # permit FrameGO?
                     if max_persist is not None:
                         self._last_accessed[label] = None
-                    yield True
-                elif value is FrameDeferred:
-                    yield False
+                    self._loaded[i] = True
                 else:
                     raise ErrorInitBus(f'supplied {value.__class__} is not a Frame or FrameDeferred.')
+            self._loaded_all = self._loaded.all()
 
-        self._loaded = np.fromiter(gen(), dtype=DTYPE_BOOL, count=len(series))
-        self._loaded_all = self._loaded.all()
+            if own_data or load_array:
+                self._values_mutable = frames_array
+                self._values_mutable.flags.writeable = True
+            else:
+                self._values_mutable = frames_array.copy()
 
-        if own_data:
-            self._values_mutable = series.values
-            self._values_mutable.flags.writeable = True
-        else:
-            self._values_mutable = series.values.copy()
-
-        self._index = series._index
-        self._name = series._name
+        # self._index = index
+        self._name = None if name is NAME_DEFAULT else name
         self._store = store
 
         # Not handling cases of max_persist being greater than the length of the Series (might floor to length)
@@ -460,7 +525,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             ) -> 'Bus':
         '''Utility for creating a derived Bus, propagating the associated ``Store`` and configuration. This can be used if the passed `series` is a subset or re-ordering of self._series; however, if the index has been transformed, this method should not be used, as, if there is a Store, the labels are no longer found in that Store.
         '''
-        return self.__class__(series,
+        # NOTE: there may be a more efficient path than using a Series
+        return self.__class__.from_series(series,
                 store=self._store,
                 config=self._config,
                 max_persist=self._max_persist,
@@ -500,8 +566,16 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         Return a new :obj:`Bus` with an updated name attribute.
         '''
-        series = self._to_series_state().rename(name)
-        return self._derive(series, own_data=True)
+        # NOTE: do not want to use .values as this will force loading all Frames; use values muetabls and let a copy be made by constructor
+        return self.__class__(self._values_mutable,
+                index=self._index,
+                name=name,
+                store=self._store,
+                config=self._config,
+                max_persist=self._max_persist,
+                own_index=True,
+                own_data=False,
+                )
 
     #---------------------------------------------------------------------------
     # interfaces
@@ -579,7 +653,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 own_index=own_index,
                 check_equals=check_equals,
                 )
-        return self.__class__(series, config=self._config)
+        return self.__class__.from_series(series, config=self._config)
 
     @doc_inject(selector='relabel', class_name='Bus')
     def relabel(self,
@@ -591,8 +665,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Args:
             index: {relabel_input}
         '''
+        # NOTE: can be done without going trhough a series
         series = self.to_series().relabel(index)
-        return self.__class__(series, config=self._config)
+        return self.__class__.from_series(series, config=self._config)
 
 
     @doc_inject(selector='relabel_flat', class_name='Bus')
@@ -601,7 +676,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         {doc}
         '''
         series = self.to_series().relabel_flat()
-        return self.__class__(series, config=self._config)
+        return self.__class__.from_series(series, config=self._config)
 
     @doc_inject(selector='relabel_level_add', class_name='Bus')
     def relabel_level_add(self,
@@ -614,7 +689,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             level: {level}
         '''
         series = self.to_series().relabel_level_add(level)
-        return self.__class__(series, config=self._config)
+        return self.__class__.from_series(series, config=self._config)
 
 
     @doc_inject(selector='relabel_level_drop', class_name='Bus')
@@ -628,7 +703,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             count: {count}
         '''
         series = self.to_series().relabel_level_drop(count)
-        return self.__class__(series, config=self._config)
+        return self.__class__.from_series(series, config=self._config)
 
     def rehierarch(self,
             depth_map: tp.Sequence[int]
@@ -637,7 +712,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Return a new :obj:`Bus` with new a hierarchy based on the supplied ``depth_map``.
         '''
         series = self.to_series().rehierarch(depth_map)
-        return self.__class__(series, config=self._config)
+        return self.__class__.from_series(series, config=self._config)
 
 
     #---------------------------------------------------------------------------
@@ -792,13 +867,15 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         if not values.__class__ is np.ndarray: # if we have a single element
             return values #type: ignore
 
-        # values will be copied and made immutable
-        series = Series(
-                values,
+        return self.__class__(values,
                 index=self._index.iloc[key],
                 name=self._name,
+                store=self._store,
+                config=self._config,
+                max_persist=self._max_persist,
+                own_index=True,
+                own_data=False, # force immutable copy
                 )
-        return self._derive(series, own_data=True)
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
         iloc_key = self._index._loc_to_iloc(key)

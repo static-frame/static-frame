@@ -91,13 +91,13 @@ class TestUnit(TestCase):
     def test_bus_init_b(self) -> None:
 
         with self.assertRaises(ErrorInitBus):
-            Bus(Series([1, 2, 3]))
+            Bus.from_series(Series([1, 2, 3]))
 
         with self.assertRaises(ErrorInitBus):
-            Bus(Series([3, 4], dtype=object))
+            Bus.from_series(Series([3, 4], dtype=object))
 
         with self.assertRaises(ErrorInitBus):
-            Bus(Series([3, 4], index=('a', 'b'), dtype=object))
+            Bus.from_series(Series([3, 4], index=('a', 'b'), dtype=object))
 
     def test_bus_init_c(self) -> None:
 
@@ -1047,7 +1047,7 @@ class TestUnit(TestCase):
 
         # simulating a Bus with a FrameDefferred but no Store, just for testing
         s1 = Series((f1, FrameDeferred), index=('p', 'q'))
-        b1 = Bus(s1, config=config)
+        b1 = Bus.from_series(s1, config=config)
         self.assertFalse(b1._loaded_all)
 
         with self.assertRaises(RuntimeError):
@@ -1076,7 +1076,7 @@ class TestUnit(TestCase):
         # do not support IndexHierarchy, as lables are tuples, not strings
         from ast import literal_eval
         config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
-        b1 = Bus(s1)
+        b1 = Bus.from_series(s1)
         b2 = b1[HLoc[:, 1]]
         self.assertEqual(b2.shape, (2,))
         self.assertEqual(b2.index.values.tolist(),
@@ -1213,7 +1213,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1240,7 +1240,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1274,7 +1274,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1320,7 +1320,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1372,7 +1372,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1407,7 +1407,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1434,7 +1434,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1461,7 +1461,7 @@ class TestUnit(TestCase):
         s1 = Series((f1, f2, f3), index=('a', 'b', 'c'))
         with self.assertRaises(ErrorInitBus):
             # max_persist cannot be less than the number of already loaded Frames
-            Bus(s1, max_persist=2)
+            Bus.from_series(s1, max_persist=2)
 
     def test_bus_max_persist_i(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
@@ -1785,7 +1785,7 @@ class TestUnit(TestCase):
                 yield 'abcde'[i], Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1951,7 +1951,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1986,7 +1986,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -2016,7 +2016,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
