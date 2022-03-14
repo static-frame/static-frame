@@ -82,7 +82,7 @@ class InterfaceFillValue(Interface[TContainer]):
 
     #---------------------------------------------------------------------------
     @property
-    def via_T(self) -> "InterfaceTranspose[Frame]":
+    def via_T(self) -> 'InterfaceTranspose[Frame]':
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
@@ -442,7 +442,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
 
     #---------------------------------------------------------------------------
     @property
-    def via_T(self) -> "InterfaceBatchTranspose":
+    def via_T(self) -> 'InterfaceBatchTranspose':
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''

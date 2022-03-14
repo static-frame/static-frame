@@ -224,7 +224,7 @@ def pandas_to_numpy(
         if isinstance(dtype_src, BooleanDtype):
             dtype = DTYPE_OBJECT if hasna else DTYPE_BOOL
         elif isinstance(dtype_src, StringDtype):
-            # trying to use a dtype argument for strings results in a converting pd.NA to a string "<NA>"
+            # trying to use a dtype argument for strings results in a converting pd.NA to a string '<NA>'
             dtype = DTYPE_OBJECT if hasna else DTYPE_STR
         else:
             # if an extension type and it hasna, have to go to object; otherwise, set to None or the dtype obtained above
@@ -783,7 +783,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
 def rehierarch_from_type_blocks(*,
         labels: 'TypeBlocks',
         depth_map: tp.Sequence[int],
-        ) -> tp.Tuple["TypeBlocks", np.ndarray]:
+        ) -> tp.Tuple['TypeBlocks', np.ndarray]:
     '''
     Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
 

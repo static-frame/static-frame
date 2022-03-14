@@ -41,7 +41,7 @@ def extrapolate_column_fields(
         data_fields: tp.Sequence[tp.Hashable],
         func_fields: tp.Iterable[tp.Hashable],
         ) -> tp.Iterable[tp.Hashable]:
-    '''"Determine columns to be reatined from gruop and data fields.
+    '''Determine columns to be reatined from gruop and data fields.
     Used in Frame.pivot.
 
     Args:

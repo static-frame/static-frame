@@ -491,8 +491,8 @@ class Display:
     @classmethod
     def from_params(cls,
             *,
-            index: "IndexBase",
-            columns: "IndexBase",
+            index: 'IndexBase',
+            columns: 'IndexBase',
             header: DisplayHeader,
             column_forward_iter: CallableToIterType,
             column_reverse_iter: CallableToIterType,

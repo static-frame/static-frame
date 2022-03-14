@@ -21,7 +21,7 @@ class TestUnit(TestCase):
     def test_init_a(self) -> None:
         indices = [
                 Index(np.arange(5)),
-                Index(tuple("ABCDE")),
+                Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
             [
@@ -129,7 +129,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     def test_build_key_indexers_from_key_a(self) -> None:
-        ih = IndexHierarchy.from_product(range(3), range(4, 7), tuple("ABC"))
+        ih = IndexHierarchy.from_product(range(3), range(4, 7), tuple('ABC'))
 
         engineA = ih._engine
         engineB = deepcopy(ih._engine)
@@ -179,7 +179,7 @@ class TestUnit(TestCase):
     def test_loc_to_iloc_a(self) -> None:
         indices = [
                 Index(np.arange(5)),
-                Index(tuple("ABCDE")),
+                Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
             [
@@ -205,7 +205,7 @@ class TestUnit(TestCase):
     def test_loc_to_iloc_b(self) -> None:
         indices = [
                 Index(np.arange(5)),
-                Index(tuple("ABCDE")),
+                Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
             [
@@ -230,7 +230,7 @@ class TestUnit(TestCase):
     def test_nbytes_a(self) -> None:
         indices = [
                 Index(np.arange(5)),
-                Index(tuple("ABCDE")),
+                Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
             [
@@ -248,7 +248,7 @@ class TestUnit(TestCase):
     def test_deepcopy_a(self) -> None:
         indices = [
                 Index(np.arange(5)),
-                Index(tuple("ABCDE")),
+                Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
             [

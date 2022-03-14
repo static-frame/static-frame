@@ -88,7 +88,7 @@ class StoreXLSX(Store):
         '''
         kind = dtype.kind
 
-        # NOTE: xlsxwriter cannot handle datetime64, raises TypeError("Unknown or unsupported datetime type")
+        # NOTE: xlsxwriter cannot handle datetime64, raises TypeError('Unknown or unsupported datetime type')
         # if kind in DTYPE_NAT_KINDS and dtype != DT64_MONTH and dtype != DT64_YEAR:
         #     return 'write_datetime', True
 

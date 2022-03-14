@@ -348,7 +348,7 @@ class TestUnit(TestCase):
                 del result
                 self.assertEqual(0, len(list(st._weak_cache)))
 
-                [frame] = list(st.read_many(("foo",), **kwargs))
+                [frame] = list(st.read_many(('foo',), **kwargs))
                 self.assertIs(frame, st._weak_cache['foo'])
 
                 # Go through pass where there are some cache hits!

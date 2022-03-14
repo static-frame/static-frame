@@ -5617,7 +5617,7 @@ class Frame(ContainerOperand):
             names = self._index.names
             if self._index.depth > 1 and self._columns.depth > 1:
                 raise RuntimeError(
-                    "Must provide `names` when both the index and columns are IndexHierarchies"
+                    'Must provide `names` when both the index and columns are IndexHierarchies'
                 )
 
         names_t = zip(*names)

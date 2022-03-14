@@ -753,7 +753,7 @@ class Index(IndexBase):
         try:
             indexer = indexer[ar1_indexer]
         except IndexError:
-            raise KeyError(f"{other} is not a subset of {self}")
+            raise KeyError(f'{other} is not a subset of {self}')
 
         indexer.flags.writeable = False
         return indexer

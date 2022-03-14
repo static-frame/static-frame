@@ -49,11 +49,11 @@ MAX_ROWS = 8
 MAX_COLUMNS = 10
 
 
-hypo_settings.register_profile("sf",
+hypo_settings.register_profile('sf',
         suppress_health_check=[HealthCheck.too_slow],
         deadline=None,
         )
-hypo_settings.load_profile("sf")
+hypo_settings.load_profile('sf')
 
 #-------------------------------------------------------------------------------
 # spacings
@@ -94,7 +94,7 @@ def get_spacing(size: int = MAX_COLUMNS) -> st.SearchStrategy:
 #-------------------------------------------------------------------------------
 # values
 
-# 55203 is just before "high surrogates", and avoids this exception
+# 55203 is just before 'high surrogates', and avoids this exception
 # UnicodeDecodeError: 'utf-32-le' codec can't decode bytes in position 0-3: code point in surrogate code point range(0xd800, 0xe000)
 ST_CODEPOINT_LIMIT = dict(min_codepoint=1, max_codepoint=55203)
 

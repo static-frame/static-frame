@@ -3882,7 +3882,7 @@ class TestUnit(TestCase):
                 (('x', ('f*o', '*', 'o')), ('y', ('b*a', '*', 'r'))))
 
     def test_series_str_getitem_a(self) -> None:
-        s1 = Series(["ab_asldkj", "cd_LKSJ", "df_foooooo"])
+        s1 = Series(['ab_asldkj', 'cd_LKSJ', 'df_foooooo'])
         self.assertEqual(s1.via_str[:2].to_pairs(),
                 ((0, 'ab'), (1, 'cd'), (2, 'df'))
                 )

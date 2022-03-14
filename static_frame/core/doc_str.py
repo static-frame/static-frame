@@ -24,7 +24,7 @@ AXIS = '''axis: Integer specifying axis, where 0 is rows and 1 is columns. Axis 
 
 CHUNKSIZE = 'chunksize: Units of work per executor, as passed to the Thread- or ProcessPoolExecutor.'
 
-COLUMNS_CONSTRUCTOR = "columns_constructor: Optional class or constructor function to create the :obj:`Index` applied to the columns."
+COLUMNS_CONSTRUCTOR = 'columns_constructor: Optional class or constructor function to create the :obj:`Index` applied to the columns.'
 
 CONSOLIDATE_BLOCKS = 'consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
 
@@ -36,7 +36,7 @@ DTYPES = "dtypes: Optionally provide an iterable of dtypes, equal in length to t
 
 FP = 'fp: A string file path or :obj:`Path` instance.'
 
-INDEX_CONSTRUCTOR = "index_constructor: Optional class or constructor function to create the :obj:`Index` applied to the rows."
+INDEX_CONSTRUCTOR = 'index_constructor: Optional class or constructor function to create the :obj:`Index` applied to the rows.'
 
 MAX_PERSIST = 'max_persist: When loading :obj:`Frame` from a :obj:`Store`, optionally define the maximum number of :obj:`Frame` to remain in the :obj:`Bus`, regardless of the size of the :obj:`Bus`. If more than ``max_persist`` number of :obj:`Frame` are loaded, least-recently loaded :obj:`Frame` will be replaced by ``FrameDeferred``. A ``max_persist`` of 1, for example, permits reading one :obj:`Frame` at a time without ever holding in memory more than 1 :obj:`Frame`.'
 
@@ -224,7 +224,7 @@ class DOC_TEMPLATE:
             compare_name="compare_name: Include equality of the container's name (and all composed containers) in the comparison.",
             compare_dtype="compare_dtype: Include equality of the container's dtype (and all composed containers) in the comparison.",
             compare_class="compare_class: Include equality of the container's class (and all composed containers) in the comparison.",
-            skipna="skipna: If True, comparisons between missing values are equal.",
+            skipna='skipna: If True, comparisons between missing values are equal.',
             )
 
     from_any = dict(
@@ -278,19 +278,19 @@ class DOC_TEMPLATE:
             )
 
     insert = dict(
-            key_before="key: Label before which the new container will be inserted.",
-            key_after="key: Label after which the new container will be inserted.",
-            container="container: Container to be inserted.",
+            key_before='key: Label before which the new container will be inserted.',
+            key_after='key: Label after which the new container will be inserted.',
+            container='container: Container to be inserted.',
             fill_value='fill_value: A value to be used to fill space after reindexing the new container.'
             )
 
     join = dict(
-            left_depth_level="left_depth_level: Specify one or more left index depths to include in the join predicate.",
-            left_columns="left_columns: Specify one or more left columns to include in the join predicate.",
-            right_depth_level="right_depth_level: Specify one or more right index depths to include in the join predicate.",
-            right_columns="right_columns: Specify one or more right columns to include in the join predicate.",
-            left_template="left_template: Provide a format string for naming left columns in the joined result.",
-            right_template="right_template: Provide a format string for naming right columns in the joined result.",
+            left_depth_level='left_depth_level: Specify one or more left index depths to include in the join predicate.',
+            left_columns='left_columns: Specify one or more left columns to include in the join predicate.',
+            right_depth_level='right_depth_level: Specify one or more right index depths to include in the join predicate.',
+            right_columns='right_columns: Specify one or more right columns to include in the join predicate.',
+            left_template='left_template: Provide a format string for naming left columns in the joined result.',
+            right_template='right_template: Provide a format string for naming right columns in the joined result.',
             fill_value='fill_value: A value to be used to fill space created in the join.',
             composite_index='composite_index: If True, an index of tuples will be returned, formed from the left index label and the right index label; if False, an index of matching labels, if unique, will be returned.',
             composite_index_fill_value='composite_index_fill_value: Value to be used when forming a composite index when a label is missing.'

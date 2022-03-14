@@ -1522,8 +1522,8 @@ class TestUnit(TestCase):
 
     def test_index_iloc_map_a(self) -> None:
 
-        ih1 = Index(tuple("QafDeHbdc"))
-        ih2 = Index(tuple("ABcdHebDEsaQf"))
+        ih1 = Index(tuple('QafDeHbdc'))
+        ih2 = Index(tuple('ABcdHebDEsaQf'))
 
         post = ih1._index_iloc_map(ih2)
         expected= ih1.iter_label().apply(ih2._loc_to_iloc)
@@ -1532,8 +1532,8 @@ class TestUnit(TestCase):
 
     def test_index_iloc_map_b(self) -> None:
 
-        ih1 = Index(tuple("abcdefg"))
-        ih2 = Index(tuple("bcdefg"))
+        ih1 = Index(tuple('abcdefg'))
+        ih2 = Index(tuple('bcdefg'))
 
         with self.assertRaises(KeyError):
             ih1._index_iloc_map(ih2)

@@ -1128,7 +1128,7 @@ class Group_R(Group, Reference):
 # class WarningsSilent_R(Warnings, Reference):
 #     def warnings_context(self) -> None:
 #         with warnings.catch_warnings():
-#             warnings.simplefilter("ignore")
+#             warnings.simplefilter('ignore')
 #             warnings.warn('foo')
 
 
@@ -1201,12 +1201,12 @@ class IndexHierarchyLoc(Perf):
 
         self.ih_small = sf.IndexHierarchy.from_product(
                 range(10),
-                tuple("abcdefg"),
+                tuple('abcdefg'),
                 [True, False, None, self.obj],
                 )
         self.mi_small = pd.MultiIndex.from_product((
                 range(10),
-                tuple("abcdefg"),
+                tuple('abcdefg'),
                 [True, False, None, self.obj],
                 ))
 
@@ -1234,111 +1234,111 @@ class IndexHierarchyLoc(Perf):
 class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
 
     def large_element_loc(self) -> None:
-        self.ih_large._loc_to_iloc((100, "A", True))
+        self.ih_large._loc_to_iloc((100, 'A', True))
         self.ih_large._loc_to_iloc(self.ih_large.iloc[12839])
         # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
         slice(
             None,
-            self.ih_large._loc_to_iloc((199, "z", None)),
+            self.ih_large._loc_to_iloc((199, 'z', None)),
         )
         slice(
-            self.ih_large._loc_to_iloc((0, "5", False)),
+            self.ih_large._loc_to_iloc((0, '5', False)),
         )
         slice(
-            self.ih_large._loc_to_iloc((19, ".", True)),
-            self.ih_large._loc_to_iloc((100, "B",  self.obj)),
+            self.ih_large._loc_to_iloc((19, '.', True)),
+            self.ih_large._loc_to_iloc((100, 'B',  self.obj)),
         )
 
     def large_element_hloc(self) -> None:
         self.i += 1
         if self.i % 60 != 0:
             return
-        self.ih_large._loc_to_iloc(sf.HLoc[100, "A", True])
+        self.ih_large._loc_to_iloc(sf.HLoc[100, 'A', True])
         self.ih_large._loc_to_iloc(sf.HLoc[144])
-        self.ih_large._loc_to_iloc(sf.HLoc[:, "|"])
+        self.ih_large._loc_to_iloc(sf.HLoc[:, '|'])
         self.ih_large._loc_to_iloc(sf.HLoc[:, :, self.obj])
-        self.ih_large._loc_to_iloc(sf.HLoc[100, "{"])
+        self.ih_large._loc_to_iloc(sf.HLoc[100, '{'])
         self.ih_large._loc_to_iloc(sf.HLoc[113, :, False])
-        self.ih_large._loc_to_iloc(sf.HLoc[:, "H", None])
+        self.ih_large._loc_to_iloc(sf.HLoc[:, 'H', None])
 
     def small_element_loc(self) -> None:
-        self.ih_small._loc_to_iloc((1, "a", True))
+        self.ih_small._loc_to_iloc((1, 'a', True))
         self.ih_small._loc_to_iloc(self.ih_small.iloc[25])
         slice(
             None,
-            self.ih_small._loc_to_iloc((9, "g", None)),
+            self.ih_small._loc_to_iloc((9, 'g', None)),
         )
         slice(
-            self.ih_small._loc_to_iloc((0, "c", False)),
+            self.ih_small._loc_to_iloc((0, 'c', False)),
         )
         slice(
-            self.ih_small._loc_to_iloc((3, "b", True)),
-            self.ih_small._loc_to_iloc((5, "e",  self.obj)),
+            self.ih_small._loc_to_iloc((3, 'b', True)),
+            self.ih_small._loc_to_iloc((5, 'e',  self.obj)),
         )
 
     def small_element_hloc(self) -> None:
-        self.ih_small._loc_to_iloc(sf.HLoc[2, "b", True])
+        self.ih_small._loc_to_iloc(sf.HLoc[2, 'b', True])
         self.ih_small._loc_to_iloc(sf.HLoc[4])
-        self.ih_small._loc_to_iloc(sf.HLoc[:, "a"])
+        self.ih_small._loc_to_iloc(sf.HLoc[:, 'a'])
         self.ih_small._loc_to_iloc(sf.HLoc[:, :, self.obj])
-        self.ih_small._loc_to_iloc(sf.HLoc[0, "f"])
+        self.ih_small._loc_to_iloc(sf.HLoc[0, 'f'])
         self.ih_small._loc_to_iloc(sf.HLoc[8, :, False])
-        self.ih_small._loc_to_iloc(sf.HLoc[:, "c", None])
+        self.ih_small._loc_to_iloc(sf.HLoc[:, 'c', None])
 
 
 class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
 
     def large_element_loc(self) -> None:
-        self.mi_large.get_loc((100, "A", True))
+        self.mi_large.get_loc((100, 'A', True))
         self.mi_large.get_loc(self.mi_large[12839])
         # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
         slice(
             None,
-            self.mi_large.get_loc((199, "z", None)),
+            self.mi_large.get_loc((199, 'z', None)),
         )
         slice(
-            self.mi_large.get_loc((0, "5", False)),
+            self.mi_large.get_loc((0, '5', False)),
         )
         slice(
-            self.mi_large.get_loc((19, ".", True)),
-            self.mi_large.get_loc((100, "B",  self.obj)),
+            self.mi_large.get_loc((19, '.', True)),
+            self.mi_large.get_loc((100, 'B',  self.obj)),
         )
 
     def large_element_hloc(self) -> None:
         self.i += 1
         if self.i % 60 != 0:
             return
-        self.mi_large.get_loc(pd.IndexSlice[100, "A", True])
+        self.mi_large.get_loc(pd.IndexSlice[100, 'A', True])
         self.mi_large.get_loc(pd.IndexSlice[144])
-        self.mi_large.get_locs(pd.IndexSlice[:, "|"])
+        self.mi_large.get_locs(pd.IndexSlice[:, '|'])
         self.mi_large.get_locs(pd.IndexSlice[:, :, self.obj])
-        self.mi_large.get_locs(pd.IndexSlice[100, "{"])
+        self.mi_large.get_locs(pd.IndexSlice[100, '{'])
         self.mi_large.get_locs(pd.IndexSlice[113, :, False])
-        self.mi_large.get_locs(pd.IndexSlice[:, "H", None])
+        self.mi_large.get_locs(pd.IndexSlice[:, 'H', None])
 
     def small_element_loc(self) -> None:
-        self.mi_small.get_loc((1, "a", True))
+        self.mi_small.get_loc((1, 'a', True))
         self.mi_small.get_loc(self.mi_small[25])
         slice(
             None,
-            self.mi_small.get_loc((9, "g", None)),
+            self.mi_small.get_loc((9, 'g', None)),
         )
         slice(
-            self.mi_small.get_loc((0, "c", False)),
+            self.mi_small.get_loc((0, 'c', False)),
         )
         slice(
-            self.mi_small.get_loc((3, "b", True)),
-            self.mi_small.get_loc((5, "e",  self.obj)),
+            self.mi_small.get_loc((3, 'b', True)),
+            self.mi_small.get_loc((5, 'e',  self.obj)),
         )
 
     def small_element_hloc(self) -> None:
-        self.mi_small.get_loc(pd.IndexSlice[2, "b", True])
+        self.mi_small.get_loc(pd.IndexSlice[2, 'b', True])
         self.mi_small.get_loc(pd.IndexSlice[4])
-        self.mi_small.get_locs(pd.IndexSlice[:, "a"])
+        self.mi_small.get_locs(pd.IndexSlice[:, 'a'])
         self.mi_small.get_locs(pd.IndexSlice[:, :, self.obj])
-        self.mi_small.get_locs(pd.IndexSlice[0, "f"])
+        self.mi_small.get_locs(pd.IndexSlice[0, 'f'])
         self.mi_small.get_locs(pd.IndexSlice[8, :, False])
-        self.mi_small.get_locs(pd.IndexSlice[:, "c", None])
+        self.mi_small.get_locs(pd.IndexSlice[:, 'c', None])
 
 
 #-------------------------------------------------------------------------------
@@ -1400,7 +1400,7 @@ class IndexHierarchyConstructionSmall(Perf, _IndexHierarchyConstructionMixin):
     def _get_product_data(self) -> tp.Tuple[tp.Sequence[tp.Hashable], ...]:
         return ( # (280, 3)
                 range(10),
-                tuple("abcdefg"),
+                tuple('abcdefg'),
                 [True, False, None, object()],
                 )
 
@@ -1604,7 +1604,7 @@ Profiling outpout for static-frame dropna:
 python3 test_performance.py SeriesIntFloat_dropna --profile
             '''
             )
-    choices = sorted(str(x).replace("<class '__main__.","").replace("'>", "") for x in Perf.__subclasses__())
+    choices = sorted(str(x).replace("<class '__main__.",'').replace("'>", '') for x in Perf.__subclasses__())
     p.add_argument('patterns',
             help=f'Names of classes to match using fn_match syntax ({choices})',
             nargs='+',
@@ -1704,7 +1704,7 @@ def graph(
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
 
-        suffix = f"{f.__qualname__}"
+        suffix = f.__qualname__
 
         _, fp = tempfile.mkstemp(suffix=suffix, text=True)
         fp_pstat = fp + '.pstat'

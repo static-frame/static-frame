@@ -841,14 +841,14 @@ class TestUnit(TestCase):
 
         ih2 = IndexHierarchy._from_empty(
             (),
-            name=tuple("ABC"),
+            name=tuple('ABC'),
             depth_reference=3,
         )
         self.assertEqual(ih2.shape, (0, 3))
 
         ih3 = IndexHierarchy._from_empty(
             np.array(()),
-            name=tuple("ABC"),
+            name=tuple('ABC'),
             depth_reference=3,
         )
         self.assertEqual(ih3.shape, (0, 3))

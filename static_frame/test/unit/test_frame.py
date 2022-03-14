@@ -369,13 +369,13 @@ class TestUnit(TestCase):
 
     def test_frame_init_iter(self) -> None:
 
-        f1 = Frame.from_element(None, index=iter(range(3)), columns=("A",))
+        f1 = Frame.from_element(None, index=iter(range(3)), columns=('A',))
         self.assertEqual(
             f1.to_pairs(0),
             (('A', ((0, None), (1, None), (2, None))),)
         )
 
-        f2 = Frame.from_element(None, index=("A",), columns=iter(range(3)))
+        f2 = Frame.from_element(None, index=('A',), columns=iter(range(3)))
         self.assertEqual(
             f2.to_pairs(0),
             ((0, (('A', None),)), (1, (('A', None),)), (2, (('A', None),)))
@@ -1503,7 +1503,7 @@ class TestUnit(TestCase):
         ih2 = sf.IndexHierarchy.from_product(tuple('EFGH'), tuple('5678'))
         f1 = sf.FrameGO(np.arange(256).reshape(16, 16), index=ih1, columns=ih2)
 
-        f1[("A", "1")] = 999.99
+        f1[('A', '1')] = 999.99
 
         msg = f1.to_msgpack()
 
@@ -2332,7 +2332,7 @@ class TestUnit(TestCase):
             f1.insert_after(slice('q', 'r'), s1)
 
     def test_frame_insert_g(self) -> None:
-        f = ff.parse("s(3,3)|v(str)")
+        f = ff.parse('s(3,3)|v(str)')
         f = f.insert_after(sf.ILoc[-1], sf.Series.from_element(1, index=f.index, name='a'))
 
         self.assertEqual(f.to_pairs(),
@@ -2345,14 +2345,14 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_insert_h(self) -> None:
-        f = ff.parse("s(2,3)|v(str)")
+        f = ff.parse('s(2,3)|v(str)')
         f = f.insert_after(sf.ILoc[-2], sf.Series.from_element(1, index=f.index, name='a'))
         self.assertEqual(f.to_pairs(),
                 ((0, ((0, 'zjZQ'), (1, 'zO5l'))), (1, ((0, 'zaji'), (1, 'zJnC'))), ('a', ((0, 1), (1, 1))), (2, ((0, 'ztsv'), (1, 'zUvW'))))
                 )
 
     def test_frame_insert_i(self) -> None:
-        f = ff.parse("s(2,3)|v(str)")
+        f = ff.parse('s(2,3)|v(str)')
         f = f.insert_before(sf.ILoc[-2], sf.Series.from_element(1, index=f.index, name='a'))
         f = f.insert_before(sf.ILoc[-2], sf.Series.from_element(2, index=f.index, name='b'))
         self.assertEqual(f.to_pairs(),
@@ -2360,7 +2360,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_insert_j(self) -> None:
-        f = ff.parse("s(2,3)|v(str)")
+        f = ff.parse('s(2,3)|v(str)')
         with self.assertRaises(IndexError):
             _ = f.insert_after(sf.ILoc[3], sf.Series.from_element(1, index=f.index, name='a'))
         with self.assertRaises(IndexError):
@@ -5184,7 +5184,7 @@ class TestUnit(TestCase):
                 columns=columns,
                 index=index)
 
-        f1[("b", 3)] = "new"
+        f1[('b', 3)] = 'new'
 
         f3 = f1.rehierarch(columns=(1,0))
         self.assertEqual(f3.to_pairs(0),
@@ -7519,7 +7519,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_drop_duplicated_d(self) -> None:
-        f1 = ff.parse("s(5,5)|v(int, str, float, bool, dtD)")
+        f1 = ff.parse('s(5,5)|v(int, str, float, bool, dtD)')
         f2 = sf.Frame.from_concat((f1, f1, f1), index=sf.IndexAutoFactory)
         f3 = f2.drop_duplicated(exclude_first=True)
 
@@ -8146,18 +8146,18 @@ class TestUnit(TestCase):
                 (dt('1543-10-31'), ((0, 2), (1, 0)))))
 
     def test_frame_from_concat_dd(self) -> None:
-        a = sf.Series([1], name=np.datetime64("2000-01-01"))
-        b = sf.Series([2], name=np.datetime64("2000-01-02"))
+        a = sf.Series([1], name=np.datetime64('2000-01-01'))
+        b = sf.Series([2], name=np.datetime64('2000-01-02'))
         # this catches a complexity of having a name on Series that becomes an index; in this case, since we are passing an index we want to ignore the name on the Series
-        f1 = sf.Frame.from_concat((a, b), index=["A", "B"])
+        f1 = sf.Frame.from_concat((a, b), index=['A', 'B'])
         self.assertEqual(f1.shape, (2, 1))
         self.assertEqual(f1.to_pairs(),
                 ((0, (('A', 1), ('B', 2))),)
                 )
 
     def test_frame_from_concat_ee(self) -> None:
-        a = sf.Series([1], name=np.datetime64("2000-01-01"))
-        b = sf.Series([2], name=np.datetime64("2000-01-02"))
+        a = sf.Series([1], name=np.datetime64('2000-01-01'))
+        b = sf.Series([2], name=np.datetime64('2000-01-02'))
         f1 = sf.Frame.from_concat((a, b), axis=1, columns_constructor=IndexDate)
         self.assertEqual(f1.shape, (1, 2))
         self.assertIs(f1.columns.__class__, IndexDate)
@@ -8635,9 +8635,9 @@ class TestUnit(TestCase):
             x: str
             y: int
 
-        f0 = Frame.from_records([(Y("foo", 1), 1, 2)])
-        f1 = Frame.from_records([(1, 2, Y("foo", 1))])
-        f2 = Frame.from_records([(1, 2, ("foo", 1))])
+        f0 = Frame.from_records([(Y('foo', 1), 1, 2)])
+        f1 = Frame.from_records([(1, 2, Y('foo', 1))])
+        f2 = Frame.from_records([(1, 2, ('foo', 1))])
 
         self.assertEqual(f0.shape, f1.shape)
         self.assertEqual(f0.shape, f2.shape)
@@ -8781,7 +8781,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_json_a(self) -> None:
 
-        msg = """[
+        msg = '''[
         {
         "userId": 1,
         "id": 1,
@@ -8805,7 +8805,7 @@ class TestUnit(TestCase):
         "id": 4,
         "title": "et porro tempora",
         "completed": true
-        }]"""
+        }]'''
 
         f1 = Frame.from_json(msg, name=msg)
         self.assertEqual(sorted(f1.columns.values.tolist()),
@@ -9312,7 +9312,7 @@ class TestUnit(TestCase):
             finalizer()
 
     def test_frame_from_npy_memory_map_c(self) -> None:
-        f1 = ff.parse("s(3,3)")
+        f1 = ff.parse('s(3,3)')
         with TemporaryDirectory() as fp:
             f1.to_npy(fp)
             f1, finalizer = sf.Frame.from_npy_mmap(fp)
@@ -9326,7 +9326,7 @@ class TestUnit(TestCase):
 
             class C:
                 def __init__(self) -> None:
-                    ff.parse("s(3,3)").to_npy(fp)
+                    ff.parse('s(3,3)').to_npy(fp)
                     self.finalizer: tp.Optional[tp.Callable[[], None]] = None
                     self.frame: tp.Optional[sf.Frame] = None
 
@@ -9411,7 +9411,7 @@ class TestUnit(TestCase):
                 ['U', 'U', 'U', 'U', 'U'])
 
     def test_frame_astype_d(self) -> None:
-        f1 = ff.parse("s(3,5)")
+        f1 = ff.parse('s(3,5)')
         f2 = f1.astype[[1,2,3]](int)
         f3 = f2.astype[f2.dtypes == int](float)
         self.assertEqual([dt.kind for dt in f3.dtypes.values],
@@ -9422,7 +9422,7 @@ class TestUnit(TestCase):
                 ['f', 'f', 'i', 'f', 'f'])
 
     def test_frame_astype_e(self) -> None:
-        f1 = ff.parse("s(3,5)")
+        f1 = ff.parse('s(3,5)')
         f2 = f1.astype[[1,2,3]](int)
         f3 = f2.astype[(f2.dtypes == int).values](float)
         self.assertEqual([dt.kind for dt in f3.dtypes.values],
@@ -11142,11 +11142,11 @@ class TestUnit(TestCase):
     def test_frame_pivot_n1(self) -> None:
 
         f1 = FrameGO(index=range(3))
-        f1["a"] = np.array(range(3)) + 10001
-        f1["b"] = np.array(range(3), "datetime64[D]")
-        f1["c"] = np.array(range(3)) * 1e9
+        f1['a'] = np.array(range(3)) + 10001
+        f1['b'] = np.array(range(3), 'datetime64[D]')
+        f1['c'] = np.array(range(3)) * 1e9
 
-        f2 = f1.pivot("b", "a", fill_value=0, index_constructor=IndexDate, func=np.nansum)
+        f2 = f1.pivot('b', 'a', fill_value=0, index_constructor=IndexDate, func=np.nansum)
         self.assertIs(f2.index.__class__, sf.IndexDate)
         self.assertIs(f2.__class__, FrameGO)
         self.assertEqual(f2.index.name, 'b')
@@ -11158,11 +11158,11 @@ class TestUnit(TestCase):
     def test_frame_pivot_n2(self) -> None:
 
         f1 = FrameGO(index=range(3))
-        f1["a"] = np.array(range(3)) + 10001
-        f1["b"] = np.array(range(3), "datetime64[D]")
-        f1["c"] = np.array(range(3)) * 1e9
+        f1['a'] = np.array(range(3)) + 10001
+        f1['b'] = np.array(range(3), 'datetime64[D]')
+        f1['c'] = np.array(range(3)) * 1e9
 
-        f2 = f1.pivot("b", "a", fill_value='', index_constructor=IndexDate, func=str)
+        f2 = f1.pivot('b', 'a', fill_value='', index_constructor=IndexDate, func=str)
         dt64 = np.datetime64
         self.assertEqual(f2.to_pairs(),
                 ((10001, ((dt64('1970-01-01'), '[0.]'), (dt64('1970-01-02'), ''), (dt64('1970-01-03'), ''))), (10002, ((dt64('1970-01-01'), ''), (dt64('1970-01-02'), '[1.e+09]'), (dt64('1970-01-03'), ''))), (10003, ((dt64('1970-01-01'), ''), (dt64('1970-01-02'), ''), (dt64('1970-01-03'), '[2.e+09]')))))
@@ -13138,7 +13138,7 @@ class TestUnit(TestCase):
 
         f1 = ff.parse('f(Fg)|s(3,4)|i(I,int)|c(IHg,(str,int))|v(str)').rename(index='a', columns=('x', 'y'))
 
-        f1[("AAAA", 999999)] = "abcd"
+        f1[('AAAA', 999999)] = 'abcd'
 
         f2 = f1.relabel_shift_in(('zZbu', 119909), axis=0)
         self.assertEqual(f2.index.name, ('a', ('zZbu', 119909)))
@@ -13234,7 +13234,7 @@ class TestUnit(TestCase):
 
         f1 = ff.parse('f(Fg)|s(3,4)|c(IHg,(int,str,int,str))|i(I,str)|v(str)').rename(
                 index=('a', 'b'), columns=('x', 'y'))
-        f1[(12345, "abcd", 67890, "efgh")] = "ijkl"
+        f1[(12345, 'abcd', 67890, 'efgh')] = 'ijkl'
         f2 = f1.relabel_shift_out([0, 1], axis=1)
         self.assertEqual(f2.index.depth, 1)
         self.assertEqual(f2.columns.depth, 2)
