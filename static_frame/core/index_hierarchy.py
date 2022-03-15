@@ -1637,7 +1637,7 @@ class IndexHierarchy(IndexBase):
 
         if isinstance(key_at_depth, slice):
             if key_at_depth.start is not None:
-                start: tp.Optional[int] = index_at_depth.loc_to_iloc(key_at_depth.start) # type: ignore
+                start: int = tp.cast(int, index_at_depth.loc_to_iloc(key_at_depth.start))
             else:
                 start = 0
 
@@ -1649,7 +1649,7 @@ class IndexHierarchy(IndexBase):
                 )
 
             if key_at_depth.stop is not None:
-                stop: tp.Optional[int] = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1 # type: ignore
+                stop: int = tp.cast(int, index_at_depth.loc_to_iloc(key_at_depth.stop)) + 1
             else:
                 stop = len(indexer_at_depth)
 
@@ -1725,14 +1725,16 @@ class IndexHierarchy(IndexBase):
                 if not (k.__class__ is slice and k == NULL_SLICE)
                 ]
 
-        def not_slice_or_mask(obj: tp.Union[slice, tp.Hashable]) -> bool:
-            return not (obj.__class__ is np.ndarray and obj.dtype == DTYPE_BOOL) and not obj.__class__ is slice # type: ignore
+        def neither_slice_nor_mask(obj: tp.Union[slice, tp.Hashable]) -> bool:
+            is_slice = obj.__class__ is slice
+            is_mask = obj.__class__ is np.ndarray and obj.dtype == DTYPE_BOOL # type: ignore
+            return not is_slice and not is_mask
 
         if len(meaningful_depths) == 1:
             # Prefer to avoid construction of a 2D mask
             mask = self._build_mask_for_key_at_depth(depth=meaningful_depths[0], key=key)
         else:
-            can_perform_fast_lookup = all(map(not_slice_or_mask, key))
+            can_perform_fast_lookup = all(map(neither_slice_nor_mask, key))
 
             if len(meaningful_depths) == self.depth and can_perform_fast_lookup:
                 return self._map.loc_to_iloc(key, self._indices)
