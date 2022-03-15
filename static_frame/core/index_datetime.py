@@ -35,6 +35,7 @@ from static_frame.core.util import YearMonthInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import WarningsSilent
+from static_frame.core.util import DTYPE_BOOL
 
 if tp.TYPE_CHECKING:
     import pandas  #pylint: disable = W0611 #pragma: no cover

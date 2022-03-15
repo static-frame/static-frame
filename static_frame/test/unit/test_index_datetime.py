@@ -845,7 +845,7 @@ class TestUnit(TestCase):
             [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
             )
 
-    def test_index_datetime_eq_b(self) -> None:
+    def test_index_datetime_eq_c(self) -> None:
         post = (IndexDate.from_date_range('2021-01-01', '2021-02-01') ==
         IndexDate.from_date_range('2021-01-01', '2021-02-01')[:1])
         self.assertEqual(post.tolist(),
