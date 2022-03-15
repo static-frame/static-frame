@@ -33,8 +33,8 @@ from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_datetime import IndexDatetime
-from static_frame.core.index_level_engine import IndexLevelEngine
 from static_frame.core.loc_map import LocMap
+from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
@@ -212,7 +212,7 @@ class IndexHierarchy(IndexBase):
             '_blocks',
             '_recache',
             '_values',
-            '_engine',
+            '_map',
             '_index_types',
             '_pending_extensions',
             )
@@ -223,7 +223,7 @@ class IndexHierarchy(IndexBase):
     _blocks: TypeBlocks
     _recache: bool
     _values: np.ndarray # Used to cache the property `values`
-    _engine: IndexLevelEngine
+    _map: HierarchicalLocMap
     _index_types: tp.Optional['Series'] # Used to cache the property `index_types`
     _pending_extensions: tp.Optional[tp.List[tp.Union[SingleLabelType, 'IndexHierarchy']]]
 
@@ -800,7 +800,7 @@ class IndexHierarchy(IndexBase):
             self._name = name if name is not NAME_DEFAULT else indices._name
             self._blocks = indices._blocks
             self._values = indices._values
-            self._engine = indices._engine
+            self._map = indices._map
             return
 
         if not (indexers.__class__ is np.ndarray and not indexers.flags.writeable):
@@ -828,7 +828,7 @@ class IndexHierarchy(IndexBase):
             self._blocks = self._create_blocks_from_self()
 
         self._values = self._blocks.values
-        self._engine = IndexLevelEngine(indices=self._indices, indexers=self._indexers)
+        self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
 
     def _update_array_cache(self: IH) -> None:
         # This MUST be set before entering this context
@@ -874,7 +874,7 @@ class IndexHierarchy(IndexBase):
         self._indexers.flags.writeable = False
         self._blocks = self._create_blocks_from_self()
         self._values = self._blocks.values
-        self._engine = IndexLevelEngine(indices=self._indices, indexers=self._indexers)
+        self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
         self._recache = False
 
     # --------------------------------------------------------------------------
@@ -905,7 +905,7 @@ class IndexHierarchy(IndexBase):
         obj._recache = False
         obj._index_types = deepcopy(self._index_types, memo)
         obj._pending_extensions = [] # this must be an empty list after recache
-        obj._engine = self._engine.__deepcopy__(memo)
+        obj._map = self._map.__deepcopy__(memo)
 
         memo[id(self)] = obj
         return obj
@@ -1130,7 +1130,7 @@ class IndexHierarchy(IndexBase):
         total = sum(map(_NBYTES_GETTER, self._indices))
         total += sum(map(_NBYTES_GETTER, self._indexers))
         total += self._blocks.nbytes
-        total += self._engine.nbytes
+        total += self._map.nbytes
         return self._blocks.nbytes
 
     # --------------------------------------------------------------------------
@@ -1737,7 +1737,7 @@ class IndexHierarchy(IndexBase):
             can_perform_fast_lookup = all(map(not_slice_or_mask, key))
 
             if len(meaningful_depths) == self.depth and can_perform_fast_lookup:
-                return self._engine.loc_to_iloc(key, self._indices)
+                return self._map.loc_to_iloc(key, self._indices)
 
             mask_2d = np.full(self.shape, True, dtype=bool)
 
