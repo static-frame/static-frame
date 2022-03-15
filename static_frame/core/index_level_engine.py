@@ -62,6 +62,14 @@ class IndexLevelEngine:
         memo[id(self)] = obj
         return obj
 
+    def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
+        '''
+        Ensure that reanimated NP arrays are set not writeable.
+        '''
+        for key, value in state[1].items():
+            setattr(self, key, value)
+        self.bit_offset_encoders.flags.writeable = False
+
     @property
     def nbytes(self: _Engine) -> int:
         return (

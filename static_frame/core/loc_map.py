@@ -38,7 +38,7 @@ class LocMap:
         Args:
             label_to_pos: callable into mapping (can be a get() method from a dictionary)
         '''
-        # NOTE: it is expected that NULL_SLICE is already identifiedE
+        # NOTE: it is expected that NULL_SLICE is already identified
         offset_apply = not offset is None
         labels_astype: tp.Optional[np.ndarray] = None
 

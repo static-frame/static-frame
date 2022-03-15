@@ -198,10 +198,6 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             _ = IndexHierarchy(ih1, indexers=ih1._indexers)
 
-        # Cannot provide engine in this case
-        with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy(ih1, engine=ih1._engine)
-
         ih2 = IndexHierarchy(ih1)
         self.assertTrue(ih2.equals(ih1, compare_dtype=True))
 

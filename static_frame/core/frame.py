@@ -5519,7 +5519,7 @@ class Frame(ContainerOperand):
             columns: Iterable of column labels.
             drop: Boolean to determine if selected columns should be removed from the data.
             index_constructors: Optionally provide a sequence of ``Index`` constructors, of length equal to depth, to be used in converting columns Index components in the ``IndexHierarchy``.
-            reorder_for_hierarchy: reorder the rows to produce a hierarchible Index from the selected columns, assuming hierarchability is possible .
+            reorder_for_hierarchy: reorder the rows to produce a hierarchible Index from the selected columns, assuming hierarchability is possible.
 
         Returns:
             :obj:`Frame`

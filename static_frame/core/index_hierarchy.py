@@ -307,7 +307,7 @@ class IndexHierarchy(IndexBase):
 
         for lvl, constructor in zip(levels, index_constructors_iter):
             if isinstance(lvl, Index):
-                # TODO: This is slighly different behavior from old impl, as it called `constructor` for both cases
+                # TODO-Ariza: This is slighly different behavior from old impl, as it called `constructor` for both cases
                 indices.append(immutable_index_filter(lvl))
             else:
                 indices.append(constructor(lvl))
@@ -729,7 +729,7 @@ class IndexHierarchy(IndexBase):
         init_blocks: tp.Optional[TypeBlocks] = blocks
 
         if index_constructors is not None:
-            # TODO: Does this logic carry over?
+            # TODO-Ariza: Does the old index-level logic carry over to the new design?
             # If defined, we may have changed columnar dtypes in IndexLevels, and cannot reuse blocks
             if tuple(blocks.dtypes) != tuple(index.dtype for index in indices):
                 init_blocks = None
@@ -764,7 +764,6 @@ class IndexHierarchy(IndexBase):
             name: NameType = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
-            engine: tp.Optional[IndexLevelEngine] = None,
             ) -> None:
         '''
         Initializer.
@@ -775,7 +774,6 @@ class IndexHierarchy(IndexBase):
             name: name of the IndexHierarchy
             blocks:
             own_blocks:
-            engine:
         '''
         self._recache = False
         self._index_types = None
@@ -789,10 +787,6 @@ class IndexHierarchy(IndexBase):
             if blocks is not None:
                 raise ErrorInitIndex(
                     'blocks must not be provided when copying an IndexHierarchy'
-                )
-            if engine is not None:
-                raise ErrorInitIndex(
-                    'engine must not be provided when copying an IndexHierarchy'
                 )
 
             if indices._recache:
@@ -834,7 +828,7 @@ class IndexHierarchy(IndexBase):
             self._blocks = self._create_blocks_from_self()
 
         self._values = self._blocks.values
-        self._engine = IndexLevelEngine(indices=self._indices, indexers=self._indexers) if engine is None else engine
+        self._engine = IndexLevelEngine(indices=self._indices, indexers=self._indexers)
 
     def _update_array_cache(self: IH) -> None:
         # This MUST be set before entering this context
@@ -847,8 +841,8 @@ class IndexHierarchy(IndexBase):
         for depth, indexer in enumerate(self._indexers):
             new_indexers[depth][:current_size] = indexer
 
-        # TODO: Do we need to clear self._indexers?
-        # TODO: What if an error is raised anywhere onward in this method?
+        # TODO-Ariza: Should we clear self._indexers?
+        # TODO-Ariza: What if an error is raised anywhere onward in this method?
 
         offset = current_size
 
@@ -876,16 +870,11 @@ class IndexHierarchy(IndexBase):
                 offset += group_size
 
         self._pending_extensions.clear()
-
         self._indexers = np.array(new_indexers)
         self._indexers.flags.writeable = False
-
         self._blocks = self._create_blocks_from_self()
         self._values = self._blocks.values
-
-        # This is what guarantees uniqueness
         self._engine = IndexLevelEngine(indices=self._indices, indexers=self._indexers)
-
         self._recache = False
 
     # --------------------------------------------------------------------------
