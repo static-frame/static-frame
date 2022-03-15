@@ -432,7 +432,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #         own_data: bool = False,
     #         ):
     def __init__(self,
-            frames: tp.Optional[tp.Iterable[Frame]],
+            frames: tp.Optional[tp.Iterable[tp.Union[Frame, tp.Type[FrameDeferred]]]],
             *,
             index: IndexInitializer,
             index_constructor: IndexConstructor = None,
@@ -455,16 +455,18 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         if max_persist is not None:
             # use an (ordered) dictionary to give use an ordered set, simply pointing to None for all keys
-            self._last_accessed: tp.Dict[str, None] = {}
+            self._last_accessed: tp.Dict[tp.Hashable, None] = {}
 
         if own_index:
-            self._index = index
+            self._index = index #type: ignore
         else:
             self._index = index_from_optional_constructor(index,
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
         count = len(self._index)
+
+        frames_array: np.ndarray
 
         if frames is None:
             if store is None:

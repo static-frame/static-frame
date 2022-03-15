@@ -919,7 +919,7 @@ class BusItemsZipPickle(Perf):
 
         frames = sf.Series.from_items(items(), dtype=object)
         _, self.fp = tempfile.mkstemp(suffix='.zip')
-        b1 = sf.Bus(frames)
+        b1 = sf.Bus.from_series(frames)
         b1.to_zip_pickle(self.fp)
 
         # self.meta = {
