@@ -34,6 +34,7 @@ from static_frame.core.util import YearInitializer
 from static_frame.core.util import YearMonthInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import WarningsSilent
 
 if tp.TYPE_CHECKING:
     import pandas  #pylint: disable = W0611 #pragma: no cover
@@ -96,21 +97,40 @@ class IndexDatetime(Index):
 
         if isinstance(other, Index):
             other = other.values # operate on labels to labels
+            other_is_array = True
         elif isinstance(other, str):
             # do not pass dtype, as want to coerce to this parsed type, not the type of sled
             other = to_datetime64(other)
+            other_is_array = False
+        elif other.__class__ is np.ndarray:
+            other_is_array = True
+        else:
+            other_is_array = False
 
         if isinstance(other, np.datetime64):
             # convert labels to other's datetime64 type to enable matching on month, year, etc.
-            array = operator(self._labels.astype(other.dtype), other)
+            result = operator(self._labels.astype(other.dtype), other)
         elif isinstance(other, datetime.timedelta):
-            array = operator(self._labels, to_timedelta64(other))
-        else:
-            # np.timedelta64 should work fine here
-            array = operator(self._labels, other)
+            result = operator(self._labels, to_timedelta64(other))
+        else: # np.timedelta64 should work fine here
+            with WarningsSilent():
+                result = operator(self._labels, other)
 
-        array.flags.writeable = False
-        return array
+        if result is False or result is True:
+            # NOTE: similar branching as in container_util.apply_binary_operator
+            if not other_is_array and not hasattr(other, '__len__'):
+                # only expand to the size of the array operand if we are comparing to an element
+                result = np.full(self.shape, result, dtype=DTYPE_BOOL)
+            elif other_is_array and other.size == 1:
+                # elements in arrays of 0 or more dimensions are acceptable; this is what NP does for arithmetic operators when the types are compatible
+                result = np.full(self.shape, result, dtype=DTYPE_BOOL)
+            else:
+                raise ValueError('operands could not be broadcast together')
+                # raise on unaligned shapes as is done for arithmetic operators
+
+
+        result.flags.writeable = False
+        return result
 
     def _loc_to_iloc(self,  # type: ignore
             key: GetItemKeyType,
