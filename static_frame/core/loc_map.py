@@ -384,7 +384,7 @@ class HierarchicalLocMap:
     def loc_to_iloc(self: _HLMap,
             key: HierarchicalLocMapKey,
             indices: tp.List['Index'],
-            ) -> int:
+            ) -> tp.Union[int, tp.List[int]]:
         key_indexers = self.build_key_indexers(key=key, indices=indices)
 
         # 2. Encode the indexers. See `build_encoded_indexers_map` for detailed comments.
@@ -392,7 +392,7 @@ class HierarchicalLocMap:
 
         if key_indexers.ndim == 2:
             key_indexers = np.bitwise_or.reduce(key_indexers, axis=1)
-            return list(map(self.encoded_indexer_map.__getitem__, key_indexers)) # type: ignore
+            return list(map(self.encoded_indexer_map.__getitem__, key_indexers))
 
         key_indexers = np.bitwise_or.reduce(key_indexers)
-        return self.encoded_indexer_map[key_indexers] # type: ignore
+        return tp.cast(int, self.encoded_indexer_map[key_indexers])

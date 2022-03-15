@@ -1617,11 +1617,9 @@ class IndexHierarchy(IndexBase):
 
     # --------------------------------------------------------------------------
 
-    # TODO: Update typehints for all loc-related functions
-
     def _build_mask_for_key_at_depth(self: IH,
             depth: int,
-            key: tp.Tuple[tp.Union[tp.Hashable, slice, np.ndarray, tp.List[tp.Hashable]], ...],
+            key: tp.Union[np.ndarray, tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]],
             ) -> np.ndarray:
         '''
         Determines the indexer mask for `key` at `depth`.
@@ -1712,7 +1710,7 @@ class IndexHierarchy(IndexBase):
         return ilocs
 
     def _loc_to_iloc_single_key(self: IH,
-            key: tp.Tuple[tp.Union[tp.Hashable, slice, np.ndarray, tp.List[tp.Hashable]], ...],
+            key: tp.Union[np.ndarray, tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]],
             ) -> tp.Union[int, np.ndarray]:
         '''
         Return the indexer for a given key. Key is assumed to not be compound (i.e. HLoc, list of keys, etc)
@@ -1727,7 +1725,7 @@ class IndexHierarchy(IndexBase):
                 if not (k.__class__ is slice and k == NULL_SLICE)
                 ]
 
-        def not_slice_or_mask(obj: tp.Hashable) -> bool:
+        def not_slice_or_mask(obj: tp.Union[slice, tp.Hashable]) -> bool:
             return not (obj.__class__ is np.ndarray and obj.dtype == DTYPE_BOOL) and not obj.__class__ is slice # type: ignore
 
         if len(meaningful_depths) == 1:
@@ -1751,8 +1749,8 @@ class IndexHierarchy(IndexBase):
         return self.positions[mask]
 
     def _loc_to_iloc(self: IH,
-            key: tp.Union[GetItemKeyType, HLoc],
-            ) -> GetItemKeyType:
+            key: tp.Union[IH, HLoc, ILoc, tp.Hashable, tp.Tuple[tp.Hashable, ...], np.ndarray, tp.List[tp.Union[tp.Tuple[tp.Hashable, ...], tp.Hashable]], slice],
+            ) -> tp.Union[int, np.ndarray, tp.List[int], slice]:
         '''
         Given iterable (or instance) of GetItemKeyType, determine the equivalent iloc key.
 
@@ -1833,8 +1831,8 @@ class IndexHierarchy(IndexBase):
         return self._loc_to_iloc_single_key(key)
 
     def loc_to_iloc(self: IH,
-            key: tp.Union[GetItemKeyType, HLoc],
-            ) -> GetItemKeyType:
+            key: tp.Union[IH, HLoc, ILoc, tp.Hashable, tp.Tuple[tp.Hashable, ...], np.ndarray, tp.List[tp.Union[tp.Tuple[tp.Hashable, ...], tp.Hashable]], slice],
+            ) -> tp.Union[int, np.ndarray, tp.List[int], slice]:
         '''
         Given a label (loc) style key (either a label, a list of labels, a slice, an HLoc object, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
 
@@ -1845,7 +1843,7 @@ class IndexHierarchy(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self: IH,
-            key: GetItemKeyType,
+            key: tp.Union[int, np.ndarray, tp.List[int], slice],
             ) -> tp.Union[IH, SingleLabelType]:
         '''
         Extract a new index given an iloc key
@@ -1882,7 +1880,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     def _extract_loc(self: IH,
-            key: GetItemKeyType,
+            key: tp.Union[IH, HLoc, ILoc, tp.Hashable, tp.Tuple[tp.Hashable, ...], np.ndarray, tp.List[tp.Union[tp.Tuple[tp.Hashable, ...], tp.Hashable]], slice],
             ) -> tp.Union[IH, SingleLabelType]:
         '''
         Extract a new index given an loc key
@@ -1890,7 +1888,7 @@ class IndexHierarchy(IndexBase):
         return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self: IH,
-            key: GetItemKeyType,
+            key: tp.Union[int, np.ndarray, tp.List[int], slice],
             ) -> tp.Union[IH, SingleLabelType]:
         '''
         Extract a new index given a key.
