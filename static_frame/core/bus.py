@@ -477,6 +477,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 frames_array = frames
                 load_array = False
             else:
+                if own_data:
+                    raise ErrorInitBus('Cannot use `own_data` when not supplying an array.')
                 if not hasattr(frames, '__len__'):
                     # need to realize generator as must get array size
                     frames = list(frames)
@@ -497,13 +499,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     self._loaded[i] = True
                 else:
                     raise ErrorInitBus(f'supplied {value.__class__} is not a Frame or FrameDeferred.')
+
             self._loaded_all = self._loaded.all()
 
             if own_data or load_array:
                 self._values_mutable = frames_array
-                self._values_mutable.flags.writeable = True
             else:
                 self._values_mutable = frames_array.copy()
+            self._values_mutable.flags.writeable = True
 
         # self._index = index
         self._name = None if name is NAME_DEFAULT else name
@@ -566,7 +569,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         Return a new :obj:`Bus` with an updated name attribute.
         '''
-        # NOTE: do not want to use .values as this will force loading all Frames; use values muetabls and let a copy be made by constructor
+        # NOTE: do not want to use .values as this will force loading all Frames; use _values_mutable and let a copy be made by constructor
         return self.__class__(self._values_mutable,
                 index=self._index,
                 name=name,
@@ -653,11 +656,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 own_index=own_index,
                 check_equals=check_equals,
                 )
+        # NOTE: do not propagate store after reindex
         return self.__class__.from_series(series, config=self._config)
 
     @doc_inject(selector='relabel', class_name='Bus')
     def relabel(self,
-            index: tp.Optional[RelabelInput]
+            index: tp.Optional[RelabelInput],
+            *,
+            index_constructor: IndexConstructor = None,
             ) -> 'Bus':
         '''
         {doc}
@@ -666,9 +672,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             index: {relabel_input}
         '''
         # NOTE: can be done without going trhough a series
-        series = self.to_series().relabel(index)
+        series = self.to_series().relabel(index, index_constructor=index_constructor)
+        # NOTE: do not propagate store after relabel
         return self.__class__.from_series(series, config=self._config)
-
 
     @doc_inject(selector='relabel_flat', class_name='Bus')
     def relabel_flat(self) -> 'Bus':
