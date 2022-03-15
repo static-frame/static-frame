@@ -102,16 +102,16 @@ _NBYTES_GETTER = operator.attrgetter('nbytes')
 
 CompountLabelType = tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]
 LocKeyType = tp.Union[
-    IH,
+    'IndexHierarchy',
     HLoc,
     ILoc,
     CompountLabelType,
     np.ndarray,
     tp.List[CompountLabelType],
-    slice
+    slice,
 ]
 IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice]
-ExtractionType = tp.Union[IH, SingleLabelType]
+ExtractionType = tp.Union['IndexHierarchy', SingleLabelType]
 
 
 def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> np.ndarray:
