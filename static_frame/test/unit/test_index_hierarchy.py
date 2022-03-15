@@ -708,14 +708,11 @@ class TestUnit(TestCase):
 
         ih1 = IndexHierarchy.from_labels(labels)
 
-        ih2 = ih1._extract_iloc(None) # will get a copy
+        ih2 = ih1._extract_iloc(slice(None)) # will get a copy
         self.assertTrue((ih1.values == ih2.values).all()) #type: ignore
-
-        ih3 = ih1._extract_iloc(slice(None)) # will get a copy
-        self.assertTrue((ih1.values == ih3.values).all()) #type: ignore
         # reduces to a tuple
-        ih4 = ih1._extract_iloc(3)
-        self.assertEqual(ih4, ('II', 'A', 2))
+        ih3 = ih1._extract_iloc(3)
+        self.assertEqual(ih3, ('II', 'A', 2))
 
     def test_hierarchy_extract_iloc_b(self) -> None:
 

@@ -100,6 +100,19 @@ TreeNodeT = tp.Dict[tp.Hashable, tp.Union[tp.Sequence[tp.Hashable], 'TreeNodeT']
 
 _NBYTES_GETTER = operator.attrgetter('nbytes')
 
+CompountLabelType = tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]
+LocKeyType = tp.Union[
+    IH,
+    HLoc,
+    ILoc,
+    CompountLabelType,
+    np.ndarray,
+    tp.List[CompountLabelType],
+    slice
+]
+IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice]
+ExtractionType = tp.Union[IH, SingleLabelType]
+
 
 def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> np.ndarray:
     '''
@@ -1619,7 +1632,7 @@ class IndexHierarchy(IndexBase):
 
     def _build_mask_for_key_at_depth(self: IH,
             depth: int,
-            key: tp.Union[np.ndarray, tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]],
+            key: tp.Union[np.ndarray, CompountLabelType],
             ) -> np.ndarray:
         '''
         Determines the indexer mask for `key` at `depth`.
@@ -1710,7 +1723,7 @@ class IndexHierarchy(IndexBase):
         return ilocs
 
     def _loc_to_iloc_single_key(self: IH,
-            key: tp.Union[np.ndarray, tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]],
+            key: tp.Union[np.ndarray, CompountLabelType],
             ) -> tp.Union[int, np.ndarray]:
         '''
         Return the indexer for a given key. Key is assumed to not be compound (i.e. HLoc, list of keys, etc)
@@ -1751,8 +1764,8 @@ class IndexHierarchy(IndexBase):
         return self.positions[mask]
 
     def _loc_to_iloc(self: IH,
-            key: tp.Union[IH, HLoc, ILoc, tp.Hashable, tp.Tuple[tp.Hashable, ...], np.ndarray, tp.List[tp.Union[tp.Tuple[tp.Hashable, ...], tp.Hashable]], slice],
-            ) -> tp.Union[int, np.ndarray, tp.List[int], slice]:
+            key: LocKeyType,
+            ) -> IntegerLocType:
         '''
         Given iterable (or instance) of GetItemKeyType, determine the equivalent iloc key.
 
@@ -1833,8 +1846,8 @@ class IndexHierarchy(IndexBase):
         return self._loc_to_iloc_single_key(key)
 
     def loc_to_iloc(self: IH,
-            key: tp.Union[IH, HLoc, ILoc, tp.Hashable, tp.Tuple[tp.Hashable, ...], np.ndarray, tp.List[tp.Union[tp.Tuple[tp.Hashable, ...], tp.Hashable]], slice],
-            ) -> tp.Union[int, np.ndarray, tp.List[int], slice]:
+            key: LocKeyType,
+            ) -> IntegerLocType:
         '''
         Given a label (loc) style key (either a label, a list of labels, a slice, an HLoc object, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
 
@@ -1845,8 +1858,8 @@ class IndexHierarchy(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self: IH,
-            key: tp.Union[int, np.ndarray, tp.List[int], slice],
-            ) -> tp.Union[IH, SingleLabelType]:
+            key: IntegerLocType,
+            ) -> ExtractionType:
         '''
         Extract a new index given an iloc key
         '''
@@ -1857,9 +1870,6 @@ class IndexHierarchy(IndexBase):
             # return a tuple if selecting a single row
             # NOTE: Selecting a single row may force type coercion before values are added to the tuple; i.e., a datetime64 will go to datetime.date before going to the tuple
             return tuple(self._blocks._extract_array(row_key=key))
-
-        if key is None:
-            return self.copy()
 
         tb = self._blocks._extract(row_key=key)
         new_indices: tp.List[Index] = []
@@ -1882,16 +1892,16 @@ class IndexHierarchy(IndexBase):
                 )
 
     def _extract_loc(self: IH,
-            key: tp.Union[IH, HLoc, ILoc, tp.Hashable, tp.Tuple[tp.Hashable, ...], np.ndarray, tp.List[tp.Union[tp.Tuple[tp.Hashable, ...], tp.Hashable]], slice],
-            ) -> tp.Union[IH, SingleLabelType]:
+            key: LocKeyType,
+            ) -> ExtractionType:
         '''
         Extract a new index given an loc key
         '''
         return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self: IH,
-            key: tp.Union[int, np.ndarray, tp.List[int], slice],
-            ) -> tp.Union[IH, SingleLabelType]:
+            key: IntegerLocType,
+            ) -> ExtractionType:
         '''
         Extract a new index given a key.
         '''
