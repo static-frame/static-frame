@@ -32,8 +32,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index import Index #pylint: disable=W0611,C0412 # pragma: no cover
 
 
-KeyForEngine = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[tp.Hashable], tp.Hashable], ...]]
-_Engine = tp.TypeVar('_Engine', bound='HierarchicalLocMap')
+HierarchicalLocMapKey = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[tp.Hashable], tp.Hashable], ...]]
+_HLMap = tp.TypeVar('_HLMap', bound='HierarchicalLocMap')
 TypePos = tp.Optional[int]
 LocEmptyInstance = LocEmpty()
 
@@ -200,7 +200,7 @@ class LocMap:
 
 class HierarchicalLocMap:
     '''
-    A utility engine utilized by IndexHierarchy in order to quickly map keys to ilocs.
+    A utility utilized by IndexHierarchy in order to quickly map keys to ilocs.
     '''
 
     __slots__ = (
@@ -213,7 +213,7 @@ class HierarchicalLocMap:
     encoding_can_overflow: bool
     encoded_indexer_map: FrozenAutoMap
 
-    def __init__(self: _Engine,
+    def __init__(self: _HLMap,
             *,
             indices: tp.List['Index'],
             indexers: tp.List[np.ndarray],
@@ -230,13 +230,13 @@ class HierarchicalLocMap:
                 )
         self.encoded_indexer_map = self.build_encoded_indexers_map(indexers)
 
-    def __deepcopy__(self: _Engine,
+    def __deepcopy__(self: _HLMap,
             memo: tp.Dict[int, tp.Any],
-            ) -> _Engine:
+            ) -> _HLMap:
         '''
         Return a deep copy of this IndexHierarchy.
         '''
-        obj: _Engine = self.__new__(self.__class__)
+        obj: _HLMap = self.__new__(self.__class__)
         obj.bit_offset_encoders = array_deepcopy(self.bit_offset_encoders, memo)
         obj.encoding_can_overflow = self.encoding_can_overflow
         obj.encoded_indexer_map = deepcopy(self.encoded_indexer_map, memo)
@@ -253,7 +253,7 @@ class HierarchicalLocMap:
         self.bit_offset_encoders.flags.writeable = False
 
     @property
-    def nbytes(self: _Engine) -> int:
+    def nbytes(self: _HLMap) -> int:
         return (
                 sys.getsizeof(self.encoding_can_overflow) +
                 tp.cast(int, self.bit_offset_encoders.nbytes) +
@@ -297,7 +297,7 @@ class HierarchicalLocMap:
         # If the last end bit is greater than 64, then it means we cannot encode a label's indexer into a uint64.
         return bit_start_positions, bit_end_positions[-1] > 64
 
-    def build_encoded_indexers_map(self: _Engine,
+    def build_encoded_indexers_map(self: _HLMap,
             indexers: np.ndarray,
             ) -> FrozenAutoMap:
         '''
@@ -352,8 +352,8 @@ class HierarchicalLocMap:
     def is_single_element(element: tp.Hashable) -> bool:
         return not hasattr(element, '__len__') or isinstance(element, str)
 
-    def build_key_indexers(self: _Engine,
-            key: KeyForEngine,
+    def build_key_indexers(self: _HLMap,
+            key: HierarchicalLocMapKey,
             indices: tp.List['Index'],
             ) -> np.ndarray:
         key_indexers: tp.List[tp.Sequence[int]] = []
@@ -381,8 +381,8 @@ class HierarchicalLocMap:
 
         return combinations
 
-    def loc_to_iloc(self: _Engine,
-            key: KeyForEngine,
+    def loc_to_iloc(self: _HLMap,
+            key: HierarchicalLocMapKey,
             indices: tp.List['Index'],
             ) -> int:
         key_indexers = self.build_key_indexers(key=key, indices=indices)

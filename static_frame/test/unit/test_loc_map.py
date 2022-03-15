@@ -149,21 +149,21 @@ class TestHierarchicalLocMapUnit(TestCase):
             ]
         )
 
-        engine = HierarchicalLocMap(indices=indices, indexers=indexers)
+        hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
 
-        self.assertListEqual(list(engine.encoded_indexer_map), [35, 19, 8, 1, 28, 0, 27, 18, 2, 32])
-        self.assertFalse(engine.encoding_can_overflow)
-        self.assertListEqual(engine.bit_offset_encoders.tolist(), [0, 3])
+        self.assertListEqual(list(hlmap.encoded_indexer_map), [35, 19, 8, 1, 28, 0, 27, 18, 2, 32])
+        self.assertFalse(hlmap.encoding_can_overflow)
+        self.assertListEqual(hlmap.bit_offset_encoders.tolist(), [0, 3])
 
     def test_init_b(self) -> None:
         indices = [Index(()) for _ in range(4)]
         indexers = [np.array(()) for _ in range(4)]
 
-        engine = HierarchicalLocMap(indices=indices, indexers=indexers)
+        hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
 
-        self.assertListEqual(list(engine.encoded_indexer_map), [])
-        self.assertFalse(engine.encoding_can_overflow)
-        self.assertListEqual(engine.bit_offset_encoders.tolist(), [0, 0, 0, 0])
+        self.assertListEqual(list(hlmap.encoded_indexer_map), [])
+        self.assertFalse(hlmap.encoding_can_overflow)
+        self.assertListEqual(hlmap.bit_offset_encoders.tolist(), [0, 0, 0, 0])
 
     def test_init_c(self) -> None:
         indices = [Index((0, 1)), Index((0, 1))]
@@ -203,11 +203,11 @@ class TestHierarchicalLocMapUnit(TestCase):
         self.assertListEqual(offset.tolist(), [0, 8, 11])
         self.assertFalse(overflow)
 
-        engine = SimpleNamespace(
+        hlmap = SimpleNamespace(
                 encoding_can_overflow=overflow,
                 bit_offset_encoders=offset,
                 )
-        result = HierarchicalLocMap.build_encoded_indexers_map(self=engine, indexers=indexers) # type: ignore
+        result = HierarchicalLocMap.build_encoded_indexers_map(self=hlmap, indexers=indexers) # type: ignore
         self.assertEqual(len(result), len(indexers[0]))
 
         self.assertEqual(min(result), 0)
@@ -230,11 +230,11 @@ class TestHierarchicalLocMapUnit(TestCase):
         self.assertListEqual(offset.tolist(), [0, 21, 42, 63])
         self.assertTrue(overflow)
 
-        engine = SimpleNamespace(
+        hlmap = SimpleNamespace(
                 encoding_can_overflow=overflow,
                 bit_offset_encoders=offset,
                 )
-        result = HierarchicalLocMap.build_encoded_indexers_map(self=engine, indexers=indexers) # type: ignore
+        result = HierarchicalLocMap.build_encoded_indexers_map(self=hlmap, indexers=indexers) # type: ignore
         self.assertEqual(len(result), len(indexers[0]))
 
         self.assertEqual(min(result), 0)
@@ -250,19 +250,19 @@ class TestHierarchicalLocMapUnit(TestCase):
     def test_build_key_indexers_from_key_a(self) -> None:
         ih = IndexHierarchy.from_product(range(3), range(4, 7), tuple('ABC'))
 
-        engineA = ih._engine
-        engineB = deepcopy(ih._engine)
-        engineB.encoding_can_overflow = True
+        hlmapA = ih._map
+        hlmapB = deepcopy(ih._map)
+        hlmapB.encoding_can_overflow = True
 
         def check(
                 key: tuple, # type: ignore
                 expected: tp.List[tp.List[int]],
                 ) -> None:
-            resultA = engineA.build_key_indexers(key, indices=ih._indices)
+            resultA = hlmapA.build_key_indexers(key, indices=ih._indices)
             self.assertEqual(resultA.dtype, np.uint64)
             self.assertListEqual(resultA.tolist(), expected)
 
-            resultB = engineB.build_key_indexers(key, indices=ih._indices)
+            resultB = hlmapB.build_key_indexers(key, indices=ih._indices)
             self.assertEqual(resultB.dtype, object)
             self.assertListEqual(resultB.tolist(), expected)
 
@@ -307,19 +307,19 @@ class TestHierarchicalLocMapUnit(TestCase):
             ]
         )
 
-        engine = HierarchicalLocMap(indices=indices, indexers=indexers)
+        hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
 
-        self.assertEqual(engine.loc_to_iloc((2, 'A'), indices), 8)
-        self.assertEqual(engine.loc_to_iloc((2, ['A']), indices), [8])
-        self.assertEqual(engine.loc_to_iloc(([2], 'A'), indices), [8])
-        self.assertEqual(engine.loc_to_iloc(([2], ['A']), indices), [8])
+        self.assertEqual(hlmap.loc_to_iloc((2, 'A'), indices), 8)
+        self.assertEqual(hlmap.loc_to_iloc((2, ['A']), indices), [8])
+        self.assertEqual(hlmap.loc_to_iloc(([2], 'A'), indices), [8])
+        self.assertEqual(hlmap.loc_to_iloc(([2], ['A']), indices), [8])
 
-        self.assertEqual(engine.loc_to_iloc(([0, 3], 'E'), indices), [9, 0])
-        self.assertEqual(engine.loc_to_iloc(([0, 3], ['E']), indices), [9, 0])
-        self.assertEqual(engine.loc_to_iloc(([3, 0], 'E'), indices), [0, 9])
-        self.assertEqual(engine.loc_to_iloc(([3, 0], ['E']), indices), [0, 9])
+        self.assertEqual(hlmap.loc_to_iloc(([0, 3], 'E'), indices), [9, 0])
+        self.assertEqual(hlmap.loc_to_iloc(([0, 3], ['E']), indices), [9, 0])
+        self.assertEqual(hlmap.loc_to_iloc(([3, 0], 'E'), indices), [0, 9])
+        self.assertEqual(hlmap.loc_to_iloc(([3, 0], ['E']), indices), [0, 9])
 
-        self.assertEqual(engine.loc_to_iloc(np.array([0, 'E'], dtype=object), indices), 9)
+        self.assertEqual(hlmap.loc_to_iloc(np.array([0, 'E'], dtype=object), indices), 9)
 
     def test_loc_to_iloc_b(self) -> None:
         indices = [
@@ -333,16 +333,16 @@ class TestHierarchicalLocMapUnit(TestCase):
             ]
         )
 
-        engine = HierarchicalLocMap(indices=indices, indexers=indexers)
+        hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
 
         with self.assertRaises(KeyError):
-            engine.loc_to_iloc((5, 'A'), indices)
+            hlmap.loc_to_iloc((5, 'A'), indices)
 
         with self.assertRaises(KeyError):
-            engine.loc_to_iloc((2, ['E']), indices)
+            hlmap.loc_to_iloc((2, ['E']), indices)
 
         with self.assertRaises(KeyError):
-            engine.loc_to_iloc(([0, 1, 2], ['A', 'B', 'C']), indices)
+            hlmap.loc_to_iloc(([0, 1, 2], ['A', 'B', 'C']), indices)
 
     #---------------------------------------------------------------------------
 
@@ -358,9 +358,9 @@ class TestHierarchicalLocMapUnit(TestCase):
             ]
         )
 
-        engine = HierarchicalLocMap(indices=indices, indexers=indexers)
+        hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
 
-        self.assertEqual(engine.nbytes, 720 + 8 + 8 + 25) # automap + 2 uint64 bit offsets + PyBool
+        self.assertEqual(hlmap.nbytes, 720 + 8 + 8 + 25) # automap + 2 uint64 bit offsets + PyBool
 
     #---------------------------------------------------------------------------
 
@@ -376,16 +376,16 @@ class TestHierarchicalLocMapUnit(TestCase):
             ]
         )
 
-        engine = HierarchicalLocMap(indices=indices, indexers=indexers)
+        hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
 
-        engine_copy = deepcopy(engine)
+        hlmap_copy = deepcopy(hlmap)
 
-        self.assertEqual(engine.encoding_can_overflow, engine_copy.encoding_can_overflow)
-        self.assertListEqual(engine.bit_offset_encoders.tolist(), engine_copy.bit_offset_encoders.tolist())
-        self.assertEqual(engine.encoded_indexer_map, engine_copy.encoded_indexer_map)
+        self.assertEqual(hlmap.encoding_can_overflow, hlmap_copy.encoding_can_overflow)
+        self.assertListEqual(hlmap.bit_offset_encoders.tolist(), hlmap_copy.bit_offset_encoders.tolist())
+        self.assertEqual(hlmap.encoded_indexer_map, hlmap_copy.encoded_indexer_map)
 
-        self.assertNotEqual(id(engine.bit_offset_encoders), id(engine_copy.bit_offset_encoders))
-        self.assertNotEqual(id(engine.encoded_indexer_map), id(engine_copy.encoded_indexer_map))
+        self.assertNotEqual(id(hlmap.bit_offset_encoders), id(hlmap_copy.bit_offset_encoders))
+        self.assertNotEqual(id(hlmap.encoded_indexer_map), id(hlmap_copy.encoded_indexer_map))
 
 
 if __name__ == '__main__':
