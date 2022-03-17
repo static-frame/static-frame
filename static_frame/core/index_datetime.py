@@ -104,7 +104,7 @@ class IndexDatetime(Index):
             other = to_datetime64(other)
             other_is_array = False
         elif other.__class__ is np.ndarray:
-            other_is_array = True
+            other_is_array = True # COV_MISSING
         else:
             other_is_array = False
 
@@ -121,10 +121,10 @@ class IndexDatetime(Index):
             # NOTE: similar branching as in container_util.apply_binary_operator
             if not other_is_array and not hasattr(other, '__len__'):
                 # only expand to the size of the array operand if we are comparing to an element
-                result = np.full(self.shape, result, dtype=DTYPE_BOOL)
+                result = np.full(self.shape, result, dtype=DTYPE_BOOL) # COV_MISSING
             elif other_is_array and other.size == 1:
                 # elements in arrays of 0 or more dimensions are acceptable; this is what NP does for arithmetic operators when the types are compatible
-                result = np.full(self.shape, result, dtype=DTYPE_BOOL)
+                result = np.full(self.shape, result, dtype=DTYPE_BOOL) # COV_MISSING
             else:
                 raise ValueError('operands could not be broadcast together')
                 # raise on unaligned shapes as is done for arithmetic operators
