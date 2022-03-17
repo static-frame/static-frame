@@ -9,7 +9,6 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
-from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
@@ -422,15 +421,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
 
     #---------------------------------------------------------------------------
-    # @doc_inject(selector='bus_init')
-    # def __init__(self,
-    #         series: Series,
-    #         *,
-    #         store: tp.Optional[Store] = None,
-    #         config: StoreConfigMapInitializer = None,
-    #         max_persist: tp.Optional[int] = None,
-    #         own_data: bool = False,
-    #         ):
     def __init__(self,
             frames: tp.Optional[tp.Iterable[tp.Union[Frame, tp.Type[FrameDeferred]]]],
             *,
