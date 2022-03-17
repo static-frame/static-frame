@@ -70,13 +70,17 @@ class Perf(PerfKey):
             if not name.startswith('_') and callable(getattr(self, name)):
                 yield name
 
+class PerfPrivate(Perf):
+    '''For "internal" performance tests that are not part of systematic testing.
+    '''
 
 class Native(PerfKey): pass
 class Reference(PerfKey): pass
-class ReferenceMissing(Reference):
-    '''For classes that do not / cannot run a reference component.
-    '''
 
+
+class NativePrivate(PerfKeyPrivate): pass
+class ReferencePrivate(PerfKeyPrivate): pass
+class ReferencePrivateMissing(PerfKeyPrivate): pass
 
 
 #-------------------------------------------------------------------------------
@@ -906,7 +910,7 @@ class Pivot_R(Pivot, Reference):
 
 
 #-------------------------------------------------------------------------------
-class BusItemsZipPickle(Perf):
+class BusItemsZipPickle(PerfPrivate):
     NUMBER = 1
 
     def __init__(self) -> None:
@@ -932,14 +936,14 @@ class BusItemsZipPickle(Perf):
     def __del__(self) -> None:
         os.unlink(self.fp)
 
-class BusItemsZipPickle_N(BusItemsZipPickle, Native):
+class BusItemsZipPickle_N(BusItemsZipPickle, NativePrivate):
 
     def int_index_str(self) -> None:
         bus = sf.Bus.from_zip_pickle(self.fp, max_persist=100)
         for label, frame in bus.items():
            assert frame.shape[0] == 2
 
-class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
+class BusItemsZipPickle_R(BusItemsZipPickle, ReferencePrivateMissing):
 
     def int_index_str(self) -> None:
         pass
@@ -989,7 +993,7 @@ class FrameToParquet_R(FrameToParquet, Reference):
 
 
 #-------------------------------------------------------------------------------
-class FrameToNPZ(Perf):
+class FrameToNPZ(PerfPrivate):
     NUMBER = 1
 
     def __init__(self) -> None:
@@ -1008,19 +1012,19 @@ class FrameToNPZ(Perf):
     def __del__(self) -> None:
         os.unlink(self.fp)
 
-class FrameToNPZ_N(FrameToNPZ, Native):
+class FrameToNPZ_N(FrameToNPZ, NativePrivate):
 
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_npz(self.fp)
 
-class FrameToNPZ_R(FrameToNPZ, Reference):
+class FrameToNPZ_R(FrameToNPZ, ReferencePrivate):
 
     # NOTE: benchmark is SF to_parquet
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_parquet(self.fp)
 
 
-class FrameFromNPZ(Perf):
+class FrameFromNPZ(PerfPrivate):
     NUMBER = 1
 
     def __init__(self) -> None:
@@ -1046,12 +1050,12 @@ class FrameFromNPZ(Perf):
         os.unlink(self.fp_npz)
         os.unlink(self.fp_parquet)
 
-class FrameFromNPZ_N(FrameFromNPZ, Native):
+class FrameFromNPZ_N(FrameFromNPZ, NativePrivate):
 
     def wide_mixed_index_str(self) -> None:
         sf.Frame.from_npz(self.fp_npz)
 
-class FrameFromNPZ_R(FrameFromNPZ, Reference):
+class FrameFromNPZ_R(FrameFromNPZ, ReferencePrivate):
 
     # NOTE: benchmark is SF from_parquet
     def wide_mixed_index_str(self) -> None:
@@ -1110,28 +1114,6 @@ class Group_R(Group, Reference):
     def tall_group_100(self) -> None:
         post = tuple(self.pdf2.groupby(1))
         assert len(post) == 100
-
-
-
-
-
-#-------------------------------------------------------------------------------
-# class Warnings(Perf):
-#     NUMBER = 50_000
-
-#     def __init__(self) -> None:
-#         super().__init__()
-
-# class WarningsSilent_N(Warnings, Native):
-#     def warnings_context(self) -> None:
-#         with WarningsSilent():
-#             warnings.warn('foo')
-
-# class WarningsSilent_R(Warnings, Reference):
-#     def warnings_context(self) -> None:
-#         with warnings.catch_warnings():
-#             warnings.simplefilter("ignore")
-#             warnings.warn('foo')
 
 
 #-------------------------------------------------------------------------------
@@ -1244,17 +1226,24 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
 
 def yield_classes(
         pattern: str
+        private: bool = False,
         ) -> tp.Iterator[
                 tp.Tuple[
                     tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],
                     str]]:
-
+    '''
+    Args:
+        private: if True, return "private" performance tests
+    '''
     if '.' in pattern:
         pattern_cls, pattern_func = pattern.split('.')
     else:
         pattern_cls, pattern_func = pattern, '*'
 
     for cls_perf in Perf.__subclasses__(): # only get one level
+        if private and isinstance(cls_perf, PerfPrivate):
+            print(f'skipping {cls_perf}')
+            continue
         if pattern_cls and not fnmatch.fnmatch(
                 cls_perf.__name__.lower(), pattern_cls.lower()):
             continue
@@ -1395,7 +1384,7 @@ def performance(
         row['iterations'] = cls_perf.NUMBER
 
         for label, runner in ((Native, runner_n), (Reference, runner_r)):
-            if isinstance(runner, ReferenceMissing):
+            if isinstance(runner, ReferencePrivateMissing):
                 row[label.__name__] = np.nan
             else:
                 row[label.__name__] = timeit.timeit(
