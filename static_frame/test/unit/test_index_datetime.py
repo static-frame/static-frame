@@ -832,6 +832,27 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             post = index_ym.intersection(index_date)
 
+    #---------------------------------------------------------------------------
+    def test_index_datetime_eq_a(self) -> None:
+        with self.assertRaises(ValueError):
+            post = (IndexDate.from_date_range('2021-01-01', '2021-02-01') ==
+            IndexDate.from_date_range('2021-01-02', '2021-02-01'))
+
+    def test_index_datetime_eq_b(self) -> None:
+        post = (IndexDate.from_date_range('2021-01-01', '2021-02-01') ==
+        IndexDate.from_date_range('2021-01-01', '2021-02-01'))
+        self.assertEqual(post.tolist(),
+            [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+            )
+
+    def test_index_datetime_eq_c(self) -> None:
+        post = (IndexDate.from_date_range('2021-01-01', '2021-02-01') ==
+        IndexDate.from_date_range('2021-01-01', '2021-02-01')[:1])
+        self.assertEqual(post.tolist(),
+            [True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+            )
+
+
 
 if __name__ == '__main__':
     import unittest

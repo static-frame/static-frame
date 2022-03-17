@@ -157,17 +157,17 @@ class ContainerOperand(ContainerBase):
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
-            return other.__radd__(self)
+            return NotImplemented
         return self._ufunc_binary_operator(operator=OPERATORS['__add__'], other=other)
 
     def __sub__(self, other: tp.Any) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
-            return other.__rsub__(self)
+            return NotImplemented
         return self._ufunc_binary_operator(operator=OPERATORS['__sub__'], other=other)
 
     def __mul__(self, other: tp.Any) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
-            return other.__rmul__(self)
+            return NotImplemented
         return self._ufunc_binary_operator(operator=OPERATORS['__mul__'], other=other)
 
     def __matmul__(self, other: tp.Any) -> tp.Any:
@@ -175,12 +175,12 @@ class ContainerOperand(ContainerBase):
 
     def __truediv__(self, other: tp.Any) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
-            return other.__rtruediv__(self)
+            return NotImplemented
         return self._ufunc_binary_operator(operator=OPERATORS['__truediv__'], other=other)
 
     def __floordiv__(self, other: tp.Any) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
-            return other.__rfloordiv__(self)
+            return NotImplemented
         return self._ufunc_binary_operator(operator=OPERATORS['__floordiv__'], other=other)
 
     def __mod__(self, other: tp.Any) -> tp.Any:
