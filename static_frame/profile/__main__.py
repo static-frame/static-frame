@@ -1225,7 +1225,7 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
 
 
 def yield_classes(
-        pattern: str
+        pattern: str,
         private: bool = False,
         ) -> tp.Iterator[
                 tp.Tuple[
