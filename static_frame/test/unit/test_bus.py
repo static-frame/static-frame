@@ -126,6 +126,23 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f1, f1_loaded)
             self.assertEqualFrames(f2, f2_loaded)
 
+    def test_bus_init_d(self) -> None:
+        f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+        f2 = ff.parse('s(2,2)|c(I,str)|v(bool)')
+
+        b1 = Bus((f1, f2), index=('a', 'b'))
+        self.assertEqual(b1.shapes.to_pairs(),
+                (('a', (2, 2)), ('b', (2, 2))),
+                )
+
+        b2 = Bus((f1, f2),
+                index=IndexDate(('2021-01-01', '1542-01-22')),
+                own_index=True,
+                )
+        self.assertEqual(b2.keys().values.tolist(),
+                [date(2021, 1, 1), date(1542, 1, 22)]
+                )
+
     #---------------------------------------------------------------------------
 
     def test_bus_from_frames_a(self) -> None:

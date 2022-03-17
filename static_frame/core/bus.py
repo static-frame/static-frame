@@ -9,6 +9,7 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
@@ -120,11 +121,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Bus`
         '''
-        # series = Series.from_items(pairs,
-        #         dtype=DTYPE_OBJECT,
-        #         name=name,
-        #         index_constructor=index_constructor,
-        #         )
         frames = []
         index = []
         for i, f in pairs:
@@ -450,12 +446,15 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         if own_index:
             self._index = index #type: ignore
         else:
-            self._index = index_from_optional_constructor(index,
-                    default_constructor=Index,
-                    explicit_constructor=index_constructor
-                    )
-        count = len(self._index)
+            try:
+                self._index = index_from_optional_constructor(index,
+                        default_constructor=Index,
+                        explicit_constructor=index_constructor
+                        )
+            except ErrorInitIndexNonUnique:
+                raise ErrorInitIndexNonUnique("Frames do not have unique names.") from None
 
+        count = len(self._index)
         frames_array: np.ndarray
 
         if frames is None:
