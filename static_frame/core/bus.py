@@ -425,9 +425,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             self._loaded_all = False
         else:
             if frames.__class__ is np.ndarray:
-                if frames.dtype != DTYPE_OBJECT:
+                if frames.dtype != DTYPE_OBJECT: #type: ignore
                     raise ErrorInitBus(
-                            f'Series passed to initializer must have dtype object, not {frames.dtype}')
+                            f'Series passed to initializer must have dtype object, not {frames.dtype}') #type: ignore
                 frames_array = frames
                 load_array = False
             else:
