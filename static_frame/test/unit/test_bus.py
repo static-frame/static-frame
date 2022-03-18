@@ -29,7 +29,7 @@ from static_frame.core.exception import StoreFileMutation
 from static_frame.core.exception import ErrorInitIndexNonUnique
 
 from static_frame.core.index_datetime import IndexDate
-
+from static_frame.core.index_datetime import IndexYearMonth
 
 class TestUnit(TestCase):
 
@@ -142,6 +142,11 @@ class TestUnit(TestCase):
         self.assertEqual(b2.keys().values.tolist(),
                 [date(2021, 1, 1), date(1542, 1, 22)]
                 )
+
+    def test_bus_init_e(self) -> None:
+        with self.assertRaises(ErrorInitBus):
+            b1 = Bus(np.arange(0,2), index=('a', 'b'))
+
 
     #---------------------------------------------------------------------------
 
@@ -1661,6 +1666,20 @@ class TestUnit(TestCase):
         b1 = Bus.from_dict(dict(a=f1, b=f2))
         self.assertEqual(b1.index.values.tolist(),
                 ['a', 'b'])
+
+    def test_bus_from_dict_b(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Bus.from_dict({'2021-01':f1, '2021-06':f2}, index_constructor=IndexYearMonth)
+        self.assertIs(b1.index.__class__, IndexYearMonth)
+
 
     #---------------------------------------------------------------------------
 
