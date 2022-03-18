@@ -121,11 +121,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Bus`
         '''
-        # series = Series.from_items(pairs,
-        #         dtype=DTYPE_OBJECT,
-        #         name=name,
-        #         index_constructor=index_constructor,
-        #         )
         frames = []
         index = []
         for i, f in pairs:
@@ -422,15 +417,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
 
     #---------------------------------------------------------------------------
-    # @doc_inject(selector='bus_init')
-    # def __init__(self,
-    #         series: Series,
-    #         *,
-    #         store: tp.Optional[Store] = None,
-    #         config: StoreConfigMapInitializer = None,
-    #         max_persist: tp.Optional[int] = None,
-    #         own_data: bool = False,
-    #         ):
     def __init__(self,
             frames: tp.Optional[tp.Iterable[tp.Union[Frame, tp.Type[FrameDeferred]]]],
             *,
@@ -460,12 +446,15 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         if own_index:
             self._index = index #type: ignore
         else:
-            self._index = index_from_optional_constructor(index,
-                    default_constructor=Index,
-                    explicit_constructor=index_constructor
-                    )
-        count = len(self._index)
+            try:
+                self._index = index_from_optional_constructor(index,
+                        default_constructor=Index,
+                        explicit_constructor=index_constructor
+                        )
+            except ErrorInitIndexNonUnique:
+                raise ErrorInitIndexNonUnique("Frames do not have unique names.") from None
 
+        count = len(self._index)
         frames_array: np.ndarray
 
         if frames is None:
