@@ -1229,13 +1229,15 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
 PERF_SUBCLASSES = tuple(p for p in Perf.__subclasses__() if p is not PerfPrivate)
 PERF_PRIVATE_SUBCLASSES = tuple(p for p in PerfPrivate.__subclasses__())
 
+BundleDict = tp.Dict[
+                tp.Union[tp.Type[Perf], tp.Type[PerfKey]],
+                tp.Type[Perf]
+                ]
+
 def yield_classes(
         pattern: str,
         private: bool = False,
-        ) -> tp.Iterator[
-                tp.Tuple[
-                    tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],
-                    str]]:
+        ) -> tp.Iterator[tp.Tuple[BundleDict, str]]:
     '''
     Args:
         private: if True, return "private" performance tests
@@ -1255,7 +1257,7 @@ def yield_classes(
                 cls_perf.__name__.lower(), pattern_cls.lower()):
             continue
 
-        runners: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]] = {Perf: cls_perf}
+        runners: BundleDict = {Perf: cls_perf}
 
         for cls_runner in cls_perf.__subclasses__():
             for cls in (Native, Reference):
@@ -1371,7 +1373,7 @@ PerformanceRecord = tp.MutableMapping[str,
         tp.Union[str, float, bool, tp.Optional[PerfStatus]]]
 
 def performance(
-        bundle: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],
+        bundle: BundleDict,
         pattern_func: str,
         ) -> tp.Iterator[PerformanceRecord]:
 
@@ -1476,13 +1478,13 @@ def main() -> None:
             if options.performance:
                 records.extend(performance(bundle, pattern_func))
             if options.profile:
-                profile(bundle[Native], pattern_func) #type: ignore
+                profile(bundle[Native], pattern_func)
             if options.graph:
-                graph(bundle[Native], pattern_func) #type: ignore
+                graph(bundle[Native], pattern_func)
             if options.instrument:
-                instrument(bundle[Native], pattern_func) #type: ignore
+                instrument(bundle[Native], pattern_func)
             if options.line:
-                line(bundle[Native], pattern_func) #type: ignore
+                line(bundle[Native], pattern_func)
 
     itemize = False # make CLI option maybe
 
