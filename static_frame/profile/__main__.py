@@ -11,6 +11,8 @@ import sys
 import datetime
 import tempfile
 from enum import Enum
+from itertools import chain
+
 # import warnings
 
 from pyinstrument import Profiler #type: ignore
@@ -52,9 +54,8 @@ class FunctionMetaData(tp.NamedTuple):
     perf_status: tp.Optional[PerfStatus] = None
     explanation: str = ''
 
-class PerfKey: pass
 
-class Perf(PerfKey):
+class Perf:
     NUMBER = 100_000
 
     def __init__(self) -> None:
@@ -74,13 +75,10 @@ class PerfPrivate(Perf):
     '''For "internal" performance tests that are not part of systematic testing.
     '''
 
+class PerfKey: pass
 class Native(PerfKey): pass
 class Reference(PerfKey): pass
-
-
-class NativePrivate(PerfKeyPrivate): pass
-class ReferencePrivate(PerfKeyPrivate): pass
-class ReferencePrivateMissing(PerfKeyPrivate): pass
+class ReferenceMissing(Reference): pass
 
 
 #-------------------------------------------------------------------------------
@@ -936,14 +934,14 @@ class BusItemsZipPickle(PerfPrivate):
     def __del__(self) -> None:
         os.unlink(self.fp)
 
-class BusItemsZipPickle_N(BusItemsZipPickle, NativePrivate):
+class BusItemsZipPickle_N(BusItemsZipPickle, Native):
 
     def int_index_str(self) -> None:
         bus = sf.Bus.from_zip_pickle(self.fp, max_persist=100)
         for label, frame in bus.items():
            assert frame.shape[0] == 2
 
-class BusItemsZipPickle_R(BusItemsZipPickle, ReferencePrivateMissing):
+class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
 
     def int_index_str(self) -> None:
         pass
@@ -1012,12 +1010,12 @@ class FrameToNPZ(PerfPrivate):
     def __del__(self) -> None:
         os.unlink(self.fp)
 
-class FrameToNPZ_N(FrameToNPZ, NativePrivate):
+class FrameToNPZ_N(FrameToNPZ, Native):
 
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_npz(self.fp)
 
-class FrameToNPZ_R(FrameToNPZ, ReferencePrivate):
+class FrameToNPZ_R(FrameToNPZ, Reference):
 
     # NOTE: benchmark is SF to_parquet
     def wide_mixed_index_str(self) -> None:
@@ -1050,12 +1048,12 @@ class FrameFromNPZ(PerfPrivate):
         os.unlink(self.fp_npz)
         os.unlink(self.fp_parquet)
 
-class FrameFromNPZ_N(FrameFromNPZ, NativePrivate):
+class FrameFromNPZ_N(FrameFromNPZ, Native):
 
     def wide_mixed_index_str(self) -> None:
         sf.Frame.from_npz(self.fp_npz)
 
-class FrameFromNPZ_R(FrameFromNPZ, ReferencePrivate):
+class FrameFromNPZ_R(FrameFromNPZ, Reference):
 
     # NOTE: benchmark is SF from_parquet
     def wide_mixed_index_str(self) -> None:
@@ -1221,8 +1219,15 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
             action='store_true',
             default=False,
             )
+    p.add_argument('--private',
+            help='Enable selection from private tests',
+            action='store_true',
+            default=False,
+            )
     return p
 
+PERF_SUBCLASSES = tuple(p for p in Perf.__subclasses__() if p is not PerfPrivate)
+PERF_PRIVATE_SUBCLASSES = tuple(p for p in PerfPrivate.__subclasses__())
 
 def yield_classes(
         pattern: str,
@@ -1240,10 +1245,12 @@ def yield_classes(
     else:
         pattern_cls, pattern_func = pattern, '*'
 
-    for cls_perf in Perf.__subclasses__(): # only get one level
-        if private and isinstance(cls_perf, PerfPrivate):
-            print(f'skipping {cls_perf}')
+    for cls_perf in chain(PERF_SUBCLASSES, PERF_PRIVATE_SUBCLASSES):
+        if not private and issubclass(cls_perf, PerfPrivate):
             continue
+        elif private and not issubclass(cls_perf, PerfPrivate):
+            continue
+
         if pattern_cls and not fnmatch.fnmatch(
                 cls_perf.__name__.lower(), pattern_cls.lower()):
             continue
@@ -1255,6 +1262,7 @@ def yield_classes(
                 if issubclass(cls_runner, cls):
                     runners[cls] = cls_runner
                     break
+        assert len(runners) == 3
         yield runners, pattern_func
 
 
@@ -1384,7 +1392,7 @@ def performance(
         row['iterations'] = cls_perf.NUMBER
 
         for label, runner in ((Native, runner_n), (Reference, runner_r)):
-            if isinstance(runner, ReferencePrivateMissing):
+            if isinstance(runner, ReferenceMissing):
                 row[label.__name__] = np.nan
             else:
                 row[label.__name__] = timeit.timeit(
@@ -1464,7 +1472,7 @@ def main() -> None:
     records: tp.List[PerformanceRecord] = []
 
     for pattern in options.patterns:
-        for bundle, pattern_func in yield_classes(pattern):
+        for bundle, pattern_func in yield_classes(pattern, private=options.private):
             if options.performance:
                 records.extend(performance(bundle, pattern_func))
             if options.profile:
@@ -1507,13 +1515,7 @@ def main() -> None:
                 print(c)
                 print(alt[c].sort_values().display(config))
 
-        # if 'sf/pd' in frame.columns:
-        #     print('mean: {}'.format(round(frame['sf/pd'].mean(), 6)))
-        #     print('wins: {}/{}'.format((frame['sf/pd'] < 1.05).sum(), len(frame)))
-
-
-        # getting an Markdown table
-
+        # getting a Markdown table
         # print(display[display.columns.iloc[:-2]].to_markdown(config=sf.DisplayConfig(include_index=False, cell_max_width=np.inf, cell_max_width_leftmost=np.inf, type_show=False, display_rows=np.inf)))
 
 
