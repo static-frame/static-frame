@@ -864,7 +864,7 @@ class Index(IndexBase):
             self._update_array_cache()
 
         return LocMap.loc_to_iloc(
-                label_to_pos=self._map, #type: ignore
+                label_to_pos=self._map,
                 labels=self._labels,
                 positions=self._positions, # always an np.ndarray
                 key=key,

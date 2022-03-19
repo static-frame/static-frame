@@ -591,7 +591,7 @@ class TestUnit(TestCase):
         idx1 = IndexAutoFactory.from_optional_constructor(3,
                 default_constructor=IndexGO)
         idx1.append(3) # type: ignore
-        post = idx1._loc_to_iloc(np.array([True, False, True, False])) #type: ignore
+        post = idx1._loc_to_iloc(np.array([True, False, True, False]))
         self.assertEqual(post.tolist(), [True, False, True, False]) #type: ignore
 
     #---------------------------------------------------------------------------
