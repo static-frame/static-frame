@@ -117,10 +117,11 @@ class IndexDatetime(Index):
             with WarningsSilent():
                 result = operator(self._labels, other)
 
-        if result is False or result is True:
-            # NOTE: similar branching as in container_util.apply_binary_operator
-            if not other_is_array and not hasattr(other, '__len__'):
-                # only expand to the size of the array operand if we are comparing to an element
+        # NOTE: similar branching as in container_util.apply_binary_operator
+        # NOTE: all string will have been converted to dt64, or raise ValueError; comparison to same sized iterables (list, tuple) will result in an array when they are the same size
+        if result is False: # will never be True
+            if not other_is_array and hasattr(other, '__len__') and len(other) == len(self):
+                # NOTE: equality comparisons of an array to same sized iterable normally return an array, but with dt64 types they just return False
                 result = np.full(self.shape, result, dtype=DTYPE_BOOL)
             elif other_is_array and other.size == 1:
                 # elements in arrays of 0 or more dimensions are acceptable; this is what NP does for arithmetic operators when the types are compatible
@@ -128,7 +129,6 @@ class IndexDatetime(Index):
             else:
                 raise ValueError('operands could not be broadcast together')
                 # raise on unaligned shapes as is done for arithmetic operators
-
 
         result.flags.writeable = False
         return result

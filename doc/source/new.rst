@@ -1,10 +1,17 @@
 What is New in Static Frame
 ===============================
 
+0.8.38
+----------
+
+Further improved handling of binary equality operators with ``IndexDatetime`` subclasses.
+
+
 0.8.37
 ----------
 
-Improved handling of binary equality operators with ``IndexDate`` and related index objects.
+Improved handling of binary equality operators with ``IndexDatetime`` subclasses.
+
 
 0.8.36
 ----------

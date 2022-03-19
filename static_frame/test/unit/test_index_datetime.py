@@ -852,7 +852,22 @@ class TestUnit(TestCase):
             [True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
             )
 
+    def test_index_datetime_eq_d(self) -> None:
+        post = (IndexDate.from_date_range('2021-01-01', '2021-02-01') ==
+        IndexDate.from_date_range('2021-01-01', '2021-02-01').values)
+        self.assertEqual(post.sum(), 32)
 
+    def test_index_datetime_eq_e(self) -> None:
+        post = IndexDate.from_date_range('2021-01-01', '2021-02-01') == np.array(3)
+        self.assertEqual(post.sum(), 0)
+
+    def test_index_datetime_eq_f(self) -> None:
+        post = IndexDate.from_date_range('2021-01-01', '2021-01-03') == (3, 2, 1)
+        self.assertEqual(post.sum(), 0)
+
+    def test_index_datetime_eq_g(self) -> None:
+        with self.assertRaises(ValueError):
+            _ = IndexDate.from_date_range('2021-01-01', '2021-01-03') == (3, 2)
 
 if __name__ == '__main__':
     import unittest

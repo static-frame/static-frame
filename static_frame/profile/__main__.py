@@ -50,9 +50,8 @@ class FunctionMetaData(tp.NamedTuple):
     perf_status: tp.Optional[PerfStatus] = None
     explanation: str = ''
 
-class PerfKey: pass
 
-class Perf(PerfKey):
+class Perf:
     NUMBER = 100_000
 
     def __init__(self) -> None:
@@ -68,13 +67,14 @@ class Perf(PerfKey):
             if not name.startswith('_') and callable(getattr(self, name)):
                 yield name
 
-
-class Native(PerfKey): pass
-class Reference(PerfKey): pass
-class ReferenceMissing(Reference):
-    '''For classes that do not / cannot run a reference component.
+class PerfPrivate(Perf):
+    '''For "internal" performance tests that are not part of systematic testing.
     '''
 
+class PerfKey: pass
+class Native(PerfKey): pass
+class Reference(PerfKey): pass
+class ReferenceMissing(Reference): pass
 
 
 #-------------------------------------------------------------------------------
@@ -904,7 +904,7 @@ class Pivot_R(Pivot, Reference):
 
 
 #-------------------------------------------------------------------------------
-class BusItemsZipPickle(Perf):
+class BusItemsZipPickle(PerfPrivate):
     NUMBER = 1
 
     def __init__(self) -> None:
@@ -987,7 +987,7 @@ class FrameToParquet_R(FrameToParquet, Reference):
 
 
 #-------------------------------------------------------------------------------
-class FrameToNPZ(Perf):
+class FrameToNPZ(PerfPrivate):
     NUMBER = 1
 
     def __init__(self) -> None:
@@ -1018,7 +1018,7 @@ class FrameToNPZ_R(FrameToNPZ, Reference):
         self.sff1.to_parquet(self.fp)
 
 
-class FrameFromNPZ(Perf):
+class FrameFromNPZ(PerfPrivate):
     NUMBER = 1
 
     def __init__(self) -> None:
@@ -1108,28 +1108,6 @@ class Group_R(Group, Reference):
     def tall_group_100(self) -> None:
         post = tuple(self.pdf2.groupby(1))
         assert len(post) == 100
-
-
-
-
-
-#-------------------------------------------------------------------------------
-# class Warnings(Perf):
-#     NUMBER = 50_000
-
-#     def __init__(self) -> None:
-#         super().__init__()
-
-# class WarningsSilent_N(Warnings, Native):
-#     def warnings_context(self) -> None:
-#         with WarningsSilent():
-#             warnings.warn('foo')
-
-# class WarningsSilent_R(Warnings, Reference):
-#     def warnings_context(self) -> None:
-#         with warnings.catch_warnings():
-#             warnings.simplefilter('ignore')
-#             warnings.warn('foo')
 
 
 #-------------------------------------------------------------------------------
@@ -1639,33 +1617,52 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
             action='store_true',
             default=False,
             )
+    p.add_argument('--private',
+            help='Enable selection from private tests',
+            action='store_true',
+            default=False,
+            )
     return p
 
+PERF_SUBCLASSES = tuple(p for p in Perf.__subclasses__() if p is not PerfPrivate)
+PERF_PRIVATE_SUBCLASSES = tuple(p for p in PerfPrivate.__subclasses__())
+
+BundleDict = tp.Dict[
+                tp.Union[tp.Type[Perf], tp.Type[PerfKey]],
+                tp.Type[Perf]
+                ]
 
 def yield_classes(
-        pattern: str
-        ) -> tp.Iterator[
-                tp.Tuple[
-                    tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],
-                    str]]:
-
+        pattern: str,
+        private: bool = False,
+        ) -> tp.Iterator[tp.Tuple[BundleDict, str]]:
+    '''
+    Args:
+        private: if True, return "private" performance tests
+    '''
     if '.' in pattern:
         pattern_cls, pattern_func = pattern.split('.')
     else:
         pattern_cls, pattern_func = pattern, '*'
 
-    for cls_perf in Perf.__subclasses__(): # only get one level
+    for cls_perf in chain(PERF_SUBCLASSES, PERF_PRIVATE_SUBCLASSES):
+        if not private and issubclass(cls_perf, PerfPrivate):
+            continue
+        elif private and not issubclass(cls_perf, PerfPrivate):
+            continue
+
         if pattern_cls and not fnmatch.fnmatch(
                 cls_perf.__name__.lower(), pattern_cls.lower()):
             continue
 
-        runners: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]] = {Perf: cls_perf}
+        runners: BundleDict = {Perf: cls_perf}
 
         for cls_runner in cls_perf.__subclasses__():
             for cls in (Native, Reference):
                 if issubclass(cls_runner, cls):
                     runners[cls] = cls_runner
                     break
+        assert len(runners) == 3
         yield runners, pattern_func
 
 
@@ -1777,7 +1774,7 @@ PerformanceRecord = tp.MutableMapping[str,
         tp.Union[str, float, bool, tp.Optional[PerfStatus]]]
 
 def performance(
-        bundle: tp.Dict[tp.Type[PerfKey], tp.Type[PerfKey]],
+        bundle: BundleDict,
         pattern_func: str,
         ) -> tp.Iterator[PerformanceRecord]:
 
@@ -1878,17 +1875,17 @@ def main() -> None:
     records: tp.List[PerformanceRecord] = []
 
     for pattern in options.patterns:
-        for bundle, pattern_func in yield_classes(pattern):
+        for bundle, pattern_func in yield_classes(pattern, private=options.private):
             if options.performance:
                 records.extend(performance(bundle, pattern_func))
             if options.profile:
-                profile(bundle[Native], pattern_func) #type: ignore
+                profile(bundle[Native], pattern_func)
             if options.graph:
-                graph(bundle[Native], pattern_func) #type: ignore
+                graph(bundle[Native], pattern_func)
             if options.instrument:
-                instrument(bundle[Native], pattern_func) #type: ignore
+                instrument(bundle[Native], pattern_func)
             if options.line:
-                line(bundle[Native], pattern_func) #type: ignore
+                line(bundle[Native], pattern_func)
 
     itemize = False # make CLI option maybe
 
@@ -1921,13 +1918,7 @@ def main() -> None:
                 print(c)
                 print(alt[c].sort_values().display(config))
 
-        # if 'sf/pd' in frame.columns:
-        #     print('mean: {}'.format(round(frame['sf/pd'].mean(), 6)))
-        #     print('wins: {}/{}'.format((frame['sf/pd'] < 1.05).sum(), len(frame)))
-
-
-        # getting an Markdown table
-
+        # getting a Markdown table
         # print(display[display.columns.iloc[:-2]].to_markdown(config=sf.DisplayConfig(include_index=False, cell_max_width=np.inf, cell_max_width_leftmost=np.inf, type_show=False, display_rows=np.inf)))
 
 
