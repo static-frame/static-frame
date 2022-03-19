@@ -1645,7 +1645,7 @@ def yield_classes(
     else:
         pattern_cls, pattern_func = pattern, '*'
 
-    for cls_perf in chain(PERF_SUBCLASSES, PERF_PRIVATE_SUBCLASSES):
+    for cls_perf in itertools.chain(PERF_SUBCLASSES, PERF_PRIVATE_SUBCLASSES):
         if not private and issubclass(cls_perf, PerfPrivate):
             continue
         elif private and not issubclass(cls_perf, PerfPrivate):
