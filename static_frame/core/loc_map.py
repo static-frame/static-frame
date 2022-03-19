@@ -45,7 +45,6 @@ class LocMap:
             label_to_pos: tp.Callable[[tp.Iterable[tp.Hashable]], int],
             key: slice,
             labels: tp.Optional[np.ndarray] = None,
-            offset: tp.Optional[int] = 0
             ) -> tp.Iterator[tp.Union[int, None]]:
         '''Given a slice ``key`` and a label-to-position mapping, yield each integer argument necessary to create a new iloc slice. If the ``key`` defines a region with no constituents, raise ``LocEmpty``
 
@@ -53,7 +52,6 @@ class LocMap:
             label_to_pos: callable into mapping (can be a get() method from a dictionary)
         '''
         # NOTE: it is expected that NULL_SLICE is already identified
-        offset_apply = not offset is None
         labels_astype: tp.Optional[np.ndarray] = None
 
         for field in SLICE_ATTRS:
@@ -93,8 +91,6 @@ class LocMap:
                     else:
                         raise LocEmptyInstance
 
-                if offset_apply:
-                    pos += offset #type: ignore
                 yield pos
 
             else:
@@ -103,8 +99,6 @@ class LocMap:
                     if pos is None:
                         # NOTE: could raise LocEmpty() to silently handle this
                         raise LocInvalid('Invalid loc given in a slice', attr, field)
-                    if offset_apply:
-                        pos += offset #type: ignore
                 else: # step
                     pos = attr # should be an integer
                     if not isinstance(pos, INT_TYPES):
@@ -120,20 +114,17 @@ class LocMap:
             labels: np.ndarray,
             positions: np.ndarray,
             key: GetItemKeyType,
-            offset: tp.Optional[int] = None,
             partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
         Note: all SF objects (Series, Index) need to be converted to basic types before being passed as `key` to this function.
 
         Args:
-            offset: in the context of an IndexHierarchical, the iloc positions returned from this funcition need to be shifted.
             partial_selection: if True and key is an iterable of labels that includes labels not in the mapping, available matches will be returned rather than raising.
         Returns:
             An integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
         # NOTE: ILoc is handled prior to this call, in the Index._loc_to_iloc method
-        offset_apply = not offset is None
 
         if key.__class__ is slice:
             if key == NULL_SLICE:
@@ -143,8 +134,7 @@ class LocMap:
                 return slice(*cls.map_slice_args(
                         label_to_pos.get, #type: ignore
                         key,
-                        labels,
-                        offset)
+                        labels)
                         )
             except LocEmpty:
                 return EMPTY_SLICE
@@ -188,13 +178,9 @@ class LocMap:
             # NOTE: we do more branching here to optimize performance
             if partial_selection:
                 return [label_to_pos[k] for k in key if k in label_to_pos] # type: ignore
-            if offset_apply:
-                return [label_to_pos[k] + offset for k in key] #type: ignore
             return [label_to_pos[k] for k in key] # type: ignore
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
-        if offset_apply:
-            return label_to_pos[key] + offset #type: ignore
         return label_to_pos[key] #type: ignore
 
 

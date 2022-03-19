@@ -828,7 +828,6 @@ class Index(IndexBase):
 
     def _loc_to_iloc(self,
             key: GetItemKeyType,
-            offset: tp.Optional[int] = None,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
             ) -> GetItemKeyType:
@@ -836,7 +835,6 @@ class Index(IndexBase):
         Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
 
         Args:
-            offset: A default of None is critical to avoid large overhead in unnecessary application of offsets.
             key_transform: A function that transforms keys to specialized type; used by IndexDate indices.
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
@@ -846,7 +844,7 @@ class Index(IndexBase):
 
         key = key_from_container_key(self, key)
 
-        if self._map is None and offset is None: # loc_is_iloc
+        if self._map is None: # loc_is_iloc
             if key.__class__ is np.ndarray:
                 if key.dtype == bool: #type: ignore
                     return key
@@ -857,13 +855,6 @@ class Index(IndexBase):
             elif key.__class__ is slice:
                 key = slice_to_inclusive_slice(key) #type: ignore
             return key
-
-        if self._map is None and offset is not None: # loc_is_iloc
-            # PERF: isolate for usage of _positions
-            if self._recache:
-                self._update_array_cache()
-
-            return self._positions[key] + offset
 
         if key_transform:
             key = key_transform(key)
@@ -877,7 +868,6 @@ class Index(IndexBase):
                 labels=self._labels,
                 positions=self._positions, # always an np.ndarray
                 key=key,
-                offset=offset,
                 partial_selection=partial_selection,
                 )
 

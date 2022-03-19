@@ -136,7 +136,6 @@ class IndexDatetime(Index):
     def _loc_to_iloc(self,  # type: ignore
             key: GetItemKeyType,
             *,
-            offset: tp.Optional[int] = None,
             partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
@@ -145,7 +144,6 @@ class IndexDatetime(Index):
         # not passing self.dtype to key_to_datetime_key so as to allow translation to a foreign datetime; slice comparison will be handled by map_slice_args
         return Index._loc_to_iloc(self,
                 key=key,
-                offset=offset,
                 key_transform=key_to_datetime_key,
                 partial_selection=partial_selection,
                 )

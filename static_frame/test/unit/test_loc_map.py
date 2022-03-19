@@ -29,7 +29,6 @@ class TestLocMapUnit(TestCase):
                 labels=idx._labels,
                 positions=idx._positions,
                 key='b',
-                offset=0,
                 partial_selection=False,
                 )
         self.assertEqual(post1, 1)
@@ -39,7 +38,6 @@ class TestLocMapUnit(TestCase):
                 labels=idx._labels,
                 positions=idx._positions,
                 key=NULL_SLICE,
-                offset=None,
                 partial_selection=False,
                 )
         self.assertEqual(post2, NULL_SLICE)
@@ -51,20 +49,9 @@ class TestLocMapUnit(TestCase):
                 labels=idx._labels,
                 positions=idx._positions,
                 key=['b', 'd'],
-                offset=None,
                 partial_selection=False,
                 )
         self.assertEqual(post1, [1, 3])
-
-        post2 = LocMap.loc_to_iloc(
-                label_to_pos=idx._map,
-                labels=idx._labels,
-                positions=idx._positions,
-                key=['b', 'd'],
-                offset=10,
-                partial_selection=False,
-                )
-        self.assertEqual(post2, [11, 13])
 
     def test_loc_map_slice_a(self) -> None:
         dt64 = np.datetime64
@@ -75,7 +62,6 @@ class TestLocMapUnit(TestCase):
                 labels=idx._labels,
                 positions=idx._positions,
                 key=slice(dt64('1985-01-01'), dt64('1985-01-04')),
-                offset=None,
                 partial_selection=False,
                 )
         self.assertEqual(post1, slice(0, 4, None))
@@ -85,7 +71,6 @@ class TestLocMapUnit(TestCase):
                 labels=idx._labels,
                 positions=idx._positions,
                 key=slice(dt64('1985-01-01'), dt64('1985-01-04'), 2),
-                offset=None,
                 partial_selection=False,
                 )
         self.assertEqual(post2, slice(0, 4, 2))
@@ -100,7 +85,6 @@ class TestLocMapUnit(TestCase):
                     labels=idx._labels,
                     positions=idx._positions,
                     key=slice(dt64('1985-01-01'), dt64('1985-01-04'), dt64('1985-01-04')),
-                    offset=None,
                     partial_selection=False,
                     )
 
@@ -113,10 +97,9 @@ class TestLocMapUnit(TestCase):
                 labels=idx._labels,
                 positions=idx._positions,
                 key=slice(dt64('1985-01-01'), dt64('1985-01-04')),
-                offset=2,
                 partial_selection=False,
                 )
-        self.assertEqual(post1, slice(2, 6, None))
+        self.assertEqual(post1, slice(0, 4, None))
 
     def test_loc_map_slice_d(self) -> None:
         dt64 = np.datetime64
@@ -127,7 +110,6 @@ class TestLocMapUnit(TestCase):
                 labels=idx._labels,
                 positions=idx._positions,
                 key=slice(dt64('1985-01'), dt64('1985-03')),
-                offset=None,
                 partial_selection=False,
                 )
         self.assertEqual(post1, slice(0, 85, None))
@@ -198,14 +180,14 @@ class TestHierarchicalLocMapUnit(TestCase):
         sizes = [188, 5, 77]
         indexers = build_indexers_from_product(sizes)
 
-        offset, overflow = HierarchicalLocMap.build_offsets_and_overflow(sizes)
+        bit_offsets, overflow = HierarchicalLocMap.build_offsets_and_overflow(sizes)
 
-        self.assertListEqual(offset.tolist(), [0, 8, 11])
+        self.assertListEqual(bit_offsets.tolist(), [0, 8, 11])
         self.assertFalse(overflow)
 
         hlmap = SimpleNamespace(
                 encoding_can_overflow=overflow,
-                bit_offset_encoders=offset,
+                bit_offset_encoders=bit_offsets,
                 )
         result = HierarchicalLocMap.build_encoded_indexers_map(self=hlmap, indexers=indexers) # type: ignore
         self.assertEqual(len(result), len(indexers[0]))
@@ -215,7 +197,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
         # Manually check every element to ensure it encodes to the same value
         for i, row in enumerate(np.array(indexers).T):
-            encoded = np.bitwise_or.reduce(row.astype(np.uint64) << offset)
+            encoded = np.bitwise_or.reduce(row.astype(np.uint64) << bit_offsets)
             self.assertEqual(i, result[encoded])
 
     def test_build_encoded_indexers_map_b(self) -> None:
@@ -225,14 +207,14 @@ class TestHierarchicalLocMapUnit(TestCase):
         arr = PositionsAllocator.get(size)
         indexers = np.array([arr for _ in range(4)])
 
-        offset, overflow = HierarchicalLocMap.build_offsets_and_overflow(sizes)
+        bit_offsets, overflow = HierarchicalLocMap.build_offsets_and_overflow(sizes)
 
-        self.assertListEqual(offset.tolist(), [0, 21, 42, 63])
+        self.assertListEqual(bit_offsets.tolist(), [0, 21, 42, 63])
         self.assertTrue(overflow)
 
         hlmap = SimpleNamespace(
                 encoding_can_overflow=overflow,
-                bit_offset_encoders=offset,
+                bit_offset_encoders=bit_offsets,
                 )
         result = HierarchicalLocMap.build_encoded_indexers_map(self=hlmap, indexers=indexers) # type: ignore
         self.assertEqual(len(result), len(indexers[0]))
@@ -242,7 +224,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
         # Manually encode the last row to ensure it matches!
         indexer = np.array([size - 1 for _ in range(4)], dtype=object)
-        encoded = np.bitwise_or.reduce(indexer << offset)
+        encoded = np.bitwise_or.reduce(indexer << bit_offsets)
         self.assertEqual(max(result), encoded)
 
     #---------------------------------------------------------------------------
