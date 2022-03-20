@@ -69,17 +69,6 @@ Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/Investment
 Context: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_
 
 
-
-
-Why Immutable Data?
--------------------------------
-
-The following example, executed in a low-memory environment (using ``prlimit``), shows how Pandas cannot re-label columns of a DataFrame or concatenate a DataFrame to itself without copying underlying data. By using immutable NumPy arrays, StaticFrame can perform these operations in the same low-memory environment. By reusing immutable arrays without copying, StaticFrame can achieve more efficient memory usage.
-
-.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-low-memory-ops-verbose.svg
-   :align: center
-
-
 Installation
 -------------------------------
 
