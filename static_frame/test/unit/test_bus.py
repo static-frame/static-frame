@@ -147,6 +147,22 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitBus):
             b1 = Bus(np.arange(0,2), index=('a', 'b'))
 
+    def test_bus_init_f(self) -> None:
+        with self.assertRaises(ErrorInitBus):
+            _ = Bus(frames=None, index=('a', 'b', 'c'))
+
+    def test_bus_init_g(self) -> None:
+        f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+        f2 = ff.parse('s(2,2)|c(I,str)|v(bool)')
+
+        with self.assertRaises(ErrorInitBus):
+            _ = Bus((f1, f2), index=('a', 'b'), own_data=True)
+
+    def test_bus_init_h(self) -> None:
+        f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+
+        with self.assertRaises(ErrorInitBus):
+                b1 = Bus((f for f in (f1,)), index=('a', 'b'))
 
     #---------------------------------------------------------------------------
 
@@ -163,6 +179,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitIndexNonUnique):
             _ = Bus.from_frames((f1, f2))
+
 
     #---------------------------------------------------------------------------
 

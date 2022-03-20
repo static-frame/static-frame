@@ -290,6 +290,7 @@ SeriesInitializer = tp.Union[
 # support single items, or numpy arrays, or values that can be made into a 2D array
 FRAME_INITIALIZER_DEFAULT = object()
 CONTINUATION_TOKEN_INACTIVE = object()
+ZIP_LONGEST_DEFAULT = object()
 
 FrameInitializer = tp.Union[
         tp.Iterable[tp.Iterable[tp.Any]],

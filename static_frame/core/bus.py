@@ -1,5 +1,5 @@
 import typing as tp
-
+from itertools import zip_longest
 import numpy as np
 
 from static_frame.core.container import ContainerBase
@@ -44,6 +44,8 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import ZIP_LONGEST_DEFAULT
+
 from static_frame.core.style_config import StyleConfig
 # from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
@@ -419,7 +421,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         if frames is None:
             if store is None:
-                raise ErrorInitBus('Cannot initialize a :obj:`Bus` with neither `frames` not `store`.')
+                raise ErrorInitBus('Cannot initialize a :obj:`Bus` with neither `frames` nor `store`.')
             self._values_mutable = np.full(count, FrameDeferred, dtype=DTYPE_OBJECT)
             self._loaded = np.full(count, False, dtype=DTYPE_BOOL)
             self._loaded_all = False
@@ -433,15 +435,20 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             else:
                 if own_data:
                     raise ErrorInitBus('Cannot use `own_data` when not supplying an array.')
-                if not hasattr(frames, '__len__'):
-                    # need to realize generator as must get array size
-                    frames = list(frames)
                 frames_array = np.empty(count, dtype=DTYPE_OBJECT)
                 load_array = True
 
             self._loaded = np.empty(count, dtype=DTYPE_BOOL)
             # do a one time iteration of series
-            for i, (label, value) in enumerate(zip(index, frames)):
+
+            for i, (label, value) in enumerate(zip_longest(
+                    index,
+                    frames,
+                    fillvalue=ZIP_LONGEST_DEFAULT,
+                    )):
+                if label is ZIP_LONGEST_DEFAULT or value is ZIP_LONGEST_DEFAULT:
+                    raise ErrorInitBus('frames and index are not of equal length')
+
                 if load_array:
                     frames_array[i] = value
 
