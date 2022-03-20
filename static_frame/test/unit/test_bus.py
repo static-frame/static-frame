@@ -162,7 +162,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
 
         with self.assertRaises(ErrorInitBus):
-                b1 = Bus((f for f in (f1,)), index=('a', 'b'))
+            b1 = Bus((f for f in (f1,)), index=('a', 'b'))
 
     #---------------------------------------------------------------------------
 
