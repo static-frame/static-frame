@@ -512,7 +512,13 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2))
         b2 = b1.iloc[1, 1]
-        post = list(s.values.tolist() for s in b2.values)
+        post = list(b2.values)
+        self.assertEqual(post, [4, 5])
+
+        b3 = Batch.from_frames((f1, f2))
+
+        b4 = b3.iloc[1, 1].via_container
+        post = list(s.values.tolist() for s in b4.values)
         self.assertEqual(post, [[4], [5]])
 
     def test_batch_iloc_b(self) -> None:
@@ -526,7 +532,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         b1 = Batch.from_frames((f1, f2), max_workers=8, use_threads=True)
-        b2 = b1.iloc[1, 1]
+        b2 = b1.iloc[1, 1].via_container
         post = list(s.values.tolist() for s in b2.values)
         self.assertEqual(post, [[4], [5]])
 
@@ -1058,15 +1064,19 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_batch_relabel_level_add_drop(self) -> None:
         f0 = ff.parse('v(int,str,bool,str)|s(9,4)')
+
         f123 = list(Batch.from_frames((
-            f0.iloc[0:3].rename('1'),
-            f0.iloc[3:6].rename('2'),
-            f0.iloc[6:9].rename('3'),
-        )).relabel_level_add('removeme').items())
+                f0.iloc[0:3].rename('1'),
+                f0.iloc[3:6].rename('2'),
+                f0.iloc[6:9].rename('3'),
+                )).relabel_level_add('removeme').items())
         expected = [['removeme', i] for i in range(9)]
-        actual = [*f123[0][1].index.values.tolist(), *f123[1][1].index.values.tolist(), *f123[2][1].index.values.tolist()]
+        actual = [*f123[0][1].index.values.tolist(),
+                *f123[1][1].index.values.tolist(),
+                *f123[2][1].index.values.tolist()]
         self.assertEqual(expected, actual)
-        f123 = list(Batch.from_frames(np.array(f123)[:,-1]).relabel_level_drop(index=1).items())
+
+        f123 = list(Batch.from_frames(f for _, f in f123).relabel_level_drop(index=1).items())
         expected = list(range(9))
         actual = [*f123[0][1].index.values.tolist(), *f123[1][1].index.values.tolist(), *f123[2][1].index.values.tolist()]
         self.assertEqual(expected, actual)
@@ -1565,7 +1575,14 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_batch_to_series_a(self) -> None:
+        frame = Frame.from_records([["A", 1.0], ["B", 2.0], ["C", 3.0], ["C", 4.0]], columns=tuple("AB"))
+        s = Batch(frame.iter_group_items("A"))["B"].sum().to_series()
+        self.assertEqual(s.to_pairs(),
+                (('A', 1.0), ('B', 2.0), ('C', 7.0))
+                )
 
+    #---------------------------------------------------------------------------
     def test_batch_to_npz(self) -> None:
 
         f1 = ff.parse('s(3,2)|v(bool)|c(I,str)|i(I,int)').rename('a')
@@ -1578,7 +1595,6 @@ class TestUnit(TestCase):
             frames = dict(b2.items())
 
             self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
-
 
     #---------------------------------------------------------------------------
     def test_batch_via_str_getitem(self) -> None:

@@ -995,7 +995,8 @@ class Series(ContainerOperand):
 
         return self.__class__(self.values,
                 index=self._index.flat(),
-                name=self._name)
+                name=self._name,
+                )
 
     @doc_inject(selector='relabel_level_add', class_name='Series')
     def relabel_level_add(self,
@@ -1009,7 +1010,8 @@ class Series(ContainerOperand):
         '''
         return self.__class__(self.values,
                 index=self._index.level_add(level),
-                name=self._name)
+                name=self._name,
+                )
 
     @doc_inject(selector='relabel_level_drop', class_name='Series')
     def relabel_level_drop(self,
@@ -1026,7 +1028,8 @@ class Series(ContainerOperand):
 
         return self.__class__(self.values,
                 index=self._index.level_drop(count),
-                name=self._name)
+                name=self._name,
+                )
 
     def rehierarch(self,
             depth_map: tp.Sequence[int]
@@ -1046,7 +1049,8 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values,
                 index=index,
-                name=self._name)
+                name=self._name,
+                )
 
     #---------------------------------------------------------------------------
     # na handling

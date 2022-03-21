@@ -29,7 +29,7 @@ from static_frame.core.exception import StoreFileMutation
 from static_frame.core.exception import ErrorInitIndexNonUnique
 
 from static_frame.core.index_datetime import IndexDate
-
+from static_frame.core.index_datetime import IndexYearMonth
 
 class TestUnit(TestCase):
 
@@ -91,13 +91,13 @@ class TestUnit(TestCase):
     def test_bus_init_b(self) -> None:
 
         with self.assertRaises(ErrorInitBus):
-            Bus(Series([1, 2, 3]))
+            Bus.from_series(Series([1, 2, 3]))
 
         with self.assertRaises(ErrorInitBus):
-            Bus(Series([3, 4], dtype=object))
+            Bus.from_series(Series([3, 4], dtype=object))
 
         with self.assertRaises(ErrorInitBus):
-            Bus(Series([3, 4], index=('a', 'b'), dtype=object))
+            Bus.from_series(Series([3, 4], index=('a', 'b'), dtype=object))
 
     def test_bus_init_c(self) -> None:
 
@@ -126,6 +126,44 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f1, f1_loaded)
             self.assertEqualFrames(f2, f2_loaded)
 
+    def test_bus_init_d(self) -> None:
+        f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+        f2 = ff.parse('s(2,2)|c(I,str)|v(bool)')
+
+        b1 = Bus((f1, f2), index=('a', 'b'))
+        self.assertEqual(b1.shapes.to_pairs(),
+                (('a', (2, 2)), ('b', (2, 2))),
+                )
+
+        b2 = Bus((f1, f2),
+                index=IndexDate(('2021-01-01', '1542-01-22')),
+                own_index=True,
+                )
+        self.assertEqual(b2.keys().values.tolist(),
+                [date(2021, 1, 1), date(1542, 1, 22)]
+                )
+
+    def test_bus_init_e(self) -> None:
+        with self.assertRaises(ErrorInitBus):
+            b1 = Bus(np.arange(0,2), index=('a', 'b'))
+
+    def test_bus_init_f(self) -> None:
+        with self.assertRaises(ErrorInitBus):
+            _ = Bus(frames=None, index=('a', 'b', 'c'))
+
+    def test_bus_init_g(self) -> None:
+        f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+        f2 = ff.parse('s(2,2)|c(I,str)|v(bool)')
+
+        with self.assertRaises(ErrorInitBus):
+            _ = Bus((f1, f2), index=('a', 'b'), own_data=True)
+
+    def test_bus_init_h(self) -> None:
+        f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+
+        with self.assertRaises(ErrorInitBus):
+            b1 = Bus((f for f in (f1,)), index=('a', 'b'))
+
     #---------------------------------------------------------------------------
 
     def test_bus_from_frames_a(self) -> None:
@@ -141,6 +179,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitIndexNonUnique):
             _ = Bus.from_frames((f1, f2))
+
 
     #---------------------------------------------------------------------------
 
@@ -1047,7 +1086,7 @@ class TestUnit(TestCase):
 
         # simulating a Bus with a FrameDefferred but no Store, just for testing
         s1 = Series((f1, FrameDeferred), index=('p', 'q'))
-        b1 = Bus(s1, config=config)
+        b1 = Bus.from_series(s1, config=config)
         self.assertFalse(b1._loaded_all)
 
         with self.assertRaises(RuntimeError):
@@ -1076,7 +1115,7 @@ class TestUnit(TestCase):
         # do not support IndexHierarchy, as lables are tuples, not strings
         from ast import literal_eval
         config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
-        b1 = Bus(s1)
+        b1 = Bus.from_series(s1)
         b2 = b1[HLoc[:, 1]]
         self.assertEqual(b2.shape, (2,))
         self.assertEqual(b2.index.values.tolist(),
@@ -1213,7 +1252,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1240,7 +1279,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1274,7 +1313,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1320,7 +1359,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1372,7 +1411,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1407,7 +1446,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1434,7 +1473,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1461,7 +1500,7 @@ class TestUnit(TestCase):
         s1 = Series((f1, f2, f3), index=('a', 'b', 'c'))
         with self.assertRaises(ErrorInitBus):
             # max_persist cannot be less than the number of already loaded Frames
-            Bus(s1, max_persist=2)
+            Bus.from_series(s1, max_persist=2)
 
     def test_bus_max_persist_i(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
@@ -1645,6 +1684,20 @@ class TestUnit(TestCase):
         self.assertEqual(b1.index.values.tolist(),
                 ['a', 'b'])
 
+    def test_bus_from_dict_b(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Bus.from_dict({'2021-01':f1, '2021-06':f2}, index_constructor=IndexYearMonth)
+        self.assertIs(b1.index.__class__, IndexYearMonth)
+
+
     #---------------------------------------------------------------------------
 
     def test_bus_iter_element_a(self) -> None:
@@ -1785,7 +1838,7 @@ class TestUnit(TestCase):
                 yield 'abcde'[i], Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1951,7 +2004,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -1986,7 +2039,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
@@ -2016,7 +2069,7 @@ class TestUnit(TestCase):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
         s = Series.from_items(items(), dtype=object)
-        b1 = Bus(s)
+        b1 = Bus.from_series(s)
 
         config = StoreConfig(
                 index_depth=1,
