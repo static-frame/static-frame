@@ -807,7 +807,7 @@ class IndexHierarchy(IndexBase):
                 )
 
             if indices._recache:
-                indices._update_array_cache() # pragma: no cover
+                indices._update_array_cache()
 
             self._indices = [
                 mutable_immutable_index_filter(self.STATIC, index)
@@ -911,7 +911,7 @@ class IndexHierarchy(IndexBase):
         Return a deep copy of this IndexHierarchy.
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cove
+            self._update_array_cache()
 
         obj: IH = self.__new__(self.__class__)
         obj._indices = deepcopy(self._indices, memo)
@@ -932,7 +932,7 @@ class IndexHierarchy(IndexBase):
         Return a shallow copy of this IndexHierarchy.
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         return self.__class__(self)
 
@@ -1302,7 +1302,7 @@ class IndexHierarchy(IndexBase):
         Create a new index after removing the values specified by the iloc key.
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
 
@@ -1539,7 +1539,7 @@ class IndexHierarchy(IndexBase):
             )
 
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         is_callable = callable(mapper)
 
@@ -1610,7 +1610,7 @@ class IndexHierarchy(IndexBase):
         Return a new :obj:`IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         rehierarched_blocks, _ = rehierarch_from_type_blocks(
                 labels=self._blocks,
@@ -1873,7 +1873,7 @@ class IndexHierarchy(IndexBase):
         Extract a new index given an iloc key
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         if isinstance(key, INT_TYPES):
             # return a tuple if selecting a single row
@@ -1965,13 +1965,13 @@ class IndexHierarchy(IndexBase):
             return matmul(other, self.values)
 
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         if isinstance(other, Index):
             other = other.values
         elif isinstance(other, IndexHierarchy):
             if other._recache:
-                other._update_array_cache() # pragma: no cover
+                other._update_array_cache()
             other = other._blocks
 
         tb = self._blocks._ufunc_binary_operator(
@@ -2024,7 +2024,7 @@ class IndexHierarchy(IndexBase):
         Returns a reverse iterator on the index labels.
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
@@ -2143,7 +2143,7 @@ class IndexHierarchy(IndexBase):
             {key}
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
 
@@ -2186,7 +2186,7 @@ class IndexHierarchy(IndexBase):
         Return an :obj:`IndexHierarchy` with values rotated forward and wrapped around (with a positive shift) or backward and wrapped around (with a negative shift).
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         blocks = TypeBlocks.from_blocks(
                 self._blocks._shift_blocks(row_shift=shift, wrap=True)
@@ -2234,7 +2234,7 @@ class IndexHierarchy(IndexBase):
             An integer array of sampled iloc values
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         key = array_sample(self.positions, count=count, seed=seed, sort=True)
         blocks = self._blocks._extract(row_key=key)
@@ -2336,7 +2336,7 @@ class IndexHierarchy(IndexBase):
             constructor: tp.Type['Frame'],
             ) -> 'Frame':
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         return constructor(
                 self._blocks.copy(),
@@ -2366,7 +2366,7 @@ class IndexHierarchy(IndexBase):
         import pandas
 
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         # must copy to get a mutable array
         mi = pandas.MultiIndex(
@@ -2408,7 +2408,7 @@ class IndexHierarchy(IndexBase):
         Returns the tree representation of an IndexHierarchy
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         tree = self._build_tree_at_depth_from_mask(
                 depth=0,
@@ -2472,7 +2472,7 @@ class IndexHierarchy(IndexBase):
             count: A positive value is the number of depths to remove from the root (outer) side of the hierarchy; a negative value is the number of depths to remove from the leaf (inner) side of the hierarchy.
         '''
         if self._recache:
-            self._update_array_cache() # pragma: no cover
+            self._update_array_cache()
 
         # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
         if self._name_is_names():
@@ -2614,7 +2614,7 @@ class IndexHierarchyAsType:
         container = self.container
 
         if container._recache:
-            container._update_array_cache() # pragma: no cover
+            container._update_array_cache()
 
         # use TypeBlocks in both situations to avoid double casting
         blocks = TypeBlocks.from_blocks(
