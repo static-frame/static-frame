@@ -49,6 +49,8 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.exception import BatchIterableInvalid
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.index_base import IndexBase
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
@@ -81,18 +83,18 @@ def normalize_container(post: tp.Any
 def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]
         ) -> FrameOrSeries:
     container, func = bundle
-    return normalize_container(func(container))
+    return func(container) # type: ignore
 
 def call_func_items(bundle: tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]
         ) -> FrameOrSeries:
     container, func, label = bundle
-    return normalize_container(func(label, container))
+    return func(label, container) # type: ignore
 
 def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]
         ) -> FrameOrSeries:
     container, attr, args, kwargs = bundle
     func = getattr(container, attr)
-    return normalize_container(func(*args, **kwargs))
+    return func(*args, **kwargs) # type: ignore
 
 #-------------------------------------------------------------------------------
 class Batch(ContainerOperand, StoreClientMixin):
@@ -382,6 +384,16 @@ class Batch(ContainerOperand, StoreClientMixin):
                 chunksize=self._chunksize,
                 use_threads=self._use_threads,
                 )
+
+    @property
+    def via_container(self) -> 'Batch':
+        '''
+        Return a new Batch with all values wrapped in either a :obj:`Frame` or :obj:`Series`.
+        '''
+        def gen() -> IteratorFrameItems:
+            for label, v in self._items:
+                yield label, normalize_container(v)
+        return self._derive(gen)
 
     #---------------------------------------------------------------------------
     # name interface
@@ -1606,6 +1618,20 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # exporter
 
+    def to_series(self, *,
+        dtype: DtypeSpecifier = None,
+        name: NameType = None,
+        index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
+        ) -> Series:
+        '''
+        Consolidate stored values into a new :obj:`Series` using the stored labels as the index.
+        '''
+        return Series.from_items(self._items,
+                dtype=dtype,
+                name=name,
+                index_constructor=index_constructor,
+                )
+
     def to_frame(self, *,
             axis: int = 0,
             union: bool = True,
@@ -1616,12 +1642,13 @@ class Batch(ContainerOperand, StoreClientMixin):
             consolidate_blocks: bool = False
         ) -> Frame:
         '''
-        Consolidate stored :obj:`Frame` into a new :obj:`Frame` using the stored labels as the index on the provided ``axis`` using :obj:`Frame.from_concat`. This assumes that that the contained :obj:`Frame` have been reduced to single dimension along the provided `axis`.
+        Consolidate stored :obj:`Frame` into a new :obj:`Frame` using the stored labels as the index on the provided ``axis`` using :obj:`Frame.from_concat`. This assumes that that the contained :obj:`Frame` have been reduced to a single dimension along the provided `axis`.
         '''
         labels = []
         containers: tp.List[FrameOrSeries] = []
         ndim1d = True
         for label, container in self._items:
+            container = normalize_container(container)
             labels.append(label)
             ndim1d &= container.ndim == 1
             containers.append(container)
@@ -1658,12 +1685,24 @@ class Batch(ContainerOperand, StoreClientMixin):
             f = f.relabel(index=index, columns=columns)
         return f
 
-    def to_bus(self) -> 'Bus':
+    def to_bus(self,
+            *,
+            index_constructor: IndexConstructor = None,
+            ) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''
-        series = Series.from_items(
-                self.items(),
-                name=self._name,
-                dtype=DTYPE_OBJECT)
+        # series = Series.from_items(
+        #         self.items(),
+        #         name=self._name,
+        #         dtype=DTYPE_OBJECT)
+        frames = []
+        index = []
+        for i, f in self.items():
+            index.append(i)
+            frames.append(f)
 
-        return Bus(series, config=self._config)
+        return Bus(frames,
+                index=index,
+                index_constructor=index_constructor,
+                config=self._config,
+                )
