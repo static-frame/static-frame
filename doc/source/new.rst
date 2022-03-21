@@ -1,6 +1,16 @@
 What is New in Static Frame
 ===============================
 
+0.9.0
+----------
+
+API change: ``Bus`` no longer accepts a ``Series`` on initialization; use ``Bus.from_series()``.
+
+API change: ``Batch`` no longer normalizes containers after each step in processing; use ``Batch.via_container`` to force elements or arrays into ``Frame`` or ``Series``.
+
+Added ``Batch.to_series()``.
+
+
 0.8.38
 ----------
 
