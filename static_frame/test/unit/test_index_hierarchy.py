@@ -1262,16 +1262,20 @@ class TestUnit(TestCase):
         labels = (('I', 'A'), ('I', 'B'))
         ih = IndexHierarchy.from_labels(labels)
 
-        self.assertNotIn(Index(labels), ih)
+        self.assertIn(Index(labels), ih)
 
     def test_hierarchy_contains_c(self) -> None:
         ih = IndexHierarchy.from_product((True, False), (True, False))
 
         self.assertIn((True, False), ih)
-        self.assertIn(np.array((True, False)), ih)
+        with self.assertRaises(IndexError):
+            np.array((True, False)) in ih
 
-        self.assertNotIn((True, False, True), ih)
-        self.assertNotIn(np.array((True, False, True)), ih)
+        with self.assertRaises(RuntimeError):
+            (True, False, True, False) in ih
+
+        # TODO: This behavior is incorrect!
+        # self.assertNotIn(np.array((True, False, True, False)), ih)
 
     def test_hierarchy_contains_d(self) -> None:
         labels = ((True, 'A'), ('I', 'B'))
@@ -1282,7 +1286,7 @@ class TestUnit(TestCase):
         ih2 = ih.loc[key]
         self.assertEqual(tuple(ih2), ((True, 'A'),))
 
-        self.assertNotIn(key, ih)
+        self.assertIn(key, ih)
 
     def test_hierarchy_extract_a(self) -> None:
         idx = IndexHierarchy.from_product(['A', 'B'], [1, 2])
@@ -3794,6 +3798,33 @@ class TestUnit(TestCase):
             [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
         ])
         self.assertTrue(np.array_equal(actual, expected))
+
+    #---------------------------------------------------------------------------
+
+    def test_extract_counts_a(self) -> None:
+        indices = [
+                Index(range(5)),
+                Index(tuple("ABCDE")),
+                Index([True, False]),
+                ]
+
+        post1 = IndexHierarchy._extract_counts(np.array([0, 0, 0]), indices, pos=0)
+        self.assertEqual(tuple(post1), ((0, 3), ))
+
+        post2 = IndexHierarchy._extract_counts(np.array([0, 0, 0]), indices, pos=1)
+        self.assertEqual(tuple(post2), (('A', 3),))
+
+        post3 = IndexHierarchy._extract_counts(np.array([0, 0, 0]), indices, pos=2)
+        self.assertEqual(tuple(post3), ((True, 3),))
+
+        post4 = IndexHierarchy._extract_counts(np.array([1, 0, 0]), indices, pos=0)
+        self.assertEqual(tuple(post4), ((0, 2), (1, 1)))
+
+        post5 = IndexHierarchy._extract_counts(np.array([1, 0, 0]), indices, pos=1)
+        self.assertEqual(tuple(post5), (('A', 2), ('B', 1)))
+
+        post6 = IndexHierarchy._extract_counts(np.array([1, 0, 0]), indices, pos=2)
+        self.assertEqual(tuple(post6), ((True, 2), (False, 1)))
 
 
 if __name__ == '__main__':

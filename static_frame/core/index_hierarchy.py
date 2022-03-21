@@ -113,6 +113,9 @@ LocKeyType = tp.Union[
 IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice]
 ExtractionType = tp.Union['IndexHierarchy', SingleLabelType]
 
+HashableToIntMapsT = tp.List[tp.Dict[tp.Hashable, int]]
+GrowableIndexersT = tp.List[tp.List[int]]
+
 
 def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> np.ndarray:
     '''
@@ -237,7 +240,7 @@ class IndexHierarchy(IndexBase):
     _name: NameType
     _blocks: TypeBlocks
     _recache: bool
-    _values: np.ndarray # Used to cache the property `values`
+    _values: tp.Optional[np.ndarray] # Used to cache the property `values`
     _map: HierarchicalLocMap
     _index_types: tp.Optional['Series'] # Used to cache the property `index_types`
     _pending_extensions: tp.Optional[tp.List[tp.Union[SingleLabelType, 'IndexHierarchy']]]
@@ -506,8 +509,8 @@ class IndexHierarchy(IndexBase):
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
         # A mapping for each depth level, of label to index
-        hash_maps: tp.List[tp.Dict[tp.Hashable, int]] = [{} for _ in range(depth)]
-        indexers: tp.List[tp.List[int]] = [[] for _ in range(depth)]
+        hash_maps: HashableToIntMapsT = [{} for _ in range(depth)]
+        indexers: GrowableIndexersT = [[] for _ in range(depth)]
 
         prev_row: tp.Sequence[tp.Hashable] = EMPTY_TUPLE
 
@@ -744,7 +747,6 @@ class IndexHierarchy(IndexBase):
         init_blocks: tp.Optional[TypeBlocks] = blocks
 
         if index_constructors is not None:
-            # TODO-Ariza: Does the old index-level logic carry over to the new design?
             # If defined, we may have changed columnar dtypes in IndexLevels, and cannot reuse blocks
             if tuple(blocks.dtypes) != tuple(index.dtype for index in indices):
                 init_blocks = None
@@ -842,7 +844,7 @@ class IndexHierarchy(IndexBase):
         else:
             self._blocks = self._create_blocks_from_self()
 
-        self._values = self._blocks.values
+        self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
 
     def _update_array_cache(self: IH) -> None:
@@ -887,7 +889,7 @@ class IndexHierarchy(IndexBase):
         self._indexers = np.array(new_indexers)
         self._indexers.flags.writeable = False
         self._blocks = self._create_blocks_from_self()
-        self._values = self._blocks.values
+        self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
         self._recache = False
 
@@ -899,7 +901,8 @@ class IndexHierarchy(IndexBase):
         '''
         for key, value in state[1].items():
             setattr(self, key, value)
-        self._values.flags.writeable = False
+        if self._values is not None:
+            self._values.flags.writeable = False
 
     def __deepcopy__(self: IH,
             memo: tp.Dict[int, tp.Any],
@@ -914,7 +917,7 @@ class IndexHierarchy(IndexBase):
         obj._indices = deepcopy(self._indices, memo)
         obj._indexers = array_deepcopy(self._indexers, memo)
         obj._blocks = self._blocks.__deepcopy__(memo)
-        obj._values = obj._blocks.values
+        obj._values = None
         obj._name = self._name # should be hashable/immutable
         obj._recache = False
         obj._index_types = deepcopy(self._index_types, memo)
@@ -1329,6 +1332,9 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
+        if self._values is None:
+            self._values = self._blocks.values
+
         return self._values
 
     @property
@@ -1366,6 +1372,17 @@ class IndexHierarchy(IndexBase):
 
         return self._blocks._extract_array(column_key=sel)
 
+    # Could this be memoized?
+    @staticmethod
+    def _extract_counts(
+            arr: np.ndarray,
+            indices: tp.List[Index],
+            pos: int,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+        unique, widths = ufunc_unique1d_counts(arr)
+        labels = indices[pos].values[unique]
+        yield from zip(labels, widths)
+
     # NOTE: This is much slower than old impl. Not sure how to optimize.
     @doc_inject()
     def label_widths_at_depth(self: IH,
@@ -1394,19 +1411,10 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        # Could this be memoized?
-        def _extract_counts(
-                arr: np.ndarray,
-                pos: int,
-                ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
-            unique, widths = ufunc_unique1d_counts(arr)
-            labels = self._indices[pos].values[unique]
-            yield from zip(labels, widths)
-
         # i.e. depth_level is an int
         if pos == 0:
             arr = self._indexers[pos]
-            yield from _extract_counts(arr, pos)
+            yield from self._extract_counts(arr, self._indices, pos)
             return
 
         def gen()-> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
@@ -1422,7 +1430,7 @@ class IndexHierarchy(IndexBase):
                     screen &= self._indexers[i] == outer_level_idx
 
                 occurrences: np.ndarray = self._indexers[pos][screen]
-                yield from _extract_counts(occurrences, pos)
+                yield from self._extract_counts(occurrences, self._indices, pos)
 
         yield from gen()
 
@@ -2027,11 +2035,8 @@ class IndexHierarchy(IndexBase):
         '''
         Determine if a label `value` is contained in this Index.
         '''
-        if len(value) != self.depth or value.__class__ is HLoc:
-            return False
-
         try:
-            result = self._map.loc_to_iloc(value, self._indices)
+            result = self._loc_to_iloc(value)
         except KeyError:
             return False
 
