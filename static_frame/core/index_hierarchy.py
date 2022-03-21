@@ -100,7 +100,7 @@ TreeNodeT = tp.Dict[tp.Hashable, tp.Union[tp.Sequence[tp.Hashable], 'TreeNodeT']
 
 _NBYTES_GETTER = operator.attrgetter('nbytes')
 
-CompountLabelType = tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]
+CompoundLabelType = tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]
 LocKeyType = tp.Union[
     'IndexHierarchy',
     HLoc,
