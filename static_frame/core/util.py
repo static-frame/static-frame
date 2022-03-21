@@ -844,11 +844,11 @@ def array_ufunc_axis_skipna(
 #-------------------------------------------------------------------------------
 # unique value discovery; based on NP's arraysetops.py
 
-def argsort_array(array: np.ndarray, sort_kind: str = DEFAULT_STABLE_SORT_KIND) -> np.ndarray:
+def argsort_array(array: np.ndarray, kind: str = DEFAULT_STABLE_SORT_KIND) -> np.ndarray:
     # NOTE: must use stable sort when returning positions
     if array.dtype.kind == 'O':
         try:
-            return array.argsort(kind=sort_kind)
+            return array.argsort(kind=kind)
         except TypeError: # if unorderable types
             pass
 
@@ -859,9 +859,9 @@ def argsort_array(array: np.ndarray, sort_kind: str = DEFAULT_STABLE_SORT_KIND) 
             array_sortable[i] = indices.setdefault(v, len(indices))
         del indices
 
-        return np.argsort(array_sortable, kind=sort_kind)
+        return np.argsort(array_sortable, kind=kind)
 
-    return array.argsort(kind=sort_kind)
+    return array.argsort(kind=kind)
 
 
 def ufunc_unique1d(array: np.ndarray) -> np.ndarray:

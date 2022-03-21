@@ -59,6 +59,8 @@ class LocMap:
             if attr is None:
                 yield None
 
+            # NOTE: We can do `is` checks on field since `SLICE_ATTRS` only contains some certain symbolic constants
+
             elif attr.__class__ is np.datetime64:
                 if field is SLICE_STEP_ATTR:
                     raise RuntimeError(f'Step cannot be {attr}')
@@ -381,4 +383,4 @@ class HierarchicalLocMap:
             return list(map(self.encoded_indexer_map.__getitem__, key_indexers))
 
         key_indexers = np.bitwise_or.reduce(key_indexers)
-        return tp.cast(int, self.encoded_indexer_map[key_indexers])
+        return self.encoded_indexer_map[key_indexers]

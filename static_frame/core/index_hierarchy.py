@@ -105,9 +105,9 @@ LocKeyType = tp.Union[
     'IndexHierarchy',
     HLoc,
     ILoc,
-    CompountLabelType,
+    CompoundLabelType,
     np.ndarray,
-    tp.List[CompountLabelType],
+    tp.List[CompoundLabelType],
     slice,
 ]
 IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice]
@@ -857,8 +857,7 @@ class IndexHierarchy(IndexBase):
         for depth, indexer in enumerate(self._indexers):
             new_indexers[depth][:current_size] = indexer
 
-        # TODO-Ariza: Should we clear self._indexers?
-        # TODO-Ariza: What if an error is raised anywhere onward in this method?
+        self._indexers = EMPTY_ARRAY_INT # Remove reference to old indexers
 
         offset = current_size
 
@@ -1147,7 +1146,7 @@ class IndexHierarchy(IndexBase):
         total += sum(map(_NBYTES_GETTER, self._indexers))
         total += self._blocks.nbytes
         total += self._map.nbytes
-        return self._blocks.nbytes
+        return total
 
     # --------------------------------------------------------------------------
 
@@ -1586,7 +1585,7 @@ class IndexHierarchy(IndexBase):
 
             new_indices[level] = index.__class__(new_index)
 
-            indexer = np.array([index_remap.get(i, i) for i in self._indexers[level]])
+            indexer = np.array([index_remap.get(i, i) for i in self._indexers[level]], dtype=DTYPE_INT_DEFAULT)
             new_indexers[level] = indexer
 
         new_indexers.flags.writeable = False
@@ -1635,7 +1634,7 @@ class IndexHierarchy(IndexBase):
 
     def _build_mask_for_key_at_depth(self: IH,
             depth: int,
-            key: tp.Union[np.ndarray, CompountLabelType],
+            key: tp.Union[np.ndarray, CompoundLabelType],
             ) -> np.ndarray:
         '''
         Determines the indexer mask for `key` at `depth`.
@@ -1653,7 +1652,7 @@ class IndexHierarchy(IndexBase):
 
         if isinstance(key_at_depth, slice):
             if key_at_depth.start is not None:
-                start: int = tp.cast(int, index_at_depth.loc_to_iloc(key_at_depth.start))
+                start: int = index_at_depth.loc_to_iloc(key_at_depth.start)
             else:
                 start = 0
 
@@ -1665,7 +1664,7 @@ class IndexHierarchy(IndexBase):
                 )
 
             if key_at_depth.stop is not None:
-                stop: int = tp.cast(int, index_at_depth.loc_to_iloc(key_at_depth.stop)) + 1
+                stop: int = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1
             else:
                 stop = len(indexer_at_depth)
 
@@ -1715,7 +1714,7 @@ class IndexHierarchy(IndexBase):
             indexer_remap = key_index._index_iloc_map(self_index)
             key_indexers.append(indexer_remap[key_indexer])
 
-        key_indexers = np.array(key_indexers).T
+        key_indexers = np.array(key_indexers, dtype=DTYPE_INT_DEFAULT).T
 
         ilocs = np.intersect1d(
                 view_2d_as_1d(self._indexers.T),
@@ -1726,7 +1725,7 @@ class IndexHierarchy(IndexBase):
         return ilocs
 
     def _loc_to_iloc_single_key(self: IH,
-            key: tp.Union[np.ndarray, CompountLabelType],
+            key: tp.Union[np.ndarray, CompoundLabelType],
             ) -> tp.Union[int, np.ndarray]:
         '''
         Return the indexer for a given key. Key is assumed to not be compound (i.e. HLoc, list of keys, etc)
