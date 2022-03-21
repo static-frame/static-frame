@@ -851,7 +851,7 @@ def argsort_array(array: np.ndarray, sort_kind: str = DEFAULT_STABLE_SORT_KIND) 
         except TypeError: # if unorderable types
             pass
 
-        array_sortable = np.empty(array.shape, dtype=np.int64)
+        array_sortable = np.empty(array.shape, dtype=DTYPE_INT_DEFAULT)
 
         indices: tp.Dict[tp.Any, int] = {}
         for i, v in enumerate(array):
