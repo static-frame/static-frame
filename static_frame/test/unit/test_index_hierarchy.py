@@ -1272,7 +1272,7 @@ class TestUnit(TestCase):
             np.array((True, False)) in ih
 
         with self.assertRaises(RuntimeError):
-            (True, False, True, False) in ih
+            (True, False, True, False) in ih #pylint: disable=W0104
 
         # TODO: This behavior is incorrect!
         # self.assertNotIn(np.array((True, False, True, False)), ih)

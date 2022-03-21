@@ -864,7 +864,7 @@ class IndexHierarchy(IndexBase):
 
         # For all these extensions, we have already update self._indices - we now need to map indexers
         for pending in self._pending_extensions: # pylint: disable = E1133
-            if pending.__class__ is PendingRow:
+            if pending.__class__ is PendingRow: # type: ignore
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
                     new_indexers[depth][offset] = label_index
@@ -1659,7 +1659,7 @@ class IndexHierarchy(IndexBase):
 
         if isinstance(key_at_depth, slice):
             if key_at_depth.start is not None:
-                start: int = index_at_depth.loc_to_iloc(key_at_depth.start)
+                start: int = index_at_depth.loc_to_iloc(key_at_depth.start) # type: ignore
             else:
                 start = 0
 
@@ -1671,7 +1671,7 @@ class IndexHierarchy(IndexBase):
                 )
 
             if key_at_depth.stop is not None:
-                stop: int = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1
+                stop: int = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1 # type: ignore
             else:
                 stop = len(indexer_at_depth)
 
@@ -2029,7 +2029,7 @@ class IndexHierarchy(IndexBase):
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
 
-    def __contains__(self: IH,
+    def __contains__(self: IH, # type: ignore
             value: SingleLabelType,
             ) -> bool:
         '''

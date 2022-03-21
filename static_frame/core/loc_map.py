@@ -11,7 +11,7 @@ from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import LocEmpty
 
-from static_frame.core.util import DTYPE_INT_DEFAULT, SLICE_ATTRS
+from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STEP_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
@@ -387,4 +387,4 @@ class HierarchicalLocMap:
             return list(map(self.encoded_indexer_map.__getitem__, key_indexers))
 
         key_indexers = np.bitwise_or.reduce(key_indexers)
-        return self.encoded_indexer_map[key_indexers]
+        return self.encoded_indexer_map[key_indexers] # type: ignore
