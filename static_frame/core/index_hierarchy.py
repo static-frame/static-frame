@@ -155,7 +155,8 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> np.ndarray:
                     )
             for i, list_length
             in enumerate(list_lengths)
-        ]
+        ],
+        dtype=DTYPE_INT_DEFAULT,
     )
     result.flags.writeable = False
 
@@ -190,7 +191,7 @@ def construct_indices_and_indexers_from_column_arrays(
         indices.append(constructor(unique_values))
         indexers.append(indexer)
 
-    indexers = np.array(indexers)
+    indexers = np.array(indexers, dtype=DTYPE_INT_DEFAULT)
     indexers.flags.writeable = False # type: ignore
 
     return indices, indexers
@@ -200,6 +201,7 @@ class PendingRow:
     '''
     Encapsulates a new label row that has yet to be inserted into a IndexHierarchy.
     '''
+    __slots__ = ('row',)
     def __init__(self, row: SingleLabelType) -> None:
         self.row = row
 
@@ -623,7 +625,8 @@ class IndexHierarchy(IndexBase):
                 [
                     np.hstack(tuple(map(_repeat, enumerate(repeats)))),
                     np.hstack(indexers_inner),
-                ]
+                ],
+                dtype=DTYPE_INT_DEFAULT,
         )
         indexers.flags.writeable = False
 
@@ -725,7 +728,7 @@ class IndexHierarchy(IndexBase):
 
         def gen_columns() -> tp.Iterator[np.ndarray]:
             for i in range(blocks.shape[1]):
-                block = blocks._extract(column_key=i)
+                block = blocks._extract_array_column(i)
                 yield block.values.reshape(size)
 
         index_constructors_iter = cls._build_index_constructors(
@@ -861,7 +864,7 @@ class IndexHierarchy(IndexBase):
 
         # For all these extensions, we have already update self._indices - we now need to map indexers
         for pending in self._pending_extensions: # pylint: disable = E1133
-            if isinstance(pending, PendingRow):
+            if pending.__class__ is PendingRow:
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
                     new_indexers[depth][offset] = label_index
@@ -1415,7 +1418,7 @@ class IndexHierarchy(IndexBase):
             ranges = tuple(map(range, map(len, self._indices[:pos])))
 
             for outer_level_idxs in itertools.product(*ranges):
-                screen = np.full(self.__len__(), True, dtype=bool)
+                screen = np.full(self.__len__(), True, dtype=DTYPE_BOOL)
 
                 for i, outer_level_idx in enumerate(outer_level_idxs):
                     screen &= self._indexers[i] == outer_level_idx
@@ -2266,7 +2269,8 @@ class IndexHierarchy(IndexBase):
             [
                 issubclass(idx_type, IndexDatetime)
                 for idx_type in self._index_constructors
-            ]
+            ],
+            dtype=DTYPE_BOOL,
         )
         has_dt = dt_pos.any()
 
@@ -2434,7 +2438,8 @@ class IndexHierarchy(IndexBase):
                 [
                     np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT),
                     *self._indexers
-                ]
+                ],
+                dtype=DTYPE_INT_DEFAULT,
         )
         indexers.flags.writeable = False
 
