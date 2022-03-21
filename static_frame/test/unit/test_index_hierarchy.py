@@ -253,7 +253,7 @@ class TestUnit(TestCase):
         labels = (('I', 'A'), ('I', 'B'))
 
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
-        self.assertEqual(ih1.nbytes, 16)
+        self.assertEqual(ih1.nbytes, 533)
 
     def test_hierarchy_size_b(self) -> None:
 
@@ -261,7 +261,7 @@ class TestUnit(TestCase):
 
         ih1 = IndexHierarchyGO.from_labels(labels, name='foo')
         ih1.append(('I', 'C'))
-        self.assertEqual(ih1.nbytes, 24)
+        self.assertEqual(ih1.nbytes, 569)
 
     def test_hierarchy_bool_a(self) -> None:
 
@@ -1256,13 +1256,33 @@ class TestUnit(TestCase):
         labels = (('I', 'A'), ('I', 'B'))
         ih = IndexHierarchy.from_labels(labels)
 
-        self.assertTrue(('I', 'A') in ih)
+        self.assertIn(('I', 'A'), ih)
 
     def test_hierarchy_contains_b(self) -> None:
         labels = (('I', 'A'), ('I', 'B'))
         ih = IndexHierarchy.from_labels(labels)
 
-        self.assertTrue(Index(labels) in ih)
+        self.assertNotIn(Index(labels), ih)
+
+    def test_hierarchy_contains_c(self) -> None:
+        ih = IndexHierarchy.from_product((True, False), (True, False))
+
+        self.assertIn((True, False), ih)
+        self.assertIn(np.array((True, False)), ih)
+
+        self.assertNotIn((True, False, True), ih)
+        self.assertNotIn(np.array((True, False, True)), ih)
+
+    def test_hierarchy_contains_d(self) -> None:
+        labels = ((True, 'A'), ('I', 'B'))
+        ih = IndexHierarchy.from_labels(labels)
+
+        key = HLoc[:, 'A']
+
+        ih2 = ih.loc[key]
+        self.assertEqual(tuple(ih2), ((True, 'A'),))
+
+        self.assertNotIn(key, ih)
 
     def test_hierarchy_extract_a(self) -> None:
         idx = IndexHierarchy.from_product(['A', 'B'], [1, 2])

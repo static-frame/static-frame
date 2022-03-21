@@ -143,6 +143,8 @@ EMPTY_ARRAY_BOOL.flags.writeable = False
 EMPTY_ARRAY_INT = np.array(EMPTY_TUPLE, dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
+EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
+
 NAT = np.datetime64('nat')
 NAT_STR = 'NaT'
 

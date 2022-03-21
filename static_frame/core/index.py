@@ -42,6 +42,7 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import array_sample
 from static_frame.core.util import arrays_equal
 from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import concat_resolved
 
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import DEFAULT_SORT_KIND
@@ -741,7 +742,7 @@ class Index(IndexBase):
 
         ar1, ar1_indexer = ufunc_unique1d_indexer(ar1)
 
-        aux = np.concatenate((ar1, ar2))
+        aux = concat_resolved((ar1, ar2))
         aux_sort_indices = argsort_array(aux)
         aux = aux[aux_sort_indices]
 

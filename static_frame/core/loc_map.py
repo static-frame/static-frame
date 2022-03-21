@@ -11,12 +11,13 @@ from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import LocEmpty
 
-from static_frame.core.util import SLICE_ATTRS
+from static_frame.core.util import DTYPE_INT_DEFAULT, SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STEP_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import DTYPE_OBJECTABLE_DT64_UNITS
+from static_frame.core.util import EMPTY_FROZEN_AUTOMAP
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import GetItemKeyType
@@ -36,6 +37,9 @@ HierarchicalLocMapKey = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[tp.Ha
 _HLMap = tp.TypeVar('_HLMap', bound='HierarchicalLocMap')
 TypePos = tp.Optional[int]
 LocEmptyInstance = LocEmpty()
+
+_ZERO_PAD_ARRAY = np.array([0], dtype=DTYPE_UINT_DEFAULT)
+_ZERO_PAD_ARRAY.flags.writeable = False
 
 
 class LocMap:
@@ -210,7 +214,7 @@ class HierarchicalLocMap:
         if not len(indexers[0]):
             self.bit_offset_encoders = np.full(len(indices), 0, dtype=DTYPE_UINT_DEFAULT)
             self.encoding_can_overflow = False
-            self.encoded_indexer_map = FrozenAutoMap()
+            self.encoded_indexer_map = EMPTY_FROZEN_AUTOMAP
             return
 
         self.bit_offset_encoders, self.encoding_can_overflow = self.build_offsets_and_overflow(
@@ -278,7 +282,7 @@ class HierarchicalLocMap:
         #  - depth 0 starts at bit offset 0.
         #  - depth 1 starts at bit offset 7. (depth 0 needed 7 bits!)
         #  - depth 2 starts at bit offset 10. (depth 1 needed 3 bits!)
-        bit_start_positions = np.concatenate(([0], bit_end_positions))[:-1].astype(DTYPE_UINT_DEFAULT)
+        bit_start_positions = np.concatenate((_ZERO_PAD_ARRAY, bit_end_positions))[:-1].astype(DTYPE_UINT_DEFAULT)
         bit_start_positions.flags.writeable = False
 
         # We now return these offsets, and whether or not we have overflow.

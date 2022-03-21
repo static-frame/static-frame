@@ -728,8 +728,7 @@ class IndexHierarchy(IndexBase):
 
         def gen_columns() -> tp.Iterator[np.ndarray]:
             for i in range(blocks.shape[1]):
-                block = blocks._extract_array_column(i)
-                yield block.values.reshape(size)
+                yield blocks._extract_array_column(i).reshape(size)
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -2023,17 +2022,20 @@ class IndexHierarchy(IndexBase):
             yield tuple(array)
 
     def __contains__(self: IH,
-            value: tp.Hashable,
+            value: SingleLabelType,
             ) -> bool:
         '''
         Determine if a label `value` is contained in this Index.
         '''
+        if len(value) != self.depth or value.__class__ is HLoc:
+            return False
+
         try:
-            result = self._loc_to_iloc(value)
+            result = self._map.loc_to_iloc(value, self._indices)
         except KeyError:
             return False
 
-        if isinstance(result, (np.ndarray, list)):
+        if hasattr(result, '__len__'):
             return bool(len(result))
 
         return True
