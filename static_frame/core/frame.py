@@ -2454,11 +2454,6 @@ class Frame(ContainerOperand):
             index = None
         elif index is not None:
             pass
-        elif index_constructor is IndexAutoFactory:
-            from static_frame.core.exception import deprecated #pragma: no cover
-            deprecated('Passing indexAutoFactory as an index_constructor is deprecated and will be removed in v0.9; pass IndexAutoFactory as the index argument.') #pragma: no cover
-            index = None #pragma: no cover
-            index_constructor = None #pragma: no cover
         else:
             index = Index.from_pandas(value.index)
             own_index = index_constructor is None
@@ -2468,11 +2463,6 @@ class Frame(ContainerOperand):
             columns = None
         elif columns is not None:
             pass
-        elif columns_constructor is IndexAutoFactory:
-            from static_frame.core.exception import deprecated #pragma: no cover
-            deprecated('Passing indexAutoFactory as an columns_constructor is deprecated and will be removed in v0.9; pass IndexAutoFactory as the columns argument.') #pragma: no cover
-            columns = None #pragma: no cover
-            columns_constructor = None #pragma: no cover
         else:
             columns = cls._COLUMNS_CONSTRUCTOR.from_pandas(value.columns)
             own_columns = columns_constructor is None

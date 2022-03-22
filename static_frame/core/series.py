@@ -446,12 +446,7 @@ class Series(ContainerOperand):
         if index is IndexAutoFactory:
             index = None
         elif index is not None:
-            pass
-        elif index_constructor is IndexAutoFactory: #type: ignore
-            from static_frame.core.exception import deprecated #pragma: no cover
-            deprecated('Passing indexAutoFactory as an index_constructor is deprecated and will be removed in v0.9; pass IndexAutoFactory as the index argument.') #pragma: no cover
-            index = None #pragma: no cover
-            index_constructor = None #pragma: no cover
+            pass # pass index into constructor
         else: # if None
             index = Index.from_pandas(value.index)
             own_index = index_constructor is None
