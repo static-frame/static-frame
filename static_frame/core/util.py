@@ -2223,7 +2223,8 @@ def _ufunc_set_2d(
 
         # NOTE: this sort may not always be successful
         try:
-            values: tp.Sequence[tp.Tuple[tp.Hashable, ...]] = sorted(result)
+            with WarningsSilent():
+                values: tp.Sequence[tp.Tuple[tp.Hashable, ...]] = sorted(result)
         except TypeError:
             values = tuple(result)
 

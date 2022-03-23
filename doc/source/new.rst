@@ -8,7 +8,10 @@ API change: ``Bus`` no longer accepts a ``Series`` on initialization; use ``Bus.
 
 API change: ``Batch`` no longer normalizes containers after each step in processing; use ``Batch.via_container`` to force elements or arrays into ``Frame`` or ``Series``.
 
-API change: ``Index`` objects can no longer be created with `np.datetime64` arrays; such labels must use an `IndexDatetime` subclass.
+API change: ``Index`` objects can no longer be created with ``np.datetime64`` arrays; such labels must use an `IndexDatetime` subclass instead.
+
+API change: ``IndexAutoFactory`` is no longer accepted as an ``index_constructor`` argument in ``Series.from_pandas()`` and ``Frame.from_pandas()``; ``IndexAutoFactory`` should be passed as an ``index`` or ``columns`` argument instead.
+
 
 Added ``Batch.to_series()``.
 

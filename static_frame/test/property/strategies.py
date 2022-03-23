@@ -16,6 +16,7 @@ import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_BOOL
+
 # from static_frame.core.util import DTYPE_INEXACT_KINDS
 
 from static_frame import TypeBlocks
@@ -588,8 +589,8 @@ def get_type_blocks_aligned_type_blocks(
 # index objects
 
 _INDEX_CLS_TO_DEFAULT_DT_GROUP = dict((
-            (Index, DTGroup.CORE),
-            (IndexGO, DTGroup.CORE),
+            (Index, DTGroup.BASIC), # not CORE as exclude dt64
+            (IndexGO, DTGroup.BASIC), # not CORE as exclude dt64
             (IndexYear, DTGroup.YEAR),
             (IndexYearGO, DTGroup.YEAR),
             (IndexYearMonth, DTGroup.YEAR_MONTH),
@@ -732,7 +733,6 @@ def get_index_hierarchy_any(
         min_depth: int = 2,
         max_depth: int = 5,
         ) -> st.SearchStrategy:
-
 
     def get_labels_spacings(depth_size: tp.Tuple[int, int]) -> st.SearchStrategy:
         depth, size = depth_size
