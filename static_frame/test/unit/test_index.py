@@ -132,7 +132,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             _ = Index('bar')
 
-    def test_index_init_g(self) -> None:
+    def test_index_init_m(self) -> None:
         with self.assertRaises(ErrorInitIndex):
             _ = Index(np.array(('2021-02', '2022-04'), dtype=np.datetime64))
 
