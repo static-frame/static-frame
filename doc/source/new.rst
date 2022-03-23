@@ -8,6 +8,8 @@ API change: ``Bus`` no longer accepts a ``Series`` on initialization; use ``Bus.
 
 API change: ``Batch`` no longer normalizes containers after each step in processing; use ``Batch.via_container`` to force elements or arrays into ``Frame`` or ``Series``.
 
+API change: ``Index`` objects can no longer be created with `np.datetime64` arrays; such labels must use an `IndexDatetime` subclass.
+
 Added ``Batch.to_series()``.
 
 
