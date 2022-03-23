@@ -11,6 +11,7 @@ import numpy as np
 from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import FrameGO
+from static_frame import TypeBlocks
 from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index
@@ -216,7 +217,27 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             IndexHierarchy(indices, indexers=indexers)
 
+    def test_hierarchy_init_m(self) -> None:
+
+        indices: tp.List[Index] = []
+        indexers = np.array([[0, 1, 2], [0, 1, 2]])
+        indexers.flags.writeable = False
+
+        # Indices must be have more than 1 element
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy(indices, indexers=indexers)
+
+        indices = [Index(tuple('ABC'))]
+
+        # Indices must be have more than 1 element
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy(indices, indexers=indexers)
+
+        indices = [Index(tuple('ABC')), Index(range(3))]
+        IndexHierarchy(indices, indexers=indexers)
+
     #---------------------------------------------------------------------------
+
     def test_hierarchy_mloc_a(self) -> None:
 
         labels = (('I', 'A'), ('I', 'B'))
@@ -1112,6 +1133,10 @@ class TestUnit(TestCase):
         self.assertEqual(ih.values.tolist(),
                 [['a', 'A'], ['a', 'B'], ['a', 'C'], ['b', 'x'], ['b', 'y'], ['c', 4], ['c', 5], ['c', 6], ['c', 7]])
 
+    def test_hierarchy_from_index_items_c(self) -> None:
+        ih = IndexHierarchy.from_index_items(())
+        self.assertEqual((0, 2), ih.shape)
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_from_labels_delimited_a(self) -> None:
@@ -1168,6 +1193,18 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             IndexHierarchy.from_labels_delimited(labels)
 
+    def test_hierarchy_from_labels_delimited_e(self) -> None:
+
+        labels = (
+                "'I' 'A' 0",
+                "'I' 'A' 1",
+                "'I' 'B' 0",
+                "'I'",
+                "'II' 'A' 0",
+                )
+
+        with self.assertRaises(RuntimeError):
+            IndexHierarchy.from_labels_delimited(labels)
     #---------------------------------------------------------------------------
 
     def test_hierarchy_from_type_blocks_a(self) -> None:
@@ -1215,6 +1252,19 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitIndex):
             ih = IndexHierarchy._from_type_blocks(f1._blocks, index_constructors=[Index for _ in range(8)])
+
+    def test_hierarchy_from_type_blocks_e(self) -> None:
+
+        str_dates = np.arange(4).reshape(2,2).astype("datetime64[D]").astype(str)
+
+        ih1 = IndexHierarchy._from_type_blocks(TypeBlocks.from_blocks(str_dates))
+        self.assertSetEqual(set(ih1.dtypes.values), {np.dtype("<U28")})
+
+        ih2 = IndexHierarchy._from_type_blocks(TypeBlocks.from_blocks(str_dates), index_constructors=[Index, IndexDate])
+        self.assertSetEqual(set(ih2.dtypes.values), {np.dtype("<U28"), np.dtype("<M8[D]")})
+
+        ih3 = IndexHierarchy._from_type_blocks(TypeBlocks.from_blocks(str_dates), index_constructors=IndexDate)
+        self.assertSetEqual(set(ih3.dtypes.values), {np.dtype("<M8[D]")})
 
     #---------------------------------------------------------------------------
 
@@ -3825,6 +3875,147 @@ class TestUnit(TestCase):
 
         post6 = IndexHierarchy._extract_counts(np.array([1, 0, 0]), indices, pos=2)
         self.assertEqual(tuple(post6), ((True, 2), (False, 1)))
+
+    #---------------------------------------------------------------------------
+
+    def test_hierarchy_ndim(self) -> None:
+        ih = IndexHierarchy.from_labels(((1, 2), (2, 3)))
+        self.assertEqual(ih.ndim, 2)
+
+        ih = IndexHierarchy.from_labels(((1, 2, 3, 4), (2, 3, 4, 5)))
+        self.assertEqual(ih.ndim, 2)
+
+    #---------------------------------------------------------------------------
+
+    def test_get_unique_labels_in_occurence_order(self) -> None:
+        labels = [
+            (1, 'A'),
+            (3, 'B'),
+            (2, 'C'),
+            (0, 'F'),
+            (4, 'D'),
+            (5, 'E'),
+        ]
+        ih = IndexHierarchy.from_labels(labels)
+
+        depth0 = list(ih._get_unique_labels_in_occurence_order(0))
+        depth1 = list(ih._get_unique_labels_in_occurence_order(1))
+
+        self.assertListEqual([1, 3, 2, 0, 4, 5], depth0)
+        self.assertListEqual(list("ABCFDE"), depth1)
+
+    #---------------------------------------------------------------------------
+
+    def test_hierarchy_update_array_cache_edge_cases(self) -> None:
+        ihgo = IndexHierarchyGO.from_product(range(5), range(5))
+
+        original = copy.deepcopy(ihgo)
+        ihgo.append((5, 5))
+        post1 = IndexHierarchyGO(ihgo)
+        self.assertIn((5, 5), set(tuple(post1.difference(original))))
+
+        original = copy.deepcopy(ihgo)
+        ihgo.append((5, 6))
+        post2 = ihgo.copy()
+        self.assertIn((5, 6), set(tuple(post2.difference(original))))
+
+        original = copy.deepcopy(ihgo)
+        ihgo.append((5, 7))
+        post3 = ihgo._drop_iloc(-2)
+        self.assertNotIn((5, 6), set(tuple(post3.difference(original))))
+        self.assertIn((5, 7), set(tuple(post3.difference(original))))
+
+        original = copy.deepcopy(ihgo)
+        ihgo.append((5, 8))
+        post4 = ihgo.relabel_at_depth(lambda x: x, depth_level=0)
+        self.assertIn((5, 8), set(tuple(post4.difference(original))))
+
+        original = copy.deepcopy(ihgo)
+        ihgo.append((5, 9))
+        post5 = ihgo.rehierarch((1, 0))
+        self.assertIn((9, 5), set(tuple(post5.difference(original))))
+        self.assertEqual(post5.shape, ihgo.shape)
+        self.assertTrue(all(a.equals(b) for (a, b) in zip(post5._indices, ihgo._indices[::-1])))
+
+        ihgo.append((5, 10))
+        post6 = ihgo[-1]
+        self.assertEqual(post6, (5, 10))
+
+        ihgo.append((5, 11))
+        post7 = ihgo * 15
+        self.assertTrue(((post7 / 15).astype(int) == ihgo.values).all().all())
+
+        # original = copy.deepcopy(ihgo)
+        # post8 = ihgo.append((5, 12))
+        # self.assertIn((5, 12), set(tuple(post8.difference(original))))
+
+        original = copy.deepcopy(ihgo)
+        ihgo2 = ihgo.copy()
+        ihgo.append((5, 13))
+        ihgo2.append((5, 13))
+        post9 = ihgo * ihgo2
+        self.assertEqual((5**2, 13**2), tuple(post9[-1]))
+        self.assertEqual(post9.shape, ihgo.shape)
+
+        ihgo.append((5, 14))
+        post10 = list(reversed(ihgo))
+        self.assertEqual((5, 14), post10[0])
+        self.assertEqual(len(ihgo), len(post10))
+
+        original = copy.deepcopy(ihgo)
+        ihgo.append((1, 99))
+        post11 = ihgo.sort()
+        self.assertEqual((1, 99), ihgo.iloc[-1])
+        self.assertEqual((5, 14), post11.iloc[-1])
+        self.assertIn((1, 99), set(tuple(post11.difference(original))))
+
+        original = copy.deepcopy(ihgo)
+        ihgo.append((5, 15))
+        post12 = ihgo.roll(1)
+        self.assertTrue((post12.roll(-1) == ihgo.values).all().all())
+        self.assertIn((5, 15), set(tuple(post12.difference(original))))
+
+        ihgo.append((5, 16))
+        post13 = ihgo._sample_and_key(seed=97)
+        self.assertEqual(((5, 16),), tuple(post13[0]))
+        self.assertEqual(len(ihgo) - 1, post13[1].tolist()[0])
+
+        original = copy.deepcopy(ihgo)
+        ihgo.append((5, 17))
+        post14 = ihgo.to_frame()
+        ihgo3 = post14.set_index_hierarchy(post14.columns).index
+        self.assertIn((5, 17), set(tuple(ihgo3.difference(original))))
+
+        ihgo.append((5, 18))
+        post15 = ihgo.to_pandas()
+        self.assertEqual(len(ihgo), len(post15))
+        self.assertEqual(ihgo.depth, post15.nlevels)
+        self.assertIn((5, 18), post15)
+
+        ihgo.append((5, 19))
+        post16 = ihgo.to_tree()
+        self.assertEqual(len(post16), len(ihgo._indices[0]))
+        self.assertEqual(len(ihgo), sum(map(len, post16.values())))
+        self.assertIn(19, post16[5])
+
+        ihgo = ihgo.relabel_at_depth(depth_level=1, mapper=ihgo.values_at_depth(1) + ihgo.positions)
+
+        ihgo.append((5, 300))
+        post17 = ihgo.level_drop(1)
+        self.assertEqual(len(post17), len(ihgo))
+        self.assertIn(300, set(post17))
+
+        ihgo.append((5, 301))
+        post18 = ihgo.astype(str)
+        self.assertEqual(len(post18), len(ihgo))
+        self.assertIn(("5", "301"), set(post18))
+
+        original = copy.deepcopy(ihgo)
+        ihgo.append((5, 302))
+        post19 = str(ihgo)
+        self.assertNotEqual(post19, str(original))
+        self.assertEqual(post19, str(ihgo))
+
 
 
 if __name__ == '__main__':

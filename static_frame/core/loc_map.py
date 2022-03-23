@@ -352,13 +352,15 @@ class HierarchicalLocMap:
 
         is_single_key = True
 
+        subkey_indexers: tp.List[int]
+
         # 1. Perform label resolution
         for key_at_depth, index_at_depth in zip(key, indices):
             if self.is_single_element(key_at_depth):
                 key_indexers.append((index_at_depth._loc_to_iloc(key_at_depth),))
             else:
                 is_single_key = False
-                subkey_indexers: tp.List[int] = []
+                subkey_indexers = []
                 for sub_key in key_at_depth:
                     subkey_indexers.append(index_at_depth._loc_to_iloc(sub_key))
                 key_indexers.append(subkey_indexers)

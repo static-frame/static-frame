@@ -2271,11 +2271,12 @@ class IndexHierarchy(IndexBase):
                 'A single label (as a tuple) or multiple labels (as a list) must be provided.'
             )
 
-        dt_pos = np.array(
-            [
+        dt_pos = np.fromiter(
+            (
                 issubclass(idx_type, IndexDatetime)
                 for idx_type in self._index_constructors
-            ],
+            ),
+            count=self.depth,
             dtype=DTYPE_BOOL,
         )
         has_dt = dt_pos.any()
