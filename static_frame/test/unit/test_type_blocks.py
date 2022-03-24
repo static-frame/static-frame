@@ -516,7 +516,7 @@ class TestUnit(TestCase):
 
         tb2 = tb1.consolidate()
 
-        self.assertTrue([b.dtype for b in tb2._blocks], [np.int, np.bool])
+        self.assertEqual([b.dtype for b in tb2._blocks], [np.dtype(int), np.dtype(bool)])
         self.assertEqual(tb2.shape, (3, 5))
 
         # we have perfect correspondence between the two
