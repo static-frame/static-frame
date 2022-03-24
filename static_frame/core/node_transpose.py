@@ -72,7 +72,7 @@ class InterfaceTranspose(Interface[TContainer]):
     #---------------------------------------------------------------------------
     def via_fill_value(self,
             fill_value: object,
-            ) -> "InterfaceFillValue[Frame]":
+            ) -> 'InterfaceFillValue[Frame]':
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
@@ -306,7 +306,7 @@ class InterfaceBatchTranspose(InterfaceBatch):
     #---------------------------------------------------------------------------
     def via_fill_value(self,
             fill_value: object,
-            ) -> "InterfaceBatchFillValue":
+            ) -> 'InterfaceBatchFillValue':
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''

@@ -68,6 +68,7 @@ from static_frame.core.util import UFUNC_MAP
 from static_frame.core.util import list_to_tuple
 from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import ufunc_unique2d_indexer
+from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import WarningsSilent
@@ -2526,7 +2527,6 @@ class TestUnit(TestCase):
         # NOTE: this tests the final fall through
         self.assertIs(ufunc_dtype_to_dtype(np.cumsum, np.dtype(np.datetime64)), None)
 
-
     #---------------------------------------------------------------------------
 
     def test_list_to_tuple_a(self) -> None:
@@ -2554,8 +2554,8 @@ class TestUnit(TestCase):
 
     def test_ufunc_unique1d_positions_c(self) -> None:
         pos, indexer = ufunc_unique1d_positions(np.array([None, 'foo', 3, 'foo', None], dtype=object))
-        self.assertEqual(pos.tolist(), [2, 0, 1])
-        self.assertEqual(indexer.tolist(), [1, 2, 0, 2, 1])
+        self.assertEqual(pos.tolist(), [0, 1, 2])
+        self.assertEqual(indexer.tolist(), [0, 1, 2, 1, 0])
 
     #---------------------------------------------------------------------------
 
@@ -2580,6 +2580,26 @@ class TestUnit(TestCase):
 
         dt7 = dtype_from_element(np.array(1j+1))
         self.assertEqual(dt7, np.dtype(complex))
+
+    #---------------------------------------------------------------------------
+
+    def test_ufunc_unique1d_counts_a(self) -> None:
+        pos, counts = ufunc_unique1d_counts(np.array([3, 2, 3, 2, 5, 3]))
+        self.assertEqual(pos.tolist(), [2, 3, 5])
+        self.assertEqual(counts.tolist(), [2, 3, 1])
+
+    def test_ufunc_unique1d_counts_b(self) -> None:
+        pos, counts = ufunc_unique1d_counts(np.array([3, 3, 2, 2, 3], dtype=object))
+        self.assertEqual(pos.tolist(), [2, 3])
+        self.assertEqual(counts.tolist(), [2, 3])
+
+    def test_ufunc_unique1d_counts_c(self) -> None:
+        pos, counts = ufunc_unique1d_counts(np.array([None, 'foo', 3, 'foo', None], dtype=object))
+        self.assertEqual(pos.tolist(), [None, 'foo', 3])
+        self.assertEqual(counts.tolist(), [2, 2, 1])
+
+        with self.assertRaises(TypeError):
+            ufunc_unique1d_counts(np.array(['foo', []], dtype=object))
 
     def test_warnings_silent_a(self) -> None:
         post = warnings.filters #type: ignore

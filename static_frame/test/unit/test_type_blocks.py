@@ -3578,6 +3578,12 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(post.tolist(), [-88017, 162197])
 
+    def test_iter(self) -> None:
+        tb = ff.parse('s(3,6)|v(int,int,bool,bool)')._blocks
+
+        with self.assertRaises(NotImplementedError):
+            iter(tb)
+
 
 if __name__ == '__main__':
     import unittest

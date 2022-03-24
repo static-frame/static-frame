@@ -163,7 +163,7 @@ class StaticFrameSheet(Sheet):
         dtypes = frame.dtypes
 
         self.columns = []
-        for col in (c for c in frame.columns if not c.startswith("__vd_")):
+        for col in (c for c in frame.columns if not c.startswith('__vd_')):
             self.addColumn(Column(
                 col,
                 type=self.dtype_to_type(dtypes[col]),

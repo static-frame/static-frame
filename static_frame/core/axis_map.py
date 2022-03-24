@@ -5,7 +5,7 @@ from copy import deepcopy
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.bus import Bus
 from static_frame.core.index_base import IndexBase
-from static_frame.core.index_level import TreeNodeT
+from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_deepcopy
@@ -83,7 +83,6 @@ def buses_to_hierarchy(
     Given an iterable of named :obj:`Bus` derive a :obj:`Series` with an :obj:`IndexHierarchy`.
     '''
     # NOTE: for now, the Returned Series will have bus Names as values; this requires the Yarn to store a dict, not a list
-
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
     tree = {}

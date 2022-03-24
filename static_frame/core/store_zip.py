@@ -81,10 +81,10 @@ class _StoreZip(Store):
 
     @staticmethod
     def _set_container_type(frame: Frame, container_type: tp.Type[Frame]) -> Frame:
-        """
+        '''
         Helper method to coerce a frame to the expected type, or return it as is
         if the type is already correct
-        """
+        '''
         if frame.__class__ is not container_type:
             return frame._to_frame(container_type)
         return frame
@@ -112,10 +112,10 @@ class _StoreZip(Store):
             constructor: FrameConstructor,
             container_type: tp.Type[Frame],
             ) -> tp.Iterator[Frame]:
-        """
+        '''
         Simplified logic path for reading many frames in a single thread, using
         the weak_cache when possible.
-        """
+        '''
         with zipfile.ZipFile(self._fp) as zf:
             for label in labels:
                 # Since the value can be deallocated between lookup & extraction,

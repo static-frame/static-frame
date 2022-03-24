@@ -7,8 +7,8 @@ from static_frame.test.test_case import TestCase
 from static_frame.core.bus import Bus
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_level import TreeNodeT
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import AxisInvalid
@@ -64,7 +64,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3), name='a')
 
         indices = Index((0, 1, 2, 3))
-        columns = Index(("zZbu", "ztsv", "zUvW", "zkuW"))
+        columns = Index(('zZbu', 'ztsv', 'zUvW', 'zkuW'))
 
         for _, frame in b1.items():
             self.assertTrue(indices.equals(frame.index))
@@ -104,9 +104,9 @@ class TestUnit(TestCase):
         values = np.arange(36).reshape(6,6)
 
         # Align all the frames on columns!
-        f1 = Frame(values, index=index1, columns=index1, name="f1")
-        f2 = Frame(values, index=index2, columns=index1, name="f2")
-        f3 = Frame(values, index=index3, columns=index1, name="f3")
+        f1 = Frame(values, index=index1, columns=index1, name='f1')
+        f2 = Frame(values, index=index2, columns=index1, name='f2')
+        f3 = Frame(values, index=index3, columns=index1, name='f3')
         b1 = Bus.from_frames((f1, f2, f3))
 
         def test_assertions(hierarchy: IndexHierarchy, opposite: Index) -> None:
@@ -125,9 +125,9 @@ class TestUnit(TestCase):
             bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=True, init_exception_cls=CustomError)
 
         # Align all the frames on index!
-        f1 = Frame(values, index=index1, columns=index1, name="f1")
-        f2 = Frame(values, index=index1, columns=index2, name="f2")
-        f3 = Frame(values, index=index1, columns=index3, name="f3")
+        f1 = Frame(values, index=index1, columns=index1, name='f1')
+        f2 = Frame(values, index=index1, columns=index2, name='f2')
+        f3 = Frame(values, index=index1, columns=index3, name='f3')
         b1 = Bus.from_frames((f1, f2, f3))
 
         test_assertions(*bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=False, init_exception_cls=CustomError))

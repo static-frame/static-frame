@@ -37,8 +37,8 @@ class LineGen:
     @classmethod
     def get_animate_command(cls) -> str:
         if cls.CMD_PREFIX:
-            return f"{cls.CMD_PREFIX} python3 doc/animate/animator.py --animate {cls.__name__}"
-        return f"python3 doc/animate/animator.py --animate {cls.__name__}"
+            return f'{cls.CMD_PREFIX} python3 doc/animate/animator.py --animate {cls.__name__}'
+        return f'python3 doc/animate/animator.py --animate {cls.__name__}'
 
 
 
@@ -166,7 +166,7 @@ class LowMemoryQuilt(LineGen):
         yield 'sf.Batch(items).to_zip_pickle(fp, config=config)'
         yield 'q1 = sf.Quilt.from_zip_pickle(fp, max_persist=1, retain_labels=True, config=config, deepcopy_from_bus=True)'
         yield 'q1.shape'
-        yield "q1.iloc[1000000:1000010, 3:]"
+        yield 'q1.iloc[1000000:1000010, 3:]'
         # yield 'sf.Batch(q1.iter_window_items(size=100_000, step=100_000)).mean().to_frame()'
 
 

@@ -230,10 +230,10 @@ class TestUnit(TestCase):
                 ((('f1', 'a'), (('x', 1), ('y', 2))), (('f1', 'c'), (('x', 3), ('y', 4))), (('f2', 'a'), (('x', 2), ('y', 3))), (('f2', 'b'), (('x', 4), ('y', 6))), (('f3', 'c'), (('x', 10), ('y', 20))), (('f3', 'b'), (('x', 50), ('y', 60)))))
 
     def test_quilt_from_frames_b(self) -> None:
-        index_a = Index(list(map(str, range(100))), name="a")
-        index_b = Index(list(map(str, range(100, 200))), name="b")
-        columns_a = Index(tuple("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), name="a")
-        columns_b = Index(tuple("abcdefghijklmnopqrstuvwxyz"), name="b")
+        index_a = Index(list(map(str, range(100))), name='a')
+        index_b = Index(list(map(str, range(100, 200))), name='b')
+        columns_a = Index(tuple('ABCDEFGHIJKLMNOPQRSTUVWXYZ'), name='a')
+        columns_b = Index(tuple('abcdefghijklmnopqrstuvwxyz'), name='b')
 
         valid_construction_args = [
             (index_a, columns_a, index_a, columns_a, True, 0),
@@ -264,8 +264,8 @@ class TestUnit(TestCase):
 
         def build_quilt(args: tp.Any) -> Quilt:
             f1_index, f1_columns, f2_index, f2_columns, retain_labels, axis = args
-            f1 = Frame.from_element("f1", index=f1_index, columns=f1_columns, name="f1")
-            f2 = Frame.from_element("f2", index=f2_index, columns=f2_columns, name="f2")
+            f1 = Frame.from_element('f1', index=f1_index, columns=f1_columns, name='f1')
+            f2 = Frame.from_element('f2', index=f2_index, columns=f2_columns, name='f2')
             return Quilt.from_frames((f1, f2), retain_labels=retain_labels, axis=axis)
 
         # This checks that the init was successful, and that the display call also is successful

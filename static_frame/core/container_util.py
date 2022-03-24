@@ -224,7 +224,7 @@ def pandas_to_numpy(
         if isinstance(dtype_src, BooleanDtype):
             dtype = DTYPE_OBJECT if hasna else DTYPE_BOOL
         elif isinstance(dtype_src, StringDtype):
-            # trying to use a dtype argument for strings results in a converting pd.NA to a string "<NA>"
+            # trying to use a dtype argument for strings results in a converting pd.NA to a string '<NA>'
             dtype = DTYPE_OBJECT if hasna else DTYPE_STR
         else:
             # if an extension type and it hasna, have to go to object; otherwise, set to None or the dtype obtained above
@@ -783,10 +783,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
 def rehierarch_from_type_blocks(*,
         labels: 'TypeBlocks',
         depth_map: tp.Sequence[int],
-        index_cls: tp.Type['IndexHierarchy'],
-        index_constructors: tp.Optional[IndexConstructors] = None,
-        name: tp.Optional[tp.Hashable] = None,
-        ) -> tp.Tuple['IndexBase', np.ndarray]:
+        ) -> tp.Tuple['TypeBlocks', np.ndarray]:
     '''
     Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
 
@@ -820,18 +817,13 @@ def rehierarch_from_type_blocks(*,
 
     labels_post = labels_post._extract(row_key=order_lex)
 
-    index = index_cls._from_type_blocks(
-            blocks=labels_post,
-            index_constructors=index_constructors,
-            name=name,
-            own_blocks=True,
-            )
-    return index, order_lex
+    return labels_post, order_lex
+
 
 def rehierarch_from_index_hierarchy(*,
         labels: 'IndexHierarchy',
         depth_map: tp.Sequence[int],
-        index_constructors: tp.Optional[IndexConstructors] = None,
+        index_constructors: IndexConstructors = None,
         name: tp.Optional[tp.Hashable] = None,
         ) -> tp.Tuple['IndexBase', np.ndarray]:
     '''
@@ -840,13 +832,16 @@ def rehierarch_from_index_hierarchy(*,
     if labels._recache:
         labels._update_array_cache()
 
-    return rehierarch_from_type_blocks(
+    rehierarched_blocks, index_iloc = rehierarch_from_type_blocks(
             labels=labels._blocks,
             depth_map=depth_map,
-            index_cls=labels.__class__,
+            )
+
+    return labels.__class__._from_type_blocks(
+            blocks=rehierarched_blocks,
             index_constructors=index_constructors,
             name=name,
-            )
+            ), index_iloc
 
 def array_from_value_iter(
         key: tp.Hashable,
@@ -1110,7 +1105,7 @@ def _index_many_to_one(
     # if IndexHierarchy, collect index_types generators
     if index.ndim == 2:
         depth_first = index.depth
-        index_types_gen = [index._levels.index_types()] #type: ignore
+        index_types_gen = [index.index_types.values]
         index_types_aligned = True
     else: # for 1D we ignore this
         index_types_aligned = False
@@ -1125,7 +1120,7 @@ def _index_many_to_one(
             index_auto_aligned = False
 
         if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
-            index_types_gen.append(index._levels.index_types()) #type: ignore
+            index_types_gen.append(index.index_types.values)
         else:
             index_types_aligned = False
 

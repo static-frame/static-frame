@@ -19,6 +19,7 @@ from static_frame.core.util import write_optional_file
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import DTYPE_INT_DEFAULT
 
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
@@ -120,20 +121,46 @@ class IndexBase(ContainerOperand):
         from static_frame.core.index_datetime import IndexDatetime
 
         if isinstance(value, pandas.MultiIndex):
+            if value.has_duplicates:
+                raise ErrorInitIndex(f'cannot create IndexHierarchy from a MultiIndex with duplicates: {value}')
+
             # iterating over a hierarchical index will iterate over labels
             name: tp.Optional[tp.Tuple[tp.Hashable, ...]] = tuple(value.names)
+
             # if not assigned Pandas returns None for all components, which will raise issue if trying to unset this index.
             if all(n is None for n in name): #type: ignore
                 name = None
-            depth = value.nlevels
 
-            if not cls.STATIC:
-                return IndexHierarchyGO.from_labels(value,
-                        name=name,
-                        depth_reference=depth)
-            return IndexHierarchy.from_labels(value,
+            hierarchy_constructor = IndexHierarchy if cls.STATIC else IndexHierarchyGO
+
+            def build_index(pd_idx: pandas.Index) -> Index:
+                # NOTE: Newer versions of pandas will not require Python date objects to live inside
+                # a DatetimeIndex. Instead, it will be a regular Index with dtype=object.
+                # Only numpy datetime objects are put into a DatetimeIndex.
+                if isinstance(pd_idx, pandas.DatetimeIndex):
+                    constructor: tp.Type[Index] = IndexNanosecond
+                else:
+                    constructor = Index
+
+                if cls.STATIC:
+                    return constructor(pd_idx, name=pd_idx.name)
+                return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx))
+
+            indices: tp.List[Index] = []
+            indexers: np.ndarray = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
+
+            for i, (levels, codes) in enumerate(zip(value.levels, value.codes)):
+                indexers[i] = codes
+                indices.append(build_index(levels))
+
+            indexers.flags.writeable = False
+
+            return hierarchy_constructor(
+                    indices=indices,
+                    indexers=indexers,
                     name=name,
-                    depth_reference=depth)
+                    )
+
         elif isinstance(value, pandas.DatetimeIndex):
             # if IndexDatetime, use cls, else use IndexNanosecond
             if issubclass(cls, IndexDatetime):

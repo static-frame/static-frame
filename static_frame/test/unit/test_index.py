@@ -596,8 +596,8 @@ class TestUnit(TestCase):
         idx1 = IndexAutoFactory.from_optional_constructor(3,
                 default_constructor=IndexGO)
         idx1.append(3) # type: ignore
-        post = idx1._loc_to_iloc(np.array([True, False, True, False]), 2) #type: ignore
-        self.assertEqual(post.tolist(), [2, 4]) #type: ignore
+        post = idx1._loc_to_iloc(np.array([True, False, True, False]))
+        self.assertEqual(post.tolist(), [True, False, True, False]) #type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -1522,6 +1522,29 @@ class TestUnit(TestCase):
         self.assertTrue(
             (idx2.values_at_depth(0) == np.array(['2012', '2012', '2012'], dtype='datetime64[Y]')).all()
             )
+
+    #---------------------------------------------------------------------------
+
+    def test_index_iloc_map_a(self) -> None:
+
+        ih1 = Index(tuple('QafDeHbdc'))
+        ih2 = Index(tuple('ABcdHebDEsaQf'))
+
+        post = ih1._index_iloc_map(ih2)
+        expected= ih1.iter_label().apply(ih2._loc_to_iloc)
+        self.assertEqual(post.tolist(), expected.tolist())
+        self.assertEqual([11, 10, 12, 7, 5, 4, 6, 3, 2], post.tolist())
+
+    def test_index_iloc_map_b(self) -> None:
+
+        ih1 = Index(tuple('abcdefg'))
+        ih2 = Index(tuple('bcdefg'))
+
+        with self.assertRaises(KeyError):
+            ih1._index_iloc_map(ih2)
+
+        with self.assertRaises(KeyError):
+            ih1.iter_label().apply(ih2._loc_to_iloc)
 
 
 if __name__ == '__main__':

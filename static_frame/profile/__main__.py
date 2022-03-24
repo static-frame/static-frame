@@ -1,19 +1,17 @@
 import io
+import itertools
 import os
 import argparse
 import typing as tp
 import fnmatch
 import timeit
-from time import sleep
+import string
 import cProfile
 import pstats
 import sys
 import datetime
 import tempfile
 from enum import Enum
-from itertools import chain
-
-# import warnings
 
 from pyinstrument import Profiler #type: ignore
 from line_profiler import LineProfiler #type: ignore
@@ -21,6 +19,7 @@ import gprof2dot #type: ignore
 
 import numpy as np
 import pandas as pd
+import random
 import frame_fixtures as ff
 
 
@@ -29,9 +28,6 @@ sys.path.append(os.getcwd())
 import static_frame as sf
 from static_frame.core.display_color import HexColor
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import isin
-from static_frame.core.util import WarningsSilent
-from static_frame.test.test_case import temp_file
 
 
 class PerfStatus(Enum):
@@ -1167,6 +1163,408 @@ class FrameFromConcat_R(FrameFromConcat, Reference):
 
 
 #-------------------------------------------------------------------------------
+
+class IndexHierarchyLoc(Perf):
+
+    NUMBER = 5000
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        class Obj:
+            def __repr__(self) -> str:
+                return f'Obj({id(self)})'
+
+        self.obj = Obj()
+
+        self.ih_small = sf.IndexHierarchy.from_product(
+                range(10),
+                tuple('abcdefg'),
+                [True, False, None, self.obj],
+                )
+        self.mi_small = pd.MultiIndex.from_product((
+                range(10),
+                tuple('abcdefg'),
+                [True, False, None, self.obj],
+                ))
+
+        self.ih_large = sf.IndexHierarchy.from_product(
+                range(300),
+                tuple(string.printable),
+                [True, False, None, self.obj]
+                )
+        self.mi_large = pd.MultiIndex.from_product((
+                range(300),
+                tuple(string.printable),
+                [True, False, None, self.obj]
+                ))
+
+        self.i = 0
+
+        self.meta = dict(
+                large_element_loc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation='We handle more variety of inputs and have more checks'),
+                large_element_hloc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                small_element_loc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation='We handle more variety of inputs and have more checks'),
+                small_element_hloc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                )
+
+
+class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
+
+    def large_element_loc(self) -> None:
+        self.ih_large._loc_to_iloc((100, 'A', True))
+        self.ih_large._loc_to_iloc(self.ih_large.iloc[12839])
+        # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
+        slice(
+            None,
+            self.ih_large._loc_to_iloc((199, 'z', None)),
+        )
+        slice(
+            self.ih_large._loc_to_iloc((0, '5', False)),
+        )
+        slice(
+            self.ih_large._loc_to_iloc((19, '.', True)),
+            self.ih_large._loc_to_iloc((100, 'B',  self.obj)),
+        )
+
+    def large_element_hloc(self) -> None:
+        self.i += 1
+        if self.i % 60 != 0:
+            return
+        self.ih_large._loc_to_iloc(sf.HLoc[100, 'A', True])
+        self.ih_large._loc_to_iloc(sf.HLoc[144])
+        self.ih_large._loc_to_iloc(sf.HLoc[:, '|'])
+        self.ih_large._loc_to_iloc(sf.HLoc[:, :, self.obj])
+        self.ih_large._loc_to_iloc(sf.HLoc[100, '{'])
+        self.ih_large._loc_to_iloc(sf.HLoc[113, :, False])
+        self.ih_large._loc_to_iloc(sf.HLoc[:, 'H', None])
+
+    def small_element_loc(self) -> None:
+        self.ih_small._loc_to_iloc((1, 'a', True))
+        self.ih_small._loc_to_iloc(self.ih_small.iloc[25])
+        slice(
+            None,
+            self.ih_small._loc_to_iloc((9, 'g', None)),
+        )
+        slice(
+            self.ih_small._loc_to_iloc((0, 'c', False)),
+        )
+        slice(
+            self.ih_small._loc_to_iloc((3, 'b', True)),
+            self.ih_small._loc_to_iloc((5, 'e',  self.obj)),
+        )
+
+    def small_element_hloc(self) -> None:
+        self.ih_small._loc_to_iloc(sf.HLoc[2, 'b', True])
+        self.ih_small._loc_to_iloc(sf.HLoc[4])
+        self.ih_small._loc_to_iloc(sf.HLoc[:, 'a'])
+        self.ih_small._loc_to_iloc(sf.HLoc[:, :, self.obj])
+        self.ih_small._loc_to_iloc(sf.HLoc[0, 'f'])
+        self.ih_small._loc_to_iloc(sf.HLoc[8, :, False])
+        self.ih_small._loc_to_iloc(sf.HLoc[:, 'c', None])
+
+
+class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
+
+    def large_element_loc(self) -> None:
+        self.mi_large.get_loc((100, 'A', True))
+        self.mi_large.get_loc(self.mi_large[12839])
+        # Pandas doesn't offer slicing up to a single label, so I will build the equivalent
+        slice(
+            None,
+            self.mi_large.get_loc((199, 'z', None)),
+        )
+        slice(
+            self.mi_large.get_loc((0, '5', False)),
+        )
+        slice(
+            self.mi_large.get_loc((19, '.', True)),
+            self.mi_large.get_loc((100, 'B',  self.obj)),
+        )
+
+    def large_element_hloc(self) -> None:
+        self.i += 1
+        if self.i % 60 != 0:
+            return
+        self.mi_large.get_loc(pd.IndexSlice[100, 'A', True])
+        self.mi_large.get_loc(pd.IndexSlice[144])
+        self.mi_large.get_locs(pd.IndexSlice[:, '|'])
+        self.mi_large.get_locs(pd.IndexSlice[:, :, self.obj])
+        self.mi_large.get_locs(pd.IndexSlice[100, '{'])
+        self.mi_large.get_locs(pd.IndexSlice[113, :, False])
+        self.mi_large.get_locs(pd.IndexSlice[:, 'H', None])
+
+    def small_element_loc(self) -> None:
+        self.mi_small.get_loc((1, 'a', True))
+        self.mi_small.get_loc(self.mi_small[25])
+        slice(
+            None,
+            self.mi_small.get_loc((9, 'g', None)),
+        )
+        slice(
+            self.mi_small.get_loc((0, 'c', False)),
+        )
+        slice(
+            self.mi_small.get_loc((3, 'b', True)),
+            self.mi_small.get_loc((5, 'e',  self.obj)),
+        )
+
+    def small_element_hloc(self) -> None:
+        self.mi_small.get_loc(pd.IndexSlice[2, 'b', True])
+        self.mi_small.get_loc(pd.IndexSlice[4])
+        self.mi_small.get_locs(pd.IndexSlice[:, 'a'])
+        self.mi_small.get_locs(pd.IndexSlice[:, :, self.obj])
+        self.mi_small.get_locs(pd.IndexSlice[0, 'f'])
+        self.mi_small.get_locs(pd.IndexSlice[8, :, False])
+        self.mi_small.get_locs(pd.IndexSlice[:, 'c', None])
+
+
+#-------------------------------------------------------------------------------
+
+class _IndexHierarchyConstructionMixin:
+
+    def _get_product_data(self) -> tp.Tuple[tp.Sequence[tp.Hashable], ...]:
+        raise NotImplementedError()
+
+    def __init__(self) -> None:
+        self.product_data = self._get_product_data()
+
+        self.labels = list(itertools.product(*self.product_data))
+        self.labels_shuffled = list(self.labels)
+
+        random.seed(0)
+        random.shuffle(self.labels_shuffled)
+
+        self.arrays = [
+            np.array([row[depth] for row in self.labels])
+            for depth in range(len(self.labels[0]))
+        ]
+
+
+class _IndexHierarchyConstructionMixin_N(_IndexHierarchyConstructionMixin):
+
+    def from_product(self) -> None:
+        sf.IndexHierarchy.from_product(*self.product_data)
+
+    def from_labels(self) -> None:
+        sf.IndexHierarchy.from_labels(self.labels)
+
+    def from_labels_reorder(self) -> None:
+        sf.IndexHierarchy.from_labels(self.labels_shuffled, reorder_for_hierarchy=True)
+
+    def from_arrays(self) -> None:
+        sf.IndexHierarchy._from_arrays(self.arrays)
+
+
+class _IndexHierarchyConstructionMixin_R(_IndexHierarchyConstructionMixin):
+
+    def from_product(self) -> None:
+        pd.MultiIndex.from_product(self.product_data).has_duplicates
+
+    def from_labels(self) -> None:
+        pd.MultiIndex.from_tuples(self.labels).has_duplicates
+
+    def from_labels_reorder(self) -> None:
+        pd.MultiIndex.from_tuples(self.labels_shuffled).sortlevel()[0].has_duplicates
+
+    def from_arrays(self) -> None:
+        pd.MultiIndex.from_arrays(self.arrays).has_duplicates
+
+
+class IndexHierarchyConstructionSmall(Perf, _IndexHierarchyConstructionMixin):
+
+    NUMBER = 1000
+
+    def _get_product_data(self) -> tp.Tuple[tp.Sequence[tp.Hashable], ...]:
+        return ( # (280, 3)
+                range(10),
+                tuple('abcdefg'),
+                [True, False, None, object()],
+                )
+
+    def __init__(self) -> None:
+        Perf.__init__(self)
+        _IndexHierarchyConstructionMixin.__init__(self)
+
+        self.meta = dict(
+                from_product=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                from_labels=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                from_labels_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                from_arrays=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                )
+
+
+class IndexHierarchyConstructionSmall_N(
+        IndexHierarchyConstructionSmall,
+        _IndexHierarchyConstructionMixin_N,
+        Native,
+        ):
+    pass
+
+
+class IndexHierarchyConstructionSmall_R(
+        IndexHierarchyConstructionSmall,
+        _IndexHierarchyConstructionMixin_R,
+        Reference,
+        ):
+    pass
+
+
+class IndexHierarchyConstructionLarge(Perf, _IndexHierarchyConstructionMixin):
+
+    NUMBER = 10
+
+    def _get_product_data(self) -> tp.Tuple[tp.Sequence[tp.Hashable], ...]:
+        return ( # (360000, 3)
+                range(900),
+                tuple(string.printable),
+                [True, False, None, object()]
+                )
+
+    def __init__(self) -> None:
+        Perf.__init__(self)
+        _IndexHierarchyConstructionMixin.__init__(self)
+
+        meta_kwargs = dict(perf_status=PerfStatus.EXPLAINED_LOSS)
+
+        self.meta = dict(
+                from_product=FunctionMetaData(**meta_kwargs, explanation='Blocks & _encoded_indexer_map construction'),
+                from_labels=FunctionMetaData(**meta_kwargs, explanation='Vectorization outperforms at larger N'),
+                from_labels_reorder=FunctionMetaData(**meta_kwargs, explanation='Vectorization outperforms at larger N'),
+                from_arrays=FunctionMetaData(**meta_kwargs, explanation='At larger scales, Pandas hash engine outperforms numpy sorting'),
+                )
+
+
+class IndexHierarchyConstructionLarge_N(
+        IndexHierarchyConstructionLarge,
+        _IndexHierarchyConstructionMixin_N,
+        Native,
+        ):
+    pass
+
+
+class IndexHierarchyConstructionLarge_R(
+        IndexHierarchyConstructionLarge,
+        _IndexHierarchyConstructionMixin_R,
+        Reference,
+        ):
+    pass
+
+
+#-------------------------------------------------------------------------------
+
+class IndexHierarchyGO(Perf):
+
+    NUMBER = 500
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        RANGE0 = range(5), range(5), range(5)
+        RANGE1 = range(5, 10), range(5, 10), range(5, 10)
+        RANGE2 = range(10, 15), range(10, 15), range(10, 15)
+
+        self.ihgo = sf.IndexHierarchyGO.from_product(*RANGE0)
+        self.ih1 = sf.IndexHierarchy.from_product(*RANGE1)
+        self.ih2 = sf.IndexHierarchy.from_product(*RANGE2)
+
+        self.migo = pd.MultiIndex.from_product(RANGE0)
+        self.mi1 = pd.MultiIndex.from_product(RANGE1)
+        self.mi2 = pd.MultiIndex.from_product(RANGE2)
+
+        self.meta = dict(
+                extend_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                append_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                append_and_extend_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                extend_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                append_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                append_and_extend_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+                )
+
+
+class IndexHierarchyGO_N(IndexHierarchyGO, Native):
+
+    def _append_and_extend(self, recache: bool) -> None:
+        ihgo = self.ihgo.copy()
+
+        for label in self.ih1:
+            ihgo.append(label)
+
+        ihgo.extend(self.ih2)
+
+        if recache:
+            ihgo._update_array_cache()
+
+    def append_and_extend_recache(self) -> None:
+        self._append_and_extend(recache=True)
+
+    def append_and_extend_no_recache(self) -> None:
+        self._append_and_extend(recache=False)
+
+    def _extend_only(self, recache: bool) -> None:
+        ihgo = self.ihgo.copy()
+
+        ihgo.extend(self.ih1)
+        ihgo.extend(self.ih2)
+
+        if recache:
+            ihgo._update_array_cache()
+
+    def extend_only_recache(self) -> None:
+        self._extend_only(recache=True)
+
+    def extend_only_no_recache(self) -> None:
+        self._extend_only(recache=False)
+
+    def _append_only(self, recache: bool) -> None:
+        ihgo = self.ihgo.copy()
+
+        for label in self.ih1:
+            ihgo.append(label)
+
+        if recache:
+            ihgo._update_array_cache()
+
+    def append_only_recache(self) -> None:
+        self._append_only(recache=True)
+
+    def append_only_no_recache(self) -> None:
+        self._append_only(recache=False)
+
+
+class IndexHierarchyGO_R(IndexHierarchyGO, Reference):
+
+    def append_and_extend_recache(self) -> None:
+        migo = self.migo.copy()
+
+        offset = len(migo)
+
+        for label in self.mi1:
+            migo = migo.insert(offset, label)
+            offset += 1
+
+        migo = migo.append(self.mi2)
+
+    def extend_only_recache(self) -> None:
+        migo = self.migo.copy()
+
+        migo = migo.append(self.mi1)
+        migo = migo.append(self.mi2)
+
+    def append_only_recache(self) -> None:
+        migo = self.migo.copy()
+
+        i = len(migo)
+        for label in self.mi1:
+            migo = migo.insert(i, label)
+            i += 1
+
+    append_and_extend_no_recache = append_and_extend_recache
+    extend_only_no_recache = extend_only_recache
+    append_only_no_recache = append_only_recache
+
+
+#-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 def get_arg_parser() -> argparse.ArgumentParser:
@@ -1184,7 +1582,7 @@ Profiling outpout for static-frame dropna:
 python3 test_performance.py SeriesIntFloat_dropna --profile
             '''
             )
-    choices = sorted(str(x).replace("<class '__main__.","").replace("'>", "") for x in Perf.__subclasses__())
+    choices = sorted(str(x).replace("<class '__main__.",'').replace("'>", '') for x in Perf.__subclasses__())
     p.add_argument('patterns',
             help=f'Names of classes to match using fn_match syntax ({choices})',
             nargs='+',
@@ -1247,7 +1645,7 @@ def yield_classes(
     else:
         pattern_cls, pattern_func = pattern, '*'
 
-    for cls_perf in chain(PERF_SUBCLASSES, PERF_PRIVATE_SUBCLASSES):
+    for cls_perf in itertools.chain(PERF_SUBCLASSES, PERF_PRIVATE_SUBCLASSES):
         if not private and issubclass(cls_perf, PerfPrivate):
             continue
         elif private and not issubclass(cls_perf, PerfPrivate):
@@ -1301,12 +1699,15 @@ def graph(
     '''
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
-        _, fp = tempfile.mkstemp(suffix='', text=True)
+        f = getattr(runner, name)
+
+        suffix = f.__qualname__
+
+        _, fp = tempfile.mkstemp(suffix=suffix, text=True)
         fp_pstat = fp + '.pstat'
         fp_dot = fp + '.dot'
         fp_png = fp + '.png'
 
-        f = getattr(runner, name)
         pr = cProfile.Profile()
 
         pr.enable()

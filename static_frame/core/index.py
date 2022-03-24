@@ -42,6 +42,7 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import array_sample
 from static_frame.core.util import arrays_equal
 from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import concat_resolved
 
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import DEFAULT_SORT_KIND
@@ -72,6 +73,8 @@ from static_frame.core.util import to_datetime64
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import union1d
+from static_frame.core.util import argsort_array
+from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import DTYPE_OBJECT
@@ -346,9 +349,8 @@ class Index(IndexBase):
         if not is_typed and self._labels.dtype.kind == DTYPE_DATETIME_KIND:
             raise ErrorInitIndex('Cannot create an Index with a datetime64 array; use an Index subclass (e.g. IndexDate) or supply an `index_constructors` argument')
 
-
-
     #---------------------------------------------------------------------------
+
     def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
         '''
         Ensure that reanimated NP arrays are set not writeable.
@@ -550,7 +552,7 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
     def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
-        '''Create a new index after removing the values specified by the loc key.
+        '''Create a new index after removing the values specified by the iloc key.
         '''
         if self._recache:
             self._update_array_cache()
@@ -724,6 +726,37 @@ class Index(IndexBase):
             self._update_array_cache()
         return self._positions
 
+    def _index_iloc_map(self: I, other: I) -> np.ndarray:
+        '''
+        Return an array of index locations to map from this array to another
+
+        Equivalent to: self.iter_label().apply(other._loc_to_iloc)
+        '''
+        if self.__len__() == 0:
+            return EMPTY_ARRAY
+
+        ar1 = self.values
+        ar2 = other.values
+
+        ar1, ar1_indexer = ufunc_unique1d_indexer(ar1)
+
+        aux = concat_resolved((ar1, ar2))
+        aux_sort_indices = argsort_array(aux)
+        aux = aux[aux_sort_indices]
+
+        mask = aux[1:] == aux[:-1]
+
+        indexer = aux_sort_indices[1:][mask] - ar1.size
+
+        # We want to return these indices to match ar1 before it was sorted
+        try:
+            indexer = indexer[ar1_indexer]
+        except IndexError:
+            raise KeyError(f'{other} is not a subset of {self}')
+
+        indexer.flags.writeable = False
+        return indexer
+
     @staticmethod
     def _depth_level_validate(depth_level: DepthLevelSpecifier) -> None:
         '''
@@ -794,7 +827,6 @@ class Index(IndexBase):
 
     def _loc_to_iloc(self,
             key: GetItemKeyType,
-            offset: tp.Optional[int] = None,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
             ) -> GetItemKeyType:
@@ -802,7 +834,6 @@ class Index(IndexBase):
         Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
 
         Args:
-            offset: A default of None is critical to avoid large overhead in unnecessary application of offsets.
             key_transform: A function that transforms keys to specialized type; used by IndexDate indices.
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
@@ -812,7 +843,7 @@ class Index(IndexBase):
 
         key = key_from_container_key(self, key)
 
-        if self._map is None and offset is None: # loc_is_iloc
+        if self._map is None: # loc_is_iloc
             if key.__class__ is np.ndarray:
                 if key.dtype == bool: #type: ignore
                     return key
@@ -824,28 +855,6 @@ class Index(IndexBase):
                 key = slice_to_inclusive_slice(key) #type: ignore
             return key
 
-        if self._map is None and offset is not None: # loc_is_iloc
-            if key.__class__ is slice:
-                if key == NULL_SLICE:
-                    return slice(offset, self.__len__() + offset)
-                return slice_to_inclusive_slice(key, offset) #type: ignore
-
-            if key.__class__ is np.ndarray:
-                # PERF: isolate for usage of _positions
-                if self._recache:
-                    self._update_array_cache()
-
-                if key.dtype == DTYPE_BOOL: #type: ignore
-                    return self._positions[key] + offset
-                if key.dtype != DTYPE_INT_DEFAULT: #type: ignore
-                    key = key.astype(DTYPE_INT_DEFAULT) #type: ignore
-                return key + offset
-
-            if isinstance(key, list):
-                return [k + offset for k in key]
-            # a single element
-            return key + offset # type: ignore
-
         if key_transform:
             key = key_transform(key)
 
@@ -854,11 +863,10 @@ class Index(IndexBase):
             self._update_array_cache()
 
         return LocMap.loc_to_iloc(
-                label_to_pos=self._map, #type: ignore
+                label_to_pos=self._map,
                 labels=self._labels,
                 positions=self._positions, # always an np.ndarray
                 key=key,
-                offset=offset,
                 partial_selection=partial_selection,
                 )
 
@@ -1224,16 +1232,23 @@ class Index(IndexBase):
 
         if index_constructor is None:
             # cannot assume new depth is the same index subclass
-            index_constructors = (cls_depth, self.__class__)
-        else:
-            index_constructors = (index_constructor, self.__class__) #type: ignore
+            index_constructor = cls_depth
 
-        return cls.from_tree(
-                {level: self.values},
+        indices = [index_constructor((level,)), immutable_index_filter(self)]
+
+        indexers = np.array(
+                [
+                    np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT),
+                    PositionsAllocator.get(self.__len__())
+                ]
+        )
+        indexers.flags.writeable = False
+
+        return cls(
+                indices=indices,
+                indexers=indexers,
                 name=self._name,
-                index_constructors=index_constructors,
                 )
-
 
     def to_pandas(self) -> 'pandas.Index':
         '''Return a Pandas Index.

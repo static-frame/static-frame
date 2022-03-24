@@ -1562,7 +1562,6 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
 
         # this selection returns just a single value
-        # import ipdb; ipdb.set_trace()
         s2 = s.loc[sf.HLoc[:, 'c']]
         self.assertEqual(s2.__class__, s.__class__)
         self.assertEqual(s2.to_pairs(), ((('b', 'c'), 4),))
@@ -1653,9 +1652,10 @@ class TestUnit(TestCase):
 
 
         self.assertEqual([g[0] for g in groups],
-                [20, 'bar', 'foo'])
+                ['foo', 'bar', 20])
         self.assertEqual([g[1].to_pairs() for g in groups],
-                [(('d', 20), ('e', 20)), (('b', 'bar'),), (('a', 'foo'), ('c', 'foo'))])
+                [(('a', 'foo'), ('c', 'foo')), (('b', 'bar'),), (('d', 20), ('e', 20))]
+                )
 
     def test_series_group_c(self) -> None:
 
@@ -3882,7 +3882,7 @@ class TestUnit(TestCase):
                 (('x', ('f*o', '*', 'o')), ('y', ('b*a', '*', 'r'))))
 
     def test_series_str_getitem_a(self) -> None:
-        s1 = Series(["ab_asldkj", "cd_LKSJ", "df_foooooo"])
+        s1 = Series(['ab_asldkj', 'cd_LKSJ', 'df_foooooo'])
         self.assertEqual(s1.via_str[:2].to_pairs(),
                 ((0, 'ab'), (1, 'cd'), (2, 'df'))
                 )

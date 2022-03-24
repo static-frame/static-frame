@@ -137,7 +137,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     name=name,
                     )
         except ErrorInitIndexNonUnique:
-            raise ErrorInitIndexNonUnique("Frames do not have unique names.") from None
+            raise ErrorInitIndexNonUnique('Frames do not have unique names.') from None
 
     @classmethod
     def from_dict(cls,

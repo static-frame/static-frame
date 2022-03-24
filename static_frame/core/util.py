@@ -1,6 +1,7 @@
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
+from collections import Counter
 from enum import Enum
 from functools import partial
 from functools import reduce
@@ -107,6 +108,7 @@ DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
 DTYPE_STR = np.dtype(str)
 DTYPE_INT_DEFAULT = np.dtype(np.int64)
+DTYPE_UINT_DEFAULT = np.dtype(np.uint64)
 # DTYPE_INT_PLATFORM = np.dtype(int) # 32 on windows
 
 DTYPE_FLOAT_DEFAULT = np.dtype(np.float64)
@@ -140,6 +142,8 @@ EMPTY_ARRAY_BOOL.flags.writeable = False
 
 EMPTY_ARRAY_INT = np.array(EMPTY_TUPLE, dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
+
+EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
 NAT = np.datetime64('nat')
 NAT_STR = 'NaT'
@@ -273,7 +277,7 @@ IndexSpecifier = tp.Union[int, tp.Hashable] # specify a postiion in an index
 IndexInitializer = tp.Union[
         'IndexBase',
         tp.Iterable[tp.Hashable],
-        tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarhcy
+        tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarchy
         ]
 
 IndexConstructor = tp.Optional[tp.Callable[..., 'IndexBase']]
@@ -842,6 +846,26 @@ def array_ufunc_axis_skipna(
 #-------------------------------------------------------------------------------
 # unique value discovery; based on NP's arraysetops.py
 
+def argsort_array(array: np.ndarray, kind: str = DEFAULT_STABLE_SORT_KIND) -> np.ndarray:
+    # NOTE: must use stable sort when returning positions
+    if array.dtype.kind == 'O':
+        try:
+            return array.argsort(kind=kind)
+        except TypeError: # if unorderable types
+            pass
+
+        array_sortable = np.empty(array.shape, dtype=DTYPE_INT_DEFAULT)
+
+        indices: tp.Dict[tp.Any, int] = {}
+        for i, v in enumerate(array):
+            array_sortable[i] = indices.setdefault(v, len(indices))
+        del indices
+
+        return np.argsort(array_sortable, kind=kind)
+
+    return array.argsort(kind=kind)
+
+
 def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     '''
     Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
@@ -873,17 +897,8 @@ def ufunc_unique1d_indexer(array: np.ndarray,
     '''
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as index positions of those values in the original array.
     '''
-    if array.dtype.kind == 'O':
-        try:
-            positions = array.argsort()
-            sortable = True
-        except TypeError: # if unorderable types
-            sortable = False
-        # if not sortable, we cannot do anything else but a string
-        if not sortable:
-            positions = array.astype(str).argsort()
-    else:
-        positions = array.argsort()
+    positions = argsort_array(array)
+
     # get the sorted array
     array = array[positions]
 
@@ -891,30 +906,21 @@ def ufunc_unique1d_indexer(array: np.ndarray,
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
 
-    indexer = np.empty(mask.shape, dtype=np.intp)
+    indexer = np.empty(mask.shape, dtype=DTYPE_INT_DEFAULT)
     indexer[positions] = np.cumsum(mask) - 1
+    indexer.flags.writeable = False
 
     return array[mask], indexer
+
 
 def ufunc_unique1d_positions(array: np.ndarray,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Does not return the unqiue values, but the positions in the original index of those values, as well as the locations of the unique values.
     '''
-    # NOTE: must use stable sort when returning positions
-    if array.dtype.kind == 'O':
-        try:
-            positions = array.argsort(kind=DEFAULT_STABLE_SORT_KIND)
-            sortable = True
-        except TypeError: # if unorderable types
-            sortable = False
-        if not sortable:
-            # NOTE: using string here could lead to None, 'None' being evaluated the same;  could repalce values with tuples of value as string, type as string, but that might also have collisions
-            positions = array.astype(str).argsort(kind=DEFAULT_STABLE_SORT_KIND)
-    else:
-        positions = array.argsort(kind=DEFAULT_STABLE_SORT_KIND)
-    array = array[positions]
+    positions = argsort_array(array)
 
+    array = array[positions]
 
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
@@ -922,8 +928,44 @@ def ufunc_unique1d_positions(array: np.ndarray,
 
     indexer = np.empty(mask.shape, dtype=np.intp)
     indexer[positions] = np.cumsum(mask) - 1
+    indexer.flags.writeable = False
 
     return positions[mask], indexer
+
+
+def ufunc_unique1d_counts(array: np.ndarray,
+        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+    '''
+    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as the counts of those unique values from the original array.
+    '''
+    if array.dtype.kind == 'O':
+        try: # some 1D object arrays are sortable
+            array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
+            sortable = True
+        except TypeError: # if unorderable types
+            sortable = False
+
+        if not sortable:
+            # Use a dict to retain order; this will break for non hashables
+            store: tp.Dict[tp.Hashable, int] = Counter(array)
+
+            counts = np.empty(len(store), dtype=DTYPE_INT_DEFAULT)
+            array = np.empty(len(store), dtype=DTYPE_OBJECT)
+
+            counts[NULL_SLICE] = tuple(store.values())
+            array[NULL_SLICE] = tuple(store)
+
+            return array, counts
+    else:
+        array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
+
+    mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+    mask[:1] = True
+    mask[1:] = array[1:] != array[:-1]
+
+    index_of_last_occurrence = np.concatenate(np.nonzero(mask) + ([mask.size],))
+
+    return array[mask], np.diff(index_of_last_occurrence)
 
 
 def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
@@ -1529,7 +1571,7 @@ def _slice_to_datetime_slice_args(key: slice,
         value = getattr(key, attr)
         if value is None:
             yield None
-        elif attr == SLICE_STEP_ATTR:
+        elif attr is SLICE_STEP_ATTR:
             # steps are never transformed
             yield value
         else:

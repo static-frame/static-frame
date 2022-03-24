@@ -445,7 +445,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     def _error_update_axis_labels(axis: int) -> ErrorInitQuilt:
         axis_label = 'index' if axis == 0 else 'column'
         axis_labels = 'indices' if axis == 0 else 'columns'
-        err_msg = f"Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy"
+        err_msg = f'Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy'
         return ErrorInitQuilt(err_msg)
 
     def _update_axis_labels(self) -> None:
@@ -525,16 +525,16 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         if self._axis == 0:
             if not self._retain_labels:
-                index = self.index.rename("Concatenated")
+                index = self.index.rename('Concatenated')
             else:
-                index = self._bus.index.rename("Frames")
-            columns = self.columns.rename("Aligned")
+                index = self._bus.index.rename('Frames')
+            columns = self.columns.rename('Aligned')
         else:
-            index = self.index.rename("Aligned")
+            index = self.index.rename('Aligned')
             if not self._retain_labels:
-                columns = self.columns.rename("Concatenated")
+                columns = self.columns.rename('Concatenated')
             else:
-                columns = self._bus.index.rename("Frames")
+                columns = self._bus.index.rename('Frames')
                 drop_column_dtype = True
 
         config = config or DisplayConfig()
@@ -898,7 +898,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if isinstance(axis_map_sub, tuple): # type: ignore
             bus_keys = (axis_map_sub[0],) #type: ignore
         else:
-            bus_keys = axis_map_sub._levels.index
+            bus_keys = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
 
         for key_count, key in enumerate(bus_keys):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
@@ -983,7 +983,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             frame_labels = (axis_map_sub[0],) #type: ignore
         else:
             # get the outer level, or just the unique frame labels needed
-            frame_labels = axis_map_sub._levels.index
+            frame_labels = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
 
         for key_count, key in enumerate(frame_labels):
             # get Boolean segment for this Frame

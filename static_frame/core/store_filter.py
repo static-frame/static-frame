@@ -265,7 +265,7 @@ class StoreFilter(metaclass=InterfaceMeta):
         if kind in DTYPE_NAT_KINDS:
             post = None
             if array.dtype == DT64_YEAR or array.dtype == DT64_MONTH:
-                post = array.astype(str) # nat will go to "NaT"
+                post = array.astype(str) # nat will go to 'NaT'
 
             if post is not None and post.dtype.kind in DTYPE_STR_KINDS:
                 is_nat = post == NAT_STR

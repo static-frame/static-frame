@@ -41,7 +41,7 @@ def extrapolate_column_fields(
         data_fields: tp.Sequence[tp.Hashable],
         func_fields: tp.Iterable[tp.Hashable],
         ) -> tp.Iterable[tp.Hashable]:
-    '''"Determine columns to be reatined from gruop and data fields.
+    '''Determine columns to be reatined from gruop and data fields.
     Used in Frame.pivot.
 
     Args:
@@ -591,7 +591,7 @@ def pivot_outer_index(
         index_inner = index_from_optional_constructor( # type: ignore
                 index_values,
                 default_constructor=partial(
-                        IndexHierarchy.from_labels,
+                        IndexHierarchy._from_arrays,
                         name=name,
                         ),
                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
@@ -737,7 +737,7 @@ def pivot_derive_constructors(*,
     if expand_src.depth == 1:
         expand_types = [expand_src.__class__]
     else:
-        expand_types = list(expand_src._levels.index_types()) #type: ignore
+        expand_types = expand_src.index_types.values.tolist()
 
     if contract_src.depth == 1:
         expand_types.append(contract_src.__class__)

@@ -46,7 +46,7 @@ def get_version() -> str:
                 if '#' in l:
                     l = l.split('#')[0].strip()
                 return l.split('=')[-1].strip()[1:-1]
-    raise ValueError("__version__ not found!")
+    raise ValueError('__version__ not found!')
 
 
 def _get_requirements(file_name: str) -> tp.Iterator[str]:

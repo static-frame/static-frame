@@ -3575,7 +3575,6 @@ class Frame(ContainerOperand):
             index_constructor:
             columns_constructor:
         '''
-
         index = (self._index.level_add(
                 index, index_constructor=index_constructor)
                 if index is not None else self._index
@@ -3643,8 +3642,7 @@ class Frame(ContainerOperand):
             ih_blocks = TypeBlocks.from_blocks((index_target.values,))
             name_prior = index_target.names if index_target.name is None else (index_target.name,)
         else:
-            if index_target._recache:
-                index_target._update_array_cache()
+            # No recache is needed as it's not possible for an index to be GO
             ih_blocks = index_target._blocks.copy() # will mutate copied blocks
             # only use string form of labels if we are not storing a correctly sized tuple
             name_prior = index_target.name if index_target._name_is_names() else index_target.names
@@ -5501,7 +5499,7 @@ class Frame(ContainerOperand):
             columns: GetItemKeyType,
             *,
             drop: bool = False,
-            index_constructors: tp.Optional[IndexConstructors] = None,
+            index_constructors: IndexConstructors = None,
             reorder_for_hierarchy: bool = False,
             ) -> 'Frame':
         '''
@@ -5532,12 +5530,16 @@ class Frame(ContainerOperand):
         index_labels = self._blocks._extract(column_key=column_iloc)
 
         if reorder_for_hierarchy:
-            index, order_lex = rehierarch_from_type_blocks(
+            rehierarched_blocks, order_lex = rehierarch_from_type_blocks(
                     labels=index_labels,
                     depth_map=range(index_labels.shape[1]), # keep order
-                    index_cls=IndexHierarchy,
+                    )
+
+            index = IndexHierarchy._from_type_blocks(
+                    blocks=rehierarched_blocks,
                     index_constructors=index_constructors,
                     name=column_name,
+                    own_blocks=True,
                     )
             blocks_src = self._blocks._extract(row_key=order_lex)
         else:
@@ -5586,15 +5588,12 @@ class Frame(ContainerOperand):
             consolidate_blocks:
             columns_constructors:
         '''
-        from static_frame.core.index_level import IndexLevel
-
         def blocks() -> tp.Iterator[np.ndarray]:
             # yield index as columns, then remaining blocks currently in Frame
             if self._index.ndim == 1:
                 yield self._index.values
             else:
-                if self._index._recache:
-                    self._index._update_array_cache()
+                # No recache is needed as it's not possible for an index to be GO
                 yield from self._index._blocks._blocks
             for b in self._blocks._blocks:
                 yield b
@@ -5606,6 +5605,11 @@ class Frame(ContainerOperand):
 
         if not names:
             names = self._index.names
+            if self._index.depth > 1 and self._columns.depth > 1:
+                raise RuntimeError(
+                    'Must provide `names` when both the index and columns are IndexHierarchies'
+                )
+
         names_t = zip(*names)
 
         # self._columns._blocks may be None until array cache is updated.
@@ -7131,7 +7135,7 @@ class Frame(ContainerOperand):
         '''
         Return an xarray Dataset.
 
-        In order to preserve columnar types, and following the precedent of Pandas, the :obj:`Frame`, with a 1D index, is translated as a Dataset of 1D arrays, where each DataArray is a 1D array. If the index is an :obj:`IndexHierarhcy`, each column is mapped into an ND array of shape equal to the unique values found at each depth of the index.
+        In order to preserve columnar types, and following the precedent of Pandas, the :obj:`Frame`, with a 1D index, is translated as a Dataset of 1D arrays, where each DataArray is a 1D array. If the index is an :obj:`IndexHierarchy`, each column is mapped into an ND array of shape equal to the unique values found at each depth of the index.
         '''
         import xarray
 
@@ -8066,7 +8070,7 @@ class FrameAssignBLoc(FrameAssign):
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
-        # get Bollean key of normalized shape; in most cases this will be a new, mutable array
+        # get Boolean key of normalized shape; in most cases this will be a new, mutable array
         key = bloc_key_normalize(
                 key=self.key,
                 container=self.container
