@@ -274,7 +274,7 @@ class TestUnit(TestCase):
         labels = (('I', 'A'), ('I', 'B'))
 
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
-        self.assertEqual(ih1.nbytes, 533)
+        self.assertIn(ih1.nbytes, (533, 557))
 
     def test_hierarchy_size_b(self) -> None:
 
@@ -282,7 +282,7 @@ class TestUnit(TestCase):
 
         ih1 = IndexHierarchyGO.from_labels(labels, name='foo')
         ih1.append(('I', 'C'))
-        self.assertEqual(ih1.nbytes, 569)
+        self.assertIn(ih1.nbytes, (569, 585))
 
     def test_hierarchy_bool_a(self) -> None:
 

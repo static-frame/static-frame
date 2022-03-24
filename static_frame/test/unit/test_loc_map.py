@@ -342,7 +342,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
         hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
 
-        self.assertEqual(hlmap.nbytes, 720 + 8 + 8 + 25) # automap + 2 uint64 bit offsets + PyBool
+        self.assertIn(hlmap.nbytes, (720 + 8 + 8 + 25, 721)) # automap + 2 uint64 bit offsets + PyBool
 
     #---------------------------------------------------------------------------
 
