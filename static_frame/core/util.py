@@ -1443,7 +1443,7 @@ def blocks_to_array_2d(
     columns = 0
     dtype = None
 
-    blocks_post = None if hasattr(blocks, '__len__') else []
+    blocks_post: tp.Optional[tp.List[np.ndarray]] = None if hasattr(blocks, '__len__') else []
 
     for b in blocks:
         if rows is None:
