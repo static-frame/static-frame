@@ -72,6 +72,7 @@ from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import WarningsSilent
+from static_frame.core.util import blocks_to_array_2d
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 
@@ -2606,6 +2607,24 @@ class TestUnit(TestCase):
         with WarningsSilent():
             warnings.warn('foo')
         self.assertIs(post, warnings.filters) #type: ignore
+
+    #---------------------------------------------------------------------------
+    def test_blocks_to_array_2d_a(self) -> None:
+        post = blocks_to_array_2d((
+                np.array((3, 2)),
+                np.array([[True, False], [False, True]])
+                ))
+        self.assertEqual(post.tolist(),
+                [[3, True, False], [2, False, True]])
+
+    def test_blocks_to_array_2d_b(self) -> None:
+        arrays = (a for a in (
+                np.array((3, 2)),
+                np.array([[True, False], [False, True]])
+                ))
+        post = blocks_to_array_2d(arrays)
+        self.assertEqual(post.tolist(),
+                [[3, True, False], [2, False, True]])
 
 
 if __name__ == '__main__':

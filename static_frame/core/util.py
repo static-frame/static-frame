@@ -1430,6 +1430,56 @@ def iterable_to_array_nd(
     # its an element
     return np.array(values)
 
+
+def blocks_to_array_2d(
+        blocks: tp.Iterator[np.ndarray]
+        ) -> np.ndarray:
+    '''
+    Given an iterable of blocks, return a consolidatd array.
+    This is equivalent but more efficient than:
+        TypeBlocks.from_blocks(blocks).values
+    '''
+    rows = None
+    columns = 0
+    dtype = None
+
+    blocks_post = None if hasattr(blocks, '__len__') else []
+
+    for b in blocks:
+        if rows is None:
+            rows = len(b) # works for 1D and 2D
+        elif len(b) != rows:
+            raise RuntimeError(f'Invalid block shape {len(b)}')
+
+        if b.ndim == 1:
+            columns += 1
+        else:
+            columns += b.shape[1]
+
+        if dtype is None:
+            dtype = b.dtype
+        else:
+            dtype = resolve_dtype(dtype, b.dtype)
+
+        if blocks_post is not None:
+            blocks_post.append(b)
+
+    if blocks_post is None:
+        blocks_post = blocks # not an iterator, reuse
+
+    array = np.empty((rows, columns), dtype=dtype)
+    c = 0
+    for b in blocks_post:
+        if b.ndim == 1:
+            array[NULL_SLICE, c] = b
+            c += 1
+        else:
+            end = c + b.shape[1]
+            array[NULL_SLICE, c: end] = b
+            c = end
+    return array
+
+
 #-------------------------------------------------------------------------------
 
 def slice_to_ascending_slice(
