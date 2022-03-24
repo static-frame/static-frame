@@ -1432,29 +1432,32 @@ def iterable_to_array_nd(
 
 
 def blocks_to_array_2d(
-        blocks: tp.Iterator[np.ndarray]
+        blocks: tp.Iterator[np.ndarray],
+        shape: tp.Optional[tp.Tuple[int, int]] = None,
         ) -> np.ndarray:
     '''
     Given an iterable of blocks, return a consolidatd array.
     This is equivalent but more efficient than:
         TypeBlocks.from_blocks(blocks).values
     '''
-    rows = None
-    columns = 0
-    dtype = None
+    discover_shape = not bool(shape)
+    if discover_shape:
+        rows = -1
+        columns = 0
+    dtype: tp.Optional[np.dtype] = None
 
     blocks_post: tp.Optional[tp.List[np.ndarray]] = None if hasattr(blocks, '__len__') else []
 
     for b in blocks:
-        if rows is None:
-            rows = len(b) # works for 1D and 2D
-        elif len(b) != rows:
-            raise RuntimeError(f'Invalid block shape {len(b)}')
-
-        if b.ndim == 1:
-            columns += 1
-        else:
-            columns += b.shape[1]
+        if discover_shape:
+            if rows == -1:
+                rows = len(b) # works for 1D and 2D
+            elif len(b) != rows:
+                raise RuntimeError(f'Invalid block shape {len(b)}')
+            if b.ndim == 1:
+                columns += 1
+            else:
+                columns += b.shape[1]
 
         if dtype is None:
             dtype = b.dtype
@@ -1465,11 +1468,13 @@ def blocks_to_array_2d(
             blocks_post.append(b)
 
     if blocks_post is None:
-        blocks_post = blocks # not an iterator, reuse
+        # not an iterator, can reuse
+        blocks_post = blocks #type: ignore
 
-    array = np.empty((rows, columns), dtype=dtype)
+    shape = (rows, columns) if discover_shape else shape
+    array = np.empty(shape, dtype=dtype)
     c = 0
-    for b in blocks_post:
+    for b in blocks_post: #type: ignore
         if b.ndim == 1:
             array[NULL_SLICE, c] = b
             c += 1

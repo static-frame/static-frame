@@ -2627,5 +2627,26 @@ class TestUnit(TestCase):
                 [[3, True, False], [2, False, True]])
 
 
+    def test_blocks_to_array_2d_c(self) -> None:
+        arrays = (a for a in (
+                np.array((3,)),
+                np.array([[True, False], [False, True]])
+                ))
+        with self.assertRaises(RuntimeError):
+            post = blocks_to_array_2d(arrays)
+
+    def test_blocks_to_array_2d_d(self) -> None:
+        arrays = (a for a in (
+                np.array((3, 2)),
+                np.array([[True, False], [False, True]])
+                ))
+        post = blocks_to_array_2d(arrays, shape=(2, 3))
+        self.assertEqual(post.dtype, object)
+        self.assertEqual(post.tolist(),
+                [[3, True, False], [2, False, True]])
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
