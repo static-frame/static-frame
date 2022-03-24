@@ -18,7 +18,6 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import NameType
@@ -388,7 +387,7 @@ def pivot_core(
     from static_frame.core.series import Series
     from static_frame.core.frame import Frame
 
-    func_no = func_single is None and func_map is EMPTY_TUPLE
+    func_no = func_single is None and func_map is ()
 
     data_fields_len = len(data_fields)
     index_depth = len(index_fields)

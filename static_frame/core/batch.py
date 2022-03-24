@@ -31,7 +31,6 @@ from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipNPZ
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -1275,7 +1274,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def unset_index(self,
             *,
-            names: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
+            names: tp.Iterable[tp.Hashable] = (),
             consolidate_blocks: bool = False,
             columns_constructors: IndexConstructors = None
             ) -> 'Batch':

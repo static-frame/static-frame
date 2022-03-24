@@ -12,7 +12,6 @@ from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
@@ -33,7 +32,7 @@ class ContainerBase(metaclass=InterfaceMeta):
     '''
     Root of all containers. The core containers, like Series, Frame, and Index, inherit from ContainerOperand. The higher-order containers, like Bus, Quilt, Batch, and Yarn, inherit from ContainerBase.
     '''
-    __slots__ = EMPTY_TUPLE
+    __slots__ = ()
 
     #---------------------------------------------------------------------------
     # class attrs
@@ -126,7 +125,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 class ContainerOperand(ContainerBase):
     '''Base class of all containers that support opperators.'''
 
-    __slots__ = EMPTY_TUPLE
+    __slots__ = ()
 
     interface: 'Frame' # property that returns a Frame
     values: np.ndarray
@@ -322,7 +321,7 @@ class ContainerOperand(ContainerBase):
                 ufunc=np.sum,
                 ufunc_skipna=np.nansum,
                 composable=False,
-                dtypes=EMPTY_TUPLE, # float or int, row type will match except Boolean
+                dtypes=(), # float or int, row type will match except Boolean
                 size_one_unity=True
                 )
 
@@ -342,7 +341,7 @@ class ContainerOperand(ContainerBase):
                 ufunc=np.min,
                 ufunc_skipna=np.nanmin,
                 composable=True,
-                dtypes=EMPTY_TUPLE,
+                dtypes=(),
                 size_one_unity=True
                 )
 
@@ -361,7 +360,7 @@ class ContainerOperand(ContainerBase):
                 ufunc=np.max,
                 ufunc_skipna=np.nanmax,
                 composable=True,
-                dtypes=EMPTY_TUPLE,
+                dtypes=(),
                 size_one_unity=True
                 )
 
@@ -463,7 +462,7 @@ class ContainerOperand(ContainerBase):
                 ufunc=np.prod,
                 ufunc_skipna=np.nanprod,
                 composable=False, # Block compbinations with overflow and NaNs require this.
-                dtypes=EMPTY_TUPLE,
+                dtypes=(),
                 size_one_unity=True
                 )
 
@@ -496,7 +495,7 @@ class ContainerOperand(ContainerBase):
                 ufunc=np.cumsum,
                 ufunc_skipna=np.nancumsum,
                 composable=False,
-                dtypes=EMPTY_TUPLE,
+                dtypes=(),
                 size_one_unity=True
                 )
 
@@ -515,7 +514,7 @@ class ContainerOperand(ContainerBase):
                 ufunc=np.cumprod,
                 ufunc_skipna=np.nancumprod,
                 composable=False,
-                dtypes=EMPTY_TUPLE,
+                dtypes=(),
                 size_one_unity=True
                 )
 

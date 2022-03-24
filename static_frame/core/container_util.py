@@ -42,7 +42,6 @@ from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import WarningsSilent
 
 from static_frame.core.rank import rank_1d
@@ -1085,8 +1084,8 @@ def _index_many_to_one(
         index = next(indices_iter)
     except StopIteration:
         if explicit_constructor is not None:
-            return explicit_constructor(EMPTY_TUPLE) #type: ignore
-        return cls_default.from_labels(EMPTY_TUPLE)
+            return explicit_constructor(()) #type: ignore
+        return cls_default.from_labels(())
 
     arrays = [index.values]
 

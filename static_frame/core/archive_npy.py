@@ -16,7 +16,6 @@ from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import list_to_tuple
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import NameType
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import concat_resolved
@@ -267,7 +266,7 @@ class Archive:
         raise NotImplementedError() #pragma: no cover
 
     def close(self) -> None:
-        for f in getattr(self, '_closable', EMPTY_TUPLE):
+        for f in getattr(self, '_closable', ()):
             f.close()
 
 class ArchiveZip(Archive):

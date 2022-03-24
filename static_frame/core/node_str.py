@@ -10,7 +10,6 @@ from static_frame.core.node_selector import TContainer
 from static_frame.core.util import array_from_element_method
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import UFunc
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import GetItemKeyType
@@ -93,7 +92,7 @@ class InterfaceString(Interface[TContainer]):
     def _process_blocks(
             blocks: BlocksType,
             func: UFunc,
-            args: tp.Tuple[tp.Any, ...] = EMPTY_TUPLE,
+            args: tp.Tuple[tp.Any, ...] = (),
             astype_str: bool = True,
             ) -> tp.Iterator[np.ndarray]:
         '''
@@ -111,7 +110,7 @@ class InterfaceString(Interface[TContainer]):
             blocks: BlocksType,
             method_name: str,
             dtype: np.dtype,
-            args: tp.Tuple[tp.Any, ...] = EMPTY_TUPLE,
+            args: tp.Tuple[tp.Any, ...] = (),
             ) -> tp.Iterator[np.ndarray]:
         '''
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
@@ -135,7 +134,7 @@ class InterfaceString(Interface[TContainer]):
             blocks: BlocksType,
             method_name: str,
             dtype: np.dtype,
-            args: tp.Tuple[tp.Any, ...] = EMPTY_TUPLE,
+            args: tp.Tuple[tp.Any, ...] = (),
             ) -> tp.Iterator[np.ndarray]:
         '''
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.

@@ -52,7 +52,6 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import isin_array
 from static_frame.core.util import iterable_to_array_1d
@@ -1277,7 +1276,7 @@ class TypeBlocks(ContainerOperand):
 
         if d is None:
             # if we do not have blocks, provide an empty display
-            d = Display.from_values(EMPTY_TUPLE,
+            d = Display.from_values((),
                     header=self.__class__,
                     config=config,
                     outermost=outermost)

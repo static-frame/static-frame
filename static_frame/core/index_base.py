@@ -18,7 +18,6 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import dtype_from_element
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_INT_DEFAULT
 
 from static_frame.core.style_config import StyleConfig
@@ -218,7 +217,7 @@ class IndexBase(ContainerOperand):
     def index_types(self) -> 'Series':
         # NOTE: this implementation is here due to pydoc.render_doc call that led to calling this base class method
         from static_frame.core.series import Series
-        return Series(EMPTY_TUPLE) # pragma: no cover
+        return Series(()) # pragma: no cover
 
     def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
         raise NotImplementedError() #pragma: no cover

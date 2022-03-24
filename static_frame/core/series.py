@@ -71,7 +71,6 @@ from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import GetItemKeyType
@@ -279,7 +278,7 @@ class Series(ContainerOperand):
 
         # End quickly if empty iterable
         if not array_values:
-            return cls(EMPTY_TUPLE, index=index, name=name)
+            return cls((), index=index, name=name)
 
         # returns immutable arrays
         values = concat_resolved(array_values)
@@ -349,7 +348,7 @@ class Series(ContainerOperand):
         except StopIteration:
             # Default to empty when given an empty iterable
             ih = None #type: ignore
-            values = EMPTY_TUPLE
+            values = ()
             own_index = False
 
         return cls(values, index=ih, own_index=own_index, name=name)
@@ -1083,7 +1082,7 @@ class Series(ContainerOperand):
         count = isna.sum()
 
         if count == length: # all are NaN
-            return self.__class__(EMPTY_TUPLE, name=self.name)
+            return self.__class__((), name=self.name)
         if count == 0: # None are nan
             return self.__class__(self.values,
                     index=self._index,
@@ -1128,7 +1127,7 @@ class Series(ContainerOperand):
         count = isfalsy.sum()
 
         if count == length: # all are falsy
-            return self.__class__(EMPTY_TUPLE, name=self.name)
+            return self.__class__((), name=self.name)
         if count == 0: # None are falsy
             return self.__class__(self.values,
                     index=self._index,

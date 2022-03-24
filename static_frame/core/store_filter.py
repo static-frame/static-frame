@@ -14,7 +14,6 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import EMPTY_SET
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import COMPLEX_TYPES
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import DTYPE_FLOAT_KIND
 from static_frame.core.util import NAT
@@ -89,7 +88,7 @@ class StoreFilter(metaclass=InterfaceMeta):
             from_neginf: tp.Optional[str] = '-inf',
             # str to type
             to_nan: tp.FrozenSet[str] = frozenset(('', 'nan', 'NaN', 'NAN', 'NULL', '#N/A')),
-            to_nat: tp.FrozenSet[str] = frozenset(EMPTY_TUPLE), # do not assume there are NaTs.
+            to_nat: tp.FrozenSet[str] = frozenset(()), # do not assume there are NaTs.
             to_none: tp.FrozenSet[str] = frozenset(('None',)),
             to_posinf: tp.FrozenSet[str] = frozenset(('inf',)),
             to_neginf: tp.FrozenSet[str] = frozenset(('-inf',)),

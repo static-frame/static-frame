@@ -53,7 +53,6 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
@@ -786,7 +785,7 @@ class Index(IndexBase):
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
         '''{}'''
         self._depth_level_validate(depth_level)
-        yield from zip_longest(self.values, EMPTY_TUPLE, fillvalue=1)
+        yield from zip_longest(self.values, (), fillvalue=1)
 
     @property
     def index_types(self) -> 'Series':

@@ -119,7 +119,6 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
@@ -1975,7 +1974,7 @@ class Frame(ContainerOperand):
         else: # only column data in table
             if index_depth > 0:
                 # no data is found an index depth was given; simulate empty index_arrays to create a empty index
-                index_arrays = [EMPTY_TUPLE] * index_depth
+                index_arrays = [()] * index_depth
             data = FRAME_INITIALIZER_DEFAULT
 
         kwargs = dict(
@@ -5575,7 +5574,7 @@ class Frame(ContainerOperand):
                 )
 
     def unset_index(self, *,
-            names: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
+            names: tp.Iterable[tp.Hashable] = (),
             # index_column_first: tp.Optional[tp.Union[int, str]] = 0,
             consolidate_blocks: bool = False,
             columns_constructors: IndexConstructors = None,
@@ -6189,8 +6188,8 @@ class Frame(ContainerOperand):
 
     def pivot(self,
             index_fields: KeyOrKeys,
-            columns_fields: KeyOrKeys = EMPTY_TUPLE,
-            data_fields: KeyOrKeys = EMPTY_TUPLE,
+            columns_fields: KeyOrKeys = (),
+            data_fields: KeyOrKeys = (),
             *,
             func: CallableOrCallableMap = np.nansum,
             fill_value: object = np.nan,
@@ -6210,17 +6209,17 @@ class Frame(ContainerOperand):
         '''
         # NOTE: default in Pandas pivot_table is a mean
         if func is None:
-            func_map = EMPTY_TUPLE
+            func_map = ()
             func_single = None
-            func_fields = EMPTY_TUPLE
+            func_fields = ()
         elif callable(func):
             func_map = (('', func),) # store iterable of pairs
             func_single = func
-            func_fields = EMPTY_TUPLE
+            func_fields = ()
         else: # assume func has an items method
             func_map = tuple(func.items())
             func_single = func_map[0][1] if len(func_map) == 1 else None
-            func_fields = EMPTY_TUPLE if func_single else tuple(label for label, _ in func_map)
+            func_fields = () if func_single else tuple(label for label, _ in func_map)
 
         # normalize all keys to lists of values
         index_fields = key_normalize(index_fields)

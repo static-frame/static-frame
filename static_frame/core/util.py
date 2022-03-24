@@ -130,17 +130,17 @@ STATIC_ATTR = 'STATIC'
 
 ELEMENT_TUPLE = (None,)
 
-EMPTY_TUPLE = ()
+() = ()
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 
 # defaults to float64
-EMPTY_ARRAY = np.array(EMPTY_TUPLE, dtype=None)
+EMPTY_ARRAY = np.array((), dtype=None)
 EMPTY_ARRAY.flags.writeable = False
 
-EMPTY_ARRAY_BOOL = np.array(EMPTY_TUPLE, dtype=DTYPE_BOOL)
+EMPTY_ARRAY_BOOL = np.array((), dtype=DTYPE_BOOL)
 EMPTY_ARRAY_BOOL.flags.writeable = False
 
-EMPTY_ARRAY_INT = np.array(EMPTY_TUPLE, dtype=DTYPE_INT_DEFAULT)
+EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
@@ -161,7 +161,7 @@ TIME_DELTA_ATTR_MAP = (
 # ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
 UFUNC_AXIS_STR_TO_OBJ = frozenset((np.min, np.max, np.sum))
 
-FALSY_VALUES = frozenset((0, '', None, EMPTY_TUPLE))
+FALSY_VALUES = frozenset((0, '', None, ()))
 
 #-------------------------------------------------------------------------------
 # utility type groups
@@ -2094,12 +2094,12 @@ def _ufunc_set_1d(
     if is_intersection:
         if len(array) == 0 or len(other) == 0:
             # not sure what DTYPE is correct to return here
-            post = np.array(EMPTY_TUPLE, dtype=dtype)
+            post = np.array((), dtype=dtype)
             post.flags.writeable = False
             return post
     elif is_difference:
         if len(array) == 0:
-            post = np.array(EMPTY_TUPLE, dtype=dtype)
+            post = np.array((), dtype=dtype)
             post.flags.writeable = False
             return post
 
@@ -2129,7 +2129,7 @@ def _ufunc_set_1d(
             # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it will always be False
             if compare.__class__ is np.ndarray and compare.all(axis=None):
                 if is_difference:
-                    post = np.array(EMPTY_TUPLE, dtype=dtype)
+                    post = np.array((), dtype=dtype)
                     post.flags.writeable = False
                     return post
                 return array
@@ -2202,14 +2202,14 @@ def _ufunc_set_2d(
     # optimizations for empty arrays
     if is_intersection: # intersection with empty
         if len(array) == 0 or len(other) == 0:
-            post = np.array(EMPTY_TUPLE, dtype=dtype)
+            post = np.array((), dtype=dtype)
             if is_2d:
                 post = post.reshape(0, 0)
             post.flags.writeable = False
             return post
     elif is_difference:
         if len(array) == 0:
-            post = np.array(EMPTY_TUPLE, dtype=dtype)
+            post = np.array((), dtype=dtype)
             if is_2d:
                 post = post.reshape(0, 0)
             post.flags.writeable = False
@@ -2237,7 +2237,7 @@ def _ufunc_set_2d(
                 arrays_are_equal = True
             if arrays_are_equal:
                 if is_difference:
-                    post = np.array(EMPTY_TUPLE, dtype=dtype)
+                    post = np.array((), dtype=dtype)
                     if is_2d:
                         post = post.reshape(0, 0)
                     post.flags.writeable = False
@@ -2272,7 +2272,7 @@ def _ufunc_set_2d(
 
         if is_2d:
             if len(values) == 0:
-                post = np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
+                post = np.array((), dtype=dtype).reshape(0, 0)
             else:
                 post = np.array(values, dtype=object)
             post.flags.writeable = False

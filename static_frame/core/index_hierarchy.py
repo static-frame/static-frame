@@ -50,7 +50,6 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
@@ -413,7 +412,7 @@ class IndexHierarchy(IndexBase):
 
         return cls(
                 indices=[
-                    cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE) for _ in range(depth_reference)
+                    cls._INDEX_CONSTRUCTOR(()) for _ in range(depth_reference)
                 ],
                 indexers=indexers,
                 name=name,
@@ -448,7 +447,7 @@ class IndexHierarchy(IndexBase):
             column_iter = arrays
 
         if not size:
-            return cls._from_empty(EMPTY_TUPLE, name=name, depth_reference=depth_reference)
+            return cls._from_empty((), name=name, depth_reference=depth_reference)
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -512,7 +511,7 @@ class IndexHierarchy(IndexBase):
         hash_maps: HashableToIntMapsT = [{} for _ in range(depth)]
         indexers: GrowableIndexersT = [[] for _ in range(depth)]
 
-        prev_row: tp.Sequence[tp.Hashable] = EMPTY_TUPLE
+        prev_row: tp.Sequence[tp.Hashable] = ()
 
         while True:
             for hash_map, indexer, val in zip(hash_maps, indexers, label_row):
@@ -616,7 +615,7 @@ class IndexHierarchy(IndexBase):
 
         if not labels:
             assert index_inner is None # sanity check
-            return cls._from_empty(EMPTY_TUPLE, name=name, depth_reference=2)
+            return cls._from_empty((), name=name, depth_reference=2)
 
         index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner) # type: ignore
 
@@ -706,7 +705,7 @@ class IndexHierarchy(IndexBase):
         if len(name) == 0:
             raise ErrorInitIndex('names must be non-empty.')
 
-        return cls._from_empty(EMPTY_TUPLE, name=name, depth_reference=len(name))
+        return cls._from_empty((), name=name, depth_reference=len(name))
 
     @classmethod
     def _from_type_blocks(cls: tp.Type[IH],
@@ -1228,7 +1227,7 @@ class IndexHierarchy(IndexBase):
                 return self if self.STATIC else self.copy()
             elif func is self.__class__._UFUNC_DIFFERENCE:
                 # we will no longer have type associations per depth
-                return self._from_empty(EMPTY_TUPLE, depth_reference=self.depth)
+                return self._from_empty((), depth_reference=self.depth)
             else:
                 raise NotImplementedError(f'Unsupported ufunc {func}') # pragma: no cover
 

@@ -28,7 +28,6 @@ from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_STR_KINDS
 
 if tp.TYPE_CHECKING:
@@ -108,7 +107,7 @@ class InterfaceDatetime(Interface[TContainer]):
     @staticmethod
     def _validate_dtype_non_str(
             dtype: np.dtype,
-            exclude: tp.Iterable[np.dtype] = EMPTY_TUPLE,
+            exclude: tp.Iterable[np.dtype] = (),
             ) -> None:
         '''
         Only support dtypes that are (or contain) datetime64 types. This is because most conversions from string can be done simply with astype().
@@ -124,7 +123,7 @@ class InterfaceDatetime(Interface[TContainer]):
     @staticmethod
     def _validate_dtype_str(
             dtype: np.dtype,
-            exclude: tp.Iterable[np.dtype] = EMPTY_TUPLE,
+            exclude: tp.Iterable[np.dtype] = (),
             ) -> None:
         '''
         Only support dtypes that are (or contain) strings.
@@ -309,7 +308,7 @@ class InterfaceDatetime(Interface[TContainer]):
                     array = array_from_element_method(
                             array=block,
                             method_name='weekday',
-                            args=EMPTY_TUPLE,
+                            args=(),
                             dtype=DTYPE_INT_DEFAULT
                             )
                 yield array
@@ -490,7 +489,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 array = array_from_element_method(
                         array=block,
                         method_name='timetuple',
-                        args=EMPTY_TUPLE,
+                        args=(),
                         dtype=DTYPE_OBJECT
                         )
                 yield array
@@ -508,7 +507,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 self._validate_dtype_non_str(block.dtype,
                         exclude=self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO)
 
-                args = EMPTY_TUPLE
+                args = ()
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     if block.dtype in self.DT64_TIME:
                         # if we know this is a time type, we can pass args
