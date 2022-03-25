@@ -66,6 +66,7 @@ from static_frame.core.util import view_2d_as_1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import OptionalArrayList
+from static_frame.core.util import blocks_to_array_2d
 
 from static_frame.core.style_config import StyleConfig
 
@@ -591,50 +592,50 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     # value extraction
 
-    @staticmethod
-    def _blocks_to_array(*,
-            blocks: tp.Sequence[np.ndarray],
-            shape: tp.Tuple[int, int],
-            row_dtype: np.dtype,
-            ) -> np.ndarray:
-        '''
-        Given blocks and a combined shape, return a consolidated 2D or 1D array.
+    # @staticmethod
+    # def _blocks_to_array(*,
+    #         blocks: tp.Sequence[np.ndarray],
+    #         shape: tp.Tuple[int, int],
+    #         row_dtype: np.dtype,
+    #         ) -> np.ndarray:
+    #     '''
+    #     Given blocks and a combined shape, return a consolidated 2D or 1D array.
 
-        Args:
-            shape: used in construting returned array; not ussed as a constraint.
-            force_1d: if True, a single row reduces to a 1D
-        '''
-        assert row_dtype is not None
+    #     Args:
+    #         shape: used in construting returned array; not ussed as a constraint.
+    #         force_1d: if True, a single row reduces to a 1D
+    #     '''
+    #     assert row_dtype is not None
 
-        # assume column_multiple is True, as this routine is called after handling extraction of single columns
-        if len(blocks) == 1:
-            return column_2d_filter(blocks[0])
+    #     # assume column_multiple is True, as this routine is called after handling extraction of single columns
+    #     if len(blocks) == 1:
+    #         return column_2d_filter(blocks[0])
 
-        # get empty array and fill parts
-        array = np.empty(shape, dtype=row_dtype)
+    #     # get empty array and fill parts
+    #     array = np.empty(shape, dtype=row_dtype)
 
-        pos = 0
-        array_ndim = array.ndim
+    #     pos = 0
+    #     array_ndim = array.ndim
 
-        for block in blocks:
-            block_ndim = block.ndim
+    #     for block in blocks:
+    #         block_ndim = block.ndim
 
-            if block_ndim == 1:
-                end = pos + 1
-            else:
-                end = pos + block.shape[1]
+    #         if block_ndim == 1:
+    #             end = pos + 1
+    #         else:
+    #             end = pos + block.shape[1]
 
-            if array_ndim == 1:
-                array[pos: end] = block # gets a row from array
-            else:
-                if block_ndim == 1:
-                    array[NULL_SLICE, pos] = block # a 1d array
-                else:
-                    array[NULL_SLICE, pos: end] = block # gets a row / row slice from array
-            pos = end
+    #         if array_ndim == 1:
+    #             array[pos: end] = block # gets a row from array
+    #         else:
+    #             if block_ndim == 1:
+    #                 array[NULL_SLICE, pos] = block # a 1d array
+    #             else:
+    #                 array[NULL_SLICE, pos: end] = block # gets a row / row slice from array
+    #         pos = end
 
-        array.flags.writeable = False
-        return array
+    #     array.flags.writeable = False
+    #     return array
 
 
     @property
@@ -644,10 +645,10 @@ class TypeBlocks(ContainerOperand):
         # provide a default dtype if one has not yet been set (an empty TypeBlocks, for example)
         row_dtype = self._row_dtype if self._row_dtype is not None else DTYPE_FLOAT_DEFAULT
         # always return a 2D array
-        return self._blocks_to_array(
+        return blocks_to_array_2d(
                 blocks=self._blocks,
                 shape=self._shape,
-                row_dtype=row_dtype,
+                dtype=row_dtype,
                 )
 
     def axis_values(self,
@@ -685,10 +686,10 @@ class TypeBlocks(ContainerOperand):
                         yield b[i]
             else:
                 # PERF: only creating and yielding one array at a time is shown to be slower; performance optimized: consolidate into a single array and then take slices
-                b = self._blocks_to_array(
+                b = blocks_to_array_2d(
                         blocks=self._blocks,
                         shape=self._shape,
-                        row_dtype=row_dtype,
+                        dtype=row_dtype,
                         )
                 for i in row_idx_iter:
                     yield b[i]
@@ -1131,10 +1132,10 @@ class TypeBlocks(ContainerOperand):
             # Cannot do block-wise processing, must resolve to single array and return
             row_dtype = self._row_dtype if self._row_dtype is not None else DTYPE_FLOAT_DEFAULT
 
-            array = self._blocks_to_array(
+            array = blocks_to_array_2d(
                     blocks=self._blocks,
                     shape=self._shape,
-                    row_dtype=row_dtype,
+                    dtype=row_dtype,
                     )
             result = func(array=array, axis=axis)
             result.flags.writeable = False
@@ -2388,10 +2389,10 @@ class TypeBlocks(ContainerOperand):
 
         row_dtype = resolve_dtype_iter(b.dtype for b in blocks)
 
-        array = self._blocks_to_array(
+        array = blocks_to_array_2d(
                 blocks=blocks,
                 shape=(rows, columns),
-                row_dtype=row_dtype,
+                dtype=row_dtype,
                 )
         if force_1d:
             return row_1d_filter(array)

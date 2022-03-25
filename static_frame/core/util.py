@@ -1446,12 +1446,15 @@ def blocks_to_array_2d(
         TypeBlocks.from_blocks(blocks).values
     '''
     discover_dtype = dtype is None
-    discover_shape = not bool(shape)
-
-    # only need to possibly create a list if we have an iter of blocks and need to discover shape or dtype
-    blocks_post: OptionalArrayList = None if hasattr(blocks, '__len__') else []
+    discover_shape = shape is None
+    blocks_is_gen = not hasattr(blocks, '__len__')
+    blocks_post: OptionalArrayList = None
 
     if discover_shape or discover_dtype:
+        # if we have to discover shape or types, we have to do two iterations, and then must load an iterator of `blocks` into a list
+        if blocks_is_gen:
+            blocks_post = []
+
         if discover_shape:
             rows = -1
             columns = 0
@@ -1474,15 +1477,17 @@ def blocks_to_array_2d(
             if blocks_post is not None:
                 blocks_post.append(b)
 
-    if blocks_post is None: # not an iterator, can reuse
-        blocks_post = blocks #type: ignore
-
-    # blocks_post by now is a sequence
-    if len(blocks_post) == 1:
-        # block might be 1d
-        return column_2d_filter(blocks[0]) # type: ignore
-
     shape = (rows, columns) if discover_shape else shape
+
+    if blocks_post is None:
+        # blocks might be an iterator if we did not need to discover shape or dtype
+        if not blocks_is_gen and len(blocks) == 1:
+            return column_2d_filter(blocks[0]) # type: ignore
+        blocks_post = blocks #type: ignore
+    elif len(blocks_post) == 1:
+        # blocks_post is filled; block might be 1d so use filter
+        return column_2d_filter(blocks_post[0]) # type: ignore
+
     array = np.empty(shape, dtype=dtype)
     pos = 0
     for b in blocks_post: #type: ignore

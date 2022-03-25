@@ -2645,7 +2645,6 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(),
                 [[3, True, False], [2, False, True]])
 
-
     def test_blocks_to_array_2d_e(self) -> None:
         arrays = (a for a in (
                 np.array((3, 2)),
@@ -2653,6 +2652,23 @@ class TestUnit(TestCase):
                 ))
         post = blocks_to_array_2d(arrays)
 
+    def test_blocks_to_array_2d_f(self) -> None:
+        arrays = (np.array(v) for v in ([1, 2], [3, 4], [5, 6]))
+        post = blocks_to_array_2d(arrays, shape=(2, 3), dtype=int)
+        self.assertEqual(post.tolist(),
+                [[1, 3, 5], [2, 4, 6]])
+
+    def test_blocks_to_array_2d_g(self) -> None:
+        arrays = (np.array(v) for v in ([1, 2],))
+        post = blocks_to_array_2d(arrays, shape=(2, 1), dtype=int)
+        self.assertEqual(post.tolist(), [[1], [2]])
+
+    def test_blocks_to_array_2d_h(self) -> None:
+        arrays = (np.array(v) for v in ([1, 2],))
+        post = blocks_to_array_2d(arrays)
+        self.assertEqual(post.tolist(), [[1], [2]])
+
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

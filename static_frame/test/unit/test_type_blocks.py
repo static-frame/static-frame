@@ -3569,16 +3569,6 @@ class TestUnit(TestCase):
         self.assertEqual([a.shape for a in post], [(3,)])
 
     #---------------------------------------------------------------------------
-    def test_type_blocks_blocks_to_array_a(self) -> None:
-        tb1 = ff.parse('s(1,2)|v(int,int)')._blocks
-
-        post = TypeBlocks._blocks_to_array(
-                blocks=tb1._blocks,
-                shape=tb1.shape,
-                row_dtype=tb1._row_dtype,
-                )
-        self.assertEqual(row_1d_filter(post).tolist(), [-88017, 162197])
-
     def test_iter(self) -> None:
         tb = ff.parse('s(3,6)|v(int,int,bool,bool)')._blocks
 
