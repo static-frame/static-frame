@@ -4,6 +4,8 @@ import copy
 
 import numpy as np
 from arraykit import immutable_filter
+from arraykit import row_1d_filter
+
 import frame_fixtures as ff
 
 from static_frame import mloc
@@ -3574,9 +3576,8 @@ class TestUnit(TestCase):
                 blocks=tb1._blocks,
                 shape=tb1.shape,
                 row_dtype=tb1._row_dtype,
-                force_1d=True,
                 )
-        self.assertEqual(post.tolist(), [-88017, 162197])
+        self.assertEqual(row_1d_filter(post).tolist(), [-88017, 162197])
 
     def test_iter(self) -> None:
         tb = ff.parse('s(3,6)|v(int,int,bool,bool)')._blocks
