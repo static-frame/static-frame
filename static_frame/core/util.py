@@ -1486,7 +1486,7 @@ def blocks_to_array_2d(
         blocks_post = blocks #type: ignore
     elif len(blocks_post) == 1:
         # blocks_post is filled; block might be 1d so use filter
-        return column_2d_filter(blocks_post[0]) # type: ignore
+        return column_2d_filter(blocks_post[0])
 
     array = np.empty(shape, dtype=dtype)
     pos = 0

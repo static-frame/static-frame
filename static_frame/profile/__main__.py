@@ -651,7 +651,6 @@ class FrameIterSeriesApply(Perf):
                 ),
             'mixed_index_str_row': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=TypeBlocks._blocks_to_array,
                 explanation='possible improvement with _blocks_to_array in C'
                 ),
             'mixed_index_str_row_dtype': FunctionMetaData(
