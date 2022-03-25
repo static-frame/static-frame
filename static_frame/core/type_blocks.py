@@ -65,6 +65,7 @@ from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import OptionalArrayList
 
 from static_frame.core.style_config import StyleConfig
 
@@ -595,7 +596,6 @@ class TypeBlocks(ContainerOperand):
             blocks: tp.Sequence[np.ndarray],
             shape: tp.Tuple[int, int],
             row_dtype: np.dtype,
-            force_1d: bool
             ) -> np.ndarray:
         '''
         Given blocks and a combined shape, return a consolidated 2D or 1D array.
@@ -608,17 +608,10 @@ class TypeBlocks(ContainerOperand):
 
         # assume column_multiple is True, as this routine is called after handling extraction of single columns
         if len(blocks) == 1:
-            if force_1d:
-                return row_1d_filter(blocks[0])
             return column_2d_filter(blocks[0])
 
         # get empty array and fill parts
-        # NOTE: row_dtype may be None if an unfillable array; defaults to NP default
-        if force_1d:
-            # return 1 row TypeBlock as a 1D array with length equal to the number of columns
-            array = np.empty(shape[1], dtype=row_dtype)
-        else: # get ndim 2 shape array
-            array = np.empty(shape, dtype=row_dtype)
+        array = np.empty(shape, dtype=row_dtype)
 
         pos = 0
         array_ndim = array.ndim
@@ -655,7 +648,6 @@ class TypeBlocks(ContainerOperand):
                 blocks=self._blocks,
                 shape=self._shape,
                 row_dtype=row_dtype,
-                force_1d=False,
                 )
 
     def axis_values(self,
@@ -697,7 +689,6 @@ class TypeBlocks(ContainerOperand):
                         blocks=self._blocks,
                         shape=self._shape,
                         row_dtype=row_dtype,
-                        force_1d=False,
                         )
                 for i in row_idx_iter:
                     yield b[i]
@@ -986,7 +977,7 @@ class TypeBlocks(ContainerOperand):
             axis: 0 orders columns by row(s) given by ``key``; 1 orders rows by column(s) given by ``key``.
         '''
         values_for_sort: tp.Optional[np.ndarray] = None
-        values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
+        values_for_lex: OptionalArrayList = None
 
         if axis == 0: # get a column ordering based on one or more rows
             cfs = self._extract_array(row_key=key)
@@ -1144,7 +1135,6 @@ class TypeBlocks(ContainerOperand):
                     blocks=self._blocks,
                     shape=self._shape,
                     row_dtype=row_dtype,
-                    force_1d=False,
                     )
             result = func(array=array, axis=axis)
             result.flags.writeable = False
@@ -2398,12 +2388,14 @@ class TypeBlocks(ContainerOperand):
 
         row_dtype = resolve_dtype_iter(b.dtype for b in blocks)
 
-        return self._blocks_to_array(
+        array = self._blocks_to_array(
                 blocks=blocks,
                 shape=(rows, columns),
                 row_dtype=row_dtype,
-                force_1d=force_1d,
                 )
+        if force_1d:
+            return row_1d_filter(array)
+        return array
 
     def _extract_array_column(self,
             key: int,

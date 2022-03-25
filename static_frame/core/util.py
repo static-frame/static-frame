@@ -230,6 +230,8 @@ Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
 
 ShapeType = tp.Union[int, tp.Tuple[int, int]]
+OptionalArrayList = tp.Optional[tp.List[np.ndarray]]
+
 
 def is_mapping(value: tp.Any) -> bool:
     from static_frame import Series
@@ -1445,7 +1447,7 @@ def blocks_to_array_2d(
     discover_shape = not bool(shape)
 
     # only need to possibly create a list if we have an iter of blocks and need to discover shape or dtype
-    blocks_post: tp.Optional[tp.List[np.ndarray]] = None if hasattr(blocks, '__len__') else []
+    blocks_post: OptionalArrayList = None if hasattr(blocks, '__len__') else []
 
     if discover_shape or discover_dtype:
         if discover_shape:
@@ -1473,21 +1475,22 @@ def blocks_to_array_2d(
     if blocks_post is None: # not an iterator, can reuse
         blocks_post = blocks #type: ignore
 
-    # can only take this optimization if blocks_post is a sequence
+    # blocks_post by now is a sequence
     if len(blocks_post) == 1:
+        # block might be 1d
         return column_2d_filter(blocks[0])
 
     shape = (rows, columns) if discover_shape else shape
     array = np.empty(shape, dtype=dtype)
-    c = 0
+    pos = 0
     for b in blocks_post: #type: ignore
         if b.ndim == 1:
-            array[NULL_SLICE, c] = b
-            c += 1
+            array[NULL_SLICE, pos] = b
+            pos += 1
         else:
-            end = c + b.shape[1]
-            array[NULL_SLICE, c: end] = b
-            c = end
+            end = pos + b.shape[1]
+            array[NULL_SLICE, pos: end] = b
+            pos = end
 
     array.flags.writeable = False
     return array

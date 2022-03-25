@@ -48,7 +48,6 @@ from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors_deferred
 from static_frame.core.container_util import df_slice_to_arrays
 from static_frame.core.container_util import frame_to_frame
-
 from static_frame.core.archive_npy import NPZFrameConverter
 from static_frame.core.archive_npy import NPYFrameConverter
 
@@ -172,6 +171,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import WarningsSilent
+from static_frame.core.util import OptionalArrayList
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -5184,7 +5184,7 @@ class Frame(ContainerOperand):
             {key}
         '''
         values_for_sort: tp.Optional[np.ndarray] = None
-        values_for_lex: tp.Optional[tp.List[np.ndarray]] = None
+        values_for_lex: OptionalArrayList = None
 
         if axis == 0: # get a column ordering based on one or more rows
             iloc_key = self._index._loc_to_iloc(label)
