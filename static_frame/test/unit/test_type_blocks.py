@@ -4,7 +4,6 @@ import copy
 
 import numpy as np
 from arraykit import immutable_filter
-from arraykit import row_1d_filter
 
 import frame_fixtures as ff
 
