@@ -3574,7 +3574,7 @@ class TestUnit(TestCase):
                 blocks=tb1._blocks,
                 shape=tb1.shape,
                 row_dtype=tb1._row_dtype,
-                row_multiple=False,
+                force_1d=True,
                 )
         self.assertEqual(post.tolist(), [-88017, 162197])
 

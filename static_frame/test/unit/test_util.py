@@ -2646,6 +2646,12 @@ class TestUnit(TestCase):
                 [[3, True, False], [2, False, True]])
 
 
+    def test_blocks_to_array_2d_e(self) -> None:
+        arrays = (a for a in (
+                np.array((3, 2)),
+                np.array([[True, False], [False, True]])
+                ))
+        post = blocks_to_array_2d(arrays)
 
 
 if __name__ == '__main__':

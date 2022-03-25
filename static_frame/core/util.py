@@ -1434,42 +1434,48 @@ def iterable_to_array_nd(
 def blocks_to_array_2d(
         blocks: tp.Iterator[np.ndarray],
         shape: tp.Optional[tp.Tuple[int, int]] = None,
+        dtype: tp.Optional[np.dtype] = None,
         ) -> np.ndarray:
     '''
     Given an iterable of blocks, return a consolidatd array.
     This is equivalent but more efficient than:
         TypeBlocks.from_blocks(blocks).values
     '''
+    discover_dtype = dtype is None
     discover_shape = not bool(shape)
-    if discover_shape:
-        rows = -1
-        columns = 0
-    dtype: tp.Optional[np.dtype] = None
 
+    # only need to possibly create a list if we have an iter of blocks and need to discover shape or dtype
     blocks_post: tp.Optional[tp.List[np.ndarray]] = None if hasattr(blocks, '__len__') else []
 
-    for b in blocks:
+    if discover_shape or discover_dtype:
         if discover_shape:
-            if rows == -1:
-                rows = len(b) # works for 1D and 2D
-            elif len(b) != rows:
-                raise RuntimeError(f'Invalid block shape {len(b)}')
-            if b.ndim == 1:
-                columns += 1
-            else:
-                columns += b.shape[1]
+            rows = -1
+            columns = 0
 
-        if dtype is None:
-            dtype = b.dtype
-        else:
-            dtype = resolve_dtype(dtype, b.dtype)
+        for b in blocks:
+            if discover_shape:
+                if rows == -1:
+                    rows = len(b) # works for 1D and 2D
+                elif len(b) != rows:
+                    raise RuntimeError(f'Invalid block shape {len(b)}')
+                if b.ndim == 1:
+                    columns += 1
+                else:
+                    columns += b.shape[1]
+            if discover_dtype:
+                if dtype is None:
+                    dtype = b.dtype
+                else:
+                    dtype = resolve_dtype(dtype, b.dtype)
+            if blocks_post is not None:
+                blocks_post.append(b)
 
-        if blocks_post is not None:
-            blocks_post.append(b)
-
-    if blocks_post is None:
-        # not an iterator, can reuse
+    if blocks_post is None: # not an iterator, can reuse
         blocks_post = blocks #type: ignore
+
+    # can only take this optimization if blocks_post is a sequence
+    if len(blocks_post) == 1:
+        return column_2d_filter(blocks[0])
 
     shape = (rows, columns) if discover_shape else shape
     array = np.empty(shape, dtype=dtype)
@@ -1482,7 +1488,61 @@ def blocks_to_array_2d(
             end = c + b.shape[1]
             array[NULL_SLICE, c: end] = b
             c = end
+
+    array.flags.writeable = False
     return array
+
+
+def blocks_to_array(*,
+        blocks: tp.Sequence[np.ndarray],
+        shape: tp.Tuple[int, int],
+        dtype: np.dtype,
+        force_2d: bool
+        ) -> np.ndarray:
+    '''
+    Given blocks and a combined shape, return a consolidated 2D or 1D array.
+
+    Args:
+        shape: used in construting returned array; not ussed as a constraint.
+        force_2d: if False, a single row reduces to a 1D
+    '''
+    # assume column_multiple is True, as this routine is called after handling extraction of single columns
+    if len(blocks) == 1:
+        if not force_2d:
+            return row_1d_filter(blocks[0])
+        return column_2d_filter(blocks[0])
+
+    # get empty array and fill parts
+    # NOTE: dtype may be None if an unfillable array; defaults to NP default
+    if not force_2d:
+        # return 1 row TypeBlock as a 1D array with length equal to the number of columns
+        array = np.empty(shape[1], dtype=dtype)
+    else: # get ndim 2 shape array
+        array = np.empty(shape, dtype=dtype)
+
+    pos = 0
+    array_ndim = array.ndim
+
+    for block in blocks:
+        block_ndim = block.ndim
+
+        if block_ndim == 1:
+            end = pos + 1
+        else:
+            end = pos + block.shape[1]
+
+        if array_ndim == 1:
+            array[pos: end] = block # gets a row from array
+        else:
+            if block_ndim == 1:
+                array[NULL_SLICE, pos] = block # a 1d array
+            else:
+                array[NULL_SLICE, pos: end] = block # gets a row / row slice from array
+        pos = end
+
+    array.flags.writeable = False
+    return array
+
 
 
 #-------------------------------------------------------------------------------
