@@ -3,6 +3,7 @@ import operator
 import typing as tp
 from ast import literal_eval
 from copy import deepcopy
+from functools import partial
 
 import numpy as np
 from arraykit import name_filter
@@ -81,6 +82,7 @@ from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import blocks_to_array_2d
 
 from static_frame.core.style_config import StyleConfig
 
@@ -161,12 +163,7 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> np.ndarray:
         dtype=DTYPE_INT_DEFAULT,
     )
     result.flags.writeable = False
-
     return result
-
-
-def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
-    return TypeBlocks.from_blocks(blocks).values
 
 
 # 71% of from_arrays_small
@@ -1022,7 +1019,7 @@ class IndexHierarchy(IndexBase):
 
         return InterfaceString(
                 blocks=self._blocks._blocks,
-                blocks_to_container=blocks_to_container,
+                blocks_to_container=partial(blocks_to_array_2d, shape=self._blocks.shape),
                 )
 
     @property
@@ -1035,7 +1032,7 @@ class IndexHierarchy(IndexBase):
 
         return InterfaceDatetime(
                 blocks=self._blocks._blocks,
-                blocks_to_container=blocks_to_container,
+                blocks_to_container=partial(blocks_to_array_2d, shape=self._blocks.shape),
                 )
 
     @property
@@ -1057,7 +1054,7 @@ class IndexHierarchy(IndexBase):
 
         return InterfaceRe(
                 blocks=self._blocks._blocks,
-                blocks_to_container=blocks_to_container,
+                blocks_to_container=partial(blocks_to_array_2d, shape=self._blocks.shape),
                 pattern=pattern,
                 flags=flags,
                 )
