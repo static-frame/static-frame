@@ -32,6 +32,7 @@ from static_frame import IndexHierarchyGO
 from static_frame import IndexYear
 from static_frame import IndexYearGO
 from static_frame import IndexYearMonth
+from static_frame import IndexSecond
 from static_frame import mloc
 from static_frame import Series
 from static_frame import TypeBlocks
@@ -9213,6 +9214,20 @@ class TestUnit(TestCase):
                 f1.to_npz(fp)
             except ErrorNPYEncode:
                 pass
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_from_npz_a(self) -> None:
+
+        f1 = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(6,2)')
+        dt64 = np.datetime64
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = sf.Frame.from_npz(fp)
+            self.assertIs(f2.columns.__class__, IndexSecond)
+            self.assertEqual(f2.to_pairs(),
+                    ((dt64('1970-01-01T09:38:35'), (((dt64('36685'), dt64('2258-03-21')), -88017), ((dt64('36685'), dt64('2298-04-20')), 92867), ((dt64('5618'), dt64('2501-10-08')), 84967), ((dt64('5618'), dt64('2441-04-14')), 13448), ((dt64('93271'), dt64('2234-04-07')), 175579), ((dt64('93271'), dt64('2210-12-26')), 58768))), (dt64('1970-01-01T01:00:48'), (((dt64('36685'), dt64('2258-03-21')), False), ((dt64('36685'), dt64('2298-04-20')), False), ((dt64('5618'), dt64('2501-10-08')), False), ((dt64('5618'), dt64('2441-04-14')), False), ((dt64('93271'), dt64('2234-04-07')), False), ((dt64('93271'), dt64('2210-12-26')), False))))
+                    )
 
     #---------------------------------------------------------------------------
 

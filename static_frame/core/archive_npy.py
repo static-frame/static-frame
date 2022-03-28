@@ -644,6 +644,13 @@ class ArchiveFrameConverter:
                 name=name_index,
                 )
 
+        # we need to align the mutability of the constructor with the Index type on the columns
+        if constructor.STATIC != cls_columns.STATIC:
+            if constructor.STATIC:
+                cls_columns = cls_columns._IMMUTABLE_CONSTRUCTOR
+            else:
+                cls_columns = cls_columns._MUTABLE_CONSTRUCTOR
+
         columns = ArchiveIndexConverter._index_decode(
                 archive=archive,
                 metadata=metadata,

@@ -98,10 +98,6 @@ class ContainerMap:
 
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
-    # @staticmethod
-    # def cls_to_str(cls: tp.Type['ContainerOperand']) -> str:
-    #     return
-
     @classmethod
     def str_to_cls(cls, name: str) -> tp.Type['ContainerOperand']:
         if cls._map is None:
