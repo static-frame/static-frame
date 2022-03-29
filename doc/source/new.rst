@@ -18,6 +18,8 @@ Added ``Batch.to_series()``.
 
 Fixed issue when using ``Frame.from_npz`` with an NPZ created with a ``FrameGO``.
 
+Fixed issue when supplying overspecified mappings to ``Frame.astype``.
+
 
 0.8.38
 ----------
