@@ -1800,7 +1800,7 @@ class IndexHierarchy(IndexBase):
 
             return [self._loc_to_iloc(k) for k in key] # type: ignore
 
-        if isinstance(key, HLoc):
+        if key.__class__ is HLoc:
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
             key = tuple(HLoc(tuple(key_from_container_key(self, k, expand_iloc=True) for k in key)))
 
