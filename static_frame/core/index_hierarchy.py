@@ -1752,7 +1752,7 @@ class IndexHierarchy(IndexBase):
             if len(meaningful_depths) == self.depth and can_perform_fast_lookup:
                 return self._map.loc_to_iloc(key, self._indices)
 
-            mask_2d = np.full(self.shape, True, dtype=bool)
+            mask_2d = np.full(self.shape, True, dtype=DTYPE_BOOL)
 
             for depth in meaningful_depths:
                 mask = self._build_mask_for_key_at_depth(depth=depth, key=key)
