@@ -27,7 +27,9 @@ class StoreHDF5(Store):
 
         config_map = StoreConfigMap.from_initializer(config)
 
-        import tables
+        with WarningsSilent():
+            import tables
+            # silence: DeprecationWarning: `np.typeDict` is a deprecated alias for `np.sctypeDict`.
 
         with tables.open_file(self._fp, mode='w') as file, WarningsSilent():
             # silence NaturalNameWarning: object name is not a valid Python identifier:

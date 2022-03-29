@@ -9427,7 +9427,6 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
 
         f2 = f1.astype({'b':str, 'e':str})
-        # import ipdb; ipdb.set_trace()
 
         self.assertEqual([dt.kind for dt in f2.dtypes.values],
                 ['i', 'U', 'U', 'b', 'U'])

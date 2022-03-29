@@ -8151,13 +8151,8 @@ class FrameAsType:
             ) -> 'Frame':
 
         if self.column_key.__class__ is slice and self.column_key == NULL_SLICE:
-            # if is_mapping(dtypes):
-            #     # translate keys loc to iloc
-            #     dtypes = {self.container._columns._loc_to_iloc(k): v
-            #             for k, v in dtypes.items()} #type: ignore [union-attr]
             dtype_factory = get_col_dtype_factory(dtypes, self.container._columns)
-
-            gen = self.container._blocks._astype_blocks_from_dtypes(dtypes)
+            gen = self.container._blocks._astype_blocks_from_dtypes(dtypes, dtype_factory)
         else:
             if not is_dtype_specifier(dtypes):
                 raise RuntimeError('must supply a single dtype specifier if using a column selection other than the NULL slice')
