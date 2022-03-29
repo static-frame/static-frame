@@ -1801,7 +1801,7 @@ class IndexHierarchy(IndexBase):
         if key.__class__ is HLoc:
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
             key = tuple(
-                    key_from_container_key(self, k, True) for k in key
+                    key_from_container_key(self, k, True) for k in key # type: ignore
                     )
             if len(key) > self.depth:
                 raise RuntimeError(
