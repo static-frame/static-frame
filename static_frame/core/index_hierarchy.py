@@ -1661,11 +1661,11 @@ class IndexHierarchy(IndexBase):
                 start = 0
 
             if key_at_depth.step is not None and not isinstance(
-                key_at_depth.step, INT_TYPES
-            ):
+                    key_at_depth.step, INT_TYPES
+                    ):
                 raise TypeError(
                     f'slice step must be an integer, not {type(key_at_depth.step)}'
-                )
+                    )
 
             if key_at_depth.stop is not None:
                 stop: int = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1 # type: ignore
@@ -1728,7 +1728,7 @@ class IndexHierarchy(IndexBase):
 
         return ilocs
 
-    def _loc_to_iloc_single_key(self: IH,
+    def _loc_per_depth_to_iloc(self: IH,
             key: tp.Union[np.ndarray, CompoundLabelType],
             ) -> tp.Union[int, np.ndarray]:
         '''
@@ -1737,7 +1737,6 @@ class IndexHierarchy(IndexBase):
         Will return a single integer for single, non-HLoc keys. Otherwise, returns a boolean mask.
         '''
         # This private internal method assumes recache has already been checked for!
-
         # We consider the NULL_SLICE to not be 'meaningful', as it requires no filtering
         meaningful_depths = [
                 depth for depth, k in enumerate(key)
@@ -1747,9 +1746,9 @@ class IndexHierarchy(IndexBase):
             # Prefer to avoid construction of a 2D mask
             mask = self._build_mask_for_key_at_depth(depth=meaningful_depths[0], key=key)
         else:
-            can_perform_fast_lookup = all(map(is_neither_slice_nor_mask, key))
-
-            if len(meaningful_depths) == self.depth and can_perform_fast_lookup:
+            # NOTE: use a faster lookup; only call is_neither_slice_nor_mask if meaningful_depths == self.depth
+            if (len(meaningful_depths) == self.depth
+                    and all(map(is_neither_slice_nor_mask, key))):
                 return self._map.loc_to_iloc(key, self._indices)
 
             mask_2d = np.full(self.shape, True, dtype=DTYPE_BOOL)
@@ -1797,7 +1796,6 @@ class IndexHierarchy(IndexBase):
                         assume_unique=False,
                         return_indices=True,
                         )[1]
-
             return [self._loc_to_iloc(k) for k in key] # type: ignore
 
         if key.__class__ is HLoc:
@@ -1805,11 +1803,10 @@ class IndexHierarchy(IndexBase):
             key = tuple(
                     key_from_container_key(self, k, True) for k in key
                     )
-            # import ipdb; ipdb.set_trace()
             if len(key) > self.depth:
                 raise RuntimeError(
                     f'Too many depths specified for {key}. Expected: {self.depth}'
-                )
+                    )
         else:
             # If the key is a series, key_from_container_key will invoke IndexCorrespondence
             # logic that eventually calls _loc_to_iloc on all the indices of that series.
@@ -1845,7 +1842,7 @@ class IndexHierarchy(IndexBase):
             # We can occasionally receive a sequence of tuples
             return [self._loc_to_iloc(k) for k in key] # type: ignore
 
-        return self._loc_to_iloc_single_key(key)
+        return self._loc_per_depth_to_iloc(key)
 
     def loc_to_iloc(self: IH,
             key: LocKeyType,
