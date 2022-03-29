@@ -32,7 +32,7 @@ DEEPCOPY_FROM_BUS = 'deepcopy_from_bus: Boolean to determine if containers are d
 
 DTYPE_SPECIFIER = '''dtype: A value suitable for specyfying a NumPy dtype, such as a Python type (float), NumPy array protocol strings ('f8'), or a dtype instance.'''
 
-DTYPES = "dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used."
+DTYPES = "dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name (where overspecied labels is not an error). If a dtype is given as None, element-wise type determination will be used."
 
 FP = 'fp: A string file path or :obj:`Path` instance.'
 

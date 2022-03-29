@@ -6142,6 +6142,24 @@ class TestUnit(TestCase):
                 ((('a', 0), ((0, 'w'),)), (('a', 1), ((0, 'x'),)), (('b', 0), ((0, 'y'),)), (('b', 1), ((0, 'z'),)))
                 )
 
+    def test_frame_from_delimited_f(self) -> None:
+        msg = 'a|b|c\n0|1|0\n23|1|4\n'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=1,
+                dtypes={'c': bool, 'd': float} # NOTE: can overspecify
+                )
+        self.assertEqual([d.kind for d in f1.dtypes.values],
+                ['i', 'i', 'b']
+                )
+        self.assertEqual(f1.to_pairs(),
+                (('a', ((0, 0), (1, 23))),
+                 ('b', ((0, 1), (1, 1))),
+                 ('c', ((0, False), (1, True))))
+                 )
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_tsv_a(self) -> None:
@@ -8704,6 +8722,18 @@ class TestUnit(TestCase):
                     index=[1, 2], columns=['a', 'b', 'c'],
                     )
 
+    def test_frame_from_records_w(self) -> None:
+
+        records = [[1,True], [4,False]]
+        dtypes = {'b': int, 'c': int} # NOTE: can overspecify
+        f1 = sf.Frame.from_records(records,
+                index=('x', 'y'),
+                columns=['a', 'b'],
+                dtypes=dtypes)
+        self.assertEqual([d.kind for d in f1.dtypes.values],
+                ['i', 'i'],
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_dict_records_a(self) -> None:
@@ -9397,6 +9427,8 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
 
         f2 = f1.astype({'b':str, 'e':str})
+        # import ipdb; ipdb.set_trace()
+
         self.assertEqual([dt.kind for dt in f2.dtypes.values],
                 ['i', 'U', 'U', 'b', 'U'])
 
@@ -9442,6 +9474,15 @@ class TestUnit(TestCase):
         f3 = f2.astype[(f2.dtypes == int).values](float)
         self.assertEqual([dt.kind for dt in f3.dtypes.values],
                 ['f', 'f', 'f', 'f', 'f'])
+
+    def test_frame_astype_f(self) -> None:
+        f1 = Frame(np.arange(25).reshape(5,5), columns=[0,1,2,3,4])
+        f2 = f1.astype({'a': bool, 0: bool})
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, False), (1, True), (2, True), (3, True), (4, True))), (1, ((0, 1), (1, 6), (2, 11), (3, 16), (4, 21))), (2, ((0, 2), (1, 7), (2, 12), (3, 17), (4, 22))), (3, ((0, 3), (1, 8), (2, 13), (3, 18), (4, 23))), (4, ((0, 4), (1, 9), (2, 14), (3, 19), (4, 24))))
+                )
+
+
 
     #---------------------------------------------------------------------------
 

@@ -1411,8 +1411,8 @@ class TypeBlocks(ContainerOperand):
             dtype: DtypeSpecifier
             ) -> tp.Iterator[np.ndarray]:
         '''
-        Give any column selection, apply a single dtype.
-        Generator producer of np.ndarray.
+        Given any column selection, apply a single dtype.
+        Generator-producer of np.ndarray.
         '''
         # block slices must be in ascending order, not key order
         block_slices = iter(self._key_to_block_slices(
@@ -1481,7 +1481,8 @@ class TypeBlocks(ContainerOperand):
 
 
     def _astype_blocks_from_dtypes(self,
-            dtypes: DtypesSpecifier
+            dtypes: DtypesSpecifier,
+            dtype_factory: tp.Optional[tp.Callable[[int], np.dtype]] = None,
             ) -> tp.Iterator[np.ndarray]:
         '''
         Generator producer of np.ndarray.
@@ -1489,13 +1490,14 @@ class TypeBlocks(ContainerOperand):
         Args:
             dtypes: specify dtypes as single item, iterable, or mapping.
         '''
-        # use a range() of integers as columns labels
-        get_col_dtype = get_col_dtype_factory(dtypes, range(self._shape[1]))
+        if dtype_factory is None:
+            # use a range() of integers as columns labels
+            dtype_factory = get_col_dtype_factory(dtypes, range(self._shape[1]))
 
         iloc = 0
         for b in self._blocks:
             if b.ndim == 1:
-                dtype = get_col_dtype(iloc)
+                dtype = dtype_factory(iloc)
                 if dtype is not None:
                     yield b.astype(dtype)
                 else:
@@ -1504,7 +1506,7 @@ class TypeBlocks(ContainerOperand):
             else:
                 group_start = 0
                 for pos in range(b.shape[1]):
-                    dtype = get_col_dtype(iloc)
+                    dtype = dtype_factory(iloc)
                     if pos == 0:
                         dtype_last = dtype
                     elif dtype != dtype_last:
