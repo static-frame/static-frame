@@ -14,6 +14,8 @@ from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import isna_array
+from static_frame.core.container_util import get_col_dtype_factory
+
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase
 from static_frame.core.type_blocks import group_match
@@ -2619,16 +2621,21 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4))
 
+        dtype_factory = get_col_dtype_factory({0: str, 2: str}, range(tb1.shape[1]))
+
         tb2 = TypeBlocks.from_blocks(tb1._astype_blocks_from_dtypes(
-                {0: str, 2: str})
+                dtype_factory)
                 )
         self.assertEqual([d.kind for d in tb2.dtypes],
                 ['U', 'i', 'U', 'b'])
         self.assertEqual(tb2.shapes.tolist(),
                 [(3,), (3,), (3,), (3,)])
 
+
+        dtype_factory = get_col_dtype_factory((str, None, str, None), range(tb2.shape[1]))
+
         tb3 = TypeBlocks.from_blocks(tb1._astype_blocks_from_dtypes(
-                (str, None, str, None))
+                dtype_factory)
                 )
         self.assertEqual([d.kind for d in tb3.dtypes],
                 ['U', 'i', 'U', 'b'])
@@ -2640,15 +2647,20 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
+        dtype_factory = get_col_dtype_factory(
+                {2: str, 3: str, 5: str}, range(tb1.shape[1]))
+
         tb2 = TypeBlocks.from_blocks(tb1._astype_blocks_from_dtypes(
-                {2: str, 3: str, 5: str})
+                dtype_factory)
                 )
         self.assertEqual([d.kind for d in tb2.dtypes],
                 ['i', 'i', 'U', 'U', 'b', 'U'])
         self.assertEqual(tb2.shapes.tolist(),
                 [(3, 2), (3, 1), (3, 1), (3, 1), (3, 1)])
 
-        tb3 = TypeBlocks.from_blocks(tb1._astype_blocks_from_dtypes(str))
+
+        dtype_factory = get_col_dtype_factory(str, range(tb1.shape[1]))
+        tb3 = TypeBlocks.from_blocks(tb1._astype_blocks_from_dtypes(dtype_factory))
 
         self.assertEqual([d.kind for d in tb3.dtypes],
                 ['U', 'U', 'U', 'U', 'U', 'U'])

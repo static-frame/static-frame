@@ -1481,19 +1481,14 @@ class TypeBlocks(ContainerOperand):
 
 
     def _astype_blocks_from_dtypes(self,
-            dtypes: DtypesSpecifier,
-            dtype_factory: tp.Optional[tp.Callable[[int], np.dtype]] = None,
+            dtype_factory: tp.Optional[tp.Callable[[int], np.dtype]],
             ) -> tp.Iterator[np.ndarray]:
         '''
         Generator producer of np.ndarray.
 
         Args:
-            dtypes: specify dtypes as single item, iterable, or mapping.
+            dtype_factory: a function for mapping iloc positions to dtypes, often produced with get_col_dtype_factory().
         '''
-        if dtype_factory is None:
-            # use a range() of integers as columns labels
-            dtype_factory = get_col_dtype_factory(dtypes, range(self._shape[1]))
-
         iloc = 0
         for b in self._blocks:
             if b.ndim == 1:
