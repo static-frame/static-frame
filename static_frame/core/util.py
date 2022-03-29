@@ -263,6 +263,12 @@ DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
 def is_dtype_specifier(value: tp.Any) -> bool:
     return isinstance(value, DTYPE_SPECIFIER_TYPES)
 
+def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
+    is_slice = value.__class__ is slice
+    is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
+    return not is_slice and not is_mask
+
+
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[
         DtypeSpecifier,

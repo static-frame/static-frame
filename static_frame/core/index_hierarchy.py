@@ -29,6 +29,7 @@ from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
+from static_frame.core.util import is_neither_slice_nor_mask
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_base import IndexBase
@@ -1742,17 +1743,11 @@ class IndexHierarchy(IndexBase):
                 depth for depth, k in enumerate(key)
                 if not (k.__class__ is slice and k == NULL_SLICE)
                 ]
-
-        def neither_slice_nor_mask(obj: tp.Union[slice, tp.Hashable]) -> bool:
-            is_slice = obj.__class__ is slice
-            is_mask = obj.__class__ is np.ndarray and obj.dtype == DTYPE_BOOL # type: ignore
-            return not is_slice and not is_mask
-
         if len(meaningful_depths) == 1:
             # Prefer to avoid construction of a 2D mask
             mask = self._build_mask_for_key_at_depth(depth=meaningful_depths[0], key=key)
         else:
-            can_perform_fast_lookup = all(map(neither_slice_nor_mask, key))
+            can_perform_fast_lookup = all(map(is_neither_slice_nor_mask, key))
 
             if len(meaningful_depths) == self.depth and can_perform_fast_lookup:
                 return self._map.loc_to_iloc(key, self._indices)
