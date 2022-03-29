@@ -1802,8 +1802,10 @@ class IndexHierarchy(IndexBase):
 
         if key.__class__ is HLoc:
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
-            key = tuple(HLoc(tuple(key_from_container_key(self, k, expand_iloc=True) for k in key)))
-
+            key = tuple(
+                    key_from_container_key(self, k, True) for k in key
+                    )
+            # import ipdb; ipdb.set_trace()
             if len(key) > self.depth:
                 raise RuntimeError(
                     f'Too many depths specified for {key}. Expected: {self.depth}'
