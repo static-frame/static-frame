@@ -132,7 +132,6 @@ from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import is_dtype_specifier
-from static_frame.core.util import is_mapping
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd

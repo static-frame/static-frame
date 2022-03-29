@@ -17,7 +17,6 @@ from arraykit import shape_filter
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
 from static_frame.core.container_util import apply_binary_operator_blocks_columnar
-from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import get_block_match
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -35,7 +34,6 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import full_for_fill
