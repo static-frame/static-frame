@@ -19,7 +19,7 @@ sphinx==4.3.2
 sphinx-jinja==1.4.0
 sphinx_rtd_theme>=0.5.1
 sphinxcontrib-napoleon==0.7.0
-pandas==0.24.2
+pandas==1.2.5
 xlsxwriter==1.1.2
 openpyxl==3.0.9
 xarray==0.13.0
