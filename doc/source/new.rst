@@ -12,6 +12,8 @@ API change: ``Index`` objects can no longer be created with ``np.datetime64`` ar
 
 API change: ``IndexAutoFactory`` is no longer accepted as an ``index_constructor`` argument in ``Series.from_pandas()`` and ``Frame.from_pandas()``; ``IndexAutoFactory`` should be passed as an ``index`` or ``columns`` argument instead.
 
+Minimum Python version is now 3.7
+
 New implementation of ``IndexHierarchy``, offering significantly improved performance and removal of the requirement of tree hierarchies.
 
 Added ``Batch.to_series()``.
