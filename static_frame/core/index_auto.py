@@ -52,13 +52,13 @@ class IndexAutoFactory:
                 return explicit_constructor(default_constructor)(labels)
             return explicit_constructor(labels)
 
-        else: # get from default constructor
-            constructor = Index if default_constructor.STATIC else IndexGO
-            return constructor(
-                    labels=labels,
-                    loc_is_iloc=True,
-                    dtype=DTYPE_INT_DEFAULT
-                    )
+        # get from default constructor
+        constructor = Index if default_constructor.STATIC else IndexGO
+        return constructor(
+                labels=labels,
+                loc_is_iloc=True,
+                dtype=DTYPE_INT_DEFAULT
+                )
 
     def __init__(self,
             size: IndexAutoInitializer,
@@ -80,6 +80,8 @@ class IndexAutoFactory:
                 explicit_constructor=explicit_constructor,
                 )
 
+    def __repr__(self) -> str:
+        return f'IndexAutoFactory<{self._size}>'
 
 
 IndexAutoFactoryType = tp.Type[IndexAutoFactory]

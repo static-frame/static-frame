@@ -61,22 +61,24 @@ class Quilt(ContainerBase, StoreClientMixin):
     __slots__ = (
             '_bus',
             '_axis',
-            '_axis_hierarchy',
+            '_index_primary',
+            '_index_secondary',
             '_retain_labels',
-            '_axis_opposite',
             '_assign_axis',
             '_columns',
             '_index',
+            '_include_index',
             '_deepcopy_from_bus',
             )
 
     _bus: tp.Union[Bus, Yarn]
     _axis: int
-    _axis_hierarchy: tp.Optional[IndexHierarchy]
-    _axis_opposite: tp.Optional[IndexBase]
+    _index_primary: tp.Optional[IndexBase]
+    _index_secondary: tp.Optional[IndexBase]
     _columns: IndexBase
     _index: IndexBase
     _assign_axis: bool
+    _include_index: bool
 
     _NDIM: int = 2
 
@@ -111,24 +113,24 @@ class Quilt(ContainerBase, StoreClientMixin):
             label_extractor = lambda x: x.iloc[0] #type: ignore
 
         axis_map_components: tp.Dict[tp.Hashable, IndexBase] = {}
-        opposite = None
+        index_secondary = None
 
         def values() -> tp.Iterator[Frame]:
-            nonlocal opposite
+            nonlocal index_secondary
 
             for start, end in zip_longest(starts, ends, fillvalue=vector_len):
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
                     label = label_extractor(f.index) #type: ignore
                     axis_map_components[label] = f.index
-                    if opposite is None:
-                        opposite = f.columns
+                    if index_secondary is None:
+                        index_secondary = f.columns
                 elif axis == 1: # along columns
                     f = frame.iloc[:, start:end]
                     label = label_extractor(f.columns) #type: ignore
                     axis_map_components[label] = f.columns
-                    if opposite is None:
-                        opposite = f.index
+                    if index_secondary is None:
+                        index_secondary = f.index
                 else:
                     raise AxisInvalid(f'invalid axis {axis}')
                 yield f.rename(label)
@@ -136,14 +138,15 @@ class Quilt(ContainerBase, StoreClientMixin):
         name = name if name else frame.name
         bus = Bus.from_frames(values(), config=config, name=name)
 
-        axis_hierarchy = IndexHierarchy.from_tree(axis_map_components)
+        index_primary = IndexHierarchy.from_tree(axis_map_components)
 
         return cls(bus,
                 axis=axis,
-                axis_hierarchy=axis_hierarchy,
-                axis_opposite=opposite,
+                index_primary=index_primary,
+                index_secondary=index_secondary,
                 retain_labels=retain_labels,
                 deepcopy_from_bus=deepcopy_from_bus,
+                include_index=False,
                 )
 
     #---------------------------------------------------------------------------
@@ -156,6 +159,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
@@ -166,9 +170,9 @@ class Quilt(ContainerBase, StoreClientMixin):
         return cls(bus,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 )
-
 
     @classmethod
     @doc_inject(selector='quilt_constructor')
@@ -178,6 +182,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
@@ -191,6 +196,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 config=config,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 max_persist=max_persist,
                 )
@@ -203,6 +209,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
@@ -216,6 +223,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 config=config,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 max_persist=max_persist,
                 )
@@ -228,6 +236,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
@@ -241,6 +250,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 config=config,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 max_persist=max_persist,
                 )
@@ -253,6 +263,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
@@ -266,6 +277,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 config=config,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 max_persist=max_persist,
                 )
@@ -278,6 +290,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
@@ -291,6 +304,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 config=config,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 max_persist=max_persist,
                 )
@@ -303,6 +317,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
@@ -317,10 +332,10 @@ class Quilt(ContainerBase, StoreClientMixin):
                 config=config,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 max_persist=max_persist,
                 )
-
 
     @classmethod
     @doc_inject(selector='quilt_constructor')
@@ -330,6 +345,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
@@ -343,10 +359,10 @@ class Quilt(ContainerBase, StoreClientMixin):
                 config=config,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 max_persist=max_persist,
                 )
-
 
     @classmethod
     @doc_inject(selector='quilt_constructor')
@@ -356,6 +372,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
@@ -369,6 +386,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 config=config,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 max_persist=max_persist,
                 )
@@ -382,6 +400,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             axis: int = 0,
             name: NameType = None,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             ) -> 'Quilt':
         '''
@@ -391,6 +410,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return cls(bus,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 )
 
@@ -401,6 +421,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             axis: int = 0,
             name: NameType = None,
             retain_labels: bool,
+            include_index: bool = True,
             deepcopy_from_bus: bool = False,
             ) -> 'Quilt':
         '''Return a :obj:`Quilt` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
@@ -409,6 +430,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return cls(bus,
                 axis=axis,
                 retain_labels=retain_labels,
+                include_index=include_index,
                 deepcopy_from_bus=deepcopy_from_bus,
                 )
 
@@ -419,9 +441,10 @@ class Quilt(ContainerBase, StoreClientMixin):
             *,
             axis: int = 0,
             retain_labels: bool,
-            axis_hierarchy: tp.Optional[IndexHierarchy] = None,
-            axis_opposite: tp.Optional[IndexBase] = None,
+            include_index: bool = False,
             deepcopy_from_bus: bool = False,
+            index_primary: tp.Optional[IndexHierarchy] = None,
+            index_secondary: tp.Optional[IndexBase] = None,
             ) -> None:
         '''
         {args}
@@ -430,17 +453,22 @@ class Quilt(ContainerBase, StoreClientMixin):
         self._axis = axis
         self._retain_labels = retain_labels
         self._deepcopy_from_bus = deepcopy_from_bus
+        self._include_index = include_index
 
-        if (axis_hierarchy is None) ^ (axis_opposite is None):
-            raise ErrorInitQuilt('if supplying axis_hierarchy, supply axis_opposite')
+        if retain_labels and not include_index:
+            raise ErrorInitQuilt('retain_labels=True requires include_index=True')
+
+        if (index_primary is None) ^ (index_secondary is None):
+            raise ErrorInitQuilt('if supplying index_primary, supply index_secondary')
 
         # can creation until needed
-        self._axis_hierarchy = axis_hierarchy
-        self._axis_opposite = axis_opposite
+        self._index_primary = index_primary
+        self._index_secondary = index_secondary
         self._assign_axis = True # Boolean to control deferred axis index creation
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
+
     @staticmethod
     def _error_update_axis_labels(axis: int) -> ErrorInitQuilt:
         axis_label = 'index' if axis == 0 else 'column'
@@ -707,7 +735,6 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         yield from self._bus.items()
 
-
     #---------------------------------------------------------------------------
     # axis iterators
 
@@ -744,7 +771,6 @@ class Quilt(ContainerBase, StoreClientMixin):
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_array(axis))
 
-
     def _axis_tuple(self, *,
             axis: int,
             constructor: tp.Optional[tp.Type[tp.NamedTuple]] = None,
@@ -754,6 +780,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             axis: 0 iterates over columns (index axis), 1 iterates over rows (column axis)
         '''
+        tuple_constructor: tp.Callable[[tp.Sequence[tp.Any]], tp.NamedTuple]
         if constructor is None:
             if axis == 1:
                 labels = self._columns.values
@@ -762,16 +789,16 @@ class Quilt(ContainerBase, StoreClientMixin):
             else:
                 raise AxisInvalid(f'no support for axis {axis}')
             # uses _make method to call with iterable
-            constructor = get_tuple_constructor(labels) #type: ignore
+            tuple_constructor = get_tuple_constructor(labels) #type: ignore
         elif (isinstance(constructor, type) and
                 issubclass(constructor, tuple) and
                 hasattr(constructor, '_make')):
-            constructor = constructor._make #type: ignore
-
-        assert constructor is not None
+            tuple_constructor = constructor._make #type: ignore
+        else:
+            raise RuntimeError(f"Unsupported constructor: {constructor}")
 
         for axis_values in self._axis_array(axis):
-            yield constructor(axis_values)
+            yield tuple_constructor(axis_values)
 
     def _axis_tuple_items(self, *,
             axis: int,
@@ -779,7 +806,6 @@ class Quilt(ContainerBase, StoreClientMixin):
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.NamedTuple]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
-
 
     def _axis_series(self, axis: int) -> tp.Iterator[Series]:
         '''Generator of Series across an axis
@@ -793,6 +819,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         yield from zip(keys, self._axis_series(axis=axis))
 
     #---------------------------------------------------------------------------
+
     def _axis_window_items(self, *,
             size: int,
             axis: int = 0,
@@ -848,6 +875,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 ))
 
     #---------------------------------------------------------------------------
+
     def _extract_array(self,
             row_key: GetItemKeyType = None,
             column_key: GetItemKeyType = None,
@@ -900,7 +928,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             bus_keys = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
 
-        for key_count, key in enumerate(bus_keys):
+        for key in bus_keys:
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
@@ -1024,6 +1052,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return Frame.from_concat(parts, axis=self._axis) #type: ignore
 
     #---------------------------------------------------------------------------
+
     @doc_inject(selector='sample')
     def sample(self,
             index: tp.Optional[int] = None,
@@ -1207,7 +1236,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.SERIES_VALUES,
                 )
-
 
     #---------------------------------------------------------------------------
 
