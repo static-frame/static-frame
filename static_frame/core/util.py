@@ -1521,7 +1521,6 @@ def slice_to_ascending_slice(
     Args:
         size: the length of the container on this axis
     '''
-    # NOTE: a slice can have start > stop, and None as step: should that case be handled here?
     key_step = key.step
     key_start = key.start
     key_stop = key.stop
@@ -1529,20 +1528,34 @@ def slice_to_ascending_slice(
     if key_step is None or key_step > 0:
         return key
 
-    stop = key_start if key_start is None else key_start + 1
+    if key_start is None:
+        stop_limit = size - 1
+        stop = None
+    elif key_start >= 0:
+        # if key_start is None, we derive the stop_limit from the size, else we take the lesser of the lesser of the size or key_start
+        stop_limit = min(size - 1, key_start)
+        stop = key_start + 1
+    else: # key_start is negative
+        stop_limit = size + key_start # add a negative key_start
+        stop = stop_limit + 1 # add one for non-inclusive
 
-    if key_step == -1:
-        # if 6, 1, -1, then
+
+    if key_step == -1 and (key_stop is None or key_stop >= 0):
+        # handle -1 as a special case
         start = key_stop if key_stop is None else key_stop + 1
         return slice(start, stop, 1)
 
     step = abs(key_step)
-    start = size - 1 if key_start is None else min(size - 1, key_start)
 
+    # we derive new start by subtracting from stop-limit the number of "hops" dictated by the step size
     if key_stop is None:
-        start = start - (step * (start // step))
+        # if key_stop is None, we will never return a new start as None, but instead derive a value from
+        start = stop_limit - (step * (stop_limit // step))
+    elif key_stop >= 0:
+        start = stop_limit - (step * ((stop_limit - key_stop - 1) // step))
     else:
-        start = start - (step * ((start - key_stop - 1) // step))
+        # import ipdb; ipdb.set_trace()
+        start = stop_limit - (step * ((stop_limit + key_stop) // step))
 
     return slice(start, stop, step)
 

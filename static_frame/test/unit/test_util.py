@@ -944,10 +944,10 @@ class TestUnit(TestCase):
             _isin_2d(arr_1d, s3)
     #---------------------------------------------------------------------------
 
-    @unittest.skip('requires network')
-    def test_read_url(self) -> None:
-        url = 'https://jsonplaceholder.typicode.com/todos'
-        post = _read_url(url)
+    # @unittest.skip('requires network')
+    # def test_read_url(self) -> None:
+    #     url = 'https://jsonplaceholder.typicode.com/todos'
+    #     post = _read_url(url)
 
     def test_slice_to_ascending_slice_a(self) -> None:
 
@@ -963,6 +963,44 @@ class TestUnit(TestCase):
         compare(slice(6, None, -3))
         compare(slice(6, 2, -2))
         compare(slice(None, 1, -1))
+
+    def test_slice_to_ascending_slice_b(self) -> None:
+        self.assertEqual(
+            slice_to_ascending_slice(slice(3, None, -1), 10),
+            slice(None, 4, 1)
+        )
+        self.assertEqual(
+            slice_to_ascending_slice(slice(3, None, -3), 10),
+            slice(0, 4, 3)
+        )
+
+
+        self.assertEqual(
+            slice_to_ascending_slice(slice(-3, 0, -1), 10),
+            slice(1, 8, 1)
+        )
+        self.assertEqual(
+            slice_to_ascending_slice(slice(-3, None, -1), 10),
+            slice(None, 8, 1)
+        )
+        self.assertEqual(
+            slice_to_ascending_slice(slice(-3, 0, -2), 10),
+            slice(1, 8, 2)
+        )
+        self.assertEqual(
+            slice_to_ascending_slice(slice(-3, None, -2), 10),
+            slice(1, 8, 2)
+        )
+        self.assertEqual(
+            slice_to_ascending_slice(slice(-3, None, -6), 10),
+            slice(1, 8, 6)
+        )
+
+        # (9, -1, -1)
+        # self.assertEqual(
+        #     slice_to_ascending_slice(slice(-9, -1, -1), 10),
+        #     slice(1, 1, 1)
+        # )
 
     def test_array_shift_a(self) -> None:
         a1 = np.arange(6)
