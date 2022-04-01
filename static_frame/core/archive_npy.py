@@ -649,6 +649,7 @@ class ArchiveFrameConverter:
             if constructor.STATIC:
                 cls_columns = cls_columns._IMMUTABLE_CONSTRUCTOR #type: ignore
             else:
+                import ipdb; ipdb.set_trace()
                 cls_columns = cls_columns._MUTABLE_CONSTRUCTOR #type: ignore
 
         columns = ArchiveIndexConverter._index_decode(

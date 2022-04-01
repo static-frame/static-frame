@@ -15,7 +15,6 @@ from static_frame.core.util import _array_to_duplicated_sortable
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _isin_1d
 from static_frame.core.util import _isin_2d
-from static_frame.core.util import _read_url
 from static_frame.core.util import _ufunc_logical_skipna
 from static_frame.core.util import _ufunc_set_1d
 from static_frame.core.util import _ufunc_set_2d
