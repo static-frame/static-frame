@@ -194,4 +194,36 @@ Examples of recent presentations:
 
 
 
+#------------------------------------------
+
+Employing NumPy's NPY Format for Faster-Than-Parquet DataFrame Serialization
+
+--
+
+An evolution of NPY and NPZ usage to support complete DataFrame encoding
+
+    2007: NEP 1: A simple file format for NumPy arrays
+
+        Defines the NPY format, a simple binary storage format for representing all NumPy arrays
+
+        Defines the NPZ format as a zipped collection of NPY
+
+    All widely used DataFrame encodings (CSV, XLSX, HDF5, Parquet) are incomplete
+
+    Pickles are fastest of all but not safe
+
+    A custom NPZ package can be used for complete DataFrame serialization
+
+        Complete compatibility with NumPy
+
+        Faster than the widely used Parquet in nearly all scenarios
+
+--
+
+About me
+
+
+--
+
+
 
