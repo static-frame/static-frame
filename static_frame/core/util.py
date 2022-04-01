@@ -1544,10 +1544,8 @@ def slice_to_ascending_slice(
     else:
         stop = norm_range[0] + 1
 
-    # gets last realized value, not last range value
-    # use stop to take the -1 optimization
     if key_step == -1:
-        start =
+        # gets last realized value, not last range value
         return slice(None if key_stop is None else norm_range[-1], stop, 1)
 
     return slice(norm_range[-1], stop, key_step * -1)
