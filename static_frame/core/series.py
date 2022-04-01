@@ -363,7 +363,7 @@ class Series(ContainerOperand):
             func: tp.Callable[[np.ndarray], np.ndarray] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> 'Series':
-        '''Return a new :obj:`Series` made by overlaying containers, filling in values with aligned values from subsequent containers. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
+        '''Return a new :obj:`Series` made by overlaying containers, aligned values are filled with values from subsequent containers with left-to-right precedence. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
 
         Args:
             containers: Iterable of :obj:`Series`.
