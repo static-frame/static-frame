@@ -9245,6 +9245,16 @@ class TestUnit(TestCase):
             except ErrorNPYEncode:
                 pass
 
+    def test_frame_to_npz_k(self) -> None:
+        f1 = ff.parse('s(100,2)|v(int)')
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = FrameGO.from_npz(fp)
+            self.assertTrue(f1.equals(f2))
+            self.assertIs(f2.__class__, FrameGO)
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_npz_a(self) -> None:
