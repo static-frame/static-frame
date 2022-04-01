@@ -996,11 +996,13 @@ class TestUnit(TestCase):
             slice(1, 8, 6)
         )
 
-        # (9, -1, -1)
-        # self.assertEqual(
-        #     slice_to_ascending_slice(slice(-9, -1, -1), 10),
-        #     slice(1, 1, 1)
-        # )
+    # def test_slice_to_ascending_slice_c(self) -> None:
+
+    #     # (9, -1, -1)
+    #     self.assertEqual(
+    #         slice_to_ascending_slice(slice(-9, -1, -1), 10),
+    #         slice(1, 1, 1)
+    #     )
 
     def test_array_shift_a(self) -> None:
         a1 = np.arange(6)
