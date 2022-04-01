@@ -1528,36 +1528,29 @@ def slice_to_ascending_slice(
     if key_step is None or key_step > 0:
         return key
 
+    # will get rid of all negative values greater than the size; but will replace None with an appropriate number for usage in range
+    norm_key_start, norm_key_stop, norm_key_step = key.indices(size)
+
+    # everything else should be descending, but we might have non-descending start, stop
+    if key_start is not None and key_stop is not None:
+        if norm_key_start <= norm_key_stop: # an ascending range
+            return EMPTY_SLICE
+
+    norm_range = range(norm_key_start, norm_key_stop, norm_key_step)
+
+    # derive stop
     if key_start is None:
-        stop_limit = size - 1
         stop = None
-    elif key_start >= 0:
-        # if key_start is None, we derive the stop_limit from the size, else we take the lesser of the lesser of the size or key_start
-        stop_limit = min(size - 1, key_start)
-        stop = key_start + 1
-    else: # key_start is negative
-        stop_limit = size + key_start # add a negative key_start
-        stop = stop_limit + 1 # add one for non-inclusive
-
-
-    if key_step == -1 and (key_stop is None or key_stop >= 0):
-        # handle -1 as a special case
-        start = key_stop if key_stop is None else key_stop + 1
-        return slice(start, stop, 1)
-
-    step = abs(key_step)
-
-    # we derive new start by subtracting from stop-limit the number of "hops" dictated by the step size
-    if key_stop is None:
-        # if key_stop is None, we will never return a new start as None, but instead derive a value from
-        start = stop_limit - (step * (stop_limit // step))
-    elif key_stop >= 0:
-        start = stop_limit - (step * ((stop_limit - key_stop - 1) // step))
     else:
-        # import ipdb; ipdb.set_trace()
-        start = stop_limit - (step * ((stop_limit + key_stop) // step))
+        stop = norm_range[0] + 1
 
-    return slice(start, stop, step)
+    # gets last realized value, not last range value
+    # use stop to take the -1 optimization
+    if key_step == -1:
+        start =
+        return slice(None if key_stop is None else norm_range[-1], stop, 1)
+
+    return slice(norm_range[-1], stop, key_step * -1)
 
 def slice_to_inclusive_slice(
         key: slice,

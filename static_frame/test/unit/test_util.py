@@ -968,41 +968,49 @@ class TestUnit(TestCase):
         self.assertEqual(
             slice_to_ascending_slice(slice(3, None, -1), 10),
             slice(None, 4, 1)
-        )
+            )
         self.assertEqual(
             slice_to_ascending_slice(slice(3, None, -3), 10),
             slice(0, 4, 3)
-        )
-
-
+            )
         self.assertEqual(
             slice_to_ascending_slice(slice(-3, 0, -1), 10),
             slice(1, 8, 1)
-        )
+            )
         self.assertEqual(
             slice_to_ascending_slice(slice(-3, None, -1), 10),
             slice(None, 8, 1)
-        )
+            )
         self.assertEqual(
             slice_to_ascending_slice(slice(-3, 0, -2), 10),
             slice(1, 8, 2)
-        )
+            )
         self.assertEqual(
             slice_to_ascending_slice(slice(-3, None, -2), 10),
             slice(1, 8, 2)
-        )
+            )
         self.assertEqual(
             slice_to_ascending_slice(slice(-3, None, -6), 10),
             slice(1, 8, 6)
-        )
+            )
 
-    # def test_slice_to_ascending_slice_c(self) -> None:
+    def test_slice_to_ascending_slice_c(self) -> None:
+        self.assertEqual(
+            slice_to_ascending_slice(slice(-9, -1, 1), 10),
+            slice(-9, -1, 1) # ascenidng
+            )
+        self.assertEqual(
+            slice_to_ascending_slice(slice(-9, -1, -1), 10),
+            slice(0, 0, None) # ascending start stop, descending
+            )
 
-    #     # (9, -1, -1)
-    #     self.assertEqual(
-    #         slice_to_ascending_slice(slice(-9, -1, -1), 10),
-    #         slice(1, 1, 1)
-    #     )
+    def test_slice_to_ascending_slice_d(self) -> None:
+        self.assertEqual(
+            slice_to_ascending_slice(slice(1, -10, -1), 10), # [1]
+            slice(1, 2, 1)
+            )
+
+
 
     def test_array_shift_a(self) -> None:
         a1 = np.arange(6)

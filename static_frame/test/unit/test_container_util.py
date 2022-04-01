@@ -267,7 +267,8 @@ class TestUnit(TestCase):
         self.assertEqual(key_to_ascending_key([9, 5, 1], 3), [1, 5, 9])
         self.assertEqual(key_to_ascending_key(np.array([9, 5, 1]), 3).tolist(), [1, 5, 9]) # type: ignore
 
-        self.assertEqual(key_to_ascending_key(slice(3, 0, -1), 3), slice(1, 4, 1))
+        self.assertEqual(key_to_ascending_key(slice(3, 0, -1), 3), slice(1, 3, 1))
+
         self.assertEqual(key_to_ascending_key(100, 3), 100)
 
         self.assertEqual(key_to_ascending_key([], 3), [])
@@ -284,6 +285,8 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             key_to_ascending_key(dict(a=3), size=3)
+
+    #---------------------------------------------------------------------------
 
     def test_pandas_to_numpy_a(self) -> None:
         import pandas as pd
