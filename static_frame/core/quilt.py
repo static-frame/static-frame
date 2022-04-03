@@ -487,7 +487,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     def _error_update_axis_labels(axis: int) -> ErrorInitQuilt:
         axis_label = 'index' if axis == 0 else 'column'
         axis_labels = 'indices' if axis == 0 else 'columns'
-        err_msg = f'Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, or set retain_labels=True to obtain an IndexHierarchy'
+        err_msg = f'Duplicate {axis_label} labels across frames. Either ensure all {axis_labels} are unique for all frames, set retain_labels=True to obtain an IndexHierarchy, or set include_index=False to use an auto-incremented index.'
         return ErrorInitQuilt(err_msg)
 
     def _update_axis_labels(self: Q) -> None:
@@ -610,7 +610,12 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         def placeholder_gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
             assert config is not None
-            yield from repeat(tuple(repeat(config.cell_placeholder, times=len(index))), times=len(columns))
+            yield from repeat(
+                    tuple(
+                        repeat(config.cell_placeholder, times=len(index))
+                        ),
+                    times=len(columns),
+                    )
 
         d = Display.from_params(
                 index=index,
@@ -1020,9 +1025,15 @@ class Quilt(ContainerBase, StoreClientMixin):
             extractor: AnyCallable,
             ) -> Frame:
         if self._retain_labels and self._axis == 0:
-            frames = (extractor(frame.relabel_level_add(index=label)) for label, frame in self._bus.items())
+            frames = (
+                    extractor(frame.relabel_level_add(index=label))
+                    for label, frame in self._bus.items()
+                    )
         elif self._retain_labels and self._axis == 1:
-            frames = (extractor(frame.relabel_level_add(columns=label)) for label, frame in self._bus.items())
+            frames = (
+                    extractor(frame.relabel_level_add(columns=label))
+                    for label, frame in self._bus.items()
+                    )
         else:
             frames = (extractor(frame) for _, frame in self._bus.items())
 
@@ -1088,8 +1099,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         column_key = NULL_SLICE if column_key is None else column_key
 
         if (
-            row_key.__class__ is slice and (row_key is NULL_SLICE or row_key== NULL_SLICE) and
-            column_key.__class__ is slice and (column_key is NULL_SLICE or column_key== NULL_SLICE)
+            row_key.__class__ is slice and row_key== NULL_SLICE and
+            column_key.__class__ is slice and column_key== NULL_SLICE
             ):
             return self._extract_null_slice(extractor)
 
