@@ -491,12 +491,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return ErrorInitQuilt(err_msg)
 
     def _update_axis_labels(self: Q) -> None:
-        if (
-                self._primary_index is None or
-                self._secondary_index is None or
-                self._iloc_to_frame_label is None or
-                self._frame_label_offset is None
-            ):
+        if self._primary_index is None or self._secondary_index is None:
             primary, self._secondary_index = build_quilt_indices(
                     self._bus,
                     axis=self._axis,
@@ -505,7 +500,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     init_exception_cls=ErrorInitQuilt,
                     )
 
-            if isinstance(primary, IndexHierarchy):
+            if self._include_index:
                 self._primary_index = primary
                 self._iloc_to_frame_label = None
                 self._frame_label_offset = None
@@ -516,28 +511,24 @@ class Quilt(ContainerBase, StoreClientMixin):
                 self._frame_label_offset = Series(s.index, index=s.values)
 
         if self._axis == 0:
-            if not self._include_index:
+            if not self._include_index or self._retain_labels:
                 self._index = self._primary_index
             else:
-                if not self._retain_labels:
-                    try:
-                        self._index = self._primary_index.level_drop(1)
-                    except ErrorInitIndexNonUnique:
-                        raise self._error_update_axis_labels(self._axis) from None
-                else: # get hierarchical
-                    self._index = self._primary_index
+                try:
+                    self._index = self._primary_index.level_drop(1)
+                except ErrorInitIndexNonUnique:
+                    raise self._error_update_axis_labels(self._axis) from None
+
             self._columns = self._secondary_index
         else:
-            if not self._include_index:
+            if not self._include_index or self._retain_labels:
                 self._columns = self._primary_index
             else:
-                if not self._retain_labels:
-                    try:
-                        self._columns = self._primary_index.level_drop(1)
-                    except ErrorInitIndexNonUnique:
-                        raise self._error_update_axis_labels(self._axis) from None
-                else:
-                    self._columns = self._primary_index
+                try:
+                    self._columns = self._primary_index.level_drop(1)
+                except ErrorInitIndexNonUnique:
+                    raise self._error_update_axis_labels(self._axis) from None
+
             self._index = self._secondary_index
 
         self._assign_axis = False
@@ -1398,7 +1389,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
-    @property #type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window(self: Q) -> IterNodeWindow[Q]:
         '''
@@ -1408,7 +1399,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         return self._iter_window(False, IterNodeType.VALUES)
 
-    @property #type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window_items(self: Q) -> IterNodeWindow[Q]:
         '''
@@ -1418,7 +1409,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         return self._iter_window(False, IterNodeType.ITEMS)
 
-    @property #type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window_array(self: Q) -> IterNodeWindow[Q]:
         '''
@@ -1428,7 +1419,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         return self._iter_window(True, IterNodeType.VALUES)
 
-    @property #type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window_array_items(self: Q) -> IterNodeWindow[Q]:
         '''
@@ -1441,7 +1432,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
 
-    @doc_inject(selector='head', class_name=Q)
+    @doc_inject(selector='head', class_name='Quilt')
     def head(self: Q,
             count: int = 5,
             ) -> Frame:
@@ -1452,7 +1443,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         return self.iloc[:count]
 
-    @doc_inject(selector='tail', class_name=Q)
+    @doc_inject(selector='tail', class_name='Quilt')
     def tail(self: Q,
             count: int = 5,
             ) -> Frame:
