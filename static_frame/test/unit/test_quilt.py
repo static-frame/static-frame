@@ -19,7 +19,7 @@ from static_frame.core.store import StoreConfig
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.axis_map import bus_to_hierarchy
+from static_frame.core.axis_map import build_quilt_indices
 
 
 class TestUnit(TestCase):
@@ -176,10 +176,10 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frame(f1, chunksize=10, axis=1, retain_labels=False)
 
-        axis_hierarchy, opp = bus_to_hierarchy(q1._bus, q1._axis, deepcopy_from_bus=False, init_exception_cls=ErrorInitQuilt)
+        primary_index, _ = build_quilt_indices(q1._bus, q1._axis, deepcopy_from_bus=False, init_exception_cls=ErrorInitQuilt, include_index=True)
 
         with self.assertRaises(ErrorInitQuilt):
-            Quilt(q1._bus, axis=1, retain_labels=False, axis_hierarchy=axis_hierarchy)
+            Quilt(q1._bus, axis=1, retain_labels=False, primary_index=primary_index)
 
     #---------------------------------------------------------------------------
 
@@ -300,7 +300,7 @@ class TestUnit(TestCase):
         self.assertEqual(q1.rename('bar').name, 'bar')
         self.assertTrue(repr(q1.display(DisplayConfig(type_color=False))).startswith('<Quilt: foo'))
 
-        post, opp = bus_to_hierarchy(q1._bus, q1._axis, deepcopy_from_bus=True, init_exception_cls=ErrorInitQuilt)
+        post, opp = build_quilt_indices(q1._bus, q1._axis, deepcopy_from_bus=True, init_exception_cls=ErrorInitQuilt, include_index=True)
         self.assertEqual(len(post), 100)
         self.assertEqual(len(opp), 4)
 
@@ -325,7 +325,7 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frame(f1, chunksize=10, axis=1, retain_labels=False)
 
-        post, opp = bus_to_hierarchy(q1._bus, q1._axis, deepcopy_from_bus=False, init_exception_cls=ErrorInitQuilt)
+        post, opp = build_quilt_indices(q1._bus, q1._axis, deepcopy_from_bus=False, init_exception_cls=ErrorInitQuilt, include_index=True)
         self.assertEqual(len(post), 100)
         self.assertEqual(len(opp), 4)
 

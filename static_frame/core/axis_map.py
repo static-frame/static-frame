@@ -7,6 +7,7 @@ from static_frame.core.bus import Bus
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.series import Series
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_deepcopy
 
@@ -31,14 +32,15 @@ def get_extractor(
     return lambda x: x
 
 
-def bus_to_hierarchy(
+def build_quilt_indices(
         bus: tp.Union[Bus, 'Yarn'],
         axis: int,
+        include_index: bool,
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
-        ) -> tp.Tuple[IndexHierarchy, IndexBase]:
+        ) -> tp.Tuple[tp.Union[Series, IndexHierarchy], IndexBase]:
     '''
-    Given a :obj:`Bus` and an axis, derive a :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
+    Given a :obj:`Bus` and an axis, derive the primary and secondary indices for a Quilt. Validate the :obj:`Index` of the secondary index.
     '''
     # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
@@ -49,28 +51,40 @@ def bus_to_hierarchy(
             return index.to_tree()
         return index
 
-    tree: TreeNodeT = {}
-    opposite: tp.Optional[IndexBase] = None
+    labels = []
+    primary_tree: TreeNodeT = {}
+    secondary: tp.Optional[IndexBase] = None
 
     for label, f in bus.items():
+        labels.extend([label] * len(f))
+
         if axis == 0:
-            tree[label] = tree_extractor(f.index)
-            if opposite is None:
-                opposite = extractor(f.columns)
+            if include_index:
+                primary_tree[label] = tree_extractor(f.index)
+            if secondary is None:
+                secondary = extractor(f.columns)
             else:
-                if not opposite.equals(f.columns):
-                    raise init_exception_cls('opposite axis must have equivalent indices')
+                if not secondary.equals(f.columns):
+                    raise init_exception_cls('Frames on axis of alignment must all have equivalent indices')
         elif axis == 1:
-            tree[label] = tree_extractor(f.columns)
-            if opposite is None:
-                opposite = extractor(f.index)
+            if include_index:
+                primary_tree[label] = tree_extractor(f.columns)
+            if secondary is None:
+                secondary = extractor(f.index)
             else:
-                if not opposite.equals(f.index):
-                    raise init_exception_cls('opposite axis must have equivalent indices')
+                if not secondary.equals(f.index):
+                    raise init_exception_cls('Frames on axis of alignment must all have equivalent indices')
         else:
             raise AxisInvalid(f'invalid axis {axis}')
 
-    return IndexHierarchy.from_tree(tree), opposite # type: ignore
+    if include_index:
+        assert primary_tree
+        primary = IndexHierarchy.from_tree(primary_tree)
+    else:
+        primary = Series(labels)
+
+    return primary, secondary # type: ignore
+
 
 
 def buses_to_hierarchy(

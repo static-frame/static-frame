@@ -50,7 +50,7 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.yarn import Yarn
 
-from static_frame.core.axis_map import bus_to_hierarchy
+from static_frame.core.axis_map import build_quilt_indices
 from static_frame.core.axis_map import get_extractor
 
 class Quilt(ContainerBase, StoreClientMixin):
@@ -61,24 +61,30 @@ class Quilt(ContainerBase, StoreClientMixin):
     __slots__ = (
             '_bus',
             '_axis',
-            '_index_primary',
-            '_index_secondary',
-            '_retain_labels',
-            '_assign_axis',
-            '_columns',
             '_index',
+            '_columns',
+            '_primary_index',
+            '_secondary_index',
+            '_retain_labels',
             '_include_index',
             '_deepcopy_from_bus',
+            '_assign_axis',
+            '_iloc_to_frame_label',
+            '_frame_label_offset',
             )
 
     _bus: tp.Union[Bus, Yarn]
     _axis: int
-    _index_primary: tp.Optional[IndexBase]
-    _index_secondary: tp.Optional[IndexBase]
-    _columns: IndexBase
     _index: IndexBase
-    _assign_axis: bool
+    _columns: IndexBase
+    _primary_index: IndexBase
+    _secondary_index: IndexBase
+    _retain_labels: bool
     _include_index: bool
+    _deepcopy_from_bus: bool
+    _assign_axis: bool
+    _iloc_to_frame_label: Series
+    _frame_label_offset: Series
 
     _NDIM: int = 2
 
@@ -113,24 +119,24 @@ class Quilt(ContainerBase, StoreClientMixin):
             label_extractor = lambda x: x.iloc[0] #type: ignore
 
         axis_map_components: tp.Dict[tp.Hashable, IndexBase] = {}
-        index_secondary = None
+        secondary_index = None
 
         def values() -> tp.Iterator[Frame]:
-            nonlocal index_secondary
+            nonlocal secondary_index
 
             for start, end in zip_longest(starts, ends, fillvalue=vector_len):
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
                     label = label_extractor(f.index) #type: ignore
                     axis_map_components[label] = f.index
-                    if index_secondary is None:
-                        index_secondary = f.columns
+                    if secondary_index is None:
+                        secondary_index = f.columns
                 elif axis == 1: # along columns
                     f = frame.iloc[:, start:end]
                     label = label_extractor(f.columns) #type: ignore
                     axis_map_components[label] = f.columns
-                    if index_secondary is None:
-                        index_secondary = f.index
+                    if secondary_index is None:
+                        secondary_index = f.index
                 else:
                     raise AxisInvalid(f'invalid axis {axis}')
                 yield f.rename(label)
@@ -138,12 +144,12 @@ class Quilt(ContainerBase, StoreClientMixin):
         name = name if name else frame.name
         bus = Bus.from_frames(values(), config=config, name=name)
 
-        index_primary = IndexHierarchy.from_tree(axis_map_components)
+        primary_index = IndexHierarchy.from_tree(axis_map_components)
 
         return cls(bus,
                 axis=axis,
-                index_primary=index_primary,
-                index_secondary=index_secondary,
+                primary_index=primary_index,
+                secondary_index=secondary_index,
                 retain_labels=retain_labels,
                 deepcopy_from_bus=deepcopy_from_bus,
                 include_index=False,
@@ -443,28 +449,23 @@ class Quilt(ContainerBase, StoreClientMixin):
             retain_labels: bool,
             include_index: bool = False,
             deepcopy_from_bus: bool = False,
-            index_primary: tp.Optional[IndexHierarchy] = None,
-            index_secondary: tp.Optional[IndexBase] = None,
+            primary_index: tp.Optional[IndexHierarchy] = None,
+            secondary_index: tp.Optional[IndexBase] = None,
             ) -> None:
         '''
         {args}
         '''
+        include_index = True
         self._bus = bus
         self._axis = axis
-        self._retain_labels = retain_labels
+        self._retain_labels = retain_labels if include_index else False
         self._deepcopy_from_bus = deepcopy_from_bus
         self._include_index = include_index
 
-        if retain_labels and not include_index:
-            raise ErrorInitQuilt('retain_labels=True requires include_index=True')
+        if (primary_index is None) ^ (secondary_index is None):
+            raise ErrorInitQuilt('if supplying primary_index, supply secondary_index')
 
-        if (index_primary is None) ^ (index_secondary is None):
-            raise ErrorInitQuilt('if supplying index_primary, supply index_secondary')
-
-        # can creation until needed
-        self._index_primary = index_primary
-        self._index_secondary = index_secondary
-        self._assign_axis = True # Boolean to control deferred axis index creation
+        self._assign_axis = True
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
@@ -477,31 +478,49 @@ class Quilt(ContainerBase, StoreClientMixin):
         return ErrorInitQuilt(err_msg)
 
     def _update_axis_labels(self) -> None:
-        if self._index_primary is None or self._index_secondary is None:
-            self._index_primary, self._index_secondary = bus_to_hierarchy(
-                    self._bus,
-                    axis=self._axis,
-                    deepcopy_from_bus=self._deepcopy_from_bus,
-                    init_exception_cls=ErrorInitQuilt,
-                    )
-        if self._axis == 0:
-            if not self._retain_labels:
-                try:
-                    self._index = self._index_primary.level_drop(1)
-                except ErrorInitIndexNonUnique:
-                    raise self._error_update_axis_labels(self._axis) from None
-            else: # get hierarchical
-                self._index = self._index_primary
-            self._columns = self._index_secondary
+        primary, self._secondary_index = build_quilt_indices(
+                self._bus,
+                axis=self._axis,
+                include_index=self._include_index,
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                init_exception_cls=ErrorInitQuilt,
+                )
+
+        if isinstance(primary, IndexHierarchy):
+            self._primary_index = primary
+            self._iloc_to_frame_label = None
+            self._frame_label_offset = None
         else:
-            if not self._retain_labels:
-                try:
-                    self._columns = self._index_primary.level_drop(1)
-                except ErrorInitIndexNonUnique:
-                    raise self._error_update_axis_labels(self._axis) from None
+            self._primary_index = primary.index
+            self._iloc_to_frame_label = primary
+            s = self._iloc_to_frame_label.drop_duplicated(exclude_first=True)
+            self._frame_label_offset = Series(s.index, index=s.values)
+
+        if self._axis == 0:
+            if not self._include_index:
+                self._index = self._primary_index
             else:
-                self._columns = self._index_primary
-            self._index = self._index_secondary
+                if not self._retain_labels:
+                    try:
+                        self._index = primary.level_drop(1)
+                    except ErrorInitIndexNonUnique:
+                        raise self._error_update_axis_labels(self._axis) from None
+                else: # get hierarchical
+                    self._index = self._primary_index
+            self._columns = self._secondary_index
+        else:
+            if not self._include_index:
+                self._columns = self._primary_index
+            else:
+                if not self._retain_labels:
+                    try:
+                        self._columns = primary.level_drop(1)
+                    except ErrorInitIndexNonUnique:
+                        raise self._error_update_axis_labels(self._axis) from None
+                else:
+                    self._columns = self._primary_index
+            self._index = self._secondary_index
+
         self._assign_axis = False
 
     def unpersist(self) -> None:
@@ -525,12 +544,20 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             name
         '''
+        if not self._assign_axis:
+            additional_kwargs = dict(
+                    primary_index=self._primary_index,
+                    secondary_index=self._secondary_index,
+                    )
+        else:
+            additional_kwargs = {}
+
         return self.__class__(self._bus.rename(name),
                 axis=self._axis,
                 retain_labels=self._retain_labels,
+                include_index=self._include_index,
                 deepcopy_from_bus=self._deepcopy_from_bus,
-                axis_hierarchy=self._index_primary,
-                axis_opposite=self._index_secondary,
+                **additional_kwargs,
                 )
 
     #---------------------------------------------------------------------------
@@ -795,7 +822,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 hasattr(constructor, '_make')):
             tuple_constructor = constructor._make #type: ignore
         else:
-            raise RuntimeError(f"Unsupported constructor: {constructor}")
+            tuple_constructor = constructor
 
         for axis_values in self._axis_array(axis):
             yield tuple_constructor(axis_values)
@@ -883,7 +910,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         Extract a consolidated array based on iloc selection.
         '''
-        assert self._index_primary is not None #mypy
+        if self._assign_axis:
+            self._update_axis_labels()
 
         extractor = get_extractor(
                 self._deepcopy_from_bus,
@@ -918,18 +946,18 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel_reduces = isinstance(sel_key, INT_TYPES)
         opposite_reduces = isinstance(opposite_key, INT_TYPES)
 
-        sel = np.full(len(self._index_primary), False)
+        sel = np.full(len(self._primary_index), False)
         sel[sel_key] = True
 
         # get ordered unique Bus labels
-        axis_map_sub = self._index_primary.iloc[sel_key]
+        axis_map_sub = self._primary_index.iloc[sel_key]
         if isinstance(axis_map_sub, tuple): # type: ignore
             bus_keys = (axis_map_sub[0],) #type: ignore
         else:
             bus_keys = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
 
         for key in bus_keys:
-            sel_component = sel[self._index_primary._loc_to_iloc(HLoc[key])]
+            sel_component = sel[self._primary_index._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
                 component = self._bus.loc[key]._extract_array(sel_component, opposite_key) #type: ignore
@@ -954,6 +982,51 @@ class Quilt(ContainerBase, StoreClientMixin):
             return concat_resolved(parts)
         return concat_resolved(parts, axis=self._axis)
 
+    def _extract_null_slice(self, extractor):
+        if self._retain_labels and self._axis == 0:
+            frames = (extractor(frame.relabel_level_add(index=label)) for label, frame in self._bus.items())
+        elif self._retain_labels and self._axis == 1:
+            frames = (extractor(frame.relabel_level_add(columns=label)) for label, frame in self._bus.items())
+        else:
+            frames = (extractor(frame) for _, frame in self._bus.items())
+
+        if not self._include_index:
+            return Frame.from_concat(frames, axis=self._axis, index=self._primary_index)
+
+        return Frame.from_concat(frames, axis=self._axis)
+
+    def _extract_charles(self,
+            axis_map_sub,
+            sel_reduces,
+            opposite_reduces,
+            extractor,
+            opposite_key,
+            ) -> tp.Union[Frame, Series]:
+        if sel_reduces:
+            axis_map_sub = (axis_map_sub,)
+
+        def gen_components():
+            for iloc_key in axis_map_sub:
+                frame_label = self._iloc_to_frame_label[iloc_key]
+                sel_component = iloc_key - self._frame_label_offset[frame_label]
+
+                component = self._bus.loc[frame_label].iloc[sel_component, opposite_key]
+                if opposite_reduces:
+                    yield extractor(component)
+                else:
+                    yield extractor(component.rename(iloc_key))
+
+        if sel_reduces and opposite_reduces:
+            return next(gen_components())
+
+        if opposite_reduces:
+            return Series(gen_components(), index=axis_map_sub, name=self._secondary_index[opposite_key])
+
+        if sel_reduces:
+            return Series.from_concat(gen_components())
+
+        return Frame.from_concat(gen_components(), axis=self._axis)
+
     def _extract(self,
             row_key: GetItemKeyType = None,
             column_key: GetItemKeyType = None,
@@ -961,8 +1034,6 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         Extract Container based on iloc selection.
         '''
-        assert self._index_primary is not None #mypy
-
         extractor = get_extractor(
                 self._deepcopy_from_bus,
                 is_array=False,
@@ -976,19 +1047,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         if (not row_key_is_array and row_key == NULL_SLICE
                 and not column_key_is_array and column_key == NULL_SLICE):
-            if self._retain_labels and self._axis == 0:
-                frames = (extractor(f.relabel_level_add(index=k))
-                        for k, f in self._bus.items())
-            elif self._retain_labels and self._axis == 1:
-                frames = (extractor(f.relabel_level_add(columns=k))
-                        for k, f in self._bus.items())
-            else:
-                frames = (extractor(f) for _, f in self._bus.items())
-
-            return Frame.from_concat( #type: ignore
-                    frames,
-                    axis=self._axis,
-                    )
+            return self._extract_null_slice(extractor)
 
         parts: tp.List[tp.Any] = []
         frame_labels: tp.Iterable[tp.Hashable]
@@ -1001,40 +1060,61 @@ class Quilt(ContainerBase, StoreClientMixin):
             opposite_key = row_key
 
         sel_reduces = isinstance(sel_key, INT_TYPES)
-
-        sel = np.full(len(self._index_primary), False)
-        sel[sel_key] = True
+        opposite_reduces = isinstance(opposite_key, INT_TYPES)
 
         # get ordered unique Bus labels
-        axis_map_sub = self._index_primary.iloc[sel_key]
+        axis_map_sub = self._primary_index.iloc[sel_key]
+
+        if not self._include_index:
+            return self._extract_charles(
+                axis_map_sub=axis_map_sub,
+                sel_reduces=sel_reduces,
+                opposite_reduces=opposite_reduces,
+                extractor=extractor,
+                opposite_key=opposite_key,
+            )
+
+        sel = np.full(len(self._primary_index), False)
+        sel[sel_key] = True
+
+        def get_component(key: tp.Hashable) -> tp.Any:
+            sel_component = sel[self._primary_index._loc_to_iloc(HLoc[key])]
+            if self._axis == 0:
+                return self._bus.loc[key].iloc[sel_component, opposite_key]
+
+            return self._bus.loc[key].iloc[opposite_key, sel_component]
+
         if isinstance(axis_map_sub, tuple): #type: ignore
-            frame_labels = (axis_map_sub[0],) #type: ignore
+            key = axis_map_sub[0] #type: ignore
+            frame_labels = ((key, get_component(key)),)
         else:
             # get the outer level, or just the unique frame labels needed
             frame_labels = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
+            frame_labels = ((key, get_component(key)) for key in frame_labels)
 
-        for key_count, key in enumerate(frame_labels):
-            # get Boolean segment for this Frame
-            sel_component = sel[self._index_primary._loc_to_iloc(HLoc[key])]
+        first = True
+
+        for key, component in frame_labels:
+            if first:
+                component_is_series = isinstance(component, Series)
+                first = False
+            else:
+                assert component_is_series == isinstance(component, Series)
 
             if self._axis == 0:
-                component = self._bus.loc[key].iloc[sel_component, opposite_key]
-                if key_count == 0:
-                    component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     # component might be a Series, can call the same with first arg
                     component = component.relabel_level_add(key)
+
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
-                component = self._bus.loc[key].iloc[opposite_key, sel_component]
-                if key_count == 0:
-                    component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     if component_is_series:
                         component = component.relabel_level_add(key)
                     else:
                         component = component.relabel_level_add(columns=key)
+
                 if sel_reduces: # make Frame into a Series, Series into an element
                     if component_is_series:
                         component = component.iloc[0]
@@ -1044,12 +1124,12 @@ class Quilt(ContainerBase, StoreClientMixin):
             parts.append(extractor(component))
 
         if len(parts) == 1:
-            return parts.pop() #type: ignore
+            return parts[0] # type: ignore
 
         # NOTE: Series/Frame from_concate will attempt to re-use ndarrays, and thus using extractor above is appropriate
         if component_is_series:
             return Series.from_concat(parts)
-        return Frame.from_concat(parts, axis=self._axis) #type: ignore
+        return Frame.from_concat(parts, axis=self._axis) # type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -1382,8 +1462,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         if other._assign_axis:
             other._update_axis_labels()
 
-        if not self._index_primary.equals( # type: ignore
-                other._index_primary,
+        if not self._index.equals( # type: ignore
+                other._index,
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
@@ -1391,8 +1471,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 ):
             return False
 
-        if not self._index_secondary.equals( # type: ignore
-                other._index_secondary,
+        if not self._columns.equals( # type: ignore
+                other._columns,
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
