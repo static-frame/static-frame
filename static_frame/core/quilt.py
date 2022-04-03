@@ -1031,18 +1031,19 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         return Frame.from_concat(frames, axis=self._axis)
 
-    def _extract_charles(self: Q,
-            axis_map_sub: tp.Union[int, IndexBase],
+    def _extract_no_hierarchy(self: Q,
+            primary_index_sel: tp.Union[int, IndexBase],
             sel_reduces: bool,
             opposite_reduces: bool,
             extractor: AnyCallable,
             opposite_key: GetItemKeyType,
             ) -> tp.Union[tp.Any, Frame, Series]:
+        '''Specialized path for when `_include_index` is False'''
         if sel_reduces:
-            axis_map_sub = (axis_map_sub,)
+            primary_index_sel = (primary_index_sel,)
 
-        def gen_components():
-            for iloc_key in axis_map_sub:
+        def gen_components() -> tp.Iterator[tp.Union[tp.Any, Frame, Series]]:
+            for iloc_key in primary_index_sel:
                 frame_label = self._iloc_to_frame_label[iloc_key]
                 sel_component = iloc_key - self._frame_label_offset[frame_label]
 
@@ -1056,12 +1057,19 @@ class Quilt(ContainerBase, StoreClientMixin):
             return next(gen_components())
 
         if opposite_reduces:
-            return Series(gen_components(), index=axis_map_sub, name=self._secondary_index[opposite_key])
+            return Series(
+                    gen_components(),
+                    index=primary_index_sel,
+                    name=self._secondary_index[opposite_key],
+                    )
 
         if sel_reduces:
             return Series.from_concat(gen_components())
 
-        return Frame.from_concat(gen_components(), axis=self._axis)
+        return Frame.from_concat(
+                gen_components(),
+                axis=self._axis,
+                )
 
     def _extract(self: Q,
             row_key: GetItemKeyType = None,
@@ -1077,16 +1085,13 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
         row_key = NULL_SLICE if row_key is None else row_key
-        row_key_is_array = isinstance(row_key, np.ndarray)
         column_key = NULL_SLICE if column_key is None else column_key
-        column_key_is_array = isinstance(column_key, np.ndarray)
 
-        if (not row_key_is_array and row_key == NULL_SLICE
-                and not column_key_is_array and column_key == NULL_SLICE):
+        if (
+            row_key.__class__ is slice and (row_key is NULL_SLICE or row_key== NULL_SLICE) and
+            column_key.__class__ is slice and (column_key is NULL_SLICE or column_key== NULL_SLICE)
+            ):
             return self._extract_null_slice(extractor)
-
-        parts: tp.List[tp.Any] = []
-        frame_labels: tp.Iterable[tp.Hashable]
 
         if self._axis == 0:
             sel_key = row_key
@@ -1099,11 +1104,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         opposite_reduces = isinstance(opposite_key, INT_TYPES)
 
         # get ordered unique Bus labels
-        axis_map_sub = self._primary_index.iloc[sel_key]
+        primary_index_sel = self._primary_index.iloc[sel_key]
 
         if not self._include_index:
-            return self._extract_charles(
-                axis_map_sub=axis_map_sub,
+            return self._extract_no_hierarchy(
+                primary_index_sel=primary_index_sel,
                 sel_reduces=sel_reduces,
                 opposite_reduces=opposite_reduces,
                 extractor=extractor,
@@ -1113,59 +1118,60 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel = np.full(len(self._primary_index), False)
         sel[sel_key] = True
 
-        def get_component(key: tp.Hashable) -> tp.Any:
-            sel_component = sel[self._primary_index._loc_to_iloc(HLoc[key])]
+        def get_component(frame_label: tp.Hashable) -> tp.Any:
+            sel_component = sel[self._primary_index._loc_to_iloc(HLoc[frame_label])]
             if self._axis == 0:
-                return self._bus.loc[key].iloc[sel_component, opposite_key]
+                return self._bus.loc[frame_label].iloc[sel_component, opposite_key]
 
-            return self._bus.loc[key].iloc[opposite_key, sel_component]
+            return self._bus.loc[frame_label].iloc[opposite_key, sel_component]
 
-        if isinstance(axis_map_sub, tuple): #type: ignore
-            key = axis_map_sub[0] #type: ignore
-            frame_labels = ((key, get_component(key)),)
+        if sel_reduces and opposite_reduces:
+            return get_component(primary_index_sel[0]).iloc[0]
+
+        frame_label_components: tp.Iterable[tp.Tuple[tp.Hashable, tp.Union[tp.Any, Frame, Series]]]
+
+        if isinstance(primary_index_sel, tuple): #type: ignore
+            frame_label = primary_index_sel[0] #type: ignore
+            frame_label_components = ((frame_label, get_component(frame_label)),)
         else:
             # get the outer level, or just the unique frame labels needed
-            frame_labels = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
-            frame_labels = ((key, get_component(key)) for key in frame_labels)
+            frame_labels = primary_index_sel._get_unique_labels_in_occurence_order(depth=0)
+            frame_label_components = (
+                    (frame_label, get_component(frame_label))
+                    for frame_label in frame_labels
+                    )
 
-        first = True
+        # Short-circuit if there is no relabeling or decomposition needed
+        if not sel_reduces and not opposite_reduces and not self._retain_labels:
+            return Frame.from_concat(
+                    (component for _, component in frame_label_components),
+                    axis=self._axis,
+                    )
 
-        for key, component in frame_labels:
-            if first:
-                component_is_series = isinstance(component, Series)
-                first = False
-            else:
-                assert component_is_series == isinstance(component, Series)
-
-            if self._axis == 0:
+        # Finally, process the components to feed correctly relabeled/decomposed components
+        def gen_components() -> tp.Iterator[tp.Union[tp.Any, Frame, Series]]:
+            for frame_label, component in frame_label_components:
                 if self._retain_labels:
-                    # component might be a Series, can call the same with first arg
-                    component = component.relabel_level_add(key)
-
-                if sel_reduces: # make Frame into a Series, Series into an element
-                    component = component.iloc[0]
-            else:
-                if self._retain_labels:
-                    if component_is_series:
-                        component = component.relabel_level_add(key)
+                    if self._axis == 0 or opposite_reduces:
+                        # Component is either a Series or Frame, which means we can call the same with first arg
+                        component = component.relabel_level_add(frame_label)
                     else:
-                        component = component.relabel_level_add(columns=key)
+                        component = component.relabel_level_add(columns=frame_label)
 
-                if sel_reduces: # make Frame into a Series, Series into an element
-                    if component_is_series:
+                if sel_reduces:
+                    # make Frame into a Series
+                    if self._axis == 0:
                         component = component.iloc[0]
                     else:
                         component = component.iloc[NULL_SLICE, 0]
 
-            parts.append(extractor(component))
+                # NOTE: from_concat will attempt to re-use ndarrays, and thus extractor is needed
+                yield extractor(component)
 
-        if len(parts) == 1:
-            return parts[0] # type: ignore
+        if sel_reduces or opposite_reduces:
+            return Series.from_concat(gen_components())
 
-        # NOTE: Series/Frame from_concate will attempt to re-use ndarrays, and thus using extractor above is appropriate
-        if component_is_series:
-            return Series.from_concat(parts)
-        return Frame.from_concat(parts, axis=self._axis) # type: ignore
+        return Frame.from_concat(gen_components(), axis=self._axis)
 
     #---------------------------------------------------------------------------
 
