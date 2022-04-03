@@ -4382,7 +4382,7 @@ class Frame(ContainerOperand):
 
     def _extract_iloc(self, key: GetItemKeyTypeCompound) -> 'Frame':
         '''
-        Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
+        Give a compound key, return a new Frame. This method simply handles the variability of single or compound selectors.
         '''
         if isinstance(key, tuple):
             return self._extract(*key)
