@@ -640,7 +640,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             raise RuntimeError('index_constructor not supported with this interface')
         # PERF: passing count here permits faster generator realization
         shape = self._container.shape
-        array, _ = iterable_to_array_1d(values, count=shape[0], dtype=dtype)
+        array, _ = iterable_to_array_1d(values, count=shape[0], dtype=dtype) # type: ignore
         return array
 
     #---------------------------------------------------------------------------

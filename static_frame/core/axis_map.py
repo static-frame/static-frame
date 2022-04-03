@@ -79,7 +79,7 @@ def build_quilt_indices(
 
     if include_index:
         assert primary_tree
-        primary = IndexHierarchy.from_tree(primary_tree)
+        primary: tp.Union[Series, IndexHierarchy] = IndexHierarchy.from_tree(primary_tree)
     else:
         primary = Series(labels)
 

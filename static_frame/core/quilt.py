@@ -81,8 +81,8 @@ class Quilt(ContainerBase, StoreClientMixin):
     _axis: int
     _index: IndexBase
     _columns: IndexBase
-    _primary_index: IndexBase
-    _secondary_index: IndexBase
+    _primary_index: tp.Optional[IndexBase]
+    _secondary_index: tp.Optional[IndexBase]
     _retain_labels: bool
     _include_index: bool
     _deepcopy_from_bus: bool
@@ -120,7 +120,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             ends = range(starts[1], vector_len, chunksize)
 
         if label_extractor is None:
-            label_extractor = lambda x: x.iloc[0] #type: ignore
+            label_extractor = lambda x: x.iloc[0] # type: ignore
 
         axis_map_components: tp.Dict[tp.Hashable, IndexBase] = {}
         secondary_index = None
@@ -131,13 +131,13 @@ class Quilt(ContainerBase, StoreClientMixin):
             for start, end in zip_longest(starts, ends, fillvalue=vector_len):
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
-                    label = label_extractor(f.index) #type: ignore
+                    label = label_extractor(f.index) # type: ignore
                     axis_map_components[label] = f.index
                     if secondary_index is None:
                         secondary_index = f.columns
                 elif axis == 1: # along columns
                     f = frame.iloc[:, start:end]
-                    label = label_extractor(f.columns) #type: ignore
+                    label = label_extractor(f.columns) # type: ignore
                     axis_map_components[label] = f.columns
                     if secondary_index is None:
                         secondary_index = f.index
@@ -501,31 +501,31 @@ class Quilt(ContainerBase, StoreClientMixin):
                     )
 
             if self._include_index:
-                self._primary_index = primary
+                self._primary_index = primary # type: ignore
                 self._iloc_to_frame_label = None
                 self._frame_label_offset = None
             else:
-                self._primary_index = primary.index
-                self._iloc_to_frame_label = primary
-                s = self._iloc_to_frame_label.drop_duplicated(exclude_first=True)
+                self._primary_index = primary.index # type: ignore
+                self._iloc_to_frame_label = primary # type: ignore
+                s: Series = self._iloc_to_frame_label.drop_duplicated(exclude_first=True) # type: ignore
                 self._frame_label_offset = Series(s.index, index=s.values)
 
         if self._axis == 0:
             if not self._include_index or self._retain_labels:
-                self._index = self._primary_index
+                self._index = self._primary_index # type: ignore
             else:
                 try:
-                    self._index = self._primary_index.level_drop(1)
+                    self._index = self._primary_index.level_drop(1) # type: ignore
                 except ErrorInitIndexNonUnique:
                     raise self._error_update_axis_labels(self._axis) from None
 
             self._columns = self._secondary_index
         else:
             if not self._include_index or self._retain_labels:
-                self._columns = self._primary_index
+                self._columns = self._primary_index # type: ignore
             else:
                 try:
-                    self._columns = self._primary_index.level_drop(1)
+                    self._columns = self._primary_index.level_drop(1) # type: ignore
                 except ErrorInitIndexNonUnique:
                     raise self._error_update_axis_labels(self._axis) from None
 
@@ -541,11 +541,11 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property # type: ignore
     @doc_inject()
     def name(self: Q) -> NameType:
         '''{}'''
-        return self._bus.name #type: ignore
+        return self._bus.name # type: ignore
 
     def rename(self: Q,
             name: NameType,
@@ -645,7 +645,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # accessors
 
-    @property #type: ignore
+    @property # type: ignore
     @doc_inject(selector='values_2d', class_name='Quilt')
     def values(self: Q) -> np.ndarray:
         '''
@@ -784,7 +784,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         if key not in self._columns:
             return default
-        return self.__getitem__(key) #type: ignore
+        return self.__getitem__(key)
 
     #---------------------------------------------------------------------------
     # compatibility with StoreClientMixin
@@ -846,7 +846,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             else:
                 raise AxisInvalid(f'no support for axis {axis}')
             # uses _make method to call with iterable
-            tuple_constructor = get_tuple_constructor(labels)
+            tuple_constructor = get_tuple_constructor(labels) # type: ignore
 
         elif (isinstance(constructor, type) and
                 issubclass(constructor, tuple) and
@@ -964,15 +964,15 @@ class Quilt(ContainerBase, StoreClientMixin):
             ) -> tp.Union[tp.Any, Frame, Series]:
         '''Specialized path for when `_include_index` is False'''
         if sel_reduces:
-            primary_index_sel = (primary_index_sel,)
+            primary_index_sel = (primary_index_sel,) # type: ignore
 
         components: tp.List[tp.Union[tp.Any, np.ndarray]] = []
 
-        for iloc_key in primary_index_sel:
-            frame_label = self._iloc_to_frame_label[iloc_key]
-            sel_component = iloc_key - self._frame_label_offset[frame_label]
+        for iloc_key in primary_index_sel: # type: ignore
+            frame_label = self._iloc_to_frame_label[iloc_key] # type: ignore
+            sel_component = iloc_key - self._frame_label_offset[frame_label] # type: ignore
 
-            func = self._bus.loc[frame_label]._extract_array
+            func = self._bus.loc[frame_label]._extract_array # type: ignore
             if sel_reduces:
                 components.append(func(sel_component, opposite_key))
             else:
@@ -986,35 +986,35 @@ class Quilt(ContainerBase, StoreClientMixin):
         return concat_resolved(components, axis=self._axis)
 
     def _extract_hierarchy_array(self: Q,
-            sel_key,
-            opposite_key,
-            sel_reduces,
-            opposite_reduces,
-            primary_index_sel,
-            extractor,
-            ):
+            sel_key: GetItemKeyType,
+            opposite_key: GetItemKeyType,
+            sel_reduces: bool,
+            opposite_reduces: bool,
+            primary_index_sel: tp.Union[tp.Tuple[tp.Hashable, ...], IndexBase],
+            extractor: AnyCallable,
+            ) -> tp.Union[tp.Any, np.ndarray]:
         sel = np.full(len(self._primary_index), False)
         sel[sel_key] = True
 
         # get ordered unique Bus labels
         frame_labels: tp.Iterable[tp.Hashable]
 
-        if isinstance(primary_index_sel, tuple): # type: ignore
-            frame_labels = (primary_index_sel[0],) #type: ignore
+        if isinstance(primary_index_sel, tuple):
+            frame_labels = (primary_index_sel[0],)
         else:
-            frame_labels = primary_index_sel._get_unique_labels_in_occurence_order(depth=0)
+            frame_labels = primary_index_sel._get_unique_labels_in_occurence_order(depth=0) # type: ignore
 
         parts: tp.List[np.ndarray] = []
 
         for frame_label in frame_labels:
-            sel_component = sel[self._primary_index._loc_to_iloc(HLoc[frame_label])]
+            sel_component = sel[self._primary_index._loc_to_iloc(HLoc[frame_label])] # type: ignore
 
             if self._axis == 0:
-                component = self._bus.loc[frame_label]._extract_array(sel_component, opposite_key) #type: ignore
+                component = self._bus.loc[frame_label]._extract_array(sel_component, opposite_key) # type: ignore
                 if sel_reduces:
                     component = component[0]
             else:
-                component = self._bus.loc[frame_label]._extract_array(opposite_key, sel_component) #type: ignore
+                component = self._bus.loc[frame_label]._extract_array(opposite_key, sel_component) # type: ignore
                 if sel_reduces:
                     if component.ndim == 1:
                         component = component[0]
@@ -1050,9 +1050,9 @@ class Quilt(ContainerBase, StoreClientMixin):
             frames = (extractor(frame) for frame in self._bus.values)
 
         if not self._include_index:
-            return Frame.from_concat(frames, axis=self._axis, index=self._primary_index)
+            return Frame.from_concat(frames, axis=self._axis, index=self._primary_index) # type: ignore
 
-        return Frame.from_concat(frames, axis=self._axis)
+        return Frame.from_concat(frames, axis=self._axis) # type: ignore
 
     def _extract_no_hierarchy(self: Q,
             primary_index_sel: tp.Union[int, IndexBase],
@@ -1063,12 +1063,12 @@ class Quilt(ContainerBase, StoreClientMixin):
             ) -> tp.Union[tp.Any, Frame, Series]:
         '''Specialized path for when `_include_index` is False'''
         if sel_reduces:
-            primary_index_sel = (primary_index_sel,)
+            primary_index_sel = (primary_index_sel,) # type: ignore
 
         def gen_components() -> tp.Iterator[tp.Union[tp.Any, Frame, Series]]:
-            for iloc_key in primary_index_sel:
-                frame_label = self._iloc_to_frame_label[iloc_key]
-                sel_component = iloc_key - self._frame_label_offset[frame_label]
+            for iloc_key in primary_index_sel: # type: ignore
+                frame_label = self._iloc_to_frame_label[iloc_key] # type: ignore
+                sel_component = iloc_key - self._frame_label_offset[frame_label] # type: ignore
 
                 component = self._bus.loc[frame_label].iloc[sel_component, opposite_key]
                 if opposite_reduces:
@@ -1083,7 +1083,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             return Series(
                     gen_components(),
                     index=primary_index_sel,
-                    name=self._secondary_index[opposite_key],
+                    name=self._secondary_index[opposite_key], # type: ignore
                     )
 
         if sel_reduces:
@@ -1095,18 +1095,18 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     def _extract_hierarchy(self: Q,
-            sel_key,
-            opposite_key,
-            sel_reduces,
-            opposite_reduces,
-            primary_index_sel,
-            extractor,
-            ):
+            sel_key: GetItemKeyType,
+            opposite_key: GetItemKeyType,
+            sel_reduces: bool,
+            opposite_reduces: bool,
+            primary_index_sel: tp.Union[tp.Tuple[tp.Hashable, ...], IndexBase],
+            extractor: AnyCallable,
+            ) -> tp.Union[tp.Any, Series, Frame]:
         sel = np.full(len(self._primary_index), False)
         sel[sel_key] = True
 
         def get_component(frame_label: tp.Hashable) -> tp.Any:
-            sel_component = sel[self._primary_index._loc_to_iloc(HLoc[frame_label])]
+            sel_component = sel[self._primary_index._loc_to_iloc(HLoc[frame_label])] # type: ignore
             if self._axis == 0:
                 return self._bus.loc[frame_label].iloc[sel_component, opposite_key]
 
@@ -1117,12 +1117,12 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         frame_label_components: tp.Iterable[tp.Tuple[tp.Hashable, tp.Union[tp.Any, Frame, Series]]]
 
-        if isinstance(primary_index_sel, tuple): #type: ignore
-            frame_label = primary_index_sel[0] #type: ignore
+        if isinstance(primary_index_sel, tuple):
+            frame_label = primary_index_sel[0]
             frame_label_components = ((frame_label, get_component(frame_label)),)
         else:
             # get the outer level, or just the unique frame labels needed
-            frame_labels = primary_index_sel._get_unique_labels_in_occurence_order(depth=0)
+            frame_labels = primary_index_sel._get_unique_labels_in_occurence_order(depth=0) # type: ignore
             frame_label_components = (
                     (frame_label, get_component(frame_label))
                     for frame_label in frame_labels
@@ -1205,7 +1205,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         opposite_reduces = isinstance(opposite_key, INT_TYPES)
 
         # get ordered unique Bus labels
-        primary_index_sel = self._primary_index.iloc[sel_key]
+        primary_index_sel = self._primary_index.iloc[sel_key] # type: ignore
 
         if not self._include_index:
             return no_hierarchy_extractor(
@@ -1281,7 +1281,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             columns_key = None
 
-        return self._extract(row_key=index_key, column_key=columns_key) #type: ignore
+        return self._extract(row_key=index_key, column_key=columns_key) # type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -1359,7 +1359,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     # iterators
 
     @property
-    def iter_array(self: Q) -> IterNodeAxis[Q]:
+    def iter_array(self: Q) -> IterNodeAxis['Quilt']:
         '''
         Iterator of :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -1375,7 +1375,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_array_items(self: Q) -> IterNodeAxis[Q]:
+    def iter_array_items(self: Q) -> IterNodeAxis['Quilt']:
         '''
         Iterator of pairs of label, :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -1391,7 +1391,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_tuple(self: Q) -> IterNodeConstructorAxis[Q]:
+    def iter_tuple(self: Q) -> IterNodeConstructorAxis['Quilt']:
         '''
         Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
         '''
@@ -1407,7 +1407,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_tuple_items(self: Q) -> IterNodeConstructorAxis[Q]:
+    def iter_tuple_items(self: Q) -> IterNodeConstructorAxis['Quilt']:
         '''
         Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -1423,7 +1423,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_series(self: Q) -> IterNodeAxis[Q]:
+    def iter_series(self: Q) -> IterNodeAxis['Quilt']:
         '''
         Iterator of :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -1439,7 +1439,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_series_items(self: Q) -> IterNodeAxis[Q]:
+    def iter_series_items(self: Q) -> IterNodeAxis['Quilt']:
         '''
         Iterator of pairs of label, :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -1458,7 +1458,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     def _iter_window(self: Q,
             as_array: bool,
             yield_type: IterNodeType,
-            ) -> IterNodeWindow[Q]:
+            ) -> IterNodeWindow['Quilt']:
         if self._assign_axis:
             self._update_axis_labels()
 
@@ -1475,7 +1475,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @property
     @doc_inject(selector='window')
-    def iter_window(self: Q) -> IterNodeWindow[Q]:
+    def iter_window(self: Q) -> IterNodeWindow['Quilt']:
         '''
         Iterator of windowed values, where values are given as a :obj:`Frame`.
 
@@ -1485,7 +1485,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @property
     @doc_inject(selector='window')
-    def iter_window_items(self: Q) -> IterNodeWindow[Q]:
+    def iter_window_items(self: Q) -> IterNodeWindow['Quilt']:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
 
@@ -1495,7 +1495,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array(self: Q) -> IterNodeWindow[Q]:
+    def iter_window_array(self: Q) -> IterNodeWindow['Quilt']:
         '''
         Iterator of windowed values, where values are given as a :obj:`np.array`.
 
@@ -1505,7 +1505,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array_items(self: Q) -> IterNodeWindow[Q]:
+    def iter_window_array_items(self: Q) -> IterNodeWindow['Quilt']:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
 
@@ -1622,4 +1622,4 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self._extract(NULL_SLICE, NULL_SLICE) #type: ignore
+        return self._extract(NULL_SLICE, NULL_SLICE) # type: ignore

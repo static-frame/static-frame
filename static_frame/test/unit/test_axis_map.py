@@ -83,7 +83,7 @@ class TestUnit(TestCase):
                 expected_index = indices
                 expected_tree = {'f1': columns, 'f2': columns, 'f3': columns}
 
-            self.compare_trees(hierarchy.to_tree(), expected_tree)
+            self.compare_trees(hierarchy.to_tree(), expected_tree) # type: ignore
             self.assertTrue(expected_index.equals(opposite))
 
         for axis in (0, 1):

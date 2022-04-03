@@ -1062,7 +1062,7 @@ def _index_many_to_one(
     '''
     from static_frame.core.index_auto import IndexAutoFactory
 
-    array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
+    array_processor: tp.Callable[[tp.Sequence[np.ndarray]], np.ndarray]
 
     if many_to_one_type is ManyToOneType.UNION:
         array_processor = partial(ufunc_set_iter,
