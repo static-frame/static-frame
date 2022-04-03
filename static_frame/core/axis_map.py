@@ -35,9 +35,9 @@ def get_extractor(
 def build_quilt_indices(
         bus: tp.Union[Bus, 'Yarn'],
         axis: int,
-        include_index: bool,
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
+        include_index: bool = True,
         ) -> tp.Tuple[tp.Union[Series, IndexHierarchy], IndexBase]:
     '''
     Given a :obj:`Bus` and an axis, derive the primary and secondary indices for a Quilt. Validate the :obj:`Index` of the secondary index.
