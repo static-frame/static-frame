@@ -698,7 +698,7 @@ def dtype_from_element(
 
 
 def concat_resolved(
-        arrays: tp.Iterable[np.ndarray],
+        arrays: tp.Sequence[np.ndarray],
         axis: int = 0,
         ) -> np.ndarray:
     '''

@@ -724,7 +724,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._assign_axis:
             self._update_axis_labels()
 
-        return sum(f.nbytes for _, f in self._bus.items())
+        return sum(f.nbytes for f in self._bus.values)
 
     @property
     def status(self: Q) -> Frame:
@@ -942,68 +942,79 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
 
-    def _extract_array(self: Q,
-            row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None,
+    def _extract_null_slice_array(self: Q,
+            extractor: AnyCallable,
             ) -> np.ndarray:
-        '''
-        Extract a consolidated array based on iloc selection.
-        '''
-        if self._assign_axis:
-            self._update_axis_labels()
+        if len(self._bus) == 1:
+            return extractor(self._bus.iloc[0].values)
 
-        extractor = get_extractor(
-                self._deepcopy_from_bus,
-                is_array=True,
-                memo_active=False,
+        # NOTE: concatenate allocates a new array, meaning we don't need to use extractor
+        arrays = [f.values for f in self._bus.values]
+        return concat_resolved(
+                arrays,
+                axis=self._axis,
                 )
 
-        row_key = NULL_SLICE if row_key is None else row_key
-        column_key = NULL_SLICE if column_key is None else column_key
+    def _extract_no_hierarchy_array(self: Q,
+            primary_index_sel: tp.Union[int, IndexBase],
+            sel_reduces: bool,
+            opposite_reduces: bool,
+            extractor: AnyCallable,
+            opposite_key: GetItemKeyType,
+            ) -> tp.Union[tp.Any, Frame, Series]:
+        '''Specialized path for when `_include_index` is False'''
+        if sel_reduces:
+            primary_index_sel = (primary_index_sel,)
 
-        if row_key == NULL_SLICE and column_key == NULL_SLICE:
-            if len(self._bus) == 1:
-                return extractor(self._bus.iloc[0].values)
+        components: tp.List[tp.Union[tp.Any, np.ndarray]] = []
 
-            # NOTE: do not need to call extractor when concatenate is called, as a new array is always allocated.
-            arrays = [f.values for _, f in self._bus.items()]
-            return concat_resolved(
-                    arrays,
-                    axis=self._axis,
-                    )
+        for iloc_key in primary_index_sel:
+            frame_label = self._iloc_to_frame_label[iloc_key]
+            sel_component = iloc_key - self._frame_label_offset[frame_label]
 
-        parts: tp.List[np.ndarray] = []
-        bus_keys: tp.Iterable[tp.Hashable]
+            func = self._bus.loc[frame_label]._extract_array
+            if sel_reduces:
+                components.append(func(sel_component, opposite_key))
+            else:
+                components.append(func([sel_component], opposite_key))
 
-        if self._axis == 0:
-            sel_key = row_key
-            opposite_key = column_key
-        else:
-            sel_key = column_key
-            opposite_key = row_key
+        if sel_reduces and opposite_reduces:
+            return components[0]
 
-        sel_reduces = isinstance(sel_key, INT_TYPES)
-        opposite_reduces = isinstance(opposite_key, INT_TYPES)
+        if sel_reduces or opposite_reduces:
+            return concat_resolved(components)
+        return concat_resolved(components, axis=self._axis)
 
+    def _extract_hierarchy_array(self: Q,
+            sel_key,
+            opposite_key,
+            sel_reduces,
+            opposite_reduces,
+            primary_index_sel,
+            extractor,
+            ):
         sel = np.full(len(self._primary_index), False)
         sel[sel_key] = True
 
         # get ordered unique Bus labels
-        axis_map_sub = self._primary_index.iloc[sel_key]
-        if isinstance(axis_map_sub, tuple): # type: ignore
-            bus_keys = (axis_map_sub[0],) #type: ignore
-        else:
-            bus_keys = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
+        frame_labels: tp.Iterable[tp.Hashable]
 
-        for key in bus_keys:
-            sel_component = sel[self._primary_index._loc_to_iloc(HLoc[key])]
+        if isinstance(primary_index_sel, tuple): # type: ignore
+            frame_labels = (primary_index_sel[0],) #type: ignore
+        else:
+            frame_labels = primary_index_sel._get_unique_labels_in_occurence_order(depth=0)
+
+        parts: tp.List[np.ndarray] = []
+
+        for frame_label in frame_labels:
+            sel_component = sel[self._primary_index._loc_to_iloc(HLoc[frame_label])]
 
             if self._axis == 0:
-                component = self._bus.loc[key]._extract_array(sel_component, opposite_key) #type: ignore
+                component = self._bus.loc[frame_label]._extract_array(sel_component, opposite_key) #type: ignore
                 if sel_reduces:
                     component = component[0]
             else:
-                component = self._bus.loc[key]._extract_array(opposite_key, sel_component) #type: ignore
+                component = self._bus.loc[frame_label]._extract_array(opposite_key, sel_component) #type: ignore
                 if sel_reduces:
                     if component.ndim == 1:
                         component = component[0]
@@ -1015,11 +1026,12 @@ class Quilt(ContainerBase, StoreClientMixin):
         if len(parts) == 1:
             return extractor(parts.pop())
 
-        # NOTE: concatenate always allocates a new array, thus no need for extractor above
+        # NOTE: concatenate allocates a new array, meaning we don't need to use extractor
         if sel_reduces or opposite_reduces:
-            # NOTE: not sure if concat_resolved is needed here
             return concat_resolved(parts)
         return concat_resolved(parts, axis=self._axis)
+
+    #---------------------------------------------------------------------------
 
     def _extract_null_slice(self: Q,
             extractor: AnyCallable,
@@ -1035,7 +1047,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     for label, frame in self._bus.items()
                     )
         else:
-            frames = (extractor(frame) for _, frame in self._bus.items())
+            frames = (extractor(frame) for frame in self._bus.values)
 
         if not self._include_index:
             return Frame.from_concat(frames, axis=self._axis, index=self._primary_index)
@@ -1082,50 +1094,14 @@ class Quilt(ContainerBase, StoreClientMixin):
                 axis=self._axis,
                 )
 
-    def _extract(self: Q,
-            row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None,
-            ) -> tp.Union[tp.Any, Frame, Series]:
-        '''
-        Extract Container based on iloc selection.
-        '''
-        extractor = get_extractor(
-                self._deepcopy_from_bus,
-                is_array=False,
-                memo_active=False,
-                )
-
-        row_key = NULL_SLICE if row_key is None else row_key
-        column_key = NULL_SLICE if column_key is None else column_key
-
-        if (
-            row_key.__class__ is slice and row_key== NULL_SLICE and
-            column_key.__class__ is slice and column_key== NULL_SLICE
+    def _extract_hierarchy(self: Q,
+            sel_key,
+            opposite_key,
+            sel_reduces,
+            opposite_reduces,
+            primary_index_sel,
+            extractor,
             ):
-            return self._extract_null_slice(extractor)
-
-        if self._axis == 0:
-            sel_key = row_key
-            opposite_key = column_key
-        else:
-            sel_key = column_key
-            opposite_key = row_key
-
-        sel_reduces = isinstance(sel_key, INT_TYPES)
-        opposite_reduces = isinstance(opposite_key, INT_TYPES)
-
-        # get ordered unique Bus labels
-        primary_index_sel = self._primary_index.iloc[sel_key]
-
-        if not self._include_index:
-            return self._extract_no_hierarchy(
-                primary_index_sel=primary_index_sel,
-                sel_reduces=sel_reduces,
-                opposite_reduces=opposite_reduces,
-                extractor=extractor,
-                opposite_key=opposite_key,
-            )
-
         sel = np.full(len(self._primary_index), False)
         sel[sel_key] = True
 
@@ -1183,6 +1159,97 @@ class Quilt(ContainerBase, StoreClientMixin):
             return Series.from_concat(gen_components())
 
         return Frame.from_concat(gen_components(), axis=self._axis)
+
+    #---------------------------------------------------------------------------
+
+    def _extract_helper(self: Q,
+            is_array: bool,
+            row_key: GetItemKeyType = None,
+            column_key: GetItemKeyType = None,
+            ) -> tp.Any:
+        if self._assign_axis:
+            self._update_axis_labels()
+
+        if is_array:
+            null_slice_extractor = self._extract_null_slice_array
+            no_hierarchy_extractor = self._extract_no_hierarchy_array
+            hierarchy_extractor = self._extract_hierarchy_array
+        else:
+            null_slice_extractor = self._extract_null_slice
+            no_hierarchy_extractor = self._extract_no_hierarchy
+            hierarchy_extractor = self._extract_hierarchy
+
+        extractor = get_extractor(
+                self._deepcopy_from_bus,
+                is_array=is_array,
+                memo_active=False,
+                )
+
+        row_key = NULL_SLICE if row_key is None else row_key
+        column_key = NULL_SLICE if column_key is None else column_key
+
+        if (
+            row_key.__class__ is slice and row_key == NULL_SLICE and
+            column_key.__class__ is slice and column_key == NULL_SLICE
+            ):
+            return null_slice_extractor(extractor)
+
+        if self._axis == 0:
+            sel_key = row_key
+            opposite_key = column_key
+        else:
+            sel_key = column_key
+            opposite_key = row_key
+
+        sel_reduces = isinstance(sel_key, INT_TYPES)
+        opposite_reduces = isinstance(opposite_key, INT_TYPES)
+
+        # get ordered unique Bus labels
+        primary_index_sel = self._primary_index.iloc[sel_key]
+
+        if not self._include_index:
+            return no_hierarchy_extractor(
+                primary_index_sel=primary_index_sel,
+                sel_reduces=sel_reduces,
+                opposite_reduces=opposite_reduces,
+                extractor=extractor,
+                opposite_key=opposite_key,
+            )
+
+        return hierarchy_extractor(
+                sel_key=sel_key,
+                opposite_key=opposite_key,
+                sel_reduces=sel_reduces,
+                opposite_reduces=opposite_reduces,
+                primary_index_sel=primary_index_sel,
+                extractor=extractor,
+                )
+
+    def _extract_array(self: Q,
+            row_key: GetItemKeyType = None,
+            column_key: GetItemKeyType = None,
+            ) -> tp.Union[tp.Any, np.ndarray]:
+        '''
+        Extract a consolidated array based on iloc selection.
+        '''
+        return self._extract_helper(
+                is_array=True,
+                row_key=row_key,
+                column_key=column_key,
+                )
+
+    def _extract(self: Q,
+            row_key: GetItemKeyType = None,
+            column_key: GetItemKeyType = None,
+            ) -> tp.Union[tp.Any, Frame, Series]:
+        '''
+        Extract Container based on iloc selection.
+        '''
+        return self._extract_helper(
+                is_array=False,
+                row_key=row_key,
+                column_key=column_key,
+                )
 
     #---------------------------------------------------------------------------
 
