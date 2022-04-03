@@ -657,6 +657,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return self.to_frame().values
 
     @property
@@ -665,6 +666,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return self._index
 
     @property
@@ -673,6 +675,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return self._columns
 
     #---------------------------------------------------------------------------
@@ -687,6 +690,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return len(self._index), len(self._columns)
 
     @property
@@ -709,6 +713,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return len(self._index) * len(self._columns)
 
     @property
@@ -722,6 +727,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         # return self._blocks.nbytes
         if self._assign_axis:
             self._update_axis_labels()
+
         return sum(f.nbytes for _, f in self._bus.items())
 
     @property
@@ -739,6 +745,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return self._columns
 
     def __iter__(self: Q) -> tp.Iterable[tp.Hashable]:
@@ -747,6 +754,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return self._columns.__iter__()
 
     def __contains__(self: Q,
@@ -757,6 +765,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return self._columns.__contains__(value)
 
     def items(self: Q) -> tp.Iterator[tp.Tuple[tp.Hashable, Series]]:
@@ -764,17 +773,19 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         yield from self._axis_series_items(axis=0) # iterate columns
 
     def get(self: Q,
             key: tp.Hashable,
-            default: tp.Optional[Series] = None,
-            ) -> tp.Optional[Series]:
+            default: tp.Optional[tp.Any] = None,
+            ) -> tp.Optional[tp.Union[tp.Any, Series, Frame]]:
         '''
         Return the value found at the columns key, else the default if the key is not found. This method is implemented to complete the dictionary-like interface.
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         if key not in self._columns:
             return default
         return self.__getitem__(key) #type: ignore
@@ -804,22 +815,15 @@ class Quilt(ContainerBase, StoreClientMixin):
                 memo_active=False,
                 )
 
-        if axis == 1: # iterate over rows
-            if self._axis == 0: # bus components aligned vertically
-                for _, component in self._bus.items():
-                    for array in component._blocks.axis_values(axis):
-                        yield extractor(array)
-            else: # bus components aligned horizontally
-                raise NotImplementedAxis()
-        elif axis == 0: # iterate over columns
-            if self._axis == 1: # bus components aligned horizontally
-                for _, component in self._bus.items():
-                    for array in component._blocks.axis_values(axis):
-                        yield extractor(array)
-            else: # bus components aligned horizontally
-                raise NotImplementedAxis()
-        else:
+        if axis == self._axis:
+            raise NotImplementedAxis()
+
+        if axis >= 2 or axis < 0:
             raise AxisInvalid(f'no support for axis {axis}')
+
+        for component in self._bus.values:
+            for array in component._blocks.axis_values(axis):
+                yield extractor(array)
 
     def _axis_array_items(self: Q,
             axis: int,
@@ -827,7 +831,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_array(axis))
 
-    def _axis_tuple(self: Q, *,
+    def _axis_tuple(self: Q,
+            *,
             axis: int,
             constructor: tp.Optional[tp.Type[tp.NamedTuple]] = None,
             ) -> tp.Iterator[tp.NamedTuple]:
@@ -845,18 +850,21 @@ class Quilt(ContainerBase, StoreClientMixin):
             else:
                 raise AxisInvalid(f'no support for axis {axis}')
             # uses _make method to call with iterable
-            tuple_constructor = get_tuple_constructor(labels) #type: ignore
+            tuple_constructor = get_tuple_constructor(labels)
+
         elif (isinstance(constructor, type) and
                 issubclass(constructor, tuple) and
                 hasattr(constructor, '_make')):
-            tuple_constructor = constructor._make #type: ignore
+            tuple_constructor = constructor._make
+
         else:
             tuple_constructor = constructor
 
         for axis_values in self._axis_array(axis):
             yield tuple_constructor(axis_values)
 
-    def _axis_tuple_items(self: Q, *,
+    def _axis_tuple_items(self: Q,
+            *,
             axis: int,
             constructor: tp.Optional[tp.Type[tp.NamedTuple]] = None,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.NamedTuple]]:
@@ -880,7 +888,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
 
-    def _axis_window_items(self: Q, *,
+    def _axis_window_items(self: Q,
+            *,
             size: int,
             axis: int = 0,
             step: int = 1,
@@ -909,7 +918,8 @@ class Quilt(ContainerBase, StoreClientMixin):
                 as_array=as_array
                 )
 
-    def _axis_window(self: Q, *,
+    def _axis_window(self: Q,
+            *,
             size: int,
             axis: int = 0,
             step: int = 1,
@@ -1208,6 +1218,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         if isinstance(key, tuple):
             return self._extract(*key)
         return self._extract(row_key=key)
@@ -1233,6 +1244,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             ) -> tp.Union[Series, Frame]:
         if self._assign_axis:
             self._update_axis_labels()
+
         return self._extract(*self._compound_loc_to_iloc(key))
 
     def _compound_loc_to_getitem_iloc(self: Q,
@@ -1246,7 +1258,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject(selector='selector')
     def __getitem__(self: Q,
             key: GetItemKeyType,
-            ) -> tp.Union[Frame, Series]:
+            ) -> tp.Union[tp.Any, Frame, Series]:
         '''Selector of columns by label.
 
         Args:
@@ -1254,6 +1266,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return self._extract(*self._compound_loc_to_getitem_iloc(key))
 
     #---------------------------------------------------------------------------
@@ -1261,11 +1274,11 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @property
     def loc(self: Q) -> InterfaceGetItem[Frame]:
-        return InterfaceGetItem(self._extract_loc) #type: ignore
+        return InterfaceGetItem(self._extract_loc)
 
     @property
     def iloc(self: Q) -> InterfaceGetItem[Frame]:
-        return InterfaceGetItem(self._extract_iloc) #type: ignore
+        return InterfaceGetItem(self._extract_iloc)
 
     #---------------------------------------------------------------------------
     # iterators
@@ -1277,6 +1290,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return IterNodeAxis(
                 container=self,
                 function_values=self._axis_array,
@@ -1292,6 +1306,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return IterNodeAxis(
                 container=self,
                 function_values=self._axis_array,
@@ -1307,6 +1322,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return IterNodeConstructorAxis(
                 container=self,
                 function_values=self._axis_tuple,
@@ -1322,6 +1338,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return IterNodeConstructorAxis(
                 container=self,
                 function_values=self._axis_tuple,
@@ -1337,6 +1354,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return IterNodeAxis(
                 container=self,
                 function_values=self._axis_series,
@@ -1352,6 +1370,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
+
         return IterNodeAxis(
                 container=self,
                 function_values=self._axis_series,
@@ -1361,6 +1380,23 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
+    def _iter_window(self: Q,
+            as_array: bool,
+            yield_type: IterNodeType,
+            ) -> IterNodeWindow[Q]:
+        if self._assign_axis:
+            self._update_axis_labels()
+
+        function_values = partial(self._axis_window, as_array=as_array)
+        function_items = partial(self._axis_window_items, as_array=as_array)
+
+        return IterNodeWindow(
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=yield_type,
+                apply_type=IterNodeApplyType.SERIES_ITEMS,
+                )
 
     @property #type: ignore
     @doc_inject(selector='window')
@@ -1370,17 +1406,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         '''
-        if self._assign_axis:
-            self._update_axis_labels()
-        function_values = partial(self._axis_window, as_array=False)
-        function_items = partial(self._axis_window_items, as_array=False)
-        return IterNodeWindow(
-                container=self,
-                function_values=function_values,
-                function_items=function_items,
-                yield_type=IterNodeType.VALUES,
-                apply_type=IterNodeApplyType.SERIES_ITEMS,
-                )
+        return self._iter_window(False, IterNodeType.VALUES)
 
     @property #type: ignore
     @doc_inject(selector='window')
@@ -1390,17 +1416,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         '''
-        if self._assign_axis:
-            self._update_axis_labels()
-        function_values = partial(self._axis_window, as_array=False)
-        function_items = partial(self._axis_window_items, as_array=False)
-        return IterNodeWindow(
-                container=self,
-                function_values=function_values,
-                function_items=function_items,
-                yield_type=IterNodeType.ITEMS,
-                apply_type=IterNodeApplyType.SERIES_ITEMS,
-                )
+        return self._iter_window(False, IterNodeType.ITEMS)
 
     @property #type: ignore
     @doc_inject(selector='window')
@@ -1410,17 +1426,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         '''
-        if self._assign_axis:
-            self._update_axis_labels()
-        function_values = partial(self._axis_window, as_array=True)
-        function_items = partial(self._axis_window_items, as_array=True)
-        return IterNodeWindow(
-                container=self,
-                function_values=function_values,
-                function_items=function_items,
-                yield_type=IterNodeType.VALUES,
-                apply_type=IterNodeApplyType.SERIES_ITEMS,
-                )
+        return self._iter_window(True, IterNodeType.VALUES)
 
     @property #type: ignore
     @doc_inject(selector='window')
@@ -1430,20 +1436,11 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         '''
-        if self._assign_axis:
-            self._update_axis_labels()
-        function_values = partial(self._axis_window, as_array=True)
-        function_items = partial(self._axis_window_items, as_array=True)
-        return IterNodeWindow(
-                container=self,
-                function_values=function_values,
-                function_items=function_items,
-                yield_type=IterNodeType.ITEMS,
-                apply_type=IterNodeApplyType.SERIES_ITEMS,
-                )
+        return self._iter_window(True, IterNodeType.ITEMS)
 
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
+
     @doc_inject(selector='head', class_name=Q)
     def head(self: Q,
             count: int = 5,
@@ -1467,6 +1464,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self.iloc[-count:]
 
     #---------------------------------------------------------------------------
+
     @doc_inject()
     def equals(self: Q,
             other: tp.Any,
@@ -1501,15 +1499,19 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._retain_labels != other._retain_labels:
             return False
 
+        if self._include_index != other._include_index:
+            return False
+
         if compare_name and self.name != other.name:
             return False
 
         if self._assign_axis:
             self._update_axis_labels()
+
         if other._assign_axis:
             other._update_axis_labels()
 
-        if not self._index.equals( # type: ignore
+        if not self._index.equals(
                 other._index,
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
@@ -1518,7 +1520,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 ):
             return False
 
-        if not self._columns.equals( # type: ignore
+        if not self._columns.equals(
                 other._columns,
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
@@ -1538,6 +1540,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return True
 
     #---------------------------------------------------------------------------
+
     def to_frame(self: Q) -> Frame:
         '''
         Return a consolidated :obj:`Frame`.
