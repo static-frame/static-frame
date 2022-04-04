@@ -199,8 +199,7 @@ Examples of recent presentations:
 Employing NumPy's NPY Format for Faster-Than-Parquet DataFrame Serialization
 
 --
-
-An evolution of NPY and NPZ usage to support complete DataFrame encoding
+Evolving NPY and NPZ usage to support complete DataFrame encoding
 
     2007: NEP 1: A simple file format for NumPy arrays
 
@@ -219,11 +218,244 @@ An evolution of NPY and NPZ usage to support complete DataFrame encoding
         Faster than the widely used Parquet in nearly all scenarios
 
 --
-
 About me
 
+    CTO at Research Affiliates
+
+    Python programmer and evangelist since 2000
+
+    In 2017 began implementing StaticFrame: a DataFrame library based on an immutable data model
+
+    StaticFrame provides support for NumPy dtypes not supported by Pandas
+
+        Unicode, datetime64
+
+    StaticFrame provides numerous novel containers for working with collections of DataFrames
 
 --
+The problem of serializing DataFrames in Pandas
+
+    No format (except Pickles) support all DataFrame characteristics
+
+    No format supports all NumPy dtypes
+
+--
+Serializing DataFrames as pickles is fast but not stable
+
+    NumPy object arays can store aribitrary Python object
+
+    Not safe from untrusted sources
+
+    Not suitable as a long-term storage
+
+        Pickles hold references to objects that might go out of date
+
+        Pickles not compatible accross platforms / Python versions
+
+--
+What is a DataFrame?
+
+    A DataFrame is collection columns
+
+    Columns are arrays
+
+    Arrays may have hetergenous types
+
+    Row and column axis are labelled with Index objects
+
+    Index objects map arbitrary "labels" to array positions
+
+    Index objects, and the DataFrame itself, can have `name` attributes
+
+--
+How is a DataFrame implemented?
+
+    Store collections of arrays per columns
+
+    Arrays are NumPy arrays
+
+    Least-performant approach is to store one array per column
+
+    Grouping same-typed arrays into 2D arrays offers performance advantages
+
+    Leads to a manager of arrays or blocks (1D or 2D arrays)
+
+--
+Two approaches to managing blocks
+
+    A block is 1D or 2D array of uniform type
+
+    Order dependent: adjacent columns of the same type can be represented by 2D arrays
+
+        Used by StaticFrame
+
+        Avoids mapping column to a position in blocks
+
+        Optimizes ordered extraction
+
+    Non-order dependent: collect same-typed data into 2D arrays regardless of column order
+
+        Used by Pandas
+
+        Maximizes opportunity for 2D consolidation
+
+        Forces random-ordered extraction in ordered processing
+
+--
+Requirements for Serializing DataFrame
+
+    Types per column
+
+    Arbitrary types for index labels
+
+    Name attributes for indices, DataFrame
+
+    Support for all NumPy dtypes
+
+--
+Serializing DataFrames: text formats
+
+    CSV, TSV
+
+    No column or index label typing information
+
+    No place to store name attributes
+
+--
+Serializing DataFrames: XLSX
+
+    Some column typing information
+
+    XLSX types are not one-to-one to NumPy types
+
+    No place to store name attributes
+
+--
+Serializing DataFrames: Parquet
+
+    Columns types can be translated to Arrow types
+
+    Column labels must be strings
+
+    No place to store name attributes
+
+--
+Parquet
+
+    A "native" serialization format of the Arrow library
+
+    Many one-to-one mappings to NumPy types
+
+    No support for full range of datetime64 types
+
+    A strict columnar representation
+
+    100 columns of floats is 100 float columns
+
+    DataFrame block managers can treat this as 1 2D array
+
+--
+Parquet's usage
+
+    Parquet has been called a "gold standard" binary file format
+
+    Used natively by AWS Glue and related routines
+
+--
+Parquet (and Arrow's x) is not a DataFrame
+
+    Strict one type per column does not permit same-type consolidation
+
+    Rows do not have an index
+
+    Row and column indices do not have names
+
+--
+No Complete Serialization Format for DataFrames
+
+    While many formats get close, none are complete
+
+    Parquet is attractive for performance, but a DataFrame
+
+--
+The NPY & NPZ formats
+
+    Introduced in NEP 1 in 2007 for encoding NumPy arrays
+
+    NPY encodes a single NumPy array
+
+    NPZ bundles arrays in a ZIP archive
+
+--
+The NPY format
+
+    A binary format
+
+    A header followed by a data payload
+
+    Header
+
+        A binary representation of the string representation of a dictionary
+
+        Defines dtype, order, and shape
+
+    Body
+
+        Raw bytes that make up array data
+
+    NPY on disk can be memory mapped
+
+--
+The NPZ format
+
+    A zip bundle of NPY files
+
+    Usage in original specification was not defined
+
+--
+How to encode a DataFrame as an NPZ
+
+    Store column arrays as NPY
+
+    Store index labels as NPY arrays
+
+    Store metadata in JSON
+
+        Name attributes of indices, Frame
+
+        Index types
+
+    Bundle all components into a single ZIP
+
+--
+A DataFrame as an NPZ
+
+    A DataFrame of 1000 columns might have thousands of NPY
+
+    In StaticFrame, same-typed adjacent columns can be represented as a 2D array
+
+    The greater same-type adjacency, the fewer the number of NPY
+
+--
+A DataFrame as a directory of NPY
+
+    Given a directory of NPY on a file system
+
+    Memory mapping of all array data is possible
+
+--
+Making NPY and NPZ writing fast
+
+    NumPy's routines are not optimzed for scale
+
+    Backward compatibility for structured arrays, alternative formats
+
+    StaticFrame re-implements NPY, NPZ writing for performance
+
+
+
+
+
 
 
 
