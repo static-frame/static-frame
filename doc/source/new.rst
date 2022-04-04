@@ -6,9 +6,9 @@ What is New in Static Frame
 
 API change: ``Bus`` no longer accepts a ``Series`` on initialization; use ``Bus.from_series()``.
 
-API change: ``Batch`` no longer normalizes containers after each step in processing; use ``Batch.via_container`` to force elements or arrays into ``Frame`` or ``Series``.
+API change: ``Batch`` no longer normalizes containers after each step in processing; use ``Batch.via_container`` to force elements or arrays to ``Frame`` or ``Series``.
 
-API change: ``Index`` objects can no longer be created with ``np.datetime64`` arrays; such labels must use an ``IndexDatetime`` subclass instead. If this is happening implicitly with an operation, that operations should expose a parameter for ``index_constructor`` or ``index_constructors``.
+API change: ``Index`` objects can no longer be created with ``np.datetime64`` arrays; such labels must use an ``IndexDatetime`` subclass instead. If this is happening implicitly with an operation, that operation should expose a parameter for ``index_constructor`` or ``index_constructors``.
 
 API change: ``IndexAutoFactory`` is no longer accepted as an ``index_constructor`` argument in ``Series.from_pandas()`` and ``Frame.from_pandas()``; ``IndexAutoFactory`` should be passed as an ``index`` or ``columns`` argument instead.
 
