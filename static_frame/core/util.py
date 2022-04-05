@@ -1483,7 +1483,8 @@ def blocks_to_array_2d(
             if blocks_post is not None:
                 blocks_post.append(b)
 
-    shape = (rows, columns) if discover_shape else shape
+        if discover_shape:
+            shape = (rows, columns) #if discover_shape else shape
 
     if blocks_post is None:
         # blocks might be an iterator if we did not need to discover shape or dtype

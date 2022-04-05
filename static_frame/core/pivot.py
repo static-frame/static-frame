@@ -387,7 +387,7 @@ def pivot_core(
     from static_frame.core.series import Series
     from static_frame.core.frame import Frame
 
-    func_no = func_single is None and func_map is ()
+    func_no = func_single is None and func_map == ()
 
     data_fields_len = len(data_fields)
     index_depth = len(index_fields)
