@@ -207,6 +207,8 @@ Evolving NPY and NPZ usage to support complete DataFrame encoding
 
         Defines the NPZ format as a zipped collection of NPY
 
+    NPY was not widely used for encoding DataFrames
+
     All widely used DataFrame encodings (CSV, XLSX, HDF5, Parquet) are incomplete
 
     Pickles are fastest of all but not safe
@@ -228,7 +230,8 @@ About me
 
     StaticFrame provides support for NumPy dtypes not supported by Pandas
 
-        Unicode, datetime64
+        Unicode
+        datetime64 units other than nanoseconds
 
     StaticFrame provides numerous novel containers for working with collections of DataFrames
 
@@ -242,15 +245,15 @@ The problem of serializing DataFrames in Pandas
 --
 Serializing DataFrames as pickles is fast but not stable
 
-    NumPy object arays can store aribitrary Python object
+    NumPy object arays can store arbitrary Python objects
 
     Not safe from untrusted sources
 
-    Not suitable as a long-term storage
+    Not suitable as long-term storage
 
         Pickles hold references to objects that might go out of date
 
-        Pickles not compatible accross platforms / Python versions
+        Pickles not compatible across platforms / Python versions
 
 --
 What is a DataFrame?
@@ -259,7 +262,7 @@ What is a DataFrame?
 
     Columns are arrays
 
-    Arrays may have hetergenous types
+    Arrays may have heterogenous types
 
     Row and column axis are labelled with Index objects
 
@@ -270,7 +273,7 @@ What is a DataFrame?
 --
 How is a DataFrame implemented?
 
-    Store collections of arrays per columns
+    Store collections of arrays for column data
 
     Arrays are NumPy arrays
 
