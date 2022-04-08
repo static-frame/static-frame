@@ -716,6 +716,47 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_hierarchy_loc_to_iloc_index_hierarchy_a(self) -> None:
+        ih1 = IndexHierarchy.from_labels([(0, 1), (0, 2), (1, 0), (1, 1)])
+        ih2 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
+
+        post = ih1._loc_to_iloc_index_hierarchy(ih2)
+
+        self.assertTrue((post == np.array([3, 1, 0])).all())
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_b(self) -> None:
+        ih1 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
+
+        post = ih1._loc_to_iloc_index_hierarchy(ih1)
+
+        self.assertTrue((post == np.array([0, 1, 2])).all())
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_c(self) -> None:
+        ih1 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
+
+        post = ih1._loc_to_iloc_index_hierarchy(ih1.iloc[1:])
+
+        self.assertTrue((post == np.array([1, 2])).all())
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_d(self) -> None:
+        ih1 = IndexHierarchy.from_labels([(1, 1)])
+        ih2 = IndexHierarchyGO.from_labels([(2, 2)])
+        ih2.append((3, 3))
+
+        with self.assertRaises(KeyError):
+            ih1._loc_to_iloc_index_hierarchy(ih2)
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_e(self) -> None:
+        ih1 = IndexHierarchyGO.from_labels([(0, 0)])
+        ih2 = IndexHierarchyGO.from_labels([(0, 0)])
+        ih1.append((1, 1))
+        ih2.append((0, 1)) # Valid theoretical combination from ih1, except it doesn't actually exist
+
+        with self.assertRaises(KeyError):
+            ih1._loc_to_iloc_index_hierarchy(ih2)
+
+    #---------------------------------------------------------------------------
+
     def test_hierarchy_extract_iloc_a(self) -> None:
 
         labels = (
@@ -1494,6 +1535,13 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             ih1.loc[Series([(1, 'dd')])]
+
+    def test_hierarchy_loc_d(self) -> None:
+        # https://github.com/InvestmentSystems/static-frame/issues/455
+        ih1 = IndexHierarchy.from_labels([(0, 1), (0, 2), (1, 0), (1, 1)])
+        ih2 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
+
+        self.assertEqual(tuple(ih2), tuple(ih1.loc[ih2]))
 
     def test_hierarchy_series_a(self) -> None:
         f1 = IndexHierarchy.from_tree

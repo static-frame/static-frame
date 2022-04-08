@@ -600,7 +600,7 @@ class TypeBlocks(ContainerOperand):
     #     Given blocks and a combined shape, return a consolidated 2D or 1D array.
 
     #     Args:
-    #         shape: used in construting returned array; not ussed as a constraint.
+    #         shape: used in constructing returned array; not used as a constraint.
     #         force_1d: if True, a single row reduces to a 1D
     #     '''
     #     assert row_dtype is not None

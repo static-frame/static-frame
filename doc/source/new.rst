@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Corrected issue when calling `IndexDatetime.loc[]` with an empty list.
 
+Corrected issue when calling `IndexHierarchy.loc[]` with another `IndexHierarchy`
+
 
 0.9.0
 ----------
@@ -686,7 +688,7 @@ API change: Container operands used with binary equality operators will raise if
 
 API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to False by default.
 
-API change: ``Series.relabel_add_level`` to ``Series.relabel_level_add``, ``Series.relabel_drop_level`` to ``Series.relabel_level_drop``, ``Frame.relabel_add_level`` to ``Frame.relabel_level_add``, ``Frame.relabel_drop_level`` to ``Frame.relabel_level_drop``, ``Index.add_level`` to ``Index.level_add``, ``IndexHierarchy.add_level`` to ``IndexHierarcchy.level_add``, ``IndexHierarchy.drop_level`` to ``IndexHierarchy.level_drop``.
+API change: ``Series.relabel_add_level`` to ``Series.relabel_level_add``, ``Series.relabel_drop_level`` to ``Series.relabel_level_drop``, ``Frame.relabel_add_level`` to ``Frame.relabel_level_add``, ``Frame.relabel_drop_level`` to ``Frame.relabel_level_drop``, ``Index.add_level`` to ``Index.level_add``, ``IndexHierarchy.add_level`` to ``IndexHierarchy.level_add``, ``IndexHierarchy.drop_level`` to ``IndexHierarchy.level_drop``.
 
 
 0.6.38
