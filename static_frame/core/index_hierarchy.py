@@ -1705,9 +1705,11 @@ class IndexHierarchy(IndexBase):
         However, this approach quickly outperforms list comprehension as the key gets larger
         '''
         # This private internal method assumes recache has already been checked for!
-
         if not key.depth == self.depth:
             raise KeyError(f'Key must have the same depth as the index. {key}')
+
+        if key._recache:
+            key._update_array_cache
 
         key_indexers: tp.List[np.ndaray] = []
         for key_index, self_index, key_indexer in zip(
@@ -1720,13 +1722,18 @@ class IndexHierarchy(IndexBase):
 
         key_indexers = np.array(key_indexers, dtype=DTYPE_INT_DEFAULT).T
 
-        ilocs = np.intersect1d(
+        _, ilocs, ilocs_order = np.intersect1d(
                 view_2d_as_1d(self._indexers.T),
                 view_2d_as_1d(key_indexers),
                 return_indices=True,
-                )[1]
+                )
 
-        return ilocs
+        if len(ilocs) != len(key):
+            raise KeyError(
+                f"Key contains labels that are not in this IndexHierarchy, including: {key._drop_iloc(ilocs)[0]}"
+            )
+
+        return ilocs[ilocs_order]
 
     def _loc_per_depth_to_iloc(self: IH,
             key: tp.Union[np.ndarray, CompoundLabelType],
