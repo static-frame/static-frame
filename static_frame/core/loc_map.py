@@ -19,6 +19,7 @@ from static_frame.core.util import OPERATORS
 from static_frame.core.util import DTYPE_OBJECTABLE_DT64_UNITS
 from static_frame.core.util import EMPTY_FROZEN_AUTOMAP
 from static_frame.core.util import EMPTY_SLICE
+from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import DTYPE_DATETIME_KIND
@@ -135,7 +136,6 @@ class LocMap:
         if key.__class__ is slice:
             if key == NULL_SLICE:
                 return NULL_SLICE
-
             try:
                 return slice(*cls.map_slice_args(
                         label_to_pos.get, #type: ignore
@@ -161,16 +161,20 @@ class LocMap:
 
         # can be an iterable of labels (keys) or an iterable of Booleans
         if is_array or is_list:
+            if len(key) == 0:
+                return EMPTY_ARRAY_INT
+
             if is_array and key.dtype.kind == DTYPE_DATETIME_KIND: #type: ignore
-                if (labels.dtype == DTYPE_OBJECT
-                        and np.datetime_data(key.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS): #type: ignore
+                dt64_unit = np.datetime_data(key.dtype)[0]
+                # NOTE: only in the conditions of an empty array, the unit might be generic
+                if (labels.dtype == DTYPE_OBJECT and dt64_unit in DTYPE_OBJECTABLE_DT64_UNITS): #type: ignore
                     # if key is dt64 and labels are object, then for objectable units we can convert key to object to permit matching in the AutoMap
                     # NOTE: tolist() is expected to be faster than astype object for smaller collections
                     key = key.tolist() #type: ignore
                     is_array = False
                     is_list = True
                 elif labels_is_dt64 and key.dtype < labels.dtype: #type: ignore
-                    # change the labels to the dt64 dtype, i.e., if the key is years, recast the labels as years, and do a Boolean selection of everything that matches each key
+                    # NOTE: change the labels to the dt64 dtype, i.e., if the key is years, recast the labels as years, and do a Boolean selection of everything that matches each key
                     labels_ref = labels.astype(key.dtype) # type: ignore
                     # NOTE: this is only correct if both key and labels are dt64, and key is a less granular unit, as the order in the key and will not be used
                     # let Boolean key advance to next branch

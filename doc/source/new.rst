@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.9.1
+----------
+
+Corrected issue when calling `IndexDatetime.loc[]` with an empty list.
+
+
 0.9.0
 ----------
 

@@ -2867,7 +2867,6 @@ def array_from_element_method(*,
 class PositionsAllocator:
     '''Resource for re-using a single array of contiguous ascending integers for common applications in IndexBase.
     '''
-
     _size: int = 1024 # 1048576
     _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
