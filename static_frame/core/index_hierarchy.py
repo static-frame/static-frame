@@ -1709,7 +1709,7 @@ class IndexHierarchy(IndexBase):
             raise KeyError(f'Key must have the same depth as the index. {key}')
 
         if key._recache:
-            key._update_array_cache
+            key._update_array_cache()
 
         key_indexers: tp.List[np.ndaray] = []
         for key_index, self_index, key_indexer in zip(
