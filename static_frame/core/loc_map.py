@@ -165,9 +165,9 @@ class LocMap:
                 return EMPTY_ARRAY_INT
 
             if is_array and key.dtype.kind == DTYPE_DATETIME_KIND: #type: ignore
-                dt64_unit = np.datetime_data(key.dtype)[0]
+                dt64_unit = np.datetime_data(key.dtype)[0] #type: ignore
                 # NOTE: only in the conditions of an empty array, the unit might be generic
-                if (labels.dtype == DTYPE_OBJECT and dt64_unit in DTYPE_OBJECTABLE_DT64_UNITS): #type: ignore
+                if (labels.dtype == DTYPE_OBJECT and dt64_unit in DTYPE_OBJECTABLE_DT64_UNITS):
                     # if key is dt64 and labels are object, then for objectable units we can convert key to object to permit matching in the AutoMap
                     # NOTE: tolist() is expected to be faster than astype object for smaller collections
                     key = key.tolist() #type: ignore
