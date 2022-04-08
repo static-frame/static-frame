@@ -262,7 +262,7 @@ class TestUnit(TestCase):
             ))
     def test_frame_to_csv(self, f1: Frame) -> None:
         with temp_file('.csv') as fp:
-            f1.to_csv(fp, escape_char=r'"')
+            f1.to_csv(fp, escape_char=r'`')
             self.assertTrue(os.stat(fp).st_size > 0)
 
             # not yet validating result, as edge cases with unusual unicode and non-unique indices are a problem
@@ -277,7 +277,7 @@ class TestUnit(TestCase):
             ))
     def test_frame_to_tsv(self, f1: Frame) -> None:
         with temp_file('.txt') as fp:
-            f1.to_tsv(fp)
+            f1.to_tsv(fp, escape_char='`')
             self.assertTrue(os.stat(fp).st_size > 0)
 
     @given(sfst.get_frame_or_frame_go(
