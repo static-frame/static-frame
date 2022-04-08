@@ -37,7 +37,8 @@ from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipNPZ
-from static_frame.core.util import AnyCallable, ShapeType
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import ShapeType
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound

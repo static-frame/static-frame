@@ -51,12 +51,13 @@ def build_quilt_indices(
             return index.to_tree()
         return index
 
-    labels = []
+    labels: tp.List[tp.Hashable] = []
     primary_tree: TreeNodeT = {}
     secondary: tp.Optional[IndexBase] = None
 
     for label, f in bus.items():
-        labels.extend([label] * len(f))
+        if not include_index:
+            labels.extend([label] * len(f))
 
         if axis == 0:
             if include_index:
