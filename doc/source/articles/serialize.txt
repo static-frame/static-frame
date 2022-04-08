@@ -198,16 +198,22 @@ Examples of recent presentations:
 
 Employing NumPy's NPY Format for Faster-Than-Parquet DataFrame Serialization
 
+
+--
+NEP 1
+
+    Defines NPY, a simple binary storage format for representing all NumPy arrays
+
+    Defines the NPZ format as a zipped collection of NPY
+
+    An efficient storage format for arrays still supported in NumPy
+
+    As Pandas emerged, usage of NPY eclipsed
+
+        A DataFrame is a lot more than an array
+
 --
 Using NPY for complete DataFrame encoding
-
-    2007: NEP 1: A simple file format for NumPy arrays
-
-        A simple binary storage format for representing all NumPy arrays
-
-        Defines the NPZ format as a zipped collection of NPY
-
-    NPY was not widely used for encoding DataFrames
 
     All widely used DataFrame encodings (CSV, XLSX, HDF5, Parquet) are incomplete
 
@@ -230,12 +236,14 @@ About Me
 
         DataFrame library based on an immutable data model
 
-        Supports NumPy dtypes not supported by Pandas
+        Supports all NumPy dtypes, even those not supported by Pandas
 
             Unicode
             datetime64 units other than nanoseconds
 
         Introduces numerous novel containers for working with collections of DataFrames
+
+    Driven to find a better way to encode DataFrame's from my colleagues requests
 
 --
 The problem of serializing DataFrames in Pandas
@@ -244,30 +252,51 @@ The problem of serializing DataFrames in Pandas
 
     No format supports all NumPy dtypes
 
---
-Serializing DataFrames with pickle
+    Serialization of DataFrames is often critical to process performance
 
-    Always fastest reading and writing
+--
+The Problem with pickle
+
+    Always fastest reading and writing DataFrames
+
+    NumPy C-types are fine for pickling
 
     NumPy object arays can store arbitrary Python objects
 
-    Not safe from untrusted sources
+    Python objects from Pickles
 
-    Not suitable as long-term storage
+        Not safe from untrusted sources
 
-        Pickles hold references to objects that might go out of date
+        Not suitable as long-term storage
 
-        Pickles are not compatible across platforms / Python versions
+            Pickles hold references to objects that might go out of date
 
---
+            Pickles are not compatible across platforms / Python versions
+
+
+
+
+
+
+==
 How to Serialize a DataFrame
 
     What are the components of a DataFrame?
 
-    How is column data stored in a DataFrame
+    How is column data stored in a DataFrame?
+
 
 --
-What is a DataFrame?
+The Components of a DataFrame
+
+    Dataframes may have first been presented in 1991 as part of S language
+
+    No standard
+
+    My definition based on StaticFrame, which is a superset of Pandas components
+
+--
+The Components of a DataFrame
 
     A DataFrame is collection columns
 
@@ -279,29 +308,36 @@ What is a DataFrame?
 
     Index objects map "labels" (an array) to row / column positions
 
+    Index objects can have "depth" to support hierarchical indices
+
     Index objects, and the DataFrame itself, can have `name` attributes
+
+<< diagram of frame >>
+<< screen shot of SF display >>
 
 --
 How Column Data is Stored in a DataFrame
 
     Store collections of arrays for column data
 
-    Column data arrays called "blocks"
-
-    At least three options
-
-        Store one array per column
-
-        Group same-typed arrays into 2D arrays independent of order
-
-        Group same-typed arrays into 2D arrays dependent on order
+    Column data referred to as a "block"
 
     Consolidating 1D arrays into 2D arrays offers performance
 
-    Column data referred to as a "block"
+        Reduce interaction with Python interpreter
+
+        Faster applications of NumPy functions
+
+        Faster copying
 
 --
-Two Approaches to Managing Blocks
+Approaches to Managing Blocks
+
+    Unconsolidated
+
+        Store one array per column
+
+        No aggregation benefit
 
     Order independent
 
@@ -321,8 +357,10 @@ Two Approaches to Managing Blocks
 
         Opportunity for 2D consolidation dependent on adjacency
 
-        Optimizes ordered extraction
+        Optimizes ordered extraction (important!)
 
+
+<< diagram of approach to storing blocks >>
 
 
 
@@ -333,13 +371,15 @@ This could be diagram that we fill in the various parts of the DF skeleton
 ==
 Complete DataFrame Serialization
 
-    All values encoded
+    All values
 
-    All types encoded
+    All value types
 
-    Index and columns depths are specified
+    Index and column labels
 
-    Index and columns types are specified
+    Index and columns types
+
+    Index and column depths
 
     Index, columns, and frame name is specified
 
@@ -358,6 +398,12 @@ Serializing DataFrames: text formats
 
     Index, columns, and frame name is not completely specified
 
+        Might be able to derive index or columns names but not both
+
+        << diagram to show this? >>
+
+    Always slowest
+
 --
 Serializing DataFrames: XLSX
 
@@ -365,24 +411,34 @@ Serializing DataFrames: XLSX
 
     Some types encoded
 
+        Support for Booleans, strings, numeric, datetime
+
+        No distinction between int, float, or reduced bit-depths numerics
+
+        No support for full range of dt64 units
+
     Index and columns depths are not specified
 
     Index and columns types are not specified
 
-    Index, columns names are not specified; frame name implied by sheet name
+    Index, columns names are not specified
+
+        Frame name implied by sheet name
 
 --
 Serializing DataFrames: Database
 
     All values encoded
 
-    Some types encoded
+    Some types encoded (depending in DB)
 
-    Index depths implied by primary keys; columns depth always 1
+    Index depths implied by primary keys, types are specified
 
-    Index and columns types is not specified
+    Columns depth always 1, always a string
 
-    Index, columns names are not specified; frame name implied by table name
+    Index, columns names are not specified
+
+        Frame name implied by table name
 
 
 --
@@ -392,13 +448,33 @@ Serializing DataFrames: Parquet
 
     Some types encoded
 
-    Index depth not specified; columns depth always 1
+        Weak support for all units of datetime64
 
-    Index and columns types are not specified
+        No support for fixed-size unicode strings
 
-    Index, columns, and frame name is not completely specified
+    Index depth not specified, type implied by columns
+
+    Columns depth always 1, limited to string types
+
+    Index, columns, and frame name is not specified
+
+    Generally the fastest format widely used
+
+--
+No Complete Serialization Format for DataFrames
+
+    With Pandas, pickle is the only "complete" serialization format
+
+    While many formats get close, none are complete
+
+    Parquet is attractive for performance, but is not a DataFrame
 
 
+
+
+
+
+<< spend some time on Parquet; should this come earliers >>
 
 ==
 Parquet
@@ -406,10 +482,6 @@ Parquet
     A "native" serialization format of the Arrow library
 
     Cross-platform, cross-language support
-
-    Nearly one-to-one mappings to NumPy types
-
-        No support datetime64 units
 
     A strict columnar representation
 
@@ -425,33 +497,19 @@ Parquet's usage
     Used natively by AWS Glue and related routines
 
 --
-Parquet (and Arrow's x) is not a DataFrame
+Parquet is not a DataFrame
 
-    Strict one columnar representation does not permit same-type consolidation
+    Arrow's X is simpler than a DataFrame
+
+    Strict columnar representation does not permit same-type consolidation
 
     Rows do not have an index
 
     Row and column indices do not have names
 
---
-No Complete Serialization Format for DataFrames
-
-    While many formats get close, none are complete
-
-    Parquet is attractive for performance, but a DataFrame
 
 
 
-
-
---
-The NPY & NPZ formats
-
-    Introduced in NEP 1 in 2007 for encoding NumPy arrays
-
-    NPY encodes a single NumPy array in a file
-
-    NPZ bundles arrays in a ZIP archive
 
 --
 The NPY format
@@ -461,16 +519,28 @@ The NPY format
     A header followed by a data payload of bytes
 
     Header
+        A prefix and version number: b'\x93NUMPY' + bytes((1, 0))
 
         A binary representation of the string representation of a dictionary
 
-        Defines dtype, order, and shape
+            Defines dtype, order, and shape
+
+        Padding to align on 64 byte divisions
 
     Body
 
         Raw bytes that make up array data
 
+        Bytes for 2D array collected in Fortran or C ordering
+
     NPY on disk can be memory mapped
+
+--
+Loading an Array from Bytes
+
+    Given bytes, all we need is dtype, order, and shape
+
+    Using the from_bytes method
 
 --
 The NPZ format
@@ -480,11 +550,12 @@ The NPZ format
     Usage in original specification was not defined
 
 --
-Loading an Array from Bytes
+NumPy routines for writing NPY and NPZ
 
-    Given bytes, all we need is dtype, order, and shape
+    pass
 
-    Using the from_bytes method
+
+
 
 
 
@@ -492,22 +563,16 @@ Loading an Array from Bytes
 --
 How to encode a DataFrame as an NPZ
 
-    Store column arrays, index labels as NPY
+    Store blocks, index labels as NPY
 
     Define metadata in a JSON
-
-    Bundle all NPY and JSON components into a single ZIP
-
---
-NPY
-
-    Store index labels as NPY arrays
-
-    Store metadata in JSON
 
         Name attributes of index, row, Frame
 
         Index types
+
+    Bundle all NPY and JSON components into a single ZIP
+
 
 --
 A DataFrame as an NPZ
