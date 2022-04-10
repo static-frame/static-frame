@@ -482,7 +482,7 @@ Parquet
 
     Originally created for use in Apache Hadoop
 
-    A "native" serialization format of the Arrow library
+    Well supported by the Arrow library, PyArrow on Python
 
     Cross-platform, cross-language support
 
