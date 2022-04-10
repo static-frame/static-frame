@@ -751,7 +751,8 @@ class Index(IndexBase):
         try:
             indexer = indexer[ar1_indexer]
         except IndexError:
-            raise KeyError(f'{other} is not a subset of {self}')
+            # Display the first missing element
+            raise KeyError(self.difference(other)[0])
 
         indexer.flags.writeable = False
         return indexer

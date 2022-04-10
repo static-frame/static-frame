@@ -461,8 +461,8 @@ class TestUnit(TestCase):
         ih3 = IndexHierarchy.from_labels(labels[-3:])
 
         # selection with an IndexHierarchy
-        self.assertEqual(ih1._loc_to_iloc(ih2).tolist(), [0, 1, 2]) # type: ignore
-        self.assertEqual(ih1._loc_to_iloc(ih3).tolist(), [3, 4, 5]) # type: ignore
+        self.assertEqual(ih1._loc_to_iloc(ih2), [0, 1, 2])
+        self.assertEqual(ih1._loc_to_iloc(ih3), [3, 4, 5])
 
         # Depth 2 != 3
         sel = IndexHierarchy.from_labels([(0, 1)])
@@ -722,21 +722,21 @@ class TestUnit(TestCase):
 
         post = ih1._loc_to_iloc_index_hierarchy(ih2)
 
-        self.assertTrue((post == np.array([3, 1, 0])).all())
+        self.assertListEqual(post, [3, 1, 0])
 
     def test_hierarchy_loc_to_iloc_index_hierarchy_b(self) -> None:
         ih1 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
 
         post = ih1._loc_to_iloc_index_hierarchy(ih1)
 
-        self.assertTrue((post == np.array([0, 1, 2])).all())
+        self.assertListEqual(post, [0, 1, 2])
 
     def test_hierarchy_loc_to_iloc_index_hierarchy_c(self) -> None:
         ih1 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
 
         post = ih1._loc_to_iloc_index_hierarchy(ih1.iloc[1:])
 
-        self.assertTrue((post == np.array([1, 2])).all())
+        self.assertListEqual(post, [1, 2])
 
     def test_hierarchy_loc_to_iloc_index_hierarchy_d(self) -> None:
         ih1 = IndexHierarchy.from_labels([(1, 1)])
@@ -754,6 +754,30 @@ class TestUnit(TestCase):
 
         with self.assertRaises(KeyError):
             ih1._loc_to_iloc_index_hierarchy(ih2)
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_f(self) -> None:
+        labels1 = (
+                ('c_II', 'B', 1),
+                ('c_II', 'A', 1),
+                ('c_I', 'C', 1),
+                ('c_I', 'B', 1),
+                ('c_I', 'A', 1),
+                ('c_I', 'D', 1),
+        )
+        labels2 = (
+                ('c_I', 'A', 1),
+                ('c_I', 'B', 1),
+                ('c_I', 'C', 1),
+                ('c_II', 'A', 1),
+                ('c_II', 'B', 1),
+        )
+
+        ih1 = IndexHierarchy.from_labels(labels1)
+        ih2 = IndexHierarchy.from_labels(labels2)
+
+        post = ih1._loc_to_iloc_index_hierarchy(ih2)
+
+        self.assertListEqual(post, [4, 3, 2, 1, 0])
 
     #---------------------------------------------------------------------------
 

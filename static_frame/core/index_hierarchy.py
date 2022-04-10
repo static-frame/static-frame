@@ -54,6 +54,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_UINT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import GetItemKeyType
@@ -1694,7 +1695,7 @@ class IndexHierarchy(IndexBase):
 
     def _loc_to_iloc_index_hierarchy(self: IH,
             key: IH,
-            ) -> np.ndarray:
+            ) -> tp.List[int]:
         '''
         Returns the boolean mask for a key that is an IndexHierarchy.
 
@@ -1711,29 +1712,22 @@ class IndexHierarchy(IndexBase):
         if key._recache:
             key._update_array_cache()
 
-        key_indexers: tp.List[np.ndaray] = []
+        remapped_indexers: tp.List[np.ndaray] = []
         for key_index, self_index, key_indexer in zip(
                 key._indices,
                 self._indices,
                 key._indexers,
                 ):
             indexer_remap = key_index._index_iloc_map(self_index)
-            key_indexers.append(indexer_remap[key_indexer])
+            remapped_indexers.append(indexer_remap[key_indexer])
 
-        key_indexers = np.array(key_indexers, dtype=DTYPE_INT_DEFAULT).T
+        remapped_indexers = np.array(remapped_indexers, dtype=DTYPE_UINT_DEFAULT).T
 
-        _, ilocs, ilocs_order = np.intersect1d(
-                view_2d_as_1d(self._indexers.T),
-                view_2d_as_1d(key_indexers),
-                return_indices=True,
-                )
-
-        if len(ilocs) != len(key):
-            raise KeyError(
-                f"Key contains labels that are not in this IndexHierarchy, including: {key._drop_iloc(ilocs)[0]}"
-            )
-
-        return ilocs[ilocs_order]
+        try:
+            return self._map.indexers_to_iloc(remapped_indexers)
+        except KeyError:
+            # Display the first missing element
+            raise KeyError(key.difference(self)[0]) from None
 
     def _loc_per_depth_to_iloc(self: IH,
             key: tp.Union[np.ndarray, CompoundLabelType],
