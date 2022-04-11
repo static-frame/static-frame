@@ -13480,6 +13480,15 @@ class TestUnit(TestCase):
 
         self.assertEqual(f2.loc[[0, 2]].index.values.tolist(), [0, 2])
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_assign_apply_index_hierarchy_columns(self) -> None:
+        f = Frame.from_element(1, index=IndexHierarchy.from_labels([(0,0)]), columns=[0])
+        post = f.assign[0].apply(lambda x: x*2)
+
+        expected = Frame.from_element(2, index=f.index, columns=f.columns)
+        self.assertTrue(post.equals(expected))
+
 
 if __name__ == '__main__':
     unittest.main()
