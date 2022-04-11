@@ -858,7 +858,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels)
 
         post = ih1._extract_iloc(None)
-        self.assertTrue(post.equals(ih1))
+        self.assertTrue(post.equals(ih1)) # type: ignore
         self.assertIs(post, ih1)
 
     #---------------------------------------------------------------------------
