@@ -14,6 +14,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_hierarchy import build_indexers_from_product
 
+from static_frame.core.util import DTYPE_UINT_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PositionsAllocator
 
@@ -368,6 +369,104 @@ class TestHierarchicalLocMapUnit(TestCase):
 
         self.assertNotEqual(id(hlmap.bit_offset_encoders), id(hlmap_copy.bit_offset_encoders))
         self.assertNotEqual(id(hlmap.encoded_indexer_map), id(hlmap_copy.encoded_indexer_map))
+
+    #---------------------------------------------------------------------------
+
+    def test_indexers_to_iloc_invalid_input(self) -> None:
+        indices = [
+                Index(np.arange(5)),
+                Index(tuple('ABCDE')),
+                ]
+        indexers = np.array(
+            [
+                [3, 3, 0, 1, 4, 0, 3, 2, 2, 0],
+                [4, 2, 1, 0, 3, 0, 3, 2, 0, 4],
+            ]
+        )
+
+        hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
+
+        # 1D
+        with self.assertRaises(AssertionError):
+            hlmap.indexers_to_iloc(np.array([0, 1, 2]))
+
+        # Shape mismatch
+        with self.assertRaises(AssertionError):
+            hlmap.indexers_to_iloc(np.array([[0, 1, 2]]))
+
+        # Invliad dtype
+        with self.assertRaises(AssertionError):
+            hlmap.indexers_to_iloc(np.array([[0, 1]]).astype(object))
+
+    def test_indexers_to_iloc_a(self) -> None:
+        indices = [
+                Index(np.arange(5)),
+                Index(tuple('ABCDE')),
+                ]
+        indexers = np.array(
+            [
+                [3, 3, 0, 1, 4, 0, 3, 2, 2, 0],
+                [4, 2, 1, 0, 3, 0, 3, 2, 0, 4],
+            ]
+        )
+
+        hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
+
+        post = hlmap.indexers_to_iloc(indexers.T.astype(DTYPE_UINT_DEFAULT))
+        self.assertListEqual(post, list(range(10)))
+
+    def test_indexers_to_iloc_b(self) -> None:
+        indices = [
+                Index(np.arange(5)),
+                Index(tuple('ABCDE')),
+                ]
+        indexers = np.array(
+            [
+                [3, 3, 0, 1, 4, 0, 3, 2, 2, 0],
+                [4, 2, 1, 0, 3, 0, 3, 2, 0, 4],
+            ]
+        )
+
+        hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
+
+        subsets = [[5,2,4,1,3], [1], [9,8,7,6,5], [1,7,4,6]]
+
+        for subset in subsets:
+            post = hlmap.indexers_to_iloc(indexers.T.astype(DTYPE_UINT_DEFAULT)[subset])
+            self.assertListEqual(post, subset)
+
+    def test_indexers_to_iloc_c(self) -> None:
+        indices = [
+                Index(np.arange(5)),
+                Index(tuple('ABCDE')),
+                ]
+        indexers = np.array(
+            [
+                [3, 3, 0, 1, 4, 0, 3, 2, 2, 0],
+                [4, 2, 1, 0, 3, 0, 3, 2, 0, 4],
+            ]
+        )
+
+        hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
+
+        invalid_indexers = indexers.copy()
+        invalid_indexers[0][0] = 14
+        invalid_indexers[1][7] = 14
+        invalid_indexers = invalid_indexers.T.astype(DTYPE_UINT_DEFAULT)
+
+        with self.assertRaises(KeyError):
+            _ = hlmap.indexers_to_iloc(invalid_indexers.copy())
+
+        with self.assertRaises(KeyError):
+            _ = hlmap.indexers_to_iloc(invalid_indexers[[0]].copy())
+
+        with self.assertRaises(KeyError):
+            _ = hlmap.indexers_to_iloc(invalid_indexers[[7]].copy())
+
+
+        valid_subset = [1, 2, 3, 4, 5, 6, 8, 9]
+        post = hlmap.indexers_to_iloc(invalid_indexers[valid_subset].copy())
+        self.assertListEqual(post, valid_subset)
 
 
 if __name__ == '__main__':

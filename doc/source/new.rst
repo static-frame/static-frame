@@ -1,13 +1,17 @@
 What is New in Static Frame
 ===============================
 
+0.9.2
+----------
+
+Corrected more issues when calling ``IndexHierarchy.loc[]`` with another ``IndexHierarchy``, or when calling ``Frame.assign.apply`` when that frame has ``IndexHierarchy`` columns.
+
 0.9.1
 ----------
 
-Corrected issue when calling `IndexDatetime.loc[]` with an empty list.
+Corrected issue when calling ``IndexDatetime.loc[]`` with an empty list.
 
-Corrected issue when calling `IndexHierarchy.loc[]` with another `IndexHierarchy`
-
+Corrected issue when calling ``IndexHierarchy.loc[]`` with another ``IndexHierarchy``
 
 0.9.0
 ----------

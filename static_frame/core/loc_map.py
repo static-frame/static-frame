@@ -394,3 +394,17 @@ class HierarchicalLocMap:
 
         key_indexers = np.bitwise_or.reduce(key_indexers)
         return self.encoded_indexer_map[key_indexers] # type: ignore
+
+    def indexers_to_iloc(self: _HLMap,
+            indexers: np.ndarray,
+            ) -> tp.List[int]:
+        '''Modifies indexers in-place'''
+        # Validate input requirements
+        assert indexers.ndim == 2
+        assert indexers.shape[1] == len(self.bit_offset_encoders)
+        assert indexers.dtype == DTYPE_UINT_DEFAULT
+
+        indexers <<= self.bit_offset_encoders
+
+        indexers = np.bitwise_or.reduce(indexers, axis=1)
+        return list(map(self.encoded_indexer_map.__getitem__, indexers))
