@@ -3587,6 +3587,13 @@ class TestUnit(TestCase):
             iter(tb)
 
 
+    def test_iter_row_elements_a(self) -> None:
+        tb1 = ff.parse('s(3,10)|v(int,int,bool,str)')._blocks
+        post = tuple(tb1.iter_row_elements(2))
+        self.assertEqual(post,
+                (84967, 5729, False, 'zCE3', 170440, 175579, False, 'zljm', -31776, -97851))
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
