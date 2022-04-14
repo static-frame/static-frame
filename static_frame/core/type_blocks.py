@@ -2404,6 +2404,17 @@ class TypeBlocks(ContainerOperand):
             return b
         return b[NULL_SLICE, column]
 
+    def iter_row_elements(self,
+            key: int,
+            ) -> tp.Iterator[tp.Any]:
+        '''Alternative extractor that yields a full-row of values from a single integer selection. This will avoid any type coercion.
+        '''
+        for b in self._blocks:
+            if b.ndim == 1:
+                yield b[key]
+            else:
+                yield from b[key]
+
     def _extract(self,
             row_key: GetItemKeyType = None,
             column_key: GetItemKeyType = None

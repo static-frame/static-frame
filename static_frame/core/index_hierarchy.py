@@ -1871,8 +1871,7 @@ class IndexHierarchy(IndexBase):
 
         if isinstance(key, INT_TYPES):
             # return a tuple if selecting a single row
-            # NOTE: Selecting a single row may force type coercion before values are added to the tuple; i.e., a datetime64 will go to datetime.date before going to the tuple
-            return tuple(self._blocks._extract_array(row_key=key))
+            return tuple(self._blocks.iter_row_elements(key))
 
         tb = self._blocks._extract(row_key=key)
         new_indices: tp.List[Index] = []

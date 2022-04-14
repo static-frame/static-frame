@@ -18,6 +18,7 @@ from static_frame import ILoc
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexDate
+from static_frame import IndexYear
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexYearMonth
@@ -4109,19 +4110,21 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_hierarchy_hloc_date_selection_a(self) -> None:
+    def test_hierarchy_iloc_a(self) -> None:
 
-        # f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(6,2)')
-        # import ipdb; ipdb.set_trace()
+        f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(6,2)')
 
-        # f.loc[sf.HLoc[f.index.iloc[0]]] # builtins.KeyError: 'no matching keys across all levels'
-        pass
+        post = f.loc[HLoc[f.index.iloc[0]]]
+        self.assertEqual(post.to_pairs(),
+            ((np.datetime64('1970-01-01T09:38:35'), -88017), (np.datetime64('1970-01-01T01:00:48'), False)))
 
-        # ih = sf.IndexHierarchy.from_labels(
-        #     [("1990", "2000-03-14")],
-        #     index_constructors=[sf.IndexYear, sf.IndexDate]
-        # )
-        # post = ih.iloc[0]
+        ih = IndexHierarchy.from_labels(
+            [("1990", "2000-03-14")],
+            index_constructors=[IndexYear, IndexDate]
+        )
+
+        self.assertEqual(ih.loc[ih.iloc[0]],
+            (np.datetime64('1990'), np.datetime64('2000-03-14')))
 
 if __name__ == '__main__':
     unittest.main()
