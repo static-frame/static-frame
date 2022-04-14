@@ -6,6 +6,9 @@ What is New in Static Frame
 
 Corrected more issues when calling ``IndexHierarchy.loc[]`` with another ``IndexHierarchy``, or when calling ``Frame.assign.apply`` when that frame has ``IndexHierarchy`` columns.
 
+Corrected undesirable type coercion from happening in single-row selections from ``IndexHierarchy``.
+
+
 0.9.1
 ----------
 
