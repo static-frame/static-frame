@@ -7,6 +7,7 @@ from collections import OrderedDict
 import copy
 
 import numpy as np
+import frame_fixtures as ff
 
 from static_frame import DisplayConfig
 from static_frame import Frame
@@ -4106,6 +4107,21 @@ class TestUnit(TestCase):
         self.assertEqual(post19, str(ihgo))
 
 
+    #---------------------------------------------------------------------------
+
+    def test_hierarchy_hloc_date_selection_a(self) -> None:
+
+        # f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(6,2)')
+        # import ipdb; ipdb.set_trace()
+
+        # f.loc[sf.HLoc[f.index.iloc[0]]] # builtins.KeyError: 'no matching keys across all levels'
+        pass
+
+        # ih = sf.IndexHierarchy.from_labels(
+        #     [("1990", "2000-03-14")],
+        #     index_constructors=[sf.IndexYear, sf.IndexDate]
+        # )
+        # post = ih.iloc[0]
 
 if __name__ == '__main__':
     unittest.main()

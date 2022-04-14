@@ -2360,9 +2360,9 @@ class TypeBlocks(ContainerOperand):
         blocks = []
         rows = 0
         columns = 0
-        for b in tuple(self._slice_blocks( # a generator
+        for b in self._slice_blocks( # a generator
                 row_key=row_key,
-                column_key=column_key)):
+                column_key=column_key):
             if b.ndim == 1: # it is a single column
                 if not rows: # assume all the same after first
                     # if 1d, then the length should be the number of rows
