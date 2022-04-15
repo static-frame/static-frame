@@ -706,9 +706,40 @@ Using NPY to Memory Map DataFrames
 
 
 
+==
+Example Frame, arrays
+
+
+f = sf.Frame.from_items(((('data', 'A'), (1, 2, 3)), (('data', 'B'), (4, 5, 6)), (('data', 'C'), (7, 8, 9)), (('valid', '*'), (False, True, True))), index=sf.IndexHierarchy.from_labels((('2012-03', 'x'), ('2012-03', 'y'), ('2012-04', 'x')), index_constructors=(sf.IndexYearMonth, sf.Index)), columns_constructor=sf.IndexHierarchy.from_labels)
+
+f.to_npz('/Users/ariza/foo.npz', consolidate_blocks=True)
+
+__blocks_0__.npy
+__blocks_1__.npy
+__values_columns_0__.npy
+__values_columns_1__.npy
+__values_index_0__.npy
+__values_index_1__.npy
+__meta__.json
+
+
+>>> open('/Users/ariza/foo/__blocks_1__.npy', 'rb').read()
+b'\x93NUMPY\x01\x006\x00{"descr":"|b1","fortran_order":True,"shape":(3,)}    \n\x00\x01\x01'
+
+
+>>> open('/Users/ariza/foo/__values_columns_1__.npy', 'rb').read()
+b'\x93NUMPY\x01\x006\x00{"descr":"<U1","fortran_order":True,"shape":(4,)}    \nA\x00\x00\x00B\x00\x00\x00C\x00\x00\x00*\x00\x00\x00'
+
+>>> np.array(('A', 'B', 'C', '*')).tobytes()
+b'A\x00\x00\x00B\x00\x00\x00C\x00\x00\x00*\x00\x00\x00'
+
+>>> open('/Users/ariza/foo/__blocks_0__.npy', 'rb').read()
+b'\x93NUMPY\x01\x006\x00{"descr":"<i8","fortran_order":False,"shape":(3, 3)} \n\x01\x00\x00\x00\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x07\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\t\x00\x00\x00\x00\x00\x00\x00'
 
 
 
+
+==
 --
 https://arrow.apache.org/docs/python/parquet.html
 
