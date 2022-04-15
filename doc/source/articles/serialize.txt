@@ -710,7 +710,7 @@ Using NPY to Memory Map DataFrames
 Example Frame, arrays
 
 
-f = sf.Frame.from_items(((('data', 'A'), (1, 2, 3)), (('data', 'B'), (4, 5, 6)), (('data', 'C'), (7, 8, 9)), (('valid', '*'), (False, True, True))), index=sf.IndexHierarchy.from_labels((('2012-03', 'x'), ('2012-03', 'y'), ('2012-04', 'x')), index_constructors=(sf.IndexYearMonth, sf.Index)), columns_constructor=sf.IndexHierarchy.from_labels)
+f = sf.Frame.from_items(((('data', 'A'), (5, 9, 3)), (('data', 'B'), (4, 1, 6)), (('data', 'C'), (7, 8, 2)), (('valid', '*'), (False, True, True))), index=sf.IndexHierarchy.from_labels((('2012-03', 'x'), ('2012-03', 'y'), ('2012-04', 'x')), index_constructors=(sf.IndexYearMonth, sf.Index)), columns_constructor=sf.IndexHierarchy.from_labels)
 
 f.to_npz('/Users/ariza/foo.npz', consolidate_blocks=True)
 
@@ -734,7 +734,19 @@ b'\x93NUMPY\x01\x006\x00{"descr":"<U1","fortran_order":True,"shape":(4,)}    \nA
 b'A\x00\x00\x00B\x00\x00\x00C\x00\x00\x00*\x00\x00\x00'
 
 >>> open('/Users/ariza/foo/__blocks_0__.npy', 'rb').read()
-b'\x93NUMPY\x01\x006\x00{"descr":"<i8","fortran_order":False,"shape":(3, 3)} \n\x01\x00\x00\x00\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x07\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\t\x00\x00\x00\x00\x00\x00\x00'
+
+
+In [17]: struct.pack('<H', 3)
+Out[17]: b'\x03\x00'
+
+In [18]: struct.pack('<H', 6)
+Out[18]: b'\x06\x00'
+
+In [19]: struct.pack('<H', 20)
+Out[19]: b'\x14\x00'
+
+In [20]: struct.pack('<H', 200)
+Out[20]: b'\xc8\x00'
 
 
 
