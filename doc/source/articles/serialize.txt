@@ -475,7 +475,7 @@ No Complete Serialization Format for DataFrames
 
 
 
-<< spend some time on Parquet; should this come earliers >>
+<< spend some time on Parquet; should this come earlier? >>
 
 ==
 Parquet
@@ -519,14 +519,20 @@ The NPY format
 
     A binary file format
 
+    Available via np.load(), np.save()
+
     A header followed by a data payload of bytes
 
     Header
-        A prefix and version number: b'\x93NUMPY' + bytes((1, 0))
+        A prefix: b'\x93NUMPY'
+
+        A version number: bytes((1, 0))
 
         A binary representation of the string representation of a dictionary
 
             Defines dtype, order, and shape
+
+            `ast.literal_eval()` used to convert back to a dictionary
 
         Padding to align on 64 byte divisions
 
@@ -534,9 +540,35 @@ The NPY format
 
         Raw bytes that make up array data
 
-        Bytes for 2D array collected in Fortran or C ordering
+        Bytes for 2D array collected in contiguous Fortran or C ordering
 
     NPY on disk can be memory mapped
+
+--
+Object Arrays in NPY
+
+    NPY supports object arrays by pickling array data
+
+    np.load() sets ``allow_pickle`` to False by default
+
+    As pickling an entire dataframe is very fast, no benefit from allowing NPY to support pickles
+
+--
+NPY Versions
+
+    All versions are atively supported and written
+
+    Versions differentiated by header size and encoding
+
+    Header need only be large if storing field names via structured arrays
+
+    Versions:
+
+        1.0: 65535 byte header ('<H', 2 byte), latin encoding
+        2.0: 4GB header ('<H', 4 byte), latin encoding
+        3.0: 4GB header ('<H', 4 byte), UTF-8 encoding
+
+    np.save() will save in the minimum compatible version
 
 --
 Loading an Array from Bytes
@@ -549,6 +581,10 @@ Loading an Array from Bytes
 The NPZ format
 
     A zip bundle of NPY files
+
+    Written with np.savez()
+
+    Read with np.load(), returning a dict-like object of arrays
 
     Usage in original specification was not defined
 
@@ -599,17 +635,76 @@ A DataFrame as a directory of NPY
 
 
 --
-Making NPY and NPZ writing fast
+Making NPY and NPZ fast
 
     NumPy's routines are not optimzed for scale
 
+        Given an array, version type is determined with try/except fall back
+
     StaticFrame re-implements NPY, NPZ writing for performance
 
-        Only read/write simplest format (1)
+        As no structured array supported needed, only read/write version 1
 
         Do not support structured arrays
 
-        Do not use a regular expression
+            Simplified version writing / discovery
+
+            Simplified conversion of dtype description to dtype
+
+        Do not support reading/writing object arrays
+
+        Faster header writing with an f-string, avoid creating a dictionary
+
+        No backwards compatibility for NPY authored in Python 2
+
+            Python 2 long integers used an "L" suffix
+
+            NumPy uses `tokenize.generate_tokens()` to filter headers for "L" strings
+
+        Faster header decoding
+
+            Using `ast.literal_eval()` creates significant performance overhead
+
+            A DataFrame is likely to have many arrays with same header
+
+            Can cache with map from raw bytes to Python objects
+
+--
+Making NPY and NPZ Correct
+
+    Hypothesis property testing
+
+    Ensure all SF Frames can round trip through NPZ
+
+    Ensure that all NPY components compatible with NumPy
+
+
+
+
+==
+--
+NPY and Memory Mappying
+
+
+
+
+--
+Using NPY to Memory Map DataFrames
+
+    Only possible if blocks on disk same format as blocks in memory
+
+    Only useful with an immutable data model
+
+        Do not need to make defensive copies
+
+        Operations only change what is necessary, reusing all possible array components
+
+        Array slices are views, even of memory map
+
+
+
+
+
 
 
 

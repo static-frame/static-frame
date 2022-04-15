@@ -60,7 +60,7 @@ class NPYConverter:
     def _header_encode(cls, header: str) -> bytes:
         '''
         Takes a string header, and attaches the prefix and padding to it.
-        This is hard-coded to only use Version 3.0
+        This is hard-coded to only use Version 1.0
         '''
         center = header.encode(cls.ENCODING)
         hlen = len(center) + 1
