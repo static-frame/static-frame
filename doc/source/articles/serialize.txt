@@ -556,7 +556,7 @@ Object Arrays in NPY
 --
 NPY Versions
 
-    All versions are atively supported and written
+    All versions are actively supported and written
 
     Versions differentiated by header size and encoding
 
@@ -587,13 +587,6 @@ The NPZ format
     Read with np.load(), returning a dict-like object of arrays
 
     Usage in original specification was not defined
-
---
-NumPy routines for writing NPY and NPZ
-
-    pass
-
-
 
 
 
@@ -710,7 +703,21 @@ Using NPY to Memory Map DataFrames
 Example Frame, arrays
 
 
-f = sf.Frame.from_items(((('data', 'A'), (5, 9, 3)), (('data', 'B'), (4, 1, 6)), (('data', 'C'), (7, 8, 2)), (('valid', '*'), (False, True, True))), index=sf.IndexHierarchy.from_labels((('2012-03', 'x'), ('2012-03', 'y'), ('2012-04', 'x')), index_constructors=(sf.IndexYearMonth, sf.Index)), columns_constructor=sf.IndexHierarchy.from_labels)
+
+
+>>> f = sf.Frame.from_items(((('data', 'A'), (5, 9, 3)), (('data', 'B'), (4, 1, 6)), (('data', 'C'), (7, 8, 2)), (('valid', '*'), (False, True, True))), index=sf.IndexHierarchy.from_labels((('2012-03', 'x'), ('2012-03', 'y'), ('2012-04', 'x')), index_constructors=(sf.IndexYearMonth, sf.Index)), columns_constructor=sf.IndexHierarchy.from_labels)
+>>> f
+<Frame>
+<IndexHierarchy>       data    data    data    valid  <<U5>
+                       A       B       C       *      <<U1>
+<IndexHierarchy>
+2012-03          x     5       4       7       False
+2012-03          y     9       1       8       True
+2012-04          x     3       6       2       True
+<datetime64[M]>  <<U1> <int64> <int64> <int64> <bool>
+
+
+
 
 f.to_npz('/Users/ariza/foo.npz', consolidate_blocks=True)
 
