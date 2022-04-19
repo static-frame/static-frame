@@ -705,16 +705,16 @@ Example Frame, arrays
 
 
 
->>> f = sf.Frame.from_items(((('data', 'A'), (5, 9, 3)), (('data', 'B'), (4, 1, 6)), (('data', 'C'), (7, 8, 2)), (('valid', '*'), (False, True, True))), index=sf.IndexHierarchy.from_labels((('2012-03', 'x'), ('2012-03', 'y'), ('2012-04', 'x')), index_constructors=(sf.IndexYearMonth, sf.Index)), columns_constructor=sf.IndexHierarchy.from_labels)
+>>> f = sf.Frame.from_items(((('data', 'A'), (5, 9, 3)), (('data', 'B'), (4, 1, 6)), (('data', 'C'), (7, 8, 2)), (('valid', '*'), (False, True, True))), name='p', index=sf.IndexHierarchy.from_labels((('2012-03', 'x'), ('2012-03', 'y'), ('2012-04', 'x')), index_constructors=(sf.IndexYearMonth, sf.Index), name='r'), columns_constructor=partial(sf.IndexHierarchy.from_labels, name='q'))
 >>> f
-<Frame>
-<IndexHierarchy>       data    data    data    valid  <<U5>
-                       A       B       C       *      <<U1>
-<IndexHierarchy>
-2012-03          x     5       4       7       False
-2012-03          y     9       1       8       True
-2012-04          x     3       6       2       True
-<datetime64[M]>  <<U1> <int64> <int64> <int64> <bool>
+<Frame: p>
+<IndexHierarchy: q>       data    data    data    valid  <<U5>
+                          A       B       C       *      <<U1>
+<IndexHierarchy: r>
+2012-03             x     5       4       7       False
+2012-03             y     9       1       8       True
+2012-04             x     3       6       2       True
+<datetime64[M]>     <<U1> <int64> <int64> <int64> <bool>
 
 
 
