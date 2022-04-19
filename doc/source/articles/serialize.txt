@@ -756,6 +756,14 @@ In [20]: struct.pack('<H', 200)
 Out[20]: b'\xc8\x00'
 
 
+# NOTE: this is not 6!
+ipdb> struct.pack(cls.STRUCT_FMT, 54)
+b'6\x00'
+ipdb> struct.unpack(cls.STRUCT_FMT, b'6\x00')
+(54,)
+
+
+
 
 
 ==

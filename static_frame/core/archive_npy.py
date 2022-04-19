@@ -52,6 +52,7 @@ class NPYConverter:
     ARRAY_ALIGN = 64
     STRUCT_FMT = '<H' # version 1.0, unsigned short
     STRUCT_FMT_SIZE = struct.calcsize(STRUCT_FMT) # 2 bytes
+    MAGIC_AND_STRUCT_FMT_SIZE_LEN = MAGIC_LEN + STRUCT_FMT_SIZE
     ENCODING = 'latin1' # version 1.0
     BUFFERSIZE_NUMERATOR = 16 * 1024 ** 2 # ~16 MB
     NDITER_FLAGS = ('external_loop', 'buffered', 'zerosize_ok')
@@ -66,7 +67,7 @@ class NPYConverter:
         hlen = len(center) + 1
 
         padlen = cls.ARRAY_ALIGN - (
-               (cls.MAGIC_LEN + cls.STRUCT_FMT_SIZE + hlen) % cls.ARRAY_ALIGN
+               (cls.MAGIC_AND_STRUCT_FMT_SIZE_LEN + hlen) % cls.ARRAY_ALIGN
                )
         prefix = cls.MAGIC_PREFIX + struct.pack(cls.STRUCT_FMT, hlen + padlen)
         postfix = b' ' * padlen + b'\n'
