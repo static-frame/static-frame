@@ -20,7 +20,7 @@ import static_frame as sf
 from static_frame.core.display_color import HexColor
 
 class FileIOTest:
-    NUMBER = 4
+    NUMBER = 10
     SUFFIX = '.tmp'
 
     def __init__(self, fixture: str):
@@ -360,25 +360,26 @@ def plot(frame: sf.Frame):
                     )
 
 
-    fig.set_size_inches(6, 7) # width, height
+    # fig.set_size_inches(6, 7) # width,
+    fig.set_size_inches(6, 3.5) # width, height
     fig.legend(post, names_display, loc='center right', fontsize=8)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
-    fig.text(.14, .97, f'NPY & NPZ Performance: {count:.0e} Elements', fontsize=10)
-    fig.text(.14, .92, get_versions(), fontsize=8)
+    fig.text(.05, .97, f'NPY & NPZ Performance: {count:.0e} Elements', fontsize=10)
+    fig.text(.05, .91, get_versions(), fontsize=6)
     # get fixtures size reference
     shape_map = {shape: fixture_shape_map[shape] for shape in frame['fixture'].unique()}
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
-    fig.text(.14, .915, shape_msg, fontsize=8)
+    fig.text(.05, .91, shape_msg, fontsize=6)
 
     fp = '/tmp/serialize.png'
     plt.subplots_adjust(
             left=0.05,
             bottom=0.05,
             right=0.75,
-            top=0.82,
+            top=0.75,
             wspace=-0.2, # width
-            hspace=1.5,
+            hspace=1,
             )
     # plt.rcParams.update({'font.size': 22})
     plt.savefig(fp, dpi=300)
@@ -508,7 +509,34 @@ def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
     f = ff.parse(fixture)
     return label, f'{f.shape[0]:}x{f.shape[1]}', fixture
 
-def run_test():
+CLS_READ = (
+    PDReadParquetArrow,
+    PDReadParquetArrowNoComp,
+    # PDReadParquetFast, # not faster!
+    # PDReadFeather,
+
+    # SFReadParquet,
+    SFReadNPZ,
+    SFReadNPY,
+    SFReadPickle,
+    # SFReadNPYMM,
+    )
+CLS_WRITE = (
+    PDWriteParquetArrow,
+    PDWriteParquetArrowNoComp,
+    # PDWriteParquetFast, # not faster!
+    # SFWriteParquet,
+    # PDWriteFeather,
+    SFWriteNPZ,
+    SFWriteNPY,
+    SFWritePickle,
+    )
+
+
+def run_test(
+        include_read: bool = True,
+        include_write: bool = True,
+        ):
     records = []
     for dtype_hetero, fixture_label, fixture in (
             fixture_to_pair('uniform', FF_wide_uniform),
@@ -523,32 +551,10 @@ def run_test():
             fixture_to_pair('mixed', FF_square_mixed),
             fixture_to_pair('columnar', FF_square_columnar),
             ):
-        cls_read = (
-            PDReadParquetArrow,
-            PDReadParquetArrowNoComp,
-            # PDReadParquetFast, # not faster!
-            PDReadFeather,
-
-            # SFReadParquet,
-            SFReadNPZ,
-            SFReadNPY,
-            SFReadPickle,
-            # SFReadNPYMM,
-            )
-        cls_write = (
-            PDWriteParquetArrow,
-            PDWriteParquetArrowNoComp,
-            # PDWriteParquetFast, # not faster!
-            # SFWriteParquet,
-            PDWriteFeather,
-            SFWriteNPZ,
-            SFWriteNPY,
-            SFWritePickle,
-            )
 
         for cls, category_prefix in chain(
-                zip(cls_read, repeat('read')),
-                zip(cls_write, repeat('write')),
+                (zip(CLS_READ, repeat('read')) if include_read else ()),
+                (zip(CLS_WRITE, repeat('write')) if include_write else ()),
                 ):
             runner = cls(fixture)
             category = f'{category_prefix} {dtype_hetero}'
@@ -587,5 +593,6 @@ def run_test():
 if __name__ == '__main__':
     # pandas_serialize_test()
     # get_sizes()
-    run_test()
+    # run_test(include_read=True, include_write=False)
+    run_test(include_read=False, include_write=True)
 
