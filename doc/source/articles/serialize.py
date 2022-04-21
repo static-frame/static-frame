@@ -16,6 +16,7 @@ import frame_fixtures as ff
 import pandas as pd
 
 sys.path.append(os.getcwd())
+
 import static_frame as sf
 from static_frame.core.display_color import HexColor
 
@@ -592,7 +593,7 @@ def run_test(
 
 if __name__ == '__main__':
     # pandas_serialize_test()
-    # get_sizes()
+    get_sizes()
     # run_test(include_read=True, include_write=False)
-    run_test(include_read=False, include_write=True)
+    # run_test(include_read=False, include_write=True)
 
