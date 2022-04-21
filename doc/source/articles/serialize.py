@@ -19,8 +19,8 @@ sys.path.append(os.getcwd())
 import static_frame as sf
 from static_frame.core.display_color import HexColor
 
+
 class FileIOTest:
-    NUMBER = 10
     SUFFIX = '.tmp'
 
     def __init__(self, fixture: str):
@@ -241,6 +241,8 @@ class SFReadNPYMM(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
+NUMBER = 5
+
 def scale(v):
     return int(v * 1)
 
@@ -262,7 +264,7 @@ FF_square_columnar   = f's({scale(1_000)},{scale(1_000)})|v(int,bool,float)|i(I,
 def get_versions() -> str:
     import platform
     import pyarrow
-    return f'OS: {platform.system()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__}\n'
+    return f'OS: {platform.system()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 
 def plot(frame: sf.Frame):
     fixture_total = len(frame['fixture'].unique())
@@ -322,7 +324,9 @@ def plot(frame: sf.Frame):
         '1000x100000': 'Wide',
     }
 
-    cmap = plt.get_cmap('terrain')
+    # cmap = plt.get_cmap('terrain')
+    cmap = plt.get_cmap('plasma')
+
     color = cmap(np.arange(name_total) / name_total)
 
     # categories are read, write
@@ -365,7 +369,7 @@ def plot(frame: sf.Frame):
     fig.legend(post, names_display, loc='center right', fontsize=8)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
-    fig.text(.05, .97, f'NPY & NPZ Performance: {count:.0e} Elements', fontsize=10)
+    fig.text(.05, .97, f'NPY & NPZ Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
     fig.text(.05, .91, get_versions(), fontsize=6)
     # get fixtures size reference
     shape_map = {shape: fixture_shape_map[shape] for shape in frame['fixture'].unique()}
@@ -517,7 +521,7 @@ CLS_READ = (
 
     # SFReadParquet,
     SFReadNPZ,
-    SFReadNPY,
+    # SFReadNPY,
     SFReadPickle,
     # SFReadNPYMM,
     )
@@ -528,7 +532,7 @@ CLS_WRITE = (
     # SFWriteParquet,
     # PDWriteFeather,
     SFWriteNPZ,
-    SFWriteNPY,
+    # SFWriteNPY,
     SFWritePickle,
     )
 
@@ -559,12 +563,12 @@ def run_test(
             runner = cls(fixture)
             category = f'{category_prefix} {dtype_hetero}'
 
-            record = [cls.__name__, cls.NUMBER, category, fixture_label]
+            record = [cls.__name__, NUMBER, category, fixture_label]
             try:
                 result = timeit.timeit(
                         f'runner()',
                         globals=locals(),
-                        number=cls.NUMBER)
+                        number=NUMBER)
             except OSError:
                 result = np.nan
             finally:
