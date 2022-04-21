@@ -1591,7 +1591,7 @@ TD64_NS = np.timedelta64(1, 'ns')
 
 _DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH)
 
-DTU_PYARROW = set(('ns', 'D', 's'))
+DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
 def to_datetime64(
         value: DateInitializer,
