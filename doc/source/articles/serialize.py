@@ -236,9 +236,9 @@ class SFReadNPYMM(FileIOTest):
 
     def __call__(self):
         # import ipdb; ipdb.set_trace()
-        f = sf.Frame.from_npy(self.fp_dir, memory_map=True)
+        f, close = sf.Frame.from_npy_mmap(self.fp_dir)
         _ = f.loc[34715, 'zZbu']
-
+        close()
 
 
 #-------------------------------------------------------------------------------
@@ -304,6 +304,7 @@ def plot_performance(frame: sf.Frame):
         SFWriteNPZ.__name__: 'NPZ (sf)',
         SFReadNPY.__name__: 'NPY (sf)',
         SFWriteNPY.__name__: 'NPY (sf)',
+        SFReadNPYMM.__name__: 'NPY mmap (sf)'
     }
 
     name_order = {
@@ -321,8 +322,9 @@ def plot_performance(frame: sf.Frame):
         SFWriteNPZ.__name__: 5,
         SFReadNPY.__name__: 6,
         SFWriteNPY.__name__: 6,
-        SFReadPickle.__name__: 7,
-        SFWritePickle.__name__: 7,
+        SFReadNPYMM.__name__: 7,
+        SFReadPickle.__name__: 8,
+        SFWritePickle.__name__: 8,
     }
 
     # cmap = plt.get_cmap('terrain')
@@ -615,12 +617,12 @@ CLS_READ = (
     # SFReadParquet,
     SFReadNPZ,
     # SFReadNPY,
+    SFReadNPYMM,
     SFReadPickle,
-    # SFReadNPYMM,
     )
 CLS_WRITE = (
-    PDWriteParquetArrow,
-    PDWriteParquetArrowNoComp,
+    # PDWriteParquetArrow,
+    # PDWriteParquetArrowNoComp,
     # PDWriteParquetFast, # not faster!
     # SFWriteParquet,
     # PDWriteFeather,
@@ -691,6 +693,6 @@ if __name__ == '__main__':
     # pandas_serialize_test()
     # get_sizes()
     run_test(include_read=True, include_write=False)
-    run_test(include_read=False, include_write=True)
+    # run_test(include_read=False, include_write=True)
 
 
