@@ -245,7 +245,7 @@ class SFReadNPYMM(FileIOTest):
 NUMBER = 5
 
 def scale(v):
-    return int(v * 1)
+    return int(v * 10)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -689,7 +689,8 @@ def run_test(
 
 if __name__ == '__main__':
     # pandas_serialize_test()
-    get_sizes()
+    # get_sizes()
     # run_test(include_read=True, include_write=False)
-    # run_test(include_read=False, include_write=True)
+    run_test(include_read=False, include_write=True)
+
 
