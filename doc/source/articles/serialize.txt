@@ -906,3 +906,38 @@ Data pages can be individually checksummed. This allows disabling of checksums a
 In [25]: df = pd.DataFrame(np.random.rand(100_000, 1_000))
 In [26]: %timeit sf.Frame.from_pandas(df).to_npz('/tmp/tmp.npz')
 2.09 s ± 127 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+
+---------------------------------------
+{.env38} % python3
+Python 3.8.12 (default, Feb 28 2022, 12:15:08)
+[GCC 9.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import numpy as np; import static_frame as sf
+>>> columns = tuple('abcdef')
+>>> f = sf.FrameGO(index=np.arange(1_000_000))
+>>> for c in columns:
+...     f[c] = np.arange(1_000_000)
+...
+>>> f.shape
+(1000000, 6)
+>>> f.to_npy('/tmp/npy')
+>>>
+
+
+
+
+>>> import psutil; import static_frame as sf
+
+>>> m0 = psutil.virtual_memory().active
+>>> f = sf.Frame.from_npy('/tmp/npy')
+>>> psutil.virtual_memory().active - m0
+47910912
+
+>>> m0 = psutil.virtual_memory().active
+>>> f, func = sf.Frame.from_npy_mmap('/tmp/npy')
+>>> m1 = psutil.virtual_memory().active
+>>> m1 - m0
+73728
+
+
