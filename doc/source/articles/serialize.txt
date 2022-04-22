@@ -941,3 +941,20 @@ Type "help", "copyright", "credits" or "license" for more information.
 73728
 
 
+
+>>> import mmap
+>>> with open('/tmp/bytes.bin', 'wb') as f: f.write(b'\x00\x01\x01')
+>>> f = open('/tmp/bytes.bin', 'rb')
+>>> mm = mmap.mmap(f.fileno(), 3, access=mmap.ACCESS_READ)
+>>> array = np.ndarray(shape=(3,), dtype=bool, buffer=mm)
+>>> array
+array([False,  True,  True])
+
+>>> array.flags
+  C_CONTIGUOUS : True
+  F_CONTIGUOUS : True
+  OWNDATA : False
+  WRITEABLE : False
+  ALIGNED : True
+  WRITEBACKIFCOPY : False
+  UPDATEIFCOPY : False
