@@ -958,3 +958,28 @@ array([False,  True,  True])
   ALIGNED : True
   WRITEBACKIFCOPY : False
   UPDATEIFCOPY : False
+
+
+
+>>> import psutil
+>>> psutil.Process().memory_info()
+pmem(rss=69828608, vms=2617835520, pfaults=18474, pageins=1457)
+>>>
+>>>
+>>>
+>>> m = psutil.Process().memory_info()
+>>> sf.Frame(np.random.rand(10_000, 10_000)).to_npy('/tmp/npy')
+
+
+>>> m0 = psutil.Process().memory_info()
+>>> f1 = sf.Frame.from_npy('/tmp/npy')
+>>> m2 = psutil.Process().memory_info()
+>>> f2, _ = sf.Frame.from_npy_mmap('/tmp/npy')
+>>> m3 = psutil.Process().memory_info()
+
+>>> m2.vms - m.vms
+808652800
+>>> m3.vms - m2.vms
+800788480
+>>> 800788480 / 808652800
+0.990274787894137
