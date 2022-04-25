@@ -1750,7 +1750,10 @@ class IndexHierarchy(IndexBase):
             # NOTE: use a faster lookup; only call is_neither_slice_nor_mask if meaningful_depths == self.depth
             if (len(meaningful_depths) == self.depth
                     and all(map(is_neither_slice_nor_mask, key))):
-                return self._map.loc_to_iloc(key, self._indices)
+                try:
+                    return self._map.loc_to_iloc(key, self._indices)
+                except KeyError:
+                    raise KeyError(key) from None
 
             mask_2d = np.full(self.shape, True, dtype=DTYPE_BOOL)
 
