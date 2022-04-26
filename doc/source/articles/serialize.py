@@ -428,14 +428,16 @@ def plot_size(frame: sf.Frame):
     cmap = plt.get_cmap('plasma')
     color = cmap(np.arange(name_total) / name_total)
 
-    sl_to_row = {'tall': 0, 'square': 1, 'wide': 2}
-    cl_to_col = {'columnar': 0, 'mixed': 1, 'uniform': 2}
+    sl_to_pos = {'tall': 0, 'square': 1, 'wide': 2}
+    cl_to_pos = {'columnar': 0, 'mixed': 1, 'uniform': 2}
 
     # categories are read, write
     for fixture_count, (fixture_label, row) in enumerate(frame.iter_series_items(axis=1)):
         shape_label, dtype_label = fixture_label.split('_')
 
-        ax = axes[sl_to_row[shape_label]][cl_to_col[dtype_label]]
+        # ax = axes[sl_to_pos[shape_label]][cl_to_pos[dtype_label]]
+        ax = axes[cl_to_pos[dtype_label]][sl_to_pos[shape_label]]
+
         x = np.arange(name_total)
     #     names_display = [name_replace[l] for l in names]
         results = row[list(names)].values
@@ -691,8 +693,8 @@ def run_test(
 
 if __name__ == '__main__':
     # pandas_serialize_test()
-    # get_sizes()
-    run_test(include_read=True, include_write=False)
+    get_sizes()
+    # run_test(include_read=True, include_write=False)
     # run_test(include_read=False, include_write=True)
 
 
