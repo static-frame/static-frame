@@ -7962,6 +7962,56 @@ class FrameAssign(Assign):
         '''
         raise NotImplementedError() #pragma: no cover
 
+    #---------------------------------------------------------------------------
+    def __add__(self, other: tp.Any) -> tp.Any:
+        return self.apply(
+                lambda c: c + other
+                )
+
+    def __sub__(self, other: tp.Any) -> tp.Any:
+        return self.apply(
+                lambda c: c - other
+                )
+
+    def __mul__(self, other: tp.Any) -> tp.Any:
+        return self.apply(
+                lambda c: c * other
+                )
+
+    #---------------------------------------------------------------------------
+    def apply_element(self,
+            func: AnyCallable,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''
+        Provide a function to apply to each element in the assignment target, and use that as the assignment value.
+
+        Args:
+            func: A function to apply to the assignment target.
+            *.
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
+        '''
+        return self.apply(
+                lambda c: c.iter_element().apply(func)
+                )
+
+    def apply_element_items(self,
+            func: AnyCallable,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''
+        Provide a function, taking pairs of label, element, to apply to each element in the assignment target, and use that as the assignment value.
+
+        Args:
+            func: A function, taking pairs of label, element, to apply to the assignment target.
+            *.
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
+        '''
+        return self.apply(
+                lambda c: c.iter_element_items().apply(func)
+                )
 
 
 class FrameAssignILoc(FrameAssign):
