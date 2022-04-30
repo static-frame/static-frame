@@ -3657,6 +3657,8 @@ class TestUnit(TestCase):
                 f1.mean(axis=1).values.tolist(),
                 f1.values.mean(axis=1).tolist())
 
+    #---------------------------------------------------------------------------
+
     def test_frame_median_a(self) -> None:
 
         a1 = np.array([
@@ -4154,6 +4156,14 @@ class TestUnit(TestCase):
 
         f4 = f1 == None #pylint: disable=C0121
         self.assertFalse(f4.any().any())
+
+    def test_frame_binary_operator_n(self) -> None:
+        # NOTE: testing FrameGO
+        f1 = ff.parse('s(2,3)|v(int64)|f(Fg)')
+        f2 = f1 - f1.mean(axis=0)
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, -90442.0), (1, 90442.0))), (1, ((0, 101677.0), (1, -101677.0))), (2, ((0, -47474.5), (1, 47474.5))))
+                )
 
     #---------------------------------------------------------------------------
 

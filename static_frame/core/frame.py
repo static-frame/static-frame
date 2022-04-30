@@ -4642,14 +4642,16 @@ class Frame(ContainerOperand):
             if axis == 0:
                 # when operating on a Series, we treat axis 0 as a row-wise operation, and thus take the union of the Series.index and Frame.columns
                 columns = self._columns.union(other._index)
+                # if self is a FrameGO, columns will be a GO, and we can own columns
                 self_tb = self.reindex(
                         columns=columns,
                         own_columns=True,
                         fill_value=fill_value,
                         )._blocks
+                # we can only own this index if other is immutable
                 other_array = other.reindex(
                         columns,
-                        own_index=True,
+                        own_index=self.STATIC,
                         fill_value=fill_value,
                         ).values
                 blocks = self_tb._ufunc_binary_operator(
@@ -4662,6 +4664,7 @@ class Frame(ContainerOperand):
                         columns=columns,
                         own_data=True,
                         own_index=True,
+                        own_columns=self.STATIC,
                         )
             elif axis == 1:
                 # column-wise operation, take union of Series.index and Frame.index
