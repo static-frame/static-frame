@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.9.3
+----------
+
+Corrected issue when using binary operators with a `FrameGO` and a `Series`.
+
+
 0.9.2
 ----------
 
@@ -15,6 +21,7 @@ Corrected undesirable type coercion from happening in single-row selections from
 Corrected issue when calling ``IndexDatetime.loc[]`` with an empty list.
 
 Corrected issue when calling ``IndexHierarchy.loc[]`` with another ``IndexHierarchy``
+
 
 0.9.0
 ----------
