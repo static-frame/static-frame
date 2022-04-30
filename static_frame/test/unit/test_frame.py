@@ -13514,6 +13514,66 @@ class TestUnit(TestCase):
                 ((0, (('zZbu', -88017), ('ztsv', 92867))), (1, (('zZbu', 0), ('ztsv', 0))), (2, (('zZbu', -3648), ('ztsv', 91301))))
                 )
 
+    def test_frame_assign_truediv(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|i(I,str)')
+        f2 = f1.assign[1] / f1[1]
+        self.assertEqual(f2.to_pairs(),
+                ((0, (('zZbu', -88017), ('ztsv', 92867))), (1, (('zZbu', 1.0), ('ztsv', 1.0))), (2, (('zZbu', -3648), ('ztsv', 91301))))
+                )
+
+    def test_frame_assign_floordiv(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|i(I,str)')
+        f2 = f1.assign[1] // f1[1]
+        self.assertEqual(f2.to_pairs(),
+                ((0, (('zZbu', -88017), ('ztsv', 92867))), (1, (('zZbu', 1), ('ztsv', 1))), (2, (('zZbu', -3648), ('ztsv', 91301))))
+                )
+        self.assertEqual([dt.kind for dt in f2.dtypes.values], ['i', 'i', 'i'])
+
+
+    def test_frame_assign_mod(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|i(I,str)')
+        f2 = f1.assign[1:] % 3
+        self.assertEqual(f2.to_pairs(),
+                ((0, (('zZbu', -88017), ('ztsv', 92867))), (1, (('zZbu', 2), ('ztsv', 0))), (2, (('zZbu', 0), ('ztsv', 2))))
+                )
+
+    def test_frame_assign_pow(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int64)|i(I,str)')
+        f2 = f1.assign.loc['ztsv', 1:] ** 2
+        self.assertEqual(f2.to_pairs(),
+                ((0, (('zZbu', -88017), ('ztsv', 92867))), (1, (('zZbu', 162197), ('ztsv', 1693898649))), (2, (('zZbu', -3648), ('ztsv', 8335872601))))
+                )
+
+    def test_frame_assign_lshift(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int64)|i(I,str)')
+        f2 = f1.assign.loc['ztsv', 1:] << 2
+        self.assertEqual(f2.to_pairs(),
+                ((0, (('zZbu', -88017), ('ztsv', 92867))), (1, (('zZbu', 162197), ('ztsv', -164628))), (2, (('zZbu', -3648), ('ztsv', 365204))))
+                )
+
+    def test_frame_assign_rshift(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int64)|i(I,str)')
+        f2 = f1.assign.loc['ztsv', 1:] >> 2
+        self.assertEqual( f2.to_pairs(),
+                ((0, (('zZbu', -88017), ('ztsv', 92867))), (1, (('zZbu', 162197), ('ztsv', -10290))), (2, (('zZbu', -3648), ('ztsv', 22825))))
+                )
+
+    def test_frame_assign_and(self) -> None:
+
+        f1 = ff.parse('s(3,4)|v(bool)|i(I,str)')
+        f2 = f1.assign.iloc[1:, 2:] & True
+        self.assertEqual(f2.to_pairs(),
+                ((0, (('zZbu', False), ('ztsv', False), ('zUvW', False))), (1, (('zZbu', False), ('ztsv', False), ('zUvW', False))), (2, (('zZbu', True), ('ztsv', False), ('zUvW', False))), (3, (('zZbu', False), ('ztsv', False), ('zUvW', True))))
+                )
+        # import ipdb; ipdb.set_trace()
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_assign_apply_element_a(self) -> None:
