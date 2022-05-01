@@ -1,6 +1,7 @@
 
 import typing as tp
 from functools import partial
+import numpy as np
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
@@ -13,12 +14,14 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 
 
+class IndexConstructorFactory:
+    pass
 
-class IndexDefaultFactory:
+class IndexDefaultFactory(IndexConstructorFactory):
     '''
-    Token class to be used to only provide a ``name`` to a default constructor of an Index. To be used as a constructor argument.
+    Token class to be used to provide a ``name`` to a default constructor of an Index. To be used as a constructor argument. An instance must be created.
     '''
-    # NOTE: probably should be renamed IndexDefaultConstructor
+    # NOTE: rename IndexDefaultConstructor
     __slots__ = ('_name',)
 
     def __init__(self, name: NameType):
@@ -29,20 +32,24 @@ class IndexDefaultFactory:
         '''
         return partial(constructor, name=self._name)
 
-class IndexAutoConstructor:
+class IndexAutoConstructorFactory(IndexConstructorFactory):
     '''
-    Token class to be used automatically determine index type by dtype; can also provide a ``name`` attribute.
+    Token class to be used to automatically determine index type by dtype; can also provide a ``name`` attribute. To be used as a constructor argument. An instance or a class can be used.
     '''
     __slots__ = ('_name',)
 
     def __init__(self, name: NameType):
         self._name = name
 
+    @staticmethod
+    def to_constructor(labels: np.ndarray) -> IndexConstructor:
+        from static_frame.core.index_datetime import dtype_to_index_cls
+        return dtype_to_index_cls(static=True, dtype=labels.dtype)
+
     def __call__(self, labels: np.ndarray) -> IndexConstructor:
         '''Partial the passeed constructor with the ``name``.
         '''
-        from static_frame.core.index_datetime import dtype_to_index_cls
-        constructor = dtype_to_index_cls(static=True, dtype=labels.dtype)
+        constructor = self.to_constructor(labels)
         return partial(constructor, name=self._name)
 
 

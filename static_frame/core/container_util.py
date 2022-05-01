@@ -58,7 +58,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactory #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no
-    from static_frame.core.index_auto import IndexAutoConstructor #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoConstructorFactory #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
@@ -288,7 +288,7 @@ def index_from_optional_constructor(
     # NOTE: do not pass `name` here; instead, partial contstuctors if necessary
     from static_frame.core.index_auto import IndexAutoFactory
     from static_frame.core.index_auto import IndexDefaultFactory
-    from static_frame.core.index_auto import IndexAutoConstructor
+    from static_frame.core.index_auto import IndexAutoConstructorFactory
 
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
@@ -297,13 +297,12 @@ def index_from_optional_constructor(
                 )
 
     if explicit_constructor:
-        if isinstance(explicit_constructor, IndexDefaultFactory):
-            # partial the default constructor with a name argument
+        if isinstance(explicit_constructor, IndexAutoConstructorFactory):
             return explicit_constructor(default_constructor)(value)
-        elif explicit_constructor is IndexAutoConstructor:
-            raise NotImplementedError()
-        elif isinstance(explicit_constructor, IndexAutoConstructor):
+        elif isinstance(explicit_constructor, IndexDefaultFactory):
             return explicit_constructor(default_constructor)(value)
+        elif explicit_constructor is IndexAutoConstructorFactory:
+            return explicit_constructor.to_constructor(value)
         return explicit_constructor(value)
 
     # default constructor could be a function with a STATIC attribute

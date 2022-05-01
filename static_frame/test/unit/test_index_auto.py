@@ -1,13 +1,15 @@
 import datetime
+import numpy as np
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_datetime import IndexYearMonth
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultFactory
-
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 
 class TestUnit(TestCase):
 
@@ -55,6 +57,20 @@ class TestUnit(TestCase):
         self.assertEqual(post.name, 'foo')
         self.assertEqual(post.values.tolist(),
             [datetime.date(1970, 1, 1), datetime.date(1970, 1, 2), datetime.date(1970, 1, 3)])
+
+    def test_index_auto_constructor_a(self) -> None:
+        a1 = np.array(('2021-05',), dtype=np.datetime64)
+        self.assertEqual(
+                IndexAutoConstructorFactory.to_constructor(a1),
+                IndexYearMonth,
+                )
+
+    def test_index_auto_constructor_b(self) -> None:
+        a1 = np.array(('2021-05',), dtype=np.datetime64)
+        ctr = IndexAutoConstructorFactory('foo')(a1)
+        idx = ctr(a1)
+        self.assertEqual(idx.name, 'foo')
+        self.assertEqual(idx.__class__, IndexYearMonth)
 
 
 if __name__ == '__main__':
