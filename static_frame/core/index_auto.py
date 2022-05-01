@@ -38,9 +38,11 @@ class IndexAutoConstructor:
     def __init__(self, name: NameType):
         self._name = name
 
-    def __call__(self, constructor: IndexConstructor) -> IndexConstructor:
+    def __call__(self, labels: np.ndarray) -> IndexConstructor:
         '''Partial the passeed constructor with the ``name``.
         '''
+        from static_frame.core.index_datetime import dtype_to_index_cls
+        constructor = dtype_to_index_cls(static=True, dtype=labels.dtype)
         return partial(constructor, name=self._name)
 
 
