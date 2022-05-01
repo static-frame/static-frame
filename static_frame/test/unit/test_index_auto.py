@@ -1,6 +1,8 @@
 import datetime
 import numpy as np
 
+import frame_fixtures as ff
+
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index_datetime import IndexDate
@@ -71,6 +73,22 @@ class TestUnit(TestCase):
         idx = ctr(a1)
         self.assertEqual(idx.name, 'foo')
         self.assertEqual(idx.__class__, IndexYearMonth)
+
+
+    def test_index_auto_constructor_c(self) -> None:
+        f = ff.parse('v(dtD)|s(3,1)').set_index(0,
+                index_constructor=IndexAutoConstructorFactory,
+                )
+        self.assertEqual(f.index.name, 0)
+        self.assertEqual(f.index.__class__, IndexDate)
+
+    def test_index_auto_constructor_d(self) -> None:
+        f = ff.parse('v(dtD)|s(3,1)').set_index(0,
+                index_constructor=IndexAutoConstructorFactory('foo'),
+                )
+        self.assertEqual(f.index.name, 'foo')
+        self.assertEqual(f.index.__class__, IndexDate)
+
 
 
 if __name__ == '__main__':

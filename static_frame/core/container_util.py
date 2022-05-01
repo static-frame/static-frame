@@ -297,12 +297,14 @@ def index_from_optional_constructor(
                 )
 
     if explicit_constructor:
-        if isinstance(explicit_constructor, IndexAutoConstructorFactory):
-            return explicit_constructor(default_constructor)(value)
-        elif isinstance(explicit_constructor, IndexDefaultFactory):
+        if isinstance(explicit_constructor, IndexDefaultFactory):
             return explicit_constructor(default_constructor)(value)
         elif explicit_constructor is IndexAutoConstructorFactory:
-            return explicit_constructor.to_constructor(value)
+            # handle class-only case; get constructor, then call with values
+            return explicit_constructor.to_constructor(value)(value)
+        elif isinstance(explicit_constructor, IndexAutoConstructorFactory):
+            # we have an instance; get constructor, then call with values
+            return explicit_constructor(value)(value)
         return explicit_constructor(value)
 
     # default constructor could be a function with a STATIC attribute

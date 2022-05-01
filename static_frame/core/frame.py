@@ -5450,7 +5450,7 @@ class Frame(ContainerOperand):
             column: tp.Hashable,
             *,
             drop: bool = False,
-            index_constructor: IndexConstructor = Index,
+            index_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` produced by setting the given column as the index, optionally removing that column from the new :obj:`Frame`.
@@ -5481,11 +5481,18 @@ class Frame(ContainerOperand):
             index_values = self._blocks._extract_array(column_key=column_iloc)
             name = column
         else:
+            # NOTE: _extract_array might force undesirable consolidation
             index_values = array2d_to_array1d(
                     self._blocks._extract_array(column_key=column_iloc))
             name = tuple(self._columns[column_iloc])
 
-        index = index_constructor(index_values, name=name)
+        index = index_from_optional_constructor(index_values,
+                default_constructor=Index,
+                explicit_constructor=index_constructor,
+                )
+        if index.name is None:
+            # NOTE: if a constructor has not set a name, we set the name as expected
+            index = index.rename(name)
 
         return self.__class__(blocks,
                 columns=columns,
