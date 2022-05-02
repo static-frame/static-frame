@@ -42,15 +42,19 @@ class IndexAutoConstructorFactory(IndexConstructorFactory):
         self._name = name
 
     @staticmethod
-    def to_constructor(labels: np.ndarray) -> IndexConstructor:
+    def to_index(labels: np.ndarray,
+            name: NameType = None,
+            ) -> Index:
+        '''Create and return the ``Index`` based on the array ``dtype``
+        '''
+        # NOTE: not sure what to do if not an array
         from static_frame.core.index_datetime import dtype_to_index_cls
-        return dtype_to_index_cls(static=True, dtype=labels.dtype)
+        return dtype_to_index_cls(static=True, dtype=labels.dtype)(labels, name=name)
 
-    def __call__(self, labels: np.ndarray) -> IndexConstructor:
+    def __call__(self, labels: np.ndarray) -> Index:
         '''Partial the passeed constructor with the ``name``.
         '''
-        constructor = self.to_constructor(labels)
-        return partial(constructor, name=self._name)
+        return self.to_index(labels, self._name)
 
 
 

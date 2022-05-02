@@ -301,10 +301,10 @@ def index_from_optional_constructor(
             return explicit_constructor(default_constructor)(value)
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
-            return explicit_constructor.to_constructor(value)(value)
+            return explicit_constructor.to_index(value)
         elif isinstance(explicit_constructor, IndexAutoConstructorFactory):
-            # we have an instance; get constructor, then call with values
-            return explicit_constructor(value)(value)
+            # we have an instance; call it with values to get the Index
+            return explicit_constructor(value)
         return explicit_constructor(value)
 
     # default constructor could be a function with a STATIC attribute

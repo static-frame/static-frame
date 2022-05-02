@@ -5542,7 +5542,6 @@ class Frame(ContainerOperand):
                     labels=index_labels,
                     depth_map=range(index_labels.shape[1]), # keep order
                     )
-
             index = IndexHierarchy._from_type_blocks(
                     blocks=rehierarched_blocks,
                     index_constructors=index_constructors,
@@ -5559,7 +5558,6 @@ class Frame(ContainerOperand):
                     )
             blocks_src = self._blocks
 
-
         if drop:
             blocks = TypeBlocks.from_blocks(
                     blocks_src._drop_blocks(column_key=column_iloc))
@@ -5571,7 +5569,6 @@ class Frame(ContainerOperand):
             columns = self._columns
             own_data = False
             own_columns = False
-
 
         return self.__class__(blocks,
                 columns=columns,

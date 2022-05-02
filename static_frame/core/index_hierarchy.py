@@ -34,6 +34,7 @@ from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.loc_map import LocMap
 from static_frame.core.loc_map import HierarchicalLocMap
@@ -264,11 +265,15 @@ class IndexHierarchy(IndexBase):
             ) -> tp.Iterable[IndexConstructor]:
         '''
         Returns an iterable of `depth` number of index constructors based on user-provided `index_constructors`
+
+        Args:
+            dtype_per_depth: Optionall provide a dtype per depth to be used with ``IndexAutoConstructorFactory``.
         '''
         if index_constructors is None:
             return (cls._INDEX_CONSTRUCTOR for _ in range(depth))
 
         if callable(index_constructors): # support a single constrctor
+            # if index_constructors is IndexAutoConstructorFactory:
             return (index_constructors for _ in range(depth))
 
         index_constructors = tuple(index_constructors)
@@ -323,7 +328,6 @@ class IndexHierarchy(IndexBase):
 
         for lvl, constructor in zip(levels, index_constructors_iter):
             if isinstance(lvl, Index):
-                # TODO-Ariza: This is slighly different behavior from old impl, as it called `constructor` for both cases
                 indices.append(immutable_index_filter(lvl))
             else:
                 indices.append(constructor(lvl))
@@ -441,7 +445,6 @@ class IndexHierarchy(IndexBase):
                 [size] = set(map(len, arrays))
             except ValueError:
                 raise ErrorInitIndex('All arrays must have the same length')
-
             depth = len(arrays)
             column_iter = arrays
 
@@ -514,7 +517,6 @@ class IndexHierarchy(IndexBase):
 
         while True:
             for hash_map, indexer, val in zip(hash_maps, indexers, label_row):
-
                 # The equality check is heavy, so we short circuit when possible on an `is` check
                 if (
                     continuation_token is not CONTINUATION_TOKEN_INACTIVE
