@@ -13510,8 +13510,8 @@ class TestUnit(TestCase):
                 index=(0, 1),
                 columns=IndexHierarchy.from_labels((('a', 0), ('a', 1))),
                 )
-        f[('b', 0)] = 1
-        f[('b', 1)] = 1
+        f[('b', 0)] = 1 #type: ignore
+        f[('b', 1)] = 1 #type: ignore
         post = f.columns._extract_iloc_by_int(3)
         self.assertEqual(post, ('b', 1))
         s = f[('b', 1)]
