@@ -389,6 +389,7 @@ class IndexHierarchy(IndexBase):
             *,
             name: NameType = None,
             depth_reference: tp.Optional[int] = None,
+            index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
         Construct an IndexHierarchy from an iterable of empty labels.
@@ -419,10 +420,13 @@ class IndexHierarchy(IndexBase):
         indexers = np.array([EMPTY_ARRAY_INT for _ in range(depth_reference)], dtype=DTYPE_INT_DEFAULT)
         indexers.flags.writeable = False
 
+        index_constructors_iter = cls._build_index_constructors(
+                index_constructors=index_constructors,
+                depth=depth_reference,
+                )
+        indices = [ctr(()) for ctr in index_constructors_iter]
         return cls(
-                indices=[
-                    cls._INDEX_CONSTRUCTOR(()) for _ in range(depth_reference)
-                ],
+                indices=indices,
                 indexers=indexers,
                 name=name,
                 )
