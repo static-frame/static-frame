@@ -301,7 +301,6 @@ class IndexHierarchy(IndexBase):
         name: SingleLabelType = tuple(index.name for index in indices)
         if any(n is None for n in name):
             return None
-
         return name
 
     @classmethod
@@ -440,7 +439,7 @@ class IndexHierarchy(IndexBase):
             index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
-        Construct an :obj:`IndexHierarchy` from a 2D numpy array
+        Construct an :obj:`IndexHierarchy` from a 2D NumPy array, or a collection of 1D arrays.
 
         Very similar implementation to :meth:`_from_type_blocks`
 
@@ -455,6 +454,7 @@ class IndexHierarchy(IndexBase):
                 [size] = set(map(len, arrays))
             except ValueError:
                 raise ErrorInitIndex('All arrays must have the same length')
+            # NOTE: we are not checking that they are all 1D
             depth = len(arrays)
             column_iter = arrays
 
@@ -470,6 +470,9 @@ class IndexHierarchy(IndexBase):
                 column_iter=column_iter,
                 index_constructors_iter=index_constructors_iter,
                 )
+
+        if name is None:
+            name = cls._build_name_from_indices(indices)
 
         return cls(
                 indices=indices,
