@@ -934,8 +934,9 @@ class TestUnit(TestCase):
         dates = np.array(('2018-01-01', '2018-01-04'), np.datetime64)
         ih = IndexHierarchy.from_product(groups, dates,
                 index_constructors=IndexAutoConstructorFactory)
-
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual([str(dt) for dt in ih.dtypes.values],
+                ['datetime64[Y]', 'datetime64[D]'],
+                )
 
     #--------------------------------------------------------------------------
 
