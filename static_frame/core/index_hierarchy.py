@@ -280,21 +280,16 @@ class IndexHierarchy(IndexBase):
                     )
             yield from (ctr for _ in range(depth))
         else:
-            for d, ctr in enumerate(index_constructors, start=1):
-                if d > depth:
-                    raise ErrorInitIndex(
-                        'When providing multiple index constructors, their number must equal the depth of the IndexHierarchy.'
-                    )
+            index_constructors = tuple(index_constructors)
+            if len(index_constructors) != depth:
+                raise ErrorInitIndex(
+                    'When providing multiple index constructors, their number must equal the depth of the IndexHierarchy.'
+                )
+            for ctr in index_constructors:
                 yield constructor_from_optional_constructor(
                         default_constructor=cls._INDEX_CONSTRUCTOR,
                         explicit_constructor=ctr
                         )
-
-        # if len(index_constructors) != depth:
-        #     raise ErrorInitIndex(
-        #         'When providing multiple index constructors, their number must equal the depth of the IndexHierarchy.'
-        #     )
-        # return index_constructors
 
     @classmethod
     def _build_name_from_indices(cls: tp.Type[IH],
