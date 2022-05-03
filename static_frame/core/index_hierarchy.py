@@ -263,7 +263,7 @@ class IndexHierarchy(IndexBase):
             *,
             index_constructors: IndexConstructors,
             depth: int,
-            ) -> tp.Iterable[IndexConstructor]:
+            ) -> tp.Iterator[IndexConstructor]:
         '''
         Returns an iterable of `depth` number of index constructors based on user-provided `index_constructors`
 
@@ -271,23 +271,30 @@ class IndexHierarchy(IndexBase):
             dtype_per_depth: Optionall provide a dtype per depth to be used with ``IndexAutoConstructorFactory``.
         '''
         if index_constructors is None:
-            return (cls._INDEX_CONSTRUCTOR for _ in range(depth))
+            yield from (cls._INDEX_CONSTRUCTOR for _ in range(depth))
 
-        if callable(index_constructors): # support a single constrctor
+        elif callable(index_constructors): # support a single constrctor
             ctr = constructor_from_optional_constructor(
                     default_constructor=cls._INDEX_CONSTRUCTOR,
                     explicit_constructor=index_constructors
                     )
-            return (ctr for _ in range(depth))
+            yield from (ctr for _ in range(depth))
+        else:
+            for d, ctr in enumerate(index_constructors, start=1):
+                if d > depth:
+                    raise ErrorInitIndex(
+                        'When providing multiple index constructors, their number must equal the depth of the IndexHierarchy.'
+                    )
+                yield constructor_from_optional_constructor(
+                        default_constructor=cls._INDEX_CONSTRUCTOR,
+                        explicit_constructor=ctr
+                        )
 
-        index_constructors = tuple(index_constructors)
-
-        if len(index_constructors) != depth:
-            raise ErrorInitIndex(
-                'When providing multiple index constructors, their number must equal the depth of the IndexHierarchy.'
-            )
-
-        return index_constructors
+        # if len(index_constructors) != depth:
+        #     raise ErrorInitIndex(
+        #         'When providing multiple index constructors, their number must equal the depth of the IndexHierarchy.'
+        #     )
+        # return index_constructors
 
     @classmethod
     def _build_name_from_indices(cls: tp.Type[IH],
