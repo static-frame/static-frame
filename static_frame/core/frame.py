@@ -45,7 +45,7 @@ from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import index_from_optional_constructors
-from static_frame.core.container_util import index_from_optional_constructors_deferred
+from static_frame.core.container_util import constructor_from_optional_constructors
 from static_frame.core.container_util import df_slice_to_arrays
 from static_frame.core.container_util import frame_to_frame
 from static_frame.core.archive_npy import NPZFrameConverter
@@ -1671,7 +1671,7 @@ class Frame(ContainerOperand):
                 index = [] # lazily populate
                 default_constructor = partial(Index, dtype=get_col_dtype(0)) if get_col_dtype else Index
                 # parital to include everything but values
-                index_constructor = index_from_optional_constructors_deferred(
+                index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
                         default_constructor=default_constructor,
                         explicit_constructors=index_constructors,
@@ -1698,7 +1698,7 @@ class Frame(ContainerOperand):
                             own_blocks=True,
                             )
                 # parital to include everything but values
-                index_constructor = index_from_optional_constructors_deferred(
+                index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
                         default_constructor=default_constructor,
                         explicit_constructors=index_constructors,

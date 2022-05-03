@@ -272,8 +272,6 @@ def df_slice_to_arrays(*,
     else:
         yield array
 
-
-
 #---------------------------------------------------------------------------
 def index_from_optional_constructor(
         value: tp.Union[IndexInitializer, 'IndexAutoFactory'],
@@ -301,10 +299,14 @@ def index_from_optional_constructor(
             return explicit_constructor(default_constructor)(value)
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
-            return explicit_constructor.to_index(value)
+            return explicit_constructor.to_index(value,
+                    default_constructor=default_constructor,
+                    )
         elif isinstance(explicit_constructor, IndexAutoConstructorFactory):
             # we have an instance; call it with values to get the Index
-            return explicit_constructor(value)
+            return explicit_constructor(value,
+                    default_constructor=default_constructor,
+                    )
         return explicit_constructor(value)
 
     # default constructor could be a function with a STATIC attribute
@@ -325,6 +327,21 @@ def index_from_optional_constructor(
 
     # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value)
+
+def constructor_from_optional_constructor(
+        default_constructor: IndexConstructor,
+        explicit_constructor: tp.Union[IndexConstructor, 'IndexDefaultFactory', None] = None,
+        ) -> IndexConstructor:
+    '''Return a constructor, resolving default and explicit constructor .
+    '''
+    def func(
+            value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            ) -> IndexBase:
+        return index_from_optional_constructor(value,
+                default_constructor=default_constructor,
+                explicit_constructor=explicit_constructor,
+                )
+    return func
 
 def index_from_optional_constructors(
         value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
@@ -366,8 +383,7 @@ def index_from_optional_constructors(
         own_index = True
     return index, own_index
 
-
-def index_from_optional_constructors_deferred(
+def constructor_from_optional_constructors(
         *,
         depth: int,
         default_constructor: IndexConstructor,
@@ -407,6 +423,7 @@ def index_constructor_empty(
         return True
     return False
 
+#---------------------------------------------------------------------------
 def matmul(
         lhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],
         rhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],

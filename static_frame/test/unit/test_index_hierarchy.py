@@ -32,7 +32,7 @@ from static_frame.core.index_hierarchy import build_indexers_from_product
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
-
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 
 SelfT = tp.TypeVar('SelfT')
 
@@ -927,6 +927,15 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitIndex):
             IndexHierarchy.from_product(range(2), range(2), range(2), index_constructors=[Index for _ in range(8)])
+
+    def test_hierarchy_from_product_f(self) -> None:
+
+        groups = np.array(('1954', '2020'), np.datetime64)
+        dates = np.array(('2018-01-01', '2018-01-04'), np.datetime64)
+        ih = IndexHierarchy.from_product(groups, dates,
+                index_constructors=IndexAutoConstructorFactory)
+
+        # import ipdb; ipdb.set_trace()
 
     #--------------------------------------------------------------------------
 

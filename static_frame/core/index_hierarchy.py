@@ -13,6 +13,7 @@ from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import sort_index_for_order
+from static_frame.core.container_util import constructor_from_optional_constructor
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -34,7 +35,7 @@ from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_auto import RelabelInput
-from static_frame.core.index_auto import IndexAutoConstructorFactory
+# from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.loc_map import LocMap
 from static_frame.core.loc_map import HierarchicalLocMap
@@ -273,8 +274,11 @@ class IndexHierarchy(IndexBase):
             return (cls._INDEX_CONSTRUCTOR for _ in range(depth))
 
         if callable(index_constructors): # support a single constrctor
-            # if index_constructors is IndexAutoConstructorFactory:
-            return (index_constructors for _ in range(depth))
+            ctr = constructor_from_optional_constructor(
+                    default_constructor=cls._INDEX_CONSTRUCTOR,
+                    explicit_constructor=index_constructors
+                    )
+            return (ctr for _ in range(depth))
 
         index_constructors = tuple(index_constructors)
 

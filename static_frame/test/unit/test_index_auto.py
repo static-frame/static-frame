@@ -63,13 +63,15 @@ class TestUnit(TestCase):
     def test_index_auto_constructor_a(self) -> None:
         a1 = np.array(('2021-05',), dtype=np.datetime64)
         self.assertEqual(
-                IndexAutoConstructorFactory.to_index(a1).__class__,
+                IndexAutoConstructorFactory.to_index(
+                        a1, default_constructor=Index).__class__,
                 IndexYearMonth,
                 )
 
     def test_index_auto_constructor_b(self) -> None:
         a1 = np.array(('2021-05',), dtype=np.datetime64)
-        idx = IndexAutoConstructorFactory('foo')(a1)
+        idx = IndexAutoConstructorFactory('foo')(a1,
+                default_constructor=Index)
         self.assertEqual(idx.name, 'foo')
         self.assertEqual(idx.__class__, IndexYearMonth)
 
