@@ -296,7 +296,9 @@ def index_from_optional_constructor(
 
     if explicit_constructor:
         if isinstance(explicit_constructor, IndexDefaultFactory):
-            return explicit_constructor(default_constructor)(value)
+            return explicit_constructor(value,
+                    default_constructor=default_constructor,
+                    )
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
             return explicit_constructor.to_index(value,

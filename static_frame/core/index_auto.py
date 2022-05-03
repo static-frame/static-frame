@@ -12,7 +12,7 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
-
+from static_frame.core.util import NAME_DEFAULT
 
 class IndexConstructorFactory:
     pass
@@ -21,16 +21,24 @@ class IndexDefaultFactory(IndexConstructorFactory):
     '''
     Token class to be used to provide a ``name`` to a default constructor of an Index. To be used as a constructor argument. An instance must be created.
     '''
-    # NOTE: rename IndexDefaultConstructor
+    # NOTE: rename IndexDefaultConstructorFactory
+
+    # We cannot have t
     __slots__ = ('_name',)
 
     def __init__(self, name: NameType):
         self._name = name
 
-    def __call__(self, constructor: IndexConstructor) -> IndexConstructor:
-        '''Partial the passeed constructor with the ``name``.
+    def __call__(self,
+            labels: tp.Iterator[tp.Hashable],
+            *,
+            name: NameType = NAME_DEFAULT,
+            default_constructor: tp.Type['IndexBase'],
+            ) -> Index:
+        '''Partial the passed constructor with the ``name``.
         '''
-        return partial(constructor, name=self._name)
+        name = self._name if name is NAME_DEFAULT else name
+        return partial(default_constructor, name=name)(labels)
 
 class IndexAutoConstructorFactory(IndexConstructorFactory):
     '''
@@ -58,13 +66,15 @@ class IndexAutoConstructorFactory(IndexConstructorFactory):
     def __call__(self,
             labels: np.ndarray,
             *,
+            name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type['IndexBase'] = Index,
             ) -> Index:
         '''Partial the passeed constructor with the ``name``.
         '''
+        name = self._name if name is NAME_DEFAULT else name
         return self.to_index(labels,
                 default_constructor=default_constructor,
-                name=self._name,
+                name=name,
                 )
 
 
@@ -76,7 +86,7 @@ IndexAutoInitializer = int
 # could create trival subclasses for these indices, but the type would would not always describe the instance; for example, an IndexAutoGO could grow inot non-contiguous integer index, as loc_is_iloc is reevaluated with each append can simply go to false.
 
 class IndexAutoFactory:
-    '''NOTE: this class is treated as an ``index`` or ``columnes`` arguement, not as a constructor.
+    '''NOTE: this class is treated as an ``index`` or ``columns`` arguement, not as a constructor.
     '''
     __slots__ = ('_size', '_name')
 
@@ -94,7 +104,10 @@ class IndexAutoFactory:
         if explicit_constructor:
             if isinstance(explicit_constructor, IndexDefaultFactory):
                 # partial the default constructor with a name argument
-                return explicit_constructor(default_constructor)(labels)
+                return explicit_constructor(labels,
+                        default_constructor=default_constructor,
+                        # NOTE might just pass name
+                        )
             return explicit_constructor(labels)
 
         else: # get from default constructor

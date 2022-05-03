@@ -599,9 +599,7 @@ class Frame(ContainerOperand):
 
                 # we have already evaluated AxisInvalid
 
-        # populates array_values as side effect
         if axis == 0:
-            # ih = IndexHierarchy.from_index_items(gen())
             ih = index_from_optional_constructor(
                     gen(),
                     default_constructor=IndexHierarchy.from_index_items,
