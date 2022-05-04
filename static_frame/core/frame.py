@@ -7992,7 +7992,8 @@ class FrameAssign(Assign):
         Args:
             func: A function, taking pairs of label, element, to apply to the assignment target.
             *
-            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.        '''
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
+        '''
         return self.apply(
                 lambda c: c.iter_element_items().apply(func, dtype=dtype),
                 fill_value=fill_value,

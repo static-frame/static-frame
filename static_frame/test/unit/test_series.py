@@ -1536,18 +1536,18 @@ class TestUnit(TestCase):
             )
 
 
-    def test_series_assign_i(self) -> None:
+    def test_series_assign_j(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
-        s2 = s1.assign.loc[['b', 'd']].apply_element(lambda e: f'--{e}--')
+        s2 = s1.assign.loc[['b', 'd']].apply_element(lambda e: f'--{e}--') #type: ignore
         self.assertEqual(s2.to_pairs(),
                 (('a', 0), ('b', '--1--'), ('c', 2), ('d', '--3--'))
                 )
 
-    def test_series_assign_j(self) -> None:
+    def test_series_assign_k(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
-        s2 = s1.assign.loc[['b', 'd']].apply_element_items(
+        s2 = s1.assign.loc[['b', 'd']].apply_element_items( #type: ignore
                 lambda k, e: f'--{e}--' if k == 'b' else f'*{e}*')
         self.assertEqual(s2.to_pairs(),
                 (('a', 0), ('b', '--1--'), ('c', 2), ('d', '*3*'))
