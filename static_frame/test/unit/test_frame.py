@@ -13530,6 +13530,15 @@ class TestUnit(TestCase):
                 ((0, (('zZbu', 'zjZQ'), ('ztsv', 'zO5l'))), (1, (('zZbu', ('zZbu', 1)), ('ztsv', ('ztsv', 1)))), (2, (('zZbu', ('zZbu', 2)), ('ztsv', ('ztsv', 2)))))
                 )
 
+    def test_frame_assign_apply_element_items_c(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int64)|i(I,str)')
+        f2 = f1.assign.bloc[f1 < 0].apply_element(lambda e: 0 if e < -40000 else e)
+        self.assertEqual(f2.to_pairs(),
+                ((0, (('zZbu', 0), ('ztsv', 92867), ('zUvW', 84967), ('zkuW', 13448))), (1, (('zZbu', 162197), ('ztsv', 0), ('zUvW', 5729), ('zkuW', 0))), (2, (('zZbu', -3648), ('ztsv', 91301), ('zUvW', 30205), ('zkuW', 54020))), (3, (('zZbu', 129017), ('ztsv', 35021), ('zUvW', 166924), ('zkuW', 122246))))
+                )
+
+
     #---------------------------------------------------------------------------
     def test_frame_name_assign_index_hierarchy_a(self) -> None:
         f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(3,2)')
