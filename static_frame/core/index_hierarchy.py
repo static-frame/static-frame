@@ -416,7 +416,8 @@ class IndexHierarchy(IndexBase):
         if depth_reference == 1:
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
-        indexers = np.array([EMPTY_ARRAY_INT for _ in range(depth_reference)], dtype=DTYPE_INT_DEFAULT)
+        indexers = np.array([EMPTY_ARRAY_INT for _ in range(depth_reference)],
+                dtype=DTYPE_INT_DEFAULT)
         indexers.flags.writeable = False
 
         index_constructors_iter = cls._build_index_constructors(
@@ -424,6 +425,10 @@ class IndexHierarchy(IndexBase):
                 depth=depth_reference,
                 )
         indices = [ctr(()) for ctr in index_constructors_iter]
+
+        if name is None:
+            name = cls._build_name_from_indices(indices)
+
         return cls(
                 indices=indices,
                 indexers=indexers,
@@ -574,10 +579,9 @@ class IndexHierarchy(IndexBase):
                 depth=depth,
                 )
 
-        indices = [
-            constructor(hash_map)
-            for constructor, hash_map in zip(index_constructors_iter, hash_maps)
-        ]
+        indices = [constructor(hash_map)
+                for constructor, hash_map in zip(index_constructors_iter, hash_maps)
+                ]
 
         if name is None:
             name = cls._build_name_from_indices(indices)
@@ -774,8 +778,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     # --------------------------------------------------------------------------
-
-    def _create_blocks_from_self(self: IH) -> TypeBlocks:
+    def _to_type_blocks(self: IH) -> TypeBlocks:
         '''
         Create a :obj:`TypeBlocks` instance from values respresented by `self._indices` and `self._indexers`.
         '''
@@ -786,7 +789,6 @@ class IndexHierarchy(IndexBase):
         return TypeBlocks.from_blocks(gen_blocks())
 
     # --------------------------------------------------------------------------
-
     def __init__(self: IH,
             indices: tp.Union[IH, tp.List[Index]],
             *,
@@ -855,7 +857,7 @@ class IndexHierarchy(IndexBase):
             else:
                 self._blocks = blocks.copy()
         else:
-            self._blocks = self._create_blocks_from_self()
+            self._blocks = self._to_type_blocks()
 
         self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
@@ -864,7 +866,8 @@ class IndexHierarchy(IndexBase):
         # This MUST be set before entering this context
         assert self._pending_extensions is not None
 
-        new_indexers = [np.empty(self.__len__(), DTYPE_INT_DEFAULT) for _ in range(self.depth)]
+        new_indexers = [np.empty(self.__len__(), DTYPE_INT_DEFAULT)
+                for _ in range(self.depth)]
 
         current_size = len(self._blocks)
 
@@ -874,7 +877,6 @@ class IndexHierarchy(IndexBase):
         self._indexers = EMPTY_ARRAY_INT # Remove reference to old indexers
 
         offset = current_size
-
         # For all these extensions, we have already update self._indices - we now need to map indexers
         for pending in self._pending_extensions: # pylint: disable = E1133
             if pending.__class__ is PendingRow: # type: ignore
@@ -901,7 +903,7 @@ class IndexHierarchy(IndexBase):
         self._pending_extensions.clear()
         self._indexers = np.array(new_indexers)
         self._indexers.flags.writeable = False
-        self._blocks = self._create_blocks_from_self()
+        self._blocks = self._to_type_blocks()
         self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
         self._recache = False
@@ -1011,8 +1013,6 @@ class IndexHierarchy(IndexBase):
                 apply_type=IterNodeApplyType.INDEX_LABELS
                 )
 
-    # NOTE: Index implements drop property
-
     @property
     @doc_inject(select='astype')
     def astype(self: IH) -> InterfaceAsType[TContainer]:
@@ -1025,7 +1025,6 @@ class IndexHierarchy(IndexBase):
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
     # --------------------------------------------------------------------------
-
     @property
     def via_str(self: IH) -> InterfaceString[np.ndarray]:
         '''
@@ -1077,7 +1076,6 @@ class IndexHierarchy(IndexBase):
                 )
 
     # --------------------------------------------------------------------------
-
     @property
     @doc_inject()
     def mloc(self: IH) -> np.ndarray:
@@ -1164,7 +1162,6 @@ class IndexHierarchy(IndexBase):
         return total
 
     # --------------------------------------------------------------------------
-
     def __len__(self: IH) -> int:
         if self._recache:
             size = self._blocks.__len__()
@@ -1300,7 +1297,6 @@ class IndexHierarchy(IndexBase):
                 )
 
     # --------------------------------------------------------------------------
-
     @property
     def _index_constructors(self: IH) -> tp.Iterator[tp.Type[Index]]:
         '''
