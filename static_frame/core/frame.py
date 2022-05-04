@@ -4313,10 +4313,8 @@ class Frame(ContainerOperand):
             index = self._index
         else:
             index = self._index._extract_iloc(row_key)
-            if not row_key_is_slice:
-                name_row = self._index.values[row_key]
-                if self._index.depth > 1:
-                    name_row = tuple(name_row)
+            if not row_key_is_slice and isinstance(row_key, INT_TYPES):
+                name_row = self._index._extract_iloc_by_int(row_key)
 
         # can only own columns if _COLUMNS_CONSTRUCTOR is static
         column_key_is_slice = column_key.__class__ is slice
@@ -4326,10 +4324,8 @@ class Frame(ContainerOperand):
         else:
             columns = self._columns._extract_iloc(column_key)
             own_columns = True
-            if not column_key_is_slice:
-                name_column = self._columns.values[column_key]
-                if self._columns.depth > 1:
-                    name_column = tuple(name_column)
+            if not column_key_is_slice and isinstance(column_key, INT_TYPES):
+                name_column = self._columns._extract_iloc_by_int(column_key)
 
         # determine if an axis is not multi; if one axis is not multi, we return a Series instead of a Frame
         axis_nm = self._extract_axis_not_multi(row_key, column_key)

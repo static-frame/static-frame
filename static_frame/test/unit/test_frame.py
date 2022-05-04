@@ -13499,6 +13499,24 @@ class TestUnit(TestCase):
         expected = Frame.from_element(2, index=f.index, columns=f.columns)
         self.assertTrue(post.equals(expected))
 
+    #---------------------------------------------------------------------------
+    def test_frame_name_assign_index_hierarchy_a(self) -> None:
+        f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(3,2)')
+        post = f.loc[sf.HLoc[f.index.iloc[0]]].name
+        self.assertEqual(post, (np.datetime64('36685', 'Y'), np.datetime64('2258-03-21')))
+
+    def test_frame_name_assign_index_hierarchy_b(self) -> None:
+        f = FrameGO.from_element(0,
+                index=(0, 1),
+                columns=IndexHierarchy.from_labels((('a', 0), ('a', 1))),
+                )
+        f[('b', 0)] = 1 #type: ignore
+        f[('b', 1)] = 1 #type: ignore
+        post = f.columns._extract_iloc_by_int(3)
+        self.assertEqual(post, ('b', 1))
+        s = f[('b', 1)]
+        self.assertEqual(s.name, ('b', 1))
+
 
 if __name__ == '__main__':
     unittest.main()

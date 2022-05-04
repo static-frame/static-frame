@@ -1896,6 +1896,15 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True,
                 )
 
+    def _extract_iloc_by_int(self,
+            key: int,
+            ) -> tp.Tuple[tp.Hashable, ...]:
+        '''Extract a single row as a tuple (without coercion) given an iloc integer key. This interface is overwhelmingly for compatibility with Index.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return tuple(self._blocks.iter_row_elements(key))
+
     def _extract_loc(self: IH,
             key: LocKeyType,
             ) -> ExtractionType:

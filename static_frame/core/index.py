@@ -940,6 +940,15 @@ class Index(IndexBase):
                 name=self._name,
                 )
 
+    def _extract_iloc_by_int(self,
+            key: int,
+            ) -> tp.Hashable:
+        '''Extract an element given an iloc integer key.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._labels[key] #type: ignore
+
     def _extract_loc(self: I,
             key: GetItemKeyType
             ) -> tp.Union['Index', tp.Hashable]:

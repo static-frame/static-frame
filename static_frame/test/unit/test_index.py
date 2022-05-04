@@ -1546,6 +1546,13 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             ih1.iter_label().apply(ih2._loc_to_iloc)
 
+    #---------------------------------------------------------------------------
+    def test_index_extract_iloc_by_int(self) -> None:
+        idx = IndexGO(('a', 'b'))
+        idx.append('c')
+        post = idx._extract_iloc_by_int(2)
+        self.assertEqual(post, 'c')
+
 
 if __name__ == '__main__':
     unittest.main()
