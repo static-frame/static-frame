@@ -4261,8 +4261,8 @@ class TestUnit(TestCase):
                 columns=range(2),
                 dtype=object,
                 name='foo',
-                index_constructor=IndexDefaultFactory('bar'), #type: ignore
-                columns_constructor=IndexDefaultFactory('baz'), #type: ignore
+                index_constructor=IndexDefaultFactory('bar'),
+                columns_constructor=IndexDefaultFactory('baz'),
                 )
 
         self.assertEqual(f1.to_pairs(),
@@ -8364,7 +8364,7 @@ class TestUnit(TestCase):
 
         f4 = Frame.from_concat_items(dict(A=f1, B=f2).items(),
                 axis=1,
-                columns_constructor=IndexDefaultFactory('foo'), #type: ignore
+                columns_constructor=IndexDefaultFactory('foo'),
                 )
         self.assertEqual(f4.columns.name, 'foo')
 
@@ -8386,7 +8386,7 @@ class TestUnit(TestCase):
 
         f3 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(),
                 axis=0,
-                index_constructor=IndexDefaultFactory('foo'), #type: ignore
+                index_constructor=IndexDefaultFactory('foo'),
                 )
         self.assertEqual(f3.index.name, 'foo')
 

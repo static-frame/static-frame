@@ -57,12 +57,19 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactory #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no
-    from static_frame.core.index_auto import IndexAutoConstructorFactory #pylint: disable=W0611,C0412 #pragma: no cover
+    # from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no
+    from static_frame.core.index_auto import IndexConstructorFactory #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
 
+
+ExplicitConstructor = tp.Union[
+        IndexConstructor,
+        'IndexConstructorFactory',
+        tp.Type['IndexConstructorFactory'],
+        None,
+        ]
 
 
 class ContainerMap:
@@ -277,7 +284,7 @@ def index_from_optional_constructor(
         value: tp.Union[IndexInitializer, 'IndexAutoFactory'],
         *,
         default_constructor: IndexConstructor,
-        explicit_constructor: tp.Union[IndexConstructor, 'IndexDefaultFactory', None] = None,
+        explicit_constructor: ExplicitConstructor = None,
         ) -> IndexBase:
     '''
     Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
@@ -301,7 +308,7 @@ def index_from_optional_constructor(
                     )
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
-            return explicit_constructor.to_index(value,
+            return explicit_constructor.to_index(value, # type: ignore
                     default_constructor=default_constructor,
                     )
         elif isinstance(explicit_constructor, IndexAutoConstructorFactory):
@@ -309,7 +316,7 @@ def index_from_optional_constructor(
             return explicit_constructor(value,
                     default_constructor=default_constructor,
                     )
-        return explicit_constructor(value)
+        return explicit_constructor(value) #type: ignore
 
     # default constructor could be a function with a STATIC attribute
     if isinstance(value, IndexBase):
@@ -332,7 +339,7 @@ def index_from_optional_constructor(
 
 def constructor_from_optional_constructor(
         default_constructor: IndexConstructor,
-        explicit_constructor: tp.Union[IndexConstructor, 'IndexDefaultFactory', None] = None,
+        explicit_constructor: ExplicitConstructor = None,
         ) -> IndexConstructor:
     '''Return a constructor, resolving default and explicit constructor .
     '''

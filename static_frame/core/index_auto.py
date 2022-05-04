@@ -34,7 +34,7 @@ class IndexDefaultFactory(IndexConstructorFactory):
             *,
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type['IndexBase'],
-            ) -> Index:
+            ) -> IndexBase:
         '''Partial the passed constructor with the ``name``.
         '''
         name = self._name if name is NAME_DEFAULT else name
@@ -54,7 +54,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactory):
             *,
             default_constructor: tp.Type['IndexBase'],
             name: NameType = None,
-            ) -> Index:
+            ) -> IndexBase:
         '''Create and return the ``Index`` based on the array ``dtype``
         '''
         # NOTE: not sure what to do if not an array
@@ -68,7 +68,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactory):
             *,
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type['IndexBase'] = Index,
-            ) -> Index:
+            ) -> IndexBase:
         '''Partial the passeed constructor with the ``name``.
         '''
         name = self._name if name is NAME_DEFAULT else name
