@@ -689,9 +689,7 @@ class IndexHierarchy(IndexBase):
             parts = label.split(delimiter)
             if len(parts) <= 1:
                 raise RuntimeError(
-                    f'Could not not parse more than one label from delimited string: {label}'
-                )
-
+                    f'Could not not parse more than one label from delimited string: {label}')
             try:
                 return tuple(literal_eval(p) for p in parts)
             except ValueError as e:
@@ -756,7 +754,9 @@ class IndexHierarchy(IndexBase):
                 index_constructors_iter=index_constructors_iter,
                 )
 
-        # Use a new variable name to make mypy happy
+        if name is None:
+            name = cls._build_name_from_indices(indices)
+
         init_blocks: tp.Optional[TypeBlocks] = blocks
 
         if index_constructors is not None:
