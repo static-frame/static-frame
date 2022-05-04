@@ -222,6 +222,9 @@ class IndexBase(ContainerOperand):
     def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
 
+    def _extract_iloc_by_int(self, key: int) -> tp.Hashable:
+        raise NotImplementedError() #pragma: no cover
+
     def _update_array_cache(self) -> None:
         raise NotImplementedError()
 

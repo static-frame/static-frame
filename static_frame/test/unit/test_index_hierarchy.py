@@ -1190,6 +1190,16 @@ class TestUnit(TestCase):
                 [[None, None, 1], ['I', 'A', 2], ['I', 'B', 1], ['I', 'B', 2], ['II', 'A', 1], ['II', 'A', 2], ['II', 'B', 1], ['II', 'B', 2]]
                 )
 
+    def test_hierarchy_from_labels_k(self) -> None:
+
+        ih = IndexHierarchy.from_labels((),
+                depth_reference=3,
+                reorder_for_hierarchy=True,
+                )
+        self.assertEqual(ih.shape, (0, 3))
+        self.assertEqual(ih.depth, 3)
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_from_index_items_a(self) -> None:

@@ -3657,6 +3657,8 @@ class TestUnit(TestCase):
                 f1.mean(axis=1).values.tolist(),
                 f1.values.mean(axis=1).tolist())
 
+    #---------------------------------------------------------------------------
+
     def test_frame_median_a(self) -> None:
 
         a1 = np.array([
@@ -4154,6 +4156,14 @@ class TestUnit(TestCase):
 
         f4 = f1 == None #pylint: disable=C0121
         self.assertFalse(f4.any().any())
+
+    def test_frame_binary_operator_n(self) -> None:
+        # NOTE: testing FrameGO
+        f1 = ff.parse('s(2,3)|v(int64)|f(Fg)')
+        f2 = f1 - f1.mean(axis=0)
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, -90442.0), (1, 90442.0))), (1, ((0, 101677.0), (1, -101677.0))), (2, ((0, -47474.5), (1, 47474.5))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -13604,6 +13614,23 @@ class TestUnit(TestCase):
                 ((0, (('zZbu', 'zjZQ'), ('ztsv', 'zO5l'))), (1, (('zZbu', ('zZbu', 1)), ('ztsv', ('ztsv', 1)))), (2, (('zZbu', ('zZbu', 2)), ('ztsv', ('ztsv', 2)))))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_frame_name_assign_index_hierarchy_a(self) -> None:
+        f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(3,2)')
+        post = f.loc[sf.HLoc[f.index.iloc[0]]].name
+        self.assertEqual(post, (np.datetime64('36685', 'Y'), np.datetime64('2258-03-21')))
+
+    def test_frame_name_assign_index_hierarchy_b(self) -> None:
+        f = FrameGO.from_element(0,
+                index=(0, 1),
+                columns=IndexHierarchy.from_labels((('a', 0), ('a', 1))),
+                )
+        f[('b', 0)] = 1 #type: ignore
+        f[('b', 1)] = 1 #type: ignore
+        post = f.columns._extract_iloc_by_int(3)
+        self.assertEqual(post, ('b', 1))
+        s = f[('b', 1)]
+        self.assertEqual(s.name, ('b', 1))
 
 
 if __name__ == '__main__':

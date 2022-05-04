@@ -4313,10 +4313,8 @@ class Frame(ContainerOperand):
             index = self._index
         else:
             index = self._index._extract_iloc(row_key)
-            if not row_key_is_slice:
-                name_row = self._index.values[row_key]
-                if self._index.depth > 1:
-                    name_row = tuple(name_row)
+            if not row_key_is_slice and isinstance(row_key, INT_TYPES):
+                name_row = self._index._extract_iloc_by_int(row_key)
 
         # can only own columns if _COLUMNS_CONSTRUCTOR is static
         column_key_is_slice = column_key.__class__ is slice
@@ -4326,10 +4324,8 @@ class Frame(ContainerOperand):
         else:
             columns = self._columns._extract_iloc(column_key)
             own_columns = True
-            if not column_key_is_slice:
-                name_column = self._columns.values[column_key]
-                if self._columns.depth > 1:
-                    name_column = tuple(name_column)
+            if not column_key_is_slice and isinstance(column_key, INT_TYPES):
+                name_column = self._columns._extract_iloc_by_int(column_key)
 
         # determine if an axis is not multi; if one axis is not multi, we return a Series instead of a Frame
         axis_nm = self._extract_axis_not_multi(row_key, column_key)
@@ -4642,14 +4638,16 @@ class Frame(ContainerOperand):
             if axis == 0:
                 # when operating on a Series, we treat axis 0 as a row-wise operation, and thus take the union of the Series.index and Frame.columns
                 columns = self._columns.union(other._index)
+                # if self is a FrameGO, columns will be a GO, and we can own columns
                 self_tb = self.reindex(
                         columns=columns,
                         own_columns=True,
                         fill_value=fill_value,
                         )._blocks
+                # we can only own this index if other is immutable
                 other_array = other.reindex(
                         columns,
-                        own_index=True,
+                        own_index=self.STATIC,
                         fill_value=fill_value,
                         ).values
                 blocks = self_tb._ufunc_binary_operator(
@@ -4662,6 +4660,7 @@ class Frame(ContainerOperand):
                         columns=columns,
                         own_data=True,
                         own_index=True,
+                        own_columns=self.STATIC,
                         )
             elif axis == 1:
                 # column-wise operation, take union of Series.index and Frame.index
