@@ -7962,121 +7962,12 @@ class FrameAssign(Assign):
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
-    def __add__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__add__(other)
-                )
+    # NOTE: explored but rejected supporting direct operater application on this object
 
-    def __sub__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__sub__(other)
-                )
-
-    def __mul__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__mul__(other)
-                )
-
-    def __truediv__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__truediv__(other)
-                )
-
-    def __floordiv__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__floordiv__(other)
-                )
-
-    def __mod__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__mod__(other)
-                )
-
-    def __pow__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__pow__(other)
-                )
-
-    def __lshift__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__lshift__(other)
-                )
-
-    def __rshift__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__rshift__(other)
-                )
-
-    def __and__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__and__(other)
-                )
-
-    def __xor__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__xor__(other)
-                )
-
-    def __or__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__or__(other)
-                )
-
-    def __lt__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__lt__(other)
-                )
-
-    def __le__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__le__(other)
-                )
-
-    def __eq__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__eq__(other)
-                )
-
-    def __ne__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__ne__(other)
-                )
-
-    def __gt__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__gt__(other)
-                )
-
-    def __ge__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__ge__(other)
-                )
-
-    #---------------------------------------------------------------------------
-    def __radd__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__radd__(other)
-                )
-
-    def __rsub__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__rsub__(other)
-                )
-
-    def __rmul__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__rmul__(other)
-                )
-
-    def __rtruediv__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__rtruediv__(other)
-                )
-
-    def __rfloordiv__(self, other: tp.Any) -> tp.Any:
-        return self.apply(
-                lambda c: c.__rfloordiv__(other)
-                )
+    # def __add__(self, other: tp.Any) -> tp.Any:
+    #     return self.apply(
+    #             lambda c: c.__add__(other)
+    #             )
 
     #---------------------------------------------------------------------------
     def apply_element(self,
