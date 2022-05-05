@@ -515,18 +515,17 @@ class TestUnit(TestCase):
         self.assertEqual((s > d).to_pairs(),
                 ((0, False), (1, True)))
 
-        with self.assertRaises(TypeError):
-            # TypeError: invalid type promotion
-            _ = d < s # why does this fail?
+        post1 = d < s
+        self.assertEqual(post1.tolist(), [False, True])
 
         s2 = s.iloc[:1]
 
         self.assertEqual((s2 < d).to_pairs(),
                 ((0, True),))
 
-        with self.assertRaises(TypeError):
-            # TypeError: int() argument must be a string, a bytes-like object or a number, not 'datetime.date'
-            _ = d < s2
+        post2 = d < s2
+        self.assertEqual(post2.tolist(), [False])
+
 
     def test_series_binary_operator_n(self) -> None:
 
