@@ -15,7 +15,13 @@ from static_frame.core.util import NameType
 from static_frame.core.util import NAME_DEFAULT
 
 class IndexConstructorFactory:
-    pass
+    def __call__(self,
+            labels: tp.Iterator[tp.Hashable],
+            *,
+            name: NameType = NAME_DEFAULT,
+            default_constructor: tp.Type['IndexBase'],
+            ) -> IndexBase:
+        raise NotImplementedError() #pragma: no cover
 
 class IndexDefaultFactory(IndexConstructorFactory):
     '''
