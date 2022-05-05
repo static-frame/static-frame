@@ -291,10 +291,8 @@ class IndexHierarchy(IndexBase):
                         explicit_constructor=ctr
                         )
 
-    @classmethod
-    def _build_name_from_indices(cls: tp.Type[IH],
-            indices: tp.List[Index],
-            ) -> tp.Optional[SingleLabelType]:
+    @staticmethod
+    def _build_name_from_indices(indices: tp.List[Index]) -> tp.Optional[SingleLabelType]:
         '''
         Builds the IndexHierarchy name from the names of `indices`. If one is not specified, the name is None
         '''
@@ -730,12 +728,14 @@ class IndexHierarchy(IndexBase):
             name: NameType = None,
             index_constructors: IndexConstructors = None,
             own_blocks: bool = False,
+            name_priority: bool = True,
             ) -> IH:
         '''
         Construct an :obj:`IndexHierarchy` from a :obj:`TypeBlocks` instance.
 
         Args:
-            blocks: a TypeBlocks instance
+            blocks: a TypeBlocks
+            name_priority: if True, setting the name from the ``name`` arguemnt superseedes the names via index_constructors; if False, names via index_constructor will get precedence.
 
         Returns:
             :obj:`IndexHierarchy`
@@ -758,8 +758,15 @@ class IndexHierarchy(IndexBase):
                 index_constructors_iter=index_constructors_iter,
                 )
 
-        if name is None:
+        if name_priority and name is None:
             name = cls._build_name_from_indices(indices)
+            # else, use passed name
+        elif not name_priority:
+            # get name via indices first; use it if defined
+            name_via_indices = cls._build_name_from_indices(indices)
+            if name_via_indices is not None:
+                name = name_via_indices
+            # else, use passed name
 
         init_blocks: tp.Optional[TypeBlocks] = blocks
 

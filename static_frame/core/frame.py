@@ -5518,17 +5518,17 @@ class Frame(ContainerOperand):
         '''
         if isinstance(columns, tuple):
             column_loc = list(columns)
-            column_name = columns
+            name = columns
         else:
             column_loc = columns
-            column_name = None # could be a slice, must get post iloc conversion
+            name = None # could be a slice, must get post iloc conversion
 
         column_iloc = self._columns._loc_to_iloc(column_loc)
 
-        if column_name is None:
-            column_name = tuple(self._columns.values[column_iloc])
+        if name is None:
+            # NOTE: is this the best approach if columns is IndexHierarchy?
+            name = tuple(self._columns[column_iloc])
 
-        # index_labels = self._blocks._extract_array(column_key=column_iloc)
         index_labels = self._blocks._extract(column_key=column_iloc)
 
         if reorder_for_hierarchy:
@@ -5539,16 +5539,18 @@ class Frame(ContainerOperand):
             index = IndexHierarchy._from_type_blocks(
                     blocks=rehierarched_blocks,
                     index_constructors=index_constructors,
-                    name=column_name,
+                    name=name,
                     own_blocks=True,
+                    name_priority=False,
                     )
             blocks_src = self._blocks._extract(row_key=order_lex)
         else:
             index = IndexHierarchy._from_type_blocks(
                     index_labels,
                     index_constructors=index_constructors,
-                    name=column_name,
+                    name=name,
                     own_blocks=True,
+                    name_priority=False,
                     )
             blocks_src = self._blocks
 

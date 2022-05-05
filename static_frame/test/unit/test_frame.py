@@ -37,6 +37,7 @@ from static_frame import mloc
 from static_frame import Series
 from static_frame import TypeBlocks
 from static_frame import IndexDefaultFactory
+from static_frame import IndexAutoConstructorFactory
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
@@ -9631,7 +9632,6 @@ class TestUnit(TestCase):
                 (('msg', ((('one', 1), 'hello'),)),))
 
     def test_frame_set_index_hierarchy_e(self) -> None:
-
         records = (
                 (1, '2018-12', 10),
                 (1, '2019-01', 20),
@@ -9652,7 +9652,6 @@ class TestUnit(TestCase):
         self.assertTrue((fh.index._blocks.mloc != f._blocks[:2].mloc).all())
 
     def test_frame_set_index_hierarchy_f(self) -> None:
-
         records = (
                 (1, 'a', 10),
                 (2, 'c', 60),
@@ -9666,10 +9665,33 @@ class TestUnit(TestCase):
                 drop=True,
                 reorder_for_hierarchy=True,
                 )
-
         self.assertEqual(fh.to_pairs(0),
                 ((2, (((1, 'a'), 10), ((1, 'c'), 30), ((1, 'b'), 20), ((2, 'a'), 40), ((2, 'c'), 60), ((2, 'b'), 50))),)
                 )
+
+    def test_frame_set_index_hierarchy_g(self) -> None:
+        f1 = ff.parse('s(3,4)|v(dtD, dtY, str, str)')
+
+        f2 = f1.set_index_hierarchy((0, 1),
+                index_constructors=IndexAutoConstructorFactory,
+                drop=True,
+                )
+        dt64 = np.datetime64
+        self.assertEqual(f2.to_pairs(),
+                ((2, (((dt64('2210-12-26'), dt64('164167')), 'ztsv'), ((dt64('2224-04-06'), dt64('43127')), 'zUvW'), ((dt64('2202-08-20'), dt64('7699')), 'zkuW'))), (3, (((dt64('2210-12-26'), dt64('164167')), 'z2Oo'), ((dt64('2224-04-06'), dt64('43127')), 'z5l6'), ((dt64('2202-08-20'), dt64('7699')), 'zCE3')))))
+        self.assertEqual(f2.index.name, (0, 1))
+
+    def test_frame_set_index_hierarchy_h(self) -> None:
+        IACF = IndexAutoConstructorFactory
+        f1 = ff.parse('s(3,4)|v(dtD, dtY, str, str)')
+        f2 = f1.set_index_hierarchy((0, 1),
+                index_constructors=(IACF('a'), IACF('b')),
+                drop=True,
+                )
+        self.assertEqual(f2.index.name, ('a', 'b'))
+        dt64 = np.datetime64
+        self.assertEqual(f2.to_pairs(),
+                ((2, (((dt64('2210-12-26'), dt64('164167')), 'ztsv'), ((dt64('2224-04-06'), dt64('43127')), 'zUvW'), ((dt64('2202-08-20'), dt64('7699')), 'zkuW'))), (3, (((dt64('2210-12-26'), dt64('164167')), 'z2Oo'), ((dt64('2224-04-06'), dt64('43127')), 'z5l6'), ((dt64('2202-08-20'), dt64('7699')), 'zCE3')))))
 
     #---------------------------------------------------------------------------
 
