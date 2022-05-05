@@ -292,7 +292,7 @@ def index_from_optional_constructor(
     # NOTE: this might return an own_index flag to show callers when a new index has been created
     # NOTE: do not pass `name` here; instead, partial contstuctors if necessary
     from static_frame.core.index_auto import IndexAutoFactory
-    from static_frame.core.index_auto import IndexDefaultFactory
+    from static_frame.core.index_auto import IndexConstructorFactory
     from static_frame.core.index_auto import IndexAutoConstructorFactory
 
     if isinstance(value, IndexAutoFactory):
@@ -302,18 +302,13 @@ def index_from_optional_constructor(
                 )
 
     if explicit_constructor:
-        if isinstance(explicit_constructor, IndexDefaultFactory):
+        if isinstance(explicit_constructor, IndexConstructorFactory):
             return explicit_constructor(value,
                     default_constructor=default_constructor,
                     )
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
             return explicit_constructor.to_index(value, # type: ignore
-                    default_constructor=default_constructor,
-                    )
-        elif isinstance(explicit_constructor, IndexAutoConstructorFactory):
-            # we have an instance; call it with values to get the Index
-            return explicit_constructor(value,
                     default_constructor=default_constructor,
                     )
         return explicit_constructor(value) #type: ignore
