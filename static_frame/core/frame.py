@@ -4311,10 +4311,8 @@ class Frame(ContainerOperand):
             index = self._index
         else:
             index = self._index._extract_iloc(row_key)
-            if not row_key_is_slice:
-                name_row = self._index.values[row_key]
-                if self._index.depth > 1:
-                    name_row = tuple(name_row)
+            if not row_key_is_slice and isinstance(row_key, INT_TYPES):
+                name_row = self._index._extract_iloc_by_int(row_key)
 
         # can only own columns if _COLUMNS_CONSTRUCTOR is static
         column_key_is_slice = column_key.__class__ is slice
@@ -4324,10 +4322,8 @@ class Frame(ContainerOperand):
         else:
             columns = self._columns._extract_iloc(column_key)
             own_columns = True
-            if not column_key_is_slice:
-                name_column = self._columns.values[column_key]
-                if self._columns.depth > 1:
-                    name_column = tuple(name_column)
+            if not column_key_is_slice and isinstance(column_key, INT_TYPES):
+                name_column = self._columns._extract_iloc_by_int(column_key)
 
         # determine if an axis is not multi; if one axis is not multi, we return a Series instead of a Frame
         axis_nm = self._extract_axis_not_multi(row_key, column_key)
@@ -7962,10 +7958,56 @@ class FrameAssign(Assign):
 
         Args:
             func: A function to apply to the assignment target.
-            *.
+            *
             fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
         '''
         raise NotImplementedError() #pragma: no cover
+
+    def apply_element(self,
+            func: AnyCallable,
+            *,
+            dtype: DtypeSpecifier = None,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''
+        Provide a function to apply to each element in the assignment target, and use that as the assignment value.
+
+        Args:
+            func: A function to apply to the assignment target.
+            *
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
+        '''
+        return self.apply(
+                lambda c: c.iter_element().apply(func, dtype=dtype),
+                fill_value=fill_value,
+                )
+
+    def apply_element_items(self,
+            func: AnyCallable,
+            *,
+            dtype: DtypeSpecifier = None,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+        '''
+        Provide a function, taking pairs of label, element, to apply to each element in the assignment target, and use that as the assignment value.
+
+        Args:
+            func: A function, taking pairs of label, element, to apply to the assignment target.
+            *
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
+        '''
+        return self.apply(
+                lambda c: c.iter_element_items().apply(func, dtype=dtype),
+                fill_value=fill_value,
+                )
+
+    #---------------------------------------------------------------------------
+    # NOTE: explored but rejected supporting direct operater application on this object
+
+    # def __add__(self, other: tp.Any) -> tp.Any:
+    #     return self.apply(
+    #             lambda c: c.__add__(other)
+    #             )
 
 
 

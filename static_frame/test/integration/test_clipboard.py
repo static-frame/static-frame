@@ -1,12 +1,13 @@
 from static_frame import Frame
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_linux_no_display
-
+from static_frame.test.test_case import skip_mac_py37
 
 class TestUnit(TestCase):
 
     # NOTE: this test will end up clearing the user's clipboard
 
+    @skip_mac_py37 #type: ignore
     @skip_linux_no_display #type: ignore
     def test_frame_to_clipboard_a(self) -> None:
         records = (

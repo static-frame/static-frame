@@ -1430,6 +1430,8 @@ class TestUnit(TestCase):
         self.assertEqual(s1.masked_array.loc[['b', 'd']].sum(), 2)
         self.assertEqual(s1.masked_array.loc[['a', 'b']].sum(), 5)
 
+    #---------------------------------------------------------------------------
+
     def test_series_assign_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
@@ -1532,6 +1534,24 @@ class TestUnit(TestCase):
         self.assertEqual(s3.to_pairs(),
             ((0, 0), (1, 3), (2, 6), (3, 9), (4, 12), (5, 15))
             )
+
+
+    def test_series_assign_j(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+
+        s2 = s1.assign.loc[['b', 'd']].apply_element(lambda e: f'--{e}--') #type: ignore
+        self.assertEqual(s2.to_pairs(),
+                (('a', 0), ('b', '--1--'), ('c', 2), ('d', '--3--'))
+                )
+
+    def test_series_assign_k(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+
+        s2 = s1.assign.loc[['b', 'd']].apply_element_items( #type: ignore
+                lambda k, e: f'--{e}--' if k == 'b' else f'*{e}*')
+        self.assertEqual(s2.to_pairs(),
+                (('a', 0), ('b', '--1--'), ('c', 2), ('d', '*3*'))
+                )
 
     #---------------------------------------------------------------------------
 
