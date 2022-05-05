@@ -589,6 +589,14 @@ class Series(ContainerOperand):
     #             own_index=True,
     #             )
 
+    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+        '''
+        Support the __array__ interface, returning a 1D array of values. This is used to support binary operators where a NumPy type is on the left hand side.
+        '''
+        if dtype is None:
+            return self.values
+        return self.values.astype(dtype)
+
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''

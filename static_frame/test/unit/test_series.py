@@ -583,6 +583,13 @@ class TestUnit(TestCase):
         self.assertEqual(s5.to_pairs(),
             ((0, 1), (1, 1), (2, 1)))
 
+    def test_series_binary_operator_q(self) -> None:
+        s1 = Series(range(4), index=list('abcd'))
+        post1 = np.int64(10) * s1
+        self.assertEqual(post1.tolist(), [0, 10, 20, 30])
+        post2 = np.array([10, 0, 10, 0]) * s1
+        self.assertEqual(post2.tolist(), [0, 0, 20, 0])
+
     #---------------------------------------------------------------------------
 
     def test_series_rename_a(self) -> None:
