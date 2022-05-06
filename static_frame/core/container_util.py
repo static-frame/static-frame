@@ -57,11 +57,19 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactory #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no cover
+    # from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no
+    from static_frame.core.index_auto import IndexConstructorFactoryBase #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
 
+
+ExplicitConstructor = tp.Union[
+        IndexConstructor,
+        'IndexConstructorFactoryBase',
+        tp.Type['IndexConstructorFactoryBase'],
+        None,
+        ]
 
 
 class ContainerMap:
@@ -271,14 +279,12 @@ def df_slice_to_arrays(*,
     else:
         yield array
 
-
-
 #---------------------------------------------------------------------------
 def index_from_optional_constructor(
         value: tp.Union[IndexInitializer, 'IndexAutoFactory'],
         *,
         default_constructor: IndexConstructor,
-        explicit_constructor: tp.Union[IndexConstructor, 'IndexDefaultFactory', None] = None,
+        explicit_constructor: ExplicitConstructor = None,
         ) -> IndexBase:
     '''
     Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
@@ -286,7 +292,8 @@ def index_from_optional_constructor(
     # NOTE: this might return an own_index flag to show callers when a new index has been created
     # NOTE: do not pass `name` here; instead, partial contstuctors if necessary
     from static_frame.core.index_auto import IndexAutoFactory
-    from static_frame.core.index_auto import IndexDefaultFactory
+    from static_frame.core.index_auto import IndexConstructorFactoryBase
+    from static_frame.core.index_auto import IndexAutoConstructorFactory
 
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
@@ -295,10 +302,16 @@ def index_from_optional_constructor(
                 )
 
     if explicit_constructor:
-        if isinstance(explicit_constructor, IndexDefaultFactory):
-            # partial the default constructor with a name argument
-            return explicit_constructor(default_constructor)(value)
-        return explicit_constructor(value)
+        if isinstance(explicit_constructor, IndexConstructorFactoryBase):
+            return explicit_constructor(value,
+                    default_constructor=default_constructor,
+                    )
+        elif explicit_constructor is IndexAutoConstructorFactory:
+            # handle class-only case; get constructor, then call with values
+            return explicit_constructor.to_index(value, # type: ignore
+                    default_constructor=default_constructor,
+                    )
+        return explicit_constructor(value) #type: ignore
 
     # default constructor could be a function with a STATIC attribute
     if isinstance(value, IndexBase):
@@ -318,6 +331,21 @@ def index_from_optional_constructor(
 
     # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value)
+
+def constructor_from_optional_constructor(
+        default_constructor: IndexConstructor,
+        explicit_constructor: ExplicitConstructor = None,
+        ) -> IndexConstructor:
+    '''Return a constructor, resolving default and explicit constructor .
+    '''
+    def func(
+            value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            ) -> IndexBase:
+        return index_from_optional_constructor(value,
+                default_constructor=default_constructor,
+                explicit_constructor=explicit_constructor,
+                )
+    return func
 
 def index_from_optional_constructors(
         value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
@@ -359,8 +387,7 @@ def index_from_optional_constructors(
         own_index = True
     return index, own_index
 
-
-def index_from_optional_constructors_deferred(
+def constructor_from_optional_constructors(
         *,
         depth: int,
         default_constructor: IndexConstructor,
@@ -400,6 +427,7 @@ def index_constructor_empty(
         return True
     return False
 
+#---------------------------------------------------------------------------
 def matmul(
         lhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],
         rhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],

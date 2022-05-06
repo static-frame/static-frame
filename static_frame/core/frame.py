@@ -45,7 +45,7 @@ from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import index_from_optional_constructors
-from static_frame.core.container_util import index_from_optional_constructors_deferred
+from static_frame.core.container_util import constructor_from_optional_constructors
 from static_frame.core.container_util import df_slice_to_arrays
 from static_frame.core.container_util import frame_to_frame
 from static_frame.core.archive_npy import NPZFrameConverter
@@ -599,9 +599,7 @@ class Frame(ContainerOperand):
 
                 # we have already evaluated AxisInvalid
 
-        # populates array_values as side effect
         if axis == 0:
-            # ih = IndexHierarchy.from_index_items(gen())
             ih = index_from_optional_constructor(
                     gen(),
                     default_constructor=IndexHierarchy.from_index_items,
@@ -1671,7 +1669,7 @@ class Frame(ContainerOperand):
                 index = [] # lazily populate
                 default_constructor = partial(Index, dtype=get_col_dtype(0)) if get_col_dtype else Index
                 # parital to include everything but values
-                index_constructor = index_from_optional_constructors_deferred(
+                index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
                         default_constructor=default_constructor,
                         explicit_constructors=index_constructors,
@@ -1698,7 +1696,7 @@ class Frame(ContainerOperand):
                             own_blocks=True,
                             )
                 # parital to include everything but values
-                index_constructor = index_from_optional_constructors_deferred(
+                index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
                         default_constructor=default_constructor,
                         explicit_constructors=index_constructors,
@@ -5446,7 +5444,7 @@ class Frame(ContainerOperand):
             column: tp.Hashable,
             *,
             drop: bool = False,
-            index_constructor: IndexConstructor = Index,
+            index_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` produced by setting the given column as the index, optionally removing that column from the new :obj:`Frame`.
@@ -5477,11 +5475,18 @@ class Frame(ContainerOperand):
             index_values = self._blocks._extract_array(column_key=column_iloc)
             name = column
         else:
+            # NOTE: _extract_array might force undesirable consolidation
             index_values = array2d_to_array1d(
                     self._blocks._extract_array(column_key=column_iloc))
             name = tuple(self._columns[column_iloc])
 
-        index = index_constructor(index_values, name=name)
+        index = index_from_optional_constructor(index_values,
+                default_constructor=Index,
+                explicit_constructor=index_constructor,
+                )
+        if index.name is None:
+            # NOTE: if a constructor has not set a name, we set the name as expected
+            index = index.rename(name)
 
         return self.__class__(blocks,
                 columns=columns,
@@ -5513,17 +5518,17 @@ class Frame(ContainerOperand):
         '''
         if isinstance(columns, tuple):
             column_loc = list(columns)
-            column_name = columns
+            name = columns
         else:
             column_loc = columns
-            column_name = None # could be a slice, must get post iloc conversion
+            name = None # could be a slice, must get post iloc conversion
 
         column_iloc = self._columns._loc_to_iloc(column_loc)
 
-        if column_name is None:
-            column_name = tuple(self._columns.values[column_iloc])
+        if name is None:
+            # NOTE: is this the best approach if columns is IndexHierarchy?
+            name = tuple(self._columns[column_iloc])
 
-        # index_labels = self._blocks._extract_array(column_key=column_iloc)
         index_labels = self._blocks._extract(column_key=column_iloc)
 
         if reorder_for_hierarchy:
@@ -5531,23 +5536,23 @@ class Frame(ContainerOperand):
                     labels=index_labels,
                     depth_map=range(index_labels.shape[1]), # keep order
                     )
-
             index = IndexHierarchy._from_type_blocks(
                     blocks=rehierarched_blocks,
                     index_constructors=index_constructors,
-                    name=column_name,
+                    name=name,
                     own_blocks=True,
+                    name_interleave=True,
                     )
             blocks_src = self._blocks._extract(row_key=order_lex)
         else:
             index = IndexHierarchy._from_type_blocks(
                     index_labels,
                     index_constructors=index_constructors,
-                    name=column_name,
+                    name=name,
                     own_blocks=True,
+                    name_interleave=True,
                     )
             blocks_src = self._blocks
-
 
         if drop:
             blocks = TypeBlocks.from_blocks(
@@ -5560,7 +5565,6 @@ class Frame(ContainerOperand):
             columns = self._columns
             own_data = False
             own_columns = False
-
 
         return self.__class__(blocks,
                 columns=columns,

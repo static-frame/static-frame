@@ -1,13 +1,17 @@
 import datetime
+import numpy as np
+
+import frame_fixtures as ff
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_datetime import IndexYearMonth
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultFactory
-
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 
 class TestUnit(TestCase):
 
@@ -55,6 +59,37 @@ class TestUnit(TestCase):
         self.assertEqual(post.name, 'foo')
         self.assertEqual(post.values.tolist(),
             [datetime.date(1970, 1, 1), datetime.date(1970, 1, 2), datetime.date(1970, 1, 3)])
+
+    def test_index_auto_constructor_a(self) -> None:
+        a1 = np.array(('2021-05',), dtype=np.datetime64)
+        self.assertEqual(
+                IndexAutoConstructorFactory.to_index(
+                        a1, default_constructor=Index).__class__,
+                IndexYearMonth,
+                )
+
+    def test_index_auto_constructor_b(self) -> None:
+        a1 = np.array(('2021-05',), dtype=np.datetime64)
+        idx = IndexAutoConstructorFactory('foo')(a1,
+                default_constructor=Index)
+        self.assertEqual(idx.name, 'foo')
+        self.assertEqual(idx.__class__, IndexYearMonth)
+
+
+    def test_index_auto_constructor_c(self) -> None:
+        f = ff.parse('v(dtD)|s(3,1)').set_index(0,
+                index_constructor=IndexAutoConstructorFactory,
+                )
+        self.assertEqual(f.index.name, 0)
+        self.assertEqual(f.index.__class__, IndexDate)
+
+    def test_index_auto_constructor_d(self) -> None:
+        f = ff.parse('v(dtD)|s(3,1)').set_index(0,
+                index_constructor=IndexAutoConstructorFactory('foo'),
+                )
+        self.assertEqual(f.index.name, 'foo')
+        self.assertEqual(f.index.__class__, IndexDate)
+
 
 
 if __name__ == '__main__':

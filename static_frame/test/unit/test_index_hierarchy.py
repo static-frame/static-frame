@@ -32,7 +32,7 @@ from static_frame.core.index_hierarchy import build_indexers_from_product
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
-
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 
 SelfT = tp.TypeVar('SelfT')
 
@@ -928,6 +928,16 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             IndexHierarchy.from_product(range(2), range(2), range(2), index_constructors=[Index for _ in range(8)])
 
+    def test_hierarchy_from_product_f(self) -> None:
+
+        groups = np.array(('1954', '2020'), np.datetime64)
+        dates = np.array(('2018-01-01', '2018-01-04'), np.datetime64)
+        ih = IndexHierarchy.from_product(groups, dates,
+                index_constructors=IndexAutoConstructorFactory)
+        self.assertEqual([str(dt) for dt in ih.dtypes.values],
+                ['datetime64[Y]', 'datetime64[D]'],
+                )
+
     #--------------------------------------------------------------------------
 
     def test_hierarchy_from_empty(self) -> None:
@@ -1362,7 +1372,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_hierarchy_from_array_a(self) -> None:
+    def test_hierarchy_from_arrays_a(self) -> None:
 
         # NOTE: This will consolidate dtypes
         arrays1 = np.array((
@@ -1387,12 +1397,36 @@ class TestUnit(TestCase):
         ih2 = IndexHierarchy._from_arrays(arrays2)
         self.assertTrue(ih1.equals(ih2))
 
-    def test_hierarchy_from_array_b(self) -> None:
+    def test_hierarchy_from_arrays_b(self) -> None:
 
         arrays = [(1, 2), (1,)]
 
         with self.assertRaises(ErrorInitIndex):
             _ = IndexHierarchy._from_arrays(arrays)
+
+
+    def test_hierarchy_from_arrays_c(self) -> None:
+        a1 = np.array(('1954', '1954', '2020'), np.datetime64)
+        a2 = np.array(('2018-01-01', '2018-01-04', '2018-01-04'), np.datetime64)
+        ih = IndexHierarchy._from_arrays((a1, a2),
+                index_constructors=IndexAutoConstructorFactory)
+        self.assertEqual([str(dt) for dt in ih.dtypes.values],
+                ['datetime64[Y]', 'datetime64[D]'],
+                )
+        self.assertEqual(ih.name, None)
+
+
+    def test_hierarchy_from_arrays_d(self) -> None:
+        IACF = IndexAutoConstructorFactory
+        a1 = np.array(('1954', '1954', '2020'), np.datetime64)
+        a2 = np.array(('2018-01-01', '2018-01-04', '2018-01-04'), np.datetime64)
+        ih = IndexHierarchy._from_arrays((a1, a2),
+                index_constructors=(IACF('a'), IACF('b')),
+                )
+        self.assertEqual([str(dt) for dt in ih.dtypes.values],
+                ['datetime64[Y]', 'datetime64[D]'],
+                )
+        self.assertEqual(ih.name, ('a', 'b'))
 
     #---------------------------------------------------------------------------
 
