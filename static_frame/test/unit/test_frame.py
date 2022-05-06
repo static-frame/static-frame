@@ -4172,17 +4172,17 @@ class TestUnit(TestCase):
                 columns=('p', 'q'),
                 index=('w', 'x'),
                 )
-        self.assertTrue((np.int64(10) * f1).equals(10 * f1))
-        self.assertTrue((np.int64(10) + f1).equals(10 + f1))
-        self.assertTrue((np.int64(10) / f1).equals(10 / f1))
-        self.assertTrue((np.int64(10) // f1).equals(10 // f1))
-        self.assertTrue((np.int64(10) - f1).equals(10 - f1))
-        self.assertTrue((np.int64(5) > f1).equals(5 > f1))
-        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1))
-        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1))
-        self.assertTrue((np.int64(5) < f1).equals(5 < f1))
-        self.assertTrue((np.int64(5) == f1).equals(5 == f1))
-        self.assertTrue((np.int64(5) != f1).equals(5 != f1))
+        self.assertTrue((np.int64(10) * f1).equals(10 * f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(10) + f1).equals(10 + f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(10) / f1).equals(10 / f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(10) // f1).equals(10 // f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(10) - f1).equals(10 - f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) > f1).equals(5 > f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) < f1).equals(5 < f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) == f1).equals(5 == f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) != f1).equals(5 != f1)) #pylint: disable=C0122
 
 
 
