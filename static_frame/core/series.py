@@ -590,30 +590,6 @@ class Series(ContainerOperand):
     #             )
 
     # ---------------------------------------------------------------------------
-    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
-        '''
-        Support the __array__ interface, returning a 1D array of values. This is used to support binary operators where a NumPy type is on the left hand side.
-        '''
-        if dtype is None:
-            return self.values
-        return self.values.astype(dtype)
-
-    def __array_ufunc__(self, ufunc, method, *args, **kwargs) -> 'Series':
-        from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
-
-        if len(args) == 2 and args[1] is self and method == '__call__':
-            # self is right-hand side of binary operator with NumPy object
-            return self._ufunc_binary_operator(
-                    operator=UFUNC_TO_REVERSE_OPERATOR[ufunc],
-                    other=args[0],
-                    )
-        raise NotImplementedError(f'__array_ufunc__ not implemented for {ufunc}')
-
-    # def __array_function__(self, func, types, args, kwargs):
-    #     # import ipdb; ipdb.set_trace()
-    #     raise NotImplementedError(f'no support for {func}')
-
-    # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''
         Returns a reverse iterator on the series' index.
