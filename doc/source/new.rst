@@ -4,7 +4,9 @@ What is New in Static Frame
 0.9.3
 ----------
 
-Added `apply_element()` and `apply_element_items()` methods to ``FrameAssign`` and ``SeriesAssign`` interfaces.
+Added ``apply_element()`` and ``apply_element_items()`` methods to ``FrameAssign`` and ``SeriesAssign`` interfaces.
+
+Added implementation of ``__array__()`` and ``__array_ufunc__()`` to all containers for better support with NumPy objects and binary operators.
 
 Corrected issue when using binary operators with a `FrameGO` and a `Series`.
 
