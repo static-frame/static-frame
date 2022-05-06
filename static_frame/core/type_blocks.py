@@ -80,6 +80,7 @@ def group_match(
     Args:
         key: iloc selector on opposite axis
         drop: Optionall drop the target of the grouping as specified by ``key``.
+        extract: if provided, will be used to select from the group on the opposite axis
 
     Returns:
         Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
