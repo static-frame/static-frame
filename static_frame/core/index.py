@@ -78,6 +78,8 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
+
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.loc_map import LocMap
 
@@ -384,6 +386,29 @@ class Index(IndexBase):
         Return shallow copy of this Index.
         '''
         return self.__copy__() #type: ignore
+
+    # ---------------------------------------------------------------------------
+    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+        '''
+        Support the __array__ interface, returning a 1D array of values.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        if dtype is None:
+            return self._labels
+        return self._labels.astype(dtype)
+
+    def __array_ufunc__(self, ufunc, method, *args, **kwargs) -> 'Series':
+        if len(args) == 2 and args[1] is self and method == '__call__':
+            # self is right-hand side of binary operator with NumPy object
+            return self._ufunc_binary_operator(
+                    operator=UFUNC_TO_REVERSE_OPERATOR[ufunc],
+                    other=args[0],
+                    )
+        raise NotImplementedError(f'__array_ufunc__ not implemented for {ufunc}')
+
+    # def __array_function__(self, func, types, args, kwargs):
+    #     raise NotImplementedError(f'no support for {func}')
 
     #---------------------------------------------------------------------------
     # name interface
