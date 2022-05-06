@@ -767,7 +767,7 @@ class IndexHierarchy(IndexBase):
             # NOTE: we always expect name to be a tuple when name_priorty is False as this pathway is exclusively from Frame.set_index_hierarchy()
             assert isinstance(name, tuple) and len(name) == len(indices)
             def gen() -> tp.Iterator[tp.Hashable]:
-                for index, n in zip(indices, name):
+                for index, n in zip(indices, name): #type: ignore
                     if index.name is not None:
                         yield index.name
                     else:
