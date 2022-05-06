@@ -735,7 +735,7 @@ class IndexHierarchy(IndexBase):
 
         Args:
             blocks: a TypeBlocks
-            name_priority: if True, setting the name from the ``name`` arguemnt superseedes the names via index_constructors; if False, names via index_constructor will get precedence.
+            name_priority: if True, setting the name from the ``name`` arguemnt supersedes the names via index_constructors; if False, names via index_constructor will get precedence.
 
         Returns:
             :obj:`IndexHierarchy`
