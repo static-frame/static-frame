@@ -252,7 +252,14 @@ class ContainerOperand(ContainerBase):
             return self.values
         return self.values.astype(dtype)
 
-    def __array_ufunc__(self, ufunc, method, *args, **kwargs) -> 'Series':
+    def __array_ufunc__(self,
+            ufunc: UFunc,
+            method: str,
+            *args: tp.Any,
+            **kwargs: tp.Any,
+            ) -> 'ContainerOperand':
+        '''Support for NumPy elements or arrays on the left hand of binary operators.
+        '''
         if len(args) == 2 and args[1] is self and method == '__call__':
             # self is right-hand side of binary operator with NumPy object
             return self._ufunc_binary_operator(
