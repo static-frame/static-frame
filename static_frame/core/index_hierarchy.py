@@ -268,7 +268,7 @@ class IndexHierarchy(IndexBase):
         Returns an iterable of `depth` number of index constructors based on user-provided `index_constructors`
 
         Args:
-            dtype_per_depth: Optionall provide a dtype per depth to be used with ``IndexAutoConstructorFactory``.
+            dtype_per_depth: Optionally provide a dtype per depth to be used with ``IndexAutoConstructorFactory``.
         '''
         if index_constructors is None:
             yield from (cls._INDEX_CONSTRUCTOR for _ in range(depth))

@@ -79,7 +79,7 @@ def group_match(
     '''
     Args:
         key: iloc selector on opposite axis
-        drop: Optionall drop the target of the grouping as specified by ``key``.
+        drop: Optionally drop the target of the grouping as specified by ``key``.
 
     Returns:
         Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
@@ -172,7 +172,7 @@ def group_sorted(
         blocks: sorted TypeBlocks
         order: args
         key: iloc selector on opposite axis; must be an integer
-        drop: Optionall drop the target of the grouping as specified by ``key``.
+        drop: Optionally drop the target of the grouping as specified by ``key``.
         axis: if 0, key is column selection, yield groups of rows; if 1, key is row selection, yield gruops of columns
         kind: Type of sort; a stable sort is required to preserve original odering.
 
