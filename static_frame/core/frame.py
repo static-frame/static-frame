@@ -5541,7 +5541,7 @@ class Frame(ContainerOperand):
                     index_constructors=index_constructors,
                     name=name,
                     own_blocks=True,
-                    name_priority=False,
+                    name_interleave=True,
                     )
             blocks_src = self._blocks._extract(row_key=order_lex)
         else:
@@ -5550,7 +5550,7 @@ class Frame(ContainerOperand):
                     index_constructors=index_constructors,
                     name=name,
                     own_blocks=True,
-                    name_priority=False,
+                    name_interleave=True,
                     )
             blocks_src = self._blocks
 
