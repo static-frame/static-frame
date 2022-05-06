@@ -19,7 +19,7 @@ class IndexConstructorFactory:
             labels: tp.Iterator[tp.Hashable],
             *,
             name: NameType = NAME_DEFAULT,
-            default_constructor: tp.Type['IndexBase'],
+            default_constructor: tp.Type[IndexBase],
             ) -> IndexBase:
         raise NotImplementedError() #pragma: no cover
 
@@ -39,7 +39,7 @@ class IndexDefaultFactory(IndexConstructorFactory):
             labels: tp.Iterator[tp.Hashable],
             *,
             name: NameType = NAME_DEFAULT,
-            default_constructor: tp.Type['IndexBase'],
+            default_constructor: tp.Type[IndexBase],
             ) -> IndexBase:
         '''Partial the passed constructor with the ``name``.
         '''
@@ -58,7 +58,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactory):
     @staticmethod
     def to_index(labels: np.ndarray,
             *,
-            default_constructor: tp.Type['IndexBase'],
+            default_constructor: tp.Type[IndexBase],
             name: NameType = None,
             ) -> IndexBase:
         '''Create and return the ``Index`` based on the array ``dtype``
@@ -73,7 +73,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactory):
             labels: np.ndarray,
             *,
             name: NameType = NAME_DEFAULT,
-            default_constructor: tp.Type['IndexBase'] = Index,
+            default_constructor: tp.Type[IndexBase] = Index,
             ) -> IndexBase:
         '''Partial the passeed constructor with the ``name``.
         '''
@@ -100,9 +100,9 @@ class IndexAutoFactory:
     def from_optional_constructor(cls,
             initializer: IndexAutoInitializer, # size
             *,
-            default_constructor: tp.Type['IndexBase'],
+            default_constructor: tp.Type[IndexBase],
             explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
-            ) -> 'IndexBase':
+            ) -> IndexBase:
 
         # get an immutable array, shared from positions allocator
         labels = PositionsAllocator.get(initializer)
@@ -134,9 +134,9 @@ class IndexAutoFactory:
 
     def to_index(self,
             *,
-            default_constructor: tp.Type['IndexBase'],
+            default_constructor: tp.Type[IndexBase],
             explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
-            ) -> 'IndexBase':
+            ) -> IndexBase:
         '''Called by index_from_optional_constructor.
         '''
         return self.from_optional_constructor(self._size,
