@@ -2106,7 +2106,7 @@ def array_shift(*,
         shift_mod = shift % -array.shape[axis]
 
     if (not wrap and shift == 0) or (wrap and shift_mod == 0):
-        # must copy so as not let caller mutate arguement
+        # must copy so as not let caller mutate argument
         return array.copy()
 
     if wrap:

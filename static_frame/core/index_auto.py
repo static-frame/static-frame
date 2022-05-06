@@ -28,7 +28,6 @@ class IndexDefaultFactory(IndexConstructorFactoryBase):
     '''
     # NOTE: rename IndexDefaultConstructorFactory
 
-    # We cannot have t
     __slots__ = ('_name',)
 
     def __init__(self, name: NameType):
@@ -91,7 +90,7 @@ IndexAutoInitializer = int
 # could create trival subclasses for these indices, but the type would would not always describe the instance; for example, an IndexAutoGO could grow inot non-contiguous integer index, as loc_is_iloc is reevaluated with each append can simply go to false.
 
 class IndexAutoFactory:
-    '''NOTE: this class is treated as an ``index`` or ``columns`` arguement, not as a constructor.
+    '''NOTE: this class is treated as an ``index`` or ``columns`` argument, not as a constructor.
     '''
     __slots__ = ('_size', '_name')
 
