@@ -259,9 +259,9 @@ class ContainerOperand(ContainerBase):
                     operator=UFUNC_TO_REVERSE_OPERATOR[ufunc],
                     other=args[0],
                     )
-        # raise NotImplementedError(f'__array_ufunc__ not implemented for {ufunc}')
-        return NotImplemented
+        return NotImplemented  #pragma: no cover
 
+    # NOTE: this method will support aribitrary np functions; we choosen not to support these as not all functions make sense for SF containers
     # def __array_function__(self, func, types, args, kwargs):
     #     raise NotImplementedError(f'no support for {func}')
 
