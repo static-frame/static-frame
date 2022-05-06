@@ -1,6 +1,5 @@
 
 import typing as tp
-from functools import partial
 import numpy as np
 
 from static_frame.core.index import Index
@@ -41,10 +40,10 @@ class IndexDefaultFactory(IndexConstructorFactoryBase):
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase],
             ) -> IndexBase:
-        '''Partial the passed constructor with the ``name``.
+        '''Call the passed constructor with the ``name``.
         '''
         name = self._name if name is NAME_DEFAULT else name
-        return partial(default_constructor, name=name)(labels)
+        return default_constructor(labels, name=name)
 
 class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
     '''
@@ -75,7 +74,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase] = Index,
             ) -> IndexBase:
-        '''Partial the passeed constructor with the ``name``.
+        '''Call the passeed constructor with the ``name``.
         '''
         name = self._name if name is NAME_DEFAULT else name
         return self.to_index(labels,
@@ -109,7 +108,6 @@ class IndexAutoFactory:
 
         if explicit_constructor:
             if isinstance(explicit_constructor, IndexDefaultFactory):
-                # partial the default constructor with a name argument
                 return explicit_constructor(labels,
                         default_constructor=default_constructor,
                         # NOTE might just pass name

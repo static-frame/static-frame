@@ -58,7 +58,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactory #pylint: disable=W0611,C0412 #pragma: no cover
     # from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no
-    from static_frame.core.index_auto import IndexConstructorFactory #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexConstructorFactoryBase #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
@@ -66,8 +66,8 @@ if tp.TYPE_CHECKING:
 
 ExplicitConstructor = tp.Union[
         IndexConstructor,
-        'IndexConstructorFactory',
-        tp.Type['IndexConstructorFactory'],
+        'IndexConstructorFactoryBase',
+        tp.Type['IndexConstructorFactoryBase'],
         None,
         ]
 
@@ -292,7 +292,7 @@ def index_from_optional_constructor(
     # NOTE: this might return an own_index flag to show callers when a new index has been created
     # NOTE: do not pass `name` here; instead, partial contstuctors if necessary
     from static_frame.core.index_auto import IndexAutoFactory
-    from static_frame.core.index_auto import IndexConstructorFactory
+    from static_frame.core.index_auto import IndexConstructorFactoryBase
     from static_frame.core.index_auto import IndexAutoConstructorFactory
 
     if isinstance(value, IndexAutoFactory):
@@ -302,7 +302,7 @@ def index_from_optional_constructor(
                 )
 
     if explicit_constructor:
-        if isinstance(explicit_constructor, IndexConstructorFactory):
+        if isinstance(explicit_constructor, IndexConstructorFactoryBase):
             return explicit_constructor(value,
                     default_constructor=default_constructor,
                     )
