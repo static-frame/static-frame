@@ -78,6 +78,7 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import IndexConstructor
+
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.loc_map import LocMap
 
