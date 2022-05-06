@@ -362,6 +362,37 @@ for attr in ('__add__', '__sub__', '__mul__', '__matmul__', '__truediv__', '__fl
     rattr = '__r' + attr[2:]
     OPERATORS[rattr] = rfunc
 
+UFUNC_TO_REVERSE_OPERATOR: tp.Dict[UFunc, UFunc] = {
+    # '__pos__': operator.__pos__,
+    # '__neg__': operator.__neg__,
+    # '__abs__': operator.__abs__,
+    # '__invert__': operator.__invert__,
+
+    np.add: OPERATORS['__radd__'],
+    np.subtract: OPERATORS['__rsub__'],
+    np.multiply: OPERATORS['__rmul__'],
+    np.matmul: OPERATORS['__rmatmul__'],
+    np.true_divide: OPERATORS['__rtruediv__'],
+    np.floor_divide: OPERATORS['__rfloordiv__'],
+
+
+    # '__mod__': operator.__mod__,
+
+    # '__pow__': operator.__pow__,
+    # '__lshift__': operator.__lshift__,
+    # '__rshift__': operator.__rshift__,
+    # '__and__': operator.__and__,
+    # '__xor__': operator.__xor__,
+    # '__or__': operator.__or__,
+    np.less: OPERATORS['__gt__'],
+    np.less_equal: OPERATORS['__ge__'],
+    np.equal: OPERATORS['__eq__'],
+    np.not_equal: OPERATORS['__ne__'],
+    np.greater: OPERATORS['__lt__'],
+    np.greater_equal: OPERATORS['__le__'],
+}
+
+
 #-------------------------------------------------------------------------------
 class WarningsSilent:
     '''Alternate context manager for silencing warnings with less overhead.
