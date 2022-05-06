@@ -292,7 +292,9 @@ class IndexHierarchy(IndexBase):
                         )
 
     @staticmethod
-    def _build_name_from_indices(indices: tp.List[Index]) -> tp.Optional[SingleLabelType]:
+    def _build_name_from_indices(
+            indices: tp.List[Index],
+            ) -> tp.Optional[SingleLabelType]:
         '''
         Builds the IndexHierarchy name from the names of `indices`. If one is not specified, the name is None
         '''
@@ -762,11 +764,15 @@ class IndexHierarchy(IndexBase):
             name = cls._build_name_from_indices(indices)
             # else, use passed name
         elif not name_priority:
-            # get name via indices first; use it if defined
-            name_via_indices = cls._build_name_from_indices(indices)
-            if name_via_indices is not None:
-                name = name_via_indices
-            # else, use passed name
+            # NOTE: we always expect name to be a tuple when name_priorty is False as this pathway is exclusively from Frame.set_index_hierarchy()
+            assert isinstance(name, tuple) and len(name) == len(indices)
+            name_interleave = []
+            for index, n in zip(indices, name):
+                if index.name is not None:
+                    name_interleave.append(index.name)
+                else:
+                    name_interleave.append(n)
+            name = tuple(name_interleave)
 
         init_blocks: tp.Optional[TypeBlocks] = blocks
 
