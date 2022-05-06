@@ -730,14 +730,14 @@ class IndexHierarchy(IndexBase):
             name: NameType = None,
             index_constructors: IndexConstructors = None,
             own_blocks: bool = False,
-            name_priority: bool = True,
+            name_interleave: bool = False,
             ) -> IH:
         '''
         Construct an :obj:`IndexHierarchy` from a :obj:`TypeBlocks` instance.
 
         Args:
             blocks: a TypeBlocks
-            name_priority: if True, setting the name from the ``name`` arguemnt supersedes the names via index_constructors; if False, names via index_constructor will get precedence.
+            name_interleave: if True, merge names via index_constructors and the name argument.
 
         Returns:
             :obj:`IndexHierarchy`
@@ -760,19 +760,19 @@ class IndexHierarchy(IndexBase):
                 index_constructors_iter=index_constructors_iter,
                 )
 
-        if name_priority and name is None:
+        if not name_interleave and name is None:
             name = cls._build_name_from_indices(indices)
             # else, use passed name
-        elif not name_priority:
+        elif name_interleave:
             # NOTE: we always expect name to be a tuple when name_priorty is False as this pathway is exclusively from Frame.set_index_hierarchy()
             assert isinstance(name, tuple) and len(name) == len(indices)
-            name_interleave = []
-            for index, n in zip(indices, name):
-                if index.name is not None:
-                    name_interleave.append(index.name)
-                else:
-                    name_interleave.append(n)
-            name = tuple(name_interleave)
+            def gen() -> tp.Iterator[tp.Hashable]:
+                for index, n in zip(indices, name):
+                    if index.name is not None:
+                        yield index.name
+                    else:
+                        yield n
+            name = tuple(gen())
 
         init_blocks: tp.Optional[TypeBlocks] = blocks
 
