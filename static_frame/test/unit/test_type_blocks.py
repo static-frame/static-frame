@@ -3443,6 +3443,14 @@ class TestUnit(TestCase):
                 [(1,), (1,), (4,)]
                 )
 
+    def test_type_blocks_group_sorted_e(self) -> None:
+        tb1, _ = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)._blocks.sort(1, 1)
+        post = tuple(group_sorted(tb1, axis=0, key=1, extract=NULL_SLICE))
+        self.assertEqual([p[2].__class__ for p in post], [np.ndarray, np.ndarray])
+        self.assertEqual([p[2].shape for p in post], [(3, 3), (4, 3)])
+
+
     #---------------------------------------------------------------------------
 
     def test_type_blocks_group_match_a(self) -> None:
@@ -3480,8 +3488,6 @@ class TestUnit(TestCase):
 
         self.assertEqual([x[0] for x in post], [0, 1])
         self.assertEqual([x[2].shape for x in post], [(2,), (4,)])
-        # import ipdb; ipdb.set_trace()
-
 
     def test_type_blocks_group_match_f(self) -> None:
         tb1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
