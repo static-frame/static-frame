@@ -447,6 +447,35 @@ class TestUnit(TestCase):
             (np.datetime64('1998-10-13'), 2)))
 
     #---------------------------------------------------------------------------
+    def test_frame_iter_group_array_a(self) -> None:
+        f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)
+
+        post = tuple(f1.iter_group_array(1))
+        self.assertEqual([p.shape for p in post],
+                [(3, 3), (4, 3)]
+                )
+        self.assertEqual([p.__class__ for p in post],
+                [np.ndarray, np.ndarray]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_group_array_items_a(self) -> None:
+        f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)
+
+        post = tuple(f1.iter_group_array_items(1))
+        self.assertEqual([p[1].shape for p in post],
+                [(3, 3), (4, 3)]
+                )
+        self.assertEqual([p[1].__class__ for p in post],
+                [np.ndarray, np.ndarray]
+                )
+        self.assertEqual([p[0] for p in post],
+                [0, 2]
+                )
+
+    #---------------------------------------------------------------------------
 
     def test_frame_iter_group_items_a(self) -> None:
 
