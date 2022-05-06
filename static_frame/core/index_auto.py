@@ -14,7 +14,7 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import NAME_DEFAULT
 
-class IndexConstructorFactory:
+class IndexConstructorFactoryBase:
     def __call__(self,
             labels: tp.Iterator[tp.Hashable],
             *,
@@ -23,7 +23,7 @@ class IndexConstructorFactory:
             ) -> IndexBase:
         raise NotImplementedError() #pragma: no cover
 
-class IndexDefaultFactory(IndexConstructorFactory):
+class IndexDefaultFactory(IndexConstructorFactoryBase):
     '''
     Token class to be used to provide a ``name`` to a default constructor of an Index. To be used as a constructor argument. An instance must be created.
     '''
@@ -46,7 +46,7 @@ class IndexDefaultFactory(IndexConstructorFactory):
         name = self._name if name is NAME_DEFAULT else name
         return partial(default_constructor, name=name)(labels)
 
-class IndexAutoConstructorFactory(IndexConstructorFactory):
+class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
     '''
     Token class to be used to automatically determine index type by dtype; can also provide a ``name`` attribute. To be used as a constructor argument. An instance or a class can be used.
     '''
