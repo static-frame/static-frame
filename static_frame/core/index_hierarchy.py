@@ -13,6 +13,7 @@ from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import sort_index_for_order
+from static_frame.core.container_util import constructor_from_optional_constructor
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -34,6 +35,7 @@ from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_auto import RelabelInput
+# from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.loc_map import LocMap
 from static_frame.core.loc_map import HierarchicalLocMap
@@ -261,27 +263,36 @@ class IndexHierarchy(IndexBase):
             *,
             index_constructors: IndexConstructors,
             depth: int,
-            ) -> tp.Iterable[IndexConstructor]:
+            ) -> tp.Iterator[IndexConstructor]:
         '''
         Returns an iterable of `depth` number of index constructors based on user-provided `index_constructors`
+
+        Args:
+            dtype_per_depth: Optionally provide a dtype per depth to be used with ``IndexAutoConstructorFactory``.
         '''
         if index_constructors is None:
-            return (cls._INDEX_CONSTRUCTOR for _ in range(depth))
+            yield from (cls._INDEX_CONSTRUCTOR for _ in range(depth))
 
-        if callable(index_constructors): # support a single constrctor
-            return (index_constructors for _ in range(depth))
+        elif callable(index_constructors): # support a single constrctor
+            ctr = constructor_from_optional_constructor(
+                    default_constructor=cls._INDEX_CONSTRUCTOR,
+                    explicit_constructor=index_constructors
+                    )
+            yield from (ctr for _ in range(depth))
+        else:
+            index_constructors = tuple(index_constructors)
+            if len(index_constructors) != depth:
+                raise ErrorInitIndex(
+                    'When providing multiple index constructors, their number must equal the depth of the IndexHierarchy.'
+                )
+            for ctr in index_constructors:
+                yield constructor_from_optional_constructor(
+                        default_constructor=cls._INDEX_CONSTRUCTOR,
+                        explicit_constructor=ctr
+                        )
 
-        index_constructors = tuple(index_constructors)
-
-        if len(index_constructors) != depth:
-            raise ErrorInitIndex(
-                'When providing multiple index constructors, their number must equal the depth of the IndexHierarchy.'
-            )
-
-        return index_constructors
-
-    @classmethod
-    def _build_name_from_indices(cls: tp.Type[IH],
+    @staticmethod
+    def _build_name_from_indices(
             indices: tp.List[Index],
             ) -> tp.Optional[SingleLabelType]:
         '''
@@ -290,7 +301,6 @@ class IndexHierarchy(IndexBase):
         name: SingleLabelType = tuple(index.name for index in indices)
         if any(n is None for n in name):
             return None
-
         return name
 
     @classmethod
@@ -323,7 +333,6 @@ class IndexHierarchy(IndexBase):
 
         for lvl, constructor in zip(levels, index_constructors_iter):
             if isinstance(lvl, Index):
-                # TODO-Ariza: This is slighly different behavior from old impl, as it called `constructor` for both cases
                 indices.append(immutable_index_filter(lvl))
             else:
                 indices.append(constructor(lvl))
@@ -379,6 +388,7 @@ class IndexHierarchy(IndexBase):
             *,
             name: NameType = None,
             depth_reference: tp.Optional[int] = None,
+            index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
         Construct an IndexHierarchy from an iterable of empty labels.
@@ -406,13 +416,21 @@ class IndexHierarchy(IndexBase):
         if depth_reference == 1:
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
-        indexers = np.array([EMPTY_ARRAY_INT for _ in range(depth_reference)], dtype=DTYPE_INT_DEFAULT)
+        indexers = np.array([EMPTY_ARRAY_INT for _ in range(depth_reference)],
+                dtype=DTYPE_INT_DEFAULT)
         indexers.flags.writeable = False
 
+        index_constructors_iter = cls._build_index_constructors(
+                index_constructors=index_constructors,
+                depth=depth_reference,
+                )
+        indices = [ctr(()) for ctr in index_constructors_iter]
+
+        if name is None:
+            name = cls._build_name_from_indices(indices)
+
         return cls(
-                indices=[
-                    cls._INDEX_CONSTRUCTOR(()) for _ in range(depth_reference)
-                ],
+                indices=indices,
                 indexers=indexers,
                 name=name,
                 )
@@ -426,7 +444,7 @@ class IndexHierarchy(IndexBase):
             index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
-        Construct an :obj:`IndexHierarchy` from a 2D numpy array
+        Construct an :obj:`IndexHierarchy` from a 2D NumPy array, or a collection of 1D arrays.
 
         Very similar implementation to :meth:`_from_type_blocks`
 
@@ -441,7 +459,7 @@ class IndexHierarchy(IndexBase):
                 [size] = set(map(len, arrays))
             except ValueError:
                 raise ErrorInitIndex('All arrays must have the same length')
-
+            # NOTE: we are not checking that they are all 1D
             depth = len(arrays)
             column_iter = arrays
 
@@ -457,6 +475,9 @@ class IndexHierarchy(IndexBase):
                 column_iter=column_iter,
                 index_constructors_iter=index_constructors_iter,
                 )
+
+        if name is None:
+            name = cls._build_name_from_indices(indices)
 
         return cls(
                 indices=indices,
@@ -514,7 +535,6 @@ class IndexHierarchy(IndexBase):
 
         while True:
             for hash_map, indexer, val in zip(hash_maps, indexers, label_row):
-
                 # The equality check is heavy, so we short circuit when possible on an `is` check
                 if (
                     continuation_token is not CONTINUATION_TOKEN_INACTIVE
@@ -559,10 +579,9 @@ class IndexHierarchy(IndexBase):
                 depth=depth,
                 )
 
-        indices = [
-            constructor(hash_map)
-            for constructor, hash_map in zip(index_constructors_iter, hash_maps)
-        ]
+        indices = [constructor(hash_map)
+                for constructor, hash_map in zip(index_constructors_iter, hash_maps)
+                ]
 
         if name is None:
             name = cls._build_name_from_indices(indices)
@@ -674,9 +693,7 @@ class IndexHierarchy(IndexBase):
             parts = label.split(delimiter)
             if len(parts) <= 1:
                 raise RuntimeError(
-                    f'Could not not parse more than one label from delimited string: {label}'
-                )
-
+                    f'Could not not parse more than one label from delimited string: {label}')
             try:
                 return tuple(literal_eval(p) for p in parts)
             except ValueError as e:
@@ -713,12 +730,14 @@ class IndexHierarchy(IndexBase):
             name: NameType = None,
             index_constructors: IndexConstructors = None,
             own_blocks: bool = False,
+            name_interleave: bool = False,
             ) -> IH:
         '''
         Construct an :obj:`IndexHierarchy` from a :obj:`TypeBlocks` instance.
 
         Args:
-            blocks: a TypeBlocks instance
+            blocks: a TypeBlocks
+            name_interleave: if True, merge names via index_constructors and the name argument.
 
         Returns:
             :obj:`IndexHierarchy`
@@ -741,7 +760,20 @@ class IndexHierarchy(IndexBase):
                 index_constructors_iter=index_constructors_iter,
                 )
 
-        # Use a new variable name to make mypy happy
+        if not name_interleave and name is None:
+            name = cls._build_name_from_indices(indices)
+            # else, use passed name
+        elif name_interleave:
+            # NOTE: we always expect name to be a tuple when name_priorty is False as this pathway is exclusively from Frame.set_index_hierarchy()
+            assert isinstance(name, tuple) and len(name) == len(indices)
+            def gen() -> tp.Iterator[tp.Hashable]:
+                for index, n in zip(indices, name): #type: ignore
+                    if index.name is not None:
+                        yield index.name
+                    else:
+                        yield n
+            name = tuple(gen())
+
         init_blocks: tp.Optional[TypeBlocks] = blocks
 
         if index_constructors is not None:
@@ -759,8 +791,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     # --------------------------------------------------------------------------
-
-    def _create_blocks_from_self(self: IH) -> TypeBlocks:
+    def _to_type_blocks(self: IH) -> TypeBlocks:
         '''
         Create a :obj:`TypeBlocks` instance from values respresented by `self._indices` and `self._indexers`.
         '''
@@ -771,7 +802,6 @@ class IndexHierarchy(IndexBase):
         return TypeBlocks.from_blocks(gen_blocks())
 
     # --------------------------------------------------------------------------
-
     def __init__(self: IH,
             indices: tp.Union[IH, tp.List[Index]],
             *,
@@ -840,7 +870,7 @@ class IndexHierarchy(IndexBase):
             else:
                 self._blocks = blocks.copy()
         else:
-            self._blocks = self._create_blocks_from_self()
+            self._blocks = self._to_type_blocks()
 
         self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
@@ -849,7 +879,8 @@ class IndexHierarchy(IndexBase):
         # This MUST be set before entering this context
         assert self._pending_extensions is not None
 
-        new_indexers = [np.empty(self.__len__(), DTYPE_INT_DEFAULT) for _ in range(self.depth)]
+        new_indexers = [np.empty(self.__len__(), DTYPE_INT_DEFAULT)
+                for _ in range(self.depth)]
 
         current_size = len(self._blocks)
 
@@ -859,7 +890,6 @@ class IndexHierarchy(IndexBase):
         self._indexers = EMPTY_ARRAY_INT # Remove reference to old indexers
 
         offset = current_size
-
         # For all these extensions, we have already update self._indices - we now need to map indexers
         for pending in self._pending_extensions: # pylint: disable = E1133
             if pending.__class__ is PendingRow: # type: ignore
@@ -886,7 +916,7 @@ class IndexHierarchy(IndexBase):
         self._pending_extensions.clear()
         self._indexers = np.array(new_indexers)
         self._indexers.flags.writeable = False
-        self._blocks = self._create_blocks_from_self()
+        self._blocks = self._to_type_blocks()
         self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
         self._recache = False
@@ -996,8 +1026,6 @@ class IndexHierarchy(IndexBase):
                 apply_type=IterNodeApplyType.INDEX_LABELS
                 )
 
-    # NOTE: Index implements drop property
-
     @property
     @doc_inject(select='astype')
     def astype(self: IH) -> InterfaceAsType[TContainer]:
@@ -1010,7 +1038,6 @@ class IndexHierarchy(IndexBase):
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
     # --------------------------------------------------------------------------
-
     @property
     def via_str(self: IH) -> InterfaceString[np.ndarray]:
         '''
@@ -1062,7 +1089,6 @@ class IndexHierarchy(IndexBase):
                 )
 
     # --------------------------------------------------------------------------
-
     @property
     @doc_inject()
     def mloc(self: IH) -> np.ndarray:
@@ -1149,7 +1175,6 @@ class IndexHierarchy(IndexBase):
         return total
 
     # --------------------------------------------------------------------------
-
     def __len__(self: IH) -> int:
         if self._recache:
             size = self._blocks.__len__()
@@ -1285,7 +1310,6 @@ class IndexHierarchy(IndexBase):
                 )
 
     # --------------------------------------------------------------------------
-
     @property
     def _index_constructors(self: IH) -> tp.Iterator[tp.Type[Index]]:
         '''
