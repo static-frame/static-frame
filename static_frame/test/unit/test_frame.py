@@ -4165,6 +4165,27 @@ class TestUnit(TestCase):
                 ((0, ((0, -90442.0), (1, 90442.0))), (1, ((0, 101677.0), (1, -101677.0))), (2, ((0, -47474.5), (1, 47474.5))))
                 )
 
+    def test_frame_binary_operator_o(self) -> None:
+        # reindex both axis
+        records = ((1, 2), (5, 10))
+        f1 = Frame.from_records(records,
+                columns=('p', 'q'),
+                index=('w', 'x'),
+                )
+        self.assertTrue((np.int64(10) * f1).equals(10 * f1))
+        self.assertTrue((np.int64(10) + f1).equals(10 + f1))
+        self.assertTrue((np.int64(10) / f1).equals(10 / f1))
+        self.assertTrue((np.int64(10) // f1).equals(10 // f1))
+        self.assertTrue((np.int64(10) - f1).equals(10 - f1))
+        self.assertTrue((np.int64(5) > f1).equals(5 > f1))
+        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1))
+        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1))
+        self.assertTrue((np.int64(5) < f1).equals(5 < f1))
+        self.assertTrue((np.int64(5) == f1).equals(5 == f1))
+        self.assertTrue((np.int64(5) != f1).equals(5 != f1))
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_isin_a(self) -> None:
