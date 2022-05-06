@@ -515,18 +515,17 @@ class TestUnit(TestCase):
         self.assertEqual((s > d).to_pairs(),
                 ((0, False), (1, True)))
 
-        with self.assertRaises(TypeError):
-            # TypeError: invalid type promotion
-            _ = d < s # why does this fail?
+        post1 = d < s
+        self.assertEqual(post1.to_pairs(), ((0, False), (1, True)))
 
         s2 = s.iloc[:1]
 
         self.assertEqual((s2 < d).to_pairs(),
                 ((0, True),))
 
-        with self.assertRaises(TypeError):
-            # TypeError: int() argument must be a string, a bytes-like object or a number, not 'datetime.date'
-            _ = d < s2
+        post2 = d < s2
+        self.assertEqual(post2.to_pairs(), ((0, False),))
+
 
     def test_series_binary_operator_n(self) -> None:
 
@@ -582,6 +581,86 @@ class TestUnit(TestCase):
         s5 = Series([2.1, 2.7, 2.9]) // 2
         self.assertEqual(s5.to_pairs(),
             ((0, 1), (1, 1), (2, 1)))
+
+    def test_series_binary_operator_q(self) -> None:
+        s1 = Series(range(4), index=list('abcd'))
+        post1 = np.int64(10) * s1
+        self.assertEqual(post1.to_pairs(),
+                (('a', 0), ('b', 10), ('c', 20), ('d', 30))
+                )
+        post2 = np.array([0, 0, 10, 10]) * s1
+        self.assertEqual(post2.to_pairs(), (('a', 0), ('b', 0), ('c', 20), ('d', 30)))
+
+    def test_series_binary_operator_r(self) -> None:
+        s1 = Series((2, 1, 8), index=list('abc'))
+        self.assertEqual((np.int64(2) - s1).to_pairs(),
+                (('a', 0), ('b', 1), ('c', -6)),
+                )
+        self.assertEqual((np.full(3, 2) - s1).to_pairs(),
+                (('a', 0), ('b', 1), ('c', -6)),
+                )
+
+    def test_series_binary_operator_s(self) -> None:
+        s1 = Series((2, 1, 8), index=list('abc'))
+        self.assertEqual((np.int64(2) + s1).to_pairs(),
+                (('a', 4), ('b', 3), ('c', 10)),
+                )
+        self.assertEqual((np.full(3, 2) + s1).to_pairs(),
+                (('a', 4), ('b', 3), ('c', 10)),
+                )
+
+    def test_series_binary_operator_t1(self) -> None:
+        s1 = Series((2, 5, 10), index=list('abc'))
+        self.assertEqual((np.int64(10) / s1).to_pairs(),
+                (('a', 5.0), ('b', 2.0), ('c', 1.0)),
+                )
+        self.assertEqual((np.full(3, 10) / s1).to_pairs(),
+                (('a', 5.0), ('b', 2.0), ('c', 1.0)),
+                )
+
+    def test_series_binary_operator_t2(self) -> None:
+        s1 = Series((2, 5, 10), index=list('abc'))
+        self.assertEqual((np.int64(10) // s1).to_pairs(),
+                (('a', 5), ('b', 2), ('c', 1)),
+                )
+        self.assertEqual((np.full(3, 10) // s1).to_pairs(),
+                (('a', 5), ('b', 2), ('c', 1)),
+                )
+
+    def test_series_binary_operator_u(self) -> None:
+        s1 = Series((2, 5, 10), index=list('abc'))
+        self.assertEqual((np.int64(5) >= s1).to_pairs(),
+                (('a', True), ('b', True), ('c', False)),
+                )
+        self.assertEqual((np.full(3, 5) >= s1).to_pairs(),
+                (('a', True), ('b', True), ('c', False)),
+                )
+
+    def test_series_binary_operator_v(self) -> None:
+        s1 = Series((2, 5, 10), index=list('abc'))
+
+        self.assertTrue((np.int64(5) >= s1).equals(5 >= s1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) > s1).equals(5 > s1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) <= s1).equals(5 <= s1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) < s1).equals(5 < s1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) == s1).equals(5 == s1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) != s1).equals(5 != s1)) #pylint: disable=C0122
+
+
+
+        # import ipdb; ipdb.set_trace()
+
+    #---------------------------------------------------------------------------
+    def test_series_array(self) -> None:
+        self.assertEqual(
+                Series(range(2), index=('a','b')).__array__().tolist(),
+                [0, 1]
+        )
+        self.assertEqual(
+                Series(range(2), index=('a','b')).__array__(str).tolist(),
+                ['0', '1']
+        )
+
 
     #---------------------------------------------------------------------------
 

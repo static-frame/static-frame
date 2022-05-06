@@ -79,16 +79,17 @@ def example(context, container=None):
     signatures = set()
 
     # discover all signatures; if it is defined, print in a darker color
-    for name, cls, frame in contexts['interface'].values():
-        for signature, row in frame.iter_tuple_items(axis=1):
-            target = f'{name}-{row.signature_no_args}'
-            signatures.add(target) # accumulate all signatures
-            if container and name != container:
-                continue
-            if target in defined:
-                print(HexColor.format_terminal(0x505050, target))
-            else:
-                print(target)
+    for name, cls, frames in contexts['interface'].values():
+        for group, frame in frames:
+            for signature, row in frame.iter_tuple_items(axis=1):
+                target = f'{name}-{row.signature_no_args}'
+                signatures.add(target) # accumulate all signatures
+                if container and name != container:
+                    continue
+                if target in defined:
+                    print(HexColor.format_terminal(0x505050, target))
+                else:
+                    print(target)
 
     for line in sorted(defined - signatures):
         print(HexColor.format_terminal(0x00ccff, line))

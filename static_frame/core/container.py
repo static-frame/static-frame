@@ -18,6 +18,7 @@ from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
 from static_frame.core.util import OPERATORS
+from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_transpose import InterfaceBatchTranspose
@@ -241,6 +242,35 @@ class ContainerOperand(ContainerBase):
 
     def __rfloordiv__(self, other: tp.Any) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__rfloordiv__'], other=other)
+
+    # --------------------------------------------------------------------------
+    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+        '''
+        Support the __array__ interface, returning a 1D array of values.
+        '''
+        if dtype is None:
+            return self.values
+        return self.values.astype(dtype)
+
+    def __array_ufunc__(self,
+            ufunc: UFunc,
+            method: str,
+            *args: tp.Any,
+            **kwargs: tp.Any,
+            ) -> 'ContainerOperand':
+        '''Support for NumPy elements or arrays on the left hand of binary operators.
+        '''
+        if len(args) == 2 and args[1] is self and method == '__call__':
+            # self is right-hand side of binary operator with NumPy object
+            return self._ufunc_binary_operator(
+                    operator=UFUNC_TO_REVERSE_OPERATOR[ufunc],
+                    other=args[0],
+                    )
+        return NotImplemented  #pragma: no cover
+
+    # NOTE: this method will support aribitrary np functions; we choosen not to support these as not all functions make sense for SF containers
+    # def __array_function__(self, func, types, args, kwargs):
+    #     raise NotImplementedError(f'no support for {func}')
 
     # --------------------------------------------------------------------------
     # ufunc axis skipna methods: applied along an axis, reducing dimensionality.
