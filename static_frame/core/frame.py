@@ -4297,7 +4297,7 @@ class Frame(ContainerOperand):
             column_key: GetItemKeyType = None,
             ) -> np.ndarray:
         '''
-        Alternative extractor that returns just an ndarray
+        Alternative extractor that returns just an ndarray. Keys are iloc keys.
         '''
         return self._blocks._extract_array(row_key, column_key)
 

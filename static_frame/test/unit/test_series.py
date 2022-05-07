@@ -1785,6 +1785,30 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_series_group_array_c(self) -> None:
+
+        s1 = Series((10, 20, 10, 20, 20),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+
+        post = tuple(s1.iter_group_array())
+        self.assertEqual(len(post), 2)
+        self.assertEqual([a.shape for a in post], [(2,), (3,)])
+
+
+    #---------------------------------------------------------------------------
+    def test_series_group_array_items_c(self) -> None:
+
+        s1 = Series((10, 20, 10, 20, 20),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+
+        post = tuple(s1.iter_group_array_items())
+        self.assertEqual(len(post), 2)
+        self.assertEqual([a[1].shape for a in post], [(2,), (3,)])
+        self.assertEqual([p[0] for p in post], [10, 20])
+
+    #---------------------------------------------------------------------------
 
     def test_series_iter_element_a(self) -> None:
 

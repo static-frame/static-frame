@@ -784,6 +784,30 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
+    def iter_group_array(self) -> IterNodeGroup['Series']:
+        '''
+        Iterator of :obj:`Series`, where each :obj:`Series` matches unique values.
+        '''
+        return IterNodeGroup(
+                container=self,
+                function_items=partial(self._axis_group_items, as_array=True),
+                function_values=partial(self._axis_group, as_array=True),
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    @property
+    def iter_group_array_items(self) -> IterNodeGroup['Series']:
+        return IterNodeGroup(
+                container=self,
+                function_items=partial(self._axis_group_items, as_array=True),
+                function_values=partial(self._axis_group, as_array=True),
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    #---------------------------------------------------------------------------
+    @property
     def iter_group_labels(self) -> IterNodeDepthLevel['Series']:
         return IterNodeDepthLevel(
                 container=self,
@@ -1676,6 +1700,9 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # extraction
 
+    # def _extract_array(self, key: GetItemKeyType) -> np.ndarray:
+    #     return self.values[key]
+
     def _extract_iloc(self, key: GetItemKeyType) -> 'Series':
         # iterable selection should be handled by NP
         values = self.values[key]
@@ -1788,21 +1815,25 @@ class Series(ContainerOperand):
     # axis functions
 
     def _axis_group_items(self, *,
-            axis: int = 0
+            axis: int = 0,
+            as_array: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
         if axis != 0:
             raise AxisInvalid(f'invalid axis {axis}')
 
         groups, locations = array_to_groups_and_locations(self.values)
 
+        func = self.values.__getitem__ if as_array else self._extract_iloc
+
         for idx, g in enumerate(groups):
             selection = locations == idx
-            yield g, self._extract_iloc(selection)
+            yield g, func(selection)
 
     def _axis_group(self, *,
-            axis: int = 0
+            axis: int = 0,
+            as_array: bool = False,
             ) -> tp.Iterator['Series']:
-        yield from (x for _, x in self._axis_group_items(axis=axis))
+        yield from (x for _, x in self._axis_group_items(axis=axis, as_array=as_array))
 
 
     def _axis_element_items(self,
