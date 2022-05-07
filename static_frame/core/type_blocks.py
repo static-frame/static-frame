@@ -127,7 +127,9 @@ def group_match(
     column_key: tp.Union[int, np.ndarray, None]
     row_key: tp.Union[int, np.ndarray, None]
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
+
     func = blocks._extract_array if as_array else blocks._extract
+
     if axis == 0:
         if extract is not None:
             column_key = extract
