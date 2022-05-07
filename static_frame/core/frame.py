@@ -3283,6 +3283,33 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS,
                 )
 
+
+    @property
+    def iter_group_labels_array(self) -> IterNodeDepthLevelAxis['Frame']:
+        '''
+        Iterator of ``np.ndarray`` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
+        '''
+        return IterNodeDepthLevelAxis(
+                container=self,
+                function_values=partial(self._axis_group_labels, as_array=True),
+                function_items=partial(self._axis_group_labels_items, as_array=True),
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS,
+                )
+
+    @property
+    def iter_group_labels_array_items(self) -> IterNodeDepthLevelAxis['Frame']:
+        '''
+        Iterator of pairs of label, ``np.ndarray`` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
+        '''
+        return IterNodeDepthLevelAxis(
+                container=self,
+                function_values=partial(self._axis_group_labels, as_array=True),
+                function_items=partial(self._axis_group_labels_items, as_array=True),
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS,
+                )
+
     #---------------------------------------------------------------------------
 
     @property
@@ -5003,10 +5030,12 @@ class Frame(ContainerOperand):
                 as_array=as_array,
                 ))
 
+    #-----------------------------------------------------------------------
     def _axis_group_labels_items(self,
             depth_level: DepthLevelSpecifier = 0,
             *,
             axis: int = 0,
+            as_array: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
 
         if axis == 0: # maintain columns, group by index
@@ -5019,40 +5048,51 @@ class Frame(ContainerOperand):
         # NOTE: see if this can use the group implementation on TypeBlocks
 
         values = ref_index.values_at_depth(depth_level)
-
         groups, locations = array_to_groups_and_locations(values)
 
         selection = np.empty(len(locations), dtype=DTYPE_BOOL)
+        func = self._blocks._extract_array if as_array else self._blocks._extract
 
-        for idx, group in enumerate(groups):
-            np.equal(locations, idx, out=selection)
+        if as_array:
+            for idx, group in enumerate(groups):
+                np.equal(locations, idx, out=selection)
+                if axis == 0:
+                    yield group, func(row_key=selection)
+                else:
+                    yield group, func(column_key=selection)
+        else:
+            for idx, group in enumerate(groups):
+                np.equal(locations, idx, out=selection)
 
-            if axis == 0:
-                # axis 0 is a row iter, so need to slice index, keep columns
-                tb = self._blocks._extract(row_key=selection)
-                yield group, self.__class__(tb,
-                        index=self._index[selection],
-                        columns=self._columns, # let constructor determine ownership
-                        own_index=True,
-                        own_data=True)
-
-            elif axis == 1:
-                # axis 1 is a column iterators, so need to slice columns, keep index
-                tb = self._blocks._extract(column_key=selection)
-                yield group, self.__class__(tb,
-                        index=self._index,
-                        columns=self._columns[selection],
-                        own_index=True,
-                        own_columns=True,
-                        own_data=True)
+                if axis == 0:
+                    # axis 0 is a row iter, so need to slice index, keep columns
+                    tb = func(row_key=selection)
+                    yield group, self.__class__(tb,
+                            index=self._index[selection],
+                            columns=self._columns, # let constructor determine ownership
+                            own_index=True,
+                            own_data=True)
+                else:
+                    # axis 1 is a column iterators, so need to slice columns, keep index
+                    tb = func(column_key=selection)
+                    yield group, self.__class__(tb,
+                            index=self._index,
+                            columns=self._columns[selection],
+                            own_index=True,
+                            own_columns=True,
+                            own_data=True)
 
     def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
             *,
             axis: int = 0,
+            as_array: bool = False,
             ) -> tp.Iterator['Frame']:
         yield from (x for _, x in self._axis_group_labels_items(
-                depth_level=depth_level, axis=axis))
+                depth_level=depth_level,
+                axis=axis,
+                as_array=as_array,
+                ))
 
     #---------------------------------------------------------------------------
     def _axis_window_items(self, *,
