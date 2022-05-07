@@ -459,6 +459,18 @@ class TestUnit(TestCase):
                 [np.ndarray, np.ndarray]
                 )
 
+    def test_frame_iter_group_array_b(self) -> None:
+        f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)
+
+        post = tuple(f1.iter_group_array(1, drop=True))
+        self.assertEqual([p.shape for p in post],
+                [(3, 2), (4, 2)]
+                )
+        self.assertEqual([p.__class__ for p in post],
+                [np.ndarray, np.ndarray]
+                )
+
     #---------------------------------------------------------------------------
     def test_frame_iter_group_array_items_a(self) -> None:
         f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
@@ -1005,7 +1017,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(post[1][1].to_pairs(0),
                 (('p', (('x', 30), ('z', 30))), ('q', (('x', 34), ('z', 73))), ('r', (('x', 'b'), ('z', 'd'))), ('s', (('x', True), ('z', True))), ('t', (('x', False), ('z', True)))))
-
 
         s1 = f1.iter_group('p', axis=0).apply(lambda f: f['q'].values.sum())
         self.assertEqual(list(s1.items()), [(2, 97), (30, 107)])

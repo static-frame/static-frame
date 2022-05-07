@@ -4910,7 +4910,7 @@ class Frame(ContainerOperand):
                     axis=axis,
                     key=key,
                     drop=drop,
-                    extract=NULL_SLICE if as_array else None
+                    as_array=as_array,
                     )
             if axis == 0:
                 index = self._index #._extract_iloc(ordering) # sort
@@ -4925,7 +4925,7 @@ class Frame(ContainerOperand):
                     axis=axis,
                     key=key,
                     drop=drop,
-                    extract=NULL_SLICE if as_array else None
+                    as_array=as_array,
                     )
             if axis == 0:
                 index = self._index

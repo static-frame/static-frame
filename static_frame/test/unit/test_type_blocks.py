@@ -3435,7 +3435,12 @@ class TestUnit(TestCase):
         tb1 = ff.parse('s(4,6)|v(int)').assign.loc[1].apply(
                 lambda s: s % 3)._blocks
         tb1, _ = tb1.sort(key=1, axis=0)
-        post = tuple(group_sorted(tb1, axis=1, key=1, extract=0))
+        post = tuple(group_sorted(tb1,
+                axis=1,
+                key=1,
+                extract=0,
+                as_array=True,
+                ))
         self.assertEqual([x[0] for x in post],
                 [0, 1, 2]
                 )
@@ -3446,7 +3451,11 @@ class TestUnit(TestCase):
     def test_type_blocks_group_sorted_e(self) -> None:
         tb1, _ = ff.parse('s(7,3)|v(int)').assign[1].apply(
                 lambda s: s % 3)._blocks.sort(1, 1)
-        post = tuple(group_sorted(tb1, axis=0, key=1, extract=NULL_SLICE))
+        post = tuple(group_sorted(tb1,
+                axis=0,
+                key=1,
+                as_array=True,
+                ))
         self.assertEqual([p[2].__class__ for p in post], [np.ndarray, np.ndarray])
         self.assertEqual([p[2].shape for p in post], [(3, 3), (4, 3)])
 
@@ -3484,7 +3493,7 @@ class TestUnit(TestCase):
     def test_type_blocks_group_match_e(self) -> None:
         tb1 = ff.parse('s(4,6)|v(int)').assign.loc[1].apply(
                 lambda s: s % 2)._blocks
-        post = tuple(group_match(tb1, axis=1, key=1, extract=0))
+        post = tuple(group_match(tb1, axis=1, key=1, extract=0, as_array=True))
 
         self.assertEqual([x[0] for x in post], [0, 1])
         self.assertEqual([x[2].shape for x in post], [(2,), (4,)])
@@ -3492,7 +3501,13 @@ class TestUnit(TestCase):
     def test_type_blocks_group_match_f(self) -> None:
         tb1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
                 lambda s: s % 3)._blocks
-        post = tuple(group_match(tb1, axis=0, key=1, extract=NULL_SLICE))
+
+        post = tuple(group_match(tb1,
+                axis=0,
+                key=1,
+                as_array=True,
+                ))
+
         self.assertEqual([p[2].__class__ for p in post], [np.ndarray, np.ndarray])
         self.assertEqual([p[2].shape for p in post], [(3, 3), (4, 3)])
 
