@@ -8,6 +8,10 @@ Added ``apply_element()`` and ``apply_element_items()`` methods to ``FrameAssign
 
 Added implementation of ``__array__()`` and ``__array_ufunc__()`` to all containers for better support with NumPy objects and binary operators.
 
+Added ``Series.iter_group_array()``, ``Series.iter_group_array_items()``, ``Series.iter_group_labels_array()``, ``Series.iter_group_labels_array_items()``
+
+Added ``Frame.iter_group_array()``, ``Frame.iter_group_array_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``
+
 Corrected issue when using binary operators with a `FrameGO` and a `Series`.
 
 Corrected issue and performance of ``name`` assignment when extracting ``Series`` from ``Frame`` with an ``IndexHierarchy``.
