@@ -1785,6 +1785,30 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_series_group_array_c(self) -> None:
+
+        s1 = Series((10, 20, 10, 20, 20),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+
+        post = tuple(s1.iter_group_array())
+        self.assertEqual(len(post), 2)
+        self.assertEqual([a.shape for a in post], [(2,), (3,)])
+
+
+    #---------------------------------------------------------------------------
+    def test_series_group_array_items_c(self) -> None:
+
+        s1 = Series((10, 20, 10, 20, 20),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+
+        post = tuple(s1.iter_group_array_items())
+        self.assertEqual(len(post), 2)
+        self.assertEqual([a[1].shape for a in post], [(2,), (3,)])
+        self.assertEqual([p[0] for p in post], [10, 20])
+
+    #---------------------------------------------------------------------------
 
     def test_series_iter_element_a(self) -> None:
 
@@ -3242,7 +3266,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_series_iter_group_index_a(self) -> None:
+    def test_series_iter_group_labels_a(self) -> None:
 
         s1 = Series((10, 3, 15, 21, 28),
                 index=('a', 'b', 'c', 'd', 'e'),
@@ -3252,7 +3276,7 @@ class TestUnit(TestCase):
         self.assertTrue(len(post), len(s1))
         self.assertTrue(all(isinstance(x[1], Series) for x in post))
 
-    def test_series_iter_group_index_b(self) -> None:
+    def test_series_iter_group_labels_b(self) -> None:
 
         colors = ('red', 'green')
         shapes = ('square', 'circle', 'triangle')
@@ -3269,7 +3293,7 @@ class TestUnit(TestCase):
                 (('green', 9), ('red', 6))
                 )
 
-    def test_series_iter_group_index_c(self) -> None:
+    def test_series_iter_group_labels_c(self) -> None:
 
         colors = ('red', 'green')
         shapes = ('square', 'circle', 'triangle')
@@ -3287,7 +3311,29 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_series_iter_group_labels_array_a(self) -> None:
 
+        s1 = Series((10, 3, 15, 21, 28),
+                index=IndexHierarchy.from_labels(
+                    ((1, 'a'), (2, 'b'), (1, 'b'), (2, 'a'), (2, 'c'))),
+                )
+        post = tuple(s1.iter_group_labels_array())
+        self.assertEqual(len(post), 2)
+        self.assertEqual([p.__class__ for p in post], [np.ndarray, np.ndarray])
+
+    #---------------------------------------------------------------------------
+    def test_series_iter_group_labels_array_items_a(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=IndexHierarchy.from_labels(
+                    ((1, 'a'), (2, 'b'), (1, 'b'), (2, 'a'), (2, 'c'))),
+                )
+        post = tuple(s1.iter_group_labels_array_items())
+        self.assertEqual(len(post), 2)
+        self.assertEqual([p[0] for p in post], [1, 2])
+        self.assertEqual([p[1].__class__ for p in post], [np.ndarray, np.ndarray])
+
+    #---------------------------------------------------------------------------
     def test_series_locmin_a(self) -> None:
         s1 = Series((2, 3, 0,), index=list('abc'))
         self.assertEqual(s1.loc_min(), 'c')

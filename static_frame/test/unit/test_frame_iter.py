@@ -447,6 +447,47 @@ class TestUnit(TestCase):
             (np.datetime64('1998-10-13'), 2)))
 
     #---------------------------------------------------------------------------
+    def test_frame_iter_group_array_a(self) -> None:
+        f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)
+
+        post = tuple(f1.iter_group_array(1))
+        self.assertEqual([p.shape for p in post],
+                [(3, 3), (4, 3)]
+                )
+        self.assertEqual([p.__class__ for p in post],
+                [np.ndarray, np.ndarray]
+                )
+
+    def test_frame_iter_group_array_b(self) -> None:
+        f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)
+
+        post = tuple(f1.iter_group_array(1, drop=True))
+        self.assertEqual([p.shape for p in post],
+                [(3, 2), (4, 2)]
+                )
+        self.assertEqual([p.__class__ for p in post],
+                [np.ndarray, np.ndarray]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_group_array_items_a(self) -> None:
+        f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)
+
+        post = tuple(f1.iter_group_array_items(1))
+        self.assertEqual([p[1].shape for p in post],
+                [(3, 3), (4, 3)]
+                )
+        self.assertEqual([p[1].__class__ for p in post],
+                [np.ndarray, np.ndarray]
+                )
+        self.assertEqual([p[0] for p in post],
+                [0, 2]
+                )
+
+    #---------------------------------------------------------------------------
 
     def test_frame_iter_group_items_a(self) -> None:
 
@@ -646,7 +687,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_iter_group_index_a(self) -> None:
+    def test_frame_iter_group_labels_a(self) -> None:
 
         records = (
                 (2, 2, 'a', False, False),
@@ -672,7 +713,7 @@ class TestUnit(TestCase):
                 (('x', 4), ('y', 64), ('z', 97))
                 )
 
-    def test_frame_iter_group_index_b(self) -> None:
+    def test_frame_iter_group_labels_b(self) -> None:
 
         records = (
                 (2, 2, 'a', 'q', False, False),
@@ -705,7 +746,7 @@ class TestUnit(TestCase):
                 (('a', 34), ('b', 131))
                 )
 
-    def test_frame_iter_group_index_c(self) -> None:
+    def test_frame_iter_group_labels_c(self) -> None:
         columns = tuple('pqrst')
         index = tuple('zxwy')
         records = (('A', 1, 'a', False, False),
@@ -725,6 +766,54 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('A', 'A:6'), ('B', 'B:6'))
         )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_iter_group_labels_array_a(self) -> None:
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+
+        f = Frame.from_records(records, columns=columns, index=index)
+        f = f.set_index_hierarchy(('p', 'q'), drop=True)
+
+        post1 = tuple(f.iter_group_labels_array(0))
+        self.assertEqual(len(post1), 2)
+        self.assertEqual([a.__class__ for a in post1], [np.ndarray, np.ndarray])
+        self.assertEqual([a.shape for a in post1], [(2, 2), (2, 2)])
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_iter_group_labels_array_items_a(self) -> None:
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+
+        f = Frame.from_records(records, columns=columns, index=index)
+        f = f.set_index_hierarchy(('p', 'q'), drop=True)
+
+        post1 = tuple(f.iter_group_labels_array_items(0))
+        self.assertEqual(len(post1), 2)
+        self.assertEqual([a[1].__class__ for a in post1], [np.ndarray, np.ndarray])
+        self.assertEqual([a[1].shape for a in post1], [(2, 2), (2, 2)])
+        self.assertEqual([a[0] for a in post1], ['A', 'B'])
+
+    def test_frame_iter_group_labels_array_items_b(self) -> None:
+        f = sf.Frame(np.arange(8).reshape(2, 4),
+                columns=sf.IndexHierarchy.from_labels(
+                        ((1, 'a'), (2, 'b'), (1, 'b'), (2, 'a'))
+                ))
+        post1 = tuple(f.iter_group_labels_array_items(1, axis=1))
+        self.assertEqual(len(post1), 2)
+        self.assertEqual([a[1].__class__ for a in post1], [np.ndarray, np.ndarray])
+        self.assertEqual([a[1].shape for a in post1], [(2, 2), (2, 2)])
+        self.assertEqual([a[0] for a in post1], ['a', 'b'])
 
     #---------------------------------------------------------------------------
 
@@ -976,7 +1065,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(post[1][1].to_pairs(0),
                 (('p', (('x', 30), ('z', 30))), ('q', (('x', 34), ('z', 73))), ('r', (('x', 'b'), ('z', 'd'))), ('s', (('x', True), ('z', True))), ('t', (('x', False), ('z', True)))))
-
 
         s1 = f1.iter_group('p', axis=0).apply(lambda f: f['q'].values.sum())
         self.assertEqual(list(s1.items()), [(2, 97), (30, 107)])
