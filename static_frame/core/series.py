@@ -829,6 +829,27 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
+    def iter_group_labels_array(self) -> IterNodeDepthLevel['Series']:
+        return IterNodeDepthLevel(
+                container=self,
+                function_items=partial(self._axis_group_labels_items, as_array=True),
+                function_values=partial(self._axis_group_labels, as_array=True),
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
+                )
+
+    @property
+    def iter_group_labels_array_items(self) -> IterNodeDepthLevel['Series']:
+        return IterNodeDepthLevel(
+                container=self,
+                function_items=partial(self._axis_group_labels_items, as_array=True),
+                function_values=partial(self._axis_group_labels, as_array=True),
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
+                )
+
+    #---------------------------------------------------------------------------
+    @property
     def iter_element(self) -> IterNodeNoArg['Series']:
         '''
         Iterator of elements.
@@ -1850,6 +1871,8 @@ class Series(ContainerOperand):
 
     def _axis_group_labels_items(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            *,
+            as_array: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
 
         if depth_level is None:
@@ -1860,17 +1883,23 @@ class Series(ContainerOperand):
         groups, locations = array_to_groups_and_locations(
                 values)
 
+        func = self.values.__getitem__ if as_array else self._extract_iloc
+
         for idx, g in enumerate(groups):
             selection = locations == idx
             if group_to_tuple:
                 g = tuple(g)
-            yield g, self._extract_iloc(selection)
+            yield g, func(selection)
 
     def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
+            *,
+            as_array: bool = False,
             ) -> tp.Iterator[tp.Hashable]:
         yield from (x for _, x in self._axis_group_labels_items(
-                depth_level=depth_level))
+                depth_level=depth_level,
+                as_array=as_array,
+                ))
 
 
 

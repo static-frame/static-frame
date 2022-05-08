@@ -3231,6 +3231,7 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
 
+    #---------------------------------------------------------------------------
     @property
     def iter_group_array(self) -> IterNodeGroupAxis['Frame']:
         '''
@@ -3257,6 +3258,7 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
 
+    #---------------------------------------------------------------------------
     @property
     def iter_group_labels(self) -> IterNodeDepthLevelAxis['Frame']:
         '''
@@ -3283,7 +3285,7 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS,
                 )
 
-
+    #---------------------------------------------------------------------------
     @property
     def iter_group_labels_array(self) -> IterNodeDepthLevelAxis['Frame']:
         '''
@@ -3311,7 +3313,6 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-
     @property
     @doc_inject(selector='window')
     def iter_window(self) -> IterNodeWindow['Frame']:
