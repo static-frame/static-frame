@@ -3809,6 +3809,15 @@ class TestUnit(TestCase):
                 [[1, 'x', 2], [1, 'x', 'x'], [1, 'b', 2], [1, 'b', 'x'], [2, 'x', 2], [2, 'x', 'x'], [2, 'b', 2], [2, 'b', 'x']]
                 )
 
+    def test_hierarchy_fillfalsy_a(self) -> None:
+
+        ih1 = IndexHierarchyGO.from_product((1, 2), ('', 'b'))
+        ih1.append((3, ''))
+        ih2 = ih1.fillfalsy('x')
+        import ipdb; ipdb.set_trace()
+        self.assertEqual(ih2.values.tolist(),
+                [[1, 'x', 2], [1, 'x', 'x'], [1, 'b', 2], [1, 'b', 'x'], [2, 'x', 2], [2, 'x', 'x'], [2, 'b', 2], [2, 'b', 'x']]
+                )
 
     #---------------------------------------------------------------------------
     def test_hierarchy_from_names_a(self) -> None:
