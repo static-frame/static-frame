@@ -1,6 +1,14 @@
 What is New in Static Frame
 ===============================
 
+0.9.4
+----------
+
+Added ``Index.dropna()``, ``Index.dropfalsy()``, ``IndexHierarchy.dropna()``, ``IndexHierarchy.dropfalsy().
+
+Added ``Index.fillfalsy()``, ``IndexHierarchy.fillfalsy()``.
+
+
 0.9.3
 ----------
 
