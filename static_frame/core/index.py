@@ -59,6 +59,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import intersect1d
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KeyIterableTypes
@@ -1191,14 +1192,14 @@ class Index(IndexBase):
 
     def _drop_missing(self,
             func: tp.Callable[[np.ndarray], np.ndarray],
-            include_dtype_kind: tp.FrozenSet[str],
+            include_dtype_kind: tp.Optional[tp.FrozenSet[str]],
             ) -> 'Index':
         '''
         Args:
             func: UFunc that returns True for missing values
         '''
         labels = self.values
-        if labels.dtype.kind not in include_dtype_kind:
+        if include_dtype_kind is not None and labels.dtype.kind not in include_dtype_kind:
             if self.STATIC:
                 return self
             return self.__class__(labels,
@@ -1251,31 +1252,11 @@ class Index(IndexBase):
     #     values = np.logical_not(isfalsy_array(self.values))
     #     values.flags.writeable = False
 
-    # def dropfalsy(self) -> 'Series':
-    #     '''
-    #     Return a new :obj:`Series` after removing values of falsy.
-    #     '''
-    #     # get positions that we want to keep
-    #     isfalsy = isfalsy_array(self.values)
-    #     length = len(self.values)
-    #     count = isfalsy.sum()
-
-    #     if count == length: # all are falsy
-    #         return self.__class__((), name=self.name)
-    #     if count == 0: # None are falsy
-    #         return self.__class__(self.values,
-    #                 index=self._index,
-    #                 name=self._name,
-    #                 own_index=True)
-
-    #     sel = np.logical_not(isfalsy)
-    #     values = self.values[sel]
-    #     values.flags.writeable = False
-
-    #     return self.__class__(values,
-    #             index=self._index._extract_iloc(sel), # PERF: use _extract_iloc as we have a Boolean array
-    #             name=self._name,
-    #             own_index=True)
+    def dropfalsy(self) -> 'Index':
+        '''
+        Return a new :obj:`Index` after removing values of NaN or None.
+        '''
+        return self._drop_missing(isfalsy_array, None)
 
 
     #---------------------------------------------------------------------------

@@ -1569,6 +1569,22 @@ class TestUnit(TestCase):
         idx2 = idx1.dropna()
         self.assertEqual(idx2.values.tolist(), [datetime.date(2020, 3, 1), datetime.date(1981, 5, 30)])
 
+    def test_index_dropna_d(self) -> None:
+        idx1 = Index((None, np.nan))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [])
+
+    def test_index_dropna_e(self) -> None:
+        idx1 = Index((3, 4))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3, 4])
+        self.assertIs(idx2, idx1)
+
+    def test_index_dropna_f(self) -> None:
+        idx1 = IndexGO((3, 4))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3, 4])
+        self.assertIsNot(idx2, idx1)
 
         # import ipdb; ipdb.set_trace()
 
