@@ -80,6 +80,7 @@ from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import isna_array
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin_array
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
@@ -2228,6 +2229,57 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True,
                 )
 
+    #---------------------------------------------------------------------------
+    def _drop_missing(self,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            condition: tp.Callable[[np.ndarray], bool],
+            ) -> IH:
+        '''
+        Return a new obj:`IndexHierarchy` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+
+        Args:
+            axis:
+            condition:
+        '''
+        # returns Boolean areas that define axis to keep
+        row_key, _ = self._blocks.drop_missing_to_keep_locations(
+                axis=0, # always labels (rows) for IH
+                condition=condition,
+                func=func,
+                )
+        if self.STATIC and row_key.all(): #type: ignore
+            return self #type: ignore
+
+        return self._drop_iloc(~row_key) #type: ignore
+
+
+    def dropna(self, *,
+            condition: tp.Callable[[np.ndarray], bool] = np.all,
+            ) -> IH:
+        '''
+        Return a new obj:`IndexHierarchy` after removing labels where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+
+        Args:
+            *,
+            condition:
+        '''
+        return self._drop_missing(isna_array, condition)
+
+    def dropfalsy(self, *,
+            condition: tp.Callable[[np.ndarray], bool] = np.all,
+            ) -> IH:
+        '''
+        Return a new obj:`IndexHierarchy` after removing labels where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+
+        Args:
+            *,
+            condition:
+        '''
+        return self._drop_missing(isfalsy_array, condition)
+
+
+    #---------------------------------------------------------------------------
+
     @doc_inject(selector='fillna')
     def fillna(self: IH,
             value: tp.Any,
@@ -2250,6 +2302,29 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True,
                 )
 
+    @doc_inject(selector='fillna')
+    def fillfalsy(self: IH,
+            value: tp.Any,
+            ) -> IH:
+        '''
+        Return an :obj:`IndexHierarchy` after replacing falsy values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        blocks = self._blocks.fill_missing_by_unit(value, None, func=isfalsy_array)
+
+        return self.__class__._from_type_blocks(
+                blocks=blocks,
+                index_constructors=self._index_constructors,
+                name=self._name,
+                own_blocks=True,
+                )
+
+    #---------------------------------------------------------------------------
     def _sample_and_key(self: IH,
             count: int = 1,
             *,

@@ -800,7 +800,6 @@ class TestUnit(TestCase):
                 ['d', 'a', 'b', 'c'])
 
     #---------------------------------------------------------------------------
-
     def test_index_fillna_a(self) -> None:
 
         idx1 = Index(('a', 'b', 'c', None))
@@ -830,6 +829,14 @@ class TestUnit(TestCase):
         self.assertEqual(idx2.values.tolist(),
                 [3.0, 2.0, 'foo'],
                 )
+
+    #---------------------------------------------------------------------------
+    def test_index_fillfalsy_a(self) -> None:
+
+        idx1 = Index(('a', 'b', 'c', ''))
+        idx2 = idx1.fillfalsy('d')
+        self.assertEqual(idx2.values.tolist(),
+                ['a', 'b', 'c', 'd'])
 
     #---------------------------------------------------------------------------
 
@@ -1553,6 +1560,63 @@ class TestUnit(TestCase):
         post = idx._extract_iloc_by_int(2)
         self.assertEqual(post, 'c')
 
+    #---------------------------------------------------------------------------
+    def test_index_dropna_a(self) -> None:
+        idx1 = Index((3.5, np.nan, 1.5))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3.5, 1.5])
+
+    def test_index_dropna_b(self) -> None:
+        idx1 = Index((3.5, None, 1.5))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3.5, 1.5])
+
+    def test_index_dropna_c(self) -> None:
+        idx1 = IndexDate(('2020-03', None, '1981-05-30'))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [datetime.date(2020, 3, 1), datetime.date(1981, 5, 30)])
+
+    def test_index_dropna_d(self) -> None:
+        idx1 = Index((None, np.nan))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [])
+
+    def test_index_dropna_e(self) -> None:
+        idx1 = Index((3, 4))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3, 4])
+        self.assertIs(idx2, idx1)
+
+    def test_index_dropna_f(self) -> None:
+        idx1 = IndexGO((3, 4))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3, 4])
+        self.assertIsNot(idx2, idx1)
+
+    def test_index_dropna_g(self) -> None:
+        idx1 = IndexDate(('2020-03', '1981-05-30'))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [datetime.date(2020, 3, 1), datetime.date(1981, 5, 30)])
+        self.assertIs(idx1, idx2)
+
+    def test_index_dropna_h(self) -> None:
+        idx1 = IndexDateGO(('2020-03', '1981-05-30'))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [datetime.date(2020, 3, 1), datetime.date(1981, 5, 30)])
+        self.assertIsNot(idx1, idx2)
+
+    #---------------------------------------------------------------------------
+    def test_index_dropfalsy_a(self) -> None:
+        idx1 = Index((3.5, np.nan, 1.5))
+        idx2 = idx1.dropfalsy()
+        self.assertEqual(idx2.values.tolist(), [3.5, 1.5])
+
+    def test_index_dropfalsy_b(self) -> None:
+        idx1 = Index((0, '', None, 2))
+        idx2 = idx1.dropfalsy()
+        self.assertEqual(idx2.values.tolist(), [2])
+
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

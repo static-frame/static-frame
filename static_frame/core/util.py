@@ -80,6 +80,18 @@ DTYPE_NA_KINDS = frozenset((
         DTYPE_OBJECT_KIND,
         ))
 
+# this is all kinds except 'V'
+# DTYPE_FALSY_KINDS = frozenset((
+#         DTYPE_FLOAT_KIND,
+#         DTYPE_COMPLEX_KIND,
+#         DTYPE_DATETIME_KIND,
+#         DTYPE_TIMEDELTA_KIND,
+#         DTYPE_OBJECT_KIND,
+#         DTYPE_BOOL_KIND,
+#         'U', 'S', # str kinds
+#         'i', 'u' # int kinds
+#         ))
+
 # all kinds that can use tolist() to go to a compatible Python type
 DTYPE_OBJECTABLE_KINDS = frozenset((
         DTYPE_FLOAT_KIND,
@@ -95,7 +107,6 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
 DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
         'D', 'h', 'm', 's', 'ms', 'us',
         ))
-
 
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((

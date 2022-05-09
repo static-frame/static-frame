@@ -59,6 +59,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import intersect1d
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KeyIterableTypes
@@ -78,6 +79,7 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import DTYPE_NA_KINDS
 
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.loc_map import LocMap
@@ -1169,15 +1171,60 @@ class Index(IndexBase):
             values.flags.writeable = False
         return self.__class__(values, name=self._name)
 
-    @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> 'Index':
-        '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
+    #---------------------------------------------------------------------------
+    # na handling
+    # falsy handling
 
-        Args:
-            {value}
+    def _drop_missing(self,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            dtype_kind_targets: tp.Optional[tp.FrozenSet[str]],
+            ) -> 'Index':
         '''
+        Args:
+            func: UFunc that returns True for missing values
+        '''
+        labels = self.values
+        if dtype_kind_targets is not None and labels.dtype.kind not in dtype_kind_targets:
+            return self if self.STATIC else self.copy()
+
+        # get positions that we want to keep
+        isna = func(labels)
+        length = len(labels)
+        count = isna.sum()
+
+        if count == length: # all are NaN
+            return self.__class__((), name=self.name)
+        if count == 0: # None are nan
+            return self if self.STATIC else self.copy()
+
+        sel = np.logical_not(isna)
+        values = labels[sel]
+        values.flags.writeable = False
+
+        return self.__class__(values,
+                name=self._name,
+                )
+
+    def dropna(self) -> 'Index':
+        '''
+        Return a new :obj:`Index` after removing values of NaN or None.
+        '''
+        return self._drop_missing(isna_array, DTYPE_NA_KINDS)
+
+    def dropfalsy(self) -> 'Index':
+        '''
+        Return a new :obj:`Index` after removing values of NaN or None.
+        '''
+        return self._drop_missing(isfalsy_array, None)
+
+    #---------------------------------------------------------------------------
+
+    def _fill_missing(self,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            value: tp.Any,
+            ) -> 'Index':
         values = self.values # force usage of property for cache update
-        sel = isna_array(values)
+        sel = func(values)
         if not np.any(sel):
             return self if self.STATIC else self.copy()
 
@@ -1191,9 +1238,27 @@ class Index(IndexBase):
 
         assigned[sel] = value
         assigned.flags.writeable = False
-
         return self.__class__(assigned, name=self._name)
 
+    @doc_inject(selector='fillna')
+    def fillna(self, value: tp.Any) -> 'Index':
+        '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(isna_array, value)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy(self, value: tp.Any) -> 'Index':
+        '''Return an :obj:`Index` with replacing falsy values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(isfalsy_array, value)
+
+    #---------------------------------------------------------------------------
     def _sample_and_key(self,
             count: int = 1,
             *,
