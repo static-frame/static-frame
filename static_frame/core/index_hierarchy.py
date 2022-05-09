@@ -80,6 +80,7 @@ from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import isna_array
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin_array
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
@@ -2228,6 +2229,8 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True,
                 )
 
+    #---------------------------------------------------------------------------
+
     @doc_inject(selector='fillna')
     def fillna(self: IH,
             value: tp.Any,
@@ -2250,6 +2253,29 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True,
                 )
 
+    @doc_inject(selector='fillna')
+    def fillfalsy(self: IH,
+            value: tp.Any,
+            ) -> IH:
+        '''
+        Return an :obj:`IndexHierarchy` after replacing falsy values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        blocks = self._blocks.fill_missing_by_unit(value, None, func=isfalsy_array)
+
+        return self.__class__._from_type_blocks(
+                blocks=blocks,
+                index_constructors=self._index_constructors,
+                name=self._name,
+                own_blocks=True,
+                )
+
+    #---------------------------------------------------------------------------
     def _sample_and_key(self: IH,
             count: int = 1,
             *,

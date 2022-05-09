@@ -3801,6 +3801,16 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_hierarchy_fillfalsy_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('', 'b'), (2, ''))
+        ih2 = ih1.fillfalsy('x')
+        self.assertEqual(ih2.values.tolist(),
+                [[1, 'x', 2], [1, 'x', 'x'], [1, 'b', 2], [1, 'b', 'x'], [2, 'x', 2], [2, 'x', 'x'], [2, 'b', 2], [2, 'b', 'x']]
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_hierarchy_from_names_a(self) -> None:
 
         ih1 = IndexHierarchy.from_names(('foo', 'bar'))
