@@ -2230,6 +2230,52 @@ class IndexHierarchy(IndexBase):
                 )
 
     #---------------------------------------------------------------------------
+    def _drop_missing(self,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            condition: tp.Callable[[np.ndarray], bool],
+            ) -> IH:
+        '''
+        Return a new obj:`IndexHierarchy` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+
+        Args:
+            axis:
+            condition:
+        '''
+        # returns Boolean areas that define axis to keep
+        row_key, _ = self._blocks.drop_missing_to_keep_locations(
+                axis=0, # always labels (rows) for IH
+                condition=condition,
+                func=func,
+                )
+        if self.STATIC and row_key.all():
+            return self
+        return self._drop_iloc(~row_key)
+
+
+    def dropna(self, *,
+            condition: tp.Callable[[np.ndarray], bool] = np.all) -> IH:
+        '''
+        Return a new obj:`IndexHierarchy` after removing labels where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+
+        Args:
+            *,
+            condition:
+        '''
+        return self._drop_missing(isna_array, condition)
+
+    def dropfalsy(self, *,
+            condition: tp.Callable[[np.ndarray], bool] = np.all) -> IH:
+        '''
+        Return a new obj:`IndexHierarchy` after removing labels where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+
+        Args:
+            *,
+            condition:
+        '''
+        return self._drop_missing(isfalsy_array, condition)
+
+
+    #---------------------------------------------------------------------------
 
     @doc_inject(selector='fillna')
     def fillna(self: IH,

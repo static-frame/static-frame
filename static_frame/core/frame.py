@@ -3922,7 +3922,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             condition: tp.Callable[[np.ndarray], bool] = np.all) -> 'Frame':
         '''
-        Return a new Frame after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+        Return a new :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
         Args:
             axis:
@@ -3936,7 +3936,7 @@ class Frame(ContainerOperand):
                 )
 
         # NOTE: if no values to drop and this is a Frame (not a FrameGO) we can return self as it is immutable. only one of row_key, colum_Key will be an array
-        if self.__class__ is Frame:
+        if self.STATIC:
             if ((column_key is None and row_key.all()) or
                     (row_key is None and column_key.all())):
                 return self

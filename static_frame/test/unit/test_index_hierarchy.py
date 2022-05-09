@@ -3819,6 +3819,32 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_hierarchy_dropna_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 'a'), (None, 'b'))
+        ih2 = ih1.dropna(condition=np.any)
+        self.assertEqual(ih2.values.tolist(), [[1, 'b'], ['a', 'b']])
+
+        ih2 = ih1.dropna(condition=np.all)
+        self.assertIs(ih2, ih1)
+
+    def test_hierarchy_dropna_b(self) -> None:
+
+        ih1 = IndexHierarchy.from_labels(((1, 'a'), (None, np.nan), (None, 'b')))
+        ih2 = ih1.dropna(condition=np.all)
+        self.assertEqual(ih2.values.tolist(), [[1, 'a'], [None, 'b']])
+
+    #---------------------------------------------------------------------------
+    def test_hierarchy_dropfalsy_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 'a'), ('', 'b'))
+        ih2 = ih1.dropfalsy(condition=np.any)
+        self.assertEqual(ih2.values.tolist(), [[1, 'b'], ['a', 'b']])
+
+        ih2 = ih1.dropna(condition=np.all)
+        self.assertIs(ih2, ih1)
+
+    #---------------------------------------------------------------------------
     def test_hierarchy_from_names_a(self) -> None:
 
         ih1 = IndexHierarchy.from_names(('foo', 'bar'))
