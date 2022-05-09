@@ -78,6 +78,7 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import DTYPE_NA_KINDS
 
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.loc_map import LocMap
@@ -1169,6 +1170,115 @@ class Index(IndexBase):
             values.flags.writeable = False
         return self.__class__(values, name=self._name)
 
+    #---------------------------------------------------------------------------
+    # na handling
+
+    # def isna(self) -> np.ndarray:
+    #     '''
+    #     Return a same-sized, Boolean np.ndarray indicating which values are NaN or None.
+    #     '''
+    #     array = isna_array(self.values)
+    #     array.flags.writeable = False
+    #     return array
+
+    # def notna(self) -> 'Series':
+    #     '''
+    #     Return a same-sized, Boolean np.ndarray indicating which values are NaN or None.
+    #     '''
+    #     array = np.logical_not(isna_array(self.values))
+    #     array.flags.writeable = False
+    #     return array
+
+    def _drop_missing(self,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            include_dtype_kind: tp.FrozenSet[str],
+            ) -> 'Index':
+        '''
+        Args:
+            func: UFunc that returns True for missing values
+        '''
+        labels = self.values
+        if labels.dtype.kind not in include_dtype_kind:
+            if self.STATIC:
+                return self
+            return self.__class__(labels,
+                    name=self._name,
+                    )
+
+        # get positions that we want to keep
+        isna = func(labels)
+        length = len(labels)
+        count = isna.sum()
+
+        if count == length: # all are NaN
+            return self.__class__((), name=self.name)
+        if count == 0: # None are nan
+            if self.STATIC:
+                return self
+            return self.__class__(labels,
+                    name=self._name,
+                    )
+
+        sel = np.logical_not(isna)
+        values = labels[sel]
+        values.flags.writeable = False
+
+        return self.__class__(values,
+                name=self._name,
+                )
+
+
+    def dropna(self) -> 'Index':
+        '''
+        Return a new :obj:`Index` after removing values of NaN or None.
+        '''
+        return self._drop_missing(isna_array, DTYPE_NA_KINDS)
+
+    #---------------------------------------------------------------------------
+    # falsy handling
+
+    # def isfalsy(self) -> np.ndarray:
+    #     '''
+    #     Return a same-sized, Boolean ``np.ndarray`` indicating which values are falsy.
+    #     '''
+    #     values = isfalsy_array(self.values)
+    #     values.flags.writeable = False
+
+    # def notfalsy(self) -> np.ndarray:
+    #     '''
+    #     Return a same-sized, Boolean ``np.ndarray`` indicating which values are falsy.
+    #     '''
+    #     values = np.logical_not(isfalsy_array(self.values))
+    #     values.flags.writeable = False
+
+    # def dropfalsy(self) -> 'Series':
+    #     '''
+    #     Return a new :obj:`Series` after removing values of falsy.
+    #     '''
+    #     # get positions that we want to keep
+    #     isfalsy = isfalsy_array(self.values)
+    #     length = len(self.values)
+    #     count = isfalsy.sum()
+
+    #     if count == length: # all are falsy
+    #         return self.__class__((), name=self.name)
+    #     if count == 0: # None are falsy
+    #         return self.__class__(self.values,
+    #                 index=self._index,
+    #                 name=self._name,
+    #                 own_index=True)
+
+    #     sel = np.logical_not(isfalsy)
+    #     values = self.values[sel]
+    #     values.flags.writeable = False
+
+    #     return self.__class__(values,
+    #             index=self._index._extract_iloc(sel), # PERF: use _extract_iloc as we have a Boolean array
+    #             name=self._name,
+    #             own_index=True)
+
+
+    #---------------------------------------------------------------------------
     @doc_inject(selector='fillna')
     def fillna(self, value: tp.Any) -> 'Index':
         '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
@@ -1194,6 +1304,7 @@ class Index(IndexBase):
 
         return self.__class__(assigned, name=self._name)
 
+    #---------------------------------------------------------------------------
     def _sample_and_key(self,
             count: int = 1,
             *,

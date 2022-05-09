@@ -96,7 +96,6 @@ DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
         'D', 'h', 'm', 's', 'ms', 'us',
         ))
 
-
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
         DTYPE_FLOAT_KIND,

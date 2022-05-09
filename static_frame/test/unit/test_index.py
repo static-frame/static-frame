@@ -1553,6 +1553,24 @@ class TestUnit(TestCase):
         post = idx._extract_iloc_by_int(2)
         self.assertEqual(post, 'c')
 
+    #---------------------------------------------------------------------------
+    def test_index_dropna_a(self) -> None:
+        idx1 = Index((3.5, np.nan, 1.5))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3.5, 1.5])
+
+    def test_index_dropna_b(self) -> None:
+        idx1 = Index((3.5, None, 1.5))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3.5, 1.5])
+
+    def test_index_dropna_c(self) -> None:
+        idx1 = IndexDate(('2020-03', None, '1981-05-30'))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [datetime.date(2020, 3, 1), datetime.date(1981, 5, 30)])
+
+
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()
