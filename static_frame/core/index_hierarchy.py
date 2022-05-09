@@ -2247,13 +2247,15 @@ class IndexHierarchy(IndexBase):
                 condition=condition,
                 func=func,
                 )
-        if self.STATIC and row_key.all():
-            return self
-        return self._drop_iloc(~row_key)
+        if self.STATIC and row_key.all(): #type: ignore
+            return self #type: ignore
+
+        return self._drop_iloc(~row_key) #type: ignore
 
 
     def dropna(self, *,
-            condition: tp.Callable[[np.ndarray], bool] = np.all) -> IH:
+            condition: tp.Callable[[np.ndarray], bool] = np.all,
+            ) -> IH:
         '''
         Return a new obj:`IndexHierarchy` after removing labels where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
@@ -2264,7 +2266,8 @@ class IndexHierarchy(IndexBase):
         return self._drop_missing(isna_array, condition)
 
     def dropfalsy(self, *,
-            condition: tp.Callable[[np.ndarray], bool] = np.all) -> IH:
+            condition: tp.Callable[[np.ndarray], bool] = np.all,
+            ) -> IH:
         '''
         Return a new obj:`IndexHierarchy` after removing labels where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
