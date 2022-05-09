@@ -1182,7 +1182,7 @@ class Index(IndexBase):
     #     array.flags.writeable = False
     #     return array
 
-    # def notna(self) -> 'Series':
+    # def notna(self) -> np.ndarray:
     #     '''
     #     Return a same-sized, Boolean np.ndarray indicating which values are NaN or None.
     #     '''
@@ -1192,14 +1192,14 @@ class Index(IndexBase):
 
     def _drop_missing(self,
             func: tp.Callable[[np.ndarray], np.ndarray],
-            include_dtype_kind: tp.Optional[tp.FrozenSet[str]],
+            dtype_kind_targets: tp.Optional[tp.FrozenSet[str]],
             ) -> 'Index':
         '''
         Args:
             func: UFunc that returns True for missing values
         '''
         labels = self.values
-        if include_dtype_kind is not None and labels.dtype.kind not in include_dtype_kind:
+        if dtype_kind_targets is not None and labels.dtype.kind not in dtype_kind_targets:
             if self.STATIC:
                 return self
             return self.__class__(labels,
@@ -1227,7 +1227,6 @@ class Index(IndexBase):
         return self.__class__(values,
                 name=self._name,
                 )
-
 
     def dropna(self) -> 'Index':
         '''
@@ -1284,6 +1283,7 @@ class Index(IndexBase):
         assigned.flags.writeable = False
 
         return self.__class__(assigned, name=self._name)
+
 
     #---------------------------------------------------------------------------
     def _sample_and_key(self,
