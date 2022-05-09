@@ -1173,22 +1173,7 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
     # na handling
-
-    # def isna(self) -> np.ndarray:
-    #     '''
-    #     Return a same-sized, Boolean np.ndarray indicating which values are NaN or None.
-    #     '''
-    #     array = isna_array(self.values)
-    #     array.flags.writeable = False
-    #     return array
-
-    # def notna(self) -> np.ndarray:
-    #     '''
-    #     Return a same-sized, Boolean np.ndarray indicating which values are NaN or None.
-    #     '''
-    #     array = np.logical_not(isna_array(self.values))
-    #     array.flags.writeable = False
-    #     return array
+    # falsy handling
 
     def _drop_missing(self,
             func: tp.Callable[[np.ndarray], np.ndarray],
@@ -1200,11 +1185,7 @@ class Index(IndexBase):
         '''
         labels = self.values
         if dtype_kind_targets is not None and labels.dtype.kind not in dtype_kind_targets:
-            if self.STATIC:
-                return self
-            return self.__class__(labels,
-                    name=self._name,
-                    )
+            return self if self.STATIC else self.copy()
 
         # get positions that we want to keep
         isna = func(labels)
@@ -1214,11 +1195,7 @@ class Index(IndexBase):
         if count == length: # all are NaN
             return self.__class__((), name=self.name)
         if count == 0: # None are nan
-            if self.STATIC:
-                return self
-            return self.__class__(labels,
-                    name=self._name,
-                    )
+            return self if self.STATIC else self.copy()
 
         sel = np.logical_not(isna)
         values = labels[sel]
@@ -1234,40 +1211,20 @@ class Index(IndexBase):
         '''
         return self._drop_missing(isna_array, DTYPE_NA_KINDS)
 
-    #---------------------------------------------------------------------------
-    # falsy handling
-
-    # def isfalsy(self) -> np.ndarray:
-    #     '''
-    #     Return a same-sized, Boolean ``np.ndarray`` indicating which values are falsy.
-    #     '''
-    #     values = isfalsy_array(self.values)
-    #     values.flags.writeable = False
-
-    # def notfalsy(self) -> np.ndarray:
-    #     '''
-    #     Return a same-sized, Boolean ``np.ndarray`` indicating which values are falsy.
-    #     '''
-    #     values = np.logical_not(isfalsy_array(self.values))
-    #     values.flags.writeable = False
-
     def dropfalsy(self) -> 'Index':
         '''
         Return a new :obj:`Index` after removing values of NaN or None.
         '''
         return self._drop_missing(isfalsy_array, None)
 
-
     #---------------------------------------------------------------------------
-    @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> 'Index':
-        '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
 
-        Args:
-            {value}
-        '''
+    def _fill_missing(self,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            value: tp.Any,
+            ) -> 'Index':
         values = self.values # force usage of property for cache update
-        sel = isna_array(values)
+        sel = func(values)
         if not np.any(sel):
             return self if self.STATIC else self.copy()
 
@@ -1281,9 +1238,25 @@ class Index(IndexBase):
 
         assigned[sel] = value
         assigned.flags.writeable = False
-
         return self.__class__(assigned, name=self._name)
 
+    @doc_inject(selector='fillna')
+    def fillna(self, value: tp.Any) -> 'Index':
+        '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(isna_array, value)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy(self, value: tp.Any) -> 'Index':
+        '''Return an :obj:`Index` with replacing falsy values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(isfalsy_array, value)
 
     #---------------------------------------------------------------------------
     def _sample_and_key(self,

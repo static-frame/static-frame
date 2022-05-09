@@ -800,7 +800,6 @@ class TestUnit(TestCase):
                 ['d', 'a', 'b', 'c'])
 
     #---------------------------------------------------------------------------
-
     def test_index_fillna_a(self) -> None:
 
         idx1 = Index(('a', 'b', 'c', None))
@@ -830,6 +829,14 @@ class TestUnit(TestCase):
         self.assertEqual(idx2.values.tolist(),
                 [3.0, 2.0, 'foo'],
                 )
+
+    #---------------------------------------------------------------------------
+    def test_index_fillfalsy_a(self) -> None:
+
+        idx1 = Index(('a', 'b', 'c', ''))
+        idx2 = idx1.fillfalsy('d')
+        self.assertEqual(idx2.values.tolist(),
+                ['a', 'b', 'c', 'd'])
 
     #---------------------------------------------------------------------------
 
