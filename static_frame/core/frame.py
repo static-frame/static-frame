@@ -171,6 +171,7 @@ from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import OptionalArrayList
+from static_frame.core.util import blocks_to_array_2d
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -5059,7 +5060,7 @@ class Frame(ContainerOperand):
         ordering = None
         try:
             if len(labels) > 1:
-                ordering = np.lexsort(reversed(labels))
+                ordering = np.lexsort(list(reversed(labels)))
             else:
                 ordering = np.argsort(labels[0], kind=DEFAULT_STABLE_SORT_KIND)
             use_sorted = True
@@ -5067,9 +5068,10 @@ class Frame(ContainerOperand):
             use_sorted = False
 
         if len(labels) > 1:
-            group_source = concat_resolved(labels, axis=1)
+            # NOTE: this will do an h-strack style concatenation; this is ultimately what is needed in group_source
+            group_source = blocks_to_array_2d(labels)
             if use_sorted:
-                group_source = group_source[NULL_SLICE, ordering]
+                group_source = group_source[ordering]
         else:
             group_source = labels[0]
             if use_sorted:

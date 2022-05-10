@@ -196,8 +196,8 @@ def group_sorted(
         return
 
     if group_source is not None:
-        if axis == 1:
-            group_source = group_source.T
+        pass
+        # NOTE: axis 1 transposition is not required as group_source is already prepared by h-stacking 1D arrays
     elif axis == 0:
         # axis 0 means we return row groups; key is a column key
         group_source = blocks._extract_array(column_key=key)

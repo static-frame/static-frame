@@ -704,7 +704,6 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             f1.iter_group_labels(foo=4)
 
-
         post = tuple(f1.iter_group_labels(0, axis=0))
 
         self.assertEqual(len(post), 3)
@@ -765,6 +764,29 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('A', 'A:6'), ('B', 'B:6'))
         )
+
+    def test_frame_iter_group_labels_d(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, 4),
+                   ('A', 2, 'b', True, 3),
+                   ('B', 1, 'c', False, 2),
+                   ('B', 2, 'd', True, 1))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+        f = f.set_index_hierarchy(('p', 'q', 'r'), drop=True)
+
+        post = tuple(f.iter_group_labels_items((1, 2), axis=0))
+        self.assertEqual([p[0] for p in post],
+                [(1, 'a'), (1, 'c'), (2, 'b'), (2, 'd')]
+                )
+
+        self.assertEqual([p[1].values.tolist() for p in post],
+                [[[False, 4]], [[False, 2]], [[True, 3]], [[True, 1]]]
+                )
+        # import ipdb; ipdb.set_trace()
+
 
     #---------------------------------------------------------------------------
 
