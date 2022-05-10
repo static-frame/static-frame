@@ -726,7 +726,6 @@ class TestUnit(TestCase):
 
         # with axis 1, we are grouping based on columns while maintain the index
         post_tuple = tuple(f1.iter_group_labels(1, axis=1))
-
         self.assertEqual(len(post_tuple), 2)
 
         post = f1[HLoc[f1.columns[0]]]

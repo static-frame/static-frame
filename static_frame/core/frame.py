@@ -5068,15 +5068,18 @@ class Frame(ContainerOperand):
 
         if len(labels) > 1:
             group_source = concat_resolved(labels, axis=1)
+            if use_sorted:
+                group_source = group_source[NULL_SLICE, ordering]
         else:
             group_source = labels[0]
+            if use_sorted:
+                group_source = group_source[ordering]
 
         if use_sorted:
             if axis == 0:
-                blocks = self._extract(column_key=ordering)
+                blocks = self._blocks._extract(row_key=ordering)
             else:
-                blocks = self._extract(row_key=ordering)
-
+                blocks = self._blocks._extract(column_key=ordering)
             group_iter = group_sorted(
                     blocks=blocks,
                     axis=axis,
@@ -5096,7 +5099,6 @@ class Frame(ContainerOperand):
                     )
 
         if as_array:
-            import ipdb; ipdb.set_trace()
             yield from ((group, array) for group, _, array in group_iter)
         else:
             for group, selection, tb in group_iter:
