@@ -1741,9 +1741,11 @@ def key_to_datetime_key(
 
 def array_to_groups_and_locations(
         array: np.ndarray,
-        unique_axis: tp.Optional[int] = 0,
+        unique_axis: int = 0,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''Locations are index positions for each group.
+    Args:
+        unique_axis: only used if ndim > 1
     '''
     if array.ndim == 1:
         return ufunc_unique1d_indexer(array)

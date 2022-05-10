@@ -5072,7 +5072,8 @@ class Frame(ContainerOperand):
             if use_sorted:
                 group_source = group_source[ordering]
         else:
-            group_source = column_2d_filter(labels[0])
+            # group_source = column_2d_filter(labels[0])
+            group_source = labels[0]
             if use_sorted:
                 group_source = group_source[ordering]
 
@@ -5126,41 +5127,6 @@ class Frame(ContainerOperand):
                             own_index=True,
                             own_columns=True,
                             own_data=True)
-
-
-        # groups, locations = array_to_groups_and_locations(values)
-
-        # selection = np.empty(len(locations), dtype=DTYPE_BOOL)
-        # func = self._blocks._extract_array if as_array else self._blocks._extract
-
-        # if as_array:
-        #     for idx, group in enumerate(groups):
-        #         np.equal(locations, idx, out=selection)
-        #         if axis == 0:
-        #             yield group, func(row_key=selection)
-        #         else:
-        #             yield group, func(column_key=selection)
-        # else:
-        #     for idx, group in enumerate(groups):
-        #         np.equal(locations, idx, out=selection)
-
-        #         if axis == 0:
-        #             # axis 0 is a row iter, so need to slice index, keep columns
-        #             tb = func(row_key=selection)
-        #             yield group, self.__class__(tb,
-        #                     index=self._index[selection],
-        #                     columns=self._columns, # let constructor determine ownership
-        #                     own_index=True,
-        #                     own_data=True)
-        #         else:
-        #             # axis 1 is a column iterators, so need to slice columns, keep index
-        #             tb = func(column_key=selection)
-        #             yield group, self.__class__(tb,
-        #                     index=self._index,
-        #                     columns=self._columns[selection],
-        #                     own_index=True,
-        #                     own_columns=True,
-        #                     own_data=True)
 
     def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,

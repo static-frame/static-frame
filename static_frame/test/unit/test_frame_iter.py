@@ -822,9 +822,12 @@ class TestUnit(TestCase):
         f = f.set_index_hierarchy(('p', 'q'), drop=True)
 
         post = tuple(f.iter_group_labels_items(0, axis=0))
-# In : [p[0] for p in post]
-# [('A',), ('B',), (None,)]
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual([p[0] for p in post],
+                ['A', None, 'B']
+                )
+        self.assertEqual([p[1].values.tolist() for p in post],
+            [[['a', False, 4]], [['b', True, 3]], [['c', False, 2], ['d', True, 1]]]
+            )
 
     #---------------------------------------------------------------------------
 

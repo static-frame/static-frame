@@ -92,28 +92,25 @@ def group_match(
     if blocks._shape[0] == 0 or blocks._shape[1] == 0: # zero sized
         return
 
-    # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
     unique_axis = None
 
     if group_source is not None:
-        unique_axis = axis
+        pass
     elif axis == 0:
         # axis 0 means we return row groups; key is a column key
         group_source = blocks._extract_array(column_key=key)
-        if group_source.ndim > 1:
-            unique_axis = 0
     elif axis == 1:
         # axis 1 means we return column groups; key is a row key
         group_source = blocks._extract_array(row_key=key)
-        if group_source.ndim > 1 and group_source.shape[0] > 1:
-            unique_axis = 1
     else:
         raise AxisInvalid(f'invalid axis: {axis}')
 
     groups, locations = array_to_groups_and_locations(
             group_source,
-            unique_axis)
-    if unique_axis is not None:
+            axis,
+            )
+
+    if group_source.ndim > 1:
         # NOTE: this is expensive!
         # make the groups hashable for usage in index construction
         if axis == 0:
