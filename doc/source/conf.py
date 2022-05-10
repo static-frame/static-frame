@@ -24,8 +24,6 @@ import static_frame as sf
 from static_frame.core.interface import INTERFACE_GROUP_ORDER
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.util import AnyCallable
-from static_frame.performance import core
-from static_frame.performance.perf_test import PerfTest
 from static_frame.test.unit.test_doc import api_example_str
 
 PREFIX_START = '#start_'
@@ -101,13 +99,13 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
     post: tp.Dict[str, tp.Any] = {}
 
-    performance_cls = []
-    for name in dir(core):
-        obj = getattr(core, name)
-        if inspect.isclass(obj) and issubclass(obj, PerfTest):
-            performance_cls.append(obj.__name__)
+    # performance_cls = []
+    # for name in dir(core):
+    #     obj = getattr(core, name)
+    #     if inspect.isclass(obj) and issubclass(obj, PerfTest):
+    #         performance_cls.append(obj.__name__)
 
-    post['performance_cls'] = performance_cls
+    # post['performance_cls'] = performance_cls
 
     # for docs
     post['examples_defined'] = get_defined()
