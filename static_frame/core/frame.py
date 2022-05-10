@@ -105,7 +105,6 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import CallableOrCallableMap
