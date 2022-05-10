@@ -785,7 +785,29 @@ class TestUnit(TestCase):
         self.assertEqual([p[1].values.tolist() for p in post],
                 [[[False, 4]], [[False, 2]], [[True, 3]], [[True, 1]]]
                 )
-        # import ipdb; ipdb.set_trace()
+
+    def test_frame_iter_group_labels_e(self) -> None:
+        index = tuple('pq')
+        columns = IndexHierarchy._from_type_blocks(TypeBlocks.from_blocks((
+                np.array(('A', 'A', 'B', 'B', 'B')),
+                np.array((4, 2, 1, 0, 4)),
+                np.array(('b', 'a', 'c', 'a', 'b')),
+                )))
+
+        records = (
+                   (True, False, 1, 2, 1),
+                   (False, True, 30, 8,7),
+                   )
+
+        f = Frame.from_records(
+                records, columns=columns, index=index)
+        post = tuple(f.iter_group_labels_items((2, 1), axis=1))
+        self.assertEqual([p[0] for p in post],
+                [('a', 0), ('a', 2), ('b', 4), ('c', 1)]
+                )
+        self.assertEqual([p[1].values.tolist() for p in post],
+                [[[2], [8]], [[False], [True]], [[True, 1], [False, 7]], [[1], [30]]]
+                )
 
 
     #---------------------------------------------------------------------------
