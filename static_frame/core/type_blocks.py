@@ -88,7 +88,6 @@ def group_match(
     Returns:
         Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
     '''
-
     # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
     if blocks._shape[0] == 0 or blocks._shape[1] == 0: # zero sized
         return
@@ -114,7 +113,6 @@ def group_match(
     groups, locations = array_to_groups_and_locations(
             group_source,
             unique_axis)
-
     if unique_axis is not None:
         # NOTE: this is expensive!
         # make the groups hashable for usage in index construction

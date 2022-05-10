@@ -20,6 +20,7 @@ from arraykit import column_1d_filter
 from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
+from arraykit import column_2d_filter
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -475,7 +476,6 @@ class Frame(ContainerOperand):
             if index is IndexAutoFactory:
                 index = None # let default creation happen
             elif index is None:
-                # import ipdb; ipdb.set_trace()
                 try:
                     index = index_many_concat(
                             (f._index for f in frames),
@@ -5072,7 +5072,7 @@ class Frame(ContainerOperand):
             if use_sorted:
                 group_source = group_source[ordering]
         else:
-            group_source = labels[0]
+            group_source = column_2d_filter(labels[0])
             if use_sorted:
                 group_source = group_source[ordering]
 

@@ -809,6 +809,22 @@ class TestUnit(TestCase):
                 [[[2], [8]], [[False], [True]], [[True, 1], [False, 7]], [[1], [30]]]
                 )
 
+    def test_frame_iter_group_labels_f(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, 4),
+                   (None, 2, 'b', True, 3),
+                   ('B', 1, 'c', False, 2),
+                   ('B', None, 'd', True, 1))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+        f = f.set_index_hierarchy(('p', 'q'), drop=True)
+
+        post = tuple(f.iter_group_labels_items(0, axis=0))
+# In : [p[0] for p in post]
+# [('A',), ('B',), (None,)]
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 
