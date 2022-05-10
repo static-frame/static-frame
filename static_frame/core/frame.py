@@ -20,7 +20,6 @@ from arraykit import column_1d_filter
 from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
-from arraykit import column_2d_filter
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
