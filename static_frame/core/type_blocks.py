@@ -71,11 +71,13 @@ from static_frame.core.style_config import StyleConfig
 #---------------------------------------------------------------------------
 def group_match(
         blocks: 'TypeBlocks',
+        *,
         axis: int,
         key: GetItemKeyTypeCompound,
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
+        group_source: tp.Optional[np.ndarray] = None,
         ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
     '''
     Args:
@@ -93,7 +95,10 @@ def group_match(
 
     # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
     unique_axis = None
-    if axis == 0:
+
+    if group_source is not None:
+        unique_axis = axis
+    elif axis == 0:
         # axis 0 means we return row groups; key is a column key
         group_source = blocks._extract_array(column_key=key)
         if group_source.ndim > 1:
@@ -161,11 +166,13 @@ def group_match(
 
 def group_sorted(
         blocks: 'TypeBlocks',
+        *,
         axis: int,
         key: int,
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
+        group_source: tp.Optional[np.ndarray] = None,
         ) -> tp.Iterator[tp.Tuple[np.ndarray, slice, tp.Union['TypeBlocks', np.ndarray]]]:
     '''
     This method must be called on sorted TypeBlocks instance.
@@ -173,7 +180,7 @@ def group_sorted(
     Args:
         blocks: sorted TypeBlocks
         order: args
-        key: iloc selector on opposite axis; must be an integer
+        key: iloc selector on opposite axis
         drop: Optionally drop the target of the grouping as specified by ``key``.
         axis: if 0, key is column selection, yield groups of rows; if 1, key is row selection, yield gruops of columns
         kind: Type of sort; a stable sort is required to preserve original odering.
@@ -188,9 +195,10 @@ def group_sorted(
     if blocks._shape[0] == 0 or blocks._shape[1] == 0: # zero sized
         return
 
-    # blocks, order = self.sort(key=key, axis=not axis, kind=kind)
-
-    if axis == 0:
+    if group_source is not None:
+        if axis == 1:
+            group_source = group_source.T
+    elif axis == 0:
         # axis 0 means we return row groups; key is a column key
         group_source = blocks._extract_array(column_key=key)
     elif axis == 1:
@@ -1023,18 +1031,7 @@ class TypeBlocks(ContainerOperand):
 
         NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
         '''
-        # might unpack keys that are lists of one element
-        # key_is_int = isinstance(key, INT_TYPES)
-
-        # NOTE: using a stable sort is necssary for groups to retain initial ordering.
-        # use_sort = True
-        # if key_is_int and axis == 0 and self.dtypes[key] != DTYPE_OBJECT:
-        #     use_sort = True
-        # elif key_is_int and axis == 1 and self._row_dtype != DTYPE_OBJECT:
-        #     use_sort = True
-        # else:
-        #     use_sort = False
-
+        # NOTE: using a stable sort is necessary for groups to retain initial ordering.
         try:
             blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
             use_sorted = True
@@ -1042,9 +1039,9 @@ class TypeBlocks(ContainerOperand):
             use_sorted = False
 
         if use_sorted:
-            yield from group_sorted(blocks, axis, key, drop)
+            yield from group_sorted(blocks, axis=axis, key=key, drop=drop)
         else:
-            yield from group_match(self, axis, key, drop)
+            yield from group_match(self, axis=axis, key=key, drop=drop)
 
 
     def group_extract(self,
@@ -1068,22 +1065,20 @@ class TypeBlocks(ContainerOperand):
 
         if use_sorted:
             yield from group_sorted(blocks,
-                    axis,
-                    key,
+                    axis=axis,
+                    key=key,
                     drop=False,
                     extract=extract,
                     as_array=True,
                     )
         else:
             yield from group_match(self,
-                    axis,
-                    key,
+                    axis=axis,
+                    key=key,
                     drop=False,
                     extract=extract,
                     as_array=True,
                     )
-
-
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
