@@ -1073,8 +1073,8 @@ class Group(Perf):
         self.pdf2 = self.sff2.to_pandas()
 
         from static_frame import Frame
-        from static_frame import TypeBlocks
-        from static_frame.core.util import array_to_groups_and_locations
+        # from static_frame import TypeBlocks
+        # from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
             'wide_group_2': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
@@ -1107,6 +1107,44 @@ class Group_R(Group, Reference):
     def tall_group_100(self) -> None:
         post = tuple(self.pdf2.groupby(1))
         assert len(post) == 100
+
+
+#-------------------------------------------------------------------------------
+class GroupLabel(Perf):
+    NUMBER = 10
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff1 = ff.parse('s(10_000,10)|v(int,str,bool)|i(IH,(str,int,str))|i(I,int)')
+        self.pdf1 = self.sff1.to_pandas()
+
+        self.meta = {
+            'tall_group_1': FunctionMetaData(
+                # perf_status=PerfStatus.EXPLAINED_LOSS,
+                # line_target=Frame._axis_group_iloc_items,
+                # explanation='nearly identical, favoring slower'
+                ),
+            # 'tall_group_100': FunctionMetaData(
+            #     # perf_status=PerfStatus.EXPLAINED_LOSS,
+            #     # line_target=Frame._axis_group_iloc_items,
+            #     ),
+            }
+
+class GroupLabel_N(GroupLabel, Native):
+
+    def tall_group_1(self) -> None:
+        post = tuple(self.sff1.iter_group_labels_items(1))
+        assert len(post) == 5000
+
+class GroupLabel_R(GroupLabel, Reference):
+
+    def tall_group_1(self) -> None:
+        post = tuple(self.pdf1.groupby(level=1))
+        assert len(post) == 5000
+
+
+
 
 
 #-------------------------------------------------------------------------------
