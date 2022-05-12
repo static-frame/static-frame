@@ -1111,7 +1111,7 @@ class Group_R(Group, Reference):
 
 #-------------------------------------------------------------------------------
 class GroupLabel(Perf):
-    NUMBER = 10
+    NUMBER = 20
 
     def __init__(self) -> None:
         super().__init__()
@@ -1119,10 +1119,12 @@ class GroupLabel(Perf):
         self.sff1 = ff.parse('s(10_000,10)|v(int,str,bool)|i(IH,(str,int,str))|i(I,int)')
         self.pdf1 = self.sff1.to_pandas()
 
+        from static_frame import Frame
+        from static_frame import IndexHierarchy
         self.meta = {
             'tall_group_1': FunctionMetaData(
                 # perf_status=PerfStatus.EXPLAINED_LOSS,
-                # line_target=Frame._axis_group_iloc_items,
+                line_target=IndexHierarchy._extract_iloc,
                 # explanation='nearly identical, favoring slower'
                 ),
             # 'tall_group_100': FunctionMetaData(
