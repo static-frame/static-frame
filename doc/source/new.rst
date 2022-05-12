@@ -8,6 +8,8 @@ Added ``Index.dropna()``, ``Index.dropfalsy()``, ``IndexHierarchy.dropna()``, ``
 
 Added ``Index.fillfalsy()``, ``IndexHierarchy.fillfalsy()``.
 
+Performance improvements for ``Frame.iter_group_labels()``, ``Frame.iter_group_labels_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``
+
 
 0.9.3
 ----------
