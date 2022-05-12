@@ -1146,9 +1146,6 @@ class GroupLabel_R(GroupLabel, Reference):
         assert len(post) == 5000
 
 
-
-
-
 #-------------------------------------------------------------------------------
 class FrameFromConcat(Perf):
     NUMBER = 50
