@@ -1902,12 +1902,6 @@ class IndexHierarchy(IndexBase):
 
         tb = self._blocks._extract(row_key=key)
 
-        # return self._from_type_blocks(tb,
-        #     name=self._name,
-        #     index_constructors=self._index_constructors,
-        #     own_blocks=True,
-        #     )
-
         new_indices: tp.List[Index] = [None] * self.depth
         new_indexers: np.ndarray = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
 
@@ -1915,7 +1909,6 @@ class IndexHierarchy(IndexBase):
             unique_indexes, new_indexer = ufunc_unique1d_indexer(indexer[key])
             new_indices[i] = index._extract_iloc(unique_indexes)
             new_indexers[i] = new_indexer
-            # import ipdb; ipdb.set_trace()
 
         new_indexers.flags.writeable = False
 

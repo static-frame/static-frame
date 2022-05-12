@@ -957,12 +957,15 @@ def ufunc_unique1d_indexer(array: np.ndarray,
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
+    masked_array = array[mask]
+    if len(masked_array) <= 1: # we have only one item
+        return masked_array, np.full(mask.shape, 0, dtype=DTYPE_INT_DEFAULT)
 
     indexer = np.empty(mask.shape, dtype=DTYPE_INT_DEFAULT)
     indexer[positions] = np.cumsum(mask) - 1
     indexer.flags.writeable = False
 
-    return array[mask], indexer
+    return masked_array, indexer
 
 
 def ufunc_unique1d_positions(array: np.ndarray,
