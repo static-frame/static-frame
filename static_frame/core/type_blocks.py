@@ -71,11 +71,13 @@ from static_frame.core.style_config import StyleConfig
 #---------------------------------------------------------------------------
 def group_match(
         blocks: 'TypeBlocks',
+        *,
         axis: int,
         key: GetItemKeyTypeCompound,
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
+        group_source: tp.Optional[np.ndarray] = None,
         ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
     '''
     Args:
@@ -86,31 +88,29 @@ def group_match(
     Returns:
         Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
     '''
-
     # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
     if blocks._shape[0] == 0 or blocks._shape[1] == 0: # zero sized
         return
 
-    # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
     unique_axis = None
-    if axis == 0:
+
+    if group_source is not None:
+        pass
+    elif axis == 0:
         # axis 0 means we return row groups; key is a column key
         group_source = blocks._extract_array(column_key=key)
-        if group_source.ndim > 1:
-            unique_axis = 0
     elif axis == 1:
         # axis 1 means we return column groups; key is a row key
         group_source = blocks._extract_array(row_key=key)
-        if group_source.ndim > 1 and group_source.shape[0] > 1:
-            unique_axis = 1
     else:
         raise AxisInvalid(f'invalid axis: {axis}')
 
     groups, locations = array_to_groups_and_locations(
             group_source,
-            unique_axis)
+            axis,
+            )
 
-    if unique_axis is not None:
+    if group_source.ndim > 1:
         # NOTE: this is expensive!
         # make the groups hashable for usage in index construction
         if axis == 0:
@@ -161,11 +161,13 @@ def group_match(
 
 def group_sorted(
         blocks: 'TypeBlocks',
+        *,
         axis: int,
         key: int,
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
+        group_source: tp.Optional[np.ndarray] = None,
         ) -> tp.Iterator[tp.Tuple[np.ndarray, slice, tp.Union['TypeBlocks', np.ndarray]]]:
     '''
     This method must be called on sorted TypeBlocks instance.
@@ -173,7 +175,7 @@ def group_sorted(
     Args:
         blocks: sorted TypeBlocks
         order: args
-        key: iloc selector on opposite axis; must be an integer
+        key: iloc selector on opposite axis
         drop: Optionally drop the target of the grouping as specified by ``key``.
         axis: if 0, key is column selection, yield groups of rows; if 1, key is row selection, yield gruops of columns
         kind: Type of sort; a stable sort is required to preserve original odering.
@@ -188,9 +190,10 @@ def group_sorted(
     if blocks._shape[0] == 0 or blocks._shape[1] == 0: # zero sized
         return
 
-    # blocks, order = self.sort(key=key, axis=not axis, kind=kind)
-
-    if axis == 0:
+    if group_source is not None:
+        pass
+        # NOTE: axis 1 transposition is not required as group_source is already prepared by h-stacking 1D arrays
+    elif axis == 0:
         # axis 0 means we return row groups; key is a column key
         group_source = blocks._extract_array(column_key=key)
     elif axis == 1:
@@ -1023,18 +1026,7 @@ class TypeBlocks(ContainerOperand):
 
         NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
         '''
-        # might unpack keys that are lists of one element
-        # key_is_int = isinstance(key, INT_TYPES)
-
-        # NOTE: using a stable sort is necssary for groups to retain initial ordering.
-        # use_sort = True
-        # if key_is_int and axis == 0 and self.dtypes[key] != DTYPE_OBJECT:
-        #     use_sort = True
-        # elif key_is_int and axis == 1 and self._row_dtype != DTYPE_OBJECT:
-        #     use_sort = True
-        # else:
-        #     use_sort = False
-
+        # NOTE: using a stable sort is necessary for groups to retain initial ordering.
         try:
             blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
             use_sorted = True
@@ -1042,9 +1034,9 @@ class TypeBlocks(ContainerOperand):
             use_sorted = False
 
         if use_sorted:
-            yield from group_sorted(blocks, axis, key, drop)
+            yield from group_sorted(blocks, axis=axis, key=key, drop=drop)
         else:
-            yield from group_match(self, axis, key, drop)
+            yield from group_match(self, axis=axis, key=key, drop=drop)
 
 
     def group_extract(self,
@@ -1068,22 +1060,20 @@ class TypeBlocks(ContainerOperand):
 
         if use_sorted:
             yield from group_sorted(blocks,
-                    axis,
-                    key,
+                    axis=axis,
+                    key=key,
                     drop=False,
                     extract=extract,
                     as_array=True,
                     )
         else:
             yield from group_match(self,
-                    axis,
-                    key,
+                    axis=axis,
+                    key=key,
                     drop=False,
                     extract=extract,
                     as_array=True,
                     )
-
-
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality

@@ -704,7 +704,6 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             f1.iter_group_labels(foo=4)
 
-
         post = tuple(f1.iter_group_labels(0, axis=0))
 
         self.assertEqual(len(post), 3)
@@ -726,7 +725,6 @@ class TestUnit(TestCase):
 
         # with axis 1, we are grouping based on columns while maintain the index
         post_tuple = tuple(f1.iter_group_labels(1, axis=1))
-
         self.assertEqual(len(post_tuple), 2)
 
         post = f1[HLoc[f1.columns[0]]]
@@ -766,6 +764,70 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('A', 'A:6'), ('B', 'B:6'))
         )
+
+    def test_frame_iter_group_labels_d(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, 4),
+                   ('A', 2, 'b', True, 3),
+                   ('B', 1, 'c', False, 2),
+                   ('B', 2, 'd', True, 1))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+        f = f.set_index_hierarchy(('p', 'q', 'r'), drop=True)
+
+        post = tuple(f.iter_group_labels_items((1, 2), axis=0))
+        self.assertEqual([p[0] for p in post],
+                [(1, 'a'), (1, 'c'), (2, 'b'), (2, 'd')]
+                )
+
+        self.assertEqual([p[1].values.tolist() for p in post],
+                [[[False, 4]], [[False, 2]], [[True, 3]], [[True, 1]]]
+                )
+
+    def test_frame_iter_group_labels_e(self) -> None:
+        index = tuple('pq')
+        columns = IndexHierarchy._from_type_blocks(TypeBlocks.from_blocks((
+                np.array(('A', 'A', 'B', 'B', 'B')),
+                np.array((4, 2, 1, 0, 4)),
+                np.array(('b', 'a', 'c', 'a', 'b')),
+                )))
+
+        records = (
+                   (True, False, 1, 2, 1),
+                   (False, True, 30, 8,7),
+                   )
+
+        f = Frame.from_records(
+                records, columns=columns, index=index)
+        post = tuple(f.iter_group_labels_items((2, 1), axis=1))
+        self.assertEqual([p[0] for p in post],
+                [('a', 0), ('a', 2), ('b', 4), ('c', 1)]
+                )
+        self.assertEqual([p[1].values.tolist() for p in post],
+                [[[2], [8]], [[False], [True]], [[True, 1], [False, 7]], [[1], [30]]]
+                )
+
+    def test_frame_iter_group_labels_f(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, 4),
+                   (None, 2, 'b', True, 3),
+                   ('B', 1, 'c', False, 2),
+                   ('B', None, 'd', True, 1))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+        f = f.set_index_hierarchy(('p', 'q'), drop=True)
+
+        post = tuple(f.iter_group_labels_items(0, axis=0))
+        self.assertEqual([p[0] for p in post],
+                ['A', None, 'B']
+                )
+        self.assertEqual([p[1].values.tolist() for p in post],
+            [[['a', False, 4]], [['b', True, 3]], [['c', False, 2], ['d', True, 1]]]
+            )
 
     #---------------------------------------------------------------------------
 

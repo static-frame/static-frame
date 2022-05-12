@@ -841,7 +841,7 @@ class IndexHierarchy(IndexBase):
             self._indices = [
                 mutable_immutable_index_filter(self.STATIC, index)
                 for index in indices._indices
-            ]
+                ]
             self._indexers = indices._indexers
             self._name = name if name is not NAME_DEFAULT else indices._name
             self._blocks = indices._blocks
@@ -861,17 +861,16 @@ class IndexHierarchy(IndexBase):
         self._indices = [
             mutable_immutable_index_filter(self.STATIC, index) # type: ignore
             for index in indices
-        ]
+            ]
         self._indexers = indexers
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
-        if blocks is not None:
-            if own_blocks:
-                self._blocks = blocks
-            else:
-                self._blocks = blocks.copy()
-        else:
+        if blocks is None:
             self._blocks = self._to_type_blocks()
+        elif own_blocks:
+            self._blocks = blocks
+        else:
+            self._blocks = blocks.copy()
 
         self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
@@ -1902,13 +1901,13 @@ class IndexHierarchy(IndexBase):
             return tuple(self._blocks.iter_row_elements(key))
 
         tb = self._blocks._extract(row_key=key)
+
         new_indices: tp.List[Index] = []
         new_indexers: np.ndarray = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (index, indexer) in enumerate(zip(self._indices, self._indexers)):
             unique_indexes, new_indexer = ufunc_unique1d_indexer(indexer[key])
-
-            new_indices.append(index.iloc[unique_indexes])
+            new_indices.append(index._extract_iloc(unique_indexes))
             new_indexers[i] = new_indexer
 
         new_indexers.flags.writeable = False

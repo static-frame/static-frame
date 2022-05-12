@@ -105,7 +105,6 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import CallableOrCallableMap
@@ -171,6 +170,7 @@ from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import OptionalArrayList
+from static_frame.core.util import blocks_to_array_2d
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -475,7 +475,6 @@ class Frame(ContainerOperand):
             if index is IndexAutoFactory:
                 index = None # let default creation happen
             elif index is None:
-                # import ipdb; ipdb.set_trace()
                 try:
                     index = index_many_concat(
                             (f._index for f in frames),
@@ -4941,11 +4940,11 @@ class Frame(ContainerOperand):
                     as_array=as_array,
                     )
             if axis == 0:
-                index = self._index #._extract_iloc(ordering) # sort
+                index = self._index
                 columns = self._columns if not drop else self._columns[drop_mask]
             else:
                 index = self._index if not drop else self._index[drop_mask]
-                columns = self._columns #._extract_iloc(ordering) # sort
+                columns = self._columns
 
         else:
             group_iter = group_match(
@@ -5038,47 +5037,92 @@ class Frame(ContainerOperand):
             axis: int = 0,
             as_array: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+        # NOTE: simlar to _axis_group_iloc_items
+
+        blocks = self._blocks
+        index = self._index
+        columns = self._columns
 
         if axis == 0: # maintain columns, group by index
-            ref_index = self._index
+            ref_index = index
         elif axis == 1: # maintain index, group by columns
-            ref_index = self._columns
+            ref_index = columns
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
-        # NOTE: see if this can use the group implementation on TypeBlocks
+        if isinstance(depth_level, INT_TYPES):
+            labels = [ref_index.values_at_depth(depth_level)]
+        else:
+            labels = [ref_index.values_at_depth(i) for i in depth_level]
 
-        values = ref_index.values_at_depth(depth_level)
-        groups, locations = array_to_groups_and_locations(values)
+        ordering = None
+        try:
+            if len(labels) > 1:
+                ordering = np.lexsort(list(reversed(labels)))
+            else:
+                ordering = np.argsort(labels[0], kind=DEFAULT_STABLE_SORT_KIND)
+            use_sorted = True
+        except TypeError:
+            use_sorted = False
 
-        selection = np.empty(len(locations), dtype=DTYPE_BOOL)
-        func = self._blocks._extract_array if as_array else self._blocks._extract
+        if len(labels) > 1:
+            # NOTE: this will do an h-strack style concatenation; this is ultimately what is needed in group_source
+            group_source = blocks_to_array_2d(labels)
+            if use_sorted:
+                group_source = group_source[ordering]
+        else:
+            # group_source = column_2d_filter(labels[0])
+            group_source = labels[0]
+            if use_sorted:
+                group_source = group_source[ordering]
+
+        if use_sorted:
+            if axis == 0:
+                blocks = self._blocks._extract(row_key=ordering)
+            else:
+                blocks = self._blocks._extract(column_key=ordering)
+            group_iter = group_sorted(
+                    blocks=blocks,
+                    axis=axis,
+                    key=None, # assume this is not used
+                    drop=False,
+                    as_array=as_array,
+                    group_source=group_source,
+                    )
+        else:
+            group_iter = group_match(
+                    blocks=blocks,
+                    axis=axis,
+                    key=None,
+                    drop=False,
+                    as_array=as_array,
+                    group_source=group_source,
+                    )
 
         if as_array:
-            for idx, group in enumerate(groups):
-                np.equal(locations, idx, out=selection)
-                if axis == 0:
-                    yield group, func(row_key=selection)
-                else:
-                    yield group, func(column_key=selection)
+            yield from ((group, array) for group, _, array in group_iter)
         else:
-            for idx, group in enumerate(groups):
-                np.equal(locations, idx, out=selection)
-
+            for group, selection, tb in group_iter:
+                # NOTE: selection can be a Boolean array or a slice
                 if axis == 0:
                     # axis 0 is a row iter, so need to slice index, keep columns
-                    tb = func(row_key=selection)
+                    index_group = (index._extract_iloc(selection) if ordering is None
+                            else index._extract_iloc(ordering[selection])
+                            )
                     yield group, self.__class__(tb,
-                            index=self._index[selection],
-                            columns=self._columns, # let constructor determine ownership
+                            index=index_group,
+                            columns=columns,
+                            own_columns=self.STATIC, # own if static
                             own_index=True,
                             own_data=True)
                 else:
                     # axis 1 is a column iterators, so need to slice columns, keep index
-                    tb = func(column_key=selection)
+                    columns_group = (columns._extract_iloc(selection) if ordering is None
+                            else columns._extract_iloc(ordering[selection])
+                            )
                     yield group, self.__class__(tb,
-                            index=self._index,
-                            columns=self._columns[selection],
+                            index=index,
+                            columns=columns_group,
                             own_index=True,
                             own_columns=True,
                             own_data=True)
@@ -5204,7 +5248,6 @@ class Frame(ContainerOperand):
             {key}
         '''
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
-
         index = self._index[order]
 
         blocks = self._blocks.iloc[order]
