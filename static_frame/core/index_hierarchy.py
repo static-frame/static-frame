@@ -1902,12 +1902,12 @@ class IndexHierarchy(IndexBase):
 
         tb = self._blocks._extract(row_key=key)
 
-        new_indices: tp.List[Index] = [None] * self.depth
+        new_indices: tp.List[Index] = []
         new_indexers: np.ndarray = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (index, indexer) in enumerate(zip(self._indices, self._indexers)):
             unique_indexes, new_indexer = ufunc_unique1d_indexer(indexer[key])
-            new_indices[i] = index._extract_iloc(unique_indexes)
+            new_indices.append(index._extract_iloc(unique_indexes))
             new_indexers[i] = new_indexer
 
         new_indexers.flags.writeable = False
