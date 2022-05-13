@@ -2919,28 +2919,23 @@ class PositionsAllocator:
     _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 
-    _lru = {}
-    _lru_max_size = 128
+    _array1 = np.arange(1, dtype=DTYPE_INT_DEFAULT)
+    _array1.flags.writeable = False
+
+    # NOTE: preliminary tests of using lru-style caching on these instances has not shown a general benfit
 
     @classmethod
     def get(cls, size: int) -> np.ndarray:
-        lru = cls._lru
+        if size == 1:
+            return cls._array1
 
-        if size not in lru:
-            if len(lru) >= cls._lru_max_size:
-                del lru[next(iter(lru.keys()))]
+        if size > cls._size:
+            cls._size = size * 2
+            cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)
+            cls._array.flags.writeable = False
+        # slices of immutable arrays are immutable
+        return cls._array[:size]
 
-            if size > cls._size:
-                cls._size = size * 2
-                cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)
-                cls._array.flags.writeable = False
-            # slices of immutable arrays are immutable
-
-            lru[size] = cls._array[:size]
-        else:
-            lru[size] = lru.pop(size)
-
-        return lru[size]
 
 def array_sample(
         array: np.ndarray,
