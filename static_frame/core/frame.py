@@ -5600,12 +5600,10 @@ class Frame(ContainerOperand):
             own_columns = False
 
         if isinstance(column_iloc, INT_TYPES):
-            index_values = self._blocks._extract_array(column_key=column_iloc)
+            index_values = self._blocks._extract_array_column(column_iloc)
             name = column
         else:
-            # NOTE: _extract_array might force undesirable consolidation
-            index_values = array2d_to_array1d(
-                    self._blocks._extract_array(column_key=column_iloc))
+            index_values = self._blocks.iter_row_tuples(column_iloc)
             name = tuple(self._columns[column_iloc])
 
         index = index_from_optional_constructor(index_values,

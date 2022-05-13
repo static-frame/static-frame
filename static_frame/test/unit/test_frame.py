@@ -8497,6 +8497,12 @@ class TestUnit(TestCase):
         f2 = f1.set_index(None, drop=True)
         self.assertTrue(f1.equals(f2))
 
+    def test_frame_set_index_g(self) -> None:
+        dt64 = np.datetime64
+        f1 = ff.parse('s(2,4)|v(dtD, dtY, int, str)')
+        f2 = f1.set_index([0, 1])
+        self.assertEqual(f2.index[0], (dt64('2210-12-26'), dt64('164167')))
+
     #---------------------------------------------------------------------------
 
     def test_frame_head_tail_a(self) -> None:

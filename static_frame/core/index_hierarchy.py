@@ -1385,14 +1385,9 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        sel: GetItemKeyType
-
         if isinstance(depth_level, INT_TYPES):
-            sel = depth_level
-        else:
-            sel = list(depth_level)
-
-        return self._blocks._extract_array(column_key=sel)
+            return self._blocks._extract_array_column(depth_level)
+        return self._blocks._extract_array(column_key=list(depth_level))
 
     # Could this be memoized?
     @staticmethod
@@ -2045,8 +2040,11 @@ class IndexHierarchy(IndexBase):
         '''
         Iterate over labels.
         '''
+        if self._recache:
+            self._update_array_cache()
         # Don't use .values, as that can coerce types
-        yield from zip(*map(self.values_at_depth, range(self.depth)))
+        yield from self._blocks.iter_row_tuples(None)
+        # yield from zip(*map(self.values_at_depth, range(self.depth)))
 
     def __reversed__(self: IH) -> tp.Iterator[SingleLabelType]:
         '''
