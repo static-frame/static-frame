@@ -160,7 +160,6 @@ from static_frame.core.util import DT64_NS
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import file_like_manager
-from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DTYPE_NA_KINDS
