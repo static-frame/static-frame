@@ -636,12 +636,11 @@ class FrameIterSeriesApply(Perf):
 
         self.meta = {
             'float_index_str_row': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=prepare_iter_for_array,
-                explanation='appears to all be in apply_iter gen exp'
                 ),
             'float_index_str_row_dtype': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
             'float_index_str_column': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
@@ -1077,9 +1076,8 @@ class Group(Perf):
         # from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
             'wide_group_2': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=Frame._axis_group_iloc_items,
-                explanation='nearly identical, favoring slower'
                 ),
             'tall_group_100': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
@@ -1123,7 +1121,7 @@ class GroupLabel(Perf):
         from static_frame import IndexHierarchy
         self.meta = {
             'tall_group_1': FunctionMetaData(
-                # perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=IndexHierarchy._extract_iloc,
                 # explanation='nearly identical, favoring slower'
                 ),
@@ -1888,15 +1886,16 @@ def performance_tables_from_records(
 
     frame = sf.FrameGO.from_dict_records(records)
 
-    fields = ['Native', 'Reference', 'n/r', 'r/n']
+    fields = ['Native', 'Reference', 'n/r', 'r/n', 'win']
     stats = sf.Frame.from_concat((
+            frame[fields].sum().rename('sum'),
             frame[fields].min().rename('min'),
             frame[fields].max().rename('max'),
             frame[fields].mean().rename('mean'),
             frame[fields].median().rename('median'),
             frame[fields].std(ddof=1).rename('std')
             )).rename(index='name').unset_index()
-    if len(frame) < 9:
+    if len(frame) < 3:
         composit = frame.relabel(columns=frame.columns, index=sf.IndexAutoFactory)
     else:
         composit = sf.Frame.from_concat((frame, stats), columns=frame.columns, index=sf.IndexAutoFactory)
