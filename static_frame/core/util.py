@@ -2910,6 +2910,7 @@ def array_from_element_method(*,
 
 
 #-------------------------------------------------------------------------------
+from functools import lru_cache
 
 class PositionsAllocator:
     '''Resource for re-using a single array of contiguous ascending integers for common applications in IndexBase.
@@ -2918,15 +2919,28 @@ class PositionsAllocator:
     _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 
+    _lru = {}
+    _lru_max_size = 128
+
     @classmethod
     def get(cls, size: int) -> np.ndarray:
-        if size > cls._size:
-            cls._size = size * 2
-            cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)
-            cls._array.flags.writeable = False
-        # slices of immutable arrays are immutable
-        return cls._array[:size]
+        lru = cls._lru
 
+        if size not in lru:
+            if len(lru) >= cls._lru_max_size:
+                del lru[next(iter(lru.keys()))]
+
+            if size > cls._size:
+                cls._size = size * 2
+                cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)
+                cls._array.flags.writeable = False
+            # slices of immutable arrays are immutable
+
+            lru[size] = cls._array[:size]
+        else:
+            lru[size] = lru.pop(size)
+
+        return lru[size]
 
 def array_sample(
         array: np.ndarray,
