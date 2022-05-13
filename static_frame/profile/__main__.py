@@ -1888,15 +1888,16 @@ def performance_tables_from_records(
 
     frame = sf.FrameGO.from_dict_records(records)
 
-    fields = ['Native', 'Reference', 'n/r', 'r/n']
+    fields = ['Native', 'Reference', 'n/r', 'r/n', 'win']
     stats = sf.Frame.from_concat((
+            frame[fields].sum().rename('sum'),
             frame[fields].min().rename('min'),
             frame[fields].max().rename('max'),
             frame[fields].mean().rename('mean'),
             frame[fields].median().rename('median'),
             frame[fields].std(ddof=1).rename('std')
             )).rename(index='name').unset_index()
-    if len(frame) < 9:
+    if len(frame) < 3:
         composit = frame.relabel(columns=frame.columns, index=sf.IndexAutoFactory)
     else:
         composit = sf.Frame.from_concat((frame, stats), columns=frame.columns, index=sf.IndexAutoFactory)
