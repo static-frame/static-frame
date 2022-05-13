@@ -636,12 +636,11 @@ class FrameIterSeriesApply(Perf):
 
         self.meta = {
             'float_index_str_row': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=prepare_iter_for_array,
-                explanation='appears to all be in apply_iter gen exp'
                 ),
             'float_index_str_row_dtype': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
             'float_index_str_column': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
@@ -1077,9 +1076,8 @@ class Group(Perf):
         # from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
             'wide_group_2': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=Frame._axis_group_iloc_items,
-                explanation='nearly identical, favoring slower'
                 ),
             'tall_group_100': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
@@ -1123,7 +1121,7 @@ class GroupLabel(Perf):
         from static_frame import IndexHierarchy
         self.meta = {
             'tall_group_1': FunctionMetaData(
-                # perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=IndexHierarchy._extract_iloc,
                 # explanation='nearly identical, favoring slower'
                 ),
