@@ -283,11 +283,11 @@ class Index(IndexBase):
                 if (labels.STATIC and self.STATIC and dtype is None):
                     if not is_typed or (is_typed and self._DTYPE == labels.dtype):
                         # can take the map if static and if types in the dict are the same as those in the labels (or to become the labels after conversion)
-                        self._map = labels._map
+                        self._map = labels._map #type: ignore
                 # get a reference to the immutable arrays, even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date; for datetime64 indices, we might need to translate to a different type
-                positions = labels._positions
-                loc_is_iloc = labels._map is None
-                labels = labels._labels
+                positions = labels._positions #type: ignore
+                loc_is_iloc = labels._map is None #type: ignore
+                labels = labels._labels # type: ignore
             else: # IndexHierarchy
                 # will be a generator of tuples; already updated caches
                 labels = labels.__iter__()
