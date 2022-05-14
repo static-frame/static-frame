@@ -142,8 +142,6 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 ELEMENT_TUPLE = (None,)
-
-() = ()
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 
 # defaults to float64
@@ -155,6 +153,9 @@ EMPTY_ARRAY_BOOL.flags.writeable = False
 
 EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
+
+UNIT_ARRAY_INT = np.array((0,), dtype=DTYPE_INT_DEFAULT)
+UNIT_ARRAY_INT.flags.writeable = False
 
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
@@ -2910,7 +2911,6 @@ def array_from_element_method(*,
 
 
 #-------------------------------------------------------------------------------
-from functools import lru_cache
 
 class PositionsAllocator:
     '''Resource for re-using a single array of contiguous ascending integers for common applications in IndexBase.
@@ -2919,15 +2919,12 @@ class PositionsAllocator:
     _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 
-    _array1 = np.arange(1, dtype=DTYPE_INT_DEFAULT)
-    _array1.flags.writeable = False
-
     # NOTE: preliminary tests of using lru-style caching on these instances has not shown a general benfit
 
     @classmethod
     def get(cls, size: int) -> np.ndarray:
         if size == 1:
-            return cls._array1
+            return UNIT_ARRAY_INT
 
         if size > cls._size:
             cls._size = size * 2
