@@ -22,7 +22,7 @@ class IndexConstructorFactoryBase:
             ) -> IndexBase:
         raise NotImplementedError() #pragma: no cover
 
-class IndexDefaultFactory(IndexConstructorFactoryBase):
+class IndexDefaultConstructor(IndexConstructorFactoryBase):
     '''
     Token class to be used to provide a ``name`` to a default constructor of an Index. To be used as a constructor argument. An instance must be created.
     '''
@@ -99,14 +99,14 @@ class IndexAutoFactory:
             initializer: IndexAutoInitializer, # size
             *,
             default_constructor: tp.Type[IndexBase],
-            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
+            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructor]] = None,
             ) -> IndexBase:
 
         # get an immutable array, shared from positions allocator
         labels = PositionsAllocator.get(initializer)
 
         if explicit_constructor:
-            if isinstance(explicit_constructor, IndexDefaultFactory):
+            if isinstance(explicit_constructor, IndexDefaultConstructor):
                 return explicit_constructor(labels,
                         default_constructor=default_constructor,
                         # NOTE might just pass name
@@ -132,7 +132,7 @@ class IndexAutoFactory:
     def to_index(self,
             *,
             default_constructor: tp.Type[IndexBase],
-            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
+            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructor]] = None,
             ) -> IndexBase:
         '''Called by index_from_optional_constructor.
         '''

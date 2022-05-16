@@ -36,7 +36,7 @@ from static_frame import IndexSecond
 from static_frame import mloc
 from static_frame import Series
 from static_frame import TypeBlocks
-from static_frame import IndexDefaultFactory
+from static_frame import IndexDefaultConstructor
 from static_frame import IndexAutoConstructorFactory
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
@@ -4283,8 +4283,8 @@ class TestUnit(TestCase):
                 columns=range(2),
                 dtype=object,
                 name='foo',
-                index_constructor=IndexDefaultFactory('bar'),
-                columns_constructor=IndexDefaultFactory('baz'),
+                index_constructor=IndexDefaultConstructor('bar'),
+                columns_constructor=IndexDefaultConstructor('baz'),
                 )
 
         self.assertEqual(f1.to_pairs(),
@@ -8386,7 +8386,7 @@ class TestUnit(TestCase):
 
         f4 = Frame.from_concat_items(dict(A=f1, B=f2).items(),
                 axis=1,
-                columns_constructor=IndexDefaultFactory('foo'),
+                columns_constructor=IndexDefaultConstructor('foo'),
                 )
         self.assertEqual(f4.columns.name, 'foo')
 
@@ -8408,7 +8408,7 @@ class TestUnit(TestCase):
 
         f3 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(),
                 axis=0,
-                index_constructor=IndexDefaultFactory('foo'),
+                index_constructor=IndexDefaultConstructor('foo'),
                 )
         self.assertEqual(f3.index.name, 'foo')
 
@@ -10215,8 +10215,8 @@ class TestUnit(TestCase):
 
         a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)),
                 index=tuple('wxyz'),
-                index_constructor=IndexDefaultFactory('foo'),
-                columns_constructor=IndexDefaultFactory('bar'),
+                index_constructor=IndexDefaultConstructor('foo'),
+                columns_constructor=IndexDefaultConstructor('bar'),
                 )
         self.assertEqual(a.index.name, 'foo')
         self.assertEqual(a.columns.name, 'bar')
@@ -10454,7 +10454,7 @@ class TestUnit(TestCase):
             for i in range(3):
                 yield f'000{i}', ('a' * i, 'b' * i)
 
-        f = Frame.from_records_items(gen(), index_constructor=IndexDefaultFactory('foo'))
+        f = Frame.from_records_items(gen(), index_constructor=IndexDefaultConstructor('foo'))
         self.assertEqual(
                 f.to_pairs(0),
                 ((0, (('0000', ''), ('0001', 'a'), ('0002', 'aa'))), (1, (('0000', ''), ('0001', 'b'), ('0002', 'bb'))))
