@@ -2426,7 +2426,7 @@ class TypeBlocks(ContainerOperand):
             for i in range(self._shape[0]):
                 yield constructor(array[i]) # works for 1D, 2D
         else:
-            def chainer(i):
+            def chainer(i: int) -> tp.Any:
                 for a in arrays:
                     if a.ndim > 1:
                         yield from a[i]

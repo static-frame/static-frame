@@ -744,51 +744,53 @@ class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
 #-------------------------------------------------------------------------------
 
 class FrameIterTuple(Perf):
-    NUMBER = 50
+    NUMBER = 20
 
     def __init__(self) -> None:
         super().__init__()
 
-        self.sff_float = ff.parse('s(1000,1000)|i(I,str)|c(I,str)|v(float,float,int)')
+        self.sff_float = ff.parse('s(10000,10)|i(I,str)|c(I,str)|v(float,float,int)')
         self.pdf_float = self.sff_float.to_pandas()
 
-        self.sff_mixed = ff.parse('s(1000,1000)|v(int,float,bool,str)|i(I,str)|c(I,str)')
+        self.sff_mixed = ff.parse('s(10000,10)|v(int,int,float,bool,str)|i(I,str)|c(I,str)')
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
-        # from static_frame.core.type_blocks import TypeBlocks
+        from static_frame.core.type_blocks import TypeBlocks
         # from static_frame.core.util import iterable_to_array_1d
         # from static_frame.core.util import prepare_iter_for_array
 
-        # self.meta = {
-        #     'float_index_str_row': FunctionMetaData(
-        #         perf_status=PerfStatus.EXPLAINED_WIN,
-        #         line_target=prepare_iter_for_array,
-        #         ),
-        #     'mixed_index_str_row': FunctionMetaData(
-        #         perf_status=PerfStatus.EXPLAINED_LOSS,
-        #         explanation='possible improvement with blocks_to_array_2d in C'
-        #         ),
-        #     }
+        self.meta = {
+            'float_index_str_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=TypeBlocks.iter_row_tuples,
+                explanation='Element-wise iteration per row to avoid type coercions.'
+                ),
+            'mixed_index_str_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=TypeBlocks.iter_row_tuples,
+                explanation='Element-wise iteration per row to avoid type coercions.'
+                ),
+            }
 
 class FrameIterTuple_N(FrameIterTuple, Native):
 
     def float_index_str_row(self) -> None:
         rows = list(self.sff_float.iter_tuple(axis=1))
-        assert len(rows) == 1000
+        assert len(rows) == 10000
 
     def mixed_index_str_row(self) -> None:
         rows = list(self.sff_mixed.iter_tuple(axis=1))
-        assert len(rows) == 1000
+        assert len(rows) == 10000
 
 class FrameIterTuple_R(FrameIterTuple, Reference):
 
     def float_index_str_row(self) -> None:
         rows = list(self.pdf_float.itertuples(index=False))
-        assert len(rows) == 1000
+        assert len(rows) == 10000
 
     def mixed_index_str_row(self) -> None:
         rows = list(self.pdf_mixed.itertuples(index=False))
-        assert len(rows) == 1000
+        assert len(rows) == 10000
 
 #-------------------------------------------------------------------------------
 class FrameIterGroupApply(Perf):
