@@ -688,6 +688,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[i]
             else:
                 # PERF: only creating and yielding one array at a time is shown to be slower; performance optimized: consolidate into a single array and then take slices
+                # NOTE: this might force unnecessary type coercion if going to a tuple
                 b = blocks_to_array_2d(
                         blocks=self._blocks,
                         shape=self._shape,
@@ -707,7 +708,7 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[NULL_SLICE, column] # excpeted to be immutable
+                    yield b[NULL_SLICE, column] # expected to be immutable
         else:
             raise AxisInvalid(f'no support for axis: {axis}')
 
@@ -2407,6 +2408,26 @@ class TypeBlocks(ContainerOperand):
                 yield b[key]
             else:
                 yield from b[key]
+
+    def iter_row_tuples(self,
+            key: tp.Optional[GetItemKeyTypeCompound],
+            ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
+        '''Alternative extractor that yields tuples per row of values based on a selection of one or more columns
+        '''
+        if key is None or (key.__class__ is slice and key == NULL_SLICE):
+            arrays = self._blocks
+        else:
+            arrays = list(self._slice_blocks(column_key=key))
+
+        if len(arrays) == 1:
+            array = arrays.pop()
+            for i in range(self._shape[0]):
+                yield tuple(array[i]) # works for 1D, 2D
+        else:
+            for i in range(self._shape[0]):
+                yield tuple(chain.from_iterable(
+                        a[i] if a.ndim > 1 else a[i:i+1] for a in arrays
+                        ))
 
     def _extract(self,
             row_key: GetItemKeyType = None,

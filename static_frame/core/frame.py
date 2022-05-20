@@ -160,7 +160,6 @@ from static_frame.core.util import DT64_NS
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import file_like_manager
-from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DTYPE_NA_KINDS
@@ -5600,12 +5599,10 @@ class Frame(ContainerOperand):
             own_columns = False
 
         if isinstance(column_iloc, INT_TYPES):
-            index_values = self._blocks._extract_array(column_key=column_iloc)
+            index_values = self._blocks._extract_array_column(column_iloc)
             name = column
         else:
-            # NOTE: _extract_array might force undesirable consolidation
-            index_values = array2d_to_array1d(
-                    self._blocks._extract_array(column_key=column_iloc))
+            index_values = self._blocks.iter_row_tuples(column_iloc)
             name = tuple(self._columns[column_iloc])
 
         index = index_from_optional_constructor(index_values,
