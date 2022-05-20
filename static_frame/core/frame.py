@@ -4865,8 +4865,11 @@ class Frame(ContainerOperand):
                 hasattr(constructor, '_make')):
             constructor = constructor._make
 
-        for axis_values in self._blocks.axis_values(axis):
-            yield constructor(axis_values)
+        if axis == 1:
+            yield from self._blocks.iter_row_tuples(key=None, constructor=constructor)
+        else: # for columns, slicing arrays from blocks should be cheap
+            for axis_values in self._blocks.axis_values(axis):
+                yield constructor(axis_values)
 
     def _axis_tuple_items(self, *,
             axis: int,
