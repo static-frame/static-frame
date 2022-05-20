@@ -190,7 +190,8 @@ class TestUnit(TestCase):
         f = ff.parse('s(3,2)|v(dtD,dtY)')
         post = tuple(f.iter_tuple(constructor=tuple, axis=1))
         self.assertEqual(len(post[0]), 2)
-        # NOTE: this is coercing types
+        self.assertEqual(post[0][1].dtype, f.iloc[0, 1].dtype)
+
 
     #---------------------------------------------------------------------------
 
