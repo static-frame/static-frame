@@ -2412,7 +2412,7 @@ class TypeBlocks(ContainerOperand):
     def iter_row_tuples(self,
             key: tp.Optional[GetItemKeyTypeCompound],
             *,
-            constructor: tp.Type[tuple] = tuple,
+            constructor: tp.Type[tp.Tuple[tp.Any, ...]] = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
         '''Alternative extractor that yields tuples per row of values based on a selection of one or more columns
         '''
