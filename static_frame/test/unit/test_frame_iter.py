@@ -186,6 +186,12 @@ class TestUnit(TestCase):
         self.assertEqual(post2,
                 [(1, 30), (2, 50), ('a', 'b'), (False, True), (True, False)])
 
+    def test_frame_iter_tuple_f(self) -> None:
+        f = ff.parse('s(3,2)|v(dtD,dtY)')
+        post = tuple(f.iter_tuple(constructor=tuple, axis=1))
+        self.assertEqual(len(post[0]), 2)
+        # NOTE: this is coercing types
+
     #---------------------------------------------------------------------------
 
     def test_frame_iter_series_a(self) -> None:
