@@ -156,7 +156,7 @@ def get_col_dtype_factory(
 def get_col_fill_value_factory(
         fill_value: tp.Any,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
-        ) -> tp.Callable[[int], np.dtype]:
+        ) -> tp.Callable[[int, np.dtype], tp.Any]:
     '''
     Return a function to get fill_vlaue.
 
@@ -183,7 +183,9 @@ def get_col_fill_value_factory(
     if columns is None and is_map:
         raise RuntimeError('cannot lookup fill_value by name without supplied columns labels')
 
-    def get_col_fill_value(col_idx: int) -> tp.Any:
+    def get_col_fill_value(col_idx: int, dtype: np.dtype) -> tp.Any:
+        '''dtype can be used for automatic selection based on dtype kind
+        '''
         nonlocal fill_value # might mutate a generator into a tuple
         if is_element:
             return fill_value

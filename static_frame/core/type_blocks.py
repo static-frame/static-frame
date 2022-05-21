@@ -2038,7 +2038,7 @@ class TypeBlocks(ContainerOperand):
                 yield block
 
             if block.ndim == 1:
-                value = func(col)
+                value = func(col, block.dtype)
                 value_dtype = dtype_from_element(value)
                 assigned_dtype = resolve_dtype(value_dtype, block.dtype)
                 if block.dtype == assigned_dtype:
@@ -2059,7 +2059,7 @@ class TypeBlocks(ContainerOperand):
                         # no targets in this columns
                         yield block[NULL_SLICE, i] # slices are immutable
                     else:
-                        value = func(col)
+                        value = func(col, block.dtype)
                         value_dtype = dtype_from_element(value)
                         assigned_dtype = resolve_dtype(value_dtype, block.dtype)
 
