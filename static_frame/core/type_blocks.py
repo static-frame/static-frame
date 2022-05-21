@@ -566,6 +566,8 @@ class TypeBlocks(ContainerOperand):
 
     @property
     def unified_dtypes(self) -> bool:
+        '''Return True if all blocks have the same dtype.
+        '''
         # use blocks to iterate over fewer things
         if len(self._blocks) <= 1:
             return True
