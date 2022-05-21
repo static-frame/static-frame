@@ -564,6 +564,22 @@ class TypeBlocks(ContainerOperand):
     def unified(self) -> bool:
         return len(self._blocks) <= 1
 
+    @property
+    def unified_dtypes(self) -> bool:
+        # use blocks to iterate over fewer things
+        if len(self._blocks) <= 1:
+            return True
+        dtypes = iter(d.dtype for d in self._blocks)
+        d_first = next(dtypes)
+        for d in dtypes:
+            if d != d_first:
+                return False
+        return True
+
+
+
+
+
     #---------------------------------------------------------------------------
     # interfaces
 

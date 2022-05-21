@@ -4865,7 +4865,8 @@ class Frame(ContainerOperand):
                 hasattr(constructor, '_make')):
             constructor = constructor._make
 
-        if axis == 1:
+        # NOTE: if all types are the same, it will be faster to use axis_values
+        if axis == 1 and not self._blocks.unified_dtypes:
             yield from self._blocks.iter_row_tuples(key=None, constructor=constructor)
         else: # for columns, slicing arrays from blocks should be cheap
             for axis_values in self._blocks.axis_values(axis):

@@ -755,6 +755,10 @@ class FrameIterTuple(Perf):
         self.sff_mixed = ff.parse('s(10000,10)|v(int,int,float,bool,str)|i(I,str)|c(I,str)')
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
+        self.sff_uniform = ff.parse('s(10000,10)|v(float)|i(I,str)|c(I,str)')
+        self.pdf_uniform = self.sff_uniform.to_pandas()
+
+
         from static_frame.core.type_blocks import TypeBlocks
         # from static_frame.core.util import iterable_to_array_1d
         # from static_frame.core.util import prepare_iter_for_array
@@ -782,6 +786,10 @@ class FrameIterTuple_N(FrameIterTuple, Native):
         rows = list(self.sff_mixed.iter_tuple(axis=1))
         assert len(rows) == 10000
 
+    def uniform_index_str_row(self) -> None:
+        rows = list(self.sff_uniform.iter_tuple(axis=1))
+        assert len(rows) == 10000
+
 class FrameIterTuple_R(FrameIterTuple, Reference):
 
     def float_index_str_row(self) -> None:
@@ -790,6 +798,10 @@ class FrameIterTuple_R(FrameIterTuple, Reference):
 
     def mixed_index_str_row(self) -> None:
         rows = list(self.pdf_mixed.itertuples(index=False))
+        assert len(rows) == 10000
+
+    def uniform_index_str_row(self) -> None:
+        rows = list(self.pdf_uniform.itertuples(index=False))
         assert len(rows) == 10000
 
 #-------------------------------------------------------------------------------
