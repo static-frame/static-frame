@@ -15,6 +15,7 @@ from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import isna_array
 from static_frame.core.container_util import get_col_dtype_factory
+from static_frame.core.container_util import get_col_fill_value_factory
 
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase
@@ -1161,6 +1162,29 @@ class TestUnit(TestCase):
 
         self.assertEqual(tb2.values.tolist(),
                 [[0, 1, 2], [3, 'a', 'b'], [6, 7, 8]])
+
+
+    #--------------------------------------------------------------------------
+    def test_type_blocks_assign_from_boolean_blocks_by_callable(self) -> None:
+
+        func = get_col_fill_value_factory([-1, 'x', True], columns=None)
+
+        a1 = np.array([[3, 4], [3, 2],])
+        a2 = np.array([False, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        t1 = np.array([[0, 1], [1, 0],], dtype=bool)
+        t2 = np.array([0, 1], dtype=bool)
+        targets = (t1, t2)
+
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_from_boolean_blocks_by_callable(
+                       targets=targets,
+                       func=func,
+                       ))
+        self.assertEqual( tb2.values.tolist(),
+                [[3, 'x', False], [-1, 2, True]],
+                )
 
     #--------------------------------------------------------------------------
     def test_type_blocks_assign_blocks_from_keys_by_blocks_a(self) -> None:

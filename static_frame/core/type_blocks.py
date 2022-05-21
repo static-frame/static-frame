@@ -1972,7 +1972,6 @@ class TypeBlocks(ContainerOperand):
         if value.__class__ is np.ndarray:
             value_dtype = value.dtype #type: ignore
             is_element = False
-            # assert value.shape == self.shape
             if value_valid is not None:
                 assert value_valid.shape == self.shape
         else: # assumed to be non-string, non-iterable
@@ -2020,6 +2019,60 @@ class TypeBlocks(ContainerOperand):
                 assigned.flags.writeable = False
                 yield assigned
 
+    def _assign_from_boolean_blocks_by_callable(self,
+            targets: tp.Iterable[np.ndarray],
+            func: tp.Callable[[int], tp.Any],
+            ) -> tp.Iterator[np.ndarray]:
+        '''Assign value (a single element) into blocks by integer column, based on a Boolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. The result of calling func with the column number is the value set where the Boolean is True.
+
+        Args:
+            func: A callable that given the index position returns the value
+            value_valid: same size Boolean area to be combined with targets
+        '''
+        col = 0
+        # value_slice: tp.Union[int, slice]
+
+        for block, target in zip_longest(self._blocks, targets):
+            # evaluate after updating target
+            if not target.any(): # works for ndim 1 and 2
+                yield block
+
+            if block.ndim == 1:
+                value = func(col)
+                value_dtype = dtype_from_element(value)
+                assigned_dtype = resolve_dtype(value_dtype, block.dtype)
+                if block.dtype == assigned_dtype:
+                    assigned = block.copy()
+                else:
+                    assigned = block.astype(assigned_dtype)
+
+                assigned[target] = value
+                assigned.flags.writeable = False
+                yield assigned
+
+                col += 1
+            else:
+                target_flat = target.any(axis=0)
+                # NOTE: this implementation does maximal de-consolidation to ensure type resolution; this might instead collect fill values and find if they are unique accross blocks, but this would require them to be hashable or otherwise comparable, which they may not be
+                for i in range(block.shape[1]):
+                    if not target_flat[i]:
+                        # no targets in this columns
+                        yield block[NULL_SLICE, i] # slices are immutable
+                    else:
+                        value = func(col)
+                        value_dtype = dtype_from_element(value)
+                        assigned_dtype = resolve_dtype(value_dtype, block.dtype)
+
+                        if block.dtype == assigned_dtype:
+                            assigned = block[NULL_SLICE, i].copy()
+                        else:
+                            assigned = block[NULL_SLICE, i].astype(assigned_dtype)
+
+                        assigned[target[NULL_SLICE, i]] = value
+                        assigned.flags.writeable = False
+                        yield assigned
+
+                    col += 1
 
     def _assign_from_boolean_blocks_by_blocks(self,
             targets: tp.Iterable[np.ndarray],
@@ -2030,7 +2083,7 @@ class TypeBlocks(ContainerOperand):
         This approach minimizes type coercion by reducing assigned values to columnar types.
 
         Args:
-            targets: arrays aligned to blocks
+            targets: Boolean arrays aligned to blocks
             values: Sequence of 1D arrays with aggregate shape equal to targets
         '''
         start = 0
@@ -3576,6 +3629,27 @@ class TypeBlocks(ContainerOperand):
                         targets=(func(b) for b in self._blocks),
                         value=value,
                         value_valid=value_valid
+                        )
+                )
+
+    def fill_missing_by_callable(self,
+            value: object,
+            *,
+            func_missing: tp.Callable[[np.ndarray], np.ndarray],
+            func_fill_value: tp.Callable[[int], tp.Any]
+            ) -> 'TypeBlocks':
+        '''
+        Return a new TypeBlocks instance that fills missing values with the passed value.
+
+        Args:
+            value: value to fill missing with; can be an element or a same-sized array.
+            value_valid: Optionally provide a same-size array mask of the value setting (useful for carrying forward information from labels).
+            func_missing: A function that takes an array and returns a Boolean array.
+        '''
+        return self.from_blocks(
+                self._assign_from_boolean_blocks_by_callable(
+                        targets=(func_missing(b) for b in self._blocks),
+                        func=func_fill_value,
                         )
                 )
 

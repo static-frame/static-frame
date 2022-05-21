@@ -112,7 +112,6 @@ class ContainerMap:
             cls._update_map()
         return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
 
-# NOTE: can this be used for fill-values
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
@@ -123,8 +122,6 @@ def get_col_dtype_factory(
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
     '''
-    from static_frame.core.series import Series
-
     # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
     # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
 
@@ -154,6 +151,52 @@ def get_col_dtype_factory(
         return dtypes[col_idx] #type: ignore
 
     return get_col_dtype
+
+
+def get_col_fill_value_factory(
+        fill_value: tp.Any,
+        columns: tp.Optional[tp.Sequence[tp.Hashable]],
+        ) -> tp.Callable[[int], np.dtype]:
+    '''
+    Return a function to get fill_vlaue.
+
+    Args:
+        columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
+    '''
+    # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
+    # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
+
+    if is_mapping(fill_value):
+        is_map = True
+        is_element = False
+    elif isinstance(fill_value, tuple):
+        # tuple is an element
+        is_map = False
+        is_element = True
+    elif hasattr(fill_value, '__iter__') and not isinstance(fill_value, str):
+        # an iterable, or iterator
+        is_map = False
+        is_element = False
+    else: # can assume an element
+        is_map = False
+        is_element = True
+
+    if columns is None and is_map:
+        raise RuntimeError('cannot lookup fill_value by name without supplied columns labels')
+
+    def get_col_fill_value(col_idx: int) -> tp.Any:
+        nonlocal fill_value # might mutate a generator into a tuple
+        if is_element:
+            return fill_value
+        if is_map:
+            # mappings can be incomplete
+            return fill_value.get(columns[col_idx], np.nan) #type: ignore
+        if not hasattr(fill_value, '__len__') or not hasattr(fill_value, '__getitem__'):
+            fill_value = tuple(fill_value) #type: ignore
+        return fill_value[col_idx] #type: ignore
+
+    return get_col_fill_value
+
 
 
 def is_static(value: IndexConstructor) -> bool:

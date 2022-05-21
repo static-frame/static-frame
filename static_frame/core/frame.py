@@ -48,6 +48,8 @@ from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import constructor_from_optional_constructors
 from static_frame.core.container_util import df_slice_to_arrays
 from static_frame.core.container_util import frame_to_frame
+from static_frame.core.container_util import get_col_fill_value_factory
+
 from static_frame.core.archive_npy import NPZFrameConverter
 from static_frame.core.archive_npy import NPYFrameConverter
 
@@ -4004,13 +4006,16 @@ class Frame(ContainerOperand):
         Args:
             func: function to return True for missing values
         '''
-
-        if hasattr(value, '__iter__') and not isinstance(value, str):
-            if not isinstance(value, Frame):
-                raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Frame')
-            # get a dummy fill_value to use during reindex and avoid undesirable type cooercions
+        kwargs = dict(
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_index=True,
+                own_columns=self.STATIC,
+                own_data=True,
+                )
+        if isinstance(value, Frame):
             fill_value = dtype_to_fill_value(value._blocks._row_dtype)
-
             fill = value.reindex(
                     index=self.index,
                     columns=self.columns,
@@ -4021,17 +4026,26 @@ class Frame(ContainerOperand):
                     self.index.isin(value.index.values),
                     self.columns.isin(value.columns.values)
                     )).values
-        else:
-            fill = value
-            fill_valid = None
-
+            return self.__class__(
+                    self._blocks.fill_missing_by_unit(fill, fill_valid, func=func),
+                    **kwargs,
+                    )
+        elif not hasattr(value, '__iter__') or isinstance(value, str):
+            # if not an iterable, or a string (which is an iterable)
+            return self.__class__(
+                    self._blocks.fill_missing_by_unit(value, None, func=func),
+                    **kwargs,
+                    )
+        # we have a iterable or a mapping
+        func_fill_value = get_col_fill_value_factory(value, columns=self._columns)
         return self.__class__(
-                self._blocks.fill_missing_by_unit(fill, fill_valid, func=func),
-                index=self._index,
-                columns=self._columns,
-                name=self._name,
-                own_data=True
+                self._blocks.fill_missing_by_callable(value,
+                        func_missing=func,
+                        func_fill_value=func_fill_value,
+                        ),
+                **kwargs,
                 )
+
 
     @doc_inject(selector='fillna')
     def fillna(self, value: tp.Any) -> 'Frame':
