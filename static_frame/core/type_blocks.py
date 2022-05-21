@@ -575,7 +575,7 @@ class TypeBlocks(ContainerOperand):
         d_first = next(dtypes)
         for d in dtypes:
             if d != d_first:
-                return
+                return False
         return True
 
     #---------------------------------------------------------------------------
