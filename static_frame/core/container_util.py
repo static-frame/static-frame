@@ -163,8 +163,7 @@ def get_col_fill_value_factory(
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
     '''
-    # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
-    # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
+    # should this take FillValueAuto(int64=-1)... but how to match?
 
     if is_mapping(fill_value):
         is_map = True
@@ -174,7 +173,7 @@ def get_col_fill_value_factory(
         is_map = False
         is_element = True
     elif hasattr(fill_value, '__iter__') and not isinstance(fill_value, str):
-        # an iterable, or iterator
+        # an iterable or iterator but not a string
         is_map = False
         is_element = False
     else: # can assume an element
