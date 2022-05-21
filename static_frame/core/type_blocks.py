@@ -3633,7 +3633,6 @@ class TypeBlocks(ContainerOperand):
                 )
 
     def fill_missing_by_callable(self,
-            value: object,
             *,
             func_missing: tp.Callable[[np.ndarray], np.ndarray],
             func_fill_value: tp.Callable[[int], tp.Any]

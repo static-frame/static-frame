@@ -4039,7 +4039,7 @@ class Frame(ContainerOperand):
         # we have a iterable or a mapping
         func_fill_value = get_col_fill_value_factory(value, columns=self._columns)
         return self.__class__(
-                self._blocks.fill_missing_by_callable(value,
+                self._blocks.fill_missing_by_callable(
                         func_missing=func,
                         func_fill_value=func_fill_value,
                         ),
