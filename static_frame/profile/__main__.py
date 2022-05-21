@@ -744,7 +744,7 @@ class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
 #-------------------------------------------------------------------------------
 
 class FrameIterTuple(Perf):
-    NUMBER = 20
+    NUMBER = 50
 
     def __init__(self) -> None:
         super().__init__()
