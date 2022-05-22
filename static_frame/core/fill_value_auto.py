@@ -40,3 +40,4 @@ class FillValueAuto:
 
     def __getitem__(self, dtype: np.dtype) -> tp.Any:
         return getattr(self, dtype.kind)
+

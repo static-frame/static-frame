@@ -63,6 +63,8 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.fill_value_auto import FillValueAuto
+
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index import Index
@@ -4030,21 +4032,25 @@ class Frame(ContainerOperand):
                     self._blocks.fill_missing_by_unit(fill, fill_valid, func=func),
                     **kwargs,
                     )
-        elif not hasattr(value, '__iter__') or isinstance(value, str):
-            # if not an iterable, or a string (which is an iterable)
+        elif ((hasattr(value, '__iter__') and not isinstance(value, str))
+                or value is FillValueAuto
+                or isinstance(value, FillValueAuto)
+                ):
+            # we have a iterable or a mapping, or FillValueAuto
+            func_fill_value = get_col_fill_value_factory(value, columns=self._columns)
             return self.__class__(
-                    self._blocks.fill_missing_by_unit(value, None, func=func),
+                    self._blocks.fill_missing_by_callable(
+                            func_missing=func,
+                            func_fill_value=func_fill_value,
+                            ),
                     **kwargs,
                     )
-        # we have a iterable or a mapping
-        func_fill_value = get_col_fill_value_factory(value, columns=self._columns)
+        # if not an iterable or a string
         return self.__class__(
-                self._blocks.fill_missing_by_callable(
-                        func_missing=func,
-                        func_fill_value=func_fill_value,
-                        ),
+                self._blocks.fill_missing_by_unit(value, None, func=func),
                 **kwargs,
                 )
+
 
 
     @doc_inject(selector='fillna')

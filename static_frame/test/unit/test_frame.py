@@ -51,6 +51,7 @@ from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import WarningsSilent
+from static_frame.core.fill_value_auto import FillValueAuto
 
 from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import skip_win
@@ -5574,6 +5575,19 @@ class TestUnit(TestCase):
                 (('A', (('w', None), ('x', 3.0), ('y', 0.0))), ('B', (('w', 2.0), ('x', 30.0), ('y', 0.0))), ('C', (('w', 3), ('x', -1), ('y', 2))), ('D', (('w', 0), ('x', None), ('y', 3))))
                 )
 
+    def test_frame_fillna_h(self) -> None:
+
+        f1 = Frame.from_records([
+                [np.nan, 2, 3, 0],
+                [3, 30, None, None],
+                [0, np.nan, 2, 3]],
+                columns=tuple('ABCD'),
+                index=tuple('wxy'),
+                )
+        f2 = f1.fillna(FillValueAuto(f=-1, O='na'))
+        self.assertEqual(f2.to_pairs(),
+                (('A', (('w', -1.0), ('x', 3.0), ('y', 0.0))), ('B', (('w', 2.0), ('x', 30.0), ('y', -1.0))), ('C', (('w', 3), ('x', 'na'), ('y', 2))), ('D', (('w', 0), ('x', 'na'), ('y', 3))))
+                )
 
     #---------------------------------------------------------------------------
 
