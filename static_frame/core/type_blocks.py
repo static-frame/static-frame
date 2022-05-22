@@ -2021,7 +2021,7 @@ class TypeBlocks(ContainerOperand):
 
     def _assign_from_boolean_blocks_by_callable(self,
             targets: tp.Iterable[np.ndarray],
-            func: tp.Callable[[int], tp.Any],
+            func: tp.Callable[[int, np.dtype], tp.Any],
             ) -> tp.Iterator[np.ndarray]:
         '''Assign value (a single element) into blocks by integer column, based on a Boolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. The result of calling func with the column number is the value set where the Boolean is True.
 
