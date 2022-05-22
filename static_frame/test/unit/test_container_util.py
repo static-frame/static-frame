@@ -18,6 +18,7 @@ from static_frame.core.container_util import apply_binary_operator_blocks_column
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
 
+from static_frame.core.fill_value_auto import FillValueAuto
 
 from static_frame.core.frame import FrameHE
 
@@ -585,6 +586,15 @@ class TestUnit(TestCase):
         self.assertEqual(func1(0, dtype=np.dtype(float)), 'x')
         self.assertEqual(func1(1, dtype=np.dtype(float)), 'y')
 
+    def test_get_col_fill_value_f(self) -> None:
+        func1 = get_col_fill_value_factory(FillValueAuto, columns=None)
+        self.assertEqual(func1(0, dtype=np.dtype(object)), None)
+        self.assertEqual(func1(1, dtype=np.dtype(str)), '')
+
+    def test_get_col_fill_value_g(self) -> None:
+        func1 = get_col_fill_value_factory(FillValueAuto(O='', U='na'), columns=None)
+        self.assertEqual(func1(0, dtype=np.dtype(object)), '')
+        self.assertEqual(func1(1, dtype=np.dtype(str)), 'na')
 
 
     #---------------------------------------------------------------------------

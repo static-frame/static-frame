@@ -38,5 +38,5 @@ class FillValueAuto:
         self.U = U
         self.V = V
 
-    def __call__(self, dtype: np.dtype) -> tp.Any:
+    def __getitem__(self, dtype: np.dtype) -> tp.Any:
         return getattr(self, dtype.kind)

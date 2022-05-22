@@ -11,11 +11,11 @@ class TestUnit(TestCase):
     def test_fill_value_auto_a(self) -> None:
 
         fva = FillValueAuto()
-        self.assertEqual(fva(np.dtype(int)), 0)
-        self.assertEqual(fva(np.dtype(bool)), False)
-        self.assertIs(fva(np.dtype(np.datetime64)), NAT)
-        self.assertIs(fva(np.dtype(np.timedelta64)), NAT_TD64)
-        self.assertEqual(fva(np.dtype('U4')), '')
+        self.assertEqual(fva[np.dtype(int)], 0)
+        self.assertEqual(fva[np.dtype(bool)], False)
+        self.assertIs(fva[np.dtype(np.datetime64)], NAT)
+        self.assertIs(fva[np.dtype(np.timedelta64)], NAT_TD64)
+        self.assertEqual(fva[np.dtype('U4')], '')
 
         # import ipdb; ipdb.set_trace()
 

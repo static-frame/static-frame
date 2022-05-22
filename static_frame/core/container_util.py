@@ -46,7 +46,7 @@ from static_frame.core.util import WarningsSilent
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
-
+from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.exception import AxisInvalid
 
 
@@ -71,6 +71,7 @@ ExplicitConstructor = tp.Union[
         None,
         ]
 
+FILL_VALUE_AUTO_DEFAULT = FillValueAuto()
 
 class ContainerMap:
 
@@ -163,21 +164,24 @@ def get_col_fill_value_factory(
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
     '''
-    # should this take FillValueAuto(int64=-1)... but how to match?
+    # if all false it is an iterable
+    is_fva = False
+    is_map = False
+    is_element = False
 
-    if is_mapping(fill_value):
+    if fill_value is FillValueAuto:
+        is_fva = True
+        fill_value = FILL_VALUE_AUTO_DEFAULT
+    elif is_mapping(fill_value):
         is_map = True
-        is_element = False
-    elif isinstance(fill_value, tuple):
-        # tuple is an element
-        is_map = False
+    elif isinstance(fill_value, tuple): # tuple is an element
         is_element = True
     elif hasattr(fill_value, '__iter__') and not isinstance(fill_value, str):
         # an iterable or iterator but not a string
-        is_map = False
-        is_element = False
+        pass
+    elif isinstance(fill_value, FillValueAuto):
+        is_fva = True
     else: # can assume an element
-        is_map = False
         is_element = True
 
     if columns is None and is_map:
@@ -187,6 +191,8 @@ def get_col_fill_value_factory(
         '''dtype can be used for automatic selection based on dtype kind
         '''
         nonlocal fill_value # might mutate a generator into a tuple
+        if is_fva: # use the mapping from dtype
+            return fill_value[dtype]
         if is_element:
             return fill_value
         if is_map:
