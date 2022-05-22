@@ -199,8 +199,8 @@ def get_col_fill_value_factory(
             # mappings can be incomplete
             return fill_value.get(columns[col_idx], np.nan) #type: ignore
         if not hasattr(fill_value, '__len__') or not hasattr(fill_value, '__getitem__'):
-            fill_value = tuple(fill_value) #type: ignore
-        return fill_value[col_idx] #type: ignore
+            fill_value = tuple(fill_value)
+        return fill_value[col_idx]
 
     return get_col_fill_value
 

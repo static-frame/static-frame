@@ -4016,6 +4016,7 @@ class Frame(ContainerOperand):
                 own_columns=self.STATIC,
                 own_data=True,
                 )
+        # NOTE: we branch based on value type to use more efficient TypeBlock methods when we know we have an element or a 2D array
         if isinstance(value, Frame):
             fill_value = dtype_to_fill_value(value._blocks._row_dtype)
             fill = value.reindex(
@@ -4045,7 +4046,7 @@ class Frame(ContainerOperand):
                             ),
                     **kwargs,
                     )
-        # if not an iterable or a string
+        # if not an iterable or if a string
         return self.__class__(
                 self._blocks.fill_missing_by_unit(value, None, func=func),
                 **kwargs,
