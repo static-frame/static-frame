@@ -161,6 +161,9 @@ EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 NAT = np.datetime64('nat')
 NAT_STR = 'NaT'
 
+# this is a different NAT but can be treated the same
+NAT_TD64 = np.timedelta64('nat')
+
 # define missing for timedelta as an untyped 0
 EMPTY_TIMEDELTA = np.timedelta64(0)
 
