@@ -3464,7 +3464,7 @@ class Frame(ContainerOperand):
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
             *,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             own_index: bool = False,
             own_columns: bool = False,
             check_equals: bool = True,

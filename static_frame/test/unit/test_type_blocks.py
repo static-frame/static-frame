@@ -2437,6 +2437,7 @@ class TestUnit(TestCase):
             self.assertEqual(tb1.nbytes, 0)
             self.assertEqual(len(tb1), tb1.shape[0])
 
+    #---------------------------------------------------------------------------
     def test_type_blocks_datetime64_a(self) -> None:
 
         d = np.datetime64
@@ -2460,7 +2461,8 @@ class TestUnit(TestCase):
 
         self.assertEqual(len(tb2._blocks), 1)
 
-    def test_type_blocks_resize_blocks_a(self) -> None:
+    #---------------------------------------------------------------------------
+    def test_type_blocks_resize_blocks_a1(self) -> None:
 
         a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
@@ -2475,6 +2477,36 @@ class TestUnit(TestCase):
 
         tb2 = TypeBlocks.from_blocks(tb1.resize_blocks(index_ic=index_ic, columns_ic=None, fill_value=None))
         self.assertEqual(tb2.shape, (2, 3))
+
+    def test_type_blocks_resize_blocks_a2(self) -> None:
+
+        a1 = np.arange(6).reshape(3, 2)
+        a2 = np.array([False, True, False])
+        a3 = np.array(['b', 'c', 'd'])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=False,
+                iloc_src=np.array((1, 2)),
+                iloc_dst=np.array((0, 2)),
+                size=5)
+
+        func = get_col_fill_value_factory([-1, -2, -3, -4], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=index_ic,
+                        columns_ic=None,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.shape, (5, 4))
+        self.assertEqual(tb2.values.tolist(),
+                [[2, 3, True, 'c'],
+                [-1, -2, -3, -4],
+                [4, 5, False, 'd'],
+                [-1, -2, -3, -4],
+                [-1, -2, -3, -4]]
+                )
+
 
     def test_type_blocks_resize_blocks_b(self) -> None:
 
@@ -2616,7 +2648,6 @@ class TestUnit(TestCase):
         a2 = np.array([4, 5, 6])
         a3 = np.array([False, False, True])
         a4 = np.array([True, False, True])
-
 
         tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4))
 

@@ -264,6 +264,9 @@ def group_sorted(
         else:
             yield group_source[start], slc, chunk
 
+
+TypeShape = tp.Union[int, tp.Tuple[int, int]]
+
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
     '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :obj:`Frame` for core, unindexed array management.
@@ -864,10 +867,9 @@ class TypeBlocks(ContainerOperand):
     def consolidate(self) -> 'TypeBlocks':
         '''Return a new TypeBlocks that unifies all adjacent types.
         '''
-        # note: not sure if we have a single block if we should return a new TypeBlocks instance (as done presently), or simply return self; either way, no new np arrays will be created
         return self.from_blocks(self.consolidate_blocks(raw_blocks=self._blocks))
 
-
+    #---------------------------------------------------------------------------
     def resize_blocks(self, *,
             index_ic: tp.Optional[IndexCorrespondence],
             columns_ic: tp.Optional[IndexCorrespondence],
@@ -877,8 +879,7 @@ class TypeBlocks(ContainerOperand):
         Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
         '''
         if columns_ic is None and index_ic is None:
-            for b in self._blocks:
-                yield b
+            yield from self._blocks
 
         elif columns_ic is None and index_ic is not None:
             for b in self._blocks:
@@ -886,7 +887,7 @@ class TypeBlocks(ContainerOperand):
                     # works for both 1d and 2s arrays
                     yield b[index_ic.iloc_src]
                 else:
-                    shape: tp.Union[int, tp.Tuple[int, int]] = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
+                    shape: TypeShape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
                     if index_ic.has_common:
                         values[index_ic.iloc_dst] = b[index_ic.iloc_src]
@@ -925,7 +926,7 @@ class TypeBlocks(ContainerOperand):
                             yield values
 
         else: # both defined
-            assert columns_ic is not None and index_ic is not None
+            # assert columns_ic is not None and index_ic is not None
             if not columns_ic.has_common and not index_ic.has_common:
                 # return an empty frame
                 shape = index_ic.size, columns_ic.size
@@ -970,6 +971,120 @@ class TypeBlocks(ContainerOperand):
                             values.flags.writeable = False
                             yield values
 
+    def resize_blocks_by_callable(self, *,
+            index_ic: tp.Optional[IndexCorrespondence],
+            columns_ic: tp.Optional[IndexCorrespondence],
+            fill_value: tp.Callable[[int, np.dtype], tp.Any]
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
+        '''
+        cols_src = 0
+
+        if columns_ic is None and index_ic is None:
+            yield from self._blocks
+        elif columns_ic is None and index_ic is not None:
+            for b in self._blocks:
+                if index_ic.is_subset: # no rows added
+                    # works for both 1d and 2s arrays
+                    yield b[index_ic.iloc_src]
+                    cols_src += b.shape[1]
+                elif b.ndim == 1:
+                    fv = fill_value(cols_src, b.dtype)
+                    values = full_for_fill(b.dtype, index_ic.size, fv)
+                    if index_ic.has_common: # if we have some overlap
+                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                    values.flags.writeable = False
+                    yield values
+                    cols_src += 1
+                else:
+                    for pos in range(b.shape[1]):
+                        fv = fill_value(cols_src, b.dtype)
+                        values = full_for_fill(b.dtype, index_ic.size, fv)
+                        if index_ic.has_common: # if we have some overlap
+                            values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos]
+                        values.flags.writeable = False
+                        yield values
+                        cols_src += 1
+
+        elif columns_ic is not None and index_ic is None:
+            if not columns_ic.has_common: # no columns in common
+                shape = self.shape[0], columns_ic.size
+                values = full_for_fill(None, shape, fill_value)
+                values.flags.writeable = False
+                yield values
+            else:
+                if self.unified and columns_ic.is_subset:
+                    b = self._blocks[0]
+                    if b.ndim == 1:
+                        yield b
+                    else:
+                        yield b[:, columns_ic.iloc_src]
+                else:
+                    dst_to_src = dict(
+                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
+                    for idx in range(columns_ic.size):
+                        if idx in dst_to_src:
+                            block_idx, block_col = self._index[dst_to_src[idx]]
+                            b = self._blocks[block_idx]
+                            if b.ndim == 1:
+                                yield b
+                            else:
+                                yield b[:, block_col]
+                        else: # just get an empty position, fill_value determines type
+                            values = full_for_fill(None,
+                                    self.shape[0],
+                                    fill_value)
+                            values.flags.writeable = False
+                            yield values
+
+        else: # both defined
+            # assert columns_ic is not None and index_ic is not None
+            if not columns_ic.has_common and not index_ic.has_common:
+                # return an empty frame
+                shape = index_ic.size, columns_ic.size
+                values = full_for_fill(None, shape, fill_value)
+                values.flags.writeable = False
+                yield values
+            else:
+                if self.unified and index_ic.is_subset and columns_ic.is_subset:
+                    b = self._blocks[0]
+                    if b.ndim == 1:
+                        yield b[index_ic.iloc_src]
+                    else:
+                        yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
+                else:
+                    columns_dst_to_src = dict(
+                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
+
+                    for idx in range(columns_ic.size):
+                        if idx in columns_dst_to_src:
+                            block_idx, block_col = self._index[columns_dst_to_src[idx]]
+                            b = self._blocks[block_idx]
+
+                            if index_ic.is_subset:
+                                if b.ndim == 1:
+                                    yield b[index_ic.iloc_src]
+                                else:
+                                    yield b[index_ic.iloc_src, block_col]
+                            else: # need an empty to fill, compatible with this block
+                                values = full_for_fill(b.dtype,
+                                        index_ic.size,
+                                        fill_value)
+                                if b.ndim == 1:
+                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                                else:
+                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
+                                values.flags.writeable = False
+                                yield values
+                        else:
+                            values = full_for_fill(None,
+                                        index_ic.size,
+                                        fill_value)
+                            values.flags.writeable = False
+                            yield values
+
+    #---------------------------------------------------------------------------
     def sort(self,
             axis: int,
             key: GetItemKeyTypeCompound,
