@@ -926,7 +926,7 @@ class TypeBlocks(ContainerOperand):
                             yield values
 
         else: # both defined
-            # assert columns_ic is not None and index_ic is not None
+            assert columns_ic is not None and index_ic is not None # mypy
             if not columns_ic.has_common and not index_ic.has_common:
                 # return an empty frame
                 shape = index_ic.size, columns_ic.size
@@ -1039,7 +1039,7 @@ class TypeBlocks(ContainerOperand):
                             yield values
 
         else: # both defined
-            # assert columns_ic is not None and index_ic is not None
+            assert columns_ic is not None and index_ic is not None # mypy
             if not columns_ic.has_common and not index_ic.has_common:
                 # return an empty frame
                 shape = index_ic.size, columns_ic.size
