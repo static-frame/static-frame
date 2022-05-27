@@ -979,40 +979,44 @@ class TypeBlocks(ContainerOperand):
         '''
         Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
         '''
-        cols_src = 0
+        col_src = 0
 
         if columns_ic is None and index_ic is None:
             yield from self._blocks
         elif columns_ic is None and index_ic is not None:
             for b in self._blocks:
                 if index_ic.is_subset: # no rows added
-                    # works for both 1d and 2s arrays
+                    # works for both 1d and 2d arrays
                     yield b[index_ic.iloc_src]
-                    cols_src += b.shape[1]
+                    col_src += b.shape[1]
                 elif b.ndim == 1:
-                    fv = fill_value(cols_src, b.dtype)
+                    fv = fill_value(col_src, b.dtype)
                     values = full_for_fill(b.dtype, index_ic.size, fv)
                     if index_ic.has_common: # if we have some overlap
                         values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                     values.flags.writeable = False
                     yield values
-                    cols_src += 1
+                    col_src += 1
                 else:
                     for pos in range(b.shape[1]):
-                        fv = fill_value(cols_src, b.dtype)
+                        fv = fill_value(col_src, b.dtype)
                         values = full_for_fill(b.dtype, index_ic.size, fv)
                         if index_ic.has_common: # if we have some overlap
                             values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos]
                         values.flags.writeable = False
                         yield values
-                        cols_src += 1
+                        col_src += 1
 
         elif columns_ic is not None and index_ic is None:
             if not columns_ic.has_common: # no columns in common
-                shape = self.shape[0], columns_ic.size
-                values = full_for_fill(None, shape, fill_value)
-                values.flags.writeable = False
-                yield values
+                for pos in range(columns_ic.size):
+                    # we do not have a block to get a reference dtype in this situation; if a caller is using FillValueAuto, this has to fail; if a caller has given a mapping or sequence, this needs to work
+                    fv = fill_value(col_src, None)
+                    shape = self.shape[0]
+                    values = full_for_fill(None, shape, fv)
+                    values.flags.writeable = False
+                    yield values
+                    col_src += 1
             else:
                 if self.unified and columns_ic.is_subset:
                     b = self._blocks[0]

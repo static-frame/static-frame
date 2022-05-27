@@ -3513,6 +3513,8 @@ class Frame(ContainerOperand):
             columns_ic = None
             own_columns_frame = self._COLUMNS_CONSTRUCTOR.STATIC
 
+
+        # if fill_value is a non-element, call get_col_fill_value_factory with the new index/columns, not the old
         return self.__class__(
                 TypeBlocks.from_blocks(
                         self._blocks.resize_blocks(

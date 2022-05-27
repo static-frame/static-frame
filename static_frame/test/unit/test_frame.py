@@ -5584,6 +5584,7 @@ class TestUnit(TestCase):
                 columns=tuple('ABCD'),
                 index=tuple('wxy'),
                 )
+        import ipdb; ipdb.set_trace()
         f2 = f1.fillna(FillValueAuto(f=-1, O='na'))
         self.assertEqual(f2.to_pairs(),
                 (('A', (('w', -1.0), ('x', 3.0), ('y', 0.0))), ('B', (('w', 2.0), ('x', 30.0), ('y', -1.0))), ('C', (('w', 3), ('x', 'na'), ('y', 2))), ('D', (('w', 0), ('x', 'na'), ('y', 3))))

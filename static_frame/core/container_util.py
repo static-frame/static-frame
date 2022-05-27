@@ -116,7 +116,7 @@ class ContainerMap:
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
-        ) -> tp.Callable[[int], np.dtype]:
+        ) -> tp.Callable[[int], DtypeSpecifier]:
     '''
     Return a function, or None, to get values from a DtypeSpecifier by integer column positions.
 
@@ -187,11 +187,11 @@ def get_col_fill_value_factory(
     if columns is None and is_map:
         raise RuntimeError('cannot lookup fill_value by name without supplied columns labels')
 
-    def get_col_fill_value(col_idx: int, dtype: np.dtype) -> tp.Any:
+    def get_col_fill_value(col_idx: int, dtype: tp.Optional[np.dtype]) -> tp.Any:
         '''dtype can be used for automatic selection based on dtype kind
         '''
         nonlocal fill_value # might mutate a generator into a tuple
-        if is_fva: # use the mapping from dtype
+        if is_fva and dtype is not None: # use the mapping from dtype
             return fill_value[dtype]
         if is_element:
             return fill_value
