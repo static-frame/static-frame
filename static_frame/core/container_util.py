@@ -193,6 +193,8 @@ def get_col_fill_value_factory(
         nonlocal fill_value # might mutate a generator into a tuple
         if is_fva and dtype is not None: # use the mapping from dtype
             return fill_value[dtype]
+        if is_fva and dtype is None:
+            raise RuntimeError('Cannot use a FillValueAuto in a context where new blocks are being created.')
         if is_element:
             return fill_value
         if is_map:

@@ -2531,17 +2531,29 @@ class TestUnit(TestCase):
                 [[-1, -2, -3, -4, -5, -6], [-1, -2, -3, -4, -5, -6], [-1, -2, -3, -4, -5, -6]]
                 )
 
-        # import ipdb; ipdb.set_trace()
-        # self.assertEqual(tb2.shape, (5, 4))
-        # self.assertEqual(tb2.values.tolist(),
-        #         [[2, 3, True, 'c'],
-        #         [-1, -2, -3, -4],
-        #         [4, 5, False, 'd'],
-        #         [-1, -2, -3, -4],
-        #         [-1, -2, -3, -4]]
-        #         )
+    def test_type_blocks_resize_blocks_a4(self) -> None:
 
+        a1 = np.arange(6).reshape(3, 2)
+        a2 = np.array([False, True, False])
+        a3 = np.array(['b', 'c', 'd'])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=False,
+                iloc_src=np.array((1,2)),
+                iloc_dst=np.array((0,3)),
+                size=5)
+
+        func = get_col_fill_value_factory([-1, -2, -3, -4, -5], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=None,
+                        columns_ic=columns_ic,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.values.tolist(),
+                [[1, -2, -3, False, -5], [3, -2, -3, True, -5], [5, -2, -3, False, -5]]
+                )
 
 
     def test_type_blocks_resize_blocks_b(self) -> None:

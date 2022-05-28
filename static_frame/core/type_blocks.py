@@ -900,30 +900,29 @@ class TypeBlocks(ContainerOperand):
                 values = full_for_fill(None, shape, fill_value)
                 values.flags.writeable = False
                 yield values
-            else:
-                if self.unified and columns_ic.is_subset:
-                    b = self._blocks[0]
-                    if b.ndim == 1:
-                        yield b
-                    else:
-                        yield b[:, columns_ic.iloc_src]
+            elif self.unified and columns_ic.is_subset:
+                b = self._blocks[0]
+                if b.ndim == 1:
+                    yield b
                 else:
-                    dst_to_src = dict(
-                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
-                    for idx in range(columns_ic.size):
-                        if idx in dst_to_src:
-                            block_idx, block_col = self._index[dst_to_src[idx]]
-                            b = self._blocks[block_idx]
-                            if b.ndim == 1:
-                                yield b
-                            else:
-                                yield b[:, block_col]
-                        else: # just get an empty position, fill_value determines type
-                            values = full_for_fill(None,
-                                    self.shape[0],
-                                    fill_value)
-                            values.flags.writeable = False
-                            yield values
+                    yield b[:, columns_ic.iloc_src]
+            else:
+                dst_to_src = dict(
+                        zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
+                for idx in range(columns_ic.size):
+                    if idx in dst_to_src:
+                        block_idx, block_col = self._index[dst_to_src[idx]]
+                        b = self._blocks[block_idx]
+                        if b.ndim == 1:
+                            yield b
+                        else:
+                            yield b[:, block_col]
+                    else: # just get an empty position, fill_value determines type
+                        values = full_for_fill(None,
+                                self.shape[0],
+                                fill_value)
+                        values.flags.writeable = False
+                        yield values
 
         else: # both defined
             assert columns_ic is not None and index_ic is not None # mypy
@@ -933,43 +932,42 @@ class TypeBlocks(ContainerOperand):
                 values = full_for_fill(None, shape, fill_value)
                 values.flags.writeable = False
                 yield values
-            else:
-                if self.unified and index_ic.is_subset and columns_ic.is_subset:
-                    b = self._blocks[0]
-                    if b.ndim == 1:
-                        yield b[index_ic.iloc_src]
-                    else:
-                        yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
+            elif self.unified and index_ic.is_subset and columns_ic.is_subset:
+                b = self._blocks[0]
+                if b.ndim == 1:
+                    yield b[index_ic.iloc_src]
                 else:
-                    columns_dst_to_src = dict(
-                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
+                    yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
+            else:
+                columns_dst_to_src = dict(
+                        zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
 
-                    for idx in range(columns_ic.size):
-                        if idx in columns_dst_to_src:
-                            block_idx, block_col = self._index[columns_dst_to_src[idx]]
-                            b = self._blocks[block_idx]
+                for idx in range(columns_ic.size):
+                    if idx in columns_dst_to_src:
+                        block_idx, block_col = self._index[columns_dst_to_src[idx]]
+                        b = self._blocks[block_idx]
 
-                            if index_ic.is_subset:
-                                if b.ndim == 1:
-                                    yield b[index_ic.iloc_src]
-                                else:
-                                    yield b[index_ic.iloc_src, block_col]
-                            else: # need an empty to fill, compatible with this block
-                                values = full_for_fill(b.dtype,
-                                        index_ic.size,
-                                        fill_value)
-                                if b.ndim == 1:
-                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src]
-                                else:
-                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
-                                values.flags.writeable = False
-                                yield values
-                        else:
-                            values = full_for_fill(None,
-                                        index_ic.size,
-                                        fill_value)
+                        if index_ic.is_subset:
+                            if b.ndim == 1:
+                                yield b[index_ic.iloc_src]
+                            else:
+                                yield b[index_ic.iloc_src, block_col]
+                        else: # need an empty to fill, compatible with this block
+                            values = full_for_fill(b.dtype,
+                                    index_ic.size,
+                                    fill_value)
+                            if b.ndim == 1:
+                                values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                            else:
+                                values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
                             values.flags.writeable = False
                             yield values
+                    else:
+                        values = full_for_fill(None,
+                                    index_ic.size,
+                                    fill_value)
+                        values.flags.writeable = False
+                        yield values
 
     def resize_blocks_by_callable(self, *,
             index_ic: tp.Optional[IndexCorrespondence],
@@ -1012,35 +1010,34 @@ class TypeBlocks(ContainerOperand):
                 for pos in range(columns_ic.size):
                     # we do not have a block to get a reference dtype in this situation; if a caller is using FillValueAuto, this has to fail; if a caller has given a mapping or sequence, this needs to work
                     fv = fill_value(col_src, None)
-                    shape = self.shape[0]
-                    values = full_for_fill(None, shape, fv)
+                    values = full_for_fill(None, self.shape[0], fv)
                     values.flags.writeable = False
                     yield values
                     col_src += 1
-            else:
-                if self.unified and columns_ic.is_subset:
-                    b = self._blocks[0]
-                    if b.ndim == 1:
-                        yield b
-                    else:
-                        yield b[:, columns_ic.iloc_src]
+            elif self.unified and columns_ic.is_subset:
+                b = self._blocks[0]
+                if b.ndim == 1:
+                    yield b
                 else:
-                    dst_to_src = dict(
-                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
-                    for idx in range(columns_ic.size):
-                        if idx in dst_to_src:
-                            block_idx, block_col = self._index[dst_to_src[idx]]
-                            b = self._blocks[block_idx]
-                            if b.ndim == 1:
-                                yield b
-                            else:
-                                yield b[:, block_col]
-                        else: # just get an empty position, fill_value determines type
-                            values = full_for_fill(None,
-                                    self.shape[0],
-                                    fill_value)
-                            values.flags.writeable = False
-                            yield values
+                    yield b[:, columns_ic.iloc_src]
+            else:
+                dst_to_src = dict(
+                        zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
+                for idx in range(columns_ic.size):
+                    if idx in dst_to_src:
+                        block_idx, block_col = self._index[dst_to_src[idx]]
+                        b = self._blocks[block_idx]
+                        if b.ndim == 1:
+                            yield b
+                        else:
+                            yield b[:, block_col]
+                    else: # just get an empty position, fill_value determines type
+                        fv = fill_value(col_src, None)
+                        values = full_for_fill(None, self.shape[0], fv)
+                        values.flags.writeable = False
+                        yield values
+                    col_src += 1
+
 
         else: # both defined
             assert columns_ic is not None and index_ic is not None # mypy
