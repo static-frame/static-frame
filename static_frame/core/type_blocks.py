@@ -1042,11 +1042,12 @@ class TypeBlocks(ContainerOperand):
         else: # both defined
             assert columns_ic is not None and index_ic is not None # mypy
             if not columns_ic.has_common and not index_ic.has_common:
-                # return an empty frame
-                shape = index_ic.size, columns_ic.size
-                values = full_for_fill(None, shape, fill_value)
-                values.flags.writeable = False
-                yield values
+                for pos in range(columns_ic.size):
+                    fv = fill_value(col_src, None)
+                    values = full_for_fill(None, (index_ic.size, columns_ic.size), fv)
+                    values.flags.writeable = False
+                    yield values
+                    col_src += 1
             else:
                 if self.unified and index_ic.is_subset and columns_ic.is_subset:
                     b = self._blocks[0]
