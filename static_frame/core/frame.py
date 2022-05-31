@@ -64,7 +64,6 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import RelabelInvalid
-from static_frame.core.fill_value_auto import FillValueAuto
 
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
