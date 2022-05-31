@@ -3617,6 +3617,20 @@ class TestUnit(TestCase):
                 (('p', (('w', 2), ('y', 0), ('x', 34))), ('r', (('w', False), ('y', False), ('x', True))))
                 )
 
+    def test_frame_reindex_k6(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.reindex(columns=('r', 's'), fill_value=FillValueAuto)
+
+
+
 
     #---------------------------------------------------------------------------
 
