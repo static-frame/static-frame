@@ -174,6 +174,7 @@ from static_frame.core.util import full_for_fill
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import OptionalArrayList
 from static_frame.core.util import blocks_to_array_2d
+from static_frame.core.util import is_element
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -4035,7 +4036,7 @@ class Frame(ContainerOperand):
                     self._blocks.fill_missing_by_unit(fill, fill_valid, func=func),
                     **kwargs,
                     )
-        elif ((hasattr(value, '__iter__') and not isinstance(value, str))
+        elif (not is_element(value)
                 or value is FillValueAuto
                 or isinstance(value, FillValueAuto)
                 ):
