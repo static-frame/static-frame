@@ -3613,7 +3613,7 @@ class TestUnit(TestCase):
                 index=('w', 'x'))
 
         f2 = f1.reindex(columns=('p', 'r'), index=('w', 'y', 'x'), fill_value=FillValueAuto)
-        self.assrtEqual( f2.to_pairs(),
+        self.assertEqual( f2.to_pairs(),
                 (('p', (('w', 2), ('y', 0), ('x', 34))), ('r', (('w', False), ('y', False), ('x', True))))
                 )
 
