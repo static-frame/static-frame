@@ -3589,7 +3589,7 @@ class TestUnit(TestCase):
                 (('p', (('w', 2), ('x', 34))), ('r', (('w', False), ('x', True))), ('s', (('w', -3), ('x', -3))), ('t', (('w', -4), ('x', -4))))
                 )
 
-    def test_frame_reindex_k3(self) -> None:
+    def test_frame_reindex_k4(self) -> None:
         records = (
                 (2, 'a', False),
                 (34, 'b', True),
@@ -3603,7 +3603,7 @@ class TestUnit(TestCase):
                 (('p', (('w', 2),)), ('r', (('w', False),)))
                 )
 
-    def test_frame_reindex_k4(self) -> None:
+    def test_frame_reindex_k5(self) -> None:
         records = (
                 (2, 'a', False),
                 (34, 'b', True),
