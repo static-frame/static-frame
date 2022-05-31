@@ -3546,6 +3546,78 @@ class TestUnit(TestCase):
                 ['i', 'i']
                 )
 
+    def test_frame_reindex_k1(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.reindex(index=('x', 'y'), fill_value=[-1, -2, -3])
+        self.assertEqual(f2.values.tolist(),
+                [[34, 'b', True], [-1, -2, -3]],
+                )
+
+    def test_frame_reindex_k2(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.reindex(index=('x', 'y'), fill_value=FillValueAuto(i=0, U='', b=False))
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('x', 34), ('y', 0))), ('q', (('x', 'b'), ('y', ''))), ('r', (('x', True), ('y', False))))
+                )
+
+
+    def test_frame_reindex_k3(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.reindex(columns=('p', 'r', 's', 't'), fill_value=[-1, -2, -3, -4])
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('w', 2), ('x', 34))), ('r', (('w', False), ('x', True))), ('s', (('w', -3), ('x', -3))), ('t', (('w', -4), ('x', -4))))
+                )
+
+    def test_frame_reindex_k3(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.reindex(columns=('p', 'r'), index=('w',), fill_value=[-1, -2])
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('w', 2),)), ('r', (('w', False),)))
+                )
+
+    def test_frame_reindex_k4(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.reindex(columns=('p', 'r'), index=('w', 'y', 'x'), fill_value=FillValueAuto)
+        self.assrtEqual( f2.to_pairs(),
+                (('p', (('w', 2), ('y', 0), ('x', 34))), ('r', (('w', False), ('y', False), ('x', True))))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_contains_a(self) -> None:

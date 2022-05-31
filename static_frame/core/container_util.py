@@ -43,6 +43,7 @@ from static_frame.core.util import is_mapping
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import WarningsSilent
+from static_frame.core.util import is_element
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -206,6 +207,9 @@ def get_col_fill_value_factory(
 
     return get_col_fill_value
 
+
+def is_fill_value_factory_initializer(value: tp.Any) -> bool:
+    return not is_element(value) or value is FillValueAuto or isinstance(value, FillValueAuto)
 
 
 def is_static(value: IndexConstructor) -> bool:

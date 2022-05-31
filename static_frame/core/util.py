@@ -283,7 +283,7 @@ def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
     return not is_slice and not is_mask
 
 def is_element(value: tp.Any) -> bool:
-    if isinstance(value, str):
+    if isinstance(value, str) or isinstance(value, tuple):
         return True
     return not hasattr(value, '__iter__')
 

@@ -49,6 +49,7 @@ from static_frame.core.container_util import constructor_from_optional_construct
 from static_frame.core.container_util import df_slice_to_arrays
 from static_frame.core.container_util import frame_to_frame
 from static_frame.core.container_util import get_col_fill_value_factory
+from static_frame.core.container_util import is_fill_value_factory_initializer
 
 from static_frame.core.archive_npy import NPZFrameConverter
 from static_frame.core.archive_npy import NPYFrameConverter
@@ -174,7 +175,6 @@ from static_frame.core.util import full_for_fill
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import OptionalArrayList
 from static_frame.core.util import blocks_to_array_2d
-from static_frame.core.util import is_element
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
@@ -3516,6 +3516,24 @@ class Frame(ContainerOperand):
 
 
         # if fill_value is a non-element, call get_col_fill_value_factory with the new index/columns, not the old
+        if is_fill_value_factory_initializer(fill_value):
+            func_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
+            return self.__class__(
+                    TypeBlocks.from_blocks(
+                            self._blocks.resize_blocks_by_callable(
+                                    index_ic=index_ic,
+                                    columns_ic=columns_ic,
+                                    fill_value=func_fill_value),
+                            shape_reference=(len(index), len(columns))
+                            ),
+                    index=index,
+                    columns=columns,
+                    name=self._name,
+                    own_data=True,
+                    own_index=own_index_frame,
+                    own_columns=own_columns_frame
+                    )
+
         return self.__class__(
                 TypeBlocks.from_blocks(
                         self._blocks.resize_blocks(
@@ -4036,10 +4054,7 @@ class Frame(ContainerOperand):
                     self._blocks.fill_missing_by_unit(fill, fill_valid, func=func),
                     **kwargs,
                     )
-        elif (not is_element(value)
-                or value is FillValueAuto
-                or isinstance(value, FillValueAuto)
-                ):
+        elif is_fill_value_factory_initializer(value):
             # we have a iterable or a mapping, or FillValueAuto
             func_fill_value = get_col_fill_value_factory(value, columns=self._columns)
             return self.__class__(
