@@ -2582,10 +2582,12 @@ class TestUnit(TestCase):
                         columns_ic=columns_ic,
                         fill_value=func,
                         ))
-        import ipdb; ipdb.set_trace()
-        # self.assertEqual(tb2.values.tolist(),
-        #         [[1, -2, -3, False, -5], [3, -2, -3, True, -5], [5, -2, -3, False, -5]]
-        #         )
+        self.assertEqual(tb2.values.tolist(),
+                [[3, -2, -3, True, -5],
+                [-1, -2, -3, -4, -5],
+                [5, -2, -3, False, -5],
+                [-1, -2, -3, -4, -5],
+                [-1, -2, -3, -4, -5]])
 
 
     def test_type_blocks_resize_blocks_b(self) -> None:

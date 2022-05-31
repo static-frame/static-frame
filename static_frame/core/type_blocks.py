@@ -1055,6 +1055,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[index_ic.iloc_src]
                     else:
                         yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
+                    col_src += 1
                 else:
                     columns_dst_to_src = dict(
                             zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
@@ -1063,16 +1064,14 @@ class TypeBlocks(ContainerOperand):
                         if idx in columns_dst_to_src:
                             block_idx, block_col = self._index[columns_dst_to_src[idx]]
                             b = self._blocks[block_idx]
-
                             if index_ic.is_subset:
                                 if b.ndim == 1:
                                     yield b[index_ic.iloc_src]
                                 else:
                                     yield b[index_ic.iloc_src, block_col]
-                            else: # need an empty to fill, compatible with this block
-                                values = full_for_fill(b.dtype,
-                                        index_ic.size,
-                                        fill_value)
+                            else: # need an empty to fill, compatible with this
+                                fv = fill_value(col_src, b.dtype)
+                                values = full_for_fill(b.dtype, index_ic.size, fv)
                                 if b.ndim == 1:
                                     values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                                 else:
@@ -1080,11 +1079,11 @@ class TypeBlocks(ContainerOperand):
                                 values.flags.writeable = False
                                 yield values
                         else:
-                            values = full_for_fill(None,
-                                        index_ic.size,
-                                        fill_value)
+                            fv = fill_value(col_src, None)
+                            values = full_for_fill(None, index_ic.size, fv)
                             values.flags.writeable = False
                             yield values
+                        col_src += 1
 
     #---------------------------------------------------------------------------
     def sort(self,
