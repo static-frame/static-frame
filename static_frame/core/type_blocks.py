@@ -986,7 +986,7 @@ class TypeBlocks(ContainerOperand):
                 if index_ic.is_subset: # no rows added
                     # works for both 1d and 2d arrays
                     yield b[index_ic.iloc_src]
-                    col_src += b.shape[1]
+                    col_src += (1 if b.ndim == 1 else b.shape[1])
                 elif b.ndim == 1:
                     fv = fill_value(col_src, b.dtype)
                     values = full_for_fill(b.dtype, index_ic.size, fv)

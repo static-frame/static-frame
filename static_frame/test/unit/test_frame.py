@@ -3630,7 +3630,20 @@ class TestUnit(TestCase):
             _ = f1.reindex(columns=('r', 's'), fill_value=FillValueAuto)
 
 
+    def test_frame_reindex_k7(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
 
+        #explicitly handle no-op scenario
+        f2 = f1.reindex(index=('x',), fill_value=FillValueAuto)
+        self.assertEqual(f2.to_pairs(),
+            (('p', (('x', 34),)), ('q', (('x', 'b'),)), ('r', (('x', True),)))
+            )
 
     #---------------------------------------------------------------------------
 
