@@ -1038,7 +1038,6 @@ class TypeBlocks(ContainerOperand):
                         yield values
                     col_src += 1
 
-
         else: # both defined
             assert columns_ic is not None and index_ic is not None # mypy
             if not columns_ic.has_common and not index_ic.has_common:
