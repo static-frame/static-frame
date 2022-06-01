@@ -3661,24 +3661,6 @@ class TestUnit(TestCase):
                 (('p', (('w', 2), ('x', 34))), ('r', (('w', 4), ('x', 5))))
                 )
 
-    def test_frame_reindex_k9(self) -> None:
-        records = (
-                (2,),
-                (34,),
-                )
-        f1 = Frame.from_records(records,
-                columns=('p',),
-                index=('w', 'x'),
-                consolidate_blocks=True,
-                )
-
-        #explicitly handle no-op scenario
-        f2 = f1.reindex(columns=('p',), fill_value=FillValueAuto)
-        self.assertEqual(f2.to_pairs(),
-                (('p', (('w', 2), ('x', 34))),)
-                )
-
-
     #---------------------------------------------------------------------------
 
     def test_frame_contains_a(self) -> None:
