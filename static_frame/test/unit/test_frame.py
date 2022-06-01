@@ -3629,7 +3629,6 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = f1.reindex(columns=('r', 's'), fill_value=FillValueAuto)
 
-
     def test_frame_reindex_k7(self) -> None:
         records = (
                 (2, 'a', False),
@@ -3644,6 +3643,41 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
             (('p', (('x', 34),)), ('q', (('x', 'b'),)), ('r', (('x', True),)))
             )
+
+    def test_frame_reindex_k8(self) -> None:
+        records = (
+                (2, 1, 4),
+                (34, 3, 5),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'),
+                consolidate_blocks=True,
+                )
+
+        #explicitly handle no-op scenario
+        f2 = f1.reindex(columns=('p', 'r'), fill_value=FillValueAuto)
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('w', 2), ('x', 34))), ('r', (('w', 4), ('x', 5))))
+                )
+
+    def test_frame_reindex_k9(self) -> None:
+        records = (
+                (2,),
+                (34,),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p',),
+                index=('w', 'x'),
+                consolidate_blocks=True,
+                )
+
+        #explicitly handle no-op scenario
+        f2 = f1.reindex(columns=('p',), fill_value=FillValueAuto)
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('w', 2), ('x', 34))),)
+                )
+
 
     #---------------------------------------------------------------------------
 
