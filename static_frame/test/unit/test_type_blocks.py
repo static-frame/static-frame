@@ -2555,7 +2555,6 @@ class TestUnit(TestCase):
                 [[1, -2, -3, False, -5], [3, -2, -3, True, -5], [5, -2, -3, False, -5]]
                 )
 
-
     def test_type_blocks_resize_blocks_a5(self) -> None:
 
         a1 = np.arange(6).reshape(3, 2)
@@ -2589,6 +2588,22 @@ class TestUnit(TestCase):
                 [-1, -2, -3, -4, -5],
                 [-1, -2, -3, -4, -5]])
 
+    def test_type_blocks_resize_blocks_a6(self) -> None:
+
+        a1 = np.arange(6).reshape(3, 2)
+        a2 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        func = get_col_fill_value_factory([-1, -2, -3, -4], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=None,
+                        columns_ic=None,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.values.tolist(),
+                [[0, 1, False], [2, 3, True], [4, 5, False]]
+                )
 
     def test_type_blocks_resize_blocks_b(self) -> None:
 
