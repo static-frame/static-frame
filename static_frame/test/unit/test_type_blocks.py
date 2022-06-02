@@ -2605,7 +2605,7 @@ class TestUnit(TestCase):
                 [[0, 1, False], [2, 3, True], [4, 5, False]]
                 )
 
-    def test_type_blocks_resize_blocks_a6(self) -> None:
+    def test_type_blocks_resize_blocks_a7(self) -> None:
 
         a1 = np.array([False, True, False])
         tb1 = TypeBlocks.from_blocks((a1,))
@@ -2627,6 +2627,7 @@ class TestUnit(TestCase):
                 [[False], [True], [False]]
                 )
 
+    #---------------------------------------------------------------------------
     def test_type_blocks_resize_blocks_b(self) -> None:
 
         a1 = np.arange(6).reshape(3, 2)
