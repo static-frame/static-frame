@@ -393,7 +393,7 @@ class TypeBlocks(ContainerOperand):
     @classmethod
     def from_zero_size_shape(cls,
             shape: tp.Tuple[int, int] = (0, 0),
-            dtypes: tp.Optional[tp.Sequence[np.dtype]] = None,
+            get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]] = None,
             ) -> 'TypeBlocks':
         '''
         Given a shape where one or both axis is 0 (a zero sized array), return a TypeBlocks instance.
@@ -404,15 +404,13 @@ class TypeBlocks(ContainerOperand):
             raise RuntimeError(f'invalid shape for empty TypeBlocks: {shape}')
 
         # as types are organized vertically, storing an array with 0 rows but > 0 columns is appropriate as it takes type space
-
         if rows == 0 and columns > 0:
-            if dtypes is None:
-                a = np.empty(shape)
-                a.flags.writeable = False
-                return cls.from_blocks(a)
+            if get_col_dtype is None:
+                blocks = np.empty(shape)
+                blocks.flags.writeable = False
             else:
-                blocks = (np.empty(rows, dtype=dtypes[i]) for i in range(columns))
-                return cls.from_blocks(blocks)
+                blocks = (np.empty(rows, dtype=get_col_dtype(i)) for i in range(columns))
+            return cls.from_blocks(blocks)
 
         # for arrays with no width, favor storing shape alone and not creating an array object; the shape will be binding for future appending
         return cls(blocks=list(), dtypes=list(), index=list(), shape=shape)

@@ -829,7 +829,7 @@ class TestUnit(TestCase):
     def test_frame_from_pandas_v(self) -> None:
         import pandas as pd
 
-        df = pd.DataFrame(columns=list('abc'))
+        df = pd.DataFrame(columns=list('abc')) # size 0
         f1 = Frame.from_pandas(df, dtypes=bool)
         self.assertEqual(f1.dtypes.values.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool')]
