@@ -8772,6 +8772,10 @@ class TestUnit(TestCase):
                 ['i', 'i'],
                 )
 
+    def test_frame_from_records_x(self) -> None:
+        f1 = sf.Frame.from_records((), columns=list('ABC'), dtypes=str)
+        self.assertEqual(f1.dtypes.unique().tolist(), [np.dtype('U1')])
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_dict_records_a(self) -> None:
