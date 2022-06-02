@@ -2605,6 +2605,28 @@ class TestUnit(TestCase):
                 [[0, 1, False], [2, 3, True], [4, 5, False]]
                 )
 
+    def test_type_blocks_resize_blocks_a6(self) -> None:
+
+        a1 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1,))
+
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0,)),
+                iloc_dst=np.array((0,)),
+                size=1)
+
+        func = get_col_fill_value_factory([-1, -2], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=None,
+                        columns_ic=columns_ic,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.values.tolist(),
+                [[False], [True], [False]]
+                )
+
     def test_type_blocks_resize_blocks_b(self) -> None:
 
         a1 = np.arange(6).reshape(3, 2)
