@@ -826,6 +826,16 @@ class TestUnit(TestCase):
         self.assertEqual(f1.shape, (2, 1))
         self.assertEqual([d.kind for d in f1.dtypes.values], ['b'])
 
+    def test_frame_from_pandas_v(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(columns=list('abc'))
+        f1 = Frame.from_pandas(df, dtypes=bool)
+        self.assertEqual(f1.dtypes.values.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool')]
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_pandas_a(self) -> None:

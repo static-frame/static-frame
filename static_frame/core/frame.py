@@ -274,7 +274,7 @@ class Frame(ContainerOperand):
                 else get_col_dtype_factory(dtypes, columns))
 
         if shape[1] > 0: # we have columns
-            # NOTE: this forces maximal deconsolidation due to not looking ahead for dtype homgeneity
+            # NOTE: this forces maximal deconsolidation due to not looking ahead for dtype homogeneity
             blocks = (np.empty(shape[0], get_col_dtype(i)) for i in range(shape[1]))
         else:
             # NOTE: we might validate that dtypes specifies only one value
@@ -2442,7 +2442,6 @@ class Frame(ContainerOperand):
             column_start, dtype_current = next(pairs)
             column_last = column_start
             yield_block = False
-
             for column, dtype in pairs: # iloc column values
                 try:
                     if dtype != dtype_current:
@@ -2478,7 +2477,9 @@ class Frame(ContainerOperand):
                     )
 
         if value.size == 0:
-            blocks = TypeBlocks.from_zero_size_shape(value.shape)
+            dtype_seq = (None if get_col_dtype is None
+                    else [get_col_dtype(i) for i in range(value.shape[1])])
+            blocks = TypeBlocks.from_zero_size_shape(value.shape, dtype_seq)
         elif consolidate_blocks:
             blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
         else:
