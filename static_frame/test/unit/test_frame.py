@@ -12955,6 +12955,18 @@ class TestUnit(TestCase):
                 ((0, ((0, 3.0), (1, 4.0))), (1, ((0, 3.0), (1, 7.0)))))
 
     #---------------------------------------------------------------------------
+    def test_frame_from_zero_size_shape_a(self) -> None:
+        f1 = Frame._from_zero_size_shape(
+                index=(),
+                columns=('a', 'b', 'c'),
+                dtypes=float,
+                )
+        self.assertEqual(
+                f1.dtypes.unique().tolist(),
+                [np.dtype('float64')]
+                )
+
+    #---------------------------------------------------------------------------
 
     def test_frame_sample_a(self) -> None:
         f = ff.parse('s(20,10)|i(I,str)|c(I,str)')
