@@ -1043,7 +1043,7 @@ class TypeBlocks(ContainerOperand):
             if not columns_ic.has_common and not index_ic.has_common:
                 for pos in range(columns_ic.size):
                     fv = fill_value(col_src, None)
-                    values = full_for_fill(None, (index_ic.size, columns_ic.size), fv)
+                    values = full_for_fill(None, index_ic.size, fv)
                     values.flags.writeable = False
                     yield values
                     col_src += 1
