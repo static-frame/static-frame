@@ -12959,12 +12959,75 @@ class TestUnit(TestCase):
         f1 = Frame._from_zero_size_shape(
                 index=(),
                 columns=('a', 'b', 'c'),
-                dtypes=float,
+                dtypes=bool,
                 )
         self.assertEqual(
                 f1.dtypes.unique().tolist(),
-                [np.dtype('float64')]
+                [np.dtype(bool)]
                 )
+        self.assertEqual(f1.shape, (0, 3))
+
+    def test_frame_from_zero_size_shape_b(self) -> None:
+        f1 = Frame._from_zero_size_shape(
+                index=(),
+                columns=Index(('a', 'b', 'c')),
+                dtypes=bool,
+                own_columns=True,
+                )
+        self.assertEqual(
+                f1.dtypes.unique().tolist(),
+                [np.dtype(bool)]
+                )
+        self.assertEqual(f1.shape, (0, 3))
+
+    def test_frame_from_zero_size_shape_c(self) -> None:
+        f1 = Frame._from_zero_size_shape(
+                columns=(),
+                index=Index(('a', 'b', 'c')),
+                dtypes=bool,
+                own_index=True,
+                )
+        # while we have a type, we have not columns, and thus cannot get back an type
+        self.assertEqual(
+                f1.dtypes.unique().tolist(),
+                []
+                )
+        self.assertEqual(f1.shape, (3, 0))
+
+
+    def test_frame_from_zero_size_shape_d(self) -> None:
+        with self.assertRaises(RuntimeError):
+            _ = Frame._from_zero_size_shape(
+                    columns=(1, 2),
+                    index=Index(('a', 'b', 'c')),
+                    dtypes=bool,
+                    )
+
+    def test_frame_from_zero_size_shape_e(self) -> None:
+        f1 = Frame._from_zero_size_shape(
+                index=(),
+                columns=Index(('a', 'b', 'c')),
+                dtypes=(bool, bool, str),
+                own_columns=True,
+                )
+        self.assertEqual(
+                f1.dtypes.values.tolist(),
+                [np.dtype(bool), np.dtype(bool), np.dtype('U1')]
+                )
+        self.assertEqual(f1.shape, (0, 3))
+
+    def test_frame_from_zero_size_shape_f(self) -> None:
+        f1 = Frame._from_zero_size_shape(
+                index=(),
+                columns=Index(('a', 'b', 'c')),
+                dtypes=(bool, bool, str),
+                own_columns=True,
+                )
+        self.assertEqual(
+                f1.dtypes.values.tolist(),
+                [np.dtype(bool), np.dtype(bool), np.dtype('U1')]
+                )
+        self.assertEqual(f1.shape, (0, 3))
 
     #---------------------------------------------------------------------------
 

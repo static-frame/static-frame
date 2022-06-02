@@ -274,9 +274,11 @@ class Frame(ContainerOperand):
                 else get_col_dtype_factory(dtypes, columns))
 
         if shape[1] > 0: # we have columns
+            # NOTE: this forces maximal deconsolidation due to not looking ahead for dtype homgeneity
             blocks = (np.empty(shape[0], get_col_dtype(i)) for i in range(shape[1]))
         else:
             # NOTE: we might validate that dtypes specifies only one value
+            # NOTE: while we can create this array with a dtype, in the context of TypeBlocks this dtype will never be "seen" as it cannot be assigned to a column if there are no columns.
             blocks = np.empty(shape, dtype=get_col_dtype(0))
             blocks.flags.writeable = False
 
