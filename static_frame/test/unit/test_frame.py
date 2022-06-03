@@ -13054,6 +13054,21 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(),
                 (('a', ((0, 1), (1, 200))), ('b', ((0, 100), (1, 20))), ('c', ((0, 30), (1, 40))))
                 )
+    def test_frame_from_overlay_i(self) -> None:
+
+        f1 = Frame.from_dict(dict(a=(10, 20),))
+        f2 = Frame.from_dict(dict(b=(True, True, True),))
+        f3 = Frame.from_dict(dict(c=('a', 'b'),))
+
+        with WarningsSilent():
+            f4 = sf.Frame.from_overlay((f1, f2, f3),
+                    func=(lambda a: (a == 0) | (a == False) | (a == '')),
+                    fill_value=dict(a=0, b=False, c='')
+                    )
+
+        self.assertEqual(f4.to_pairs(),
+                (('a', ((0, 10), (1, 20), (2, 0))), ('b', ((0, True), (1, True), (2, True))), ('c', ((0, 'a'), (1, 'b'), (2, ''))))
+                )
 
     #---------------------------------------------------------------------------
 

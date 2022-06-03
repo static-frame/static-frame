@@ -683,26 +683,37 @@ class Frame(ContainerOperand):
         container = next(containers_iter)
 
         if fill_value is FILL_VALUE_DEFAULT:
-            fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
+            fill_value_reindex = dtype_kind_to_na(container._blocks._row_dtype.kind)
+        else:
+            fill_value_reindex = fill_value # just pass along even if FillValueAuto
 
         # get the first container
         post = frame_to_frame(container, cls).reindex(
                 index=index,
                 columns=columns,
-                fill_value=fill_value,
+                fill_value=fill_value_reindex,
                 own_index=True,
                 own_columns=True,
                 )
+
+        # we need a fill value that will be identified as a missing value by ``func`` on subsequent iterations, otherwise this fill value will not be identified as fillable
+        if fill_value is FILL_VALUE_DEFAULT:
+            fill_value_factory = lambda _, dtype: dtype_kind_to_na(dtype.kind)
+        else:
+            fill_value_factory = get_col_fill_value_factory(fill_value, columns)
+
         # dtype column mapping will not change
         dtypes = post.dtypes
+        post_blocks = post._blocks
 
         for container in containers_iter:
             values = []
             index_match = container._index.equals(index)
-            for col, dtype_at_col in dtypes.items():
+            # iterate over reindexed, full dtypes; some containers will not have columns
+            for col_count, (col, dtype_at_col) in enumerate(dtypes.items()):
                 if col not in container:
                     # get fill value based on previous container
-                    fill_value = dtype_kind_to_na(dtype_at_col.kind)
+                    fill_value = fill_value_factory(col_count, dtype_at_col)
                     # store fill_arrays for re-use
                     if fill_value not in fill_arrays:
                         array = np.full(len(index), fill_value)
@@ -714,13 +725,17 @@ class Frame(ContainerOperand):
                     array = container._blocks._extract_array_column(iloc_column_key)
                 else: # need to reindex
                     col_series = container[col]
-                    fill_value = dtype_kind_to_na(col_series.dtype.kind)
+                    fill_value = fill_value_factory(col_count, col_series.dtype)
                     array = col_series.reindex(index, fill_value=fill_value).values
                     array.flags.writeable = False
                 values.append(array)
 
-            post = cls(
-                    post._blocks.fill_missing_by_values(values, func=func),
+            # apply values only where missing
+            post_blocks = post_blocks.fill_missing_by_values(values, func=func)
+            if not post_blocks.boolean_apply_any(func):
+                break
+
+        return cls(post_blocks,
                     index=index,
                     columns=columns,
                     name=name,
@@ -728,11 +743,6 @@ class Frame(ContainerOperand):
                     own_index=True,
                     own_columns=True,
                     )
-
-            if not post._blocks.boolean_apply_any(func):
-                break
-
-        return post
 
 
     @classmethod
