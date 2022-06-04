@@ -1059,7 +1059,7 @@ class Frame(ContainerOperand):
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
             *,
             index: IndexInitializer = None,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             index_constructor: IndexConstructor = None,
@@ -1093,6 +1093,7 @@ class Frame(ContainerOperand):
             own_index = True
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
+        get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for col_idx, (k, v) in enumerate(pairs):
@@ -1110,8 +1111,11 @@ class Frame(ContainerOperand):
                         raise ErrorInitFrame('can only consume Series in Frame.from_items if an Index is provided.')
 
                     if not v.index.equals(index):
+                        # NOTE: we assume we should use column_type if it is specified
+                        dtype_for_fv = (np.dtype(column_type) if column_type is not None
+                                else v.dtype)
                         v = v.reindex(index,
-                                fill_value=fill_value,
+                                fill_value=get_col_fill_value(col_idx, dtype_for_fv),
                                 check_equals=False,
                                 )
                     # return values array post reindexing
@@ -3534,13 +3538,13 @@ class Frame(ContainerOperand):
 
         # if fill_value is a non-element, call get_col_fill_value_factory with the new index/columns, not the old
         if is_fill_value_factory_initializer(fill_value):
-            func_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
+            get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
             return self.__class__(
                     TypeBlocks.from_blocks(
                             self._blocks.resize_blocks_by_callable(
                                     index_ic=index_ic,
                                     columns_ic=columns_ic,
-                                    fill_value=func_fill_value),
+                                    fill_value=get_col_fill_value),
                             shape_reference=(len(index), len(columns))
                             ),
                     index=index,

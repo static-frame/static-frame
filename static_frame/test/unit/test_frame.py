@@ -4635,6 +4635,35 @@ class TestUnit(TestCase):
             # must provide an index
             _ = Frame.from_items(gen())
 
+    def test_frame_from_items_k(self) -> None:
+
+        s1 = Series((2, 3), index=('b', 'c'))
+        s2 = Series(('x', 'y'), index=('a',  'c'))
+        s3 = Series((True, False), index=('b',  'c'))
+
+        f1 = Frame.from_items(zip(list('xyz'), (s1, s2, s3)),
+                index=tuple('abc'),
+                fill_value=FillValueAuto,
+                )
+        self.assertEqual(f1.to_pairs(),
+                (('x', (('a', 0), ('b', 2), ('c', 3))), ('y', (('a', 'x'), ('b', ''), ('c', 'y'))), ('z', (('a', False), ('b', True), ('c', False))))
+                )
+
+    def test_frame_from_items_l(self) -> None:
+
+        s1 = Series((2, 3), index=('b', 'c'))
+        s2 = Series(('x', 'y'), index=('a',  'c'))
+        s3 = Series((True, False), index=('b',  'c'))
+
+        f1 = Frame.from_items(zip(list('xyz'), (s1, s2, s3)),
+                index=tuple('abc'),
+                fill_value=FillValueAuto,
+                dtypes=str,
+                )
+        self.assertEqual(f1.to_pairs(),
+                (('x', (('a', ''), ('b', '2'), ('c', '3'))), ('y', (('a', 'x'), ('b', ''), ('c', 'y'))), ('z', (('a', ''), ('b', 'True'), ('c', 'False'))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_structured_array_a(self) -> None:
@@ -9037,9 +9066,6 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(),
                 (('a', ((0, True), (1, False))), ('b', ((0, '2'), (1, ''))), ('c', ((0, 3), (1, 5))))
                 )
-        # import ipdb; ipdb.set_trace()
-        # self.assertEqual(str(f1.dtypes['b']), 'int64')
-
 
     #---------------------------------------------------------------------------
 
