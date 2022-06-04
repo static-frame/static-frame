@@ -199,7 +199,7 @@ def get_col_fill_value_factory(
         if is_element:
             return fill_value
         if is_map:
-            return fill_value.get(columns[col_idx], np.nan) #type:
+            return fill_value.get(columns[col_idx], np.nan) #type: ignore
         # NOTE: the types trying to select here could be more explicit
         if not hasattr(fill_value, '__len__') or not hasattr(fill_value, '__getitem__'):
             fill_value = tuple(fill_value)
