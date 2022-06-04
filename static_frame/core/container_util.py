@@ -925,7 +925,7 @@ def rehierarch_from_index_hierarchy(*,
 def array_from_value_iter(
         key: tp.Hashable,
         idx: int,
-        get_value_iter: tp.Callable[[tp.Hashable], tp.Iterator[tp.Any]],
+        get_value_iter: tp.Callable[[tp.Hashable, int], tp.Iterator[tp.Any]],
         get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]],
         row_count: int,
         ) -> np.ndarray:
