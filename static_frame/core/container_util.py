@@ -199,8 +199,8 @@ def get_col_fill_value_factory(
         if is_element:
             return fill_value
         if is_map:
-            # mappings can be incomplete
-            return fill_value.get(columns[col_idx], np.nan) #type: ignore
+            return fill_value.get(columns[col_idx], np.nan) #type:
+        # NOTE: the types trying to select here could be more explicit
         if not hasattr(fill_value, '__len__') or not hasattr(fill_value, '__getitem__'):
             fill_value = tuple(fill_value)
         return fill_value[col_idx]
@@ -949,7 +949,7 @@ def array_from_value_iter(
     if dtype is not None:
         try:
             values = np.fromiter(
-                    get_value_iter(key),
+                    get_value_iter(key, idx),
                     count=row_count,
                     dtype=dtype)
             values.flags.writeable = False
@@ -959,7 +959,7 @@ def array_from_value_iter(
     if values is None:
         # returns an immutable array
         values, _ = iterable_to_array_1d(
-                get_value_iter(key),
+                get_value_iter(key, idx),
                 dtype=dtype
                 )
     return values

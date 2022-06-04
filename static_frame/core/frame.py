@@ -844,11 +844,11 @@ class Frame(ContainerOperand):
             raise NotImplementedError(f'cannot get col_count from {row_reference}')
 
         if not is_dataclass:
-            def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
+            def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
                 rows_iter = rows if not rows_to_iter else iter(rows)
                 return (row[col_key] for row in rows_iter)
         else:
-            def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
+            def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
                 rows_iter = rows if not rows_to_iter else iter(rows)
                 return (getattr(row, fields_dc[col_key]) for row in rows_iter)
 
@@ -890,7 +890,7 @@ class Frame(ContainerOperand):
             index: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -909,8 +909,9 @@ class Frame(ContainerOperand):
             :obj:`static_frame.Frame`
         '''
         columns = []
-
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
+        get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
+                else get_col_fill_value_factory(fill_value, columns))
 
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
@@ -931,26 +932,33 @@ class Frame(ContainerOperand):
         for row in rows: # produce a row that has a value for all observed keys
             row_reference.update(row)
 
-        col_count = len(row_reference)
-
-        # define function to get generator of row values; may need to call twice, so need to get fresh row_iter each time
-        def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
+        # get value for a column accross all rows
+        def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
             rows_iter = rows if not rows_to_iter else iter(rows)
+
+            if get_col_fill_value is not None and get_col_dtype is not None:
+                return (row.get(col_key, get_col_fill_value(
+                                col_idx,
+                                np.dtype(get_col_dtype(col_idx)))) # might be dtype specifier
+                        for row in rows_iter)
+
+            if get_col_fill_value is not None:
+                return (row.get(col_key, get_col_fill_value(col_idx, None))
+                        for row in rows_iter)
+
             return (row.get(col_key, fill_value) for row in rows_iter)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             # iterate over final column order, yielding 1D arrays
             for col_idx, col_key in enumerate(row_reference.keys()):
                 columns.append(col_key)
-
-                values = array_from_value_iter(
+                yield array_from_value_iter(
                         key=col_key,
                         idx=col_idx,
                         get_value_iter=get_value_iter,
                         get_col_dtype=get_col_dtype,
                         row_count=row_count
                         )
-                yield values
 
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())

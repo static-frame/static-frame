@@ -9021,6 +9021,26 @@ class TestUnit(TestCase):
                 (('a', ((0, True), (1, 'x'))), ('b', ((0, False), (1, True))), ('c', ((0, 'x'), (1, False))))
                 )
 
+    def test_frame_from_dict_records_i(self) -> None:
+
+        records = [dict(a=1, b='2', c=3), dict(b='5')]
+        dtypes = None #{'b': np.int64}
+        f1 = sf.Frame.from_dict_records(records, dtypes=dtypes, fill_value=dict(a=-1, c=-3))
+        self.assertEqual(f1.to_pairs(),
+                (('a', ((0, 1), (1, -1))), ('b', ((0, '2'), (1, '5'))), ('c', ((0, 3), (1, -3)))))
+
+    def test_frame_from_dict_records_j(self) -> None:
+
+        records = [dict(a=1, b='2', c=3), dict(c='5')]
+        dtypes = [bool, str, int]
+        f1 = sf.Frame.from_dict_records(records, dtypes=dtypes, fill_value=FillValueAuto)
+        self.assertEqual(f1.to_pairs(),
+                (('a', ((0, True), (1, False))), ('b', ((0, '2'), (1, ''))), ('c', ((0, 3), (1, 5))))
+                )
+        # import ipdb; ipdb.set_trace()
+        # self.assertEqual(str(f1.dtypes['b']), 'int64')
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_json_a(self) -> None:
