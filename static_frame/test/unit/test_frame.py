@@ -4496,6 +4496,19 @@ class TestUnit(TestCase):
                     dtype=(int, float),
                     )
 
+    def test_frame_from_element_items_e(self) -> None:
+
+        items = (((0,1), True), ((1,0), True))
+
+        with self.assertRaises(ErrorInitFrame):
+            f2 = Frame.from_element_items(items,
+                index=range(2),
+                columns=range(2),
+                dtype=bool,
+                fill_value=FillValueAuto,
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_element_loc_items_a(self) -> None:

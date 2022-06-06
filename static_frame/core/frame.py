@@ -1564,10 +1564,12 @@ class Frame(ContainerOperand):
                     )
             own_columns = True
 
-        # if items are given i n
         if axis is None:
             if not is_dtype_specifier(dtype):
                 raise ErrorInitFrame('cannot provide multiple dtypes when creating a Frame from element items and axis is None')
+            if is_fill_value_factory_initializer(fill_value):
+                raise ErrorInitFrame('An elemental fill_value must be provided.')
+
             items = (((index._loc_to_iloc(k[0]), columns._loc_to_iloc(k[1])), v)
                     for k, v in items)
             dtype = dtype if dtype is not None else DTYPE_OBJECT
@@ -1609,7 +1611,7 @@ class Frame(ContainerOperand):
                     dtypes=dtype,
                     )
 
-        elif axis == 1: # column wise, use from_items
+        elif axis == 1: # column wise, use from_fields
             def fields() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.List[tp.Any]]]:
                 items_iter = iter(items)
                 first = next(items_iter)
