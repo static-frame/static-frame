@@ -827,6 +827,16 @@ class TestUnit(TestCase):
         self.assertEqual(f1.shape, (2, 1))
         self.assertEqual([d.kind for d in f1.dtypes.values], ['b'])
 
+    def test_frame_from_pandas_v(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(columns=list('abc')) # size 0
+        f1 = Frame.from_pandas(df, dtypes=bool)
+        self.assertEqual(f1.dtypes.values.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool')]
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_pandas_a(self) -> None:
@@ -8993,6 +9003,10 @@ class TestUnit(TestCase):
                 ['i', 'i'],
                 )
 
+    def test_frame_from_records_x(self) -> None:
+        f1 = sf.Frame.from_records((), columns=list('ABC'), dtypes=str)
+        self.assertEqual(f1.dtypes.unique().tolist(), [np.dtype('U1')])
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_dict_records_a(self) -> None:
@@ -13221,6 +13235,81 @@ class TestUnit(TestCase):
                 ((0, ((2, 0), (1, 4), (0, 3))), (1, ((2, False), (1, False), (0, True))))
                 )
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_from_zero_size_shape_a(self) -> None:
+        f1 = Frame._from_zero_size_shape(
+                index=(),
+                columns=('a', 'b', 'c'),
+                dtypes=bool,
+                )
+        self.assertEqual(
+                f1.dtypes.unique().tolist(),
+                [np.dtype(bool)]
+                )
+        self.assertEqual(f1.shape, (0, 3))
+
+    def test_frame_from_zero_size_shape_b(self) -> None:
+        f1 = Frame._from_zero_size_shape(
+                index=(),
+                columns=Index(('a', 'b', 'c')),
+                dtypes=bool,
+                own_columns=True,
+                )
+        self.assertEqual(
+                f1.dtypes.unique().tolist(),
+                [np.dtype(bool)]
+                )
+        self.assertEqual(f1.shape, (0, 3))
+
+    def test_frame_from_zero_size_shape_c(self) -> None:
+        f1 = Frame._from_zero_size_shape(
+                columns=(),
+                index=Index(('a', 'b', 'c')),
+                dtypes=bool,
+                own_index=True,
+                )
+        # while we have a type, we have not columns, and thus cannot get back an type
+        self.assertEqual(
+                f1.dtypes.unique().tolist(),
+                []
+                )
+        self.assertEqual(f1.shape, (3, 0))
+
+
+    def test_frame_from_zero_size_shape_d(self) -> None:
+        with self.assertRaises(RuntimeError):
+            _ = Frame._from_zero_size_shape(
+                    columns=(1, 2),
+                    index=Index(('a', 'b', 'c')),
+                    dtypes=bool,
+                    )
+
+    def test_frame_from_zero_size_shape_e(self) -> None:
+        f1 = Frame._from_zero_size_shape(
+                index=(),
+                columns=Index(('a', 'b', 'c')),
+                dtypes=(bool, bool, str),
+                own_columns=True,
+                )
+        self.assertEqual(
+                f1.dtypes.values.tolist(),
+                [np.dtype(bool), np.dtype(bool), np.dtype('U1')]
+                )
+        self.assertEqual(f1.shape, (0, 3))
+
+    def test_frame_from_zero_size_shape_f(self) -> None:
+        f1 = Frame._from_zero_size_shape(
+                index=(),
+                columns=Index(('a', 'b', 'c')),
+                dtypes=(bool, bool, str),
+                own_columns=True,
+                )
+        self.assertEqual(
+                f1.dtypes.values.tolist(),
+                [np.dtype(bool), np.dtype(bool), np.dtype('U1')]
+                )
+        self.assertEqual(f1.shape, (0, 3))
 
     #---------------------------------------------------------------------------
 

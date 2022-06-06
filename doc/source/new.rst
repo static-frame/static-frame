@@ -8,7 +8,9 @@ Added ``Index.dropna()``, ``Index.dropfalsy()``, ``IndexHierarchy.dropna()``, ``
 
 Added ``Index.fillfalsy()``, ``IndexHierarchy.fillfalsy()``.
 
-Performance improvements for ``Frame.iter_group_labels()``, ``Frame.iter_group_labels_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``
+Performance improvements for ``Frame.iter_group_labels()``, ``Frame.iter_group_labels_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``.
+
+Fixed usage of ``dtypes`` argument when encountering zero-sized data in ``Frame.from_records()`` and ``Frame.from_pandas()``.
 
 
 0.9.3
@@ -18,9 +20,9 @@ Added ``apply_element()`` and ``apply_element_items()`` methods to ``FrameAssign
 
 Added implementation of ``__array__()`` and ``__array_ufunc__()`` to all containers for better support with NumPy objects and binary operators.
 
-Added ``Series.iter_group_array()``, ``Series.iter_group_array_items()``, ``Series.iter_group_labels_array()``, ``Series.iter_group_labels_array_items()``
+Added ``Series.iter_group_array()``, ``Series.iter_group_array_items()``, ``Series.iter_group_labels_array()``, ``Series.iter_group_labels_array_items()``.
 
-Added ``Frame.iter_group_array()``, ``Frame.iter_group_array_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``
+Added ``Frame.iter_group_array()``, ``Frame.iter_group_array_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``.
 
 Corrected issue when using binary operators with a `FrameGO` and a `Series`.
 

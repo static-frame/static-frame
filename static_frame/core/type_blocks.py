@@ -395,24 +395,25 @@ class TypeBlocks(ContainerOperand):
 
     @classmethod
     def from_zero_size_shape(cls,
-            shape: tp.Tuple[int, int] = (0, 0)
+            shape: tp.Tuple[int, int] = (0, 0),
+            get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]] = None,
             ) -> 'TypeBlocks':
         '''
         Given a shape where one or both axis is 0 (a zero sized array), return a TypeBlocks instance.
         '''
-        #NOTE: might want to take dtypes here, so as we can create a zero row Frame with properly defined dtypes. The challenge is that DtypesSpecifier includes column name maps, and we do not have access to an index-like map in this context.
-
         rows, columns = shape
 
         if not (rows == 0 or columns == 0):
             raise RuntimeError(f'invalid shape for empty TypeBlocks: {shape}')
 
         # as types are organized vertically, storing an array with 0 rows but > 0 columns is appropriate as it takes type space
-
         if rows == 0 and columns > 0:
-            a = np.empty(shape)
-            a.flags.writeable = False
-            return cls.from_blocks(a)
+            if get_col_dtype is None:
+                blocks = np.empty(shape)
+                blocks.flags.writeable = False
+            else:
+                blocks = (np.empty(rows, dtype=get_col_dtype(i)) for i in range(columns))
+            return cls.from_blocks(blocks)
 
         # for arrays with no width, favor storing shape alone and not creating an array object; the shape will be binding for future appending
         return cls(blocks=list(), dtypes=list(), index=list(), shape=shape)
@@ -1203,7 +1204,7 @@ class TypeBlocks(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Sequence[np.dtype],
             size_one_unity: bool
             ) -> np.ndarray:
         '''Apply a function that reduces blocks to a single axis. Note that this only works in axis 1 if the operation can be applied more than once, first by block, then by reduced blocks. This will not work for a ufunc like argmin, argmax, where the result of the function cannot be compared to the result of the function applied on a different block.
