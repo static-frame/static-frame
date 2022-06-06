@@ -1049,7 +1049,6 @@ class TypeBlocks(ContainerOperand):
                     col_src += 1
             else:
                 if self.unified and index_ic.is_subset and columns_ic.is_subset:
-                    # COV_MISSING
                     b = self._blocks[0]
                     if b.ndim == 1:
                         yield b[index_ic.iloc_src]
