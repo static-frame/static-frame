@@ -1067,7 +1067,7 @@ class TypeBlocks(ContainerOperand):
                                 if b.ndim == 1:
                                     yield b[index_ic.iloc_src]
                                 else:
-                                    # COV_MISSING
+                                    # NOTE: this is not using iloc_dst if iloc_src is a different order
                                     yield b[index_ic.iloc_src, block_col]
                             else: # need an empty to fill, compatible with this
                                 fv = fill_value(col_src, b.dtype)

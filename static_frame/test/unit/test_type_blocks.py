@@ -2683,6 +2683,35 @@ class TestUnit(TestCase):
 
         self.assertEqual(tb2.values.tolist(), [[False], [True]])
 
+
+    def test_type_blocks_resize_blocks_a10(self) -> None:
+
+        a1 = np.arange(9).reshape(3, 3)
+        a2 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0,)),
+                iloc_dst=np.array((1,)),
+                size=2)
+
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0, 1)),
+                iloc_dst=np.array((1, 0)),
+                size=2)
+
+        func = get_col_fill_value_factory([-1, -2], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=index_ic,
+                        columns_ic=columns_ic,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.values.tolist(), [[-1, 0], [-1, 3]])
+
+
     #---------------------------------------------------------------------------
     def test_type_blocks_resize_blocks_b(self) -> None:
 
