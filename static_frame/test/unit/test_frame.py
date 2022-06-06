@@ -13108,7 +13108,7 @@ class TestUnit(TestCase):
 
         with WarningsSilent():
             f4 = sf.Frame.from_overlay((f1, f2, f3),
-                    func=(lambda a: (a == 0) | (a == False) | (a == '')),
+                    func=(lambda a: (a == 0) | (a == False) | (a == '')), #pylint: disable=C0121
                     fill_value=dict(a=0, b=False, c='')
                     )
 
