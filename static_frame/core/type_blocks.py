@@ -949,6 +949,7 @@ class TypeBlocks(ContainerOperand):
 
                         if index_ic.is_subset:
                             if b.ndim == 1:
+                                # NOTE: iloc_src is in the right order for dst
                                 yield b[index_ic.iloc_src]
                             else:
                                 yield b[index_ic.iloc_src, block_col]
@@ -1051,6 +1052,7 @@ class TypeBlocks(ContainerOperand):
                 if self.unified and index_ic.is_subset and columns_ic.is_subset:
                     b = self._blocks[0]
                     if b.ndim == 1:
+                        # NOTE: iloc_src is in the right order for dst
                         yield b[index_ic.iloc_src]
                     else:
                         yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]

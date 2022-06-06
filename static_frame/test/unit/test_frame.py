@@ -3678,6 +3678,23 @@ class TestUnit(TestCase):
             (('s', (('a', -1), ('b', -1))), ('t', (('a', -2), ('b', -2))))
             )
 
+    def test_frame_reindex_m(self) -> None:
+        records = (
+                (2, 'a', False),
+                (3, 'b', True),
+                (10, 'c', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y'),
+                consolidate_blocks=True,
+                )
+
+        f2 = f1.reindex(columns=('r', 'p'), index=('y', 'x'))
+        self.assertEqual(f2.to_pairs(),
+                (('r', (('y', True), ('x', True))), ('p', (('y', 10), ('x', 3))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_contains_a(self) -> None:
