@@ -233,6 +233,55 @@ class Frame(ContainerOperand):
                 own_index=True,
                 )
 
+
+    @classmethod
+    def _from_zero_size_shape(cls,
+            *,
+            index: IndexInitializer = None,
+            columns: IndexInitializer = None,
+            dtypes: DtypeSpecifier = None,
+            name: tp.Hashable = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            own_index: bool = False,
+            own_columns: bool = False
+            ) -> 'Frame':
+        '''
+        Create a zero-sized Frame based on ``index`` or ``columns`` (though not both of size).
+        '''
+        if own_columns:
+            columns_final = columns
+        else:
+            columns_final = index_from_optional_constructor(
+                    columns if columns is not None else (),
+                    default_constructor=cls._COLUMNS_CONSTRUCTOR,
+                    explicit_constructor=columns_constructor
+                    )
+        if own_index:
+            index_final = index
+        else:
+            index_final = index_from_optional_constructor(
+                    index if index is not None else (),
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+
+        shape = (len(index_final), len(columns_final))
+        if shape[0] > 0 and shape[1] > 0:
+            raise ErrorInitFrame('Cannot create zero-sized Frame from sized index and columns.')
+
+        get_col_dtype = ((lambda x: None) if dtypes is None
+                else get_col_dtype_factory(dtypes, columns))
+
+        return cls(TypeBlocks.from_zero_size_shape(shape, get_col_dtype),
+                index=index_final,
+                columns=columns_final,
+                name=name,
+                own_data=True,
+                own_index=True,
+                own_columns=True,
+                )
+
     @classmethod
     def from_element(cls,
             element: tp.Any,
@@ -265,17 +314,6 @@ class Frame(ContainerOperand):
                     )
 
         shape = (len(index_final), len(columns_final))
-
-        # if hasattr(element, '__len__') and not isinstance(element, str):
-        #     array = np.empty(shape, dtype=DTYPE_OBJECT)
-        #     # this is the only way to insert tuples, lists,ranges
-        #     for iloc in np.ndindex(shape):
-        #         array[iloc] = element
-        # else:
-        #     array = np.full(
-        #             shape,
-        #             fill_value=element,
-        #             dtype=dtype)
         dtype = None if dtype is None else np.dtype(dtype)
         array = full_for_fill(
                 dtype,
@@ -786,11 +824,12 @@ class Frame(ContainerOperand):
 
         if not row_count:
             if columns is not None: # we can create a zero-record Frame
-                return cls(
+                return cls._from_zero_size_shape(
                         columns=columns,
                         columns_constructor=columns_constructor,
                         own_columns=own_columns,
                         name=name,
+                        dtypes=dtypes,
                         )
             raise ErrorInitFrame('no rows available in records, and no columns defined.')
 
@@ -809,6 +848,7 @@ class Frame(ContainerOperand):
         is_dataclass = hasattr(row_reference, '__dataclass_fields__')
         if is_dataclass:
             fields_dc = tuple(row_reference.__dataclass_fields__.keys())
+
 
         column_name_getter = None
         # NOTE: even if getter is defined, columns list is needed to be available to get_col_dtype after it is populated
@@ -2393,7 +2433,6 @@ class Frame(ContainerOperand):
             column_start, dtype_current = next(pairs)
             column_last = column_start
             yield_block = False
-
             for column, dtype in pairs: # iloc column values
                 try:
                     if dtype != dtype_current:
@@ -2429,7 +2468,7 @@ class Frame(ContainerOperand):
                     )
 
         if value.size == 0:
-            blocks = TypeBlocks.from_zero_size_shape(value.shape)
+            blocks = TypeBlocks.from_zero_size_shape(value.shape, get_col_dtype)
         elif consolidate_blocks:
             blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
         else:
