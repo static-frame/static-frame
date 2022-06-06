@@ -1084,6 +1084,7 @@ class Frame(ContainerOperand):
         columns = []
 
         # if an index initializer is passed, and we expect to get Series, we need to create the index in advance of iterating blocks
+        # NOTE: could add own_index argument in signature, see implementation in from_fields()
         own_index = False
         if _index_initializer_needs_init(index):
             index = index_from_optional_constructor(index,
@@ -1118,7 +1119,6 @@ class Frame(ContainerOperand):
                                 fill_value=get_col_fill_value(col_idx, dtype_for_fv),
                                 check_equals=False,
                                 )
-                    # return values array post reindexing
                     if column_type is not None:
                         yield v.values.astype(column_type)
                     else:
@@ -1189,7 +1189,7 @@ class Frame(ContainerOperand):
             *,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             index_constructor: IndexConstructor = None,
@@ -1198,7 +1198,7 @@ class Frame(ContainerOperand):
             own_columns: bool = False,
             consolidate_blocks: bool = False
             ) -> 'Frame':
-        '''Frame constructor from an iterator of columns, where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
+        '''Frame constructor from an iterator of columns, where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied. This constructor is similar to ``from_items()``, though here columns are provided through an independent ``columns`` argument.
 
         Args:
             fields: Iterable of column values.
@@ -1220,6 +1220,7 @@ class Frame(ContainerOperand):
             own_index = True
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
+        get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for col_idx, v in enumerate(fields):
@@ -1233,9 +1234,12 @@ class Frame(ContainerOperand):
                 elif isinstance(v, Series):
                     if index is None:
                         raise ErrorInitFrame('can only consume Series in Frame.from_fields if an Index is provided.')
+
                     if not v.index.equals(index):
+                        dtype_for_fv = (np.dtype(column_type) if column_type is not None
+                                else v.dtype)
                         v = v.reindex(index,
-                                fill_value=fill_value,
+                                fill_value=get_col_fill_value(col_idx, dtype_for_fv),
                                 check_equals=False,
                                 )
                     if column_type is not None:

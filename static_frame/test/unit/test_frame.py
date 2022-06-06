@@ -13203,6 +13203,25 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(),
                 ((0, ((0, 3.0), (1, 4.0))), (1, ((0, 3.0), (1, 7.0)))))
 
+    def test_frame_from_fields_f(self) -> None:
+        f1 = sf.Frame.from_fields((Series([3, 4]), Series([3, 7])),
+                fill_value=[-1, -2],
+                index=(2, 1, 0),
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((2, -1), (1, 4), (0, 3))), (1, ((2, -2), (1, 7), (0, 3))))
+                )
+
+    def test_frame_from_fields_g(self) -> None:
+        f1 = sf.Frame.from_fields((Series([3, 4]), Series([True, False])),
+                fill_value=FillValueAuto,
+                index=(2, 1, 0),
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((2, 0), (1, 4), (0, 3))), (1, ((2, False), (1, False), (0, True))))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_sample_a(self) -> None:
