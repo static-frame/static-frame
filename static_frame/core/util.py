@@ -282,11 +282,6 @@ def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
     is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
     return not is_slice and not is_mask
 
-def is_element(value: tp.Any) -> bool:
-    if isinstance(value, str) or isinstance(value, tuple):
-        return True
-    return not hasattr(value, '__iter__')
-
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[
         DtypeSpecifier,

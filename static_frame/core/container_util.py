@@ -43,12 +43,12 @@ from static_frame.core.util import is_mapping
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import WarningsSilent
-from static_frame.core.util import is_element
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
 
 
 if tp.TYPE_CHECKING:
@@ -208,9 +208,23 @@ def get_col_fill_value_factory(
     return get_col_fill_value
 
 
-def is_fill_value_factory_initializer(value: tp.Any) -> bool:
-    return not is_element(value) or value is FillValueAuto or isinstance(value, FillValueAuto)
+def is_element(value: tp.Any, container_is_element: bool = False) -> bool:
+    '''
+    Args:
+        container_is_element: Boolean to show if SF containers are treated as elements.
+    '''
+    if isinstance(value, str) or isinstance(value, tuple):
+        return True
+    if container_is_element and isinstance(value, ContainerOperand):
+        return True
+    return not hasattr(value, '__iter__')
 
+def is_fill_value_factory_initializer(value: tp.Any) -> bool:
+    # NOTE: in the context of a fill-value, we will not accept SF containers for now; a Series might be used as a mapping, but more clear to just force that to be converted to a dict
+    return (not is_element(value, container_is_element=True)
+            or value is FillValueAuto
+            or isinstance(value, FillValueAuto)
+            )
 
 def is_static(value: IndexConstructor) -> bool:
     try:

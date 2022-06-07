@@ -25,6 +25,8 @@ from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.container_util import get_col_fill_value_factory
+from static_frame.core.container_util import is_fill_value_factory_initializer
+
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -981,7 +983,11 @@ class Series(ContainerOperand):
                     own_index=True,
                     name=self._name)
 
-        fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+        if is_fill_value_factory_initializer(fill_value):
+            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+        else:
+            fv = fill_value
+
         values = full_for_fill(self.values.dtype, len(index), fv) #type: ignore
         # if some intersection of values
         if ic.has_common:
