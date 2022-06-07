@@ -73,7 +73,7 @@ class InterfaceFillValue(Interface[TContainer]):
     def __init__(self,
             container: TContainer,
             *,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             axis: int = 0,
             ) -> None:
         self._container: TContainer = container
@@ -112,6 +112,8 @@ class InterfaceFillValue(Interface[TContainer]):
     def _extract_loc1d(self,
             key: GetItemKeyType = NULL_SLICE,
             ) -> 'Series':
+        from static_frame.core.container_util import get_col_fill_value_factory
+
         key, is_multiple, is_null_slice = self._extract_key_attrs(
                 key,
                 self._container._index,
@@ -123,7 +125,9 @@ class InterfaceFillValue(Interface[TContainer]):
             return container.reindex(key if not is_null_slice else None, #type: ignore
                     fill_value=fill_value,
                     )
-        return container.get(key, fill_value) #type: ignore
+
+        fv = get_col_fill_value_factory(fill_value, None)(0, container.dtype)
+        return container.get(key, fv) #type: ignore
 
     def _extract_loc2d(self,
             row_key: GetItemKeyType = NULL_SLICE,

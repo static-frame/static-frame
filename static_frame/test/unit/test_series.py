@@ -30,6 +30,7 @@ from static_frame import IndexYearMonth
 from static_frame import IndexYear
 from static_frame import IndexAutoFactory
 from static_frame import IndexDefaultFactory
+from static_frame import FillValueAuto
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import isna_array
 
@@ -4973,6 +4974,16 @@ class TestUnit(TestCase):
         s2 = s1.via_fill_value(-1)[s1.index.values]
         self.assertEqual(s2.to_pairs(),
                 (('a', 0), ('b', 1), ('c', 2), ('d', 3))
+                )
+
+    def test_series_via_fill_value_a(self) -> None:
+
+        s1 = Series(range(3), index=tuple('abc'))
+        s2 = Series(range(5), index=tuple('abcde'))
+
+        s3 = s1.via_fill_value(FillValueAuto) + s2
+        self.assertEqual(s3.to_pairs(),
+                (('a', 0), ('b', 2), ('c', 4), ('d', 3), ('e', 4))
                 )
 
     #---------------------------------------------------------------------------

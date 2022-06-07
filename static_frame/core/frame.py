@@ -1532,7 +1532,7 @@ class Frame(ContainerOperand):
             dtype: DtypesSpecifier = None,
             axis: tp.Optional[int] = None,
             name: NameType = None,
-            fill_value: object = FILL_VALUE_DEFAULT,
+            fill_value: tp.Any = FILL_VALUE_DEFAULT,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
@@ -3157,7 +3157,7 @@ class Frame(ContainerOperand):
 
 
     def via_fill_value(self,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             ) -> InterfaceFillValue['Frame']:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
