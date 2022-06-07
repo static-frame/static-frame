@@ -48,7 +48,7 @@ from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
+from static_frame.core.container import ContainerOperand
 
 
 if tp.TYPE_CHECKING:
@@ -62,7 +62,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import IndexConstructorFactoryBase #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
 
 
 ExplicitConstructor = tp.Union[
@@ -76,7 +75,7 @@ FILL_VALUE_AUTO_DEFAULT = FillValueAuto()
 
 class ContainerMap:
 
-    _map: tp.Optional[tp.Dict[str, tp.Type['ContainerOperand']]] = None
+    _map: tp.Optional[tp.Dict[str, tp.Type[ContainerOperand]]] = None
 
     @classmethod
     def _update_map(cls) -> None:
@@ -109,7 +108,7 @@ class ContainerMap:
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
     @classmethod
-    def str_to_cls(cls, name: str) -> tp.Type['ContainerOperand']:
+    def str_to_cls(cls, name: str) -> tp.Type[ContainerOperand]:
         if cls._map is None:
             cls._update_map()
         return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
