@@ -112,6 +112,8 @@ class InterfaceFillValue(Interface[TContainer]):
     def _extract_loc1d(self,
             key: GetItemKeyType = NULL_SLICE,
             ) -> 'Series':
+        '''This is only called if container is 1D
+        '''
         from static_frame.core.container_util import get_col_fill_value_factory
 
         key, is_multiple, is_null_slice = self._extract_key_attrs(
@@ -126,7 +128,7 @@ class InterfaceFillValue(Interface[TContainer]):
                     fill_value=fill_value,
                     )
 
-        fv = get_col_fill_value_factory(fill_value, None)(0, container.dtype)
+        fv = get_col_fill_value_factory(fill_value, None)(0, container.dtype) #type: ignore
         return container.get(key, fv) #type: ignore
 
     def _extract_loc2d(self,

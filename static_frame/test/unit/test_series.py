@@ -4976,7 +4976,7 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 1), ('c', 2), ('d', 3))
                 )
 
-    def test_series_via_fill_value_a(self) -> None:
+    def test_series_via_fill_value_i(self) -> None:
 
         s1 = Series(range(3), index=tuple('abc'))
         s2 = Series(range(5), index=tuple('abcde'))
