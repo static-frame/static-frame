@@ -5953,6 +5953,10 @@ class Frame(ContainerOperand):
         shift_index = index
         shift_column = columns
 
+        # get_col_fill_value = get_col_fill_value_factory(
+        #         fill_value,
+        #         tuple(self._columns), # tuple better for IH
+        #         )
         blocks = TypeBlocks.from_blocks(
                 self._blocks._shift_blocks(
                 row_shift=shift_index,
