@@ -1167,7 +1167,7 @@ class TestUnit(TestCase):
     #--------------------------------------------------------------------------
     def test_type_blocks_assign_from_boolean_blocks_by_callable(self) -> None:
 
-        func = get_col_fill_value_factory([-1, 'x', True], columns=None)
+        get_col_fill_value = get_col_fill_value_factory([-1, 'x', True], columns=None)
 
         a1 = np.array([[3, 4], [3, 2],])
         a2 = np.array([False, False])
@@ -1180,7 +1180,7 @@ class TestUnit(TestCase):
         tb2 = TypeBlocks.from_blocks(
                 tb1._assign_from_boolean_blocks_by_callable(
                        targets=targets,
-                       func=func,
+                       get_col_fill_value=get_col_fill_value,
                        ))
         self.assertEqual( tb2.values.tolist(),
                 [[3, 'x', False], [-1, 2, True]],

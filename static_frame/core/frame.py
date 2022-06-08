@@ -736,9 +736,9 @@ class Frame(ContainerOperand):
 
         # we need a fill value that will be identified as a missing value by ``func`` on subsequent iterations, otherwise this fill value will not be identified as fillable
         if fill_value is FILL_VALUE_DEFAULT:
-            fill_value_factory = lambda _, dtype: dtype_kind_to_na(dtype.kind)
+            get_col_fill_value = lambda _, dtype: dtype_kind_to_na(dtype.kind)
         else:
-            fill_value_factory = get_col_fill_value_factory(fill_value, columns)
+            get_col_fill_value = get_col_fill_value_factory(fill_value, columns)
 
         # dtype column mapping will not change
         dtypes = post.dtypes
@@ -751,7 +751,7 @@ class Frame(ContainerOperand):
             for col_count, (col, dtype_at_col) in enumerate(dtypes.items()):
                 if col not in container:
                     # get fill value based on previous container
-                    fill_value = fill_value_factory(col_count, dtype_at_col)
+                    fill_value = get_col_fill_value(col_count, dtype_at_col)
                     # store fill_arrays for re-use
                     if fill_value not in fill_arrays:
                         array = np.full(len(index), fill_value)
@@ -763,7 +763,7 @@ class Frame(ContainerOperand):
                     array = container._blocks._extract_array_column(iloc_column_key)
                 else: # need to reindex
                     col_series = container[col]
-                    fill_value = fill_value_factory(col_count, col_series.dtype)
+                    fill_value = get_col_fill_value(col_count, col_series.dtype)
                     array = col_series.reindex(index, fill_value=fill_value).values
                     array.flags.writeable = False
                 values.append(array)
@@ -4121,11 +4121,11 @@ class Frame(ContainerOperand):
                     )
         elif is_fill_value_factory_initializer(value):
             # we have a iterable or a mapping, or FillValueAuto
-            func_fill_value = get_col_fill_value_factory(value, columns=self._columns)
+            get_col_fill_value = get_col_fill_value_factory(value, columns=self._columns)
             return self.__class__(
                     self._blocks.fill_missing_by_callable(
                             func_missing=func,
-                            func_fill_value=func_fill_value,
+                            get_col_fill_value=get_col_fill_value,
                             ),
                     **kwargs,
                     )
@@ -4747,7 +4747,7 @@ class Frame(ContainerOperand):
             operator: UFunc,
             other: tp.Any,
             axis: int = 0,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             ) -> 'Frame':
 
         if operator.__name__ == 'matmul':
@@ -5944,7 +5944,8 @@ class Frame(ContainerOperand):
             index: int = 0,
             columns: int = 0,
             *,
-            fill_value: tp.Any = np.nan) -> 'Frame':
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
         '''
         Shift columns and/or rows by positive or negative integer counts, where columns and/or rows fall of the axis and introduce missing values, filled by `fill_value`.
         '''

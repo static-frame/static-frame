@@ -1805,7 +1805,7 @@ class TypeBlocks(ContainerOperand):
             row_shift: int = 0,
             column_shift: int = 0,
             wrap: bool = True,
-            fill_value: object = np.nan
+            fill_value: tp.Any = np.nan
             ) -> tp.Iterator[np.ndarray]:
         '''
         Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``fill_value``.
@@ -2140,12 +2140,12 @@ class TypeBlocks(ContainerOperand):
 
     def _assign_from_boolean_blocks_by_callable(self,
             targets: tp.Iterable[np.ndarray],
-            func: tp.Callable[[int, np.dtype], tp.Any],
+            get_col_fill_value: tp.Callable[[int, np.dtype], tp.Any],
             ) -> tp.Iterator[np.ndarray]:
         '''Assign value (a single element) into blocks by integer column, based on a Boolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. The result of calling func with the column number is the value set where the Boolean is True.
 
         Args:
-            func: A callable that given the index position returns the value
+            get_col_fill_value: A callable that given the index position returns the value
             value_valid: same size Boolean area to be combined with targets
         '''
         col = 0
@@ -2157,7 +2157,7 @@ class TypeBlocks(ContainerOperand):
                 yield block
 
             if block.ndim == 1:
-                value = func(col, block.dtype)
+                value = get_col_fill_value(col, block.dtype)
                 value_dtype = dtype_from_element(value)
                 assigned_dtype = resolve_dtype(value_dtype, block.dtype)
                 if block.dtype == assigned_dtype:
@@ -2178,7 +2178,7 @@ class TypeBlocks(ContainerOperand):
                         # no targets in this columns
                         yield block[NULL_SLICE, i] # slices are immutable
                     else:
-                        value = func(col, block.dtype)
+                        value = get_col_fill_value(col, block.dtype)
                         value_dtype = dtype_from_element(value)
                         assigned_dtype = resolve_dtype(value_dtype, block.dtype)
 
@@ -3754,7 +3754,7 @@ class TypeBlocks(ContainerOperand):
     def fill_missing_by_callable(self,
             *,
             func_missing: tp.Callable[[np.ndarray], np.ndarray],
-            func_fill_value: tp.Callable[[int], tp.Any]
+            get_col_fill_value: tp.Callable[[int], tp.Any]
             ) -> 'TypeBlocks':
         '''
         Return a new TypeBlocks instance that fills missing values with the passed value.
@@ -3767,7 +3767,7 @@ class TypeBlocks(ContainerOperand):
         return self.from_blocks(
                 self._assign_from_boolean_blocks_by_callable(
                         targets=(func_missing(b) for b in self._blocks),
-                        func=func_fill_value,
+                        get_col_fill_value=get_col_fill_value,
                         )
                 )
 
