@@ -94,7 +94,6 @@ class InterfaceFillValue(Interface[TContainer]):
                 fill_value=self._fill_value,
                 )
 
-
     #---------------------------------------------------------------------------
     @staticmethod
     def _extract_key_attrs(
