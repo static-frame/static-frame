@@ -139,6 +139,8 @@ class InterfaceFillValue(Interface[TContainer]):
         NOTE: keys are loc keys; None is interpreted as selector, not a NULL_SLICE
         '''
         from static_frame.core.series import Series
+        from static_frame.core.container_util import get_col_fill_value_factory
+
         fill_value = self._fill_value
         container = self._container # always a Frame
 
@@ -162,13 +164,15 @@ class InterfaceFillValue(Interface[TContainer]):
             try:
                 return container.loc[row_key, column_key]
             except KeyError:
-                return fill_value #type: ignore
+                fv = get_col_fill_value_factory(fill_value, None)(0, None)
+                return fv #type: ignore
         elif not row_is_multiple:
             # row is an element, return Series indexed by columns
             if row_key in container._index: #type: ignore
                 s = container.loc[row_key]
                 return s.reindex(column_key, fill_value=fill_value) #type: ignore
-            return Series.from_element(fill_value,
+            fv = get_col_fill_value_factory(fill_value, None)(0, None)
+            return Series.from_element(fv,
                     index=column_key,
                     name=row_key,
                     )
@@ -176,7 +180,9 @@ class InterfaceFillValue(Interface[TContainer]):
         if column_key in container._columns: #type: ignore
             s = container[column_key]
             return s.reindex(row_key, fill_value=fill_value) #type: ignore
-        return Series.from_element(fill_value,
+
+        fv = get_col_fill_value_factory(fill_value, None)(0, None)
+        return Series.from_element(fv,
                 index=row_key,
                 name=column_key,
                 )
