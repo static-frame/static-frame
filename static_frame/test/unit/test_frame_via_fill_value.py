@@ -31,8 +31,9 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|c(I,str)|i(I,str)|v(int64)')
 
         f3 = f1.via_fill_value({'zZbu': 0, 'ztsv': 1, 'zUvW': 1}) * f2
-        self.assertEqual(3.to_pairs(),
+        self.assertEqual(f3.to_pairs(),
                 (('zUvW', (('zUvW', 30205), ('zZbu', -3648), ('ztsv', 91301))), ('zZbu', (('zUvW', 0), ('zZbu', 7746992289), ('ztsv', 8624279689))), ('ztsv', (('zUvW', 5729), ('zZbu', 26307866809), ('ztsv', 1693898649))))
+                )
 
     def test_frame_via_fill_value_b(self) -> None:
 
