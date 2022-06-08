@@ -169,9 +169,6 @@ def get_col_fill_value_factory(
     is_map = False
     is_element = False
 
-
-    # TODO: return lambdas
-
     if fill_value is FillValueAuto:
         is_fva = True
         fill_value = FILL_VALUE_AUTO_DEFAULT
