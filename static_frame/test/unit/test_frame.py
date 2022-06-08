@@ -8457,6 +8457,30 @@ class TestUnit(TestCase):
         self.assertEqual(f1.shape, (1, 2))
         self.assertIs(f1.columns.__class__, IndexDate)
 
+    def test_frame_from_concat_ff(self) -> None:
+        records1 = (
+                (2, False),
+                (34, False),
+                )
+
+        f1 = Frame.from_records(records1,
+                columns=('p', 'q',),
+                index=('x', 'z'))
+
+        records2 = (
+                ('c', False),
+                ('d', True),
+                ('e', True),
+                )
+        f2 = Frame.from_records(records2,
+                columns=('r', 's',),
+                index=('w', 'x', 'z'))
+
+        f3 = Frame.from_concat((f1, f2), axis=1, fill_value=dict(p=-3, q=-2))
+        self.assertEqual(f3.to_pairs(),
+                (('p', (('w', -3), ('x', 2), ('z', 34))), ('q', (('w', -2), ('x', False), ('z', False))), ('r', (('w', 'c'), ('x', 'd'), ('z', 'e'))), ('s', (('w', False), ('x', True), ('z', True)))))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_concat_error_init_a(self) -> None:
