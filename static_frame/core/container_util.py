@@ -71,7 +71,7 @@ ExplicitConstructor = tp.Union[
         None,
         ]
 
-FILL_VALUE_AUTO_DEFAULT = FillValueAuto()
+FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
 class ContainerMap:
 
