@@ -3487,7 +3487,7 @@ class Frame(ContainerOperand):
             iloc_key: GetItemKeyTypeCompound,
             is_series: bool,
             is_frame: bool,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             ) -> tp.Union[Series, 'Frame']:
         '''Given a value that is a Series or Frame, reindex it to the index components, drawn from this Frame, that are specified by the iloc_key.
         '''
@@ -3579,8 +3579,6 @@ class Frame(ContainerOperand):
             columns = self._columns
             columns_ic = None
             own_columns_frame = self._COLUMNS_CONSTRUCTOR.STATIC
-
-        # TODO: group arguemtns in kwargs
 
         # if fill_value is a non-element, call get_col_fill_value_factory with the new index/columns, not the old
         if is_fill_value_factory_initializer(fill_value):
