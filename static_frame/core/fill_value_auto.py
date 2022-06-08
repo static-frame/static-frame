@@ -6,7 +6,7 @@ import numpy as np
 from static_frame.core.util import NAT
 from static_frame.core.util import NAT_TD64
 
-FILL_VALUE_AUTO_DEFAULT = object()
+FILL_VALUE_UNSET = object()
 
 class FillValueAuto:
     '''Define, per NumPy dtype kind, a value to be used for filling missing values.
@@ -57,17 +57,17 @@ class FillValueAuto:
                 )
 
     def __init__(self,
-            b: tp.Any = FILL_VALUE_AUTO_DEFAULT,
-            i: tp.Any = FILL_VALUE_AUTO_DEFAULT,
-            u: tp.Any = FILL_VALUE_AUTO_DEFAULT,
-            f: tp.Any = FILL_VALUE_AUTO_DEFAULT,
-            c: tp.Any = FILL_VALUE_AUTO_DEFAULT,
-            m: tp.Any = FILL_VALUE_AUTO_DEFAULT,
-            M: tp.Any = FILL_VALUE_AUTO_DEFAULT,
-            O: tp.Any = FILL_VALUE_AUTO_DEFAULT,
-            S: tp.Any = FILL_VALUE_AUTO_DEFAULT,
-            U: tp.Any = FILL_VALUE_AUTO_DEFAULT,
-            V: tp.Any = FILL_VALUE_AUTO_DEFAULT,
+            b: tp.Any = FILL_VALUE_UNSET,
+            i: tp.Any = FILL_VALUE_UNSET,
+            u: tp.Any = FILL_VALUE_UNSET,
+            f: tp.Any = FILL_VALUE_UNSET,
+            c: tp.Any = FILL_VALUE_UNSET,
+            m: tp.Any = FILL_VALUE_UNSET,
+            M: tp.Any = FILL_VALUE_UNSET,
+            O: tp.Any = FILL_VALUE_UNSET,
+            S: tp.Any = FILL_VALUE_UNSET,
+            U: tp.Any = FILL_VALUE_UNSET,
+            V: tp.Any = FILL_VALUE_UNSET,
             ) -> None:
         '''
         Args:
@@ -97,6 +97,6 @@ class FillValueAuto:
 
     def __getitem__(self, dtype: np.dtype) -> tp.Any:
         fv = getattr(self, dtype.kind)
-        if fv is FILL_VALUE_AUTO_DEFAULT:
+        if fv is FILL_VALUE_UNSET:
             raise RuntimeError(f'FillValueAuto requested value for kind {dtype.kind} not defined.')
         return fv
