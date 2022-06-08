@@ -422,7 +422,7 @@ class Frame(ContainerOperand):
             index_constructor: tp.Optional[IndexConstructor] = None,
             columns_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = None,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''
@@ -592,7 +592,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             union: bool = True,
             name: NameType = None,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             index_constructor: tp.Optional[IndexConstructor] = None,
             columns_constructor: tp.Optional[IndexConstructor] = None,
             consolidate_blocks: bool = False,
@@ -3580,6 +3580,7 @@ class Frame(ContainerOperand):
             columns_ic = None
             own_columns_frame = self._COLUMNS_CONSTRUCTOR.STATIC
 
+        # TODO: group arguemtns in kwargs
 
         # if fill_value is a non-element, call get_col_fill_value_factory with the new index/columns, not the old
         if is_fill_value_factory_initializer(fill_value):

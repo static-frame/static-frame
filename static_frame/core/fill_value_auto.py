@@ -9,8 +9,16 @@ from static_frame.core.util import NAT_TD64
 
 class FillValueAuto:
     '''Define, per NumPy dtype kind, a value to be used for filling missing values.
+
+    Mappings are based on dtype, kind, as follows:
+        b: bool
+        ..
     '''
     __slots__ = tuple('biufcmMOSUV')
+
+
+    def from_default() -> 'FillValueAuto':
+        pass
 
     def __init__(self,
             b: tp.Any = False, # np.bool_(False)
