@@ -8480,6 +8480,11 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(),
                 (('p', (('w', -3), ('x', 2), ('z', 34))), ('q', (('w', -2), ('x', False), ('z', False))), ('r', (('w', 'c'), ('x', 'd'), ('z', 'e'))), ('s', (('w', False), ('x', True), ('z', True)))))
 
+        f4 = Frame.from_concat((f1, f2), axis=1, fill_value=FillValueAuto)
+        self.assertEqual(f4.to_pairs(),
+                (('p', (('w', 0), ('x', 2), ('z', 34))), ('q', (('w', False), ('x', False), ('z', False))), ('r', (('w', 'c'), ('x', 'd'), ('z', 'e'))), ('s', (('w', False), ('x', True), ('z', True))))
+                )
+
 
     #---------------------------------------------------------------------------
 
