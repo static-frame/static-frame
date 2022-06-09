@@ -2475,7 +2475,7 @@ class TestUnit(TestCase):
                 iloc_dst=np.array((0, 2)),
                 size=2)
 
-        tb2 = TypeBlocks.from_blocks(tb1.resize_blocks(index_ic=index_ic, columns_ic=None, fill_value=None))
+        tb2 = TypeBlocks.from_blocks(tb1.resize_blocks_by_element(index_ic=index_ic, columns_ic=None, fill_value=None))
         self.assertEqual(tb2.shape, (2, 3))
 
     def test_type_blocks_resize_blocks_a2(self) -> None:
@@ -2735,7 +2735,7 @@ class TestUnit(TestCase):
                 iloc_dst=np.array((0)),
                 size=1)
 
-        result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
+        result = tb1.resize_blocks_by_element(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([[5], [3], [1]])]
         for r,e in zip_longest(result, expected):
             self.assertTrue(np.array_equal(r, e))
@@ -2758,7 +2758,7 @@ class TestUnit(TestCase):
                 iloc_dst=np.array((0)),
                 size=1)
 
-        result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
+        result = tb1.resize_blocks_by_element(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([0,5])]
         for r,e in zip_longest(result, expected):
             self.assertTrue(np.array_equal(r, e))
@@ -2775,7 +2775,7 @@ class TestUnit(TestCase):
                 iloc_dst=np.array((0)),
                 size=1)
 
-        result = tb1.resize_blocks(index_ic=None, columns_ic=columns_ic, fill_value=None)
+        result = tb1.resize_blocks_by_element(index_ic=None, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([0,1,2,3,4,5])]
         for r,e in zip_longest(result, expected):
             self.assertTrue(np.array_equal(r, e))
@@ -2799,7 +2799,7 @@ class TestUnit(TestCase):
                 iloc_dst=np.array((0,1,2)),
                 size=3)
 
-        result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
+        result = tb1.resize_blocks_by_element(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([0, 5]), np.array([ 0, 10]), np.array([ 1, 11])]
         # [[0,  0,  1],
         #  [5, 10, 11]]

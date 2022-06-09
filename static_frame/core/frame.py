@@ -3601,7 +3601,7 @@ class Frame(ContainerOperand):
 
         return self.__class__(
                 TypeBlocks.from_blocks(
-                        self._blocks.resize_blocks(
+                        self._blocks.resize_blocks_by_element(
                                 index_ic=index_ic,
                                 columns_ic=columns_ic,
                                 fill_value=fill_value),

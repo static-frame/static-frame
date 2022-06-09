@@ -871,7 +871,7 @@ class TypeBlocks(ContainerOperand):
         return self.from_blocks(self.consolidate_blocks(raw_blocks=self._blocks))
 
     #---------------------------------------------------------------------------
-    def resize_blocks(self, *,
+    def resize_blocks_by_element(self, *,
             index_ic: tp.Optional[IndexCorrespondence],
             columns_ic: tp.Optional[IndexCorrespondence],
             fill_value: tp.Any
