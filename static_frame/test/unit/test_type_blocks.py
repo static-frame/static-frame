@@ -3252,7 +3252,7 @@ class TestUnit(TestCase):
                 get_col_fill_value=get_col_fill_value,
                 ))
         self.assertEqual(tb4.values.tolist(),
-                [[4, 9, 6, 'c', 'd', None], [0, 0, 1, 'oe', 'od', None], [-1, -2, -3, -4, -5, -6]]
+                [[1, 2, 3, 'a', 'b', None], [4, 9, 6, 'c', 'd', None], [0, 0, 1, 'oe', 'od', None]]
                 )
 
     def test_type_blocks_shift_blocks_fill_by_callable_c(self) -> None:
