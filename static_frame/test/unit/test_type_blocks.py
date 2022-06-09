@@ -3291,6 +3291,22 @@ class TestUnit(TestCase):
                 [[-1, -2, -3, -4, -5, -6], [-1, -2, 1, 2, 3, 'a'], [-1, -2, 4, 9, 6, 'c']]
                 )
 
+    def test_type_blocks_shift_blocks_fill_by_callable_e(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, 9, 6], [0, 0, 1]], dtype=int)
+        a2 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        a3 = np.array([None, None, None])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+        get_col_fill_value = get_col_fill_value_factory([-1, -2, -3, -4, -5, -6], None)
+        tb2 = TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_callable(0,
+                0,
+                wrap=True, # for coverage
+                get_col_fill_value=get_col_fill_value,
+                ))
+        self.assertEqual(tb2.values.tolist(),
+                [[1, 2, 3, 'a', 'b', None], [4, 9, 6, 'c', 'd', None], [0, 0, 1, 'oe', 'od', None]]
+                )
 
     #---------------------------------------------------------------------------
 
