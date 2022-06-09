@@ -1801,7 +1801,7 @@ class TypeBlocks(ContainerOperand):
                     yield from parts
 
 
-    def _shift_blocks(self,
+    def _shift_blocks_fill_by_element(self,
             row_shift: int = 0,
             column_shift: int = 0,
             wrap: bool = True,
@@ -1842,7 +1842,7 @@ class TypeBlocks(ContainerOperand):
                         )
 
             if not wrap:
-                shape = (self._shape[0], min(self._shape[1], abs(column_shift)))
+                shape = (row_count, min(column_count, abs(column_shift)))
                 empty = np.full(shape, fill_value)
                 if column_shift > 0:
                     block_head_iter = (empty,)
@@ -1854,77 +1854,88 @@ class TypeBlocks(ContainerOperand):
                 if (wrap and row_start_pos == 0) or (not wrap and row_shift == 0):
                     yield b
                 else:
-                    b = array_shift(
+                    array = array_shift(
                             array=b,
                             shift=row_shift,
                             axis=0,
                             wrap=wrap,
                             fill_value=fill_value)
-                    b.flags.writeable = False
+                    array.flags.writeable = False
+                    yield array
+
+
+    def _shift_blocks_fill_by_callable(self,
+            row_shift: int,
+            column_shift: int,
+            wrap: bool,
+            get_col_fill_value: tp.Callable[[int, np.dtype], tp.Any],
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``get_col_fill_value``.
+        '''
+        row_count, column_count = self._shape
+
+        # new start index is the opposite of the shift; if shifting by 2, the new start is the second from the end
+        index_start_pos = -(column_shift % column_count)
+        row_start_pos = -(row_shift % row_count)
+
+        # possibly be truthy
+        # index is columns here
+        if wrap and index_start_pos == 0 and row_start_pos == 0:
+            yield from self._blocks
+        elif not wrap and column_shift == 0 and row_shift == 0:
+            yield from self._blocks
+        else:
+            block_start_idx, block_start_column = self._index[index_start_pos]
+            block_start = self._blocks[block_start_idx]
+
+            if block_start_column == 0:
+                # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
+                block_head_iter: tp.Iterable[np.ndarray] = chain(
+                        (block_start,),
+                        self._blocks[block_start_idx + 1:])
+                block_tail_iter: tp.Iterable[np.ndarray] = self._blocks[:block_start_idx]
+            else:
+                block_head_iter = chain(
+                        (block_start[:, block_start_column:],),
+                        self._blocks[block_start_idx + 1:])
+                block_tail_iter = chain(
+                        self._blocks[:block_start_idx],
+                        (block_start[:, :block_start_column],)
+                        )
+
+            if not wrap:
+                # get the lesser of the existing number of columns or the shift
+                fill_count = min(column_count, abs(column_shift))
+                if column_shift > 0:
+                    block_head_iter = (
+                        np.full(row_count, get_col_fill_value(i, None))
+                        for i in range(fill_count)
+                        )
+                elif column_shift < 0:
+                    block_tail_iter = (
+                        np.full(row_count, get_col_fill_value(i, None))
+                        for i in range(column_count - fill_count, column_count)
+                        )
+
+            # NOTE: might consider not rolling when yielding an empty array
+            col_idx = 0
+            for b in chain(block_head_iter, block_tail_iter):
+                if (wrap and row_start_pos == 0) or (not wrap and row_shift == 0):
                     yield b
-
-
-    # def _shift_blocks_with_callable(self,
-    #         row_shift: int = 0,
-    #         column_shift: int = 0,
-    #         wrap: bool = True,
-    #         get_col_fill_value: tp.Callable[[int, np.dtype], tp.Any],
-    #         ) -> tp.Iterator[np.ndarray]:
-    #     '''
-    #     Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``fill_value``.
-    #     '''
-    #     row_count, column_count = self._shape
-
-    #     # new start index is the opposite of the shift; if shifting by 2, the new start is the second from the end
-    #     index_start_pos = -(column_shift % column_count)
-    #     row_start_pos = -(row_shift % row_count)
-
-    #     # possibly be truthy
-    #     # index is columns here
-    #     if wrap and index_start_pos == 0 and row_start_pos == 0:
-    #         yield from self._blocks
-    #     elif not wrap and column_shift == 0 and row_shift == 0:
-    #         yield from self._blocks
-    #     else:
-    #         block_start_idx, block_start_column = self._index[index_start_pos]
-    #         block_start = self._blocks[block_start_idx]
-
-    #         if block_start_column == 0:
-    #             # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
-    #             block_head_iter: tp.Iterable[np.ndarray] = chain(
-    #                     (block_start,),
-    #                     self._blocks[block_start_idx + 1:])
-    #             block_tail_iter: tp.Iterable[np.ndarray] = self._blocks[:block_start_idx]
-    #         else:
-    #             block_head_iter = chain(
-    #                     (block_start[:, block_start_column:],),
-    #                     self._blocks[block_start_idx + 1:])
-    #             block_tail_iter = chain(
-    #                     self._blocks[:block_start_idx],
-    #                     (block_start[:, :block_start_column],)
-    #                     )
-
-    #         if not wrap:
-    #             shape = (self._shape[0], min(self._shape[1], abs(column_shift)))
-    #             empty = np.full(shape, fill_value)
-    #             if column_shift > 0:
-    #                 block_head_iter = (empty,)
-    #             elif column_shift < 0:
-    #                 block_tail_iter = (empty,)
-
-    #         # NOTE: might consider not rolling when yielding an empty array
-    #         for b in chain(block_head_iter, block_tail_iter):
-    #             if (wrap and row_start_pos == 0) or (not wrap and row_shift == 0):
-    #                 yield b
-    #             else:
-    #                 b = array_shift(
-    #                         array=b,
-    #                         shift=row_shift,
-    #                         axis=0,
-    #                         wrap=wrap,
-    #                         fill_value=fill_value)
-    #                 b.flags.writeable = False
-    #                 yield b
+                else:
+                    for i in range(1 if b.ndim == 1 else b.shape[1]):
+                        fv = get_col_fill_value(col_idx, b.dtype)
+                        array = array_shift(
+                                array=b if b.ndim == 1 else b[NULL_SLICE, i],
+                                shift=row_shift,
+                                axis=0,
+                                wrap=wrap,
+                                fill_value=fv,
+                                )
+                        array.flags.writeable = False
+                        yield array
+                        col_idx += 1
 
 
     #---------------------------------------------------------------------------

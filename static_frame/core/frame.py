@@ -5911,7 +5911,7 @@ class Frame(ContainerOperand):
         shift_column = columns
 
         blocks = TypeBlocks.from_blocks(
-                self._blocks._shift_blocks(
+                self._blocks._shift_blocks_fill_by_element(
                 row_shift=shift_index,
                 column_shift=shift_column,
                 wrap=True
@@ -5958,7 +5958,7 @@ class Frame(ContainerOperand):
         #         tuple(self._columns), # tuple better for IH
         #         )
         blocks = TypeBlocks.from_blocks(
-                self._blocks._shift_blocks(
+                self._blocks._shift_blocks_fill_by_element(
                 row_shift=shift_index,
                 column_shift=shift_column,
                 wrap=False,
