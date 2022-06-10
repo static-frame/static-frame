@@ -5953,17 +5953,26 @@ class Frame(ContainerOperand):
         shift_index = index
         shift_column = columns
 
-        # get_col_fill_value = get_col_fill_value_factory(
-        #         fill_value,
-        #         tuple(self._columns), # tuple better for IH
-        #         )
-        blocks = TypeBlocks.from_blocks(
-                self._blocks._shift_blocks_fill_by_element(
-                row_shift=shift_index,
-                column_shift=shift_column,
-                wrap=False,
-                fill_value=fill_value
-                ))
+        if is_fill_value_factory_initializer(fill_value):
+            get_col_fill_value = get_col_fill_value_factory(
+                    fill_value,
+                    tuple(self._columns), # tuple better for IH
+                    )
+            blocks = TypeBlocks.from_blocks(
+                    self._blocks._shift_blocks_fill_by_callable(
+                    row_shift=shift_index,
+                    column_shift=shift_column,
+                    wrap=False,
+                    get_col_fill_value=get_col_fill_value
+                    ))
+        else:
+            blocks = TypeBlocks.from_blocks(
+                    self._blocks._shift_blocks_fill_by_element(
+                    row_shift=shift_index,
+                    column_shift=shift_column,
+                    wrap=False,
+                    fill_value=fill_value
+                    ))
 
         return self.__class__(blocks,
                 columns=self._columns,

@@ -10160,9 +10160,9 @@ class TestUnit(TestCase):
                 f1.roll(-3, 3, include_index=True, include_columns=True).to_pairs(0),
                 (('r', (('z', 'd'), ('w', 'a'), ('x', 'b'), ('y', 'c'))), ('s', (('z', True), ('w', False), ('x', True), ('y', False))), ('t', (('z', True), ('w', False), ('x', False), ('y', False))), ('p', (('z', 30), ('w', 2), ('x', 30), ('y', 2))), ('q', (('z', 73), ('w', 2), ('x', 34), ('y', 95)))))
 
+    #---------------------------------------------------------------------------
+
     def test_frame_shift_a(self) -> None:
-
-
         records = (
                 (2, 2, 'a', False, False),
                 (30, 34, 'b', True, False),
@@ -10190,6 +10190,23 @@ class TestUnit(TestCase):
         self.assertEqual(f1.shift(0, 5, fill_value=-1).to_pairs(0),
                 (('p', (('w', -1), ('x', -1), ('y', -1), ('z', -1))), ('q', (('w', -1), ('x', -1), ('y', -1), ('z', -1))), ('r', (('w', -1), ('x', -1), ('y', -1), ('z', -1))), ('s', (('w', -1), ('x', -1), ('y', -1), ('z', -1))), ('t', (('w', -1), ('x', -1), ('y', -1), ('z', -1))))
                 )
+
+    def test_frame_shift_b(self) -> None:
+
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x', 'y', 'z'),
+                name='test')
+
+        f2 = f1.shift(index=2)
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_name_a(self) -> None:
 
