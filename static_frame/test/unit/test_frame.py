@@ -10209,7 +10209,7 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(
-                f1.shift(2, fill_value=FillValueAuto(i=-1, U='na', b=True)).to_pairs()
+                f1.shift(2, fill_value=FillValueAuto(i=-1, U='na', b=True)).to_pairs(),
                 (('p', (('x', -1), ('y', -1), ('z', 2))), ('q', (('x', -1), ('y', -1), ('z', 2))), ('r', (('x', 'na'), ('y', 'na'), ('z', 'a'))), ('s', (('x', True), ('y', True), ('z', False))), ('t', (('x', True), ('y', True), ('z', False))))
                 )
 
