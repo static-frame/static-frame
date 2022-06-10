@@ -568,6 +568,20 @@ class TypeBlocks(ContainerOperand):
     def unified(self) -> bool:
         return len(self._blocks) <= 1
 
+    @property
+    def unified_dtypes(self) -> bool:
+        '''Return True if all blocks have the same dtype.
+        '''
+        # use blocks to iterate over fewer things
+        if len(self._blocks) <= 1:
+            return True
+        dtypes = iter(d.dtype for d in self._blocks)
+        d_first = next(dtypes)
+        for d in dtypes:
+            if d != d_first:
+                return False
+        return True
+
     #---------------------------------------------------------------------------
     # interfaces
 
@@ -2658,6 +2672,8 @@ class TypeBlocks(ContainerOperand):
 
     def iter_row_tuples(self,
             key: tp.Optional[GetItemKeyTypeCompound],
+            *,
+            constructor: tp.Type[tp.Tuple[tp.Any, ...]] = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
         '''Alternative extractor that yields tuples per row of values based on a selection of one or more columns
         '''
@@ -2669,12 +2685,16 @@ class TypeBlocks(ContainerOperand):
         if len(arrays) == 1:
             array = arrays.pop()
             for i in range(self._shape[0]):
-                yield tuple(array[i]) # works for 1D, 2D
+                yield constructor(array[i]) # works for 1D, 2D
         else:
+            def chainer(i: int) -> tp.Any:
+                for a in arrays:
+                    if a.ndim > 1:
+                        yield from a[i]
+                    else:
+                        yield a[i]
             for i in range(self._shape[0]):
-                yield tuple(chain.from_iterable(
-                        a[i] if a.ndim > 1 else a[i:i+1] for a in arrays
-                        ))
+                yield constructor(chainer(i))
 
     def _extract(self,
             row_key: GetItemKeyType = None,

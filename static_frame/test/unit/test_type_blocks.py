@@ -3993,13 +3993,31 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             iter(tb)
 
-
+    #---------------------------------------------------------------------------
     def test_iter_row_elements_a(self) -> None:
         tb1 = ff.parse('s(3,10)|v(int,int,bool,str)')._blocks
         post = tuple(tb1.iter_row_elements(2))
         self.assertEqual(post,
                 (84967, 5729, False, 'zCE3', 170440, 175579, False, 'zljm', -31776, -97851))
 
+    #---------------------------------------------------------------------------
+    def test_unified_dtypes_a(self) -> None:
+
+        a1 = np.array([False, True, False])
+        a2 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        self.assertTrue(tb1.unified_dtypes)
+
+    def test_unified_dtypes_b(self) -> None:
+        a1 = np.array([False, True, False])
+        a2 = np.array([0, 2, 1])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        self.assertFalse(tb1.unified_dtypes)
+
+    def test_unified_dtypes_c(self) -> None:
+        a1 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, ))
+        self.assertTrue(tb1.unified_dtypes)
 
 if __name__ == '__main__':
     import unittest

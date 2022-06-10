@@ -1727,7 +1727,7 @@ Jupiter  0.0
 [Axis(Earth=12756, Mars=6792, Jupiter=142984), Axis(Earth=5.97, Mars=0.642, Jupiter=1898.0)]
 
 >>> [x for x in f.iter_tuple(axis=1)]
-[Axis(diameter=12756.0, mass=5.97), Axis(diameter=6792.0, mass=0.642), Axis(diameter=142984.0, mass=1898.0)]
+[Axis(diameter=12756, mass=5.97), Axis(diameter=6792, mass=0.642), Axis(diameter=142984, mass=1898.0)]
 
 #end_Frame-iter_tuple()
 
@@ -1753,7 +1753,7 @@ Jupiter  1.24003876e-12
 [('diameter', Axis(Earth=12756, Mars=6792, Jupiter=142984)), ('mass', Axis(Earth=5.97, Mars=0.642, Jupiter=1898.0))]
 
 >>> [x for x in f.iter_tuple_items(axis=1)]
-[('Earth', Axis(diameter=12756.0, mass=5.97)), ('Mars', Axis(diameter=6792.0, mass=0.642)), ('Jupiter', Axis(diameter=142984.0, mass=1898.0))]
+[('Earth', Axis(diameter=12756, mass=5.97)), ('Mars', Axis(diameter=6792, mass=0.642)), ('Jupiter', Axis(diameter=142984, mass=1898.0))]
 
 #end_Frame-iter_tuple_items()
 
@@ -1761,13 +1761,13 @@ Jupiter  1.24003876e-12
 #start_Frame-iter_tuple_items().apply()
 >>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 
->>> f.iter_tuple_items(axis=1).apply(lambda k, v: v.diameter if k == 'Earth' else 0)
+>>> f.iter_tuple_items(axis=1).apply(lambda k, v: v.diameter if k == 'Earth' else 0, dtype=np.int64)
 <Series>
 <Index>
-Earth    12756.0
-Mars     0.0
-Jupiter  0.0
-<<U7>    <float64>
+Earth    12756
+Mars     0
+Jupiter  0
+<<U7>    <int64>
 
 #end_Frame-iter_tuple_items().apply()
 
