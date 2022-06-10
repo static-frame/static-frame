@@ -2438,7 +2438,7 @@ class TypeBlocks(ContainerOperand):
 
         if len(arrays) == 1:
             array = arrays.pop()
-            for i in range(self._shape[0]):
+            for i in range(array.shape[0]):
                 yield constructor(array[i]) # works for 1D, 2D
         else:
             def chainer(i: int) -> tp.Any:
@@ -2449,6 +2449,33 @@ class TypeBlocks(ContainerOperand):
                         yield a[i]
             for i in range(self._shape[0]):
                 yield constructor(chainer(i))
+
+    def iter_columns_tuples(self,
+            key: tp.Optional[GetItemKeyTypeCompound],
+            *,
+            constructor: tp.Type[tp.Tuple[tp.Any, ...]] = tuple,
+            ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
+        '''Alternative extractor that yields tuples per column of values based on a selection of one or more rows. This interface yields all columns in the TypeBlocks.
+        '''
+        if key is None or (key.__class__ is slice and key == NULL_SLICE):
+            arrays = self._blocks
+        else:
+            arrays = list(self._slice_blocks(row_key=key))
+
+        if len(arrays) == 1:
+            array = arrays.pop()
+            for i in range(array.shape[1]):
+                yield constructor(array[i]) # works for 1D, 2D
+        else:
+            def chainer() -> tp.Iterator[np.ndarray]:
+                for a in arrays:
+                    if a.ndim == 1:
+                        yield a
+                    else:
+                        for i in range(a.shape[1]):
+                            yield a[NULL_SLICE, i]
+
+            yield from map(constructor, chainer())
 
     def _extract(self,
             row_key: GetItemKeyType = None,
