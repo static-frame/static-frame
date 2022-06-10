@@ -64,6 +64,7 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.exception import InvalidFillValue
 
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
@@ -1568,7 +1569,7 @@ class Frame(ContainerOperand):
             if not is_dtype_specifier(dtype):
                 raise ErrorInitFrame('cannot provide multiple dtypes when creating a Frame from element items and axis is None')
             if is_fill_value_factory_initializer(fill_value):
-                raise ErrorInitFrame('An elemental fill_value must be provided.')
+                raise InvalidFillValue(fill_value, 'axis==None')
 
             items = (((index._loc_to_iloc(k[0]), columns._loc_to_iloc(k[1])), v)
                     for k, v in items)
@@ -5988,8 +5989,6 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # ranking transformations resulting in the same dimensionality
     # NOTE: this could be implemented on TypeBlocks, but handling missing values requires using indices, and is thus better handled at the Frame level
-
-    # TODO: support FillValueAuto
     def _rank(self, *,
             method: RankMethod,
             axis: int = 0, # 0 ranks columns, 1 ranks rows
@@ -5999,6 +5998,9 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
     ) -> 'Frame':
 
+        if axis == 1 and is_fill_value_factory_initializer(fill_value):
+            raise InvalidFillValue(fill_value, 'axis==1')
+
         shape = self._blocks._shape
         asc_is_element = isinstance(ascending, BOOL_TYPES)
 
@@ -6007,6 +6009,9 @@ class Frame(ContainerOperand):
             opposite_axis = int(not axis)
             if len(ascending) != shape[opposite_axis]:
                 raise RuntimeError(f'Multiple ascending values must match length of axis {opposite_axis}.')
+
+        if axis == 0:
+            fill_value_factory = get_col_fill_value_factory(fill_value, self.columns)
 
         def array_iter() -> tp.Iterator[np.ndarray]:
             for idx, array in enumerate(self._blocks.axis_values(axis=axis)):
@@ -6020,12 +6025,13 @@ class Frame(ContainerOperand):
                 else:
                     index = self._index if axis == 0 else self._columns
                     s = Series(array, index=index, own_index=True)
-                    # skipna is True
+                    # if iterating rows, all arrays will have the same dtype
+                    fv = fill_value if axis == 1 else fill_value_factory(idx, array.dtype)
                     yield s._rank(method=method,
                             skipna=skipna,
                             ascending=asc,
                             start=start,
-                            fill_value=fill_value,
+                            fill_value=fv,
                             ).values
         if axis == 0:
             # array_iter returns blocks
@@ -6442,7 +6448,7 @@ class Frame(ContainerOperand):
             data_fields: KeyOrKeys = (),
             *,
             func: CallableOrCallableMap = np.nansum,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             index_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
@@ -6457,6 +6463,9 @@ class Frame(ContainerOperand):
             func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
             index_constructor:
         '''
+        if is_fill_value_factory_initializer(fill_value):
+            raise InvalidFillValue(fill_value, 'pivot')
+
         # NOTE: default in Pandas pivot_table is a mean
         if func is None:
             func_map = ()
@@ -6523,6 +6532,9 @@ class Frame(ContainerOperand):
         columns_src = self.columns
         dtype_fill = np.array(fill_value).dtype
         dtypes_src = self.dtypes.values
+
+        if is_fill_value_factory_initializer(fill_value):
+            raise InvalidFillValue(fill_value, 'pivot_stack')
 
         pim = pivot_index_map(
                 index_src=columns_src,
@@ -6602,6 +6614,9 @@ class Frame(ContainerOperand):
         dtype_fill = np.array(fill_value).dtype
         dtypes_src = self.dtypes.values # dtypes need to be "exploded" into new columns
 
+        if is_fill_value_factory_initializer(fill_value):
+            raise InvalidFillValue(fill_value, 'pivot_unstack')
+
         # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns.
 
         pim = pivot_index_map(
@@ -6670,6 +6685,9 @@ class Frame(ContainerOperand):
             composite_index: bool = True,
             composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
+
+        if is_fill_value_factory_initializer(fill_value):
+            raise InvalidFillValue(fill_value, 'join')
 
         left_index = self.index
         right_index = other.index
