@@ -13942,7 +13942,7 @@ class TestUnit(TestCase):
                 (('x', (('a', -1), ('b', 0), ('c', 1))), ('y', (('a', 0), ('b', -2), ('c', 1))), ('z', (('a', 1), ('b', -3), ('c', 0)))),
                 )
         with self.assertRaises(InvalidFillValue):
-                f1.rank_ordinal(axis=1, fill_value=FillValueAuto) # rank within rows
+            f1.rank_ordinal(axis=1, fill_value=FillValueAuto) # rank within rows
 
 
 
