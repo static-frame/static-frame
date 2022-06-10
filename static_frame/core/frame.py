@@ -5989,6 +5989,7 @@ class Frame(ContainerOperand):
     # ranking transformations resulting in the same dimensionality
     # NOTE: this could be implemented on TypeBlocks, but handling missing values requires using indices, and is thus better handled at the Frame level
 
+    # TODO: support FillValueAuto
     def _rank(self, *,
             method: RankMethod,
             axis: int = 0, # 0 ranks columns, 1 ranks rows
