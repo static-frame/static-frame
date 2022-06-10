@@ -12,6 +12,8 @@ Performance improvements for ``Frame.iter_group_labels()``, ``Frame.iter_group_l
 
 Fixed usage of ``dtypes`` argument when encountering zero-sized data in ``Frame.from_records()`` and ``Frame.from_pandas()``.
 
+Improved ``Frame.iter_tuple`` to not coerce types throgh arrays.
+
 
 0.9.3
 ----------
