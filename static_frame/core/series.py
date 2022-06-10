@@ -1500,7 +1500,7 @@ class Series(ContainerOperand):
             operator: UFunc,
             other: tp.Any,
             axis: int = 0,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             ) -> 'Series':
         '''
         For binary operations, the `name` attribute does not propagate unless other is a scalar.
@@ -2293,6 +2293,10 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
+        if is_fill_value_factory_initializer(fill_value):
+            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+        else:
+            fv = fill_value
 
         if shift:
             values = array_shift(
@@ -2300,7 +2304,7 @@ class Series(ContainerOperand):
                     shift=shift,
                     axis=0,
                     wrap=False,
-                    fill_value=fill_value)
+                    fill_value=fv)
             values.flags.writeable = False
         else:
             values = self.values

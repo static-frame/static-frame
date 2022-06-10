@@ -2924,6 +2924,14 @@ class TestUnit(TestCase):
         s1 = sf.Series([]).shift(1)
         self.assertEqual(len(s1), 0)
 
+    def test_series_shift_c(self) -> None:
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        s2 = s1.shift(4, fill_value=FillValueAuto)
+        self.assertEqual(s2.to_pairs(),
+            (('a', 0), ('b', 0), ('c', 0), ('d', 0), ('e', 2), ('f', 3))
+            )
+
     #---------------------------------------------------------------------------
 
     def test_series_isin_a(self) -> None:
