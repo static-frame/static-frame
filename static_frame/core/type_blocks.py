@@ -2413,7 +2413,7 @@ class TypeBlocks(ContainerOperand):
     def iter_row_tuples(self,
             key: tp.Optional[GetItemKeyTypeCompound],
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
-        '''Alternative extractor that yields tuples per row of values based on a selection of one or more columns
+        '''Alternative extractor that yields tuples per row of values based on a selection of one or more columns. This interface yields all rows in the TypeBlocks.
         '''
         if key is None or (key.__class__ is slice and key == NULL_SLICE):
             arrays = self._blocks

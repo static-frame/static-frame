@@ -8515,6 +8515,28 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_frame_set_columns_a(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (9, 4, 'c', False, True),
+                )
+
+        f1 = Frame.from_records(records, index=('a', 'b', 'c'))
+        f2 = f1.set_columns('c')
+        self.assertEqual(f2.columns.name, 'c')
+        self.assertEqual(f2.to_pairs(),
+                ((9, (('a', 2), ('b', 30), ('c', 9))), (4, (('a', 2), ('b', 34), ('c', 4))), ('c', (('a', 'a'), ('b', 'b'), ('c', 'c'))), (False, (('a', False), ('b', True), ('c', False))), (True, (('a', False), ('b', False), ('c', True))))
+                )
+
+        f3 = f1.set_columns('c', drop=True)
+        self.assertEqual(f3.columns.name, 'c')
+        self.assertEqual(f3.to_pairs(),
+                ((9, (('a', 2), ('b', 30))), (4, (('a', 2), ('b', 34))), ('c', (('a', 'a'), ('b', 'b'))), (False, (('a', False), ('b', True))), (True, (('a', False), ('b', False))))
+                )
+
+    #---------------------------------------------------------------------------
+
     def test_frame_head_tail_a(self) -> None:
 
         # thest of multi threaded apply

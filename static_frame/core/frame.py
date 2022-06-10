@@ -5810,6 +5810,64 @@ class Frame(ContainerOperand):
                 name=self._name,
                 )
 
+    def set_columns(self,
+            index: tp.Hashable,
+            *,
+            drop: bool = False,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''
+        Return a new :obj:`Frame` produced by setting the given row as the columns, optionally removing that row from the new :obj:`Frame`.
+
+        Args:
+            index:
+            *,
+            drop:
+            columns_constructor:
+        '''
+        index_iloc = self._index._loc_to_iloc(index)
+        if index_iloc is None: # if None was a key it would have an iloc
+            return self if self.STATIC else self.__class__(self)
+
+        if drop:
+            blocks = TypeBlocks.from_blocks(
+                    self._blocks._drop_blocks(row_key=index_iloc))
+            index_final = self._index._drop_iloc(index_iloc)
+            own_data = True
+        else:
+            blocks = self._blocks
+            index_final = self._index
+            own_data = False
+
+        if isinstance(index_iloc, INT_TYPES):
+            columns_values = self._blocks.iter_row_elements(index_iloc)
+            name = index
+        else:
+            # Need a better way to get column tuples for a subset of rows
+            # given a multiple row selection, yield a tuple accross rows (column values) as tuples
+            # columns_values = self._blocks._extract(row_key=index_iloc)
+            raise NotImplementedError('todo')
+            name = tuple(self._index[index_iloc])
+
+        columns = index_from_optional_constructor(columns_values,
+                default_constructor=self._COLUMNS_CONSTRUCTOR,
+                explicit_constructor=columns_constructor,
+                )
+        if columns.name is None:
+            # NOTE: if a constructor has not set a name, we set the name as expected
+            columns = columns.rename(name)
+
+        return self.__class__(blocks,
+                columns=columns,
+                index=index_final,
+                own_data=own_data,
+                own_columns=True,
+                own_index=True,
+                name=self._name,
+                )
+
+
+
     def __round__(self, decimals: int = 0) -> 'Frame':
         '''
         Return a :obj:`Frame` rounded to the given decimals. Negative decimals round to the left of the decimal point.
