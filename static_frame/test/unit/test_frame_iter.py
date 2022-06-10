@@ -190,7 +190,11 @@ class TestUnit(TestCase):
         f = ff.parse('s(3,2)|v(dtD,dtY)')
         post = tuple(f.iter_tuple(constructor=tuple, axis=1))
         self.assertEqual(len(post[0]), 2)
-        # NOTE: this is coercing types
+        self.assertEqual(post[0][1].dtype, f.iloc[0, 1].dtype)
+        self.assertEqual(post[0],
+            (np.datetime64('2210-12-26'), np.datetime64('164167'))
+            )
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 
