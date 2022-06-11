@@ -5847,7 +5847,7 @@ class Frame(ContainerOperand):
             columns_values = self._blocks.iter_row_elements(index_iloc)
             name = index
         else:
-            # given a multiple row selection, yield a tuple accross rows (column values) as tuples
+            # given a multiple row selection, yield a tuple accross rows (column values) as tuples; this acvoids going through arrays
             columns_values = self._blocks.iter_columns_tuples(index_iloc)
             name = tuple(self._index[index_iloc])
 
@@ -5901,8 +5901,8 @@ class Frame(ContainerOperand):
             # NOTE: is this the best approach if index is IndexHierarchy?
             name = tuple(self._index[index_iloc])
 
-        # todo: transpost
-        columns_labels = self._blocks._extract(row_key=index_iloc)
+        # NOTE: must transpose so that blocks are organized by what was each row
+        columns_labels = self._blocks._extract(row_key=index_iloc).transpose()
 
         if reorder_for_hierarchy:
             rehierarched_blocks, order_lex = rehierarch_from_type_blocks(

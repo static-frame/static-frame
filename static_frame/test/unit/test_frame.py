@@ -8556,6 +8556,30 @@ class TestUnit(TestCase):
             )
 
     #---------------------------------------------------------------------------
+    def test_frame_set_columns_hierarchy_a(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (9, 4, 'c', False, True),
+                )
+
+        f1 = Frame.from_records(records, index=('a', 'b', 'c'))
+        f2 = f1.set_columns_hierarchy(['a', 'c'],)
+        self.assertEqual(f2.columns.name, ('a', 'c'))
+        self.assertEqual(f2.columns.depth, 2)
+        self.assertEqual(f2.to_pairs(),
+                (((2, 9), (('a', 2), ('b', 30), ('c', 9))), ((2, 4), (('a', 2), ('b', 34), ('c', 4))), (('a', 'c'), (('a', 'a'), ('b', 'b'), ('c', 'c'))), ((False, False), (('a', False), ('b', True), ('c', False))), ((False, True), (('a', False), ('b', False), ('c', True))))
+                )
+
+        f3 = f1.set_columns_hierarchy(['a', 'c'], drop=True)
+        self.assertEqual(f3.columns.name, ('a', 'c'))
+        self.assertEqual(f3.columns.depth, 2)
+        self.assertEqual(f3.to_pairs(),
+                (((2, 9), (('b', 30),)), ((2, 4), (('b', 34),)), (('a', 'c'), (('b', 'b'),)), ((False, False), (('b', True),)), ((False, True), (('b', False),)))
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_head_tail_a(self) -> None:
 
