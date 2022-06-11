@@ -8555,8 +8555,20 @@ class TestUnit(TestCase):
             (((2, 9), (('b', 30),)), ((2, 4), (('b', 34),)), (('a', 'c'), (('b', 'b'),)), ((False, False), (('b', True),)), ((False, True), (('b', False),)))
             )
 
+
+    def test_frame_set_columns_a3(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (9, 4, 'c', False, True),
+                )
+        f1 = Frame.from_records(records, index=('a', 'b', 'c'))
+        f2 = f1.set_columns([])
+        self.assertTrue(f1.equals(f2))
+
+
     #---------------------------------------------------------------------------
-    def test_frame_set_columns_hierarchy_a(self) -> None:
+    def test_frame_set_columns_hierarchy_a1(self) -> None:
         records = (
                 (2, 2, 'a', False, False),
                 (30, 34, 'b', True, False),
@@ -8578,6 +8590,30 @@ class TestUnit(TestCase):
                 (((2, 9), (('b', 30),)), ((2, 4), (('b', 34),)), (('a', 'c'), (('b', 'b'),)), ((False, False), (('b', True),)), ((False, True), (('b', False),)))
                 )
 
+    def test_frame_set_columns_hierarchy_a2(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (9, 4, 'c', False, True),
+                )
+
+        f1 = Frame.from_records(records, index=('a', 'b', 'c'))
+        f2 = f1.set_columns_hierarchy(('a', 'c'),) # this treated as a non-element selection
+        self.assertEqual(f2.columns.depth, 2)
+
+
+    def test_frame_set_columns_hierarchy_b(self) -> None:
+        records = (
+                (1, 2, 1, 2),
+                (10, 10, 20, 20),
+                (0, 1, 2, 3),
+                )
+        f1 = Frame.from_records(records, index=('a', 'b', 'c'))
+        f2 = f1.set_columns_hierarchy(['a', 'b'], reorder_for_hierarchy=True, drop=True)
+        self.assertEqual(f2.to_pairs(),
+                (((1, 10), (('c', 0),)), ((1, 20), (('c', 2),)), ((2, 10), (('c', 1),)), ((2, 20), (('c', 3),)))
+                )
+        self.assertEqual(f2.columns.depth, 2)
 
     #---------------------------------------------------------------------------
 
