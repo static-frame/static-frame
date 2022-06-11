@@ -8617,6 +8617,23 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_frame_unset_columns_a1(self) -> None:
+        records = (
+                (2, 2, 'a', False),
+                (30, 34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                index=('a', 'b'),
+                consolidate_blocks=True,
+                columns=IndexHierarchy.from_product((10, 20), (1, 2))
+                )
+        f2 = f1.unset_columns()
+        self.assertEqual(f2.to_pairs(),
+                ((0, (('__index0__', 10), ('__index1__', 1), ('a', 2), ('b', 30))), (1, (('__index0__', 10), ('__index1__', 2), ('a', 2), ('b', 34))), (2, (('__index0__', 20), ('__index1__', 1), ('a', 'a'), ('b', 'b'))), (3, (('__index0__', 20), ('__index1__', 2), ('a', False), ('b', True))))
+                )
+
+    #---------------------------------------------------------------------------
+
     def test_frame_head_tail_a(self) -> None:
 
         # thest of multi threaded apply

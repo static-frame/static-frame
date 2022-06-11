@@ -5948,60 +5948,66 @@ class Frame(ContainerOperand):
                 name=self._name
                 )
 
-    # def unset_columns(self, *,
-    #         names: tp.Iterable[tp.Hashable] = (),
-    #         # consolidate_blocks: bool = False,
-    #         index_constructors: IndexConstructors = None,
-    #         ) -> 'Frame':
-    #     '''
-    #     Return a new :obj:`Frame` where the index is added to the front of the data, and an :obj:`IndexAutoFactory` is used to populate a new index. If the :obj:`Index` has a ``name``, that name will be used for the column name, otherwise a suitable default will be used. As underlying NumPy arrays are immutable, data is not copied.
+    def unset_columns(self, *,
+            names: tp.Iterable[tp.Hashable] = (),
+            # consolidate_blocks: bool = False,
+            index_constructors: IndexConstructors = None,
+            ) -> 'Frame':
+        '''
+        Return a new :obj:`Frame` where columns are added to the top of the data, and an :obj:`IndexAutoFactory` is used to populate new columns. This operation potentially forces a complete copy of all data.
 
-    #     Args:
-    #         names: An iterable of hashables to be used to name the unset columns. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
-    #         index_constructors:
-    #     '''
-    #     if not names:
-    #         names = self._index.names
-    #         if self._index.depth > 1 and self._columns.depth > 1:
-    #             raise RuntimeError(
-    #                 'Must provide `names` when both the index and columns are IndexHierarchies'
-    #             )
+        Args:
+            names: An iterable of hashables to be used to name the unset columns. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
+            index_constructors:
+        '''
+        if not names:
+            names = self._columns.names
+            if self._index.depth > 1 and self._columns.depth > 1:
+                raise RuntimeError(
+                    'Must provide `names` when both the index and columns are IndexHierarchies'
+                )
 
-    #     names_t = zip(*names)
+        names_t = zip(*names)
 
-    #     # columns blocks are oriented as "rows" here, and might have different types per row; when moved on to the frame, types will have to be consolidated "vertically", meaning there is little chance of consolidation. A maximal decomposition might give a chance, but each ultimate column would have to be re-evaluated, and that would be expense.
-    #     # self._columns._blocks may be None until array cache is updated.
-    #     if self._columns._recache:
-    #         self._columns._update_array_cache()
+        # columns blocks are oriented as "rows" here, and might have different types per row; when moved on to the frame, types will have to be consolidated "vertically", meaning there is little chance of consolidation. A maximal decomposition might give a chance, but each ultimate column would have to be re-evaluated, and that would be expense.
+        # self._columns._blocks may be None until array cache is updated.
+        if self._columns._recache:
+            self._columns._update_array_cache()
 
-    #     if self._index.depth > 1:
-    #         index_labels = TypeBlocks.from_blocks(
-    #                 concat_resolved((np.array([name]), block[np.newaxis]), axis=1).T
-    #                 for name, block in zip(names_t, self._index._blocks._blocks)
-    #                 )
-    #         index_default_constructor = partial(
-    #                 IndexHierarchy._from_type_blocks,
-    #                 own_blocks=True)
+        blocks = TypeBlocks.from_blocks(
+                TypeBlocks.vstack_blocks_to_blocks((
+                        TypeBlocks.from_blocks(self.columns.values).transpose(),
+                        self._blocks
+                        ))
+                )
 
-    #     else:
-    #         index_labels = chain(names, self._index.values)
-    #         index_default_constructor = Index
+        if self._index.depth > 1:
+            index_labels = TypeBlocks.from_blocks(
+                    concat_resolved((np.array([name]), block))
+                    for name, block in zip(names_t, self._index._blocks._blocks)
+                    )
+            index_default_constructor = partial(
+                    IndexHierarchy._from_type_blocks,
+                    own_blocks=True)
 
-    #     index, own_index = index_from_optional_constructors(
-    #             index_labels,
-    #             depth=self._index.depth,
-    #             default_constructor=index_default_constructor,
-    #             explicit_constructors=index_constructors, # cannot supply name
-    #             )
+        else:
+            index_labels = chain(names, self._index.values)
+            index_default_constructor = Index
 
-    #     return self.__class__(
-    #             TypeBlocks.from_blocks(block_gen()),
-    #             columns=None,
-    #             own_index=own_index,
-    #             index=index,
-    #             own_data=True,
-    #             name=self._name,
-    #             )
+        index, own_index = index_from_optional_constructors(
+                index_labels,
+                depth=self._index.depth,
+                default_constructor=index_default_constructor,
+                explicit_constructors=index_constructors, # cannot supply name
+                )
+        return self.__class__(
+                blocks,
+                columns=None,
+                own_index=own_index,
+                index=index,
+                own_data=True,
+                name=self._name,
+                )
 
     def __round__(self, decimals: int = 0) -> 'Frame':
         '''
