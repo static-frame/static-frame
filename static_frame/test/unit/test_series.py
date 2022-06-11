@@ -5125,12 +5125,18 @@ class TestUnit(TestCase):
         self.assertEqual(s2.name, 'foo')
         self.assertEqual(s2.values.tolist(), [3, 4, 2, 0, 5, 1, 5, 2, -1, 4])
 
-    def test_series_rank_dense_c(self) -> None:
+    def test_series_rank_dense_c1(self) -> None:
 
         s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
         s2 = s1.rank_dense(skipna=False)
         self.assertEqual(s2.name, 'foo')
         self.assertEqual(s2.values.tolist(), [3, 4, 2, 0, 5, 1, 5, 2, 6, 4])
+
+    def test_series_rank_dense_c2(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, None, 15], name='foo')
+        s2 = s1.rank_dense(fill_value=FillValueAuto)
+        self.assertEqual(s2.values.tolist(), [3, 4, 2, 0, 5, 1, 5, 2, None, 4])
 
     def test_series_rank_dense_d(self) -> None:
 

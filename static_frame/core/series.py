@@ -2324,6 +2324,11 @@ class Series(ContainerOperand):
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
 
+        if is_fill_value_factory_initializer(fill_value):
+            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+        else:
+            fv = fill_value
+
         if not skipna or self.dtype.kind not in DTYPE_NA_KINDS:
             rankable = self
         else:
@@ -2351,7 +2356,7 @@ class Series(ContainerOperand):
                 )
         # this will preserve the name
         return post.reindex(self.index, #type: ignore
-                fill_value=fill_value,
+                fill_value=fv,
                 check_equals=False, # the index will never be equal
                 )
 
