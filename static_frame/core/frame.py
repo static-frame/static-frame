@@ -5684,7 +5684,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(columns, tuple):
+        if isinstance(columns, tuple): # NOTE: this prohibits selecting a single tuple label, which might be fine given context
             column_loc = list(columns)
             name = columns
         else:
@@ -5868,6 +5868,86 @@ class Frame(ContainerOperand):
                 own_columns=True,
                 own_index=True,
                 name=self._name,
+                )
+
+
+    def set_columns_hierarchy(self,
+            index: GetItemKeyType,
+            *,
+            drop: bool = False,
+            columns_constructors: IndexConstructors = None,
+            reorder_for_hierarchy: bool = False,
+            ) -> 'Frame':
+        '''
+        Given an iterable of index labels, return a new ``Frame`` with those rows as an ``IndexHierarchy`` on the columns.
+
+        Args:
+            index: Iterable of index labels.
+            drop: Boolean to determine if selected rows should be removed from the data.
+            columns_constructors: Optionally provide a sequence of ``Index`` constructors, of length equal to depth, to be used in converting row Index components in the ``IndexHierarchy``.
+            reorder_for_hierarchy: reorder the columns to produce a hierarchible Index from the selected columns.
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(index, tuple): # NOTE: this prohibits selecting a single tuple label, which might be fine given context
+            index_loc = list(index)
+            name = index
+        else:
+            index_loc = index
+            name = None # could be a slice, must get post iloc conversion
+
+        index_iloc = self._index._loc_to_iloc(index_loc)
+
+        if name is None:
+            # NOTE: is this the best approach if index is IndexHierarchy?
+            name = tuple(self._index[index_iloc])
+
+        # todo: transpost
+        columns_labels = self._blocks._extract(row_key=index_iloc)
+
+        if reorder_for_hierarchy:
+            rehierarched_blocks, order_lex = rehierarch_from_type_blocks(
+                    labels=columns_labels,
+                    depth_map=range(columns_labels.shape[1]), # keep order
+                    )
+            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
+                    blocks=rehierarched_blocks,
+                    index_constructors=columns_constructors,
+                    name=name,
+                    own_blocks=True,
+                    name_interleave=True,
+                    )
+            blocks_src = self._blocks._extract(column_key=order_lex)
+        else:
+            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
+                    columns_labels,
+                    index_constructors=columns_constructors,
+                    name=name,
+                    own_blocks=True,
+                    name_interleave=True,
+                    )
+            blocks_src = self._blocks
+
+        if drop:
+            blocks = TypeBlocks.from_blocks(
+                    blocks_src._drop_blocks(row_key=index_iloc))
+            index = self._index._drop_iloc(index_iloc)
+            own_data = True
+            own_index = True
+        else:
+            blocks = blocks_src
+            index = self._index
+            own_data = False
+            own_index = False
+
+        return self.__class__(blocks,
+                columns=columns,
+                index=index,
+                own_data=own_data,
+                own_columns=True,
+                own_index=own_index,
+                name=self._name
                 )
 
 
