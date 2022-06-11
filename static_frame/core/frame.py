@@ -5847,10 +5847,8 @@ class Frame(ContainerOperand):
             columns_values = self._blocks.iter_row_elements(index_iloc)
             name = index
         else:
-            # Need a better way to get column tuples for a subset of rows
             # given a multiple row selection, yield a tuple accross rows (column values) as tuples
-            # columns_values = self._blocks._extract(row_key=index_iloc)
-            raise NotImplementedError('todo')
+            columns_values = self._blocks.iter_columns_tuples(index_iloc)
             name = tuple(self._index[index_iloc])
 
         columns = index_from_optional_constructor(columns_values,
