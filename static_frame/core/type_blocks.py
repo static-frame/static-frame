@@ -2437,7 +2437,7 @@ class TypeBlocks(ContainerOperand):
             arrays = list(self._slice_blocks(column_key=key))
 
         if len(arrays) == 1:
-            array = arrays.pop()
+            array = arrays[0]
             for i in range(array.shape[0]):
                 yield constructor(array[i]) # works for 1D, 2D
         else:
@@ -2463,9 +2463,9 @@ class TypeBlocks(ContainerOperand):
             arrays = list(self._slice_blocks(row_key=key))
 
         if len(arrays) == 1:
-            array = arrays.pop()
+            array = arrays[0]
             for i in range(array.shape[1]):
-                yield constructor(array[i]) # works for 1D, 2D
+                yield constructor(array[NULL_SLICE, i])
         else:
             def chainer() -> tp.Iterator[np.ndarray]:
                 for a in arrays:
