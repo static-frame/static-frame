@@ -3636,7 +3636,7 @@ class TestUnit(TestCase):
                 ((92867, 13448), (-41157, -168387), (False, True), ('z5l6', 'zr4u'), (146284, 32395), (13448, 58768))
                 )
 
-    def test_iter_columns_tuples_a(self) -> None:
+    def test_iter_columns_tuples_b(self) -> None:
         tb1 = ff.parse('s(2,3)|v(str)')._blocks
         post1 = tuple(tb1.iter_columns_tuples(None))
         self.assertEqual(post1, (('zjZQ', 'zO5l'), ('zaji', 'zJnC'), ('ztsv', 'zUvW')))
