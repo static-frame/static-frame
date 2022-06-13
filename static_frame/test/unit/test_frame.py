@@ -8936,7 +8936,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = f1.unset_columns()
 
-        f2 = f1.unset_columns(names=('B', 'b'))
+        f2 = f1.unset_columns(names=[('B', 'b')])
         self.assertEqual(f2.index.values.tolist(),
             [['B', 'b'], ['A', 'a'], ['A', 'b']])
 
@@ -8959,10 +8959,9 @@ class TestUnit(TestCase):
             _ = f1.unset_columns(names=('a',))
 
         f2 = f1.unset_columns(names=(('B', 'a'), ('B', 'c')))
-        self.asertEqual(f2.to_pairs(),
+        self.assertEqual(f2.to_pairs(),
                 ((0, ((('B', 'a'), 10), (('B', 'c'), 1), (('A', 'a'), 2), (('A', 'b'), 30))), (1, ((('B', 'a'), 10), (('B', 'c'), 2), (('A', 'a'), 2), (('A', 'b'), 34))), (2, ((('B', 'a'), 20), (('B', 'c'), 1), (('A', 'a'), 'a'), (('A', 'b'), 'b'))), (3, ((('B', 'a'), 20), (('B', 'c'), 2), (('A', 'a'), False), (('A', 'b'), True))))
                 )
-        import ipdb; ipdb.set_trace()
 
 
     #---------------------------------------------------------------------------

@@ -5840,27 +5840,43 @@ class Frame(ContainerOperand):
 
         if not names:
             names = self._index.names
-            if self._index.depth > 1 and self._columns.depth > 1:
-                raise RuntimeError(
-                    'Must provide `names` when both the index and columns are IndexHierarchies'
-                )
 
         # self._columns._blocks may be None until array cache is updated.
         if self._columns._recache:
             self._columns._update_array_cache()
 
         if self._columns.depth > 1:
-            # NOTE: this assumes we have a tuple of tuples, which might not always be correct
-            names_t = zip(*names)
-            columns_labels = TypeBlocks.from_blocks(
-                    concat_resolved((np.array([name]), block[np.newaxis]), axis=1).T
-                    for name, block in zip(names_t, self._columns._blocks._blocks)
-                    )
+            if len(names) != self._index.depth:
+                raise RuntimeError('Passed `names` must have a sequence of labels per depth of index')
+            if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
+                raise RuntimeError(f'Invalid name labels ({names[0]}); provide a sequence with a label per columns depth.')
+
+            if self._index.depth == 1:
+                # assume that names[0] is an iterable of labels per columns depth level (one column of labels)
+                columns_labels = TypeBlocks.from_blocks(
+                        concat_resolved((np.array([name]), block))
+                        for name, block in zip(names[0], self._columns._blocks._blocks)
+                        )
+            else:
+                # assume that names is an iterable of columns, each column with a label per columns depth
+                labels_per_depth = []
+                for labels in zip(*names):
+                    a, _ = iterable_to_array_1d(labels)
+                    labels_per_depth.append(a)
+
+                assert len(labels_per_depth) == self._columns.depth
+                columns_labels = TypeBlocks.from_blocks(
+                        concat_resolved((labels, block))
+                        for labels, block in zip(labels_per_depth, self._columns._blocks._blocks)
+                        )
+
             columns_default_constructor = partial(
                     self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
                     own_blocks=True)
 
         else:
+            # columns depth is 1, label per index depth is correct
+            assert len(names) == self._index.depth
             columns_labels = chain(names, self._columns.values)
             columns_default_constructor = self._COLUMNS_CONSTRUCTOR
 
@@ -6042,26 +6058,25 @@ class Frame(ContainerOperand):
                 )
 
         if self._index.depth > 1:
+            if len(names) != self._columns.depth:
+                raise RuntimeError('Passed `names` must have a label per depth of columns.')
+            if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
+                raise RuntimeError(f'Invalid name labels ({names[0]}); provide a sequence with a label per index depth.')
+
             if self._columns.depth == 1:
                 # assume that names is an iterable of labels per index depth level (one row of labels)
-                if len(names) != self._index.depth:
-                    raise RuntimeError('Passed `names` must have a label per depth of index')
                 index_labels = TypeBlocks.from_blocks(
                         concat_resolved((np.array([name]), block))
-                        for name, block in zip(names, self._index._blocks._blocks)
+                        for name, block in zip(names[0], self._index._blocks._blocks)
                         )
             else:
                 # assume that names is an iterable of rows, each row with a label per index depth
-                if len(names) != self._columns.depth:
-                    raise RuntimeError('Passed `names` must have a label per depth of columns.')
                 labels_per_depth = []
-                # each name in names is a "row"; need to partion into "columns" per depth level with zip
-                if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
-                    raise RuntimeError(f'Invalid name labels ({names[0]}); provide a sequence with a label per index depth.')
                 for labels in zip(*names):
                     a, _ = iterable_to_array_1d(labels)
                     labels_per_depth.append(a)
 
+                # assert len(labels_per_depth) == self._index.depth
                 index_labels = TypeBlocks.from_blocks(
                         concat_resolved((labels, block))
                         for labels, block in zip(labels_per_depth, self._index._blocks._blocks)
@@ -6071,6 +6086,7 @@ class Frame(ContainerOperand):
                     IndexHierarchy._from_type_blocks,
                     own_blocks=True)
         else:
+            # index depth is 1, label per columns depth is correct
             assert len(names) == self._columns.depth
             index_labels = chain(names, self._index.values)
             index_default_constructor = Index
