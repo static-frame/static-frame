@@ -6015,7 +6015,7 @@ class Frame(ContainerOperand):
                 )
 
     def unset_columns(self, *,
-            names: tp.Iterable[tp.Hashable] = (),
+            names: tp.Sequence[tp.Hashable] = (),
             # consolidate_blocks: bool = False,
             index_constructors: IndexConstructors = None,
             ) -> 'Frame':
@@ -6023,15 +6023,12 @@ class Frame(ContainerOperand):
         Return a new :obj:`Frame` where columns are added to the top of the data, and an :obj:`IndexAutoFactory` is used to populate new columns. This operation potentially forces a complete copy of all data.
 
         Args:
-            names: An iterable of hashables to be used to name the unset columns. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
+            names: An sequence of hashables to be used to name the unset columns. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
             index_constructors:
         '''
         if not names:
             names = self._columns.names
-            if self._index.depth > 1 and self._columns.depth > 1:
-                raise RuntimeError(
-                    'Must provide `names` when both the index and columns are IndexHierarchy'
-                )
+
         # columns blocks are oriented as "rows" here, and might have different types per row; when moved on to the frame, types will have to be consolidated "vertically", meaning there is little chance of consolidation. A maximal decomposition might give a chance, but each ultimate column would have to be re-evaluated, and that would be expense.
         # self._columns._blocks may be None until array cache is updated.
         if self._columns._recache:
@@ -6045,14 +6042,31 @@ class Frame(ContainerOperand):
                 )
 
         if self._index.depth > 1:
-            # need to have index.depth labels per new index row; if columns has depth > 1 this will not work...
-            if len(names) != self._index.depth:
-                raise RuntimeError('Passed `names` must have a label per depth of Index')
+            if self._columns.depth == 1:
+                # assume that names is an iterable of labels per index depth level (one row of labels)
+                if len(names) != self._index.depth:
+                    raise RuntimeError('Passed `names` must have a label per depth of index')
+                index_labels = TypeBlocks.from_blocks(
+                        concat_resolved((np.array([name]), block))
+                        for name, block in zip(names, self._index._blocks._blocks)
+                        )
+            else:
+                # assume that names is an iterable of rows, each row with a label per index depth
+                if len(names) != self._columns.depth:
+                    raise RuntimeError('Passed `names` must have a label per depth of columns.')
+                labels_per_depth = []
+                # each name in names is a "row"; need to partion into "columns" per depth level with zip
+                if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
+                    raise RuntimeError(f'Invalid name labels ({names[0]}); provide a sequence with a label per index depth.')
+                for labels in zip(*names):
+                    a, _ = iterable_to_array_1d(labels)
+                    labels_per_depth.append(a)
 
-            index_labels = TypeBlocks.from_blocks(
-                    concat_resolved((np.array([name]), block))
-                    for name, block in zip(names, self._index._blocks._blocks)
-                    )
+                index_labels = TypeBlocks.from_blocks(
+                        concat_resolved((labels, block))
+                        for labels, block in zip(labels_per_depth, self._index._blocks._blocks)
+                        )
+
             index_default_constructor = partial(
                     IndexHierarchy._from_type_blocks,
                     own_blocks=True)

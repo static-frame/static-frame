@@ -8940,6 +8940,31 @@ class TestUnit(TestCase):
         self.assertEqual(f2.index.values.tolist(),
             [['B', 'b'], ['A', 'a'], ['A', 'b']])
 
+
+    def test_frame_unset_columns_a5(self) -> None:
+        records = (
+                (2, 2, 'a', False),
+                (30, 34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                index=IndexHierarchy.from_labels((('A', 'a'), ('A', 'b'))),
+                consolidate_blocks=True,
+                columns=IndexHierarchy.from_product((10, 20), (1, 2))
+                )
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.unset_columns()
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.unset_columns(names=('a',))
+
+        f2 = f1.unset_columns(names=(('B', 'a'), ('B', 'c')))
+        self.asertEqual(f2.to_pairs(),
+                ((0, ((('B', 'a'), 10), (('B', 'c'), 1), (('A', 'a'), 2), (('A', 'b'), 30))), (1, ((('B', 'a'), 10), (('B', 'c'), 2), (('A', 'a'), 2), (('A', 'b'), 34))), (2, ((('B', 'a'), 20), (('B', 'c'), 1), (('A', 'a'), 'a'), (('A', 'b'), 'b'))), (3, ((('B', 'a'), 20), (('B', 'c'), 2), (('A', 'a'), False), (('A', 'b'), True))))
+                )
+        import ipdb; ipdb.set_trace()
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_head_tail_a(self) -> None:
