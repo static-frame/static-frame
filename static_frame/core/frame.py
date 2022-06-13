@@ -5750,7 +5750,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(columns, tuple):
+        if isinstance(columns, tuple): # NOTE: this prohibits selecting a single tuple label, which might be fine given context
             column_loc = list(columns)
             name = columns
         else:
@@ -5816,7 +5816,7 @@ class Frame(ContainerOperand):
             columns_constructors: IndexConstructors = None,
             ) -> 'Frame':
         '''
-        Return a new :obj:`Frame where the index is added to the front of the data, and an :obj:`IndexAutoFactory` is used to populate a new index. If the :obj:`Index` has a ``name``, that name will be used for the column name, otherwise a suitable default will be used. As underlying NumPy arrays are immutable, data is not copied.
+        Return a new :obj:`Frame` where the index is added to the front of the data, and an :obj:`IndexAutoFactory` is used to populate a new index. If the :obj:`Index` has a ``name``, that name will be used for the column name, otherwise a suitable default will be used. As underlying NumPy arrays are immutable, data is not copied.
 
         Args:
             names: An iterable of hashables to be used to name the unset index. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
@@ -5840,33 +5840,47 @@ class Frame(ContainerOperand):
 
         if not names:
             names = self._index.names
-            if self._index.depth > 1 and self._columns.depth > 1:
-                raise RuntimeError(
-                    'Must provide `names` when both the index and columns are IndexHierarchies'
-                )
 
-        names_t = zip(*names)
+        columns_depth = self._columns.depth
+        index_depth = self._index.depth
 
-        # self._columns._blocks may be None until array cache is updated.
-        if self._columns._recache:
-            self._columns._update_array_cache()
+        if len(names) != index_depth:
+            raise RuntimeError('Passed `names` must have a label (or sequence of labels) per depth of index.')
 
-        if self._columns.depth > 1:
-            columns_labels = TypeBlocks.from_blocks(
-                    concat_resolved((np.array([name]), block[np.newaxis]), axis=1).T
-                    for name, block in zip(names_t, self._columns._blocks._blocks)
-                    )
+        if columns_depth > 1:
+            if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
+                raise RuntimeError(f'Invalid name labels ({names[0]}); provide a sequence with a label per columns depth.')
+
+            if index_depth == 1:
+                # assume that names[0] is an iterable of labels per columns depth level (one column of labels)
+                columns_labels = TypeBlocks.from_blocks(
+                        concat_resolved((np.array([name]), self._columns.values_at_depth(i)))
+                        for i, name in enumerate(names[0])
+                        )
+            else:
+                # assume that names is an iterable of columns, each column with a label per columns depth
+                labels_per_depth = []
+                for labels in zip(*names):
+                    a, _ = iterable_to_array_1d(labels)
+                    labels_per_depth.append(a)
+
+                # assert len(labels_per_depth) == columns_depth
+                columns_labels = TypeBlocks.from_blocks(
+                        concat_resolved((labels, self._columns.values_at_depth(i)))
+                        for i, labels in enumerate(labels_per_depth)
+                        )
+
             columns_default_constructor = partial(
                     self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
                     own_blocks=True)
-
         else:
+            # columns depth is 1, label per index depth is correct
             columns_labels = chain(names, self._columns.values)
             columns_default_constructor = self._COLUMNS_CONSTRUCTOR
 
         columns, own_columns = index_from_optional_constructors(
                 columns_labels,
-                depth=self._columns.depth,
+                depth=columns_depth,
                 default_constructor=columns_default_constructor,
                 explicit_constructors=columns_constructors, # cannot supply name
                 )
@@ -5876,6 +5890,216 @@ class Frame(ContainerOperand):
                 columns=columns,
                 own_columns=own_columns,
                 index=None,
+                own_data=True,
+                name=self._name,
+                )
+
+    def set_columns(self,
+            index: tp.Hashable,
+            *,
+            drop: bool = False,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''
+        Return a new :obj:`Frame` produced by setting the given row as the columns, optionally removing that row from the new :obj:`Frame`.
+
+        Args:
+            index:
+            *,
+            drop:
+            columns_constructor:
+        '''
+        index_iloc = self._index._loc_to_iloc(index)
+        if index_iloc is None or (index_iloc.__class__ is np.ndarray and len(index_iloc) == 0):
+            # if None was a key it would have an iloc
+            return self if self.STATIC else self.__class__(self)
+
+        if drop:
+            blocks = TypeBlocks.from_blocks(
+                    self._blocks._drop_blocks(row_key=index_iloc))
+            index_final = self._index._drop_iloc(index_iloc)
+            own_data = True
+        else:
+            blocks = self._blocks
+            index_final = self._index
+            own_data = False
+
+        if isinstance(index_iloc, INT_TYPES):
+            columns_values = self._blocks.iter_row_elements(index_iloc)
+            name = index
+        else:
+            # given a multiple row selection, yield a tuple accross rows (column values) as tuples; this acvoids going through arrays
+            columns_values = self._blocks.iter_columns_tuples(index_iloc)
+            name = tuple(self._index[index_iloc])
+
+        columns = index_from_optional_constructor(columns_values,
+                default_constructor=self._COLUMNS_CONSTRUCTOR,
+                explicit_constructor=columns_constructor,
+                )
+        if columns.name is None:
+            # NOTE: if a constructor has not set a name, we set the name as expected
+            columns = columns.rename(name)
+
+        return self.__class__(blocks,
+                columns=columns,
+                index=index_final,
+                own_data=own_data,
+                own_columns=True,
+                own_index=True,
+                name=self._name,
+                )
+
+    def set_columns_hierarchy(self,
+            index: GetItemKeyType,
+            *,
+            drop: bool = False,
+            columns_constructors: IndexConstructors = None,
+            reorder_for_hierarchy: bool = False,
+            ) -> 'Frame':
+        '''
+        Given an iterable of index labels, return a new ``Frame`` with those rows as an ``IndexHierarchy`` on the columns.
+
+        Args:
+            index: Iterable of index labels.
+            drop: Boolean to determine if selected rows should be removed from the data.
+            columns_constructors: Optionally provide a sequence of ``Index`` constructors, of length equal to depth, to be used in converting row Index components in the ``IndexHierarchy``.
+            reorder_for_hierarchy: reorder the columns to produce a hierarchible Index from the selected columns.
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(index, tuple): # NOTE: this prohibits selecting a single tuple label, which might be fine given context
+            index_loc = list(index)
+            name = index
+        else:
+            index_loc = index
+            name = None # could be a slice, must get post iloc conversion
+
+        index_iloc = self._index._loc_to_iloc(index_loc)
+
+        if name is None:
+            # NOTE: is this the best approach if index is IndexHierarchy?
+            name = tuple(self._index[index_iloc])
+
+        # NOTE: must transpose so that blocks are organized by what was each row
+        columns_labels = self._blocks._extract(row_key=index_iloc).transpose()
+
+        if reorder_for_hierarchy:
+            rehierarched_blocks, order_lex = rehierarch_from_type_blocks(
+                    labels=columns_labels,
+                    depth_map=range(columns_labels.shape[1]), # keep order
+                    )
+            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
+                    blocks=rehierarched_blocks,
+                    index_constructors=columns_constructors,
+                    name=name,
+                    own_blocks=True,
+                    name_interleave=True,
+                    )
+            blocks_src = self._blocks._extract(column_key=order_lex)
+        else:
+            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
+                    columns_labels,
+                    index_constructors=columns_constructors,
+                    name=name,
+                    own_blocks=True,
+                    name_interleave=True,
+                    )
+            blocks_src = self._blocks
+
+        if drop:
+            blocks = TypeBlocks.from_blocks(
+                    blocks_src._drop_blocks(row_key=index_iloc))
+            index = self._index._drop_iloc(index_iloc)
+            own_data = True
+            own_index = True
+        else:
+            blocks = blocks_src
+            index = self._index
+            own_data = False
+            own_index = False
+
+        return self.__class__(blocks,
+                columns=columns,
+                index=index,
+                own_data=own_data,
+                own_columns=True,
+                own_index=own_index,
+                name=self._name
+                )
+
+    def unset_columns(self, *,
+            names: tp.Sequence[tp.Hashable] = (),
+            # consolidate_blocks: bool = False,
+            index_constructors: IndexConstructors = None,
+            ) -> 'Frame':
+        '''
+        Return a new :obj:`Frame` where columns are added to the top of the data, and an :obj:`IndexAutoFactory` is used to populate new columns. This operation potentially forces a complete copy of all data.
+
+        Args:
+            names: An sequence of hashables to be used to name the unset columns. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
+            index_constructors:
+        '''
+        if not names:
+            names = self._columns.names
+
+        # columns blocks are oriented as "rows" here, and might have different types per row; when moved on to the frame, types will have to be consolidated "vertically", meaning there is little chance of consolidation. A maximal decomposition might give a chance, but each ultimate column would have to be re-evaluated, and that would be expense.
+
+        blocks = TypeBlocks.from_blocks(
+                TypeBlocks.vstack_blocks_to_blocks((
+                        TypeBlocks.from_blocks(self.columns.values).transpose(),
+                        self._blocks
+                        ))
+                )
+
+        columns_depth = self._columns.depth
+        index_depth = self._index.depth
+
+        if len(names) != columns_depth:
+            raise RuntimeError('Passed `names` must have a label (or sequence of labels) per depth of columns.')
+
+        if index_depth > 1:
+            if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
+                raise RuntimeError(f'Invalid name labels ({names[0]}); provide a sequence with a label per index depth.')
+
+            if columns_depth == 1:
+                # assume that names[0] is an iterable of labels per index depth level (one row of labels)
+                index_labels = TypeBlocks.from_blocks(
+                        concat_resolved((np.array([name]), self._index.values_at_depth(i)))
+                        for i, name in enumerate(names[0])
+                        )
+            else:
+                # assume that names is an iterable of rows, each row with a label per index depth
+                labels_per_depth = []
+                for labels in zip(*names):
+                    a, _ = iterable_to_array_1d(labels)
+                    labels_per_depth.append(a)
+
+                # assert len(labels_per_depth) == index_depth
+                index_labels = TypeBlocks.from_blocks(
+                        concat_resolved((labels, self._index.values_at_depth(i)))
+                        for i, labels in enumerate(labels_per_depth)
+                        )
+
+            index_default_constructor = partial(
+                    IndexHierarchy._from_type_blocks,
+                    own_blocks=True)
+        else:
+            # index depth is 1, label per columns depth is correct
+            index_labels = chain(names, self._index.values)
+            index_default_constructor = Index
+
+        index, own_index = index_from_optional_constructors(
+                index_labels,
+                depth=index_depth,
+                default_constructor=index_default_constructor,
+                explicit_constructors=index_constructors, # cannot supply name
+                )
+        return self.__class__(
+                blocks,
+                columns=None,
+                own_index=own_index,
+                index=index,
                 own_data=True,
                 name=self._name,
                 )

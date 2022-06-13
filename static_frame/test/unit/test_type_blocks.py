@@ -4001,6 +4001,26 @@ class TestUnit(TestCase):
                 (84967, 5729, False, 'zCE3', 170440, 175579, False, 'zljm', -31776, -97851))
 
     #---------------------------------------------------------------------------
+    def test_iter_columns_tuples_a(self) -> None:
+        tb1 = ff.parse('s(4,6)|v(int,int,bool,str)')._blocks
+        post1 = tuple(tb1.iter_columns_tuples(None))
+        self.assertEqual(post1,
+                ((-88017, 92867, 84967, 13448), (162197, -41157, 5729, -168387), (True, False, False, True), ('z2Oo', 'z5l6', 'zCE3', 'zr4u'), (58768, 146284, 170440, 32395), (84967, 13448, 175579, 58768))
+                )
+
+        post2 = tuple(tb1.iter_columns_tuples([1, 3]))
+        self.assertEqual(post2,
+                ((92867, 13448), (-41157, -168387), (False, True), ('z5l6', 'zr4u'), (146284, 32395), (13448, 58768))
+                )
+
+    def test_iter_columns_tuples_b(self) -> None:
+        tb1 = ff.parse('s(2,3)|v(str)')._blocks
+        post1 = tuple(tb1.iter_columns_tuples(None))
+        self.assertEqual(post1, (('zjZQ', 'zO5l'), ('zaji', 'zJnC'), ('ztsv', 'zUvW')))
+        self.assertEqual(tb1.values.tolist(),
+                [['zjZQ', 'zaji', 'ztsv'], ['zO5l', 'zJnC', 'zUvW']])
+
+    #---------------------------------------------------------------------------
     def test_unified_dtypes_a(self) -> None:
 
         a1 = np.array([False, True, False])
