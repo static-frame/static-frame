@@ -11318,7 +11318,7 @@ class TestUnit(TestCase):
                 (('__index0__', ((0, 'x'), (1, 'y'), (2, 'z'))), ('a', ((0, 2), (1, 30), (2, 2))), ('b', ((0, 2.0), (1, 3), (2, -95.0))))
                 )
 
-    def test_frame_unset_index_a1(self) -> None:
+    def test_frame_unset_index_a2(self) -> None:
         records = (
                 (2, 2),
                 (30, 3),
