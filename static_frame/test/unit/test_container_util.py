@@ -4,6 +4,7 @@ import numpy as np
 
 from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import get_col_dtype_factory
+from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_set
@@ -17,6 +18,7 @@ from static_frame.core.container_util import apply_binary_operator_blocks_column
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
 
+from static_frame.core.fill_value_auto import FillValueAuto
 
 from static_frame.core.frame import FrameHE
 
@@ -549,6 +551,51 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             _ = get_col_dtype_factory(dict(bar=np.dtype(bool)), None)
+
+    #---------------------------------------------------------------------------
+
+    def test_get_col_fill_value_a(self) -> None:
+        func1 = get_col_fill_value_factory({'a':-1, 'b':2}, columns=('b', 'a'))
+        self.assertEqual(func1(0, np.dtype(float)), 2)
+        self.assertEqual(func1(1, np.dtype(float)), -1)
+
+        with self.assertRaises(RuntimeError):
+            _ = get_col_fill_value_factory({'a':-1, 'b':2}, columns=None)
+
+
+    def test_get_col_fill_value_b(self) -> None:
+        func1 = get_col_fill_value_factory(('x', 1), columns=('b', 'a'))
+        self.assertEqual(func1(0, np.dtype(float)), ('x', 1))
+        self.assertEqual(func1(1, np.dtype(float)), ('x', 1))
+
+    def test_get_col_fill_value_c(self) -> None:
+        func1 = get_col_fill_value_factory(('x', 1), columns=('b', 'a'))
+        self.assertEqual(func1(0, np.dtype(float)), ('x', 1))
+        self.assertEqual(func1(1, np.dtype(float)), ('x', 1))
+
+    def test_get_col_fill_value_d(self) -> None:
+        func1 = get_col_fill_value_factory('x', columns=('b', 'a'))
+        self.assertEqual(func1(0, np.dtype(float)), 'x')
+        self.assertEqual(func1(1, np.dtype(float)), 'x')
+
+    def test_get_col_fill_value_e(self) -> None:
+        func1 = get_col_fill_value_factory(
+                (c for c in 'xy'),
+                columns=('b', 'a'),
+                )
+        self.assertEqual(func1(0, np.dtype(float)), 'x')
+        self.assertEqual(func1(1, np.dtype(float)), 'y')
+
+    def test_get_col_fill_value_f(self) -> None:
+        func1 = get_col_fill_value_factory(FillValueAuto, columns=None)
+        self.assertEqual(func1(0, np.dtype(object)), None)
+        self.assertEqual(func1(1, np.dtype(str)), '')
+
+    def test_get_col_fill_value_g(self) -> None:
+        func1 = get_col_fill_value_factory(FillValueAuto(O='', U='na'), columns=None)
+        self.assertEqual(func1(0, np.dtype(object)), '')
+        self.assertEqual(func1(1, np.dtype(str)), 'na')
+
 
     #---------------------------------------------------------------------------
 

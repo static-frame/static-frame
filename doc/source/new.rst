@@ -4,6 +4,8 @@ What is New in Static Frame
 0.9.4
 ----------
 
+Enhanced support for ``fill_value`` as a ``FillValueAuto``, a mapping, or a sequence of fill values (per column) where appropriate.
+
 Added ``Index.dropna()``, ``Index.dropfalsy()``, ``IndexHierarchy.dropna()``, ``IndexHierarchy.dropfalsy().
 
 Added ``Index.fillfalsy()``, ``IndexHierarchy.fillfalsy()``.

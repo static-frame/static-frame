@@ -9,7 +9,7 @@ from static_frame.test.test_case import TestCase
 
 class TestUnit(TestCase):
 
-    def test_frame_via_fill_value_a(self) -> None:
+    def test_frame_via_fill_value_a1(self) -> None:
 
         f1 = ff.parse('s(3,3)|c(I,str)|i(I,str)|v(int)')
         f2 = ff.parse('s(2,2)|c(I,str)|i(I,str)|v(int)')
@@ -23,6 +23,16 @@ class TestUnit(TestCase):
         f4 = f1.via_fill_value(0) + f2.iloc[0]
         self.assertEqual(f4.to_pairs(),
                 (('zUvW', (('zZbu', -3648), ('ztsv', 91301), ('zUvW', 30205))), ('zZbu', (('zZbu', -176034), ('ztsv', 4850), ('zUvW', -3050))), ('ztsv', (('zZbu', 324394), ('ztsv', 121040), ('zUvW', 167926))))
+                )
+
+    def test_frame_via_fill_value_a2(self) -> None:
+
+        f1 = ff.parse('s(3,3)|c(I,str)|i(I,str)|v(int64)')
+        f2 = ff.parse('s(2,2)|c(I,str)|i(I,str)|v(int64)')
+
+        f3 = f1.via_fill_value({'zZbu': 0, 'ztsv': 1, 'zUvW': 1}) * f2
+        self.assertEqual(f3.to_pairs(),
+                (('zUvW', (('zUvW', 30205), ('zZbu', -3648), ('ztsv', 91301))), ('zZbu', (('zUvW', 0), ('zZbu', 7746992289), ('ztsv', 8624279689))), ('ztsv', (('zUvW', 5729), ('zZbu', 26307866809), ('ztsv', 1693898649))))
                 )
 
     def test_frame_via_fill_value_b(self) -> None:

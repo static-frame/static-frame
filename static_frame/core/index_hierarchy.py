@@ -2216,7 +2216,7 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
 
         blocks = TypeBlocks.from_blocks(
-                self._blocks._shift_blocks(row_shift=shift, wrap=True)
+                self._blocks._shift_blocks_fill_by_element(row_shift=shift, wrap=True)
                 )
 
         return self.__class__._from_type_blocks(

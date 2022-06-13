@@ -30,6 +30,7 @@ from static_frame import IndexYearMonth
 from static_frame import IndexYear
 from static_frame import IndexAutoFactory
 from static_frame import IndexDefaultFactory
+from static_frame import FillValueAuto
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import isna_array
 
@@ -2923,6 +2924,14 @@ class TestUnit(TestCase):
         s1 = sf.Series([]).shift(1)
         self.assertEqual(len(s1), 0)
 
+    def test_series_shift_c(self) -> None:
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        s2 = s1.shift(4, fill_value=FillValueAuto)
+        self.assertEqual(s2.to_pairs(),
+            (('a', 0), ('b', 0), ('c', 0), ('d', 0), ('e', 2), ('f', 3))
+            )
+
     #---------------------------------------------------------------------------
 
     def test_series_isin_a(self) -> None:
@@ -4975,6 +4984,16 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 1), ('c', 2), ('d', 3))
                 )
 
+    def test_series_via_fill_value_i(self) -> None:
+
+        s1 = Series(range(3), index=tuple('abc'))
+        s2 = Series(range(5), index=tuple('abcde'))
+
+        s3 = s1.via_fill_value(FillValueAuto) + s2
+        self.assertEqual(s3.to_pairs(),
+                (('a', 0), ('b', 2), ('c', 4), ('d', 3), ('e', 4))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_series_via_re_search_a(self) -> None:
@@ -5106,12 +5125,18 @@ class TestUnit(TestCase):
         self.assertEqual(s2.name, 'foo')
         self.assertEqual(s2.values.tolist(), [3, 4, 2, 0, 5, 1, 5, 2, -1, 4])
 
-    def test_series_rank_dense_c(self) -> None:
+    def test_series_rank_dense_c1(self) -> None:
 
         s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, np.nan, 15], name='foo')
         s2 = s1.rank_dense(skipna=False)
         self.assertEqual(s2.name, 'foo')
         self.assertEqual(s2.values.tolist(), [3, 4, 2, 0, 5, 1, 5, 2, 6, 4])
+
+    def test_series_rank_dense_c2(self) -> None:
+
+        s1 = sf.Series([8, 15, 7, 2, 20, 4, 20, 7, None, 15], name='foo')
+        s2 = s1.rank_dense(fill_value=FillValueAuto)
+        self.assertEqual(s2.values.tolist(), [3, 4, 2, 0, 5, 1, 5, 2, None, 4])
 
     def test_series_rank_dense_d(self) -> None:
 

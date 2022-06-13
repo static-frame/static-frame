@@ -42,6 +42,7 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.exception import InvalidFillValue
 
 from static_frame.core.frame import FrameAssignILoc
 from static_frame.core.frame import FrameAssignBLoc
@@ -51,6 +52,7 @@ from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import WarningsSilent
+from static_frame.core.fill_value_auto import FillValueAuto
 
 from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import skip_win
@@ -3555,6 +3557,155 @@ class TestUnit(TestCase):
                 ['i', 'i']
                 )
 
+    def test_frame_reindex_k1(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.reindex(index=('x', 'y'), fill_value=[-1, -2, -3])
+        self.assertEqual(f2.values.tolist(),
+                [[34, 'b', True], [-1, -2, -3]],
+                )
+
+    def test_frame_reindex_k2(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.reindex(index=('x', 'y'), fill_value=FillValueAuto(i=0, U='', b=False))
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('x', 34), ('y', 0))), ('q', (('x', 'b'), ('y', ''))), ('r', (('x', True), ('y', False))))
+                )
+
+
+    def test_frame_reindex_k3(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.reindex(columns=('p', 'r', 's', 't'), fill_value=[-1, -2, -3, -4])
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('w', 2), ('x', 34))), ('r', (('w', False), ('x', True))), ('s', (('w', -3), ('x', -3))), ('t', (('w', -4), ('x', -4))))
+                )
+
+    def test_frame_reindex_k4(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.reindex(columns=('p', 'r'), index=('w',), fill_value=[-1, -2])
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('w', 2),)), ('r', (('w', False),)))
+                )
+
+    def test_frame_reindex_k5(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.reindex(columns=('p', 'r'), index=('w', 'y', 'x'), fill_value=FillValueAuto)
+        self.assertEqual( f2.to_pairs(),
+                (('p', (('w', 2), ('y', 0), ('x', 34))), ('r', (('w', False), ('y', False), ('x', True))))
+                )
+
+    def test_frame_reindex_k6(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.reindex(columns=('r', 's'), fill_value=FillValueAuto)
+
+    def test_frame_reindex_k7(self) -> None:
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        #explicitly handle no-op scenario
+        f2 = f1.reindex(index=('x',), fill_value=FillValueAuto)
+        self.assertEqual(f2.to_pairs(),
+            (('p', (('x', 34),)), ('q', (('x', 'b'),)), ('r', (('x', True),)))
+            )
+
+    def test_frame_reindex_k8(self) -> None:
+        records = (
+                (2, 1, 4),
+                (34, 3, 5),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'),
+                consolidate_blocks=True,
+                )
+
+        #explicitly handle no-op scenario
+        f2 = f1.reindex(columns=('p', 'r'), fill_value=FillValueAuto)
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('w', 2), ('x', 34))), ('r', (('w', 4), ('x', 5))))
+                )
+
+    def test_frame_reindex_k9(self) -> None:
+        records = (
+                (2, 'x', False),
+                (3, 'y', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'),
+                consolidate_blocks=True,
+                )
+
+        #explicitly handle no-op scenario
+        f2 = f1.reindex(columns=('s', 't'), index=('a', 'b'), fill_value=[-1, -2])
+        self.assertEqual(f2.to_pairs(),
+            (('s', (('a', -1), ('b', -1))), ('t', (('a', -2), ('b', -2))))
+            )
+
+    def test_frame_reindex_m(self) -> None:
+        records = (
+                (2, 'a', False),
+                (3, 'b', True),
+                (10, 'c', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y'),
+                consolidate_blocks=True,
+                )
+
+        f2 = f1.reindex(columns=('r', 'p'), index=('y', 'x'))
+        self.assertEqual(f2.to_pairs(),
+                (('r', (('y', True), ('x', True))), ('p', (('y', 10), ('x', 3))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_contains_a(self) -> None:
@@ -4346,6 +4497,19 @@ class TestUnit(TestCase):
                     dtype=(int, float),
                     )
 
+    def test_frame_from_element_items_e(self) -> None:
+
+        items = (((0,1), True), ((1,0), True))
+
+        with self.assertRaises(InvalidFillValue):
+            f2 = Frame.from_element_items(items,
+                index=range(2),
+                columns=range(2),
+                dtype=bool,
+                fill_value=FillValueAuto,
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_element_loc_items_a(self) -> None:
@@ -4511,6 +4675,35 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitFrame):
             # must provide an index
             _ = Frame.from_items(gen())
+
+    def test_frame_from_items_k(self) -> None:
+
+        s1 = Series((2, 3), index=('b', 'c'))
+        s2 = Series(('x', 'y'), index=('a',  'c'))
+        s3 = Series((True, False), index=('b',  'c'))
+
+        f1 = Frame.from_items(zip(list('xyz'), (s1, s2, s3)),
+                index=tuple('abc'),
+                fill_value=FillValueAuto,
+                )
+        self.assertEqual(f1.to_pairs(),
+                (('x', (('a', 0), ('b', 2), ('c', 3))), ('y', (('a', 'x'), ('b', ''), ('c', 'y'))), ('z', (('a', False), ('b', True), ('c', False))))
+                )
+
+    def test_frame_from_items_l(self) -> None:
+
+        s1 = Series((2, 3), index=('b', 'c'))
+        s2 = Series(('x', 'y'), index=('a',  'c'))
+        s3 = Series((True, False), index=('b',  'c'))
+
+        f1 = Frame.from_items(zip(list('xyz'), (s1, s2, s3)),
+                index=tuple('abc'),
+                fill_value=FillValueAuto,
+                dtypes=str,
+                )
+        self.assertEqual(f1.to_pairs(),
+                (('x', (('a', ''), ('b', '2'), ('c', '3'))), ('y', (('a', 'x'), ('b', ''), ('c', 'y'))), ('z', (('a', ''), ('b', 'True'), ('c', 'False'))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -5555,6 +5748,48 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             # must provde a Frame
             f.fillna(np.arange(4).reshape(2, 2))
+
+    def test_frame_fillna_f(self) -> None:
+
+        f1 = Frame.from_records([
+                [np.nan, 2, 3, 0],
+                [3, 30, None, None],
+                [0, np.nan, 2, 3]],
+                columns=tuple('ABCD'),
+                index=tuple('wxy'),
+                )
+        f2 = f1.fillna({'A':None, 'B':0, 'C':-1, 'D':None})
+        self.assertEqual(f2.to_pairs(),
+                (('A', (('w', None), ('x', 3.0), ('y', 0.0))), ('B', (('w', 2.0), ('x', 30.0), ('y', 0.0))), ('C', (('w', 3), ('x', -1), ('y', 2))), ('D', (('w', 0), ('x', None), ('y', 3))))
+                )
+
+    def test_frame_fillna_g(self) -> None:
+
+        f1 = Frame.from_records([
+                [np.nan, 2, 3, 0],
+                [3, 30, None, None],
+                [0, np.nan, 2, 3]],
+                columns=tuple('ABCD'),
+                index=tuple('wxy'),
+                )
+        f2 = f1.fillna([None, 0, -1, None])
+        self.assertEqual(f2.to_pairs(),
+                (('A', (('w', None), ('x', 3.0), ('y', 0.0))), ('B', (('w', 2.0), ('x', 30.0), ('y', 0.0))), ('C', (('w', 3), ('x', -1), ('y', 2))), ('D', (('w', 0), ('x', None), ('y', 3))))
+                )
+
+    def test_frame_fillna_h(self) -> None:
+
+        f1 = Frame.from_records([
+                [np.nan, 2, 3, 0],
+                [3, 30, None, None],
+                [0, np.nan, 2, 3]],
+                columns=tuple('ABCD'),
+                index=tuple('wxy'),
+                )
+        f2 = f1.fillna(FillValueAuto(f=-1, O='na'))
+        self.assertEqual(f2.to_pairs(),
+                (('A', (('w', -1.0), ('x', 3.0), ('y', 0.0))), ('B', (('w', 2.0), ('x', 30.0), ('y', -1.0))), ('C', (('w', 3), ('x', 'na'), ('y', 2))), ('D', (('w', 0), ('x', 'na'), ('y', 3))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -8223,6 +8458,35 @@ class TestUnit(TestCase):
         self.assertEqual(f1.shape, (1, 2))
         self.assertIs(f1.columns.__class__, IndexDate)
 
+    def test_frame_from_concat_ff(self) -> None:
+        records1 = (
+                (2, False),
+                (34, False),
+                )
+
+        f1 = Frame.from_records(records1,
+                columns=('p', 'q',),
+                index=('x', 'z'))
+
+        records2 = (
+                ('c', False),
+                ('d', True),
+                ('e', True),
+                )
+        f2 = Frame.from_records(records2,
+                columns=('r', 's',),
+                index=('w', 'x', 'z'))
+
+        f3 = Frame.from_concat((f1, f2), axis=1, fill_value=dict(p=-3, q=-2))
+        self.assertEqual(f3.to_pairs(),
+                (('p', (('w', -3), ('x', 2), ('z', 34))), ('q', (('w', -2), ('x', False), ('z', False))), ('r', (('w', 'c'), ('x', 'd'), ('z', 'e'))), ('s', (('w', False), ('x', True), ('z', True)))))
+
+        f4 = Frame.from_concat((f1, f2), axis=1, fill_value=FillValueAuto)
+        self.assertEqual(f4.to_pairs(),
+                (('p', (('w', 0), ('x', 2), ('z', 34))), ('q', (('w', False), ('x', False), ('z', False))), ('r', (('w', 'c'), ('x', 'd'), ('z', 'e'))), ('s', (('w', False), ('x', True), ('z', True))))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_concat_error_init_a(self) -> None:
@@ -8977,6 +9241,23 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict_records(records, fill_value='x')
         self.assertEqual(f1.to_pairs(0),
                 (('a', ((0, True), (1, 'x'))), ('b', ((0, False), (1, True))), ('c', ((0, 'x'), (1, False))))
+                )
+
+    def test_frame_from_dict_records_i(self) -> None:
+
+        records = [dict(a=1, b='2', c=3), dict(b='5')]
+        dtypes = None #{'b': np.int64}
+        f1 = sf.Frame.from_dict_records(records, dtypes=dtypes, fill_value=dict(a=-1, c=-3))
+        self.assertEqual(f1.to_pairs(),
+                (('a', ((0, 1), (1, -1))), ('b', ((0, '2'), (1, '5'))), ('c', ((0, 3), (1, -3)))))
+
+    def test_frame_from_dict_records_j(self) -> None:
+
+        records = [dict(a=1, b='2', c=3), dict(c='5')]
+        dtypes = [bool, str, int]
+        f1 = sf.Frame.from_dict_records(records, dtypes=dtypes, fill_value=FillValueAuto)
+        self.assertEqual(f1.to_pairs(),
+                (('a', ((0, True), (1, False))), ('b', ((0, '2'), (1, ''))), ('c', ((0, 3), (1, 5))))
                 )
 
     #---------------------------------------------------------------------------
@@ -9999,9 +10280,9 @@ class TestUnit(TestCase):
                 f1.roll(-3, 3, include_index=True, include_columns=True).to_pairs(0),
                 (('r', (('z', 'd'), ('w', 'a'), ('x', 'b'), ('y', 'c'))), ('s', (('z', True), ('w', False), ('x', True), ('y', False))), ('t', (('z', True), ('w', False), ('x', False), ('y', False))), ('p', (('z', 30), ('w', 2), ('x', 30), ('y', 2))), ('q', (('z', 73), ('w', 2), ('x', 34), ('y', 95)))))
 
+    #---------------------------------------------------------------------------
+
     def test_frame_shift_a(self) -> None:
-
-
         records = (
                 (2, 2, 'a', False, False),
                 (30, 34, 'b', True, False),
@@ -10029,6 +10310,31 @@ class TestUnit(TestCase):
         self.assertEqual(f1.shift(0, 5, fill_value=-1).to_pairs(0),
                 (('p', (('w', -1), ('x', -1), ('y', -1), ('z', -1))), ('q', (('w', -1), ('x', -1), ('y', -1), ('z', -1))), ('r', (('w', -1), ('x', -1), ('y', -1), ('z', -1))), ('s', (('w', -1), ('x', -1), ('y', -1), ('z', -1))), ('t', (('w', -1), ('x', -1), ('y', -1), ('z', -1))))
                 )
+
+    def test_frame_shift_b(self) -> None:
+
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x', 'y', 'z'),
+                name='test')
+
+        self.assertEqual(
+                f1.shift(2, fill_value=FillValueAuto).to_pairs(),
+                (('p', (('x', 0), ('y', 0), ('z', 2))), ('q', (('x', 0), ('y', 0), ('z', 2))), ('r', (('x', ''), ('y', ''), ('z', 'a'))), ('s', (('x', False), ('y', False), ('z', False))), ('t', (('x', False), ('y', False), ('z', False))))
+                )
+
+        self.assertEqual(
+                f1.shift(2, fill_value=FillValueAuto(i=-1, U='na', b=True)).to_pairs(),
+                (('p', (('x', -1), ('y', -1), ('z', 2))), ('q', (('x', -1), ('y', -1), ('z', 2))), ('r', (('x', 'na'), ('y', 'na'), ('z', 'a'))), ('s', (('x', True), ('y', True), ('z', False))), ('t', (('x', True), ('y', True), ('z', False))))
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_name_a(self) -> None:
 
@@ -11639,6 +11945,15 @@ class TestUnit(TestCase):
                 ((0, ((0, '[]'), (1, '[1]'), (2, '[2 2 1 2]'))), (1, ((0, '[]'), (1, '[]'), (2, '[1]'))), (2, ((0, '[0]'), (1, '[1]'), (2, '[1 1]'))))
                 )
 
+    def test_frame_pivot_y3(self) -> None:
+        f1 = ff.parse('s(10,4)|v(int)').assign[0].apply(
+                lambda x: x % 3).assign[1].apply(
+                lambda x: x % 3).assign[2].apply(
+                lambda x: x % 3)
+        with self.assertRaises(InvalidFillValue):
+            f1.pivot(index_fields=2, fill_value=FillValueAuto)
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_bool_a(self) -> None:
@@ -12562,7 +12877,7 @@ class TestUnit(TestCase):
                 (('recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2), (('u', None), 3), (('v', None), 4), (('w', None), 5))), ('recipe_name', ((('s', 'i'), 'Apple Crumble'), (('s', 'j'), 'Apple Crumble'), (('s', 'k'), 'Apple Crumble'), (('s', 'l'), 'Apple Crumble'), (('t', 'm'), 'Fruit Salad'), (('t', 'n'), 'Fruit Salad'), (('t', 'o'), 'Fruit Salad'), (('t', 'p'), 'Fruit Salad'), (('t', 'q'), 'Fruit Salad'), (('u', None), 'Weekday Risotto'), (('v', None), 'Beans Chili'), (('w', None), 'Chicken Casserole'))), ('new_recipe_id', ((('s', 'i'), 1.0), (('s', 'j'), 1.0), (('s', 'k'), 1.0), (('s', 'l'), 1.0), (('t', 'm'), 2.0), (('t', 'n'), 2.0), (('t', 'o'), 2.0), (('t', 'p'), 2.0), (('t', 'q'), 2.0), (('u', None), None), (('v', None), None), (('w', None), None))), ('new_ingredient_id', ((('s', 'i'), 1.0), (('s', 'j'), 5.0), (('s', 'k'), 7.0), (('s', 'l'), 8.0), (('t', 'm'), 6.0), (('t', 'n'), 2.0), (('t', 'o'), 1.0), (('t', 'p'), 3.0), (('t', 'q'), 4.0), (('u', None), None), (('v', None), None), (('w', None), None))))
                 )
 
-    def test_frame_join_h(self) -> None:
+    def test_frame_join_h1(self) -> None:
 
         f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
@@ -12606,6 +12921,14 @@ class TestUnit(TestCase):
         self.assertEqual(f6.to_pairs(0),
                 (('c', ((0, None), (1, None), (2, None), (3, None), (4, None), ('y', 'bar'), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), (3, None), (4, None), ('y', 20), ('x', 10))), ('a', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 20), ('y', None), ('x', None))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), (3, 'y'), (4, 'z'), ('y', None), ('x', None))))
                 )
+
+    def test_frame_join_h2(self) -> None:
+
+        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
+        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
+        with self.assertRaises(InvalidFillValue):
+            _ = f2.join_inner(f1, left_depth_level=0, right_depth_level=0, fill_value=FillValueAuto)
+
 
     def test_frame_join_i(self) -> None:
 
@@ -12785,7 +13108,7 @@ class TestUnit(TestCase):
                     ((('I', 1), (((0, 'A'), 0), ((0, 'B'), 2), ((1, 'A'), 8), ((1, 'B'), 10))), (('I', 2), (((0, 'A'), 1), ((0, 'B'), 3), ((1, 'A'), 9), ((1, 'B'), 11))), (('II', 1), (((0, 'A'), 4), ((0, 'B'), 6), ((1, 'A'), 12), ((1, 'B'), 14))), (('II', 2), (((0, 'A'), 5), ((0, 'B'), 7), ((1, 'A'), 13), ((1, 'B'), 15))))
                     )
 
-    def test_frame_pivot_stack_e(self) -> None:
+    def test_frame_pivot_stack_e1(self) -> None:
 
         f1 = Frame(np.arange(16).reshape(2, 8),
                     columns=IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
@@ -12800,6 +13123,14 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
                 (('I', (((0, 'A', 1), 0), ((0, 'A', 2), 1), ((0, 'B', 1), 2), ((0, 'B', 2), 3), ((1, 'A', 1), 8), ((1, 'A', 2), 9), ((1, 'B', 1), 10), ((1, 'B', 2), 11))), ('II', (((0, 'A', 1), 4), ((0, 'A', 2), 5), ((0, 'B', 1), 6), ((0, 'B', 2), 7), ((1, 'A', 1), 12), ((1, 'A', 2), 13), ((1, 'B', 1), 14), ((1, 'B', 2), 15))))
                 )
+
+    def test_frame_pivot_stack_e2(self) -> None:
+        f1 = Frame(np.arange(16).reshape(2, 8),
+                    columns=IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
+                    )
+        with self.assertRaises(InvalidFillValue):
+            f2 = f1.pivot_stack([0, 2], fill_value=FillValueAuto)
+
 
     def test_frame_pivot_stack_f(self) -> None:
 
@@ -12869,7 +13200,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_pivot_unstack_a(self) -> None:
+    def test_frame_pivot_unstack_a1(self) -> None:
 
         index = IndexHierarchy.from_labels((('r0', 'r00'), ('r0', 'r01')))
         columns = IndexHierarchy.from_labels(
@@ -12888,6 +13219,17 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
                 ((('c0', 'c00', 'r00', 'r0'), ((0, 0),)), (('c0', 'c00', 'r01', 'r0'), ((0, 3),)), (('c0', 'c01', 'r00', 'r0'), ((0, 1),)), (('c0', 'c01', 'r01', 'r0'), ((0, 4),)), (('c1', 'c10', 'r00', 'r0'), ((0, 2),)), (('c1', 'c10', 'r01', 'r0'), ((0, 5),)))
                 )
+
+    def test_frame_pivot_unstack_a2(self) -> None:
+
+        index = IndexHierarchy.from_labels((('r0', 'r00'), ('r0', 'r01')))
+        columns = IndexHierarchy.from_labels(
+                (('c0', 'c00'), ('c0', 'c01'), ('c1', 'c10'))
+                )
+        f1 = Frame(np.arange(6).reshape(2, 3), index=index, columns=columns)
+        with self.assertRaises(InvalidFillValue):
+            _ = f1.pivot_unstack(fill_value=FillValueAuto)
+
 
     def test_frame_pivot_unstack_b(self) -> None:
 
@@ -13012,6 +13354,21 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(),
                 (('a', ((0, 1), (1, 200))), ('b', ((0, 100), (1, 20))), ('c', ((0, 30), (1, 40))))
                 )
+    def test_frame_from_overlay_i(self) -> None:
+
+        f1 = Frame.from_dict(dict(a=(10, 20),))
+        f2 = Frame.from_dict(dict(b=(True, True, True),))
+        f3 = Frame.from_dict(dict(c=('a', 'b'),))
+
+        with WarningsSilent():
+            f4 = sf.Frame.from_overlay((f1, f2, f3),
+                    func=(lambda a: (a == 0) | (a == False) | (a == '')), #pylint: disable=C0121
+                    fill_value=dict(a=0, b=False, c='')
+                    )
+
+        self.assertEqual(f4.to_pairs(),
+                (('a', ((0, 10), (1, 20), (2, 0))), ('b', ((0, True), (1, True), (2, True))), ('c', ((0, 'a'), (1, 'b'), (2, ''))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -13082,6 +13439,25 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(f1.to_pairs(),
                 ((0, ((0, 3.0), (1, 4.0))), (1, ((0, 3.0), (1, 7.0)))))
+
+    def test_frame_from_fields_f(self) -> None:
+        f1 = sf.Frame.from_fields((Series([3, 4]), Series([3, 7])),
+                fill_value=[-1, -2],
+                index=(2, 1, 0),
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((2, -1), (1, 4), (0, 3))), (1, ((2, -2), (1, 7), (0, 3))))
+                )
+
+    def test_frame_from_fields_g(self) -> None:
+        f1 = sf.Frame.from_fields((Series([3, 4]), Series([True, False])),
+                fill_value=FillValueAuto,
+                index=(2, 1, 0),
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((2, 0), (1, 4), (0, 3))), (1, ((2, False), (1, False), (0, True))))
+                )
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_zero_size_shape_a(self) -> None:
@@ -13676,6 +14052,18 @@ class TestUnit(TestCase):
         self.assertEqual(f4.values.dtype.kind, 'i')
         f5 = f1.rank_ordinal(axis=1, fill_value=-1)
         self.assertEqual(f5.values.dtype.kind, 'i')
+
+    def test_frame_rank_c1(self) -> None:
+        f1 = Frame.from_fields([[np.nan, 0, 1], [0, None, 1], [2, None, -1]], index=('a','b','c'), columns=('x','y', 'z'))
+
+        f2 = f1.rank_ordinal(axis=0, fill_value=[-1, -2, -3]) # rank within
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('a', -1), ('b', 0), ('c', 1))), ('y', (('a', 0), ('b', -2), ('c', 1))), ('z', (('a', 1), ('b', -3), ('c', 0)))),
+                )
+        with self.assertRaises(InvalidFillValue):
+            f1.rank_ordinal(axis=1, fill_value=FillValueAuto) # rank within rows
+
+
 
     def test_frame_rank_d(self) -> None:
         f1 = Frame.from_fields([[np.nan, 0, 1], [0, None, 1]], index=('a','b','c'), columns=('x','y'))

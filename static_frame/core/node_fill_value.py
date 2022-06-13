@@ -73,7 +73,7 @@ class InterfaceFillValue(Interface[TContainer]):
     def __init__(self,
             container: TContainer,
             *,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             axis: int = 0,
             ) -> None:
         self._container: TContainer = container
@@ -94,7 +94,6 @@ class InterfaceFillValue(Interface[TContainer]):
                 fill_value=self._fill_value,
                 )
 
-
     #---------------------------------------------------------------------------
     @staticmethod
     def _extract_key_attrs(
@@ -112,6 +111,10 @@ class InterfaceFillValue(Interface[TContainer]):
     def _extract_loc1d(self,
             key: GetItemKeyType = NULL_SLICE,
             ) -> 'Series':
+        '''This is only called if container is 1D
+        '''
+        from static_frame.core.container_util import get_col_fill_value_factory
+
         key, is_multiple, is_null_slice = self._extract_key_attrs(
                 key,
                 self._container._index,
@@ -123,7 +126,9 @@ class InterfaceFillValue(Interface[TContainer]):
             return container.reindex(key if not is_null_slice else None, #type: ignore
                     fill_value=fill_value,
                     )
-        return container.get(key, fill_value) #type: ignore
+
+        fv = get_col_fill_value_factory(fill_value, None)(0, container.dtype) #type: ignore
+        return container.get(key, fv) #type: ignore
 
     def _extract_loc2d(self,
             row_key: GetItemKeyType = NULL_SLICE,
@@ -133,6 +138,8 @@ class InterfaceFillValue(Interface[TContainer]):
         NOTE: keys are loc keys; None is interpreted as selector, not a NULL_SLICE
         '''
         from static_frame.core.series import Series
+        from static_frame.core.container_util import get_col_fill_value_factory
+
         fill_value = self._fill_value
         container = self._container # always a Frame
 
@@ -156,13 +163,15 @@ class InterfaceFillValue(Interface[TContainer]):
             try:
                 return container.loc[row_key, column_key]
             except KeyError:
-                return fill_value #type: ignore
+                fv = get_col_fill_value_factory(fill_value, None)(0, None)
+                return fv #type: ignore
         elif not row_is_multiple:
             # row is an element, return Series indexed by columns
             if row_key in container._index: #type: ignore
                 s = container.loc[row_key]
                 return s.reindex(column_key, fill_value=fill_value) #type: ignore
-            return Series.from_element(fill_value,
+            fv = get_col_fill_value_factory(fill_value, None)(0, None)
+            return Series.from_element(fv,
                     index=column_key,
                     name=row_key,
                     )
@@ -170,7 +179,9 @@ class InterfaceFillValue(Interface[TContainer]):
         if column_key in container._columns: #type: ignore
             s = container[column_key]
             return s.reindex(row_key, fill_value=fill_value) #type: ignore
-        return Series.from_element(fill_value,
+
+        fv = get_col_fill_value_factory(fill_value, None)(0, None)
+        return Series.from_element(fv,
                 index=row_key,
                 name=column_key,
                 )
