@@ -24,6 +24,9 @@ from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import sort_index_for_order
+from static_frame.core.container_util import get_col_fill_value_factory
+from static_frame.core.container_util import is_fill_value_factory_initializer
+
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -980,7 +983,12 @@ class Series(ContainerOperand):
                     own_index=True,
                     name=self._name)
 
-        values = full_for_fill(self.values.dtype, len(index), fill_value) #type: ignore
+        if is_fill_value_factory_initializer(fill_value):
+            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+        else:
+            fv = fill_value
+
+        values = full_for_fill(self.values.dtype, len(index), fv) #type: ignore
         # if some intersection of values
         if ic.has_common:
             values[ic.iloc_dst] = self.values[ic.iloc_src]
@@ -1492,7 +1500,7 @@ class Series(ContainerOperand):
             operator: UFunc,
             other: tp.Any,
             axis: int = 0,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             ) -> 'Series':
         '''
         For binary operations, the `name` attribute does not propagate unless other is a scalar.
@@ -2285,6 +2293,10 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
+        if is_fill_value_factory_initializer(fill_value):
+            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+        else:
+            fv = fill_value
 
         if shift:
             values = array_shift(
@@ -2292,7 +2304,7 @@ class Series(ContainerOperand):
                     shift=shift,
                     axis=0,
                     wrap=False,
-                    fill_value=fill_value)
+                    fill_value=fv)
             values.flags.writeable = False
         else:
             values = self.values
@@ -2311,6 +2323,11 @@ class Series(ContainerOperand):
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
+
+        if is_fill_value_factory_initializer(fill_value):
+            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+        else:
+            fv = fill_value
 
         if not skipna or self.dtype.kind not in DTYPE_NA_KINDS:
             rankable = self
@@ -2339,7 +2356,7 @@ class Series(ContainerOperand):
                 )
         # this will preserve the name
         return post.reindex(self.index, #type: ignore
-                fill_value=fill_value,
+                fill_value=fv,
                 check_equals=False, # the index will never be equal
                 )
 

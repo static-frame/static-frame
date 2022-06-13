@@ -34,6 +34,7 @@ from static_frame.core.frame import FrameAssignBLoc as FrameAssignBLoc
 from static_frame.core.frame import FrameAssignILoc as FrameAssignILoc
 from static_frame.core.frame import FrameGO as FrameGO
 from static_frame.core.frame import FrameHE as FrameHE
+from static_frame.core.fill_value_auto import FillValueAuto as FillValueAuto
 from static_frame.core.hloc import HLoc as HLoc
 from static_frame.core.index import ILoc as ILoc
 from static_frame.core.index import Index as Index

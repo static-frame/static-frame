@@ -48,6 +48,9 @@ from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import constructor_from_optional_constructors
 from static_frame.core.container_util import df_slice_to_arrays
 from static_frame.core.container_util import frame_to_frame
+from static_frame.core.container_util import get_col_fill_value_factory
+from static_frame.core.container_util import is_fill_value_factory_initializer
+
 from static_frame.core.archive_npy import NPZFrameConverter
 from static_frame.core.archive_npy import NPYFrameConverter
 
@@ -61,6 +64,8 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.exception import InvalidFillValue
+
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index import Index
@@ -418,7 +423,7 @@ class Frame(ContainerOperand):
             index_constructor: tp.Optional[IndexConstructor] = None,
             columns_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = None,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''
@@ -588,7 +593,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             union: bool = True,
             name: NameType = None,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             index_constructor: tp.Optional[IndexConstructor] = None,
             columns_constructor: tp.Optional[IndexConstructor] = None,
             consolidate_blocks: bool = False,
@@ -717,26 +722,37 @@ class Frame(ContainerOperand):
         container = next(containers_iter)
 
         if fill_value is FILL_VALUE_DEFAULT:
-            fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
+            fill_value_reindex = dtype_kind_to_na(container._blocks._row_dtype.kind)
+        else:
+            fill_value_reindex = fill_value # just pass along even if FillValueAuto
 
         # get the first container
         post = frame_to_frame(container, cls).reindex(
                 index=index,
                 columns=columns,
-                fill_value=fill_value,
+                fill_value=fill_value_reindex,
                 own_index=True,
                 own_columns=True,
                 )
+
+        # we need a fill value that will be identified as a missing value by ``func`` on subsequent iterations, otherwise this fill value will not be identified as fillable
+        if fill_value is FILL_VALUE_DEFAULT:
+            get_col_fill_value = lambda _, dtype: dtype_kind_to_na(dtype.kind)
+        else:
+            get_col_fill_value = get_col_fill_value_factory(fill_value, columns)
+
         # dtype column mapping will not change
         dtypes = post.dtypes
+        post_blocks = post._blocks
 
         for container in containers_iter:
             values = []
             index_match = container._index.equals(index)
-            for col, dtype_at_col in dtypes.items():
+            # iterate over reindexed, full dtypes; some containers will not have columns
+            for col_count, (col, dtype_at_col) in enumerate(dtypes.items()):
                 if col not in container:
                     # get fill value based on previous container
-                    fill_value = dtype_kind_to_na(dtype_at_col.kind)
+                    fill_value = get_col_fill_value(col_count, dtype_at_col)
                     # store fill_arrays for re-use
                     if fill_value not in fill_arrays:
                         array = np.full(len(index), fill_value)
@@ -748,13 +764,17 @@ class Frame(ContainerOperand):
                     array = container._blocks._extract_array_column(iloc_column_key)
                 else: # need to reindex
                     col_series = container[col]
-                    fill_value = dtype_kind_to_na(col_series.dtype.kind)
+                    fill_value = get_col_fill_value(col_count, col_series.dtype)
                     array = col_series.reindex(index, fill_value=fill_value).values
                     array.flags.writeable = False
                 values.append(array)
 
-            post = cls(
-                    post._blocks.fill_missing_by_values(values, func=func),
+            # apply values only where missing
+            post_blocks = post_blocks.fill_missing_by_values(values, func=func)
+            if not post_blocks.boolean_apply_any(func):
+                break
+
+        return cls(post_blocks,
                     index=index,
                     columns=columns,
                     name=name,
@@ -762,11 +782,6 @@ class Frame(ContainerOperand):
                     own_index=True,
                     own_columns=True,
                     )
-
-            if not post._blocks.boolean_apply_any(func):
-                break
-
-        return post
 
 
     @classmethod
@@ -870,11 +885,11 @@ class Frame(ContainerOperand):
             raise NotImplementedError(f'cannot get col_count from {row_reference}')
 
         if not is_dataclass:
-            def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
+            def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
                 rows_iter = rows if not rows_to_iter else iter(rows)
                 return (row[col_key] for row in rows_iter)
         else:
-            def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
+            def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
                 rows_iter = rows if not rows_to_iter else iter(rows)
                 return (getattr(row, fields_dc[col_key]) for row in rows_iter)
 
@@ -916,7 +931,7 @@ class Frame(ContainerOperand):
             index: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -935,8 +950,9 @@ class Frame(ContainerOperand):
             :obj:`static_frame.Frame`
         '''
         columns = []
-
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
+        get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
+                else get_col_fill_value_factory(fill_value, columns))
 
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
@@ -957,26 +973,33 @@ class Frame(ContainerOperand):
         for row in rows: # produce a row that has a value for all observed keys
             row_reference.update(row)
 
-        col_count = len(row_reference)
-
-        # define function to get generator of row values; may need to call twice, so need to get fresh row_iter each time
-        def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
+        # get value for a column accross all rows
+        def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
             rows_iter = rows if not rows_to_iter else iter(rows)
+
+            if get_col_fill_value is not None and get_col_dtype is not None:
+                return (row.get(col_key, get_col_fill_value(
+                                col_idx,
+                                np.dtype(get_col_dtype(col_idx)))) # might be dtype specifier
+                        for row in rows_iter)
+
+            if get_col_fill_value is not None:
+                return (row.get(col_key, get_col_fill_value(col_idx, None))
+                        for row in rows_iter)
+
             return (row.get(col_key, fill_value) for row in rows_iter)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             # iterate over final column order, yielding 1D arrays
             for col_idx, col_key in enumerate(row_reference.keys()):
                 columns.append(col_key)
-
-                values = array_from_value_iter(
+                yield array_from_value_iter(
                         key=col_key,
                         idx=col_idx,
                         get_value_iter=get_value_iter,
                         get_col_dtype=get_col_dtype,
                         row_count=row_count
                         )
-                yield values
 
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
@@ -1077,7 +1100,7 @@ class Frame(ContainerOperand):
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
             *,
             index: IndexInitializer = None,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             index_constructor: IndexConstructor = None,
@@ -1102,6 +1125,7 @@ class Frame(ContainerOperand):
         columns = []
 
         # if an index initializer is passed, and we expect to get Series, we need to create the index in advance of iterating blocks
+        # NOTE: could add own_index argument in signature, see implementation in from_fields()
         own_index = False
         if _index_initializer_needs_init(index):
             index = index_from_optional_constructor(index,
@@ -1111,6 +1135,7 @@ class Frame(ContainerOperand):
             own_index = True
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
+        get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for col_idx, (k, v) in enumerate(pairs):
@@ -1128,11 +1153,13 @@ class Frame(ContainerOperand):
                         raise ErrorInitFrame('can only consume Series in Frame.from_items if an Index is provided.')
 
                     if not v.index.equals(index):
+                        # NOTE: we assume we should use column_type if it is specified
+                        dtype_for_fv = (np.dtype(column_type) if column_type is not None
+                                else v.dtype)
                         v = v.reindex(index,
-                                fill_value=fill_value,
+                                fill_value=get_col_fill_value(col_idx, dtype_for_fv),
                                 check_equals=False,
                                 )
-                    # return values array post reindexing
                     if column_type is not None:
                         yield v.values.astype(column_type)
                     else:
@@ -1203,7 +1230,7 @@ class Frame(ContainerOperand):
             *,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             index_constructor: IndexConstructor = None,
@@ -1212,7 +1239,7 @@ class Frame(ContainerOperand):
             own_columns: bool = False,
             consolidate_blocks: bool = False
             ) -> 'Frame':
-        '''Frame constructor from an iterator of columns, where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
+        '''Frame constructor from an iterator of columns, where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied. This constructor is similar to ``from_items()``, though here columns are provided through an independent ``columns`` argument.
 
         Args:
             fields: Iterable of column values.
@@ -1234,6 +1261,7 @@ class Frame(ContainerOperand):
             own_index = True
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
+        get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for col_idx, v in enumerate(fields):
@@ -1247,9 +1275,12 @@ class Frame(ContainerOperand):
                 elif isinstance(v, Series):
                     if index is None:
                         raise ErrorInitFrame('can only consume Series in Frame.from_fields if an Index is provided.')
+
                     if not v.index.equals(index):
+                        dtype_for_fv = (np.dtype(column_type) if column_type is not None
+                                else v.dtype)
                         v = v.reindex(index,
-                                fill_value=fill_value,
+                                fill_value=get_col_fill_value(col_idx, dtype_for_fv),
                                 check_equals=False,
                                 )
                     if column_type is not None:
@@ -1502,7 +1533,7 @@ class Frame(ContainerOperand):
             dtype: DtypesSpecifier = None,
             axis: tp.Optional[int] = None,
             name: NameType = None,
-            fill_value: object = FILL_VALUE_DEFAULT,
+            fill_value: tp.Any = FILL_VALUE_DEFAULT,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
@@ -1534,10 +1565,12 @@ class Frame(ContainerOperand):
                     )
             own_columns = True
 
-        # if items are given i n
         if axis is None:
             if not is_dtype_specifier(dtype):
                 raise ErrorInitFrame('cannot provide multiple dtypes when creating a Frame from element items and axis is None')
+            if is_fill_value_factory_initializer(fill_value):
+                raise InvalidFillValue(fill_value, 'axis==None')
+
             items = (((index._loc_to_iloc(k[0]), columns._loc_to_iloc(k[1])), v)
                     for k, v in items)
             dtype = dtype if dtype is not None else DTYPE_OBJECT
@@ -1579,7 +1612,7 @@ class Frame(ContainerOperand):
                     dtypes=dtype,
                     )
 
-        elif axis == 1: # column wise, use from_items
+        elif axis == 1: # column wise, use from_fields
             def fields() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.List[tp.Any]]]:
                 items_iter = iter(items)
                 first = next(items_iter)
@@ -3125,7 +3158,7 @@ class Frame(ContainerOperand):
 
 
     def via_fill_value(self,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             ) -> InterfaceFillValue['Frame']:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
@@ -3455,7 +3488,7 @@ class Frame(ContainerOperand):
             iloc_key: GetItemKeyTypeCompound,
             is_series: bool,
             is_frame: bool,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             ) -> tp.Union[Series, 'Frame']:
         '''Given a value that is a Series or Frame, reindex it to the index components, drawn from this Frame, that are specified by the iloc_key.
         '''
@@ -3499,7 +3532,7 @@ class Frame(ContainerOperand):
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
             *,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             own_index: bool = False,
             own_columns: bool = False,
             check_equals: bool = True,
@@ -3548,9 +3581,28 @@ class Frame(ContainerOperand):
             columns_ic = None
             own_columns_frame = self._COLUMNS_CONSTRUCTOR.STATIC
 
+        # if fill_value is a non-element, call get_col_fill_value_factory with the new index/columns, not the old
+        if is_fill_value_factory_initializer(fill_value):
+            get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
+            return self.__class__(
+                    TypeBlocks.from_blocks(
+                            self._blocks.resize_blocks_by_callable(
+                                    index_ic=index_ic,
+                                    columns_ic=columns_ic,
+                                    fill_value=get_col_fill_value),
+                            shape_reference=(len(index), len(columns))
+                            ),
+                    index=index,
+                    columns=columns,
+                    name=self._name,
+                    own_data=True,
+                    own_index=own_index_frame,
+                    own_columns=own_columns_frame
+                    )
+
         return self.__class__(
                 TypeBlocks.from_blocks(
-                        self._blocks.resize_blocks(
+                        self._blocks.resize_blocks_by_element(
                                 index_ic=index_ic,
                                 columns_ic=columns_ic,
                                 fill_value=fill_value),
@@ -4043,13 +4095,17 @@ class Frame(ContainerOperand):
         Args:
             func: function to return True for missing values
         '''
-
-        if hasattr(value, '__iter__') and not isinstance(value, str):
-            if not isinstance(value, Frame):
-                raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Frame')
-            # get a dummy fill_value to use during reindex and avoid undesirable type cooercions
+        kwargs = dict(
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_index=True,
+                own_columns=self.STATIC,
+                own_data=True,
+                )
+        # NOTE: we branch based on value type to use more efficient TypeBlock methods when we know we have an element or a 2D array
+        if isinstance(value, Frame):
             fill_value = dtype_to_fill_value(value._blocks._row_dtype)
-
             fill = value.reindex(
                     index=self.index,
                     columns=self.columns,
@@ -4060,17 +4116,27 @@ class Frame(ContainerOperand):
                     self.index.isin(value.index.values),
                     self.columns.isin(value.columns.values)
                     )).values
-        else:
-            fill = value
-            fill_valid = None
-
+            return self.__class__(
+                    self._blocks.fill_missing_by_unit(fill, fill_valid, func=func),
+                    **kwargs,
+                    )
+        elif is_fill_value_factory_initializer(value):
+            # we have a iterable or a mapping, or FillValueAuto
+            get_col_fill_value = get_col_fill_value_factory(value, columns=self._columns)
+            return self.__class__(
+                    self._blocks.fill_missing_by_callable(
+                            func_missing=func,
+                            get_col_fill_value=get_col_fill_value,
+                            ),
+                    **kwargs,
+                    )
+        # if not an iterable or if a string
         return self.__class__(
-                self._blocks.fill_missing_by_unit(fill, fill_valid, func=func),
-                index=self._index,
-                columns=self._columns,
-                name=self._name,
-                own_data=True
+                self._blocks.fill_missing_by_unit(value, None, func=func),
+                **kwargs,
                 )
+
+
 
     @doc_inject(selector='fillna')
     def fillna(self, value: tp.Any) -> 'Frame':
@@ -4682,7 +4748,7 @@ class Frame(ContainerOperand):
             operator: UFunc,
             other: tp.Any,
             axis: int = 0,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             ) -> 'Frame':
 
         if operator.__name__ == 'matmul':
@@ -5850,7 +5916,7 @@ class Frame(ContainerOperand):
         shift_column = columns
 
         blocks = TypeBlocks.from_blocks(
-                self._blocks._shift_blocks(
+                self._blocks._shift_blocks_fill_by_element(
                 row_shift=shift_index,
                 column_shift=shift_column,
                 wrap=True
@@ -5883,7 +5949,8 @@ class Frame(ContainerOperand):
             index: int = 0,
             columns: int = 0,
             *,
-            fill_value: tp.Any = np.nan) -> 'Frame':
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
         '''
         Shift columns and/or rows by positive or negative integer counts, where columns and/or rows fall of the axis and introduce missing values, filled by `fill_value`.
         '''
@@ -5891,13 +5958,26 @@ class Frame(ContainerOperand):
         shift_index = index
         shift_column = columns
 
-        blocks = TypeBlocks.from_blocks(
-                self._blocks._shift_blocks(
-                row_shift=shift_index,
-                column_shift=shift_column,
-                wrap=False,
-                fill_value=fill_value
-                ))
+        if is_fill_value_factory_initializer(fill_value):
+            get_col_fill_value = get_col_fill_value_factory(
+                    fill_value,
+                    tuple(self._columns), # tuple better for IH
+                    )
+            blocks = TypeBlocks.from_blocks(
+                    self._blocks._shift_blocks_fill_by_callable(
+                    row_shift=shift_index,
+                    column_shift=shift_column,
+                    wrap=False,
+                    get_col_fill_value=get_col_fill_value
+                    ))
+        else:
+            blocks = TypeBlocks.from_blocks(
+                    self._blocks._shift_blocks_fill_by_element(
+                    row_shift=shift_index,
+                    column_shift=shift_column,
+                    wrap=False,
+                    fill_value=fill_value
+                    ))
 
         return self.__class__(blocks,
                 columns=self._columns,
@@ -5909,7 +5989,6 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # ranking transformations resulting in the same dimensionality
     # NOTE: this could be implemented on TypeBlocks, but handling missing values requires using indices, and is thus better handled at the Frame level
-
     def _rank(self, *,
             method: RankMethod,
             axis: int = 0, # 0 ranks columns, 1 ranks rows
@@ -5919,6 +5998,9 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
     ) -> 'Frame':
 
+        if axis == 1 and is_fill_value_factory_initializer(fill_value):
+            raise InvalidFillValue(fill_value, 'axis==1')
+
         shape = self._blocks._shape
         asc_is_element = isinstance(ascending, BOOL_TYPES)
 
@@ -5927,6 +6009,9 @@ class Frame(ContainerOperand):
             opposite_axis = int(not axis)
             if len(ascending) != shape[opposite_axis]:
                 raise RuntimeError(f'Multiple ascending values must match length of axis {opposite_axis}.')
+
+        if axis == 0:
+            fill_value_factory = get_col_fill_value_factory(fill_value, self.columns)
 
         def array_iter() -> tp.Iterator[np.ndarray]:
             for idx, array in enumerate(self._blocks.axis_values(axis=axis)):
@@ -5940,12 +6025,13 @@ class Frame(ContainerOperand):
                 else:
                     index = self._index if axis == 0 else self._columns
                     s = Series(array, index=index, own_index=True)
-                    # skipna is True
+                    # if iterating rows, all arrays will have the same dtype
+                    fv = fill_value if axis == 1 else fill_value_factory(idx, array.dtype)
                     yield s._rank(method=method,
                             skipna=skipna,
                             ascending=asc,
                             start=start,
-                            fill_value=fill_value,
+                            fill_value=fv,
                             ).values
         if axis == 0:
             # array_iter returns blocks
@@ -6362,7 +6448,7 @@ class Frame(ContainerOperand):
             data_fields: KeyOrKeys = (),
             *,
             func: CallableOrCallableMap = np.nansum,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             index_constructor: IndexConstructor = None,
             ) -> 'Frame':
         '''
@@ -6377,6 +6463,9 @@ class Frame(ContainerOperand):
             func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
             index_constructor:
         '''
+        if is_fill_value_factory_initializer(fill_value):
+            raise InvalidFillValue(fill_value, 'pivot')
+
         # NOTE: default in Pandas pivot_table is a mean
         if func is None:
             func_map = ()
@@ -6443,6 +6532,9 @@ class Frame(ContainerOperand):
         columns_src = self.columns
         dtype_fill = np.array(fill_value).dtype
         dtypes_src = self.dtypes.values
+
+        if is_fill_value_factory_initializer(fill_value):
+            raise InvalidFillValue(fill_value, 'pivot_stack')
 
         pim = pivot_index_map(
                 index_src=columns_src,
@@ -6522,6 +6614,9 @@ class Frame(ContainerOperand):
         dtype_fill = np.array(fill_value).dtype
         dtypes_src = self.dtypes.values # dtypes need to be "exploded" into new columns
 
+        if is_fill_value_factory_initializer(fill_value):
+            raise InvalidFillValue(fill_value, 'pivot_unstack')
+
         # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns.
 
         pim = pivot_index_map(
@@ -6590,6 +6685,9 @@ class Frame(ContainerOperand):
             composite_index: bool = True,
             composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
+
+        if is_fill_value_factory_initializer(fill_value):
+            raise InvalidFillValue(fill_value, 'join')
 
         left_index = self.index
         right_index = other.index

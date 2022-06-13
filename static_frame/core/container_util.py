@@ -46,8 +46,9 @@ from static_frame.core.util import WarningsSilent
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
-
+from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.container import ContainerOperand
 
 
 if tp.TYPE_CHECKING:
@@ -61,7 +62,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import IndexConstructorFactoryBase #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
 
 
 ExplicitConstructor = tp.Union[
@@ -71,10 +71,11 @@ ExplicitConstructor = tp.Union[
         None,
         ]
 
+FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
 class ContainerMap:
 
-    _map: tp.Optional[tp.Dict[str, tp.Type['ContainerOperand']]] = None
+    _map: tp.Optional[tp.Dict[str, tp.Type[ContainerOperand]]] = None
 
     @classmethod
     def _update_map(cls) -> None:
@@ -107,24 +108,21 @@ class ContainerMap:
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
     @classmethod
-    def str_to_cls(cls, name: str) -> tp.Type['ContainerOperand']:
+    def str_to_cls(cls, name: str) -> tp.Type[ContainerOperand]:
         if cls._map is None:
             cls._update_map()
         return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
 
-
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
-        ) -> tp.Callable[[int], np.dtype]:
+        ) -> tp.Callable[[int], DtypeSpecifier]:
     '''
     Return a function, or None, to get values from a DtypeSpecifier by integer column positions.
 
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
     '''
-    from static_frame.core.series import Series
-
     # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
     # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
 
@@ -155,6 +153,77 @@ def get_col_dtype_factory(
 
     return get_col_dtype
 
+
+def get_col_fill_value_factory(
+        fill_value: tp.Any,
+        columns: tp.Optional[tp.Sequence[tp.Hashable]],
+        ) -> tp.Callable[[int, np.dtype], tp.Any]:
+    '''
+    Return a function to get fill_vlaue.
+
+    Args:
+        columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
+    '''
+    # if all false it is an iterable
+    is_fva = False
+    is_map = False
+    is_element = False
+
+    if fill_value is FillValueAuto:
+        is_fva = True
+        fill_value = FILL_VALUE_AUTO_DEFAULT
+    elif is_mapping(fill_value):
+        is_map = True
+    elif isinstance(fill_value, tuple): # tuple is an element
+        is_element = True
+    elif hasattr(fill_value, '__iter__') and not isinstance(fill_value, str):
+        # an iterable or iterator but not a string
+        pass
+    elif isinstance(fill_value, FillValueAuto):
+        is_fva = True
+    else: # can assume an element
+        is_element = True
+
+    if columns is None and is_map:
+        raise RuntimeError('cannot lookup fill_value by name without supplied columns labels')
+
+    def get_col_fill_value(col_idx: int, dtype: tp.Optional[np.dtype]) -> tp.Any:
+        '''dtype can be used for automatic selection based on dtype kind
+        '''
+        nonlocal fill_value # might mutate a generator into a tuple
+        if is_fva and dtype is not None: # use the mapping from dtype
+            return fill_value[dtype]
+        if is_fva and dtype is None:
+            raise RuntimeError('Cannot use a FillValueAuto in a context where new blocks are being created.')
+        if is_element:
+            return fill_value
+        if is_map:
+            return fill_value.get(columns[col_idx], np.nan) #type: ignore
+        # NOTE: the types trying to select here could be more explicit
+        if not hasattr(fill_value, '__len__') or not hasattr(fill_value, '__getitem__'):
+            fill_value = tuple(fill_value)
+        return fill_value[col_idx]
+
+    return get_col_fill_value
+
+
+def is_element(value: tp.Any, container_is_element: bool = False) -> bool:
+    '''
+    Args:
+        container_is_element: Boolean to show if SF containers are treated as elements.
+    '''
+    if isinstance(value, str) or isinstance(value, tuple):
+        return True
+    if container_is_element and isinstance(value, ContainerOperand):
+        return True
+    return not hasattr(value, '__iter__')
+
+def is_fill_value_factory_initializer(value: tp.Any) -> bool:
+    # NOTE: in the context of a fill-value, we will not accept SF containers for now; a Series might be used as a mapping, but more clear to just force that to be converted to a dict
+    return (not is_element(value, container_is_element=True)
+            or value is FillValueAuto
+            or isinstance(value, FillValueAuto)
+            )
 
 def is_static(value: IndexConstructor) -> bool:
     try:
@@ -869,7 +938,7 @@ def rehierarch_from_index_hierarchy(*,
 def array_from_value_iter(
         key: tp.Hashable,
         idx: int,
-        get_value_iter: tp.Callable[[tp.Hashable], tp.Iterator[tp.Any]],
+        get_value_iter: tp.Callable[[tp.Hashable, int], tp.Iterator[tp.Any]],
         get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]],
         row_count: int,
         ) -> np.ndarray:
@@ -893,7 +962,7 @@ def array_from_value_iter(
     if dtype is not None:
         try:
             values = np.fromiter(
-                    get_value_iter(key),
+                    get_value_iter(key, idx),
                     count=row_count,
                     dtype=dtype)
             values.flags.writeable = False
@@ -903,7 +972,7 @@ def array_from_value_iter(
     if values is None:
         # returns an immutable array
         values, _ = iterable_to_array_1d(
-                get_value_iter(key),
+                get_value_iter(key, idx),
                 dtype=dtype
                 )
     return values

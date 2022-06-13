@@ -161,6 +161,9 @@ EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 NAT = np.datetime64('nat')
 NAT_STR = 'NaT'
 
+# this is a different NAT but can be treated the same
+NAT_TD64 = np.timedelta64('nat')
+
 # define missing for timedelta as an untyped 0
 EMPTY_TIMEDELTA = np.timedelta64(0)
 
@@ -278,7 +281,6 @@ def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
     is_slice = value.__class__ is slice
     is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
     return not is_slice and not is_mask
-
 
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[
@@ -664,6 +666,7 @@ def dtype_from_element(
     if value.__class__ is np.ndarray and value.ndim == 0:
         return value.dtype
     # all arrays, or SF containers, should be treated as objects when elements
+    # NOTE: might check for __iter__?
     if hasattr(value, '__len__') and not isinstance(value, str):
         return DTYPE_OBJECT
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
