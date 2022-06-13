@@ -5841,21 +5841,21 @@ class Frame(ContainerOperand):
         if not names:
             names = self._index.names
 
-        # self._columns._blocks may be None until array cache is updated.
-        if self._columns._recache:
-            self._columns._update_array_cache()
+        columns_depth = self._columns.depth
+        index_depth = self._index.depth
 
-        if self._columns.depth > 1:
-            if len(names) != self._index.depth:
-                raise RuntimeError('Passed `names` must have a sequence of labels per depth of index')
+        if len(names) != index_depth:
+            raise RuntimeError('Passed `names` must have a label (or sequence of labels) per depth of index.')
+
+        if columns_depth > 1:
             if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
                 raise RuntimeError(f'Invalid name labels ({names[0]}); provide a sequence with a label per columns depth.')
 
-            if self._index.depth == 1:
+            if index_depth == 1:
                 # assume that names[0] is an iterable of labels per columns depth level (one column of labels)
                 columns_labels = TypeBlocks.from_blocks(
-                        concat_resolved((np.array([name]), block))
-                        for name, block in zip(names[0], self._columns._blocks._blocks)
+                        concat_resolved((np.array([name]), self._columns.values_at_depth(i)))
+                        for i, name in enumerate(names[0])
                         )
             else:
                 # assume that names is an iterable of columns, each column with a label per columns depth
@@ -5864,25 +5864,23 @@ class Frame(ContainerOperand):
                     a, _ = iterable_to_array_1d(labels)
                     labels_per_depth.append(a)
 
-                assert len(labels_per_depth) == self._columns.depth
+                # assert len(labels_per_depth) == columns_depth
                 columns_labels = TypeBlocks.from_blocks(
-                        concat_resolved((labels, block))
-                        for labels, block in zip(labels_per_depth, self._columns._blocks._blocks)
+                        concat_resolved((labels, self._columns.values_at_depth(i)))
+                        for i, labels in enumerate(labels_per_depth)
                         )
 
             columns_default_constructor = partial(
                     self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
                     own_blocks=True)
-
         else:
             # columns depth is 1, label per index depth is correct
-            assert len(names) == self._index.depth
             columns_labels = chain(names, self._columns.values)
             columns_default_constructor = self._COLUMNS_CONSTRUCTOR
 
         columns, own_columns = index_from_optional_constructors(
                 columns_labels,
-                depth=self._columns.depth,
+                depth=columns_depth,
                 default_constructor=columns_default_constructor,
                 explicit_constructors=columns_constructors, # cannot supply name
                 )
@@ -6046,9 +6044,6 @@ class Frame(ContainerOperand):
             names = self._columns.names
 
         # columns blocks are oriented as "rows" here, and might have different types per row; when moved on to the frame, types will have to be consolidated "vertically", meaning there is little chance of consolidation. A maximal decomposition might give a chance, but each ultimate column would have to be re-evaluated, and that would be expense.
-        # self._columns._blocks may be None until array cache is updated.
-        if self._columns._recache:
-            self._columns._update_array_cache()
 
         blocks = TypeBlocks.from_blocks(
                 TypeBlocks.vstack_blocks_to_blocks((
@@ -6057,17 +6052,21 @@ class Frame(ContainerOperand):
                         ))
                 )
 
-        if self._index.depth > 1:
-            if len(names) != self._columns.depth:
-                raise RuntimeError('Passed `names` must have a label per depth of columns.')
+        columns_depth = self._columns.depth
+        index_depth = self._index.depth
+
+        if len(names) != columns_depth:
+            raise RuntimeError('Passed `names` must have a label (or sequence of labels) per depth of columns.')
+
+        if index_depth > 1:
             if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
                 raise RuntimeError(f'Invalid name labels ({names[0]}); provide a sequence with a label per index depth.')
 
-            if self._columns.depth == 1:
-                # assume that names is an iterable of labels per index depth level (one row of labels)
+            if columns_depth == 1:
+                # assume that names[0] is an iterable of labels per index depth level (one row of labels)
                 index_labels = TypeBlocks.from_blocks(
-                        concat_resolved((np.array([name]), block))
-                        for name, block in zip(names[0], self._index._blocks._blocks)
+                        concat_resolved((np.array([name]), self._index.values_at_depth(i)))
+                        for i, name in enumerate(names[0])
                         )
             else:
                 # assume that names is an iterable of rows, each row with a label per index depth
@@ -6076,10 +6075,10 @@ class Frame(ContainerOperand):
                     a, _ = iterable_to_array_1d(labels)
                     labels_per_depth.append(a)
 
-                # assert len(labels_per_depth) == self._index.depth
+                # assert len(labels_per_depth) == index_depth
                 index_labels = TypeBlocks.from_blocks(
-                        concat_resolved((labels, block))
-                        for labels, block in zip(labels_per_depth, self._index._blocks._blocks)
+                        concat_resolved((labels, self._index.values_at_depth(i)))
+                        for i, labels in enumerate(labels_per_depth)
                         )
 
             index_default_constructor = partial(
@@ -6087,13 +6086,12 @@ class Frame(ContainerOperand):
                     own_blocks=True)
         else:
             # index depth is 1, label per columns depth is correct
-            assert len(names) == self._columns.depth
             index_labels = chain(names, self._index.values)
             index_default_constructor = Index
 
         index, own_index = index_from_optional_constructors(
                 index_labels,
-                depth=self._index.depth,
+                depth=index_depth,
                 default_constructor=index_default_constructor,
                 explicit_constructors=index_constructors, # cannot supply name
                 )
