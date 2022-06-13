@@ -5845,13 +5845,13 @@ class Frame(ContainerOperand):
                     'Must provide `names` when both the index and columns are IndexHierarchies'
                 )
 
-        names_t = zip(*names)
-
         # self._columns._blocks may be None until array cache is updated.
         if self._columns._recache:
             self._columns._update_array_cache()
 
         if self._columns.depth > 1:
+            # NOTE: this assumes we have a tuple of tuples, which might not always be correct
+            names_t = zip(*names)
             columns_labels = TypeBlocks.from_blocks(
                     concat_resolved((np.array([name]), block[np.newaxis]), axis=1).T
                     for name, block in zip(names_t, self._columns._blocks._blocks)
@@ -6030,11 +6030,8 @@ class Frame(ContainerOperand):
             names = self._columns.names
             if self._index.depth > 1 and self._columns.depth > 1:
                 raise RuntimeError(
-                    'Must provide `names` when both the index and columns are IndexHierarchies'
+                    'Must provide `names` when both the index and columns are IndexHierarchy'
                 )
-
-        names_t = zip(*names)
-
         # columns blocks are oriented as "rows" here, and might have different types per row; when moved on to the frame, types will have to be consolidated "vertically", meaning there is little chance of consolidation. A maximal decomposition might give a chance, but each ultimate column would have to be re-evaluated, and that would be expense.
         # self._columns._blocks may be None until array cache is updated.
         if self._columns._recache:
@@ -6048,15 +6045,19 @@ class Frame(ContainerOperand):
                 )
 
         if self._index.depth > 1:
+            # need to have index.depth labels per new index row; if columns has depth > 1 this will not work...
+            if len(names) != self._index.depth:
+                raise RuntimeError('Passed `names` must have a label per depth of Index')
+
             index_labels = TypeBlocks.from_blocks(
                     concat_resolved((np.array([name]), block))
-                    for name, block in zip(names_t, self._index._blocks._blocks)
+                    for name, block in zip(names, self._index._blocks._blocks)
                     )
             index_default_constructor = partial(
                     IndexHierarchy._from_type_blocks,
                     own_blocks=True)
-
         else:
+            assert len(names) == self._columns.depth
             index_labels = chain(names, self._index.values)
             index_default_constructor = Index
 
