@@ -1,6 +1,14 @@
 What is New in Static Frame
 ===============================
 
+0.9.5
+----------
+
+Updated AutoMap to 0.5.1
+
+Removed "performance" package from setup.py
+
+
 0.9.4
 ----------
 
