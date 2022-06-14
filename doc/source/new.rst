@@ -34,6 +34,8 @@ Corrected issue when using binary operators with a `FrameGO` and a `Series`.
 
 Corrected issue and performance of ``name`` assignment when extracting ``Series`` from ``Frame`` with an ``IndexHierarchy``.
 
+Added ``IndexAutoConstructorFactory`` for automatic constructor selection based on NumPy dtype.
+
 
 0.9.2
 ----------
