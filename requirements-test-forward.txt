@@ -1,5 +1,5 @@
 numpy==1.22.2
-automap==0.4.8
+automap==0.5.1
 arraykit==0.1.8
 
 pytest==6.2.5
