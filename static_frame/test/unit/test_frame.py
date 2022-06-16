@@ -10011,6 +10011,13 @@ class TestUnit(TestCase):
                 ((0, ((0, False), (1, True), (2, True), (3, True), (4, True))), (1, ((0, 1), (1, 6), (2, 11), (3, 16), (4, 21))), (2, ((0, 2), (1, 7), (2, 12), (3, 17), (4, 22))), (3, ((0, 3), (1, 8), (2, 13), (3, 18), (4, 23))), (4, ((0, 4), (1, 9), (2, 14), (3, 19), (4, 24))))
                 )
 
+    def test_frame_astype_g(self) -> None:
+        f1 = ff.parse('s(3,5)|v(int,str,bool,str,int)')
+        f2 = f1.astype[f1.dtypes.values == int](str)
+        self.assertEqual([d.kind for d in f2.dtypes.values],
+                ['U', 'U', 'b', 'U', 'U']
+                )
+
 
 
     #---------------------------------------------------------------------------

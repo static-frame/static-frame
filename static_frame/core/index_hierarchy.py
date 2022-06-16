@@ -2727,6 +2727,7 @@ class IndexHierarchyAsType:
         index_constructors = container.index_types.values.copy()
 
         dtype_post = blocks.dtypes[self.key] # can select element or array
+
         if isinstance(dtype_post, np.dtype):
             index_constructors[self.key] = dtype_to_index_cls(
                     container.STATIC,
