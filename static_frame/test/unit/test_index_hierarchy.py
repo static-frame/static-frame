@@ -3575,6 +3575,15 @@ class TestUnit(TestCase):
                 ((0, np.dtype('int64')), (1, np.dtype('int64')), (2, np.dtype('<M8[M]')))
                 )
 
+    def test_hierarchy_astype_f(self) -> None:
+
+        idx1 = IndexHierarchy.from_labels([("1", 2), (3, "4"), ('5', '6')], name=(5, 6))
+        idx2 = idx1.astype[np.array([True, False])](str)
+        self.assertEqual([d.kind for d in idx2.dtypes.values], ['U', 'O'])
+
+        idx3 = idx2.astype[np.array([True, True])](str)
+        self.assertEqual([d.kind for d in idx3.dtypes.values], ['U', 'U'])
+
     #---------------------------------------------------------------------------
 
     @skip_win #type: ignore

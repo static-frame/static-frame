@@ -1454,7 +1454,7 @@ class TypeBlocks(ContainerOperand):
             retain_key_order: bool = True
             ) -> tp.Iterator[tp.Tuple[int, tp.Union[slice, int]]]:
         '''
-        For a column key (an integer, slice, or iterable), generate pairs of (block_idx, slice or integer) to cover all extractions. First, get the relevant index values (pairs of block id, column id), then convert those to contiguous slices.
+        For a column key (an integer, slice, iterable, Boolean array), generate pairs of (block_idx, slice or integer) to cover all extractions. First, get the relevant index values (pairs of block id, column id), then convert those to contiguous slices.
 
         Args:
             retain_key_order: if False, returned slices will be in ascending order.
