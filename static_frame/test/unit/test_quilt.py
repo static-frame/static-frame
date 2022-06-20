@@ -15,6 +15,8 @@ from static_frame.core.bus import Bus
 from static_frame.core.yarn import Yarn
 from static_frame.core.batch import Batch
 from static_frame.core.store import StoreConfig
+from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_datetime import IndexSecond
 
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitQuilt
@@ -1615,7 +1617,7 @@ class TestUnit(TestCase):
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
 
     #---------------------------------------------------------------------------
-    def test_quilt_dt64_index(self) -> None:
+    def test_quilt_dt64_index_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int)|i(ID,dtD)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f2')
@@ -1623,8 +1625,17 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2))
         q1 = Quilt(b1, retain_labels=True)
         self.assertTrue(q1.shape, (8, 4))
-        import ipdb; ipdb.set_trace()
+        self.assertIs(q1.index.index_types[1], IndexDate)
 
+    def test_quilt_dt64_index_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)|i(ID,dtD)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|i(IS,dts)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True)
+        self.assertTrue(q1.shape, (8, 4))
+        self.assertIs(q1.index.index_types[1], IndexSecond)
 
 if __name__ == '__main__':
     import unittest

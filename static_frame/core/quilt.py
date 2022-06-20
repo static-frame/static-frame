@@ -125,7 +125,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     if opposite is None:
                         opposite = f.columns
                 elif axis == 1: # along columns
-                    f = frame.iloc[:, start:end]
+                    f = frame.iloc[NULL_SLICE, start:end]
                     label = label_extractor(f.columns) #type: ignore
                     axis_map_components[label] = f.columns
                     if opposite is None:

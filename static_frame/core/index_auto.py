@@ -12,6 +12,7 @@ from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import iterable_to_array_1d
 
 class IndexConstructorFactoryBase:
     def __call__(self,
@@ -54,21 +55,25 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
         self._name = name
 
     @staticmethod
-    def to_index(labels: np.ndarray,
+    def to_index(labels: tp.Iterable[tp.Hashable],
             *,
             default_constructor: tp.Type[IndexBase],
             name: NameType = None,
             ) -> IndexBase:
         '''Create and return the ``Index`` based on the array ``dtype``
         '''
-        # NOTE: not sure what to do if not an array
         from static_frame.core.index_datetime import dtype_to_index_cls
+
+        if labels.__class__ is not np.ndarray:
+            # we can assume that this is 1D; returns an immutable array
+            labels, _ = iterable_to_array_1d(labels)
+
         return dtype_to_index_cls(
                 static=default_constructor.STATIC,
                 dtype=labels.dtype)(labels, name=name)
 
     def __call__(self,
-            labels: np.ndarray,
+            labels: tp.Iterable[tp.Hashable],
             *,
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase] = Index,
