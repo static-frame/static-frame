@@ -1614,6 +1614,17 @@ class TestUnit(TestCase):
 
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
 
+    #---------------------------------------------------------------------------
+    def test_quilt_dt64_index(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)|i(ID,dtD)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True)
+        self.assertTrue(q1.shape, (8, 4))
+        import ipdb; ipdb.set_trace()
+
 
 if __name__ == '__main__':
     import unittest
