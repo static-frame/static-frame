@@ -2020,7 +2020,6 @@ class IndexHierarchy(IndexBase):
             immutable NumPy array.
         '''
         dtype = None if not dtypes else dtypes[0] # must be a tuple
-
         if skipna:
             post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
         else:

@@ -4223,5 +4223,12 @@ class TestUnit(TestCase):
         self.assertEqual(ih.loc[ih.iloc[0]],
             (np.datetime64('1990'), np.datetime64('2000-03-14')))
 
+    #---------------------------------------------------------------------------
+    def test_hierarchy_max_a(self) -> None:
+        ih = IndexHierarchy.from_labels([[1, 2], [3, 4]])
+        post = ih.max()
+
+
+
 if __name__ == '__main__':
     unittest.main()
