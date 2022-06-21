@@ -268,7 +268,7 @@ class IndexHierarchy(IndexBase):
             depth: int,
             ) -> tp.Iterator[IndexConstructor]:
         '''
-        Returns an iterable of `depth` number of index constructors based on user-provided `index_constructors`
+        Returns an iterable of `depth` number of index constructors based on user-provided ``index_constructors``.
 
         Args:
             dtype_per_depth: Optionally provide a dtype per depth to be used with ``IndexAutoConstructorFactory``.
@@ -276,7 +276,7 @@ class IndexHierarchy(IndexBase):
         if index_constructors is None:
             yield from (cls._INDEX_CONSTRUCTOR for _ in range(depth))
 
-        elif callable(index_constructors): # support a single constrctor
+        elif callable(index_constructors): # support a single constructor
             ctr = constructor_from_optional_constructor(
                     default_constructor=cls._INDEX_CONSTRUCTOR,
                     explicit_constructor=index_constructors
@@ -581,7 +581,6 @@ class IndexHierarchy(IndexBase):
                 index_constructors=index_constructors,
                 depth=depth,
                 )
-
         indices = [constructor(hash_map)
                 for constructor, hash_map in zip(index_constructors_iter, hash_maps)
                 ]
