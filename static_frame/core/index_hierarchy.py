@@ -2025,7 +2025,7 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
 
         if not ufunc_is_statistical(ufunc):
-            # NOTE: as min and max are label based, it is awkward that statistical functions are depth level based; we permit this for sum, prod, cumsum, cumprod for backward compatibility they might also raise
+            # NOTE: as min and max are label based, it is awkward that statistical functions are calculated as Frames, per depth level; we permit this for sum, prod, cumsum, cumprod for backward compatibility, however they might also raise
             raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to Frame.')
 
         if ufunc is np.max or ufunc is np.min:

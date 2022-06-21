@@ -4918,7 +4918,6 @@ class Frame(ContainerOperand):
             post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
         else:
             post = ufunc(self.values, axis=axis, dtype=dtype)
-
         post.flags.writeable = False
 
         return self.__class__(
