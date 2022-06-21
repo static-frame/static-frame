@@ -4262,7 +4262,7 @@ class TestUnit(TestCase):
         post = ih.min()
         self.assertEqual(post.tolist(), [-1, -4])
 
-    def test_hierarchy_cumsum_e(self) -> None:
+    def test_hierarchy_cumsum_a(self) -> None:
         ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
         ih.append([-1, np.nan])
 
