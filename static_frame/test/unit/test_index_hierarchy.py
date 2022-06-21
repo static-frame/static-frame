@@ -4256,5 +4256,24 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = ih.mean()
 
+    def test_hierarchy_max_d(self) -> None:
+        ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
+        ih.append([-1, -4])
+        post = ih.min()
+        self.assertEqual(post.tolist(), [-1, -4])
+
+    def test_hierarchy_cumsum_e(self) -> None:
+        ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
+        ih.append([-1, np.nan])
+
+        post = ih.cumsum()
+        self.assertEqual(post.tolist(),
+            [[1.0, 2.0], [21.0, 3.0], [24.0, 7.0], [23.0, 7.0]]
+            )
+        self.assertEqual(ih.cumsum(skipna=False).astype(str).tolist(),
+            [['1.0', '2.0'], ['21.0', '3.0'], ['24.0', '7.0'], ['23.0', 'nan']]
+            )
+
+
 if __name__ == '__main__':
     unittest.main()
