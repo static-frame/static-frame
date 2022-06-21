@@ -894,7 +894,7 @@ class Index(IndexBase):
                 result = self._positions[key]
             except IndexError:
                 # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
-                if is_array and key.dtype == DTYPE_BOOL:
+                if is_array and key.dtype == DTYPE_BOOL: #type: ignore
                     raise # loc selection on Boolean array selection returns IndexError
                 raise KeyError(key)
             except TypeError:
