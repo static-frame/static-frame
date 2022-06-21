@@ -1,6 +1,14 @@
 What is New in Static Frame
 ===============================
 
+0.9.6
+----------
+
+Corrected issue in ``Quilt`` creation when given a ``Bus`` with ``Frame`` with ``datetime64`` indices.
+
+Extended ``IndexAutoConstructorFactory`` to evaluate dtype from arbitrary iterables, not just arrays.
+
+
 0.9.5
 ----------
 
