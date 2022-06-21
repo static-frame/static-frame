@@ -4225,8 +4225,24 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_hierarchy_max_a(self) -> None:
-        ih = IndexHierarchy.from_labels([[1, 2], [3, 4]])
-        post = ih.max()
+        ih = IndexHierarchy.from_labels([[1, 2], [20, 1], [3, 4]])
+        self.assertEqual(ih.max().tolist(), [20, 1])
+        self.assertEqual(ih.min().tolist(), [1, 2])
+        self.assertEqual(ih.loc_to_iloc(ih.max()), 1)
+        self.assertEqual(ih.loc_to_iloc(ih.min()), 0)
+
+        with self.assertRaises(NotImplementedError):
+            _ = ih.max(axis=1)
+
+    def test_hierarchy_max_b(self) -> None:
+        ih = IndexHierarchy.from_labels([[3, 4], [20, 1], [2, 1], [22, None]])
+        self.assertEqual(ih.max().tolist(), [20, 1])
+        self.assertEqual(ih.min().tolist(), [2, 1])
+        self.assertEqual(ih.loc_to_iloc(ih.max()), 1)
+        self.assertEqual(ih.loc_to_iloc(ih.min()), 2)
+
+        with self.assertRaises(TypeError):
+            _ = ih.max(skipna=False)
 
 
 

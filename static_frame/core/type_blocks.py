@@ -1313,20 +1313,21 @@ class TypeBlocks(ContainerOperand):
             else:
                 # Combine columns, end with block length shape and then call func again, for final result
                 if b.size == 1 and size_one_unity and not skipna:
-                    out[:, idx] = b
+                    out[NULL_SLICE, idx] = b
                 elif b.ndim == 1:
                     # if this is a composable, numeric single columns we just copy it and process it later; but if this is a logical application (and, or) then it is already Boolean
                     if out.dtype == DTYPE_BOOL and b.dtype != DTYPE_BOOL:
                         # making 2D with axis 0 func will result in element-wise operation
-                        out[:, idx] = func(array=column_2d_filter(b), axis=1)
+                        out[NULL_SLICE, idx] = func(array=column_2d_filter(b), axis=1)
                     else: # otherwise, keep as is
-                        out[:, idx] = b
+                        out[NULL_SLICE, idx] = b
                 else:
-                    func(array=b, axis=axis, out=out[:, idx])
+                    func(array=b, axis=axis, out=out[NULL_SLICE, idx])
 
         if axis == 0: # nothing more to do
             out.flags.writeable = False
             return out
+
         # If axis 1 and composable, can call function one more time on remaining components. Note that composability is problematic in cases where overflow is possible
         result = func(array=out, axis=1)
         result.flags.writeable = False

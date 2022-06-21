@@ -2019,11 +2019,28 @@ class IndexHierarchy(IndexBase):
         Returns:
             immutable NumPy array.
         '''
-        dtype = None if not dtypes else dtypes[0] # must be a tuple
-        if skipna:
-            post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
+        if ufunc is np.max or ufunc is np.min:
+            if axis == 1:
+                raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined for axis {axis}')
+
+            if skipna:
+                # as we will be doing a lexicasl sort, must drop any label with a missing value
+                source = self.dropna(condition=np.any)
+            else:
+                source = self
+
+            order = sort_index_for_order(source, kind=DEFAULT_SORT_KIND, ascending=True, key=None)
+            # if skipna, drop rows with any NaNs
+            blocks = self._blocks._extract(row_key=order)
+            # NOTE: this could return a tuple rather than an array
+            post = blocks._extract_array(row_key=(-1 if ufunc is np.max else 0))
+
         else:
-            post = ufunc(self.values, axis=axis, dtype=dtype)
+            dtype = None if not dtypes else dtypes[0] # must be a tuple
+            if skipna:
+                post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
+            else:
+                post = ufunc(self.values, axis=axis, dtype=dtype)
 
         post.flags.writeable = False
         return post
@@ -2231,7 +2248,7 @@ class IndexHierarchy(IndexBase):
             condition: tp.Callable[[np.ndarray], bool],
             ) -> IH:
         '''
-        Return a new obj:`IndexHierarchy` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+        Return a new obj:`IndexHierarchy` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by  a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
         Args:
             axis:
