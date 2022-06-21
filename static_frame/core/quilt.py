@@ -6,6 +6,7 @@ from functools import partial
 import numpy as np
 
 from static_frame.core.bus import Bus
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.display import Display
@@ -124,7 +125,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     if opposite is None:
                         opposite = f.columns
                 elif axis == 1: # along columns
-                    f = frame.iloc[:, start:end]
+                    f = frame.iloc[NULL_SLICE, start:end]
                     label = label_extractor(f.columns) #type: ignore
                     axis_map_components[label] = f.columns
                     if opposite is None:
@@ -136,7 +137,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         name = name if name else frame.name
         bus = Bus.from_frames(values(), config=config, name=name)
 
-        axis_hierarchy = IndexHierarchy.from_tree(axis_map_components)
+        axis_hierarchy = IndexHierarchy.from_tree(axis_map_components,
+                index_constructors=IndexAutoConstructorFactory)
 
         return cls(bus,
                 axis=axis,
