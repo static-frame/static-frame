@@ -1608,13 +1608,18 @@ def pos_loc_slice_to_iloc_slice(
     '''
     if key == NULL_SLICE:
         return key
+
+    # NOTE: we are not validating that this is an integer here
     start = None if key.start is None else key.start
 
     if key.stop is None:
         stop = None
     else:
-        if key.stop >= length:
-            # while a valid slice of positions, loc lookups do not permit over-stating boundaries
+        try:
+            if key.stop >= length:
+                # while a valid slice of positions, loc lookups do not permit over-stating boundaries
+                raise LocInvalid(f'Invalid loc: {key}')
+        except TypeError: # if stop is not an int
             raise LocInvalid(f'Invalid loc: {key}')
 
         stop = key.stop + 1

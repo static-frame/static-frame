@@ -883,24 +883,23 @@ class Index(IndexBase):
         if self._map is None: # loc is iloc
             # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array. This also handles and re-raises better exceptions.
 
-            key = key_from_container_key(self, key)
-
-            if self._recache:
-                self._update_array_cache()
-
-            is_array = key.__class__ is np.ndarray
-            try:
-                # NOTE: this insures that the returned type will be DTYPE_INT_DEFAULT
-                result = self._positions[key]
-            except IndexError:
-                # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
-                if is_array and key.dtype == DTYPE_BOOL: #type: ignore
-                    raise # loc selection on Boolean array selection returns IndexError
-                raise KeyError(key)
-            except TypeError:
-                raise LocInvalid(f'Invalid loc: {key}')
-
             if not key.__class__ is slice:
+                if self._recache:
+                    self._update_array_cache()
+
+                key = key_from_container_key(self, key)
+                is_array = key.__class__ is np.ndarray
+                try:
+                    # NOTE: this insures that the returned type will be DTYPE_INT_DEFAULT
+                    result = self._positions[key]
+                except IndexError:
+                    # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
+                    if is_array and key.dtype == DTYPE_BOOL: #type: ignore
+                        raise # loc selection on Boolean array selection returns IndexError
+                    raise KeyError(key)
+                except TypeError:
+                    raise LocInvalid(f'Invalid loc: {key}')
+
                 return result # return position as array
 
             # might raise LocInvalid

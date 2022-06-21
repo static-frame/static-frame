@@ -193,8 +193,10 @@ class TestUnit(TestCase):
             _ = idx2.loc_to_iloc(5)
 
         self.assertEqual(idx2.loc_to_iloc(slice(1, 3)), slice(1, 4))
+
         with self.assertRaises(LocInvalid):
             _ = idx2.loc_to_iloc(slice('x', 'y'))
+
         with self.assertRaises(LocInvalid):
             # loc slices are always interpreted as inclusive, so going beyond the inclusive boundary is an error
             _ = idx2.loc_to_iloc(slice(0, 4))
