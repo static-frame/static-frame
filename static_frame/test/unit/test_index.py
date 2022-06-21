@@ -281,6 +281,13 @@ class TestUnit(TestCase):
         post2 = idx1.loc_to_iloc(Series((3, 1), index=('a', 'b')))
         self.assertEqual(post1.tolist(), post2.tolist())
 
+    def test_index_loc_to_iloc_m(self) -> None:
+        idx1 = IndexGO(range(4), loc_is_iloc=True)
+        idx1.append(4)
+        self.assertTrue(idx1._map is None)
+        post1 = idx1.loc_to_iloc([3, 0])
+        self.assertEqual(post1.tolist(), [3, 0])
+
 
     #---------------------------------------------------------------------------
 

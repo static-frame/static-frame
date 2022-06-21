@@ -881,7 +881,7 @@ class Index(IndexBase):
             key: a label key.
         '''
         if self._map is None: # loc is iloc
-            # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array
+            # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array. This also handles and re-raises better exceptions.
 
             key = key_from_container_key(self, key)
 
@@ -905,8 +905,6 @@ class Index(IndexBase):
 
             # might raise LocInvalid
             return pos_loc_slice_to_iloc_slice(key, self.__len__())
-
-            # return key
 
         return self._loc_to_iloc(key)
 
