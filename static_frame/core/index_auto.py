@@ -70,7 +70,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
 
         return dtype_to_index_cls(
                 static=default_constructor.STATIC,
-                dtype=labels.dtype)(labels, name=name)
+                dtype=labels.dtype)(labels, name=name) #type: ignore
 
     def __call__(self,
             labels: tp.Iterable[tp.Hashable],
