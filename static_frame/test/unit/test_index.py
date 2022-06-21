@@ -199,7 +199,7 @@ class TestUnit(TestCase):
             # loc slices are always interpreted as inclusive, so going beyond the inclusive boundary is an error
             _ = idx2.loc_to_iloc(slice(0, 4))
 
-        self.assertEqual(idx2.loc_to_iloc([3, 0]), [3, 0])
+        self.assertEqual(idx2.loc_to_iloc([3, 0]).tolist(), [3, 0])
         with self.assertRaises(KeyError):
             _ = idx2.loc_to_iloc([3, 20])
 

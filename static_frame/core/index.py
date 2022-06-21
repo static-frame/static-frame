@@ -881,11 +881,13 @@ class Index(IndexBase):
             key: a label key.
         '''
         if self._map is None: # loc is iloc
+            # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array
+
             key = key_from_container_key(self, key)
+
             if self._recache:
                 self._update_array_cache()
 
-            # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array
             is_array = key.__class__ is np.ndarray
             try:
                 # NOTE: this insures that the returned type will be DTYPE_INT_DEFAULT
@@ -898,14 +900,13 @@ class Index(IndexBase):
             except TypeError:
                 raise LocInvalid(f'Invalid loc: {key}')
 
-            if is_array:
+            if not key.__class__ is slice:
                 return result # return position as array
 
-            if key.__class__ is slice:
-                # might raise LocInvalid
-                key = pos_loc_slice_to_iloc_slice(key, self.__len__())
+            # might raise LocInvalid
+            return pos_loc_slice_to_iloc_slice(key, self.__len__())
 
-            return key
+            # return key
 
         return self._loc_to_iloc(key)
 
