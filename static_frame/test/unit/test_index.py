@@ -266,6 +266,13 @@ class TestUnit(TestCase):
         post = idx1.loc_to_iloc(NULL_SLICE)
         self.assertEqual(post, NULL_SLICE)
 
+    def test_index_loc_to_iloc_k(self) -> None:
+        idx1 = Index(range(4), loc_is_iloc=True)
+        self.assertTrue(idx1._map is None)
+
+        post = idx1.loc[[True, False, True, False]]
+        # import ipdb; ipdb.set_trace()
+
     #---------------------------------------------------------------------------
 
     def test_index_mloc_a(self) -> None:

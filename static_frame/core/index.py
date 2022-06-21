@@ -68,7 +68,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import setdiff1d
-from static_frame.core.util import slice_to_inclusive_slice
+from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
@@ -834,8 +834,6 @@ class Index(IndexBase):
             partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
-        Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
-
         Args:
             key_transform: A function that transforms keys to specialized type; used by IndexDate indices.
         Returns:
@@ -855,7 +853,8 @@ class Index(IndexBase):
                     # could use tolist(), but we expect all keys to be integers
                     return key.astype(DTYPE_INT_DEFAULT) #type: ignore
             elif key.__class__ is slice:
-                key = slice_to_inclusive_slice(key) #type: ignore
+                # might raise LocInvalid
+                key = pos_loc_slice_to_iloc_slice(key, self.__len__())
             return key
 
         if key_transform:
@@ -882,6 +881,8 @@ class Index(IndexBase):
             key: a label key.
         '''
         if self._map is None: # loc is iloc
+            # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array
+
             is_bool_array = key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL #type: ignore
 
             try:
@@ -897,13 +898,8 @@ class Index(IndexBase):
             if is_bool_array:
                 return result # return position as array
 
-            if isinstance(key, slice):
-                if key == NULL_SLICE:
-                    return NULL_SLICE
-                if key.stop >= len(self):
-                    # while a valid slice of positions, loc lookups do not permit over-stating boundaries
-                    raise LocInvalid(f'Invalid loc: {key}')
-                key = slice_to_inclusive_slice(key)
+            if key.__class__ is slice:
+                key = pos_loc_slice_to_iloc_slice(key, self.__len__())
 
             return key
 
