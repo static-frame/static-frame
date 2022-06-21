@@ -269,9 +269,18 @@ class TestUnit(TestCase):
     def test_index_loc_to_iloc_k(self) -> None:
         idx1 = Index(range(4), loc_is_iloc=True)
         self.assertTrue(idx1._map is None)
-
+        # for now, lists of Bools only work on indicies without maps
         post = idx1.loc[[True, False, True, False]]
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(post.values.tolist(), [0, 2])
+
+    def test_index_loc_to_iloc_l(self) -> None:
+        idx1 = Index(range(4), loc_is_iloc=True)
+        self.assertTrue(idx1._map is None)
+
+        post1 = idx1[Series((3, 1), index=('a', 'b'))]
+        post2 = idx1.loc_to_iloc(Series((3, 1), index=('a', 'b')))
+        self.assertEqual(post1.tolist(), post2.tolist())
+
 
     #---------------------------------------------------------------------------
 
