@@ -468,9 +468,9 @@ UFUNC_MAP: tp.Dict[UFunc, UFuncCategory] = {
 }
 
 def ufunc_to_category(func: UFunc) -> tp.Optional[UFuncCategory]:
-    if func.__class__ is partial:
+    if func.__class__ is partial: #type: ignore
         # std, var partialed
-        func = func.func
+        func = func.func #type: ignore
     return UFUNC_MAP.get(func, None)
 
 def ufunc_is_statistical(func: UFunc) -> bool:
