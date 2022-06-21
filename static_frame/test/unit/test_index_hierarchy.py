@@ -3290,6 +3290,12 @@ class TestUnit(TestCase):
                 [[10, 3], [100, 21], [2000, 63], [40000, 441]]
                 )
 
+    def test_hierarchy_ufunc_axis_skipna_c(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
+        with self.assertRaises(NotImplementedError):
+            _ = ih1.std()
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_pickle_a(self) -> None:
@@ -4245,6 +4251,10 @@ class TestUnit(TestCase):
             _ = ih.max(skipna=False)
 
 
+    def test_hierarchy_max_c(self) -> None:
+        ih = IndexHierarchy.from_labels([[1, 2], [20, 1], [3, 4]])
+        with self.assertRaises(NotImplementedError):
+            _ = ih.mean()
 
 if __name__ == '__main__':
     unittest.main()

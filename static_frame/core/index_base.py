@@ -460,34 +460,6 @@ class IndexBase(ContainerOperand):
                 other)
 
     #---------------------------------------------------------------------------
-    # metaclass-applied functions
-
-    def _ufunc_shape_skipna(self, *,
-            axis: int,
-            skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
-            composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
-            size_one_unity: bool
-            ) -> np.ndarray:
-        '''
-        For Index and IndexHierarchy, _ufunc_shape_skipna and _ufunc_axis_skipna are defined the same.
-
-        Returns:
-            immutable NumPy array.
-        '''
-        return self._ufunc_axis_skipna(
-                axis=axis,
-                skipna=skipna,
-                ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna,
-                composable=composable, # shape on axis 1 is never composable
-                dtypes=dtypes,
-                size_one_unity=size_one_unity
-                )
-
-    #---------------------------------------------------------------------------
     # via interfaces
 
     @property

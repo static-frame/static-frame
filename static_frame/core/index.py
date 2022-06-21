@@ -1043,7 +1043,31 @@ class Index(IndexBase):
                 ufunc_skipna=ufunc_skipna
                 )
 
-    # _ufunc_shape_skipna defined in IndexBase
+    def _ufunc_shape_skipna(self, *,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
+            composable: bool,
+            dtypes: tp.Tuple[np.dtype, ...],
+            size_one_unity: bool
+            ) -> np.ndarray:
+        '''
+        As Index and IndexHierarchy return np.ndarray from such operations, _ufunc_shape_skipna and _ufunc_axis_skipna can be defined the same.
+
+        Returns:
+            immutable NumPy array.
+        '''
+        # NOTE: for 1D Index, can use axis for shape ufunc
+        return self._ufunc_axis_skipna(
+                axis=axis,
+                skipna=skipna,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna,
+                composable=composable, # shape on axis 1 is never composable
+                dtypes=dtypes,
+                size_one_unity=size_one_unity
+                )
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
