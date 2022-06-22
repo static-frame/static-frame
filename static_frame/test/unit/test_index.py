@@ -193,13 +193,15 @@ class TestUnit(TestCase):
             _ = idx2.loc_to_iloc(5)
 
         self.assertEqual(idx2.loc_to_iloc(slice(1, 3)), slice(1, 4))
+
         with self.assertRaises(LocInvalid):
             _ = idx2.loc_to_iloc(slice('x', 'y'))
+
         with self.assertRaises(LocInvalid):
             # loc slices are always interpreted as inclusive, so going beyond the inclusive boundary is an error
             _ = idx2.loc_to_iloc(slice(0, 4))
 
-        self.assertEqual(idx2.loc_to_iloc([3, 0]), [3, 0])
+        self.assertEqual(idx2.loc_to_iloc([3, 0]).tolist(), [3, 0]) #type: ignore
         with self.assertRaises(KeyError):
             _ = idx2.loc_to_iloc([3, 20])
 
@@ -265,6 +267,29 @@ class TestUnit(TestCase):
                 default_constructor=Index)
         post = idx1.loc_to_iloc(NULL_SLICE)
         self.assertEqual(post, NULL_SLICE)
+
+    def test_index_loc_to_iloc_k(self) -> None:
+        idx1 = Index(range(4), loc_is_iloc=True)
+        self.assertTrue(idx1._map is None)
+        # for now, lists of Bools only work on indicies without maps
+        post = idx1.loc[[True, False, True, False]]
+        self.assertEqual(post.values.tolist(), [0, 2]) #type: ignore
+
+    def test_index_loc_to_iloc_l(self) -> None:
+        idx1 = Index(range(4), loc_is_iloc=True)
+        self.assertTrue(idx1._map is None)
+
+        post1 = idx1[Series((3, 1), index=('a', 'b'))]
+        post2 = idx1.loc_to_iloc(Series((3, 1), index=('a', 'b')))
+        self.assertEqual(post1.tolist(), post2.tolist()) #type: ignore
+
+    def test_index_loc_to_iloc_m(self) -> None:
+        idx1 = IndexGO(range(4), loc_is_iloc=True)
+        idx1.append(4)
+        self.assertTrue(idx1._map is None)
+        post1 = idx1.loc_to_iloc([3, 0])
+        self.assertEqual(post1.tolist(), [3, 0]) #type: ignore
+
 
     #---------------------------------------------------------------------------
 

@@ -68,7 +68,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import setdiff1d
-from static_frame.core.util import slice_to_inclusive_slice
+from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
@@ -834,8 +834,6 @@ class Index(IndexBase):
             partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
-        Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
-
         Args:
             key_transform: A function that transforms keys to specialized type; used by IndexDate indices.
         Returns:
@@ -848,14 +846,15 @@ class Index(IndexBase):
 
         if self._map is None: # loc_is_iloc
             if key.__class__ is np.ndarray:
-                if key.dtype == bool: #type: ignore
+                if key.dtype == DTYPE_BOOL: #type: ignore
                     return key
                 if key.dtype != DTYPE_INT_DEFAULT: #type: ignore
                     # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
                     return key.astype(DTYPE_INT_DEFAULT) #type: ignore
             elif key.__class__ is slice:
-                key = slice_to_inclusive_slice(key) #type: ignore
+                # might raise LocInvalid
+                key = pos_loc_slice_to_iloc_slice(key, self.__len__())
             return key
 
         if key_transform:
@@ -882,30 +881,29 @@ class Index(IndexBase):
             key: a label key.
         '''
         if self._map is None: # loc is iloc
-            is_bool_array = key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL #type: ignore
+            # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array. This also handles and re-raises better exceptions.
 
-            try:
-                result = self._positions[key]
-            except IndexError:
-                # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
-                if is_bool_array:
-                    raise # loc selection on Boolean array selection returns IndexError
-                raise KeyError(key)
-            except TypeError:
-                raise LocInvalid(f'Invalid loc: {key}')
+            if not key.__class__ is slice:
+                if self._recache:
+                    self._update_array_cache()
 
-            if is_bool_array:
+                key = key_from_container_key(self, key)
+                is_array = key.__class__ is np.ndarray
+                try:
+                    # NOTE: this insures that the returned type will be DTYPE_INT_DEFAULT
+                    result = self._positions[key]
+                except IndexError:
+                    # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
+                    if is_array and key.dtype == DTYPE_BOOL: #type: ignore
+                        raise # loc selection on Boolean array selection returns IndexError
+                    raise KeyError(key)
+                except TypeError:
+                    raise LocInvalid(f'Invalid loc: {key}')
+
                 return result # return position as array
 
-            if isinstance(key, slice):
-                if key == NULL_SLICE:
-                    return NULL_SLICE
-                if key.stop >= len(self):
-                    # while a valid slice of positions, loc lookups do not permit over-stating boundaries
-                    raise LocInvalid(f'Invalid loc: {key}')
-                key = slice_to_inclusive_slice(key)
-
-            return key
+            # might raise LocInvalid
+            return pos_loc_slice_to_iloc_slice(key, self.__len__())
 
         return self._loc_to_iloc(key)
 
@@ -930,8 +928,7 @@ class Index(IndexBase):
                 labels.flags.writeable = False
                 loc_is_iloc = False
         elif isinstance(key, KEY_ITERABLE_TYPES):
-            # we assume Booleans have been normalized to integers here
-            # can select directly from _labels[key] if if key is a list
+            # can select directly from _labels[key] if if key is a list, array, or Boolean array
             labels = self._labels[key]
             labels.flags.writeable = False
             loc_is_iloc = False

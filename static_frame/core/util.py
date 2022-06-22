@@ -28,6 +28,7 @@ from automap import FrozenAutoMap  # pylint: disable = E0611
 import numpy as np
 
 from static_frame.core.exception import InvalidDatetime64Comparison
+from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
@@ -1599,14 +1600,29 @@ def slice_to_ascending_slice(
 
     return slice(norm_range[-1], stop, key_step * -1)
 
-def slice_to_inclusive_slice(
+def pos_loc_slice_to_iloc_slice(
         key: slice,
-        offset: int = 0,
+        length: int,
         ) -> slice:
-    '''Make a stop exclusive key inclusive by adding one to the stop value.
+    '''Make a positional (integer) exclusive stop key inclusive by adding one to the stop value.
     '''
-    start = None if key.start is None else key.start + offset
-    stop = None if key.stop is None else key.stop + 1 + offset
+    if key == NULL_SLICE:
+        return key
+
+    # NOTE: we are not validating that this is an integer here
+    start = None if key.start is None else key.start
+
+    if key.stop is None:
+        stop = None
+    else:
+        try:
+            if key.stop >= length:
+                # while a valid slice of positions, loc lookups do not permit over-stating boundaries
+                raise LocInvalid(f'Invalid loc: {key}')
+        except TypeError: # if stop is not an int
+            raise LocInvalid(f'Invalid loc: {key}')
+
+        stop = key.stop + 1
     return slice(start, stop, key.step)
 
 
