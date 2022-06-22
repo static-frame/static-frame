@@ -1,6 +1,7 @@
 What is New in Static Frame
 ===============================
 
+
 0.9.6
 ----------
 
@@ -9,6 +10,8 @@ Corrected issue in ``Quilt`` creation when given a ``Bus`` with ``Frame`` with `
 Extended ``IndexAutoConstructorFactory`` to evaluate dtype from arbitrary iterables, not just arrays.
 
 Improvements to consistency and performance of ``loc_to_iloc`.
+
+Implemented ``max`` and ``min`` methods on ``IndexHierarchy``; related statistical methods now raise.
 
 
 0.9.5
