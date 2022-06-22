@@ -3290,6 +3290,12 @@ class TestUnit(TestCase):
                 [[10, 3], [100, 21], [2000, 63], [40000, 441]]
                 )
 
+    def test_hierarchy_ufunc_axis_skipna_c(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
+        with self.assertRaises(NotImplementedError):
+            _ = ih1.std()
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_pickle_a(self) -> None:
@@ -4222,6 +4228,52 @@ class TestUnit(TestCase):
 
         self.assertEqual(ih.loc[ih.iloc[0]],
             (np.datetime64('1990'), np.datetime64('2000-03-14')))
+
+    #---------------------------------------------------------------------------
+    def test_hierarchy_max_a(self) -> None:
+        ih = IndexHierarchy.from_labels([[1, 2], [20, 1], [3, 4]])
+        self.assertEqual(ih.max().tolist(), [20, 1])
+        self.assertEqual(ih.min().tolist(), [1, 2])
+        self.assertEqual(ih.loc_to_iloc(ih.max()), 1)
+        self.assertEqual(ih.loc_to_iloc(ih.min()), 0)
+
+        with self.assertRaises(NotImplementedError):
+            _ = ih.max(axis=1)
+
+    def test_hierarchy_max_b(self) -> None:
+        ih = IndexHierarchy.from_labels([[3, 4], [20, 1], [2, 1], [22, None]])
+        self.assertEqual(ih.max().tolist(), [20, 1])
+        self.assertEqual(ih.min().tolist(), [2, 1])
+        self.assertEqual(ih.loc_to_iloc(ih.max()), 1)
+        self.assertEqual(ih.loc_to_iloc(ih.min()), 2)
+
+        with self.assertRaises(TypeError):
+            _ = ih.max(skipna=False)
+
+
+    def test_hierarchy_max_c(self) -> None:
+        ih = IndexHierarchy.from_labels([[1, 2], [20, 1], [3, 4]])
+        with self.assertRaises(NotImplementedError):
+            _ = ih.mean()
+
+    def test_hierarchy_max_d(self) -> None:
+        ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
+        ih.append([-1, -4])
+        post = ih.min()
+        self.assertEqual(post.tolist(), [-1, -4])
+
+    def test_hierarchy_cumsum_a(self) -> None:
+        ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
+        ih.append([-1, np.nan])
+
+        post = ih.cumsum()
+        self.assertEqual(post.tolist(),
+            [[1.0, 2.0], [21.0, 3.0], [24.0, 7.0], [23.0, 7.0]]
+            )
+        self.assertEqual(ih.cumsum(skipna=False).astype(str).tolist(),
+            [['1.0', '2.0'], ['21.0', '3.0'], ['24.0', '7.0'], ['23.0', 'nan']]
+            )
+
 
 if __name__ == '__main__':
     unittest.main()

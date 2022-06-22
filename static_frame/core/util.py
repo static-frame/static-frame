@@ -468,10 +468,21 @@ UFUNC_MAP: tp.Dict[UFunc, UFuncCategory] = {
     np.nancumprod: UFuncCategory.CUMMULATIVE,
 }
 
+def ufunc_to_category(func: UFunc) -> tp.Optional[UFuncCategory]:
+    if func.__class__ is partial: #type: ignore
+        # std, var partialed
+        func = func.func #type: ignore
+    return UFUNC_MAP.get(func, None)
+
+def ufunc_is_statistical(func: UFunc) -> bool:
+    category = ufunc_to_category(func)
+    return not category is UFuncCategory.STATISTICAL
+
+
 def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
     '''Given a common UFunc and dtype, return the expected return dtype, or None if not possible.
     '''
-    rt = UFUNC_MAP.get(func, None)
+    rt = ufunc_to_category(func)
 
     if rt is None:
         return None

@@ -31,6 +31,8 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import is_neither_slice_nor_mask
+from static_frame.core.util import ufunc_is_statistical
+
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_base import IndexBase
@@ -2018,17 +2020,65 @@ class IndexHierarchy(IndexBase):
         Returns:
             immutable NumPy array.
         '''
-        dtype = None if not dtypes else dtypes[0] # must be a tuple
+        if self._recache:
+            self._update_array_cache()
 
+        if not ufunc_is_statistical(ufunc):
+            # NOTE: as min and max are label based, it is awkward that statistical functions are calculated as Frames, per depth level; we permit this for sum, prod, cumsum, cumprod for backward compatibility, however they might also raise
+            raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to Frame.')
+
+        if ufunc is np.max or ufunc is np.min:
+            # max and min are treated per label; thus we do a lexical sort for axis 0
+            if axis == 1:
+                raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined for axis {axis}.')
+
+            # as we will be doing a lexicasl sort, must drop any label with a missing value
+            order = sort_index_for_order(
+                    self.dropna(condition=np.any) if skipna else self,
+                    kind=DEFAULT_SORT_KIND,
+                    ascending=True,
+                    key=None,
+                    )
+            # if skipna, drop rows with any NaNs
+            blocks = self._blocks._extract(row_key=order)
+            # NOTE: this could return a tuple rather than an array
+            return blocks._extract_array(row_key=(-1 if ufunc is np.max else 0))
+
+        return self._blocks.ufunc_axis_skipna(
+                skipna=skipna,
+                axis=axis,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna,
+                composable=composable,
+                dtypes=dtypes,
+                size_one_unity=size_one_unity,
+                )
+
+    def _ufunc_shape_skipna(self, *,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
+            composable: bool,
+            dtypes: tp.Tuple[np.dtype, ...],
+            size_one_unity: bool
+            ) -> np.ndarray:
+        '''
+        As Index and IndexHierarchy return np.ndarray from such operations, _ufunc_shape_skipna and _ufunc_axis_skipna can be defined the same.
+
+        Returns:
+            immutable NumPy array.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        dtype = None if not dtypes else dtypes[0] # only a tuple
         if skipna:
             post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
         else:
             post = ufunc(self.values, axis=axis, dtype=dtype)
-
         post.flags.writeable = False
         return post
-
-    # _ufunc_shape_skipna defined in IndexBase
 
     # --------------------------------------------------------------------------
     # dictionary-like interface
@@ -2231,7 +2281,7 @@ class IndexHierarchy(IndexBase):
             condition: tp.Callable[[np.ndarray], bool],
             ) -> IH:
         '''
-        Return a new obj:`IndexHierarchy` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
+        Return a new obj:`IndexHierarchy` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by  a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
         Args:
             axis:
