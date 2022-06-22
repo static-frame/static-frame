@@ -4914,14 +4914,10 @@ class Frame(ContainerOperand):
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
         dtype = None if not dtypes else dtypes[0] # only a tuple
-
-        # assumed not composable for axis 1, full-shape processing requires processing contiguous values
-        v = self.values
         if skipna:
-            post = ufunc_skipna(v, axis=axis, dtype=dtype)
+            post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
         else:
-            post = ufunc(v, axis=axis, dtype=dtype)
-
+            post = ufunc(self.values, axis=axis, dtype=dtype)
         post.flags.writeable = False
 
         return self.__class__(
