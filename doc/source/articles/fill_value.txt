@@ -61,7 +61,7 @@ We can create the same DataFrame in StaticFrame and reindex it with a single fil
 <int64> <object> <float64> <object>
 
 
-Beyond a single element, a fill value can provide a list of fill value per column:
+Beyond a single element, a fill value can provide a list of fill values per column:
 
 >>> f.reindex((1, 0, 2), fill_value=['', 0, False])
 <Frame>
@@ -73,7 +73,7 @@ Beyond a single element, a fill value can provide a list of fill value per colum
 <int64> <<U1> <int64> <bool>
 
 
-A dictionary can be used to provide a partial or complete mapping by column label.
+A dictionary can be used to provide a mapping of column label to fill value. If label is not provided, the default (``np.nan``) will be provided.
 
 >>> f.reindex((1, 0, 2), fill_value={'z':False, 'x':''})
 <Frame>
@@ -85,9 +85,37 @@ A dictionary can be used to provide a partial or complete mapping by column labe
 <int64> <<U1> <float64> <bool>
 
 
-The following examples all require an explicit value per column, providing maximum specificity. In many cases (and in particular for larger DataFrame), a more general specification is appropriate. Specifying a fill vlaue per dtype kind can be used to avoid type coercions while not requiring a specifcation per column. NumPy dtypes have a "kind" independent of dtype "size": for example, int8, int16, int32, and int64 dtypes all have kind "i". There are eleven dtype kinds summarized in the table below:
+The previous examples all require an explicit value per column, providing maximum specificity. In many cases (and in particular for larger DataFrames), a more general specification is appropriate.
 
-TABLE
+Specifying a fill vlaue per dtype kind can be used to avoid type coercions while not requiring a specifcation per column. NumPy dtypes have a "kind" independent of dtype "size": for example, int8, int16, int32, and int64 dtypes all have kind "i". There are eleven dtype kinds summarized in the table below:
+
++-----+------------+
+|Kind |Example name|
++=====+============+
+|b    |bool        |
++-----+------------+
+|i    |int64       |
++-----+------------+
+|u    |uint64      |
++-----+------------+
+|f    |float64     |
++-----+------------+
+|c    |complex128  |
++-----+------------+
+|m    |timedelta64 |
++-----+------------+
+|M    |datetime64  |
++-----+------------+
+|O    |object      |
++-----+------------+
+|S    |bytes       |
++-----+------------+
+|U    |str         |
++-----+------------+
+|V    |void        |
++-----+------------+
+
+
 
 The fill value `FillValueAuto`, used as a class, will provide tyep-coercion-free defaults for all kinds. If a different mapping is desired, a ``FillValueAuto`` instance can be created, specifying a value per kind.
 
@@ -153,4 +181,8 @@ fails on 1.4.2
 
 
 
+
+>>> types = [np.dtype(bool), np.dtype(int), np.dtype(np.uint), np.dtype(float), np.dtype(complex), np.dtype(np.timedelta64), np.dtype(np.datetime64), np.dtype(object), np.dtype(bytes), np.dtype(str), np.dtype(np.void)]
+
+>>> print(sf.Frame.from_fields(([t.kind for t in types], [t.name for t in types]), columns=('Kind', 'Example name')).to_rst(sf.DisplayConfig(include_index=False, type_show=False)))
 
