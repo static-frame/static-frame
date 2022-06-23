@@ -2,6 +2,12 @@ What is New in Static Frame
 ===============================
 
 
+0.9.7
+----------
+
+Corrected issue in ``Series.from_overlay()`` that prematurely aborted processing all ``Series``
+
+
 0.9.6
 ----------
 
