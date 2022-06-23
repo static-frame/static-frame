@@ -4772,6 +4772,29 @@ class TestUnit(TestCase):
                 (('a', 1), ('b', 230), ('c', 5), ('d', -5))
                 )
 
+    def test_series_from_overlay_n(self) -> None:
+
+        values = (Series(['a'], index=tuple('y')),
+                Series([np.nan, 'c', 'missing'], index=tuple('xyz')),
+                Series(['', 'd', 'missing'], index=tuple('xyz'))
+                )
+        s = Series.from_overlay(values)
+        self.assertEqual(s.to_pairs(),
+                (('x', ''), ('y', 'a'), ('z', 'missing'))
+                )
+
+    def test_series_from_overlay_o(self) -> None:
+
+        values = (Series(['a'], index=tuple('y')),
+                Series(['a'], index=tuple('y')),
+                Series([np.nan, 'c', 'missing'], index=tuple('xyz')),
+                Series(['', 'd', 'missing'], index=tuple('xyz'))
+                )
+        s = Series.from_overlay(values)
+        self.assertEqual(s.to_pairs(),
+                (('x', ''), ('y', 'a'), ('z', 'missing'))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_series_sample_a(self) -> None:

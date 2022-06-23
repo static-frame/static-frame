@@ -374,6 +374,8 @@ class Series(ContainerOperand):
             index: An :obj:`Index` or :obj:`IndexHierarchy`, or index initializer, to be used as the index upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
             union: If True, and no ``index`` argument is supplied, a union index from ``containers`` will be used; if False, the intersection index will be used.
             name:
+            func:
+            fill_value:
         '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
@@ -401,9 +403,6 @@ class Series(ContainerOperand):
 
         for container in container_iter:
             filled = post._fill_missing(container, func)
-            # if no targets are found self is returned; use to determine if no targets remain
-            if filled is post:
-                break
             post = filled
         return post
 
@@ -1206,6 +1205,7 @@ class Series(ContainerOperand):
         '''
         Args:
             func: A function that returns a same-shaped array of Booleans.
+
         '''
         values = self.values
         sel = func(values)
