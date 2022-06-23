@@ -1,0 +1,103 @@
+
+
+
+
+
+One `fill_value` Is Not Enough: Reindexing DataFrames with Hetergenous Types
+
+One `fill_value` Is Not Enough: Preserving Columnar Types when Reindexing DataFrames
+
+How to Reindex Dataframes without Degrading your Types
+
+
+
+When working with DataFrames, reindexing is common. When we reindex, we conform an old index (and its associated values) into a new index, potentially reordering, removing, or expanding the rows and columns in a DataFrame. When a reindex expands rows or columns, new values need to be supplied to fill the newly created rows or columns. In Pandas, only a single value, via the ``fill_value`` parameter, is permitted. If that ``fill_value`` is of a type not compatible with the column's type, the column will be re-cast into different, likely undesirable (object) type.
+
+For example, given a DataFrame with a column each of object, integer, and Boolean, reindexing the index, by default, injects `NaN`s, a float type that causes the integer column to be converted to float and the Boolean column to be converted to object:
+
+>>> df = pd.DataFrame.from_records((('a', 1, True), ('b', 2, False)), columns=tuple('xyz'))
+>>> df.dtypes
+x    object
+y     int64
+z      bool
+dtype: object
+
+>>> df.reindex((1, 0, 2))
+     x    y      z
+1    b  2.0  False
+0    a  1.0   True
+2  NaN  NaN    NaN
+>>> df.reindex((1, 0, 2)).dtypes
+x     object
+y    float64
+z     object
+dtype: object
+
+
+In most cases such type degradation is detrimental, as the intended columnar type has changed as a side-effect of the reindexing (perhaps without the user noticing).Further, when going to object types, the performance of subsequent operations might be significantly degraded. In Pandas, there is no simple way to avoid this.
+
+One
+
+
+
+
+
+
+
+
+
+
+
+
+==
+
+>>> df = pd.DataFrame.from_records((('a', 1, True), ('b', 2, False)), columns=tuple('xyz'))
+>>> df.reindex((1, 0, 2))
+     x    y      z
+1    b  2.0  False
+0    a  1.0   True
+2  NaN  NaN    NaN
+>>> df.reindex((1, 0, 2)).dtypes
+x     object
+y    float64
+z     object
+dtype: object
+
+
+
+Reindexing can be done explicitly, when we call ``reindex()``, or implicitly, such as when peforming binary operations with ``Series`` as operands.
+
+
+
+
+
+
+# show via_fill_value!
+
+
+
+
+
+----
+
+
+>>> df = pd.DataFrame.from_records((('a', 1, True), ('b', 2, False)), columns=tuple('xyz'))
+
+
+>>> df.reindex((1, 0, 2), fill_value=[-1, -2, -3])
+fails on 1.4.2
+
+>>> df.reindex((1, 0, 2), fill_value={'x':-1, 'y':-2, 'z':-3})
+fails on 1.4.2
+
+# multiple fill values are only support with the fillna interface
+
+>>> df2.fillna({'x':-1, 'y':-2, 'z':-3})
+    x    y      z
+1   b  2.0  False
+0   a  1.0   True
+2  -1 -2.0     -3
+
+
+
+
