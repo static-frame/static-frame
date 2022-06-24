@@ -52,7 +52,7 @@ def join(frame: 'Frame',
     if right_depth_level is None and right_columns is None:
         raise RuntimeError('Must specify one or both of right_depth_level and right_columns.')
 
-    # for now we reduce the targets to arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
+    # reduce the targets to 2D arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
     target_left = TypeBlocks.from_blocks(
             arrays_from_index_frame(frame, left_depth_level, left_columns)).values
     target_right = TypeBlocks.from_blocks(
@@ -66,9 +66,10 @@ def join(frame: 'Frame',
     is_many = composite_index # one to many or many to many
 
     map_iloc = {}
-    seen = set()
+    seen = set() # this stores
 
     # NOTE: this could be optimized by always iterating over the shorter target
+
     for idx_left, row_left in enumerate(target_left):
         # Get 1D vector showing matches along right's full heigh
         with WarningsSilent():
@@ -78,15 +79,17 @@ def join(frame: 'Frame',
         matched = matched.all(axis=1)
         if not matched.any():
             continue
+        # convert Booleans to integer positions
         matched_idx = np.flatnonzero(matched)
-        if not is_many:
+        if not is_many: # if user did not select composite index
             if len(matched_idx) > 1:
                 is_many = True
             elif len(matched_idx) == 1:
                 if matched_idx[0] in seen:
                     is_many = True
                 seen.add(matched_idx[0])
-
+        # build up a dictionary of left ilocs to an integer array of right matches
+        # note that if row_left is the same as a previous row_left, we duplicate the matched_idx
         map_iloc[idx_left] = matched_idx
 
     if not composite_index and is_many:
@@ -95,25 +98,24 @@ def join(frame: 'Frame',
     #-----------------------------------------------------------------------
     # store collections of matches, derive final index
 
-    left_loc_set = set()
-    right_loc_set = set()
+    left_loc_set = set() # all left loc labels that match
+    right_loc_set = set() # all right loc labels that match
     many_loc = []
-    many_iloc = []
 
     cifv = composite_index_fill_value
 
     # NOTE: doing selection and using iteration (from set, and with zip, below) reduces chances for type coercion in IndexHierarchy
     left_loc = left_index[list(map_iloc.keys())]
 
+    # iter over idx_left, matched_idx in right, left loc labels
     for (k, v), left_loc_element in zip(map_iloc.items(), left_loc):
         left_loc_set.add(left_loc_element)
-        # right at v is an array
-        right_loc_part = right_index[v] # iloc to loc
+
+        right_loc_part = right_index.values[v]
         right_loc_set.update(right_loc_part)
 
         if is_many:
             many_loc.extend(Pair(p) for p in product((left_loc_element,), right_loc_part))
-            many_iloc.extend(Pair(p) for p in product((k,), v))
 
     #-----------------------------------------------------------------------
     # get final_index; if is_many is True, many_loc (and Pair instances) will be used

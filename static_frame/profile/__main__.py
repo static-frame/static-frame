@@ -979,10 +979,10 @@ class JoinLeft(Perf):
         self.pdf_right = self.sff_right.to_pandas()
 
         # NOTE: SF returns a composite index of tuples; Pandas just returns a auto index
-        from static_frame.core.frame import Frame
+        from static_frame.core.join import join
         self.meta = {
             'basic': FunctionMetaData(
-                line_target=Frame._join,
+                line_target=join,
                 perf_status=PerfStatus.UNEXPLAINED_LOSS,
                 ),
             }
