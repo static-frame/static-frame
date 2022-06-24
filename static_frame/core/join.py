@@ -99,9 +99,9 @@ def join(frame: 'Frame',
     #-----------------------------------------------------------------------
     # store collections of matches, derive final index
 
-    left_loc_set = set() # all left loc labels that match
-    right_loc_set = set() # all right loc labels that match
-    many_loc = []
+    left_loc_set: tp.Set[tp.Hashable] = set() # all left loc labels that match
+    right_loc_set: tp.Set[tp.Hashable] = set() # all right loc labels that match
+    many_loc: tp.List[Pair] = []
 
     cifv = composite_index_fill_value
 
@@ -109,7 +109,7 @@ def join(frame: 'Frame',
     left_loc = left_index[list(map_iloc.keys())]
 
     # iter over idx_left, matched_idx in right, left loc labels
-    for (k, v), left_loc_element in zip(map_iloc.items(), left_loc):
+    for (k, v), left_loc_element in zip(map_iloc.items(), left_loc): # type: ignore
         left_loc_set.add(left_loc_element)
 
         right_loc_part = right_index.values[v]
@@ -123,6 +123,7 @@ def join(frame: 'Frame',
 
     #-----------------------------------------------------------------------
     # get final_index; if is_many is True, many_loc (and Pair instances) will be used
+    final_index: Index
 
     if join_type is Join.INNER:
         if is_many:
@@ -136,14 +137,14 @@ def join(frame: 'Frame',
             # What if we are extending an index that already has a tuple
             final_index = Index(chain(many_loc, extend))
         else:
-            final_index = left_index
+            final_index = left_index #type: ignore
     elif join_type is Join.RIGHT:
         if is_many:
             extend = (PairRight((cifv, x))
                     for x in right_index if x not in right_loc_set)
             final_index = Index(chain(many_loc, extend))
         else:
-            final_index = right_index
+            final_index = right_index #type: ignore
     elif join_type is Join.OUTER:
         extend_left = (PairLeft((x, cifv))
                 for x in left_index if x not in left_loc_set)
@@ -153,7 +154,7 @@ def join(frame: 'Frame',
             # must revese the many_loc so as to preserent right id first
             final_index = Index(chain(many_loc, extend_left, extend_right))
         else:
-            final_index = left_index.union(right_index)
+            final_index = left_index.union(right_index) #type: ignore
     else:
         raise NotImplementedError(f'index source must be one of {tuple(Join)}')
 
@@ -170,7 +171,7 @@ def join(frame: 'Frame',
             for loc in final_index:
                 # what if loc is in both left and rihgt?
                 if loc in left_index and left_index._loc_to_iloc(loc) in map_iloc:
-                    iloc = map_iloc[left_index._loc_to_iloc(loc)]
+                    iloc = map_iloc[left_index._loc_to_iloc(loc)] #type: ignore
                     assert len(iloc) == 1 # not is_many, so all have to be length 1
                     values.append(other._extract_iloc((iloc[0], idx_col)))
                 elif loc in right_index:
@@ -185,11 +186,11 @@ def join(frame: 'Frame',
     final_index_left = []
     for p in final_index:
         if p.__class__ is Pair: # in both
-            iloc = left_index._loc_to_iloc(p[0])
+            iloc = left_index._loc_to_iloc(p[0]) #type: ignore
             row_key.append(iloc)
             final_index_left.append(p)
         elif p.__class__ is PairLeft:
-            row_key.append(left_index._loc_to_iloc(p[0]))
+            row_key.append(left_index._loc_to_iloc(p[0])) #type: ignore
             final_index_left.append(p)
 
     # extract potentially repeated rows
@@ -215,12 +216,12 @@ def join(frame: 'Frame',
             # NOTE: we used to support pair being something other than a Pair subclass (which would append fill_value to values), but it appears that if is_many is True, each value in final_index will be a Pair instance
             # assert isinstance(pair, Pair)
             if pair.__class__ is PairRight: # get from right
-                values.append(other._extract(right_index._loc_to_iloc(pair[1]), idx_col))
+                values.append(other._extract(right_index._loc_to_iloc(pair[1]), idx_col)) #type: ignore
             elif pair.__class__ is PairLeft:
                 # get from left, but we do not have col, so fill value
                 values.append(fill_value)
             else:
-                values.append(other._extract(right_index._loc_to_iloc(pair[1]), idx_col))
+                values.append(other._extract(right_index._loc_to_iloc(pair[1]), idx_col)) #type: ignore
 
         final[right_template.format(col)] = values
     return final.to_frame()
