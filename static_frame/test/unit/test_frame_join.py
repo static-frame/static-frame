@@ -9,7 +9,7 @@ from static_frame.core.exception import InvalidFillValue
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame import IndexHierarchy
 from static_frame import IndexDate
-
+from static_frame.core.join import join
 
 
 
@@ -439,12 +439,12 @@ class TestUnit(TestCase):
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
 
         with self.assertRaises(RuntimeError):
-            f1._join(f2, join_type=None)
+            join(f1, f2, join_type=None)
         with self.assertRaises(RuntimeError):
-            f1._join(f2, join_type=None, left_depth_level=0)
+            join(f1, f2, join_type=None, left_depth_level=0)
 
         with self.assertRaises(NotImplementedError):
-            f1._join(f2, join_type=None, left_depth_level=0, right_depth_level=0)
+            join(f1, f2, join_type=None, left_depth_level=0, right_depth_level=0)
 
     def test_frame_join_l(self) -> None:
         f1 = sf.Frame.from_dict(dict(a=(10, 20), b=('y','z')))
