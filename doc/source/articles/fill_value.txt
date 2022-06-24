@@ -3,44 +3,42 @@
 
 
 
-One `fill_value` Is Not Enough: Reindexing DataFrames with Hetergenous Types
 
-One `fill_value` Is Not Enough: Preserving Columnar Types when Reindexing DataFrames
+One Fill Value Is Not Enough: Preserving Columnar Types when Reindexing DataFrames
+
 
 How to Reindex Dataframes without Degrading your Types
+One `fill_value` Is Not Enough: Reindexing DataFrames with Hetergenous Types
 
 
 
-When working with DataFrames, reindexing is common. When we reindex, we conform an old index (and its associated values) into a new index, potentially reordering, removing, or expanding the rows and columns in a DataFrame. When a reindex expands rows or columns, new values need to be supplied to fill the newly created rows or columns. In Pandas, only a single value, via the ``fill_value`` parameter, is permitted. If that ``fill_value`` is of a type not compatible with the column's type, the column will be re-cast into different, likely undesirable (object) type.
+When working with DataFrames, reindexing is common. When a DataFrame is reindexed, an old index (and its associated values) are conformed to a new index, potentially reordering, removing, or expanding the rows and columns. When a reindex expands a DataFrame, new values are needed to fill the newly created data rows or columns.
 
-For example, given a DataFrame with a column each of object, integer, and Boolean, reindexing the index, by default, injects `NaN`s, a float type that causes the integer column to be converted to float and the Boolean column to be converted to object:
+When reindexing with Pandas, only a single value, via the ``fill_value`` parameter, is permitted. If that ``fill_value`` is a type incompatible with the columnar type, the column will be re-cast into a different, likely undesirable, type.
+
+For example, given a DataFrame with a column each of object, integer, and Boolean, reindexing the index, by default, fills new rows with NaN, a float type that forces the integer column to be converted to float and the Boolean column to be converted to object:
 
 >>> df = pd.DataFrame.from_records((('a', 1, True), ('b', 2, False)), columns=tuple('xyz'))
->>> df.dtypes
-x    object
-y     int64
-z      bool
-dtype: object
+>>> df.dtypes.tolist()
+[dtype('O'), dtype('int64'), dtype('bool')]
 
 >>> df.reindex((1, 0, 2))
      x    y      z
 1    b  2.0  False
 0    a  1.0   True
 2  NaN  NaN    NaN
->>> df.reindex((1, 0, 2)).dtypes
-x     object
-y    float64
-z     object
-dtype: object
+
+>>> df.reindex((1, 0, 2)).dtypes.tolist()
+[dtype('O'), dtype('float64'), dtype('O')]
 
 
-In most cases such type degradation is detrimental, as the intended columnar type has changed as a result of the reindexing (perhaps without the user noticing). Further, when going to object types, the performance of subsequent operations might be significantly degraded. In Pandas, there is no way to avoid this problem.
+Columnar type degradation is detrimental, as the pre-existing type has unnecessarily changed as a result of reindexing, perhaps even without the user noticing. Further, when going from C-level NumPy dtypes to arrays of Python objects, the performance of will be significantly degraded. When reindexing with Pandas, there is no way to avoid this problem.
 
-In StaticFrame, alternative fill value representations can be provided to preserve columnar types in reindexing, shifting, and filling missing values. For operations on hetergenously typed columnar data, one fill value is simply not enough.
+In StaticFrame, alternative fill value representations can be used to preserve columnar types in reindexing, shifting, and filling missing values. For operations on heterogeneously typed columnar data, one fill value is simply not enough.
 
-StaticFrame supports providing ``fill_value`` as a single element, as a row-length list of values, as a mapping by column label, or as a ``FillValueAuto``, an object to define dtype kind to value mappings. Each of these will be demonstrated in the context of reindexing.
+StaticFrame supports providing ``fill_value`` as a single element, as a row-length list of values, as a mapping by column label, or as a ``FillValueAuto``, an novel object to define type to value mappings. Each of these will be demonstrated in the context of reindexing.
 
-We can create the same DataFrame in StaticFrame and reindex it with a single fill value, ``np.nan``. This results in the same columnar types as Pandas. Notice that StaticFrame, by default, shows the dtype for each column, making type changes easily visible.
+For example, we can reproduce Pandas behavior in StaticFrame by reindexing the same DataFrame with a single fill value, NaN. This results in the same columnar types as Pandas. Notice that StaticFrame, by default, displays the dtype for each column, making type degradation easily visible.
 
 >>> f = sf.Frame.from_records((('a', 1, True), ('b', 2, False)), columns=tuple('xyz'))
 >>> f
@@ -60,8 +58,7 @@ We can create the same DataFrame in StaticFrame and reindex it with a single fil
 2       nan      nan       nan
 <int64> <object> <float64> <object>
 
-
-Beyond a single element, a fill value can provide a list of fill values per column:
+One way to avoid type degredation is to provide a value per column. With StaticFrame, fill values can be provide in a list, providing one per column:
 
 >>> f.reindex((1, 0, 2), fill_value=['', 0, False])
 <Frame>
@@ -85,9 +82,7 @@ A dictionary can be used to provide a mapping of column label to fill value. If 
 <int64> <<U1> <float64> <bool>
 
 
-The previous examples all require an explicit value per column, providing maximum specificity. In many cases (and in particular for larger DataFrames), a more general specification is appropriate.
-
-Specifying a fill vlaue per dtype kind can be used to avoid type coercions while not requiring a specifcation per column. NumPy dtypes have a "kind" independent of dtype "size": for example, int8, int16, int32, and int64 dtypes all have kind "i". There are eleven dtype kinds summarized in the table below:
+The previous examples all require an explicit value per column, providing maximum specificity. In many cases (and in particular for larger DataFrames), a more general way of specifying fill values is necessary. One option might be to map a fill value based on NumPy dtype. Such an approach is rejected, however, as the same fill value might be used for all sizes of integers (int8, int16, int32, and int64). To capture this group, we can use dtype "kind". NumPy dtypes have a "kind" independent of dtype "size": for example, int8, int16, int32, and int64 dtypes all have kind "i". There are eleven dtype kinds summarized in the table below:
 
 +-----+------------+
 |Kind |Example name|
@@ -116,19 +111,97 @@ Specifying a fill vlaue per dtype kind can be used to avoid type coercions while
 +-----+------------+
 
 
+Specifying a fill value per dtype kind provides a convenient way to avoid columnar type coercions while not requiring a cumbersome specification per column. To do this StaticFrame introduces a new object: ``FileValueAuto``.
 
-The fill value `FillValueAuto`, used as a class, will provide tyep-coercion-free defaults for all kinds. If a different mapping is desired, a ``FillValueAuto`` instance can be created, specifying a value per kind.
+Using the class ``FillValueAuto`` as fill value provides type-coercion-free defaults for all dtype kinds. If a different mapping is desired, a ``FillValueAuto`` instance can be created, specifying a fillo value per dtype kind.
 
-fill value auto examples
+Returning to our previous example, we see the convenince of using ``FillValueAuto``:
+
+>>> f
+<Frame>
+<Index> x     y       z      <<U1>
+<Index>
+0       a     1       True
+1       b     2       False
+<int64> <<U1> <int64> <bool>
+
+>>> f.reindex((1, 0, 2), fill_value=sf.FillValueAuto)
+<Frame>
+<Index> x     y       z      <<U1>
+<Index>
+1       b     2       False
+0       a     1       True
+2             0       False
+<int64> <<U1> <int64> <bool>
 
 
-# show shift, fillna examples
+Of course, if we do not like the supplied defaults, an instance can be created, specifying fill values per dtype kind. The key-word-arguments of the initializer are dtype kind characters.
+
+>>> f.reindex((1, 0, 2), fill_value=sf.FillValueAuto(U='x', i=-1, b=None))
+<Frame>
+<Index> x     y       z        <<U1>
+<Index>
+1       b     2       False
+0       a     1       True
+2       x     -1      None
+<int64> <<U1> <int64> <object>
 
 
-# show via_fill_value
+The same multitude of fill value types are accepted nearly everywhere fill values are needed in StaticFrame. For example, in shifting data, fill values must be provided; but when shifting an entire DataFrame of hetergenous types, one fill value is not enough.
 
 
+>>> f = sf.Frame.from_records((('a', 1, True, 'p', 23.2), ('b', 2, False, 'q', 85.1), ('c', 3, True, 'r', 1.23)), columns=tuple('abcde'))
 
+>>> f.shift(2)
+<Frame>
+<Index> a        b         c        d        e         <<U1>
+<Index>
+0       nan      nan       nan      nan      nan
+1       nan      nan       nan      nan      nan
+2       a        1.0       True     p        23.2
+<int64> <object> <float64> <object> <object> <float64>
+
+>>> f.shift(1, fill_value=sf.FillValueAuto(U='', b=False, f=0, i=0))
+<Frame>
+<Index> a     b       c      d     e         <<U1>
+<Index>
+0             0       False        0.0
+1       a     1       True   p     23.2
+2       b     2       False  q     85.1
+<int64> <<U1> <int64> <bool> <<U1> <float64>
+
+
+A fill value is also needed in many applications of binary operators. In general, binary operations on labelled data force operands to reindex to a union index, potentially introducing missing values. If the missing value is only ``np.nan``, the resulting columnar types might be recast.
+
+For example, given two ``Frame``, each with a float and an integer column, a binary (element-wise) operation will introduce ``np.nan`` on reindex values, coercing the integer column to floats.
+
+This can be avoided in StaticFrame by using ``FillValueAuto``. Of course, binary operations do not accept arguments. StaticFrame provides the ``via_fill_value`` interface to permit specification of a fill value to be used if reindexing is required. This is similar to functionality provided by Pandas ``DataFrame.multiply`` and related methods, though with ``StaticFrame`` we can continue to use expressions.
+
+>>> f1 = sf.Frame.from_records(((10.2, 20), (2.4, 4)), index=('a', 'b'))
+>>> f2 = sf.Frame.from_records(((3.4, 1), (8.2, 0)), index=('b', 'c'))
+
+>>> f1 * f2
+<Frame>
+<Index> 0         1         <int64>
+<Index>
+a       nan       nan
+b       8.16      4.0
+c       nan       nan
+<<U1>   <float64> <float64>
+
+>>> f1.via_fill_value(sf.FillValueAuto) * f2
+<Frame>
+<Index> 0         1       <int64>
+<Index>
+a       nan       0
+b       8.16      4
+c       nan       0
+<<U1>   <float64> <int64>
+
+
+Examples with few columns, as used above, do not fully illustrate the power of ``FillValueAuto``: when dealing with heterogenously typed DataFrame of hundreds or thousands of columns, the generality of specification ``FillValueAuto`` provides provides a concise and powerful specification as well as the opportunity to avoid all columnar type coercions.
+
+StaticFrame, unlike Pandas, provides full support for all NumPy dtypes and, by default represntaion, makes columnar types visible. The cost of inadvertent type coercion caused by reindexing or other transformations can lead to bugs or degraded performance. Flexible fill values types, as well as the new ``FillValueAuto``, provide a way to avoid these problems.
 
 
 
