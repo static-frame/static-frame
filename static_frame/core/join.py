@@ -42,8 +42,8 @@ def join(frame: 'Frame',
     if is_fill_value_factory_initializer(fill_value):
         raise InvalidFillValue(fill_value, 'join')
 
-    left_index = frame.index
-    right_index = other.index
+    left_index = frame._index
+    right_index = other._index
 
     #-----------------------------------------------------------------------
     # find matches
@@ -209,18 +209,18 @@ def join(frame: 'Frame',
     # NOTE: find optimized path to avoid final_index iteration per column in all scenarios
 
     for idx_col, col in enumerate(other.columns):
+
         values = []
         for pair in final_index:
             # NOTE: we used to support pair being something other than a Pair subclass (which would append fill_value to values), but it appears that if is_many is True, each value in final_index will be a Pair instance
             # assert isinstance(pair, Pair)
-            loc_left, loc_right = pair
             if pair.__class__ is PairRight: # get from right
-                values.append(other._extract_loc((loc_right, col)))
+                values.append(other._extract(right_index._loc_to_iloc(pair[1]), idx_col))
             elif pair.__class__ is PairLeft:
                 # get from left, but we do not have col, so fill value
                 values.append(fill_value)
-            else: # is this case needed?
-                values.append(other._extract_loc((loc_right, col)))
+            else:
+                values.append(other._extract(right_index._loc_to_iloc(pair[1]), idx_col))
 
         final[right_template.format(col)] = values
     return final.to_frame()
