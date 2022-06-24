@@ -16,6 +16,7 @@ from static_frame.core.exception import InvalidFillValue
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import WarningsSilent
 from static_frame.core.index import Index
+from static_frame.core.util import array2d_to_tuples
 
 
 if tp.TYPE_CHECKING:
@@ -112,7 +113,10 @@ def join(frame: 'Frame',
         left_loc_set.add(left_loc_element)
 
         right_loc_part = right_index.values[v]
-        right_loc_set.update(right_loc_part)
+        if right_loc_part.ndim == 2:
+            right_loc_set.update(array2d_to_tuples(right_loc_part))
+        else:
+            right_loc_set.update(right_loc_part) # iter 1D array
 
         if is_many:
             many_loc.extend(Pair(p) for p in product((left_loc_element,), right_loc_part))
@@ -168,9 +172,9 @@ def join(frame: 'Frame',
                 if loc in left_index and left_index._loc_to_iloc(loc) in map_iloc:
                     iloc = map_iloc[left_index._loc_to_iloc(loc)]
                     assert len(iloc) == 1 # not is_many, so all have to be length 1
-                    values.append(other.iloc[iloc[0], idx_col])
+                    values.append(other._extract_iloc((iloc[0], idx_col)))
                 elif loc in right_index:
-                    values.append(other.loc[loc, col])
+                    values.append(other._extract_loc((loc, col)))
                 else:
                     values.append(fill_value)
             final[right_template.format(col)] = values
@@ -211,12 +215,12 @@ def join(frame: 'Frame',
             # assert isinstance(pair, Pair)
             loc_left, loc_right = pair
             if pair.__class__ is PairRight: # get from right
-                values.append(other.loc[loc_right, col])
+                values.append(other._extract_loc((loc_right, col)))
             elif pair.__class__ is PairLeft:
                 # get from left, but we do not have col, so fill value
                 values.append(fill_value)
             else: # is this case needed?
-                values.append(other.loc[loc_right, col])
+                values.append(other._extract_loc((loc_right, col)))
 
         final[right_template.format(col)] = values
     return final.to_frame()

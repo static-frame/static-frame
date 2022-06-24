@@ -45,14 +45,17 @@ class InterfaceBatch:
     # Batch interfaces are unique in that they always (?) return a Batch
     INTERFACE: tp.Tuple[str, ...] = ()
 
+
+GetItemFuncT = tp.Callable[[GetItemKeyType], TContainer]
+
 class InterfaceGetItem(Interface[TContainer]):
 
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[GetItemKeyType], TContainer]
+    _func: GetItemFuncT
 
-    def __init__(self, func: tp.Callable[[GetItemKeyType], TContainer]) -> None:
+    def __init__(self, func: GetItemFuncT) -> None:
         self._func = func #type: ignore
 
     def __getitem__(self, key: GetItemKeyType) -> TContainer:
