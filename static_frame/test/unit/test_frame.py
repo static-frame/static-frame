@@ -57,6 +57,8 @@ from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
+
 import static_frame as sf
 
 nan = np.nan
