@@ -22,7 +22,7 @@ from static_frame.core.util import dtype_from_element
 
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame
+    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
 
 def join(frame: 'Frame',
         other: 'Frame', # support a named Series as a 1D frame?
