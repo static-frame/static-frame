@@ -3,6 +3,7 @@ from itertools import chain
 from itertools import product
 
 import numpy as np
+from arraykit import resolve_dtype
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import DepthLevelSpecifier
@@ -17,6 +18,7 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import WarningsSilent
 from static_frame.core.index import Index
 from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import dtype_from_element
 
 
 if tp.TYPE_CHECKING:
@@ -44,6 +46,7 @@ def join(frame: 'Frame',
 
     left_index = frame._index
     right_index = other._index
+    fill_value_dtype = dtype_from_element(fill_value)
 
     #-----------------------------------------------------------------------
     # find matches
@@ -209,19 +212,25 @@ def join(frame: 'Frame',
     # populate from right columns
     # NOTE: find optimized path to avoid final_index iteration per column in all scenarios
 
+    other_dtypes = other.dtypes.values
     for idx_col, col in enumerate(other.columns):
+        values = np.empty(len(final_index), dtype=other_dtypes[idx_col])
+        resolved_dtype = resolve_dtype(values.dtype, fill_value_dtype)
 
-        values = []
-        for pair in final_index:
+        for i, pair in enumerate(final_index):
             # NOTE: we used to support pair being something other than a Pair subclass (which would append fill_value to values), but it appears that if is_many is True, each value in final_index will be a Pair instance
             # assert isinstance(pair, Pair)
             if pair.__class__ is PairRight: # get from right
-                values.append(other._extract(right_index._loc_to_iloc(pair[1]), idx_col)) #type: ignore
+                values[i] = other._extract(right_index._loc_to_iloc(pair[1]), idx_col) #type: ignore
             elif pair.__class__ is PairLeft:
                 # get from left, but we do not have col, so fill value
-                values.append(fill_value)
+                if resolved_dtype != values.dtype:
+                    values = values.astype(resolved_dtype)
+                values[i] = fill_value
             else:
-                values.append(other._extract(right_index._loc_to_iloc(pair[1]), idx_col)) #type: ignore
+                values[i] = other._extract(right_index._loc_to_iloc(pair[1]), idx_col)
+                #type: ignore
 
+        values.flags.writeable = False
         final[right_template.format(col)] = values
     return final.to_frame()
