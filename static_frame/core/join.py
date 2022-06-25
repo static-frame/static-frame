@@ -214,23 +214,22 @@ def join(frame: 'Frame',
 
     other_dtypes = other.dtypes.values
     for idx_col, col in enumerate(other.columns):
-        values = np.empty(len(final_index), dtype=other_dtypes[idx_col])
-        resolved_dtype = resolve_dtype(values.dtype, fill_value_dtype)
+        array = np.empty(len(final_index), dtype=other_dtypes[idx_col])
+        resolved_dtype = resolve_dtype(array.dtype, fill_value_dtype)
 
         for i, pair in enumerate(final_index):
-            # NOTE: we used to support pair being something other than a Pair subclass (which would append fill_value to values), but it appears that if is_many is True, each value in final_index will be a Pair instance
+            # NOTE: we used to support pair being something other than a Pair subclass (which would append fill_value to array), but it appears that if is_many is True, each value in final_index will be a Pair instance
             # assert isinstance(pair, Pair)
             if pair.__class__ is PairRight: # get from right
-                values[i] = other._extract(right_index._loc_to_iloc(pair[1]), idx_col) #type: ignore
+                array[i] = other._extract(right_index._loc_to_iloc(pair[1]), idx_col) #type: ignore
             elif pair.__class__ is PairLeft:
                 # get from left, but we do not have col, so fill value
-                if resolved_dtype != values.dtype:
-                    values = values.astype(resolved_dtype)
-                values[i] = fill_value
+                if resolved_dtype != array.dtype:
+                    array = array.astype(resolved_dtype)
+                array[i] = fill_value
             else:
-                values[i] = other._extract(right_index._loc_to_iloc(pair[1]), idx_col)
-                #type: ignore
+                array[i] = other._extract(right_index._loc_to_iloc(pair[1]), idx_col) # type: ignore
 
-        values.flags.writeable = False
-        final[right_template.format(col)] = values
+        array.flags.writeable = False
+        final[right_template.format(col)] = array
     return final.to_frame()
