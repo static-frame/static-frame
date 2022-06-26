@@ -19,6 +19,8 @@ from static_frame.core.util import WarningsSilent
 from static_frame.core.index import Index
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import dtype_from_element
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
 
 
 if tp.TYPE_CHECKING:
@@ -233,3 +235,92 @@ def join(frame: 'Frame',
         array.flags.writeable = False
         final[right_template.format(col)] = array
     return final.to_frame()
+
+
+
+
+
+def join_sort(left: 'Frame',
+        right: 'Frame', # support a named Series as a 1D frame?
+        *,
+        # join_type: Join, # intersect, left, right, union,
+        left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+        left_columns: GetItemKeyType = None,
+        right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+        right_columns: GetItemKeyType = None,
+        left_template: str = '{}',
+        right_template: str = '{}',
+        fill_value: tp.Any = np.nan,
+        composite_index: bool = True,
+        composite_index_fill_value: tp.Hashable = None,
+        ) -> 'Frame':
+
+    from static_frame.core.frame import FrameGO
+
+    if is_fill_value_factory_initializer(fill_value):
+        raise InvalidFillValue(fill_value, 'join')
+
+    left_index = left.index
+    right_index = right.index
+
+    # NOTE: creating a new TypeBlocks instance as we might be combining index and normal columns; keep TypeBlocks for sorting;
+    # NOTE: might optimize for single-arrays, operating only an array
+    l_targets = TypeBlocks.from_blocks(
+            arrays_from_index_frame(left, left_depth_level, left_columns))
+    r_targets = TypeBlocks.from_blocks(
+            arrays_from_index_frame(right, right_depth_level, right_columns))
+
+    if l_targets.shape[1] != r_targets.shape[1]:
+        raise RuntimeError('left and right selections must be the same width.')
+
+    l_target_sorted, l_order = l_targets.sort(1, key=NULL_SLICE)
+    r_target_sorted, r_order = r_targets.sort(1, key=NULL_SLICE)
+    l_blocks_sorted = left._blocks._extract(l_order)
+    r_blocks_sorted = right._blocks._extract(r_order)
+
+    get_col_fill_value = lambda i, dtype: FILL_VALUE_AUTO_DEFAULT[dtype]
+    l_shifted = TypeBlocks.from_blocks(
+            l_target_sorted._shift_blocks_fill_by_callable(
+            row_shift=1,
+            column_shift=0,
+            wrap=False,
+            get_col_fill_value=get_col_fill_value
+            ))
+
+    r_shifted = TypeBlocks.from_blocks(
+            r_target_sorted._shift_blocks_fill_by_callable(
+            row_shift=1,
+            column_shift=0,
+            wrap=False,
+            get_col_fill_value=get_col_fill_value
+            ))
+
+    # ignore first comparison because it was filled
+    l_tt = (l_target_sorted != l_shifted).values.any(axis=1)
+    l_tt[0] = False
+    l_transitions = np.flatnonzero(l_tt)
+
+    r_tt = (r_target_sorted != r_shifted).values.any(axis=1)
+    r_tt[0] = False
+    r_transitions = np.flatnonzero(r_tt)
+
+    # not sure if we need this...
+    # l_unique = set((0,))
+    # l_unique.update(l_transitions)
+    def get_slices(transitions, targets):
+        def slices() -> tp.Iterator:
+            start = 0
+            for t in transitions:
+                slc = slice(start, t)
+                yield targets._extract(start), slc # tb
+                # can determine if any is more than 1
+                start = t
+            slc = slice(start, len(targets))
+            yield targets._extract(start), slc
+        return slices
+
+    # NOTE: while getting slices we can find out if either left/right has a target with more than one row; this indicates a many situation
+    l_slices = get_slices(l_transitions, l_target_sorted)
+    r_slices = get_slices(r_transitions, r_target_sorted)
+
+    import ipdb; ipdb.set_trace()

@@ -1,4 +1,5 @@
 import numpy as np
+import frame_fixtures as ff
 
 
 from static_frame import Frame
@@ -458,5 +459,18 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('a', ((0, 10), (1, 20))), ('b', ((0, 'y'), (1, 'z'))), ('c', ((0, 'foo'), (1, 'bar'))), ('d', ((0, 10), (1, 20))))
                 )
+
+
+    def test_frame_join_sort_a(self) -> None:
+        from static_frame.core.join import join_sort
+
+        sff_left = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 3)
+
+        sff_right = ff.parse('s(8,3)|v(int,bool,bool)|i(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 3)
+
+        post = join_sort(sff_left, sff_right, left_columns='zZbu', right_columns=0)
+        ref = sff_left.join_left(sff_right, left_columns='zZbu', right_columns=0)
+
+        import ipdb; ipdb.set_trace()
 
 
