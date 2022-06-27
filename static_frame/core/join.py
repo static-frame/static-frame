@@ -255,7 +255,7 @@ def join_sort(left: 'Frame',
         composite_index_fill_value: tp.Hashable = None,
         ) -> 'Frame':
 
-    from static_frame.core.frame import FrameGO
+    # from static_frame.core.frame import FrameGO
 
     if is_fill_value_factory_initializer(fill_value):
         raise InvalidFillValue(fill_value, 'join')
@@ -308,19 +308,26 @@ def join_sort(left: 'Frame',
     # l_unique = set((0,))
     # l_unique.update(l_transitions)
     def get_slices(transitions, targets):
-        def slices() -> tp.Iterator:
-            start = 0
-            for t in transitions:
-                slc = slice(start, t)
-                yield targets._extract(start), slc # tb
-                # can determine if any is more than 1
-                start = t
-            slc = slice(start, len(targets))
-            yield targets._extract(start), slc
-        return slices
+        slices = [] # maybe a dictionary?
+        multi = False
+        start = 0
+        for t in transitions:
+            slc = slice(start, t)
+            if multi is False and t - start > 1:
+                multi = True
+            slices.append((tuple(targets.iter_row_elements(start)), slc))
+            # can determine if any is more than 1
+            start = t
+
+        slc = slice(start, len(targets))
+        if multi is False and t - start > 1:
+            multi = True
+        slices.append((tuple(targets.iter_row_elements(start)), slc))
+
+        return slices, multi
 
     # NOTE: while getting slices we can find out if either left/right has a target with more than one row; this indicates a many situation
-    l_slices = get_slices(l_transitions, l_target_sorted)
-    r_slices = get_slices(r_transitions, r_target_sorted)
+    l_slices, l_multi = get_slices(l_transitions, l_target_sorted)
+    r_slices, r_multi = get_slices(r_transitions, r_target_sorted)
 
     import ipdb; ipdb.set_trace()
