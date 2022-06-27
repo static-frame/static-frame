@@ -272,6 +272,7 @@ def join_sort(left: 'Frame',
 
     if l_targets.shape[1] != r_targets.shape[1]:
         raise RuntimeError('left and right selections must be the same width.')
+    target_depth = l_targets.shape[1]
 
     l_target_sorted, l_order = l_targets.sort(1, key=NULL_SLICE)
     r_target_sorted, r_order = r_targets.sort(1, key=NULL_SLICE)
@@ -332,8 +333,30 @@ def join_sort(left: 'Frame',
     # NOTE: while getting slices we can find out if either left/right has a target with more than one row; this indicates a many situation
     l_slices, l_multi = get_slices(l_transitions, l_target_sorted)
     r_slices, r_multi = get_slices(r_transitions, r_target_sorted)
+    r_slices_iter = iter(r_slices)
 
-    # import ipdb; ipdb.set_trace()
+    for l_target, l_slice in l_slices:
+        if target_depth == 1:
+            target = l_target[0]
+        else:
+            raise NotImplementedError()
+
+        l_sel = l_blocks_sorted._extract(l_slice)
+
+        match = False
+        for r_target, r_slice in r_slices_iter:
+            if l_target == r_target:
+                match = True
+                break
+
+        if match:
+            # for every col on the left, match one or more on the right
+            pass
+
+        # import ipdb; ipdb.set_trace()
 
 
     return Frame() # temp
+
+
+
