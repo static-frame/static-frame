@@ -471,6 +471,6 @@ class TestUnit(TestCase):
         post = join_sort(sff_left, sff_right, left_columns='zZbu', right_columns=0)
         ref = sff_left.join_left(sff_right, left_columns='zZbu', right_columns=0)
 
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
 
 
