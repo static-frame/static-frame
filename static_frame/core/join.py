@@ -255,7 +255,7 @@ def join_sort(left: 'Frame',
         composite_index_fill_value: tp.Hashable = None,
         ) -> 'Frame':
 
-    # from static_frame.core.frame import FrameGO
+    from static_frame.core.frame import Frame
 
     if is_fill_value_factory_initializer(fill_value):
         raise InvalidFillValue(fill_value, 'join')
