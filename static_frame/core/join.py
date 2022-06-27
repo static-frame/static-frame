@@ -307,7 +307,10 @@ def join_sort(left: 'Frame',
     # not sure if we need this...
     # l_unique = set((0,))
     # l_unique.update(l_transitions)
-    def get_slices(transitions, targets):
+    def get_slices(
+            transitions: np.ndarray,
+            targets: TypeBlocks
+            ) -> tp.Tuple[tp.List[tp.Tuple[tp.Tuple[tp.Any, ...], slice]], bool]:
         slices = [] # maybe a dictionary?
         multi = False
         start = 0
@@ -331,3 +334,6 @@ def join_sort(left: 'Frame',
     r_slices, r_multi = get_slices(r_transitions, r_target_sorted)
 
     # import ipdb; ipdb.set_trace()
+
+
+    return Frame() # temp
