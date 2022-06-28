@@ -42,16 +42,15 @@ The ideas behind StaticFrame developed out of years of work with Pandas and rela
 Articles
 ************
 
-2022: `StaticFrame from the Ground Up: Getting Started with Immutable DataFrames <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
-
-2022: `Using Higher-Order Containers to Efficiently Process 7,163 (or More) DataFrames <https://towardsdatascience.com/using-higher-order-containers-to-efficiently-process-7-163-or-more-dataframes-964da8b0c679>`_.
-
-2020: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_.
+- 2022: `One Fill Value Is Not Enough: Preserving Columnar Types When Reindexing DataFrames <https://dev.to/flexatone/one-fill-value-is-not-enough-preserving-columnar-types-when-reindexing-dataframes-2jdj>`_
+- 2022: `StaticFrame from the Ground Up: Getting Started with Immutable DataFrames <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
+- 2022: `Using Higher-Order Containers to Efficiently Process 7,163 (or More) DataFrames <https://towardsdatascience.com/using-higher-order-containers-to-efficiently-process-7-163-or-more-dataframes-964da8b0c679>`_
+- 2020: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_
 
 
 
 Presentations
-***********************************
+*************************
 
 The following presentations and interviews describe StaticFrame in greater depth.
 
