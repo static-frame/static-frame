@@ -1,9 +1,9 @@
 
 One Fill Value Is Not Enough: Preserving Columnar Types When Reindexing DataFrames
+===========================================================================================
 
-Reindexing DataFrames in Pandas can lead to undesirable degradation of columnar types; StaticFrame offers alternatives that solve this problem.
+    Reindexing DataFrames in Pandas can lead to undesirable degradation of columnar types; StaticFrame offers alternatives that solve this problem.
 
-==
 
 When working with DataFrames, reindexing is common. When a DataFrame is reindexed, an old index (and its associated values) is conformed to a new index, potentially reordering, contracting, or expanding the rows or columns. When a reindex expands a DataFrame, new values are needed to fill the newly created rows or columns: these are "fill values."
 
@@ -217,23 +217,4 @@ c       nan       0
 Examples with just a few columns, as used above, do not fully demonstrate the power of ``FillValueAuto``: when dealing with heterogeneously typed DataFrames of hundreds or thousands of columns, the generality of specification provides a concise and powerful tool.
 
 The cost of inadvertent type coercion caused by reindexing or other transformations can lead to bugs or degraded performance. StaticFrame's flexible fill value types, as well as the new ``FillValueAuto``, provide solutions to these practical problems.
-
-
-
-
-
-
-
-
-==
-
-StaticFrame, unlike Pandas, provides full support for all NumPy dtypes and makes columnar types visible in the default DataFrame display.
-
-Reindexing can be done explicitly, when we call ``reindex()``, or implicitly, such as when peforming binary operations with ``Series`` as operands.
-
-
-
->>> types = [np.dtype(bool), np.dtype(int), np.dtype(np.uint), np.dtype(float), np.dtype(complex), np.dtype(np.timedelta64), np.dtype(np.datetime64), np.dtype(object), np.dtype(bytes), np.dtype(str), np.dtype(np.void)]
-
->>> print(sf.Frame.from_fields(([t.kind for t in types], [t.name.replace('64', '').replace('128', '') for t in types]), columns=('Kind Label', 'Type')).to_rst(sf.DisplayConfig(include_index=False, type_show=False)))
 
