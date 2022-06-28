@@ -67,7 +67,7 @@ from static_frame.core.index_datetime import IndexYearMonthGO as IndexYearMonthG
 from static_frame.core.index_hierarchy import IndexHierarchy as IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchyGO
 from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta
-from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_dt import InterfaceDatetime, InterfaceBatchDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
@@ -94,7 +94,7 @@ from static_frame.core.node_selector import (
     InterfaceSelectTrio
     )
 from static_frame.core.node_str import InterfaceBatchString, InterfaceString
-from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_transpose import InterfaceTranspose, InterfaceBatchTranspose
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
 from static_frame.core.series import Series as Series
