@@ -20,6 +20,11 @@ SERIES_INIT_D = dict(values=(2, 8, 19), index=('b', 'c', 'd'))
 SERIES_INIT_E = dict(values=(10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 SERIES_INIT_F = dict(values=(False, False, True), index=('a', 'b', 'c'))
 SERIES_INIT_G = dict(values=(8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+SERIES_INIT_H = dict(values=('q', 'r', '', 's'), index=('a', 'b', 'c', 'd'))
+SERIES_INIT_I = dict(values=('', '', 'r', 's'), index=('a', 'b', 'c', 'd'))
+SERIES_INIT_J = dict(values=('p', 'q', '', ''), index=('a', 'b', 'c', 'd'))
+SERIES_INIT_K = dict(values=(10.235, 2.124, np.nan, 8.734, np.nan),
+        index=('a', 'b', 'c', 'd', 'e'))
 
 
 SERIES_INIT_DICT_A = dict(sf.Series(**SERIES_INIT_A))
@@ -29,13 +34,24 @@ SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series(**SERIES_INIT_A)).ite
 
 DC = sf.DisplayConfig(type_color=False)
 
+
+def repr_value(v) -> str:
+    if isinstance(v, tuple):
+        return f"({', '.join(repr_value(x) for x in v)})"
+    if v is np.nan:
+        # default string repr is not evalable
+        return 'np.nan'
+    if isinstance(v, str):
+        return repr(v)
+    return str(v)
+
 def kwa(params, arg_first: bool = True):
     arg_only = set()
     if arg_first:
         arg_only.add(0)
 
     return ', '.join(
-        f'{k}={repr(v)}' if i not in arg_only else f'{repr(v)}'
+        f'{k}={repr_value(v)}' if i not in arg_only else f'{repr_value(v)}'
         for i, (k, v) in enumerate(params.items())
         )
 
@@ -247,22 +263,56 @@ class ExGenSeries(ExGen):
         elif attr in ('cumprod()', 'cumsum()'):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield f"s.{attr_func}()"
+        elif attr == 'drop_duplicated()':
+            yield f's = {icls}({kwa(SERIES_INIT_G)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr == 'dropfalsy()':
+            yield f's = {icls}({kwa(SERIES_INIT_H)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr == 'dropna()':
+            yield f's = {icls}({kwa(SERIES_INIT_G)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr == 'duplicated()':
+            yield f's = {icls}({kwa(SERIES_INIT_G)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr == 'equals()':
+            yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
+            yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s1.{attr_func}(s2)"
+        elif attr == 'fillfalsy()':
+            yield f's = {icls}({kwa(SERIES_INIT_H)})'
+            yield 's'
+            yield f"s.{attr_func}('missing')"
+        elif attr == 'fillfalsy_backward()':
+            yield f's = {icls}({kwa(SERIES_INIT_I)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr == 'fillfalsy_forward()':
+            yield f's = {icls}({kwa(SERIES_INIT_J)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr == 'fillfalsy_leading()':
+            yield f's = {icls}({kwa(SERIES_INIT_I)})'
+            yield 's'
+            yield f"s.{attr_func}('missing')"
+        elif attr == 'fillfalsy_trailing()':
+            yield f's = {icls}({kwa(SERIES_INIT_J)})'
+            yield 's'
+            yield f"s.{attr_func}('missing')"
+        elif attr == 'fillna()':
+            yield f's = {icls}({kwa(SERIES_INIT_K)})'
+            yield 's'
+            yield f"s.{attr_func}(0.0)"
 
         else:
             print(f'no handling for {attr}')
             # raise NotImplementedError(f'no handling for {attr}')
 
 
-# no handling for drop_duplicated()
-# no handling for dropfalsy()
-# no handling for dropna()
-# no handling for duplicated()
-# no handling for equals()
-# no handling for fillfalsy()
-# no handling for fillfalsy_backward()
-# no handling for fillfalsy_forward()
-# no handling for fillfalsy_leading()
-# no handling for fillfalsy_trailing()
 # no handling for fillna()
 # no handling for fillna_backward()
 # no handling for fillna_forward()
