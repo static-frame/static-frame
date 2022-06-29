@@ -253,7 +253,6 @@ class ExGenSeries(ExGen):
             # raise NotImplementedError(f'no handling for {attr}')
 
 
-# no handling for cumsum()
 # no handling for drop_duplicated()
 # no handling for dropfalsy()
 # no handling for dropna()
