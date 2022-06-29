@@ -25,14 +25,22 @@ SERIES_INIT_I = dict(values=('', '', 'r', 's'), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_J = dict(values=('p', 'q', '', ''), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_K = dict(values=(10.235, 2.124, np.nan, 8.734, np.nan),
         index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_L = dict(values=(np.nan, np.nan, 10.235, 2.124, 8.734),
+        index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_M = dict(values=(10.235, 2.124, 8.734, np.nan, np.nan),
+        index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_N = dict(values=(2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_O = dict(values=(2, '', 19, 0, None), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_P = dict(values=(8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+SERIES_INIT_Q = dict(values=(8, 5, 0, 8), index=('d', 'b', 'a', 'c'))
+SERIES_INIT_R = dict(values=(3, 2, 8, 7),
+        index=b"sf.IndexHierarchy.from_product((1, 2), ('a', 'b'))")
+
 
 
 SERIES_INIT_DICT_A = dict(sf.Series(**SERIES_INIT_A))
 SERIES_INIT_FROM_ELEMENT_A = dict(element=-1, index=('a', 'b', 'c'), name='x')
 SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series(**SERIES_INIT_A)).items()), name='x')
-
-
-DC = sf.DisplayConfig(type_color=False)
 
 
 def repr_value(v) -> str:
@@ -43,6 +51,9 @@ def repr_value(v) -> str:
         return 'np.nan'
     if isinstance(v, str):
         return repr(v)
+    if isinstance(v, bytes):
+        # use bytes to denote code string that should not be quoted
+        return v.decode()
     return str(v)
 
 def kwa(params, arg_first: bool = True):
@@ -219,7 +230,19 @@ class ExGenSeries(ExGen):
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
-        if attr in ('__array__()',):
+        if attr in ('__array__()',
+                'max()',
+                'mean()',
+                'median()',
+                'min()',
+                'prod()',
+                'cumprod()',
+                'cumsum()',
+                'sum()',
+                'std()',
+                'var()',
+                'transpose()',
+                 ):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield f"s.{attr_func}()"
 
@@ -260,25 +283,21 @@ class ExGenSeries(ExGen):
             yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
             yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
             yield f"s1.{attr_func}(s2)"
-        elif attr in ('cumprod()', 'cumsum()'):
-            yield f's = {icls}({kwa(SERIES_INIT_A)})'
-            yield f"s.{attr_func}()"
-        elif attr == 'drop_duplicated()':
+        elif attr in (
+                'drop_duplicated()',
+                'dropna()',
+                'duplicated()',
+                'unique()',
+                ):
             yield f's = {icls}({kwa(SERIES_INIT_G)})'
             yield 's'
             yield f"s.{attr_func}()"
+
         elif attr == 'dropfalsy()':
             yield f's = {icls}({kwa(SERIES_INIT_H)})'
             yield 's'
             yield f"s.{attr_func}()"
-        elif attr == 'dropna()':
-            yield f's = {icls}({kwa(SERIES_INIT_G)})'
-            yield 's'
-            yield f"s.{attr_func}()"
-        elif attr == 'duplicated()':
-            yield f's = {icls}({kwa(SERIES_INIT_G)})'
-            yield 's'
-            yield f"s.{attr_func}()"
+
         elif attr == 'equals()':
             yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
             yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
@@ -307,41 +326,95 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_K)})'
             yield 's'
             yield f"s.{attr_func}(0.0)"
+        elif attr == 'fillna_backward()':
+            yield f's = {icls}({kwa(SERIES_INIT_L)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr == 'fillna_forward()':
+            yield f's = {icls}({kwa(SERIES_INIT_M)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr == 'fillna_leading()':
+            yield f's = {icls}({kwa(SERIES_INIT_L)})'
+            yield 's'
+            yield f"s.{attr_func}(0.0)"
+        elif attr == 'fillna_trailing()':
+            yield f's = {icls}({kwa(SERIES_INIT_M)})'
+            yield 's'
+            yield f"s.{attr_func}(0.0)"
+        elif attr in (
+                'head()',
+                'tail()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_K)})'
+            yield 's'
+            yield f"s.{attr_func}(2)"
+        elif attr in (
+                'iloc_max()',
+                'iloc_min()',
+                'loc_max()',
+                'loc_min()',
+                'isna()',
+                'notna()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_K)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr in (
+                'iloc_searchsorted()',
+                'loc_searchsorted()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.{attr_func}(18)"
+        elif attr in ('insert_before()', 'insert_after()'):
+            yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
+            yield f's2 = {icls}({kwa(SERIES_INIT_B)})'
+            yield f"s1.{attr_func}('b', s2)"
+        elif attr in (
+                'isfalsy()',
+                'notfalsy()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_O)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr == 'isin()':
+            yield f's = {icls}({kwa(SERIES_INIT_O)})'
+            yield f"s.{attr_func}((2, 19))"
+        elif attr in (
+                'rank_dense()',
+                'rank_max()',
+                'rank_min()',
+                'rank_mean()',
+                'rank_ordinal()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_P)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr in (
+                'sort_index()',
+                'sort_values()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_P)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+            yield f"s.{attr_func}(ascending=False)"
+        elif attr in (
+                'shift()',
+                'roll()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.{attr_func}(2)" # could show fill value for shfit...
+        elif attr == 'rehierarch()':
+            yield f's = {icls}({kwa(SERIES_INIT_R)})'
+            yield 's'
+            yield f"s.{attr_func}((1, 0))"
 
         else:
             print(f'no handling for {attr}')
             # raise NotImplementedError(f'no handling for {attr}')
 
-
-# no handling for fillna()
-# no handling for fillna_backward()
-# no handling for fillna_forward()
-# no handling for fillna_leading()
-# no handling for fillna_trailing()
-# no handling for head()
-# no handling for iloc_max()
-# no handling for iloc_min()
-# no handling for iloc_searchsorted()
-# no handling for insert_after()
-# no handling for insert_before()
-# no handling for isfalsy()
-# no handling for isin()
-# no handling for isna()
-# no handling for loc_max()
-# no handling for loc_min()
-# no handling for loc_searchsorted()
-# no handling for max()
-# no handling for mean()
-# no handling for median()
-# no handling for min()
-# no handling for notfalsy()
-# no handling for notna()
-# no handling for prod()
-# no handling for rank_dense()
-# no handling for rank_max()
-# no handling for rank_mean()
-# no handling for rank_min()
-# no handling for rank_ordinal()
 # no handling for rehierarch()
 # no handling for reindex()
 # no handling for relabel()
@@ -349,17 +422,7 @@ class ExGenSeries(ExGen):
 # no handling for relabel_level_add()
 # no handling for relabel_level_drop()
 # no handling for rename()
-# no handling for roll()
 # no handling for sample()
-# no handling for shift()
-# no handling for sort_index()
-# no handling for sort_values()
-# no handling for std()
-# no handling for sum()
-# no handling for tail()
-# no handling for transpose()
-# no handling for unique()
-# no handling for var()
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
@@ -387,7 +450,7 @@ class ExGenSeries(ExGen):
 #-------------------------------------------------------------------------------
 def gen_examples(target, exg: ExGen):
 
-    sf.DisplayActive.set(DC)
+    sf.DisplayActive.set(sf.DisplayConfig(type_color=False))
 
     msg = []
     inter = InterfaceSummary.to_frame(target, #type: ignore
