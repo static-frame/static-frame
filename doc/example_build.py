@@ -415,7 +415,6 @@ class ExGenSeries(ExGen):
             print(f'no handling for {attr}')
             # raise NotImplementedError(f'no handling for {attr}')
 
-# no handling for rehierarch()
 # no handling for reindex()
 # no handling for relabel()
 # no handling for relabel_flat()
