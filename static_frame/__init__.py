@@ -15,21 +15,19 @@ from static_frame.core.display import DisplayActive as DisplayActive
 from static_frame.core.display_config import DisplayConfig as DisplayConfig
 from static_frame.core.display_config import DisplayConfigs as DisplayConfigs
 from static_frame.core.display_config import DisplayFormats as DisplayFormats
-from static_frame.core.exception import (
-        AxisInvalid,
-        ErrorInit,
-        ErrorInitBus,
-        ErrorInitFrame,
-        ErrorInitIndex,
-        ErrorInitIndexLevel,
-        ErrorInitSeries,
-        ErrorInitStore,
-        ErrorInitStoreConfig,
-        ErrorInitTypeBlocks,
-        LocEmpty,
-        LocInvalid,
-        StoreFileMutation
-        )
+from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInit
+from static_frame.core.exception import ErrorInitBus
+from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitIndexLevel
+from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import ErrorInitStore
+from static_frame.core.exception import ErrorInitStoreConfig
+from static_frame.core.exception import ErrorInitTypeBlocks
+from static_frame.core.exception import LocEmpty
+from static_frame.core.exception import LocInvalid
+from static_frame.core.exception import StoreFileMutation
 from static_frame.core.fill_value_auto import FillValueAuto as FillValueAuto
 from static_frame.core.frame import Frame as Frame
 from static_frame.core.frame import FrameAssign as FrameAssign
@@ -67,34 +65,31 @@ from static_frame.core.index_datetime import IndexYearMonthGO as IndexYearMonthG
 from static_frame.core.index_hierarchy import IndexHierarchy as IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchyGO
 from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta
-from static_frame.core.node_dt import InterfaceBatchDatetime, InterfaceDatetime
+from static_frame.core.node_dt import InterfaceBatchDatetime
+from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeDelegate as IterNodeDelegate
-from static_frame.core.node_iter import (
-        IterNodeDepthLevel,
-        IterNodeDepthLevelAxis,
-        IterNodeGroup,
-        IterNodeGroupAxis,
-        IterNodeNoArg
-        )
+from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeDepthLevelAxis
+from static_frame.core.node_iter import IterNodeGroup
+from static_frame.core.node_iter import IterNodeGroupAxis
+from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType as IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import (
-        InterfaceAssignQuartet,
-        InterfaceAssignTrio,
-        InterfaceAsType
-        )
+from static_frame.core.node_selector import InterfaceAssignQuartet
+from static_frame.core.node_selector import InterfaceAssignTrio
+from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceGetItem as InterfaceGetItem
-from static_frame.core.node_selector import (
-        InterfaceSelectDuo,
-        InterfaceSelectQuartet,
-        InterfaceSelectTrio
-        )
-from static_frame.core.node_str import InterfaceBatchString, InterfaceString
-from static_frame.core.node_transpose import InterfaceBatchTranspose, InterfaceTranspose
+from static_frame.core.node_selector import InterfaceSelectDuo
+from static_frame.core.node_selector import InterfaceSelectQuartet
+from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_str import InterfaceBatchString
+from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_transpose import InterfaceBatchTranspose
+from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
 from static_frame.core.series import Series as Series
