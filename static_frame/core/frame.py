@@ -4149,7 +4149,7 @@ class Frame(ContainerOperand):
 
     @doc_inject(selector='fillna')
     def fillfalsy(self, value: tp.Any) -> 'Frame':
-        '''Return a new ``Frame`` after replacing falsy (NaN, None, 0, "", and other falsy values) values with the supplied value.
+        '''Return a new ``Frame`` after replacing falsy values with the supplied value.
 
         Args:
             {value}
