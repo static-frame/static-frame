@@ -5,7 +5,6 @@ import numpy as np
 import static_frame as sf
 import pandas as pd
 
-from static_frame.core.interface import INTERFACE_GROUP_ORDER
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.container_util import ContainerMap
@@ -230,7 +229,8 @@ class ExGenSeries(ExGen):
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
-        if attr in ('__array__()',
+        if attr in (
+                '__array__()',
                 'max()',
                 'mean()',
                 'median()',
@@ -263,7 +263,10 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_E)})'
             yield 's'
             yield f"round(s, 1)"
-        elif attr in ('all()', 'any()'):
+        elif attr in (
+                'all()',
+                'any()',
+                ):
             yield f's = {icls}({kwa(SERIES_INIT_F)})'
             yield f"s.{attr_func}()"
         elif attr == 'astype()':
@@ -410,13 +413,20 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_R)})'
             yield 's'
             yield f"s.{attr_func}((1, 0))"
-
+        elif attr == 'reindex()':
+            yield f's = {icls}({kwa(SERIES_INIT_P)})'
+            yield 's'
+            yield f"s.{attr_func}(('d', 'f', 'e', 'c'), fill_value=-1)"
+        elif attr == 'relabel()':
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
+            yield f"s.{attr_func}(('x', 'y', 'z'))"
+            yield f"s.{attr_func}(dict(a='x', b='y'))"
+            yield f"s.{attr_func}(lambda l: f'+{{l.upper()}}+')"
         else:
             print(f'no handling for {attr}')
             # raise NotImplementedError(f'no handling for {attr}')
 
-# no handling for reindex()
-# no handling for relabel()
 # no handling for relabel_flat()
 # no handling for relabel_level_add()
 # no handling for relabel_level_drop()
