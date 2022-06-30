@@ -24,31 +24,35 @@ import static_frame as sf
 from static_frame.core.interface import INTERFACE_GROUP_ORDER
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.util import AnyCallable
-from static_frame.test.unit.test_doc import api_example_str
+# from static_frame.test.unit.test_doc import api_example_str
 
 PREFIX_START = '#start_'
 PREFIX_END = '#end_'
 
 def get_defined() -> tp.Set[str]:
 
+    source_dir = os.path.abspath(os.path.dirname(__file__))
+    fp = os.path.join(source_dir, 'examples.txt')
+
     defined = set()
     signature_start = ''
     signature_end = ''
 
-    for line in api_example_str.split('\n'):
-        if line.startswith(PREFIX_START):
-            signature_start = line.replace(PREFIX_START, '').strip()
-        elif line.startswith(PREFIX_END):
-            signature_end = line.replace(PREFIX_END, '').strip()
-            if signature_start == signature_end:
-                if signature_start in defined:
-                    raise RuntimeError(f'duplicate definition: {signature_start}')
-                defined.add(signature_start)
-                signature_start = ''
-                signature_end = ''
-            else:
-                raise RuntimeError(f'mismatched: {signature_start}: {signature_end}')
-
+    with open(fp) as f:
+        for line in f:
+            line = line.rstrip()
+            if line.startswith(PREFIX_START):
+                signature_start = line.replace(PREFIX_START, '').strip()
+            elif line.startswith(PREFIX_END):
+                signature_end = line.replace(PREFIX_END, '').strip()
+                if signature_start == signature_end:
+                    if signature_start in defined:
+                        raise RuntimeError(f'duplicate definition: {signature_start}')
+                    defined.add(signature_start)
+                    signature_start = ''
+                    signature_end = ''
+                else:
+                    raise RuntimeError(f'mismatched: {signature_start}: {signature_end}')
     return defined
 
 # If extensions (or modules to document with autodoc) are in another directory,

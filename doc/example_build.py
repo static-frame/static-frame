@@ -1,5 +1,6 @@
 from io import StringIO
 import typing as tp
+import os
 
 import numpy as np
 import static_frame as sf
@@ -34,6 +35,7 @@ SERIES_INIT_P = dict(values=(8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_Q = dict(values=(8, 5, 0, 8), index=('d', 'b', 'a', 'c'))
 SERIES_INIT_R = dict(values=(3, 2, 8, 7),
         index=b"sf.IndexHierarchy.from_product((1, 2), ('a', 'b'))")
+SERIES_INIT_S = dict(values=(10, 2, 8), index=('a', 'b', 'c'), name='x')
 
 
 
@@ -93,7 +95,6 @@ def calls_to_msg(calls: tp.Iterator[str],
             yield repr(e) # show this error
 
     if i >= 0:
-        yield ''
         yield f'#end_{cls.__name__}-{row["signature_no_args"]}'
         yield ''
 
@@ -169,7 +170,7 @@ class ExGenSeries(ExGen):
             yield f's2 = {icls}({kwa(SERIES_INIT_B)})'
             yield f"s = {iattr}((('x', s1), ('y', s2)))"
         elif attr == 'from_dict':
-            yield f's = {iattr}(dict({kwa(SERIES_INIT_DICT_A)}))'
+            yield f's = {iattr}(dict({kwa(SERIES_INIT_DICT_A, arg_first=False)}))'
         elif attr == 'from_element':
             yield f's = {iattr}({kwa(SERIES_INIT_FROM_ELEMENT_A)})'
         elif attr == 'from_items':
@@ -180,7 +181,7 @@ class ExGenSeries(ExGen):
             yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
             yield f"s = {iattr}((s1, s2))"
         elif attr == 'from_pandas':
-            yield f'df = pd.Series({kwa(SERIES_INIT_A, arg_first=True)})'
+            yield f'df = pd.Series({kwa(SERIES_INIT_A)})'
             yield f's = {iattr}(df)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
@@ -200,6 +201,7 @@ class ExGenSeries(ExGen):
                 'to_pairs()',
                 'to_pandas()',
                 'to_series_he()',
+                'to_series()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield f"s.{attr_func}()"
@@ -423,14 +425,30 @@ class ExGenSeries(ExGen):
             yield f"s.{attr_func}(('x', 'y', 'z'))"
             yield f"s.{attr_func}(dict(a='x', b='y'))"
             yield f"s.{attr_func}(lambda l: f'+{{l.upper()}}+')"
+        elif attr == 'relabel_flat()':
+            yield f's = {icls}({kwa(SERIES_INIT_R)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr == 'relabel_level_add()':
+            yield f's = {icls}({kwa(SERIES_INIT_R)})'
+            yield 's'
+            yield f"s.{attr_func}('x')"
+        elif attr == 'relabel_level_drop()':
+            yield f's = {icls}({kwa(SERIES_INIT_R)})'
+            yield 's'
+            yield f"s.iloc[:2].{attr_func}(1)"
+        elif attr == 'rename()':
+            yield f's = {icls}({kwa(SERIES_INIT_S)})'
+            yield 's'
+            yield f"s.{attr_func}('y')"
+        elif attr == 'sample()':
+            yield f's = {icls}({kwa(SERIES_INIT_K)})'
+            yield 's'
+            yield f"s.{attr_func}(2, seed=0)"
         else:
-            print(f'no handling for {attr}')
-            # raise NotImplementedError(f'no handling for {attr}')
+            # print(f'no handling for {attr}')
+            raise NotImplementedError(f'no handling for {attr}')
 
-# no handling for relabel_flat()
-# no handling for relabel_level_add()
-# no handling for relabel_level_drop()
-# no handling for rename()
 # no handling for sample()
 
     @staticmethod
@@ -457,34 +475,37 @@ class ExGenSeries(ExGen):
 
 
 #-------------------------------------------------------------------------------
-def gen_examples(target, exg: ExGen):
+def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
     sf.DisplayActive.set(sf.DisplayConfig(type_color=False))
 
-    msg = []
     inter = InterfaceSummary.to_frame(target, #type: ignore
             minimized=False,
             max_args=99, # +inf, but keep as int
             )
 
     for ig in (
-            # InterfaceGroup.Constructor,
-            # InterfaceGroup.Exporter,
-            # InterfaceGroup.Attribute,
+            InterfaceGroup.Constructor,
+            InterfaceGroup.Exporter,
+            InterfaceGroup.Attribute,
             InterfaceGroup.Method,
-            # InterfaceGroup.DictLike,
-
+            InterfaceGroup.DictLike,
             ):
         func = exg.group_to_method(ig)
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
             calls = func(row)
-            msg.extend(calls_to_msg(calls, row))
+            yield from calls_to_msg(calls, row)
 
-    for line in msg:
-        print(line)
-
-
+def gen_all_examples() -> tp.Iterator[str]:
+    yield from gen_examples(sf.Series, ExGenSeries)
+    yield from gen_examples(sf.SeriesHE, ExGenSeries)
 
 
 if __name__ == '__main__':
-    gen_examples(sf.Series, ExGenSeries)
+    doc_dir = os.path.abspath(os.path.dirname(__file__))
+    fp = os.path.join(doc_dir, 'source', 'examples.txt')
+
+    with open(fp, 'w') as f:
+        for line in gen_all_examples():
+            f.write(line)
+            f.write('\n')
