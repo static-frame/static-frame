@@ -535,8 +535,6 @@ class ExGenSeries(ExGen):
             raise NotImplementedError(f'no handling for {attr}')
 
 
-
-
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
 
@@ -595,12 +593,28 @@ class ExGenSeries(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
+    @staticmethod
+    def iterator(row: sf.Series) -> tp.Iterator[str]:
+
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+        attr_sel = row['signature_no_args'][:-2]
+
+        if attr in (
+                'drop[]',
+                'mask[]',
+                'masked_array[]',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"s.{attr_sel}['c']"
+            yield f"s.{attr_sel}['c':]"
+            yield f"s.{attr_sel}[['a', 'd']]"
+        else:
+            print(attr)
+        return ''
 
 
-
-# []
-# iloc[]
-# loc[]
 
 #-------------------------------------------------------------------------------
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
@@ -620,7 +634,8 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             # InterfaceGroup.DictLike,
             # InterfaceGroup.Display,
             # InterfaceGroup.Assignment,
-            InterfaceGroup.Selector,
+            # InterfaceGroup.Selector,
+            InterfaceGroup.Iterator,
             ):
         func = exg.group_to_method(ig)
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
