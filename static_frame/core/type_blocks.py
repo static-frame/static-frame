@@ -2793,6 +2793,7 @@ class TypeBlocks(ContainerOperand):
         size: int = 0
         target_slice: tp.Union[int, slice]
 
+        # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering.
         t_start = 0
         for block in self._blocks:
             if block.ndim == 1:
