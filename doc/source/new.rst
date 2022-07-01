@@ -7,6 +7,8 @@ What is New in Static Frame
 
 Corrected issue in ``Series.from_overlay()`` that prematurely aborted processing all ``Series``
 
+Normalized ordering of results from ``Frame.bloc[]`` selections.
+
 
 0.9.6
 ----------
