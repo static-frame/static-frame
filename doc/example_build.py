@@ -130,7 +130,32 @@ class ExGen:
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        return
+
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr in (
+                'interface',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s.{attr}"
+        elif attr in (
+                'display()',
+                'display_tall()',
+                'display_wide()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s.{attr_func}()"
+        elif attr == '__repr__()':
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"repr(s)"
+        elif attr == '__str__()':
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"str(s)"
+        else:
+            print(attr)
 
     @staticmethod
     def assignment(row: sf.Series) -> tp.Iterator[str]:
@@ -471,35 +496,43 @@ class ExGenSeries(ExGen):
         else:
             yield f's.{attr_func}()'
 
+
     @staticmethod
-    def display(row: sf.Series) -> tp.Iterator[str]:
+    def assignment(row: sf.Series) -> tp.Iterator[str]:
 
         cls = ContainerMap.str_to_cls(row['cls_name'])
         icls = f'sf.{cls.__name__}' # interface cls
         attr = row['signature_no_args']
-        attr_func = row['signature_no_args'][:-2]
+        # attr_func = row['signature_no_args'][:-2]
 
-        if attr in (
-                'interface',
-                ):
-            yield f's = {icls}({kwa(SERIES_INIT_A)})'
-            yield f"s.{attr}"
-        elif attr in (
-                'display()',
-                'display_tall()',
-                'display_wide()',
-                ):
-            yield f's = {icls}({kwa(SERIES_INIT_A)})'
-            yield f"s.{attr_func}()"
-        elif attr == '__repr__()':
-            yield f's = {icls}({kwa(SERIES_INIT_A)})'
-            yield f"repr(s)"
-        elif attr == '__str__()':
-            yield f's = {icls}({kwa(SERIES_INIT_A)})'
-            yield f"str(s)"
+        if attr == 'assign[]()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"s.assign['c']('x')"
+            yield f"s.assign['c':]('x')"
+            yield f"s.assign[['a', 'd']](('x', 'y'))"
+
+        # elif attr in (
+        #         'display()',
+        #         'display_tall()',
+        #         'display_wide()',
+        #         ):
+        #     yield f's = {icls}({kwa(SERIES_INIT_A)})'
+        #     yield f"s.{attr_func}()"
+        # elif attr == '__repr__()':
+        #     yield f's = {icls}({kwa(SERIES_INIT_A)})'
+        #     yield f"repr(s)"
+        # elif attr == '__str__()':
+        #     yield f's = {icls}({kwa(SERIES_INIT_A)})'
+        #     yield f"str(s)"
         else:
             print(attr)
 
+# assign[]()
+# assign[].apply()
+# assign.iloc[]()
+# assign.iloc[].apply()
+# assign.loc[]()
+# assign.loc[].apply()
 
 #-------------------------------------------------------------------------------
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
@@ -512,12 +545,13 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            InterfaceGroup.Constructor,
-            InterfaceGroup.Exporter,
-            InterfaceGroup.Attribute,
-            InterfaceGroup.Method,
-            InterfaceGroup.DictLike,
-            InterfaceGroup.Display,
+            # InterfaceGroup.Constructor,
+            # InterfaceGroup.Exporter,
+            # InterfaceGroup.Attribute,
+            # InterfaceGroup.Method,
+            # InterfaceGroup.DictLike,
+            # InterfaceGroup.Display,
+            InterfaceGroup.Assignment,
             ):
         func = exg.group_to_method(ig)
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
