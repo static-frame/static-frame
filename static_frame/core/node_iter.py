@@ -73,7 +73,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             '_apply_type',
             )
 
-    INTERFACE = (
+    INTERFACE: tp.Tuple[str, ...] = (
             'apply',
             'apply_iter',
             'apply_iter_items',
@@ -662,7 +662,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
     def _get_delegate(self,
             **kwargs: object,
-            ) -> IterNodeDelegate[FrameOrSeries]:
+            ) -> tp.Dict[str, tp.Any]:
         '''
         In usage as an iteator, the args passed here are expected to be argument for the core iterators, i.e., axis arguments.
 

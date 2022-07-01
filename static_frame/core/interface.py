@@ -511,7 +511,8 @@ class InterfaceRecord(tp.NamedTuple):
                 )
         # TypeBlocks as iter_* methods that are just functions
         if hasattr(obj, 'CLS_DELEGATE'):
-            cls_interface = obj.CLS_DELEGATE # IterNodeDelegate or IterNodeDelegateMapable
+            cls_interface = obj.CLS_DELEGATE #type: ignore
+            # IterNodeDelegate or IterNodeDelegateMapable
 
             for field in cls_interface.INTERFACE: # apply, map, etc
                 delegate_obj = getattr(cls_interface, field)
