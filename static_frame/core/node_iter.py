@@ -801,7 +801,7 @@ class IterNodeDepthLevel(IterNode[FrameOrSeries]):
     def __call__(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None
             ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNode.get_delegate(self, depth_level=depth_level)
+        return IterNode.get_delegate_mapable(self, depth_level=depth_level)
 
 
 class IterNodeDepthLevelAxis(IterNode[FrameOrSeries]):
