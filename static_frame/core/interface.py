@@ -23,7 +23,6 @@ from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_dt import InterfaceBatchDatetime
-from static_frame.core.node_iter import IterNodeDelegate
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
