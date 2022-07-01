@@ -3157,7 +3157,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(4,8)|v(int,int,bool,bool,int,bool,int,int)')
         s1 = f1.bloc[(f1 % 2) == 1]
         self.assertEqual(s1.to_pairs(),
-                (((0, 0), -88017), ((0, 1), 162197), ((1, 0), 92867), ((1, 1), -41157), ((2, 0), 84967), ((2, 1), 5729), ((3, 1), -168387), ((0, 2), True), ((2, 3), True), ((3, 2), True), ((3, 3), True), ((3, 4), 32395), ((1, 5), True), ((3, 5), True), ((0, 7), 137759), ((2, 6), 32395), ((3, 6), 137759))
+                (((0, 0), -88017), ((0, 1), 162197), ((0, 2), True), ((0, 7), 137759), ((1, 0), 92867), ((1, 1), -41157), ((1, 5), True), ((2, 0), 84967), ((2, 1), 5729), ((2, 3), True), ((2, 6), 32395), ((3, 1), -168387), ((3, 2), True), ((3, 3), True), ((3, 4), 32395), ((3, 5), True), ((3, 6), 137759))
                 )
 
         self.assertEqual(
@@ -11267,9 +11267,8 @@ class TestUnit(TestCase):
                 name='f3')
 
         s1 = f1.bloc[(f1 <= 2) | (f1 > 4)]
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(s1.to_pairs(),
-                ((('y', 'a'), 2), (('z', 'a'), 1), (('y', 'b'), 5), (('z', 'b'), 6))
+                ((('y', 'a'), 2), (('y', 'b'), 5), (('z', 'a'), 1), (('z', 'b'), 6))
                 )
 
         s2 = f2.bloc[(f2 < 0)]
@@ -11279,7 +11278,7 @@ class TestUnit(TestCase):
 
         s3 = f3.bloc[f3 < 11]
         self.assertEqual(s3.to_pairs(),
-                ((('p', ('I', 'a')), 10), (('q', ('II', 'a')), -50), (('q', ('II', 'b')), -60))
+                ((('p', ('I', 'a')), 10.0), (('q', ('II', 'a')), -50.0), (('q', ('II', 'b')), -60.0))
                 )
 
     def test_frame_bloc_b(self) -> None:
@@ -11306,8 +11305,18 @@ class TestUnit(TestCase):
 
         s2 = f.bloc[f == False] # pylint: disable=C0121
         self.assertEqual(s2.to_pairs(),
-                ((('a', 'x'), False), (('b', 'x'), False), (('a', 'y'), False), (('b', 'y'), False), (('a', 'z'), False), (('b', 'z'), False))
+                ((('a', 'x'), False), (('a', 'y'), False), (('a', 'z'), False), (('b', 'x'), False), (('b', 'y'), False), (('b', 'z'), False))
                 )
+
+    def test_frame_bloc_d(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3, 3))
+        f2 = Frame(np.arange(9).reshape(3, 3))
+        # this forces a different block structure that resulted in different bloc ordering
+        f2 = f2.assign[:].apply_element(lambda v: {v})
+        sel = f1 % 1 == 0
+        s1 = f1.bloc[sel]
+        s2 = f2.bloc[sel]
+        self.assertTrue(s1.index.equals(s2.index))
 
     #---------------------------------------------------------------------------
 
