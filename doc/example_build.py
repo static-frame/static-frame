@@ -449,8 +449,6 @@ class ExGenSeries(ExGen):
             # print(f'no handling for {attr}')
             raise NotImplementedError(f'no handling for {attr}')
 
-# no handling for sample()
-
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
 
@@ -473,6 +471,35 @@ class ExGenSeries(ExGen):
         else:
             yield f's.{attr_func}()'
 
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr in (
+                'interface',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s.{attr}"
+        elif attr in (
+                'display()',
+                'display_tall()',
+                'display_wide()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s.{attr_func}()"
+        elif attr == '__repr__()':
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"repr(s)"
+        elif attr == '__str__()':
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"str(s)"
+        else:
+            print(attr)
+
 
 #-------------------------------------------------------------------------------
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
@@ -490,6 +517,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             InterfaceGroup.Attribute,
             InterfaceGroup.Method,
             InterfaceGroup.DictLike,
+            InterfaceGroup.Display,
             ):
         func = exg.group_to_method(ig)
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
@@ -498,10 +526,9 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
 def gen_all_examples() -> tp.Iterator[str]:
     yield from gen_examples(sf.Series, ExGenSeries)
-    yield from gen_examples(sf.SeriesHE, ExGenSeries)
+    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
 
-
-if __name__ == '__main__':
+def write():
     doc_dir = os.path.abspath(os.path.dirname(__file__))
     fp = os.path.join(doc_dir, 'source', 'examples.txt')
 
@@ -509,3 +536,9 @@ if __name__ == '__main__':
         for line in gen_all_examples():
             f.write(line)
             f.write('\n')
+
+
+if __name__ == '__main__':
+    for line in gen_all_examples():
+        print(line)
+    # write()

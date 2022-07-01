@@ -1,0 +1,1522 @@
+#start_Series-__init__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-__init__()
+
+#start_Series-from_concat()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((4, 3, 12), index=('d', 'e', 'f'))
+>>> s = sf.Series.from_concat((s1, s2))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+d        4
+e        3
+f        12
+<<U1>    <int64>
+#end_Series-from_concat()
+
+#start_Series-from_concat_items()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((4, 3, 12), index=('d', 'e', 'f'))
+>>> s = sf.Series.from_concat_items((('x', s1), ('y', s2)))
+>>> s
+<Series>
+<IndexHierarchy>
+x                a     10
+x                b     2
+x                c     8
+y                d     4
+y                e     3
+y                f     12
+<<U1>            <<U1> <int64>
+#end_Series-from_concat_items()
+
+#start_Series-from_dict()
+>>> s = sf.Series.from_dict(dict(a=10, b=2, c=8))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-from_dict()
+
+#start_Series-from_element()
+>>> s = sf.Series.from_element(-1, index=('a', 'b', 'c'), name='x')
+>>> s
+<Series: x>
+<Index>
+a           -1
+b           -1
+c           -1
+<<U1>       <int64>
+#end_Series-from_element()
+
+#start_Series-from_items()
+>>> s = sf.Series.from_items((('a', 10), ('b', 2), ('c', 8)), name='x')
+>>> s
+<Series: x>
+<Index>
+a           10
+b           2
+c           8
+<<U1>       <int64>
+#end_Series-from_items()
+
+#start_Series-from_overlay()
+>>> s1 = sf.Series((11, 1, None), index=('a', 'b', 'c'))
+>>> s1
+<Series>
+<Index>
+a        11
+b        1
+c        None
+<<U1>    <object>
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s = sf.Series.from_overlay((s1, s2))
+>>> s
+<Series>
+<Index>
+a        11
+b        1
+c        8
+d        19
+<<U1>    <object>
+#end_Series-from_overlay()
+
+#start_Series-from_pandas()
+>>> df = pd.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s = sf.Series.from_pandas(df)
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<object> <int64>
+#end_Series-from_pandas()
+
+#start_Series-to_frame()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+a       10
+b       2
+c       8
+<<U1>   <int64>
+#end_Series-to_frame()
+
+#start_Series-to_frame_go()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_frame_go()
+<FrameGO>
+<IndexGO> 0       <int64>
+<Index>
+a         10
+b         2
+c         8
+<<U1>     <int64>
+#end_Series-to_frame_go()
+
+#start_Series-to_frame_he()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_frame_he()
+<FrameHE>
+<Index>   0       <int64>
+<Index>
+a         10
+b         2
+c         8
+<<U1>     <int64>
+#end_Series-to_frame_he()
+
+#start_Series-to_pairs()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_pairs()
+(('a', 10), ('b', 2), ('c', 8))
+#end_Series-to_pairs()
+
+#start_Series-to_pandas()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_pandas()
+a    10
+b     2
+c     8
+dtype: int64
+#end_Series-to_pandas()
+
+#start_Series-to_series_he()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_series_he()
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_Series-to_series_he()
+
+#start_Series-STATIC
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.STATIC
+True
+#end_Series-STATIC
+
+#start_Series-T
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.T
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-T
+
+#start_Series-dtype
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.dtype
+int64
+#end_Series-dtype
+
+#start_Series-index
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.index
+<Index>
+a
+b
+c
+<<U1>
+#end_Series-index
+
+#start_Series-mloc
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.mloc
+94879424144000
+#end_Series-mloc
+
+#start_Series-name
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.name
+#end_Series-name
+
+#start_Series-nbytes
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.nbytes
+24
+#end_Series-nbytes
+
+#start_Series-ndim
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.ndim
+1
+#end_Series-ndim
+
+#start_Series-shape
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.shape
+(3,)
+#end_Series-shape
+
+#start_Series-size
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.size
+3
+#end_Series-size
+
+#start_Series-__array__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.__array__()
+[10  2  8]
+#end_Series-__array__()
+
+#start_Series-__array_ufunc__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> np.array((0, 1, 0)) * s
+<Series>
+<Index>
+a        0
+b        2
+c        0
+<<U1>    <int64>
+#end_Series-__array_ufunc__()
+
+#start_Series-__bool__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> bool(s)
+ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+#end_Series-__bool__()
+
+#start_Series-__deepcopy__()
+>>> import copy
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> copy.deepcopy(s)
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-__deepcopy__()
+
+#start_Series-__len__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> len(s)
+3
+#end_Series-__len__()
+
+#start_Series-__round__()
+>>> s = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        8.734
+<<U1>    <float64>
+>>> round(s, 1)
+<Series>
+<Index>
+a        10.2
+b        2.1
+c        8.7
+<<U1>    <float64>
+#end_Series-__round__()
+
+#start_Series-all()
+>>> s = sf.Series((False, False, True), index=('a', 'b', 'c'))
+>>> s.all()
+False
+#end_Series-all()
+
+#start_Series-any()
+>>> s = sf.Series((False, False, True), index=('a', 'b', 'c'))
+>>> s.any()
+True
+#end_Series-any()
+
+#start_Series-astype()
+>>> s = sf.Series((11, 1, None), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        11
+b        1
+c        None
+<<U1>    <object>
+>>> s.astype(float)
+<Series>
+<Index>
+a        11.0
+b        1.0
+c        nan
+<<U1>    <float64>
+#end_Series-astype()
+
+#start_Series-clip()
+>>> s = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        8.734
+<<U1>    <float64>
+>>> s.clip(lower=2.5, upper=10.1)
+<Series>
+<Index>
+a        10.1
+b        2.5
+c        8.734
+<<U1>    <float64>
+#end_Series-clip()
+
+#start_Series-count()
+>>> s = sf.Series((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s.count(skipna=True)
+3
+>>> s.count(unique=True)
+2
+#end_Series-count()
+
+#start_Series-cov()
+>>> s1 = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s1.cov(s2)
+17.924999999999997
+#end_Series-cov()
+
+#start_Series-cumprod()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.cumprod()
+<Series>
+<Index>
+a        10
+b        20
+c        160
+<<U1>    <int64>
+#end_Series-cumprod()
+
+#start_Series-cumsum()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.cumsum()
+<Series>
+<Index>
+a        10
+b        12
+c        20
+<<U1>    <int64>
+#end_Series-cumsum()
+
+#start_Series-drop_duplicated()
+>>> s = sf.Series((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        None
+d        8
+<<U1>    <object>
+>>> s.drop_duplicated()
+<Series>
+<Index>
+b        5
+c        None
+<<U1>    <object>
+#end_Series-drop_duplicated()
+
+#start_Series-dropfalsy()
+>>> s = sf.Series(('q', 'r', '', 's'), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        q
+b        r
+c
+d        s
+<<U1>    <<U1>
+>>> s.dropfalsy()
+<Series>
+<Index>
+a        q
+b        r
+d        s
+<<U1>    <<U1>
+#end_Series-dropfalsy()
+
+#start_Series-dropna()
+>>> s = sf.Series((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        None
+d        8
+<<U1>    <object>
+>>> s.dropna()
+<Series>
+<Index>
+a        8
+b        5
+d        8
+<<U1>    <object>
+#end_Series-dropna()
+
+#start_Series-duplicated()
+>>> s = sf.Series((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        None
+d        8
+<<U1>    <object>
+>>> s.duplicated()
+<Series>
+<Index>
+a        True
+b        False
+c        False
+d        True
+<<U1>    <bool>
+#end_Series-duplicated()
+
+#start_Series-equals()
+>>> s1 = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s1.equals(s2)
+False
+#end_Series-equals()
+
+#start_Series-fillfalsy()
+>>> s = sf.Series(('q', 'r', '', 's'), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        q
+b        r
+c
+d        s
+<<U1>    <<U1>
+>>> s.fillfalsy('missing')
+<Series>
+<Index>
+a        q
+b        r
+c        missing
+d        s
+<<U1>    <<U7>
+#end_Series-fillfalsy()
+
+#start_Series-fillfalsy_backward()
+>>> s = sf.Series(('', '', 'r', 's'), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a
+b
+c        r
+d        s
+<<U1>    <<U1>
+>>> s.fillfalsy_backward()
+<Series>
+<Index>
+a        r
+b        r
+c        r
+d        s
+<<U1>    <<U1>
+#end_Series-fillfalsy_backward()
+
+#start_Series-fillfalsy_forward()
+>>> s = sf.Series(('p', 'q', '', ''), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        p
+b        q
+c
+d
+<<U1>    <<U1>
+>>> s.fillfalsy_forward()
+<Series>
+<Index>
+a        p
+b        q
+c        q
+d        q
+<<U1>    <<U1>
+#end_Series-fillfalsy_forward()
+
+#start_Series-fillfalsy_leading()
+>>> s = sf.Series(('', '', 'r', 's'), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a
+b
+c        r
+d        s
+<<U1>    <<U1>
+>>> s.fillfalsy_leading('missing')
+<Series>
+<Index>
+a        missing
+b        missing
+c        r
+d        s
+<<U1>    <<U7>
+#end_Series-fillfalsy_leading()
+
+#start_Series-fillfalsy_trailing()
+>>> s = sf.Series(('p', 'q', '', ''), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        p
+b        q
+c
+d
+<<U1>    <<U1>
+>>> s.fillfalsy_trailing('missing')
+<Series>
+<Index>
+a        p
+b        q
+c        missing
+d        missing
+<<U1>    <<U7>
+#end_Series-fillfalsy_trailing()
+
+#start_Series-fillna()
+>>> s = sf.Series((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        nan
+d        8.734
+e        nan
+<<U1>    <float64>
+>>> s.fillna(0.0)
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        0.0
+d        8.734
+e        0.0
+<<U1>    <float64>
+#end_Series-fillna()
+
+#start_Series-fillna_backward()
+>>> s = sf.Series((np.nan, np.nan, 10.235, 2.124, 8.734), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        nan
+b        nan
+c        10.235
+d        2.124
+e        8.734
+<<U1>    <float64>
+>>> s.fillna_backward()
+<Series>
+<Index>
+a        10.235
+b        10.235
+c        10.235
+d        2.124
+e        8.734
+<<U1>    <float64>
+#end_Series-fillna_backward()
+
+#start_Series-fillna_forward()
+>>> s = sf.Series((10.235, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        8.734
+d        nan
+e        nan
+<<U1>    <float64>
+>>> s.fillna_forward()
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        8.734
+d        8.734
+e        8.734
+<<U1>    <float64>
+#end_Series-fillna_forward()
+
+#start_Series-fillna_leading()
+>>> s = sf.Series((np.nan, np.nan, 10.235, 2.124, 8.734), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        nan
+b        nan
+c        10.235
+d        2.124
+e        8.734
+<<U1>    <float64>
+>>> s.fillna_leading(0.0)
+<Series>
+<Index>
+a        0.0
+b        0.0
+c        10.235
+d        2.124
+e        8.734
+<<U1>    <float64>
+#end_Series-fillna_leading()
+
+#start_Series-fillna_trailing()
+>>> s = sf.Series((10.235, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        8.734
+d        nan
+e        nan
+<<U1>    <float64>
+>>> s.fillna_trailing(0.0)
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        8.734
+d        0.0
+e        0.0
+<<U1>    <float64>
+#end_Series-fillna_trailing()
+
+#start_Series-head()
+>>> s = sf.Series((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        nan
+d        8.734
+e        nan
+<<U1>    <float64>
+>>> s.head(2)
+<Series>
+<Index>
+a        10.235
+b        2.124
+<<U1>    <float64>
+#end_Series-head()
+
+#start_Series-iloc_max()
+>>> s = sf.Series((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        nan
+d        8.734
+e        nan
+<<U1>    <float64>
+>>> s.iloc_max()
+0
+#end_Series-iloc_max()
+
+#start_Series-iloc_min()
+>>> s = sf.Series((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        nan
+d        8.734
+e        nan
+<<U1>    <float64>
+>>> s.iloc_min()
+1
+#end_Series-iloc_min()
+
+#start_Series-iloc_searchsorted()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.iloc_searchsorted(18)
+2
+#end_Series-iloc_searchsorted()
+
+#start_Series-insert_after()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((4, 3, 12), index=('d', 'e', 'f'))
+>>> s1.insert_after('b', s2)
+<Series>
+<Index>
+a        10
+b        2
+d        4
+e        3
+f        12
+c        8
+<<U1>    <int64>
+#end_Series-insert_after()
+
+#start_Series-insert_before()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((4, 3, 12), index=('d', 'e', 'f'))
+>>> s1.insert_before('b', s2)
+<Series>
+<Index>
+a        10
+d        4
+e        3
+f        12
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-insert_before()
+
+#start_Series-isfalsy()
+>>> s = sf.Series((2, '', 19, 0, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b
+c        19
+d        0
+e        None
+<<U1>    <object>
+>>> s.isfalsy()
+<Series>
+<Index>
+a        False
+b        True
+c        False
+d        True
+e        True
+<<U1>    <bool>
+#end_Series-isfalsy()
+
+#start_Series-isin()
+>>> s = sf.Series((2, '', 19, 0, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.isin((2, 19))
+<Series>
+<Index>
+a        True
+b        False
+c        True
+d        False
+e        False
+<<U1>    <bool>
+#end_Series-isin()
+
+#start_Series-isna()
+>>> s = sf.Series((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        nan
+d        8.734
+e        nan
+<<U1>    <float64>
+>>> s.isna()
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        False
+e        True
+<<U1>    <bool>
+#end_Series-isna()
+
+#start_Series-loc_max()
+>>> s = sf.Series((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        nan
+d        8.734
+e        nan
+<<U1>    <float64>
+>>> s.loc_max()
+a
+#end_Series-loc_max()
+
+#start_Series-loc_min()
+>>> s = sf.Series((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        nan
+d        8.734
+e        nan
+<<U1>    <float64>
+>>> s.loc_min()
+b
+#end_Series-loc_min()
+
+#start_Series-loc_searchsorted()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.loc_searchsorted(18)
+c
+#end_Series-loc_searchsorted()
+
+#start_Series-max()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.max()
+10
+#end_Series-max()
+
+#start_Series-mean()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.mean()
+6.666666666666667
+#end_Series-mean()
+
+#start_Series-median()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.median()
+8.0
+#end_Series-median()
+
+#start_Series-min()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.min()
+2
+#end_Series-min()
+
+#start_Series-notfalsy()
+>>> s = sf.Series((2, '', 19, 0, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b
+c        19
+d        0
+e        None
+<<U1>    <object>
+>>> s.notfalsy()
+<Series>
+<Index>
+a        True
+b        False
+c        True
+d        False
+e        False
+<<U1>    <bool>
+#end_Series-notfalsy()
+
+#start_Series-notna()
+>>> s = sf.Series((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        nan
+d        8.734
+e        nan
+<<U1>    <float64>
+>>> s.notna()
+<Series>
+<Index>
+a        True
+b        True
+c        False
+d        True
+e        False
+<<U1>    <bool>
+#end_Series-notna()
+
+#start_Series-prod()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.prod()
+160
+#end_Series-prod()
+
+#start_Series-rank_dense()
+>>> s = sf.Series((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        0
+d        8
+<<U1>    <int64>
+>>> s.rank_dense()
+<Series>
+<Index>
+a        2
+b        1
+c        0
+d        2
+<<U1>    <int64>
+#end_Series-rank_dense()
+
+#start_Series-rank_max()
+>>> s = sf.Series((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        0
+d        8
+<<U1>    <int64>
+>>> s.rank_max()
+<Series>
+<Index>
+a        3
+b        1
+c        0
+d        3
+<<U1>    <int64>
+#end_Series-rank_max()
+
+#start_Series-rank_mean()
+>>> s = sf.Series((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        0
+d        8
+<<U1>    <int64>
+>>> s.rank_mean()
+<Series>
+<Index>
+a        2.5
+b        1.0
+c        0.0
+d        2.5
+<<U1>    <float64>
+#end_Series-rank_mean()
+
+#start_Series-rank_min()
+>>> s = sf.Series((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        0
+d        8
+<<U1>    <int64>
+>>> s.rank_min()
+<Series>
+<Index>
+a        2
+b        1
+c        0
+d        2
+<<U1>    <int64>
+#end_Series-rank_min()
+
+#start_Series-rank_ordinal()
+>>> s = sf.Series((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        0
+d        8
+<<U1>    <int64>
+>>> s.rank_ordinal()
+<Series>
+<Index>
+a        2
+b        1
+c        0
+d        3
+<<U1>    <int64>
+#end_Series-rank_ordinal()
+
+#start_Series-rehierarch()
+>>> s = sf.Series((3, 2, 8, 7), index=sf.IndexHierarchy.from_product((1, 2), ('a', 'b')))
+>>> s
+<Series>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+>>> s.rehierarch((1, 0))
+<Series>
+<IndexHierarchy>
+a                1       3
+a                2       8
+b                1       2
+b                2       7
+<<U1>            <int64> <int64>
+#end_Series-rehierarch()
+
+#start_Series-reindex()
+>>> s = sf.Series((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        0
+d        8
+<<U1>    <int64>
+>>> s.reindex(('d', 'f', 'e', 'c'), fill_value=-1)
+<Series>
+<Index>
+d        8
+f        -1
+e        -1
+c        0
+<<U1>    <int64>
+#end_Series-reindex()
+
+#start_Series-relabel()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> s.relabel(('x', 'y', 'z'))
+<Series>
+<Index>
+x        10
+y        2
+z        8
+<<U1>    <int64>
+>>> s.relabel(dict(a='x', b='y'))
+<Series>
+<Index>
+x        10
+y        2
+c        8
+<<U1>    <int64>
+>>> s.relabel(lambda l: f'+{l.upper()}+')
+<Series>
+<Index>
++A+      10
++B+      2
++C+      8
+<<U3>    <int64>
+#end_Series-relabel()
+
+#start_Series-relabel_flat()
+>>> s = sf.Series((3, 2, 8, 7), index=sf.IndexHierarchy.from_product((1, 2), ('a', 'b')))
+>>> s
+<Series>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+>>> s.relabel_flat()
+<Series>
+<Index>
+(1, 'a') 3
+(1, 'b') 2
+(2, 'a') 8
+(2, 'b') 7
+<object> <int64>
+#end_Series-relabel_flat()
+
+#start_Series-relabel_level_add()
+>>> s = sf.Series((3, 2, 8, 7), index=sf.IndexHierarchy.from_product((1, 2), ('a', 'b')))
+>>> s
+<Series>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+>>> s.relabel_level_add('x')
+<Series>
+<IndexHierarchy>
+x                1       a     3
+x                1       b     2
+x                2       a     8
+x                2       b     7
+<<U1>            <int64> <<U1> <int64>
+#end_Series-relabel_level_add()
+
+#start_Series-relabel_level_drop()
+>>> s = sf.Series((3, 2, 8, 7), index=sf.IndexHierarchy.from_product((1, 2), ('a', 'b')))
+>>> s
+<Series>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+>>> s.iloc[:2].relabel_level_drop(1)
+<Series>
+<Index>
+a        3
+b        2
+<<U1>    <int64>
+#end_Series-relabel_level_drop()
+
+#start_Series-rename()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'), name='x')
+>>> s
+<Series: x>
+<Index>
+a           10
+b           2
+c           8
+<<U1>       <int64>
+>>> s.rename('y')
+<Series: y>
+<Index>
+a           10
+b           2
+c           8
+<<U1>       <int64>
+#end_Series-rename()
+
+#start_Series-roll()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.roll(2)
+<Series>
+<Index>
+a        34
+b        54
+c        2
+d        8
+e        19
+<<U1>    <int64>
+#end_Series-roll()
+
+#start_Series-sample()
+>>> s = sf.Series((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        nan
+d        8.734
+e        nan
+<<U1>    <float64>
+>>> s.sample(2, seed=0)
+<Series>
+<Index>
+a        10.235
+c        nan
+<<U1>    <float64>
+#end_Series-sample()
+
+#start_Series-shift()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.shift(2)
+<Series>
+<Index>
+a        nan
+b        nan
+c        2.0
+d        8.0
+e        19.0
+<<U1>    <float64>
+#end_Series-shift()
+
+#start_Series-sort_index()
+>>> s = sf.Series((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        0
+d        8
+<<U1>    <int64>
+>>> s.sort_index()
+<Series>
+<Index>
+a        8
+b        5
+c        0
+d        8
+<<U1>    <int64>
+>>> s.sort_index(ascending=False)
+<Series>
+<Index>
+d        8
+c        0
+b        5
+a        8
+<<U1>    <int64>
+#end_Series-sort_index()
+
+#start_Series-sort_values()
+>>> s = sf.Series((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        0
+d        8
+<<U1>    <int64>
+>>> s.sort_values()
+<Series>
+<Index>
+c        0
+b        5
+a        8
+d        8
+<<U1>    <int64>
+>>> s.sort_values(ascending=False)
+<Series>
+<Index>
+d        8
+a        8
+b        5
+c        0
+<<U1>    <int64>
+#end_Series-sort_values()
+
+#start_Series-std()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.std()
+3.39934634239519
+#end_Series-std()
+
+#start_Series-sum()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.sum()
+20
+#end_Series-sum()
+
+#start_Series-tail()
+>>> s = sf.Series((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        nan
+d        8.734
+e        nan
+<<U1>    <float64>
+>>> s.tail(2)
+<Series>
+<Index>
+d        8.734
+e        nan
+<<U1>    <float64>
+#end_Series-tail()
+
+#start_Series-transpose()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.transpose()
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-transpose()
+
+#start_Series-unique()
+>>> s = sf.Series((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        None
+d        8
+<<U1>    <object>
+>>> s.unique()
+[8 5 None]
+#end_Series-unique()
+
+#start_Series-var()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.var()
+11.555555555555557
+#end_Series-var()
+
+#start_Series-__contains__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.__contains__('a')
+True
+#end_Series-__contains__()
+
+#start_Series-__iter__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.__iter__()
+<generator object Index.__iter__ at 0x7f306b2666d0>
+#end_Series-__iter__()
+
+#start_Series-__reversed__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.__reversed__()
+<reversed object at 0x7f306b24bb20>
+#end_Series-__reversed__()
+
+#start_Series-get()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.get('a')
+10
+>>> s.get('z', -1)
+-1
+#end_Series-get()
+
+#start_Series-items()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.items())
+(('a', 10), ('b', 2), ('c', 8))
+#end_Series-items()
+
+#start_Series-keys()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.keys()
+<Index>
+a
+b
+c
+<<U1>
+#end_Series-keys()
+
+#start_Series-values
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.values
+[10  2  8]
+#end_Series-values
+
+#start_Series-interface
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.interface
+<Frame: Series>
+<Index>                              cls_name group                doc                  <<U18>
+<Index: signature>
+__init__(values, *, index, name, ... Series   Constructor          Initializer. Args...
+from_concat(containers, *, index,... Series   Constructor          Concatenate multi...
+from_concat_items(items, *, name,... Series   Constructor          Produce a Series ...
+from_dict(mapping, *, dtype, name... Series   Constructor          Series constructi...
+from_element(element, *, index, d... Series   Constructor          Create a Series f...
+from_items(pairs, *, dtype, name,... Series   Constructor          Series constructi...
+from_overlay(containers, *, index... Series   Constructor          Return a new Seri...
+from_pandas(value, *, index, inde... Series   Constructor          Given a Pandas Se...
+to_frame(axis, *, index, index_co... Series   Exporter             Return a Frame vi...
+to_frame_go(axis, *, index, index... Series   Exporter             Return FrameGO vi...
+to_frame_he(axis, *, index, index... Series   Exporter             Return FrameHE vi...
+to_html(config, style_config)        Series   Exporter             Return an HTML ta...
+to_html_datatables(fp, show, config) Series   Exporter             Return a complete...
+to_pairs()                           Series   Exporter             Return a tuple of...
+to_pandas()                          Series   Exporter             Return a Pandas S...
+to_series_he()                       Series   Exporter             Return a SeriesHE...
+to_visidata()                        Series   Exporter             Open an interacti...
+...                                  ...      ...                  ...
+via_fill_value(fill_value).__le__... Series   Accessor Fill Value
+via_fill_value(fill_value).__eq__... Series   Accessor Fill Value
+via_fill_value(fill_value).__ne__... Series   Accessor Fill Value
+via_fill_value(fill_value).__gt__... Series   Accessor Fill Value
+via_fill_value(fill_value).__ge__... Series   Accessor Fill Value
+via_fill_value(fill_value).__radd... Series   Accessor Fill Value
+via_fill_value(fill_value).__rsub... Series   Accessor Fill Value
+via_fill_value(fill_value).__rmul... Series   Accessor Fill Value
+via_fill_value(fill_value).__rtru... Series   Accessor Fill Value
+via_fill_value(fill_value).__rflo... Series   Accessor Fill Value
+via_re(pattern, flags).search(pos... Series   Accessor Regular ... Scan through stri...
+via_re(pattern, flags).match(pos,... Series   Accessor Regular ... If zero or more c...
+via_re(pattern, flags).fullmatch(... Series   Accessor Regular ... If the whole stri...
+via_re(pattern, flags).split(maxs... Series   Accessor Regular ... Split string by t...
+via_re(pattern, flags).findall(po... Series   Accessor Regular ... Return all non-ov...
+via_re(pattern, flags).sub(repl, ... Series   Accessor Regular ... Return the string...
+via_re(pattern, flags).subn(repl,... Series   Accessor Regular ... Perform the same ...
+<<U94>                               <<U6>    <<U27>               <<U83>
+#end_Series-interface
+
+#start_Series-__repr__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> repr(s)
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-__repr__()
+
+#start_Series-__str__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> str(s)
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-__str__()
+
+#start_Series-display()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.display()
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-display()
+
+#start_Series-display_tall()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.display_tall()
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-display_tall()
+
+#start_Series-display_wide()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.display_wide()
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-display_wide()
+
