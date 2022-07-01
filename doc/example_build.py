@@ -471,7 +471,6 @@ class ExGenSeries(ExGen):
             yield 's'
             yield f"s.{attr_func}(2, seed=0)"
         else:
-            # print(f'no handling for {attr}')
             raise NotImplementedError(f'no handling for {attr}')
 
     @staticmethod
@@ -510,29 +509,32 @@ class ExGenSeries(ExGen):
             yield f"s.assign['c']('x')"
             yield f"s.assign['c':]('x')"
             yield f"s.assign[['a', 'd']](('x', 'y'))"
-
-        # elif attr in (
-        #         'display()',
-        #         'display_tall()',
-        #         'display_wide()',
-        #         ):
-        #     yield f's = {icls}({kwa(SERIES_INIT_A)})'
-        #     yield f"s.{attr_func}()"
-        # elif attr == '__repr__()':
-        #     yield f's = {icls}({kwa(SERIES_INIT_A)})'
-        #     yield f"repr(s)"
-        # elif attr == '__str__()':
-        #     yield f's = {icls}({kwa(SERIES_INIT_A)})'
-        #     yield f"str(s)"
+        elif attr == 'assign[].apply()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign['c':].apply(lambda s: s / 100)"
+        elif attr == 'assign.iloc[]()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"s.assign.iloc[2]('x')"
+            yield f"s.assign.iloc[2:]('x')"
+            yield f"s.assign.iloc[[0, 4]](('x', 'y'))"
+        elif attr == 'assign.iloc[].apply()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign.iloc[2:].apply(lambda s: s / 100)"
+        elif attr == 'assign.loc[]()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"s.assign.loc['c']('x')"
+            yield f"s.assign.loc['c':]('x')"
+            yield f"s.assign.loc[['a', 'd']](('x', 'y'))"
+        elif attr == 'assign.loc[].apply()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign.loc['c':].apply(lambda s: s / 100)"
         else:
-            print(attr)
+            raise NotImplementedError(f'no handling for {attr}')
 
-# assign[]()
-# assign[].apply()
-# assign.iloc[]()
-# assign.iloc[].apply()
-# assign.loc[]()
-# assign.loc[].apply()
+
 
 #-------------------------------------------------------------------------------
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
