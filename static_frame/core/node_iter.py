@@ -742,10 +742,21 @@ class IterNodeNoArg(IterNode[FrameOrSeries]):
         return IterNode.get_delegate_mapable(self)
 
 
-class IterNodeAxis(IterNode[FrameOrSeries]):
+class IterNodeAxisElement(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
     CLS_DELEGATE = IterNodeDelegateMapable
+
+    def __call__(self,
+            *,
+            axis: int = 0
+            ) -> IterNodeDelegateMapable[FrameOrSeries]:
+        return IterNode.get_delegate_mapable(self, axis=axis)
+
+
+class IterNodeAxis(IterNode[FrameOrSeries]):
+
+    __slots__ = _ITER_NODE_SLOTS
 
     def __call__(self,
             *,
@@ -801,7 +812,6 @@ class IterNodeGroupAxis(IterNode[FrameOrSeries]):
 class IterNodeDepthLevel(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
-    CLS_DELEGATE = IterNodeDelegateMapable
 
     def __call__(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None

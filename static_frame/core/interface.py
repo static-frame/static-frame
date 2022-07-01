@@ -509,31 +509,33 @@ class InterfaceRecord(tp.NamedTuple):
                 is_attr=True, # doc as attr so sphinx does not add parens to sig
                 signature_no_args=signature_no_args,
                 )
-        cls_interface = obj.CLS_DELEGATE # IterNodeDelegate or IterNodeDelegateMapable
+        # TypeBlocks as iter_* methods that are just functions
+        if hasattr(obj, 'CLS_DELEGATE'):
+            cls_interface = obj.CLS_DELEGATE # IterNodeDelegate or IterNodeDelegateMapable
 
-        for field in cls_interface.INTERFACE: # apply, map, etc
-            delegate_obj = getattr(cls_interface, field)
-            delegate_reference = f'{cls_interface.__name__}.{field}'
-            doc = Features.scrub_doc(delegate_obj.__doc__)
+            for field in cls_interface.INTERFACE: # apply, map, etc
+                delegate_obj = getattr(cls_interface, field)
+                delegate_reference = f'{cls_interface.__name__}.{field}'
+                doc = Features.scrub_doc(delegate_obj.__doc__)
 
-            signature, signature_no_args = _get_signatures(
-                    name,
-                    obj.__call__, #type: ignore
-                    is_getitem=False,
-                    delegate_func=delegate_obj,
-                    delegate_name=field,
-                    max_args=max_args,
-                    )
-            yield cls(cls_name,
-                    InterfaceGroup.Iterator,
-                    signature,
-                    doc,
-                    reference,
-                    use_signature=True,
-                    is_attr=True,
-                    delegate_reference=delegate_reference,
-                    signature_no_args=signature_no_args
-                    )
+                signature, signature_no_args = _get_signatures(
+                        name,
+                        obj.__call__, #type: ignore
+                        is_getitem=False,
+                        delegate_func=delegate_obj,
+                        delegate_name=field,
+                        max_args=max_args,
+                        )
+                yield cls(cls_name,
+                        InterfaceGroup.Iterator,
+                        signature,
+                        doc,
+                        reference,
+                        use_signature=True,
+                        is_attr=True,
+                        delegate_reference=delegate_reference,
+                        signature_no_args=signature_no_args
+                        )
 
     @classmethod
     def gen_from_accessor(cls, *,
