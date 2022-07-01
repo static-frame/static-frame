@@ -509,10 +509,11 @@ class InterfaceRecord(tp.NamedTuple):
                 is_attr=True, # doc as attr so sphinx does not add parens to sig
                 signature_no_args=signature_no_args,
                 )
+        cls_interface = obj.CLS_DELEGATE # IterNodeDelegate or IterNodeDelegateMapable
 
-        for field in IterNodeDelegate.INTERFACE: # apply, map, etc
-            delegate_obj = getattr(IterNodeDelegate, field)
-            delegate_reference = f'{IterNodeDelegate.__name__}.{field}'
+        for field in cls_interface.INTERFACE: # apply, map, etc
+            delegate_obj = getattr(cls_interface, field)
+            delegate_reference = f'{cls_interface.__name__}.{field}'
             doc = Features.scrub_doc(delegate_obj.__doc__)
 
             signature, signature_no_args = _get_signatures(
