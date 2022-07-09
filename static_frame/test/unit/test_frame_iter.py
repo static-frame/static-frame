@@ -196,6 +196,20 @@ class TestUnit(TestCase):
             )
         # import ipdb; ipdb.set_trace()
 
+    def test_frame_iter_tuple_g(self) -> None:
+        # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        post = f[['r', 's']].iter_tuple(axis=1, constructor=tuple).map_any({(False, False): None})
+        self.assertEqual(post.to_pairs(),
+                (('z', None), ('x', (True, False)), ('w', None), ('y', (True, True)))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_iter_series_a(self) -> None:

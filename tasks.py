@@ -41,13 +41,12 @@ def performance(context):
 
 
 @invoke.task
-def interface(context, container=None):
+def interface(context, container=None, doc=False):
     '''
     Optionally select a container type to discover what API endpoints have examples.
     '''
     from static_frame.core.container import ContainerBase
     import static_frame as sf
-
 
     def subclasses(cls) -> tp.Iterator[tp.Type]:
         if cls.__name__ not in ('IndexBase', 'IndexDatetime'):
@@ -64,7 +63,10 @@ def interface(context, container=None):
     else:
         f = getattr(sf, container).interface
 
-    print(f.display_tall())
+    if not doc:
+        f = f.drop['doc']
+    dc = sf.DisplayConfig(cell_max_width_leftmost=99, cell_max_width=60, display_rows=99999, display_columns=99)
+    print(f.display(dc))
 
 @invoke.task
 def example(context, container=None):

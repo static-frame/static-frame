@@ -79,6 +79,7 @@ from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_fill_value import InterfaceFillValueGO
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
+from static_frame.core.node_iter import IterNodeAxisElement
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
@@ -3449,10 +3450,10 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeAxis['Frame']:
+    def iter_element(self) -> IterNodeAxisElement['Frame']:
         '''Iterator of elements, ordered by row then column.
         '''
-        return IterNodeAxis(
+        return IterNodeAxisElement(
                 container=self,
                 function_values=self._iter_element_loc,
                 function_items=self._iter_element_loc_items,
@@ -3461,10 +3462,10 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeAxis['Frame']:
+    def iter_element_items(self) -> IterNodeAxisElement['Frame']:
         '''Iterator of pairs of label, element, where labels are pairs of index, columns labels, ordered by row then column.
         '''
-        return IterNodeAxis(
+        return IterNodeAxisElement(
                 container=self,
                 function_values=self._iter_element_loc,
                 function_items=self._iter_element_loc_items,
@@ -4561,11 +4562,12 @@ class Frame(ContainerOperand):
         2D Boolean selector, selected by either a Boolean 2D Frame or array.
         '''
         bloc_key = bloc_key_normalize(key=key, container=self)
-        coords, values = self._blocks.extract_bloc(bloc_key) # immutable, 1D array
+        coords, values = self._blocks.extract_bloc(bloc_key)
         index = Index(
                 ((self._index[x], self._columns[y]) for x, y in coords),
                 dtype=DTYPE_OBJECT)
-        return Series(values, index=index, own_index=True)
+        # NOTE: the ordering of coords is determined by block structure, and may not be consistent for same-valued Frame with different block structures; best then to sort here to provide consistent representation independent of block structure.
+        return Series(values, index=index, own_index=True).sort_index()
 
     def _compound_loc_to_getitem_iloc(self,
             key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:

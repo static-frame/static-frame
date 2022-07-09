@@ -1,11 +1,18 @@
 What is New in Static Frame
 ===============================
 
+0.9.8
+----------
+
+Corrected usage of ``IterNodeDelegate`` with iterator endpoints that do not iterate hashables; added ``IterNodeDelegateMapable`` for usage with iterators of hashables.
+
 
 0.9.7
 ----------
 
 Corrected issue in ``Series.from_overlay()`` that prematurely aborted processing all ``Series``
+
+Normalized ordering of results from ``Frame.bloc[]`` selections.
 
 
 0.9.6
@@ -57,7 +64,7 @@ Added ``Series.iter_group_array()``, ``Series.iter_group_array_items()``, ``Seri
 
 Added ``Frame.iter_group_array()``, ``Frame.iter_group_array_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``.
 
-Corrected issue when using binary operators with a `FrameGO` and a `Series`.
+Corrected issue when using binary operators with a ``FrameGO`` and a ``Series``.
 
 Corrected issue and performance of ``name`` assignment when extracting ``Series`` from ``Frame`` with an ``IndexHierarchy``.
 
@@ -131,7 +138,7 @@ Performance enhancements to ``Frame.pivot()``, ``Frame.iter_group()``, and ``Fra
 
 Extended ``Series.from_overlay()`` and ``Frame.from_overlay()`` to support ``func`` and ``fill_value`` arguments; ``func`` can be used to optionally specify what elements are available for assignment in overlay.
 
-Extended ``via_fill_value()`` interfaces to implement ``__getitem__`` and ``loc`` selection interfaces on :obj:`Series` and :obj:`Frame` for selections that potentially contain new labels filled with the fill value.
+Extended ``via_fill_value()`` interfaces to implement ``__getitem__`` and ``loc`` selection interfaces on ``Series`` and ``Frame`` for selections that potentially contain new labels filled with the fill value.
 
 
 0.8.34
