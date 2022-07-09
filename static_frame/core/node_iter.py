@@ -276,11 +276,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
             '_apply_type',
             )
 
-    INTERFACE = (
-            'apply',
-            'apply_iter',
-            'apply_iter_items',
-            'apply_pool',
+    INTERFACE = IterNodeDelegate.INTERFACE + (
             'map_all',
             'map_all_iter',
             'map_all_iter_items',
