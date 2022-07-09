@@ -793,67 +793,54 @@ class ExGenSeries(ExGen):
             yield f"s.{attr_func}(lambda l, s: s.sum() if l != 8 else s.shape)"
 
         else:
-            pass
+            # pass
+            print('missing', attr)
             # exludeding all mapping on groups/windows as these will be removed
 
 
-# iter_group_array_items().apply_iter()
-# iter_group_array_items().apply_iter_items()
-# iter_group_array_items().apply_pool()
-
-# iter_group_items().apply_iter()
-# iter_group_items().apply_iter_items()
-# iter_group_items().apply_pool()
-
-# iter_group_labels()
-# iter_group_labels().apply()
-# iter_group_labels().apply_iter()
-# iter_group_labels().apply_iter_items()
-# iter_group_labels().apply_pool()
-
-# iter_group_labels_array()
-# iter_group_labels_array().apply()
-# iter_group_labels_array().apply_iter()
-# iter_group_labels_array().apply_iter_items()
-# iter_group_labels_array().apply_pool()
-
-# iter_group_labels_array_items()
-# iter_group_labels_array_items().apply()
-# iter_group_labels_array_items().apply_iter()
-# iter_group_labels_array_items().apply_iter_items()
-# iter_group_labels_array_items().apply_pool()
-
-# iter_group_labels_items()
-# iter_group_labels_items().apply()
-# iter_group_labels_items().apply_iter()
-# iter_group_labels_items().apply_iter_items()
-# iter_group_labels_items().apply_pool()
-
-# iter_window()
-# iter_window().apply()
-# iter_window().apply_iter()
-# iter_window().apply_iter_items()
-# iter_window().apply_pool()
-
-# iter_window_array()
-# iter_window_array().apply()
-# iter_window_array().apply_iter()
-# iter_window_array().apply_iter_items()
-# iter_window_array().apply_pool()
-
-# iter_window_array_items()
-# iter_window_array_items().apply()
-# iter_window_array_items().apply_iter()
-# iter_window_array_items().apply_iter_items()
-# iter_window_array_items().apply_pool()
-
-# iter_window_items()
-# iter_window_items().apply()
-# iter_window_items().apply_iter()
-# iter_window_items().apply_iter_items()
-# iter_window_items().apply_pool()
-
-
+# missing iter_group_items().apply_iter()
+# missing iter_group_items().apply_iter_items()
+# missing iter_group_items().apply_pool()
+# missing iter_group_labels()
+# missing iter_group_labels().apply()
+# missing iter_group_labels().apply_iter()
+# missing iter_group_labels().apply_iter_items()
+# missing iter_group_labels().apply_pool()
+# missing iter_group_labels_array()
+# missing iter_group_labels_array().apply()
+# missing iter_group_labels_array().apply_iter()
+# missing iter_group_labels_array().apply_iter_items()
+# missing iter_group_labels_array().apply_pool()
+# missing iter_group_labels_array_items()
+# missing iter_group_labels_array_items().apply()
+# missing iter_group_labels_array_items().apply_iter()
+# missing iter_group_labels_array_items().apply_iter_items()
+# missing iter_group_labels_array_items().apply_pool()
+# missing iter_group_labels_items()
+# missing iter_group_labels_items().apply()
+# missing iter_group_labels_items().apply_iter()
+# missing iter_group_labels_items().apply_iter_items()
+# missing iter_group_labels_items().apply_pool()
+# missing iter_window()
+# missing iter_window().apply()
+# missing iter_window().apply_iter()
+# missing iter_window().apply_iter_items()
+# missing iter_window().apply_pool()
+# missing iter_window_array()
+# missing iter_window_array().apply()
+# missing iter_window_array().apply_iter()
+# missing iter_window_array().apply_iter_items()
+# missing iter_window_array().apply_pool()
+# missing iter_window_array_items()
+# missing iter_window_array_items().apply()
+# missing iter_window_array_items().apply_iter()
+# missing iter_window_array_items().apply_iter_items()
+# missing iter_window_array_items().apply_pool()
+# missing iter_window_items()
+# missing iter_window_items().apply()
+# missing iter_window_items().apply_iter()
+# missing iter_window_items().apply_iter_items()
+# missing iter_window_items().apply_pool()
 
 #-------------------------------------------------------------------------------
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
