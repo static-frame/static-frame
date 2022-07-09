@@ -1774,17 +1774,6 @@ class TestUnit(TestCase):
                 s1.iter_group_items().apply(lambda g, s: (g * s).values.tolist()).to_pairs(),
                 ((10, [100, 100, 100]), (20, [400, 400])))
 
-    def test_series_group_d(self) -> None:
-        from static_frame import SeriesHE
-        s1 = SeriesHE((10, 10, 10, 20, 20),
-                index=('a', 'b', 'c', 'd', 'e'),
-                )
-        mapping = {s1.iloc[:3]: 100}
-        groups = s1.iter_group().map_fill(mapping, fill_value=None)
-        self.assertEqual(groups.to_pairs(),
-                ((10, 100), (20, None)),
-                )
-
     #---------------------------------------------------------------------------
     def test_series_group_array_c(self) -> None:
 

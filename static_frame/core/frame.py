@@ -79,6 +79,7 @@ from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_fill_value import InterfaceFillValueGO
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
+from static_frame.core.node_iter import IterNodeAxisElement
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
@@ -3449,10 +3450,10 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeAxis['Frame']:
+    def iter_element(self) -> IterNodeAxisElement['Frame']:
         '''Iterator of elements, ordered by row then column.
         '''
-        return IterNodeAxis(
+        return IterNodeAxisElement(
                 container=self,
                 function_values=self._iter_element_loc,
                 function_items=self._iter_element_loc_items,
@@ -3461,10 +3462,10 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeAxis['Frame']:
+    def iter_element_items(self) -> IterNodeAxisElement['Frame']:
         '''Iterator of pairs of label, element, where labels are pairs of index, columns labels, ordered by row then column.
         '''
-        return IterNodeAxis(
+        return IterNodeAxisElement(
                 container=self,
                 function_values=self._iter_element_loc,
                 function_items=self._iter_element_loc_items,
