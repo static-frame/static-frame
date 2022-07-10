@@ -38,8 +38,6 @@ SERIES_INIT_R = dict(values=(3, 2, 8, 7),
 SERIES_INIT_S = dict(values=(10, 2, 8), index=('a', 'b', 'c'), name='x')
 SERIES_INIT_T = dict(values=(2, 8, 19, 2, 8), index=('a', 'b', 'c', 'd', 'e'))
 
-
-
 SERIES_INIT_DICT_A = dict(sf.Series(**SERIES_INIT_A))
 SERIES_INIT_FROM_ELEMENT_A = dict(element=-1, index=('a', 'b', 'c'), name='x')
 SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series(**SERIES_INIT_A)).items()), name='x')
@@ -599,8 +597,12 @@ class ExGenSeries(ExGen):
 
         cls = ContainerMap.str_to_cls(row['cls_name'])
         icls = f'sf.{cls.__name__}' # interface cls
-        attr = row['signature_no_args']
-        attr_func = row['signature_no_args'][:-2]
+        sig = row['signature_no_args']
+        attr = sig
+        attr_func = sig[:-2]
+        if sig.count('()') == 2:
+            # ['iter_element', 'apply']
+            attr_funcs = [x.strip('.') for x in sig.split('()') if x]
 
         if attr in (
                 'iter_element()',
@@ -613,6 +615,11 @@ class ExGenSeries(ExGen):
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield f"s.{attr_func}(lambda e: e > 10)"
+        elif attr in (
+                'iter_element_items().apply()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"s.{attr_func}(lambda l, e: e > 10 if l != 'c' else 0)"
         elif attr in (
                 'iter_element().apply_iter()',
                 'iter_element().apply_iter_items()',
@@ -725,17 +732,11 @@ class ExGenSeries(ExGen):
             yield f"s.{attr_func}({{('a', 10): -1, ('c', 8): 45}})"
         elif attr in (
                 'iter_element_items().map_any_iter()',
-                ):
-            yield f's = {icls}({kwa(SERIES_INIT_A)})'
-            yield 's'
-            yield f"tuple(s.{attr_func}({{('a', 10): -1, ('c', 8): 45}}))"
-        elif attr in (
                 'iter_element_items().map_any_iter_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield 's'
             yield f"tuple(s.{attr_func}({{('a', 10): -1, ('c', 8): 45}}))"
-
         elif attr in (
                 'iter_element_items().map_fill()',
                 ):
@@ -765,7 +766,9 @@ class ExGenSeries(ExGen):
             yield f"tuple(s.{attr_func}())"
         elif attr in (
                 'iter_group().apply()',
+                'iter_group_labels().apply()',
                 'iter_group_array().apply()',
+                'iter_group_labels_array().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield f"s.{attr_func}(lambda s: s.sum())"
@@ -774,74 +777,125 @@ class ExGenSeries(ExGen):
                 'iter_group().apply_iter_items()',
                 'iter_group_array().apply_iter()',
                 'iter_group_array().apply_iter_items()',
-
+                'iter_group_labels().apply_iter()',
+                'iter_group_labels().apply_iter_items()',
+                'iter_group_labels_array().apply_iter()',
+                'iter_group_labels_array().apply_iter_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield f"tuple(s.{attr_func}(lambda s: s.sum()))"
         elif attr in (
                 'iter_group().apply_pool()',
                 'iter_group_array().apply_pool()',
+                'iter_group_labels().apply_pool()',
+                'iter_group_labels_array().apply_pool()',
                 ):
             yield "def func(s): return s.sum()"
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield f"s.{attr_func}(func, use_threads=True)"
         elif attr in (
+                'iter_group_items().apply_pool()',
+                'iter_group_array_items().apply_pool()',
+                'iter_group_labels_items().apply_pool()',
+                'iter_group_labels_array_items().apply_pool()',
+                ):
+            # NOTE: check that this is delivering expected results
+            yield "def func(pair): return pair[1].sum()"
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield f"s.{attr_func}(func, use_threads=True)"
+        elif attr in (
                 'iter_group_items().apply()',
                 'iter_group_array_items().apply()',
+                'iter_group_labels_items().apply()',
+                'iter_group_labels_array_items().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield f"s.{attr_func}(lambda l, s: s.sum() if l != 8 else s.shape)"
-
+        elif attr in (
+                'iter_group_items().apply_iter()',
+                'iter_group_items().apply_iter_items()',
+                'iter_group_array_items().apply_iter()',
+                'iter_group_array_items().apply_iter_items()',
+                'iter_group_labels_items().apply_iter()',
+                'iter_group_labels_items().apply_iter_items()',
+                'iter_group_labels_array_items().apply_iter()',
+                'iter_group_labels_array_items().apply_iter_items()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield f"tuple(s.{attr_func}(lambda l, s: s.sum() if l != 8 else -1))"
+        elif attr in (
+                'iter_group_labels()',
+                'iter_group_labels_array()',
+                'iter_group_labels_items()',
+                'iter_group_labels_array_items()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"tuple(s.{attr_func}())"
+        elif attr in (
+                'iter_window()',
+                'iter_window_array()',
+                'iter_window_array_items()',
+                'iter_window_items()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"tuple(s.{attr_func}(size=3, step=1))"
+        elif attr in (
+                'iter_window().apply()',
+                'iter_window_array().apply()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum())"
+        elif attr in (
+                'iter_window().apply_iter()',
+                'iter_window().apply_iter_items()',
+                'iter_window_array().apply_iter()',
+                'iter_window_array().apply_iter_items()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"tuple(s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum()))"
+        elif attr in (
+                'iter_window_items().apply()',
+                'iter_window_array_items().apply()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda l, s: s.sum() if l != 'd' else -1)"
+        elif attr in (
+                'iter_window_items().apply_iter()',
+                'iter_window_items().apply_iter_items()',
+                'iter_window_array_items().apply_iter()',
+                'iter_window_array_items().apply_iter_items()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"tuple(s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda l, s: s.sum() if l != 'd' else -1))"
+        elif attr in (
+                'iter_window().apply_pool()',
+                'iter_window_array().apply_pool()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum(), use_threads=True)"
+        elif attr in (
+                'iter_window_items().apply_pool()',
+                'iter_window_array_items().apply_pool()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda pair: pair[1].sum(), use_threads=True)"
         else:
-            # pass
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+    @staticmethod
+    def operator_binary(row: sf.Series) -> tp.Iterator[str]:
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+        attr_sel = row['signature_no_args'][:-2]
+
+        if attr in (
+                ):
+            pass
+        else:
             print('missing', attr)
-            # exludeding all mapping on groups/windows as these will be removed
-
-
-# missing iter_group_items().apply_iter()
-# missing iter_group_items().apply_iter_items()
-# missing iter_group_items().apply_pool()
-# missing iter_group_labels()
-# missing iter_group_labels().apply()
-# missing iter_group_labels().apply_iter()
-# missing iter_group_labels().apply_iter_items()
-# missing iter_group_labels().apply_pool()
-# missing iter_group_labels_array()
-# missing iter_group_labels_array().apply()
-# missing iter_group_labels_array().apply_iter()
-# missing iter_group_labels_array().apply_iter_items()
-# missing iter_group_labels_array().apply_pool()
-# missing iter_group_labels_array_items()
-# missing iter_group_labels_array_items().apply()
-# missing iter_group_labels_array_items().apply_iter()
-# missing iter_group_labels_array_items().apply_iter_items()
-# missing iter_group_labels_array_items().apply_pool()
-# missing iter_group_labels_items()
-# missing iter_group_labels_items().apply()
-# missing iter_group_labels_items().apply_iter()
-# missing iter_group_labels_items().apply_iter_items()
-# missing iter_group_labels_items().apply_pool()
-# missing iter_window()
-# missing iter_window().apply()
-# missing iter_window().apply_iter()
-# missing iter_window().apply_iter_items()
-# missing iter_window().apply_pool()
-# missing iter_window_array()
-# missing iter_window_array().apply()
-# missing iter_window_array().apply_iter()
-# missing iter_window_array().apply_iter_items()
-# missing iter_window_array().apply_pool()
-# missing iter_window_array_items()
-# missing iter_window_array_items().apply()
-# missing iter_window_array_items().apply_iter()
-# missing iter_window_array_items().apply_iter_items()
-# missing iter_window_array_items().apply_pool()
-# missing iter_window_items()
-# missing iter_window_items().apply()
-# missing iter_window_items().apply_iter()
-# missing iter_window_items().apply_iter_items()
-# missing iter_window_items().apply_pool()
-
+        yield ''
 #-------------------------------------------------------------------------------
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
@@ -861,7 +915,8 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             # InterfaceGroup.Display,
             # InterfaceGroup.Assignment,
             # InterfaceGroup.Selector,
-            InterfaceGroup.Iterator,
+            # InterfaceGroup.Iterator,
+            InterfaceGroup.OperatorBinary,
             ):
         func = exg.group_to_method(ig)
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
@@ -885,4 +940,5 @@ def write():
 if __name__ == '__main__':
     for line in gen_all_examples():
         print(line)
+        pass
     # write()
