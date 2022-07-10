@@ -890,14 +890,50 @@ class ExGenSeries(ExGen):
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
-        if attr in (
-                '__add__()',
-                ):
-            yield f's = {icls}({kwa(SERIES_INIT_N)})'
-            yield f's + 10'
+        sig_to_op_numeric = {
+            '__add__()': '+',
+            '__eq__()': '==',
+            '__floordiv__()': '//',
+            '__ge__()': '>=',
+            '__gt__()': '>',
+            '__le__()': '<=',
+            '__lt__()': '<',
+            '__mod__()': '%',
+            '__mul__()': '*',
+            '__ne__()': '!=',
+            '__pow__()': '**',
+            '__sub__()': '-',
+            '__truediv__()': '/',
+            '__rfloordiv__()': '//',
+            '__radd__()': '+',
+            '__rmul__()': '*',
+            '__rsub__()': '-',
+            '__rtruediv__()': '/',
+        }
+            # '__matmull__()': '@',
+            # '__rmatmul__()': '@',
+
+        sig_to_op_bit = {
+            '__rshift__()': '>>',
+            '__lshift__()': '<<',
+        }
+        sig_to_op_logic = {
+            '__and__()': '&',
+            '__or__()': '|',
+            '__xor__()': '^',
+        }
+
+        if attr in sig_to_op_numeric:
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            if attr.startswith('__r'):
+                yield f'8 {sig_to_op_numeric[attr]} s'
+                # no need to show reverse on series
+            else:
+                yield f's {sig_to_op_numeric[attr]} 8'
+                yield f"s {sig_to_op_numeric[attr]} s.reindex(('c', 'b'))"
         else:
             print('missing', attr)
-        yield ''
+
 #-------------------------------------------------------------------------------
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
