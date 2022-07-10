@@ -891,8 +891,10 @@ class ExGenSeries(ExGen):
         attr_sel = row['signature_no_args'][:-2]
 
         if attr in (
+                '__add__()',
                 ):
-            pass
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield f's + 10'
         else:
             print('missing', attr)
         yield ''
