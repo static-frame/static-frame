@@ -1013,9 +1013,6 @@ class ExGenSeries(ExGen):
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_V)})'
             yield f's.{attr_func}("%m/%d/%Y")'
-        elif attr.endswith('()'):
-            yield f's = {icls}({kwa(SERIES_INIT_U)})'
-            yield f's.{attr}'
         else:
             yield f's = {icls}({kwa(SERIES_INIT_U)})'
             yield f's.{attr}'
