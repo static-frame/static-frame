@@ -1111,15 +1111,20 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
 
-        if attr in ():
-            yield ''
+        yield f's = {icls}({kwa(SERIES_INIT_X)})'
+
+        if attr == 'via_re().sub()':
+            yield f"s.via_re('[X123]').{attr_funcs[1]}('==')"
+        elif attr == 'via_re().subn()':
+            yield f"s.via_re('[X123]').{attr_funcs[1]}('==', 1)"
+        elif attr == 'via_re().fullmatch()':
+            yield f"s.via_re('123').{attr_funcs[1]}()"
         else:
-            print('missing', attr)
-
+            yield f"s.via_re('[X123]').{attr_funcs[1]}()"
 
 
 #-------------------------------------------------------------------------------
@@ -1133,22 +1138,22 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            InterfaceGroup.Constructor,
-            InterfaceGroup.Exporter,
-            InterfaceGroup.Attribute,
-            InterfaceGroup.Method,
-            InterfaceGroup.DictLike,
-            InterfaceGroup.Display,
-            InterfaceGroup.Assignment,
-            InterfaceGroup.Selector,
-            InterfaceGroup.Iterator,
-            InterfaceGroup.OperatorBinary,
-            InterfaceGroup.OperatorUnary,
-            InterfaceGroup.AccessorDatetime,
-            InterfaceGroup.AccessorString,
-            InterfaceGroup.AccessorTranspose,
-            InterfaceGroup.AccessorFillValue,
-            # InterfaceGroup.AccessorRe,
+            # InterfaceGroup.Constructor,
+            # InterfaceGroup.Exporter,
+            # InterfaceGroup.Attribute,
+            # InterfaceGroup.Method,
+            # InterfaceGroup.DictLike,
+            # InterfaceGroup.Display,
+            # InterfaceGroup.Assignment,
+            # InterfaceGroup.Selector,
+            # InterfaceGroup.Iterator,
+            # InterfaceGroup.OperatorBinary,
+            # InterfaceGroup.OperatorUnary,
+            # InterfaceGroup.AccessorDatetime,
+            # InterfaceGroup.AccessorString,
+            # InterfaceGroup.AccessorTranspose,
+            # InterfaceGroup.AccessorFillValue,
+            InterfaceGroup.AccessorRe,
 
             ):
         func = exg.group_to_method(ig)
@@ -1159,7 +1164,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
 def gen_all_examples() -> tp.Iterator[str]:
     yield from gen_examples(sf.Series, ExGenSeries)
-    yield from gen_examples(sf.SeriesHE, ExGenSeries)
+    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
 
 def write():
     doc_dir = os.path.abspath(os.path.dirname(__file__))
