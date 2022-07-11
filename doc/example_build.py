@@ -10,8 +10,7 @@ from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.container_util import ContainerMap
 
-
-
+dt64 = np.datetime64
 
 SERIES_INIT_A = dict(values=(10, 2, 8), index=('a', 'b', 'c'))
 SERIES_INIT_B = dict(values=(4, 3, 12), index=('d', 'e', 'f'))
@@ -36,7 +35,10 @@ SERIES_INIT_Q = dict(values=(8, 5, 0, 8), index=('d', 'b', 'a', 'c'))
 SERIES_INIT_R = dict(values=(3, 2, 8, 7),
         index=b"sf.IndexHierarchy.from_product((1, 2), ('a', 'b'))")
 SERIES_INIT_S = dict(values=(10, 2, 8), index=('a', 'b', 'c'), name='x')
-SERIES_INIT_T = dict(values=(2, 8, 19, 2, 8), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_T = dict(values=(-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_U = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
+SERIES_INIT_V = dict(values=('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
+SERIES_INIT_W = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'))
 
 SERIES_INIT_DICT_A = dict(sf.Series(**SERIES_INIT_A))
 SERIES_INIT_FROM_ELEMENT_A = dict(element=-1, index=('a', 'b', 'c'), name='x')
@@ -82,7 +84,6 @@ def calls_to_msg(calls: tp.Iterator[str],
         g['np'] = np
         g['pd'] = pd
         l = locals()
-
         try:
             yield f'>>> {call}'
             post = eval(call, g, l)
@@ -171,6 +172,32 @@ class ExGen:
     @staticmethod
     def operator_binary(row: sf.Series) -> tp.Iterator[str]:
         return
+
+    @staticmethod
+    def operator_unary(row: sf.Series) -> tp.Iterator[str]:
+        return
+
+    @staticmethod
+    def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
+        return
+
+    @staticmethod
+    def accessor_string(row: sf.Series) -> tp.Iterator[str]:
+        return
+
+    @staticmethod
+    def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
+        return
+
+    @staticmethod
+    def accessor_fill_value(row: sf.Series) -> tp.Iterator[str]:
+        return
+
+    @staticmethod
+    def accessor_re(row: sf.Series) -> tp.Iterator[str]:
+        return
+
+
 
 
 class ExGenSeries(ExGen):
@@ -600,6 +627,7 @@ class ExGenSeries(ExGen):
         sig = row['signature_no_args']
         attr = sig
         attr_func = sig[:-2]
+
         if sig.count('()') == 2:
             # ['iter_element', 'apply']
             attr_funcs = [x.strip('.') for x in sig.split('()') if x]
@@ -888,7 +916,6 @@ class ExGenSeries(ExGen):
         cls = ContainerMap.str_to_cls(row['cls_name'])
         icls = f'sf.{cls.__name__}' # interface cls
         attr = row['signature_no_args']
-        attr_sel = row['signature_no_args'][:-2]
 
         sig_to_op_numeric = {
             '__add__()': '+',
@@ -910,17 +937,18 @@ class ExGenSeries(ExGen):
             '__rsub__()': '-',
             '__rtruediv__()': '/',
         }
-            # '__matmull__()': '@',
-            # '__rmatmul__()': '@',
-
-        sig_to_op_bit = {
-            '__rshift__()': '>>',
-            '__lshift__()': '<<',
-        }
         sig_to_op_logic = {
             '__and__()': '&',
             '__or__()': '|',
             '__xor__()': '^',
+        }
+        sig_to_op_matmul = {
+            '__matmul__()': '@',
+            '__rmatmul__()': '@',
+        }
+        sig_to_op_bit = {
+            '__rshift__()': '>>',
+            '__lshift__()': '<<',
         }
 
         if attr in sig_to_op_numeric:
@@ -931,8 +959,109 @@ class ExGenSeries(ExGen):
             else:
                 yield f's {sig_to_op_numeric[attr]} 8'
                 yield f"s {sig_to_op_numeric[attr]} s.reindex(('c', 'b'))"
+        elif attr in sig_to_op_logic:
+            yield f's = {icls}({kwa(SERIES_INIT_F)})'
+            yield f"s {sig_to_op_logic[attr]} True"
+            yield f"s {sig_to_op_logic[attr]} (True, False, True)"
+        elif attr in sig_to_op_matmul:
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s {sig_to_op_matmul[attr]} (3, 0, 4)"
+        elif attr in sig_to_op_bit:
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s {sig_to_op_bit[attr]} 1"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def operator_unary(row: sf.Series) -> tp.Iterator[str]:
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+
+        sig_to_op = {
+            '__neg__()': '-',
+            '__pos__()': '+',
+        }
+        if attr == '__abs__()':
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield f'abs(s)'
+        elif attr == '__invert__()':
+            yield f's = {icls}({kwa(SERIES_INIT_F)})'
+            yield f'~s'
+        elif attr in sig_to_op:
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"{sig_to_op[attr]}s"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr == 'via_dt.fromisoformat()':
+            yield f's = {icls}({kwa(SERIES_INIT_W)})'
+            yield f's.{attr}'
+        elif attr == 'via_dt.strftime()':
+            yield f's = {icls}({kwa(SERIES_INIT_U)})'
+            yield f's.{attr_func}("%A | %B")'
+        elif attr in (
+                'via_dt.strptime()',
+                'via_dt.strpdate()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_V)})'
+            yield f's.{attr_func}("%m/%d/%Y")'
+        elif attr.endswith('()'):
+            yield f's = {icls}({kwa(SERIES_INIT_U)})'
+            yield f's.{attr}'
+        else:
+            yield f's = {icls}({kwa(SERIES_INIT_U)})'
+            yield f's.{attr}'
+
+    @staticmethod
+    def accessor_string(row: sf.Series) -> tp.Iterator[str]:
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+        if attr in ():
+            yield ''
         else:
             print('missing', attr)
+
+    @staticmethod
+    def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+        if attr in ():
+            yield ''
+        else:
+            print('missing', attr)
+
+    @staticmethod
+    def accessor_fill_value(row: sf.Series) -> tp.Iterator[str]:
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+        if attr in ():
+            yield ''
+        else:
+            print('missing', attr)
+
+    @staticmethod
+    def accessor_re(row: sf.Series) -> tp.Iterator[str]:
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+
+        if attr in ():
+            yield ''
+        else:
+            print('missing', attr)
+
+
 
 #-------------------------------------------------------------------------------
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
@@ -954,7 +1083,9 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             # InterfaceGroup.Assignment,
             # InterfaceGroup.Selector,
             # InterfaceGroup.Iterator,
-            InterfaceGroup.OperatorBinary,
+            # InterfaceGroup.OperatorBinary,
+            # InterfaceGroup.OperatorUnary,
+            InterfaceGroup.AccessorDatetime,
             ):
         func = exg.group_to_method(ig)
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
