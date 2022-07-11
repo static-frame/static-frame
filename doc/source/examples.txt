@@ -205,7 +205,7 @@ c
 #start_Series-mloc
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.mloc
-94879424144000
+94464622707712
 #end_Series-mloc
 
 #start_Series-name
@@ -1382,13 +1382,13 @@ True
 #start_Series-__iter__()
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.__iter__()
-<generator object Index.__iter__ at 0x7f306b2666d0>
+<generator object Index.__iter__ at 0x7fe8c4581660>
 #end_Series-__iter__()
 
 #start_Series-__reversed__()
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.__reversed__()
-<reversed object at 0x7f306b24bb20>
+<reversed object at 0x7fe8c44a0d90>
 #end_Series-__reversed__()
 
 #start_Series-get()
@@ -1462,7 +1462,7 @@ via_re(pattern, flags).split(maxs... Series   Accessor Regular ... Split string 
 via_re(pattern, flags).findall(po... Series   Accessor Regular ... Return all non-ov...
 via_re(pattern, flags).sub(repl, ... Series   Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... Series   Accessor Regular ... Perform the same ...
-<<U94>                               <<U6>    <<U27>               <<U83>
+<<U87>                               <<U6>    <<U27>               <<U83>
 #end_Series-interface
 
 #start_Series-__repr__()
@@ -1519,4 +1519,6999 @@ b        2
 c        8
 <<U1>    <int64>
 #end_Series-display_wide()
+
+#start_Series-assign[]()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.assign['c']('x')
+<Series>
+<Index>
+a        2
+b        8
+c        x
+d        34
+e        54
+<<U1>    <object>
+>>> s.assign['c':]('x')
+<Series>
+<Index>
+a        2
+b        8
+c        x
+d        x
+e        x
+<<U1>    <object>
+>>> s.assign[['a', 'd']](('x', 'y'))
+<Series>
+<Index>
+a        x
+b        8
+c        19
+d        y
+e        54
+<<U1>    <object>
+#end_Series-assign[]()
+
+#start_Series-assign[].apply()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.assign['c':].apply(lambda s: s / 100)
+<Series>
+<Index>
+a        2.0
+b        8.0
+c        0.19
+d        0.34
+e        0.54
+<<U1>    <float64>
+#end_Series-assign[].apply()
+
+#start_Series-assign.iloc[]()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.assign.iloc[2]('x')
+<Series>
+<Index>
+a        2
+b        8
+c        x
+d        34
+e        54
+<<U1>    <object>
+>>> s.assign.iloc[2:]('x')
+<Series>
+<Index>
+a        2
+b        8
+c        x
+d        x
+e        x
+<<U1>    <object>
+>>> s.assign.iloc[[0, 4]](('x', 'y'))
+<Series>
+<Index>
+a        x
+b        8
+c        19
+d        34
+e        y
+<<U1>    <object>
+#end_Series-assign.iloc[]()
+
+#start_Series-assign.iloc[].apply()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.assign.iloc[2:].apply(lambda s: s / 100)
+<Series>
+<Index>
+a        2.0
+b        8.0
+c        0.19
+d        0.34
+e        0.54
+<<U1>    <float64>
+#end_Series-assign.iloc[].apply()
+
+#start_Series-assign.loc[]()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.assign.loc['c']('x')
+<Series>
+<Index>
+a        2
+b        8
+c        x
+d        34
+e        54
+<<U1>    <object>
+>>> s.assign.loc['c':]('x')
+<Series>
+<Index>
+a        2
+b        8
+c        x
+d        x
+e        x
+<<U1>    <object>
+>>> s.assign.loc[['a', 'd']](('x', 'y'))
+<Series>
+<Index>
+a        x
+b        8
+c        19
+d        y
+e        54
+<<U1>    <object>
+#end_Series-assign.loc[]()
+
+#start_Series-assign.loc[].apply()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.assign.loc['c':].apply(lambda s: s / 100)
+<Series>
+<Index>
+a        2.0
+b        8.0
+c        0.19
+d        0.34
+e        0.54
+<<U1>    <float64>
+#end_Series-assign.loc[].apply()
+
+#start_Series-drop[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.drop['c']
+<Series>
+<Index>
+a        2
+b        8
+d        34
+e        54
+<<U1>    <int64>
+>>> s.drop['c':]
+<Series>
+<Index>
+a        2
+b        8
+<<U1>    <int64>
+>>> s.drop[['a', 'd']]
+<Series>
+<Index>
+b        8
+c        19
+e        54
+<<U1>    <int64>
+#end_Series-drop[]
+
+#start_Series-drop.iloc[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.drop.iloc[2]
+<Series>
+<Index>
+a        2
+b        8
+d        34
+e        54
+<<U1>    <int64>
+>>> s.drop.iloc[2:]
+<Series>
+<Index>
+a        2
+b        8
+<<U1>    <int64>
+>>> s.drop.iloc[[0, 4]]
+<Series>
+<Index>
+b        8
+c        19
+d        34
+<<U1>    <int64>
+#end_Series-drop.iloc[]
+
+#start_Series-drop.loc[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.drop.loc['c']
+<Series>
+<Index>
+a        2
+b        8
+d        34
+e        54
+<<U1>    <int64>
+>>> s.drop.loc['c':]
+<Series>
+<Index>
+a        2
+b        8
+<<U1>    <int64>
+>>> s.drop.loc[['a', 'd']]
+<Series>
+<Index>
+b        8
+c        19
+e        54
+<<U1>    <int64>
+#end_Series-drop.loc[]
+
+#start_Series-mask[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.mask['c']
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        False
+e        False
+<<U1>    <bool>
+>>> s.mask['c':]
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        True
+<<U1>    <bool>
+>>> s.mask[['a', 'd']]
+<Series>
+<Index>
+a        True
+b        False
+c        False
+d        True
+e        False
+<<U1>    <bool>
+#end_Series-mask[]
+
+#start_Series-mask.iloc[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.mask.iloc[2]
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        False
+e        False
+<<U1>    <bool>
+>>> s.mask.iloc[2:]
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        True
+<<U1>    <bool>
+>>> s.mask.iloc[[0, 4]]
+<Series>
+<Index>
+a        True
+b        False
+c        False
+d        False
+e        True
+<<U1>    <bool>
+#end_Series-mask.iloc[]
+
+#start_Series-mask.loc[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.mask.loc['c']
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        False
+e        False
+<<U1>    <bool>
+>>> s.mask.loc['c':]
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        True
+<<U1>    <bool>
+>>> s.mask.loc[['a', 'd']]
+<Series>
+<Index>
+a        True
+b        False
+c        False
+d        True
+e        False
+<<U1>    <bool>
+#end_Series-mask.loc[]
+
+#start_Series-masked_array[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.masked_array['c']
+[2 8 -- 34 54]
+>>> s.masked_array['c':]
+[2 8 -- -- --]
+>>> s.masked_array[['a', 'd']]
+[-- 8 19 -- 54]
+#end_Series-masked_array[]
+
+#start_Series-masked_array.iloc[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.masked_array.iloc[2]
+[2 8 -- 34 54]
+>>> s.masked_array.iloc[2:]
+[2 8 -- -- --]
+>>> s.masked_array.iloc[[0, 4]]
+[-- 8 19 34 --]
+#end_Series-masked_array.iloc[]
+
+#start_Series-masked_array.loc[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.masked_array.loc['c']
+[2 8 -- 34 54]
+>>> s.masked_array.loc['c':]
+[2 8 -- -- --]
+>>> s.masked_array.loc[['a', 'd']]
+[-- 8 19 -- 54]
+#end_Series-masked_array.loc[]
+
+#start_Series-[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s['c']
+19
+>>> s['c':]
+<Series>
+<Index>
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s[['a', 'd']]
+<Series>
+<Index>
+a        2
+d        34
+<<U1>    <int64>
+#end_Series-[]
+
+#start_Series-iloc[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iloc[2]
+19
+>>> s.iloc[2:]
+<Series>
+<Index>
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.iloc[[0, 4]]
+<Series>
+<Index>
+a        2
+e        54
+<<U1>    <int64>
+#end_Series-iloc[]
+
+#start_Series-loc[]
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.loc['c']
+19
+>>> s.loc['c':]
+<Series>
+<Index>
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.loc[['a', 'd']]
+<Series>
+<Index>
+a        2
+d        34
+<<U1>    <int64>
+#end_Series-loc[]
+
+#start_Series-iter_element()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element())
+(2, 8, 19, 34, 54)
+#end_Series-iter_element()
+
+#start_Series-iter_element().apply()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_element().apply(lambda e: e > 10)
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        True
+<<U1>    <bool>
+#end_Series-iter_element().apply()
+
+#start_Series-iter_element().apply_iter()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element().apply_iter(lambda e: e > 10))
+(False, False, True, True, True)
+#end_Series-iter_element().apply_iter()
+
+#start_Series-iter_element().apply_iter_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element().apply_iter_items(lambda e: e > 10))
+(('a', False), ('b', False), ('c', True), ('d', True), ('e', True))
+#end_Series-iter_element().apply_iter_items()
+
+#start_Series-iter_element().apply_pool()
+>>> def func(e): return e > 10
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_element().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        True
+<<U1>    <bool>
+#end_Series-iter_element().apply_pool()
+
+#start_Series-iter_element().map_all()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> s.iter_element().map_all({2: 200, 10: -1, 8: 45})
+<Series>
+<Index>
+a        -1
+b        200
+c        45
+<<U1>    <int64>
+#end_Series-iter_element().map_all()
+
+#start_Series-iter_element().map_all_iter()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element().map_all_iter({2: 200, 10: -1, 8: 45}))
+(-1, 200, 45)
+#end_Series-iter_element().map_all_iter()
+
+#start_Series-iter_element().map_all_iter_items()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element().map_all_iter_items({2: 200, 10: -1, 8: 45}))
+(('a', -1), ('b', 200), ('c', 45))
+#end_Series-iter_element().map_all_iter_items()
+
+#start_Series-iter_element().map_any()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> s.iter_element().map_any({10: -1, 8: 45})
+<Series>
+<Index>
+a        -1
+b        2
+c        45
+<<U1>    <int64>
+#end_Series-iter_element().map_any()
+
+#start_Series-iter_element().map_any_iter()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element().map_any_iter({10: -1, 8: 45}))
+(-1, 2, 45)
+#end_Series-iter_element().map_any_iter()
+
+#start_Series-iter_element().map_any_iter_items()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element().map_any_iter_items({10: -1, 8: 45}))
+(('a', -1), ('b', 2), ('c', 45))
+#end_Series-iter_element().map_any_iter_items()
+
+#start_Series-iter_element().map_fill()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> s.iter_element().map_fill({10: -1, 8: 45}, fill_value=np.nan)
+<Series>
+<Index>
+a        -1.0
+b        nan
+c        45.0
+<<U1>    <float64>
+#end_Series-iter_element().map_fill()
+
+#start_Series-iter_element().map_fill_iter()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element().map_fill_iter({10: -1, 8: 45}, fill_value=np.nan))
+(-1, nan, 45)
+#end_Series-iter_element().map_fill_iter()
+
+#start_Series-iter_element().map_fill_iter_items()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element().map_fill_iter_items({10: -1, 8: 45}, fill_value=np.nan))
+(('a', -1), ('b', nan), ('c', 45))
+#end_Series-iter_element().map_fill_iter_items()
+
+#start_Series-iter_element_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element_items())
+(('a', 2), ('b', 8), ('c', 19), ('d', 34), ('e', 54))
+#end_Series-iter_element_items()
+
+#start_Series-iter_element_items().apply()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_element_items().apply(lambda l, e: e > 10 if l != 'c' else 0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+d        1
+e        1
+<<U1>    <int64>
+#end_Series-iter_element_items().apply()
+
+#start_Series-iter_element_items().apply_iter()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element_items().apply_iter(lambda l, e: e > 10 and l != 'e'))
+(False, False, True, True, False)
+#end_Series-iter_element_items().apply_iter()
+
+#start_Series-iter_element_items().apply_iter_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element_items().apply_iter_items(lambda l, e: e > 10 and l != 'e'))
+(('a', False), ('b', False), ('c', True), ('d', True), ('e', False))
+#end_Series-iter_element_items().apply_iter_items()
+
+#start_Series-iter_element_items().apply_pool()
+>>> def func(pair): return pair[1] > 10 and pair[0] != 'e'
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_element_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        False
+<<U1>    <bool>
+#end_Series-iter_element_items().apply_pool()
+
+#start_Series-iter_element_items().map_all()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> s.iter_element_items().map_all({('b', 2): 200, ('a', 10): -1, ('c', 8): 45})
+<Series>
+<Index>
+a        -1
+b        200
+c        45
+<<U1>    <int64>
+#end_Series-iter_element_items().map_all()
+
+#start_Series-iter_element_items().map_all_iter()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element_items().map_all_iter({('b', 2): 200, ('a', 10): -1, ('c', 8): 45}))
+(-1, 200, 45)
+#end_Series-iter_element_items().map_all_iter()
+
+#start_Series-iter_element_items().map_all_iter_items()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element_items().map_all_iter_items({('b', 2): 200, ('a', 10): -1, ('c', 8): 45}))
+(('a', -1), ('b', 200), ('c', 45))
+#end_Series-iter_element_items().map_all_iter_items()
+
+#start_Series-iter_element_items().map_any()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> s.iter_element_items().map_any({('a', 10): -1, ('c', 8): 45})
+<Series>
+<Index>
+a        -1
+b        2
+c        45
+<<U1>    <int64>
+#end_Series-iter_element_items().map_any()
+
+#start_Series-iter_element_items().map_any_iter()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element_items().map_any_iter({('a', 10): -1, ('c', 8): 45}))
+(-1, 2, 45)
+#end_Series-iter_element_items().map_any_iter()
+
+#start_Series-iter_element_items().map_any_iter_items()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element_items().map_any_iter_items({('a', 10): -1, ('c', 8): 45}))
+(('a', -1), ('b', 2), ('c', 45))
+#end_Series-iter_element_items().map_any_iter_items()
+
+#start_Series-iter_element_items().map_fill()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> s.iter_element_items().map_fill({('a', 10): -1, ('c', 8): 45}, fill_value=np.nan)
+<Series>
+<Index>
+a        -1.0
+b        nan
+c        45.0
+<<U1>    <float64>
+#end_Series-iter_element_items().map_fill()
+
+#start_Series-iter_element_items().map_fill_iter()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element_items().map_fill_iter({('a', 10): -1, ('c', 8): 45}, fill_value=np.nan))
+(-1, nan, 45)
+#end_Series-iter_element_items().map_fill_iter()
+
+#start_Series-iter_element_items().map_fill_iter_items()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+>>> tuple(s.iter_element_items().map_fill_iter_items({('a', 10): -1, ('c', 8): 45}, fill_value=np.nan))
+(('a', -1), ('b', nan), ('c', 45))
+#end_Series-iter_element_items().map_fill_iter_items()
+
+#start_Series-iter_group()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group())
+(<Series>
+<Index>
+a        -2
+d        -2
+<<U1>    <int64>, <Series>
+<Index>
+b        8
+e        8
+<<U1>    <int64>, <Series>
+<Index>
+c        19
+<<U1>    <int64>)
+#end_Series-iter_group()
+
+#start_Series-iter_group().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group().apply(lambda s: s.sum())
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_Series-iter_group().apply()
+
+#start_Series-iter_group().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group().apply_iter(lambda s: s.sum()))
+(-4, 16, 19)
+#end_Series-iter_group().apply_iter()
+
+#start_Series-iter_group().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group().apply_iter_items(lambda s: s.sum()))
+((-2, -4), (8, 16), (19, 19))
+#end_Series-iter_group().apply_iter_items()
+
+#start_Series-iter_group().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_Series-iter_group().apply_pool()
+
+#start_Series-iter_group_array()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array())
+(array([-2, -2]), array([8, 8]), array([19]))
+#end_Series-iter_group_array()
+
+#start_Series-iter_group_array().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_array().apply(lambda s: s.sum())
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_Series-iter_group_array().apply()
+
+#start_Series-iter_group_array().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array().apply_iter(lambda s: s.sum()))
+(-4, 16, 19)
+#end_Series-iter_group_array().apply_iter()
+
+#start_Series-iter_group_array().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array().apply_iter_items(lambda s: s.sum()))
+((-2, -4), (8, 16), (19, 19))
+#end_Series-iter_group_array().apply_iter_items()
+
+#start_Series-iter_group_array().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_array().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_Series-iter_group_array().apply_pool()
+
+#start_Series-iter_group_array_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array_items())
+((-2, array([-2, -2])), (8, array([8, 8])), (19, array([19])))
+#end_Series-iter_group_array_items()
+
+#start_Series-iter_group_array_items().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_array_items().apply(lambda l, s: s.sum() if l != 8 else s.shape)
+<Series>
+<Index>
+-2       -4
+8        (2,)
+19       19
+<int64>  <object>
+#end_Series-iter_group_array_items().apply()
+
+#start_Series-iter_group_array_items().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array_items().apply_iter(lambda l, s: s.sum() if l != 8 else -1))
+(-4, -1, 19)
+#end_Series-iter_group_array_items().apply_iter()
+
+#start_Series-iter_group_array_items().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array_items().apply_iter_items(lambda l, s: s.sum() if l != 8 else -1))
+((-2, -4), (8, -1), (19, 19))
+#end_Series-iter_group_array_items().apply_iter_items()
+
+#start_Series-iter_group_array_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_array_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_Series-iter_group_array_items().apply_pool()
+
+#start_Series-iter_group_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_items())
+((-2, <Series>
+<Index>
+a        -2
+d        -2
+<<U1>    <int64>), (8, <Series>
+<Index>
+b        8
+e        8
+<<U1>    <int64>), (19, <Series>
+<Index>
+c        19
+<<U1>    <int64>))
+#end_Series-iter_group_items()
+
+#start_Series-iter_group_items().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_items().apply(lambda l, s: s.sum() if l != 8 else s.shape)
+<Series>
+<Index>
+-2       -4
+8        (2,)
+19       19
+<int64>  <object>
+#end_Series-iter_group_items().apply()
+
+#start_Series-iter_group_items().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_items().apply_iter(lambda l, s: s.sum() if l != 8 else -1))
+(-4, -1, 19)
+#end_Series-iter_group_items().apply_iter()
+
+#start_Series-iter_group_items().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_items().apply_iter_items(lambda l, s: s.sum() if l != 8 else -1))
+((-2, -4), (8, -1), (19, 19))
+#end_Series-iter_group_items().apply_iter_items()
+
+#start_Series-iter_group_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_Series-iter_group_items().apply_pool()
+
+#start_Series-iter_group_labels()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.iter_group_labels())
+(<Series>
+<Index>
+a        10
+<<U1>    <int64>, <Series>
+<Index>
+b        2
+<<U1>    <int64>, <Series>
+<Index>
+c        8
+<<U1>    <int64>)
+#end_Series-iter_group_labels()
+
+#start_Series-iter_group_labels().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels().apply(lambda s: s.sum())
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_Series-iter_group_labels().apply()
+
+#start_Series-iter_group_labels().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels().apply_iter(lambda s: s.sum()))
+(-2, 8, 19, -2, 8)
+#end_Series-iter_group_labels().apply_iter()
+
+#start_Series-iter_group_labels().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels().apply_iter_items(lambda s: s.sum()))
+(('a', -2), ('b', 8), ('c', 19), ('d', -2), ('e', 8))
+#end_Series-iter_group_labels().apply_iter_items()
+
+#start_Series-iter_group_labels().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_Series-iter_group_labels().apply_pool()
+
+#start_Series-iter_group_labels_array()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.iter_group_labels_array())
+(array([10]), array([2]), array([8]))
+#end_Series-iter_group_labels_array()
+
+#start_Series-iter_group_labels_array().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_array().apply(lambda s: s.sum())
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_Series-iter_group_labels_array().apply()
+
+#start_Series-iter_group_labels_array().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_array().apply_iter(lambda s: s.sum()))
+(-2, 8, 19, -2, 8)
+#end_Series-iter_group_labels_array().apply_iter()
+
+#start_Series-iter_group_labels_array().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_array().apply_iter_items(lambda s: s.sum()))
+(('a', -2), ('b', 8), ('c', 19), ('d', -2), ('e', 8))
+#end_Series-iter_group_labels_array().apply_iter_items()
+
+#start_Series-iter_group_labels_array().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_array().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_Series-iter_group_labels_array().apply_pool()
+
+#start_Series-iter_group_labels_array_items()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.iter_group_labels_array_items())
+(('a', array([10])), ('b', array([2])), ('c', array([8])))
+#end_Series-iter_group_labels_array_items()
+
+#start_Series-iter_group_labels_array_items().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_array_items().apply(lambda l, s: s.sum() if l != 8 else s.shape)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_Series-iter_group_labels_array_items().apply()
+
+#start_Series-iter_group_labels_array_items().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_array_items().apply_iter(lambda l, s: s.sum() if l != 8 else -1))
+(-2, 8, 19, -2, 8)
+#end_Series-iter_group_labels_array_items().apply_iter()
+
+#start_Series-iter_group_labels_array_items().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_array_items().apply_iter_items(lambda l, s: s.sum() if l != 8 else -1))
+(('a', -2), ('b', 8), ('c', 19), ('d', -2), ('e', 8))
+#end_Series-iter_group_labels_array_items().apply_iter_items()
+
+#start_Series-iter_group_labels_array_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_array_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_Series-iter_group_labels_array_items().apply_pool()
+
+#start_Series-iter_group_labels_items()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.iter_group_labels_items())
+(('a', <Series>
+<Index>
+a        10
+<<U1>    <int64>), ('b', <Series>
+<Index>
+b        2
+<<U1>    <int64>), ('c', <Series>
+<Index>
+c        8
+<<U1>    <int64>))
+#end_Series-iter_group_labels_items()
+
+#start_Series-iter_group_labels_items().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_items().apply(lambda l, s: s.sum() if l != 8 else s.shape)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_Series-iter_group_labels_items().apply()
+
+#start_Series-iter_group_labels_items().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_items().apply_iter(lambda l, s: s.sum() if l != 8 else -1))
+(-2, 8, 19, -2, 8)
+#end_Series-iter_group_labels_items().apply_iter()
+
+#start_Series-iter_group_labels_items().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_items().apply_iter_items(lambda l, s: s.sum() if l != 8 else -1))
+(('a', -2), ('b', 8), ('c', 19), ('d', -2), ('e', 8))
+#end_Series-iter_group_labels_items().apply_iter_items()
+
+#start_Series-iter_group_labels_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_Series-iter_group_labels_items().apply_pool()
+
+#start_Series-iter_window()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window(size=3, step=1))
+(<Series>
+<Index>
+a        2
+b        8
+c        19
+<<U1>    <int64>, <Series>
+<Index>
+b        8
+c        19
+d        34
+<<U1>    <int64>, <Series>
+<Index>
+c        19
+d        34
+e        54
+<<U1>    <int64>)
+#end_Series-iter_window()
+
+#start_Series-iter_window().apply()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window(size=3, step=1).apply(lambda s: s.sum())
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_Series-iter_window().apply()
+
+#start_Series-iter_window().apply_iter()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window(size=3, step=1).apply_iter(lambda s: s.sum()))
+(29, 61, 107)
+#end_Series-iter_window().apply_iter()
+
+#start_Series-iter_window().apply_iter_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window(size=3, step=1).apply_iter_items(lambda s: s.sum()))
+(('c', 29), ('d', 61), ('e', 107))
+#end_Series-iter_window().apply_iter_items()
+
+#start_Series-iter_window().apply_pool()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window(size=3, step=1).apply_pool(lambda s: s.sum(), use_threads=True)
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_Series-iter_window().apply_pool()
+
+#start_Series-iter_window_array()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array(size=3, step=1))
+(array([ 2,  8, 19]), array([ 8, 19, 34]), array([19, 34, 54]))
+#end_Series-iter_window_array()
+
+#start_Series-iter_window_array().apply()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_array(size=3, step=1).apply(lambda s: s.sum())
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_Series-iter_window_array().apply()
+
+#start_Series-iter_window_array().apply_iter()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array(size=3, step=1).apply_iter(lambda s: s.sum()))
+(29, 61, 107)
+#end_Series-iter_window_array().apply_iter()
+
+#start_Series-iter_window_array().apply_iter_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array(size=3, step=1).apply_iter_items(lambda s: s.sum()))
+(('c', 29), ('d', 61), ('e', 107))
+#end_Series-iter_window_array().apply_iter_items()
+
+#start_Series-iter_window_array().apply_pool()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_array(size=3, step=1).apply_pool(lambda s: s.sum(), use_threads=True)
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_Series-iter_window_array().apply_pool()
+
+#start_Series-iter_window_array_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array_items(size=3, step=1))
+(('c', array([ 2,  8, 19])), ('d', array([ 8, 19, 34])), ('e', array([19, 34, 54])))
+#end_Series-iter_window_array_items()
+
+#start_Series-iter_window_array_items().apply()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_array_items(size=3, step=1).apply(lambda l, s: s.sum() if l != 'd' else -1)
+<Series>
+<Index>
+c        29
+d        -1
+e        107
+<<U1>    <int64>
+#end_Series-iter_window_array_items().apply()
+
+#start_Series-iter_window_array_items().apply_iter()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array_items(size=3, step=1).apply_iter(lambda l, s: s.sum() if l != 'd' else -1))
+(29, -1, 107)
+#end_Series-iter_window_array_items().apply_iter()
+
+#start_Series-iter_window_array_items().apply_iter_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array_items(size=3, step=1).apply_iter_items(lambda l, s: s.sum() if l != 'd' else -1))
+(('c', 29), ('d', -1), ('e', 107))
+#end_Series-iter_window_array_items().apply_iter_items()
+
+#start_Series-iter_window_array_items().apply_pool()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_array_items(size=3, step=1).apply_pool(lambda pair: pair[1].sum(), use_threads=True)
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_Series-iter_window_array_items().apply_pool()
+
+#start_Series-iter_window_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_items(size=3, step=1))
+(('c', <Series>
+<Index>
+a        2
+b        8
+c        19
+<<U1>    <int64>), ('d', <Series>
+<Index>
+b        8
+c        19
+d        34
+<<U1>    <int64>), ('e', <Series>
+<Index>
+c        19
+d        34
+e        54
+<<U1>    <int64>))
+#end_Series-iter_window_items()
+
+#start_Series-iter_window_items().apply()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_items(size=3, step=1).apply(lambda l, s: s.sum() if l != 'd' else -1)
+<Series>
+<Index>
+c        29
+d        -1
+e        107
+<<U1>    <int64>
+#end_Series-iter_window_items().apply()
+
+#start_Series-iter_window_items().apply_iter()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_items(size=3, step=1).apply_iter(lambda l, s: s.sum() if l != 'd' else -1))
+(29, -1, 107)
+#end_Series-iter_window_items().apply_iter()
+
+#start_Series-iter_window_items().apply_iter_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_items(size=3, step=1).apply_iter_items(lambda l, s: s.sum() if l != 'd' else -1))
+(('c', 29), ('d', -1), ('e', 107))
+#end_Series-iter_window_items().apply_iter_items()
+
+#start_Series-iter_window_items().apply_pool()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_items(size=3, step=1).apply_pool(lambda pair: pair[1].sum(), use_threads=True)
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_Series-iter_window_items().apply_pool()
+
+#start_Series-__add__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s + 8
+<Series>
+<Index>
+a        18
+b        10
+c        16
+<<U1>    <int64>
+>>> s + s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        nan
+b        4.0
+c        16.0
+<<U1>    <float64>
+#end_Series-__add__()
+
+#start_Series-__and__()
+>>> s = sf.Series((False, False, True), index=('a', 'b', 'c'))
+>>> s & True
+<Series>
+<Index>
+a        False
+b        False
+c        True
+<<U1>    <bool>
+>>> s & (True, False, True)
+<Series>
+<Index>
+a        False
+b        False
+c        True
+<<U1>    <bool>
+#end_Series-__and__()
+
+#start_Series-__eq__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s == 8
+<Series>
+<Index>
+a        False
+b        False
+c        True
+<<U1>    <bool>
+>>> s == s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        False
+b        True
+c        True
+<<U1>    <bool>
+#end_Series-__eq__()
+
+#start_Series-__floordiv__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s // 8
+<Series>
+<Index>
+a        1
+b        0
+c        1
+<<U1>    <int64>
+>>> s // s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        nan
+b        1.0
+c        1.0
+<<U1>    <float64>
+#end_Series-__floordiv__()
+
+#start_Series-__ge__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s >= 8
+<Series>
+<Index>
+a        True
+b        False
+c        True
+<<U1>    <bool>
+>>> s >= s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        False
+b        True
+c        True
+<<U1>    <bool>
+#end_Series-__ge__()
+
+#start_Series-__gt__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s > 8
+<Series>
+<Index>
+a        True
+b        False
+c        False
+<<U1>    <bool>
+>>> s > s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        False
+b        False
+c        False
+<<U1>    <bool>
+#end_Series-__gt__()
+
+#start_Series-__le__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s <= 8
+<Series>
+<Index>
+a        False
+b        True
+c        True
+<<U1>    <bool>
+>>> s <= s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        False
+b        True
+c        True
+<<U1>    <bool>
+#end_Series-__le__()
+
+#start_Series-__lt__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s < 8
+<Series>
+<Index>
+a        False
+b        True
+c        False
+<<U1>    <bool>
+>>> s < s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        False
+b        False
+c        False
+<<U1>    <bool>
+#end_Series-__lt__()
+
+#start_Series-__matmul__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s @ (3, 0, 4)
+62
+#end_Series-__matmul__()
+
+#start_Series-__mod__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s % 8
+<Series>
+<Index>
+a        2
+b        2
+c        0
+<<U1>    <int64>
+>>> s % s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        nan
+b        0.0
+c        0.0
+<<U1>    <float64>
+#end_Series-__mod__()
+
+#start_Series-__mul__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s * 8
+<Series>
+<Index>
+a        80
+b        16
+c        64
+<<U1>    <int64>
+>>> s * s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        nan
+b        4.0
+c        64.0
+<<U1>    <float64>
+#end_Series-__mul__()
+
+#start_Series-__ne__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s != 8
+<Series>
+<Index>
+a        True
+b        True
+c        False
+<<U1>    <bool>
+>>> s != s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        True
+b        False
+c        False
+<<U1>    <bool>
+#end_Series-__ne__()
+
+#start_Series-__or__()
+>>> s = sf.Series((False, False, True), index=('a', 'b', 'c'))
+>>> s | True
+<Series>
+<Index>
+a        True
+b        True
+c        True
+<<U1>    <bool>
+>>> s | (True, False, True)
+<Series>
+<Index>
+a        True
+b        False
+c        True
+<<U1>    <bool>
+#end_Series-__or__()
+
+#start_Series-__pow__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s ** 8
+<Series>
+<Index>
+a        100000000
+b        256
+c        16777216
+<<U1>    <int64>
+>>> s ** s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        nan
+b        4.0
+c        16777216.0
+<<U1>    <float64>
+#end_Series-__pow__()
+
+#start_Series-__radd__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> 8 + s
+<Series>
+<Index>
+a        18
+b        10
+c        16
+<<U1>    <int64>
+#end_Series-__radd__()
+
+#start_Series-__rfloordiv__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> 8 // s
+<Series>
+<Index>
+a        0
+b        4
+c        1
+<<U1>    <int64>
+#end_Series-__rfloordiv__()
+
+#start_Series-__rmatmul__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s @ (3, 0, 4)
+62
+#end_Series-__rmatmul__()
+
+#start_Series-__rmul__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> 8 * s
+<Series>
+<Index>
+a        80
+b        16
+c        64
+<<U1>    <int64>
+#end_Series-__rmul__()
+
+#start_Series-__rshift__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s >> 1
+<Series>
+<Index>
+a        5
+b        1
+c        4
+<<U1>    <int64>
+#end_Series-__rshift__()
+
+#start_Series-__rsub__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> 8 - s
+<Series>
+<Index>
+a        -2
+b        6
+c        0
+<<U1>    <int64>
+#end_Series-__rsub__()
+
+#start_Series-__rtruediv__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> 8 / s
+<Series>
+<Index>
+a        0.8
+b        4.0
+c        1.0
+<<U1>    <float64>
+#end_Series-__rtruediv__()
+
+#start_Series-__sub__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s - 8
+<Series>
+<Index>
+a        2
+b        -6
+c        0
+<<U1>    <int64>
+>>> s - s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        nan
+b        0.0
+c        0.0
+<<U1>    <float64>
+#end_Series-__sub__()
+
+#start_Series-__truediv__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s / 8
+<Series>
+<Index>
+a        1.25
+b        0.25
+c        1.0
+<<U1>    <float64>
+>>> s / s.reindex(('c', 'b'))
+<Series>
+<Index>
+a        nan
+b        1.0
+c        1.0
+<<U1>    <float64>
+#end_Series-__truediv__()
+
+#start_Series-__xor__()
+>>> s = sf.Series((False, False, True), index=('a', 'b', 'c'))
+>>> s ^ True
+<Series>
+<Index>
+a        True
+b        True
+c        False
+<<U1>    <bool>
+>>> s ^ (True, False, True)
+<Series>
+<Index>
+a        True
+b        False
+c        False
+<<U1>    <bool>
+#end_Series-__xor__()
+
+#start_Series-__abs__()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> abs(s)
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        2
+e        8
+<<U1>    <int64>
+#end_Series-__abs__()
+
+#start_Series-__invert__()
+>>> s = sf.Series((False, False, True), index=('a', 'b', 'c'))
+>>> ~s
+<Series>
+<Index>
+a        True
+b        True
+c        False
+<<U1>    <bool>
+#end_Series-__invert__()
+
+#start_Series-__neg__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> -s
+<Series>
+<Index>
+a        -10
+b        -2
+c        -8
+<<U1>    <int64>
+#end_Series-__neg__()
+
+#start_Series-__pos__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> +s
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_Series-__pos__()
+
+#start_Series-via_dt.year
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.year
+<Series>
+<Index>
+a        1517
+b        1517
+c        1517
+d        1517
+e        1517
+<<U1>    <int64>
+#end_Series-via_dt.year
+
+#start_Series-via_dt.month
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.month
+<Series>
+<Index>
+a        1
+b        4
+c        12
+d        6
+e        10
+<<U1>    <int64>
+#end_Series-via_dt.month
+
+#start_Series-via_dt.day
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.day
+<Series>
+<Index>
+a        1
+b        1
+c        31
+d        30
+e        1
+<<U1>    <int64>
+#end_Series-via_dt.day
+
+#start_Series-via_dt.hour
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.hour
+<Series>
+<Index>
+a        0
+b        0
+c        0
+d        0
+e        0
+<<U1>    <int64>
+#end_Series-via_dt.hour
+
+#start_Series-via_dt.minute
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.minute
+<Series>
+<Index>
+a        0
+b        0
+c        0
+d        0
+e        0
+<<U1>    <int64>
+#end_Series-via_dt.minute
+
+#start_Series-via_dt.second
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.second
+<Series>
+<Index>
+a        0
+b        0
+c        0
+d        0
+e        0
+<<U1>    <int64>
+#end_Series-via_dt.second
+
+#start_Series-via_dt.weekday()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.weekday()
+<Series>
+<Index>
+a        0
+b        6
+c        0
+d        5
+e        0
+<<U1>    <int64>
+#end_Series-via_dt.weekday()
+
+#start_Series-via_dt.quarter()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.quarter()
+<Series>
+<Index>
+a        1
+b        2
+c        4
+d        2
+e        4
+<<U1>    <int64>
+#end_Series-via_dt.quarter()
+
+#start_Series-via_dt.is_month_end()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_month_end()
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        False
+<<U1>    <bool>
+#end_Series-via_dt.is_month_end()
+
+#start_Series-via_dt.is_month_start()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_month_start()
+<Series>
+<Index>
+a        True
+b        True
+c        False
+d        False
+e        True
+<<U1>    <bool>
+#end_Series-via_dt.is_month_start()
+
+#start_Series-via_dt.is_year_end()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_year_end()
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        False
+e        False
+<<U1>    <bool>
+#end_Series-via_dt.is_year_end()
+
+#start_Series-via_dt.is_year_start()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_year_start()
+<Series>
+<Index>
+a        True
+b        False
+c        False
+d        False
+e        False
+<<U1>    <bool>
+#end_Series-via_dt.is_year_start()
+
+#start_Series-via_dt.is_quarter_end()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_quarter_end()
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        False
+<<U1>    <bool>
+#end_Series-via_dt.is_quarter_end()
+
+#start_Series-via_dt.is_quarter_start()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_quarter_start()
+<Series>
+<Index>
+a        True
+b        True
+c        False
+d        False
+e        True
+<<U1>    <bool>
+#end_Series-via_dt.is_quarter_start()
+
+#start_Series-via_dt.timetuple()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.timetuple()
+<Series>
+<Index>
+a        time.struct_time(...
+b        time.struct_time(...
+c        time.struct_time(...
+d        time.struct_time(...
+e        time.struct_time(...
+<<U1>    <object>
+#end_Series-via_dt.timetuple()
+
+#start_Series-via_dt.isoformat()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.isoformat()
+<Series>
+<Index>
+a        1517-01-01
+b        1517-04-01
+c        1517-12-31
+d        1517-06-30
+e        1517-10-01
+<<U1>    <<U10>
+#end_Series-via_dt.isoformat()
+
+#start_Series-via_dt.fromisoformat()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.via_dt.fromisoformat()
+<Series>
+<Index>
+a        1517-01-01
+b        1517-04-01
+c        1517-12-31
+d        1517-06-30
+e        1517-10-01
+<<U1>    <object>
+#end_Series-via_dt.fromisoformat()
+
+#start_Series-via_dt.strftime()
+>>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.strftime("%A | %B")
+<Series>
+<Index>
+a        Monday | January
+b        Sunday | April
+c        Monday | December
+d        Saturday | June
+e        Monday | October
+<<U1>    <<U17>
+#end_Series-via_dt.strftime()
+
+#start_Series-via_dt.strptime()
+>>> s = sf.Series(('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
+>>> s.via_dt.strptime("%m/%d/%Y")
+<Series>
+<Index>
+a        1517-01-01 00:00:00
+b        1517-04-01 00:00:00
+c        1517-06-30 00:00:00
+<<U1>    <object>
+#end_Series-via_dt.strptime()
+
+#start_Series-via_dt.strpdate()
+>>> s = sf.Series(('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
+>>> s.via_dt.strpdate("%m/%d/%Y")
+<Series>
+<Index>
+a        1517-01-01
+b        1517-04-01
+c        1517-06-30
+<<U1>    <object>
+#end_Series-via_dt.strpdate()
+
+#start_Series-via_str.__getitem__()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str[-1]
+<Series>
+<Index>
+a
+b        Z
+c        3
+d
+<<U1>    <<U1>
+#end_Series-via_str.__getitem__()
+
+#start_Series-via_str.capitalize()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.capitalize()
+<Series>
+<Index>
+a        Qrs
+b        Xyz
+c        123
+d         wx
+<<U1>    <<U4>
+#end_Series-via_str.capitalize()
+
+#start_Series-via_str.center()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.center(8)
+<Series>
+<Index>
+a          qrs
+b          XYZ
+c          123
+d           wX
+<<U1>    <<U8>
+#end_Series-via_str.center()
+
+#start_Series-via_str.count()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.count('X')
+<Series>
+<Index>
+a        0
+b        1
+c        0
+d        1
+<<U1>    <int64>
+#end_Series-via_str.count()
+
+#start_Series-via_str.decode()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'), dtype=bytes)
+>>> s.via_str.decode()
+<Series>
+<Index>
+a        qrs
+b        XYZ
+c        123
+d         wX
+<<U1>    <<U4>
+#end_Series-via_str.decode()
+
+#start_Series-via_str.encode()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.encode()
+<Series>
+<Index>
+a        b'qrs '
+b        b'XYZ'
+c        b'123'
+d        b' wX '
+<<U1>    <|S4>
+#end_Series-via_str.encode()
+
+#start_Series-via_str.endswith()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.endswith(' ')
+<Series>
+<Index>
+a        True
+b        False
+c        False
+d        True
+<<U1>    <bool>
+#end_Series-via_str.endswith()
+
+#start_Series-via_str.find()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.find('X')
+<Series>
+<Index>
+a        -1
+b        0
+c        -1
+d        2
+<<U1>    <int64>
+#end_Series-via_str.find()
+
+#start_Series-via_str.index()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.index('X')
+ValueError('substring not found')
+#end_Series-via_str.index()
+
+#start_Series-via_str.isalnum()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isalnum()
+<Series>
+<Index>
+a        False
+b        True
+c        True
+d        False
+<<U1>    <bool>
+#end_Series-via_str.isalnum()
+
+#start_Series-via_str.isalpha()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isalpha()
+<Series>
+<Index>
+a        False
+b        True
+c        False
+d        False
+<<U1>    <bool>
+#end_Series-via_str.isalpha()
+
+#start_Series-via_str.isdecimal()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isdecimal()
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        False
+<<U1>    <bool>
+#end_Series-via_str.isdecimal()
+
+#start_Series-via_str.isdigit()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isdigit()
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        False
+<<U1>    <bool>
+#end_Series-via_str.isdigit()
+
+#start_Series-via_str.islower()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.islower()
+<Series>
+<Index>
+a        True
+b        False
+c        False
+d        False
+<<U1>    <bool>
+#end_Series-via_str.islower()
+
+#start_Series-via_str.isnumeric()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isnumeric()
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        False
+<<U1>    <bool>
+#end_Series-via_str.isnumeric()
+
+#start_Series-via_str.isspace()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isspace()
+<Series>
+<Index>
+a        False
+b        False
+c        False
+d        False
+<<U1>    <bool>
+#end_Series-via_str.isspace()
+
+#start_Series-via_str.istitle()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.istitle()
+<Series>
+<Index>
+a        False
+b        False
+c        False
+d        False
+<<U1>    <bool>
+#end_Series-via_str.istitle()
+
+#start_Series-via_str.isupper()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isupper()
+<Series>
+<Index>
+a        False
+b        True
+c        False
+d        False
+<<U1>    <bool>
+#end_Series-via_str.isupper()
+
+#start_Series-via_str.ljust()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.ljust(8)
+<Series>
+<Index>
+a        qrs
+b        XYZ
+c        123
+d         wX
+<<U1>    <<U8>
+#end_Series-via_str.ljust()
+
+#start_Series-via_str.len()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.len()
+<Series>
+<Index>
+a        4
+b        3
+c        3
+d        4
+<<U1>    <int64>
+#end_Series-via_str.len()
+
+#start_Series-via_str.lower()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.lower()
+<Series>
+<Index>
+a        qrs
+b        xyz
+c        123
+d         wx
+<<U1>    <<U4>
+#end_Series-via_str.lower()
+
+#start_Series-via_str.lstrip()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.lstrip()
+<Series>
+<Index>
+a        qrs
+b        XYZ
+c        123
+d        wX
+<<U1>    <<U4>
+#end_Series-via_str.lstrip()
+
+#start_Series-via_str.partition()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.partition('X')
+<Series>
+<Index>
+a        ('qrs ', '', '')
+b        ('', 'X', 'YZ')
+c        ('123', '', '')
+d        (' w', 'X', ' ')
+<<U1>    <object>
+#end_Series-via_str.partition()
+
+#start_Series-via_str.replace()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.replace('X', '*')
+<Series>
+<Index>
+a        qrs
+b        *YZ
+c        123
+d         w*
+<<U1>    <<U4>
+#end_Series-via_str.replace()
+
+#start_Series-via_str.rfind()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rfind('X')
+<Series>
+<Index>
+a        -1
+b        0
+c        -1
+d        2
+<<U1>    <int64>
+#end_Series-via_str.rfind()
+
+#start_Series-via_str.rindex()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rindex('X')
+ValueError('substring not found')
+#end_Series-via_str.rindex()
+
+#start_Series-via_str.rjust()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rjust(8)
+<Series>
+<Index>
+a            qrs
+b             XYZ
+c             123
+d             wX
+<<U1>    <<U8>
+#end_Series-via_str.rjust()
+
+#start_Series-via_str.rpartition()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rpartition('X')
+<Series>
+<Index>
+a        ('', '', 'qrs ')
+b        ('', 'X', 'YZ')
+c        ('', '', '123')
+d        (' w', 'X', ' ')
+<<U1>    <object>
+#end_Series-via_str.rpartition()
+
+#start_Series-via_str.rsplit()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rsplit('X')
+<Series>
+<Index>
+a        ('qrs ',)
+b        ('', 'YZ')
+c        ('123',)
+d        (' w', ' ')
+<<U1>    <object>
+#end_Series-via_str.rsplit()
+
+#start_Series-via_str.rstrip()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rstrip()
+<Series>
+<Index>
+a        qrs
+b        XYZ
+c        123
+d         wX
+<<U1>    <<U4>
+#end_Series-via_str.rstrip()
+
+#start_Series-via_str.split()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.split('X')
+<Series>
+<Index>
+a        ('qrs ',)
+b        ('', 'YZ')
+c        ('123',)
+d        (' w', ' ')
+<<U1>    <object>
+#end_Series-via_str.split()
+
+#start_Series-via_str.startswith()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.startswith('X')
+<Series>
+<Index>
+a        False
+b        True
+c        False
+d        False
+<<U1>    <bool>
+#end_Series-via_str.startswith()
+
+#start_Series-via_str.strip()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.strip()
+<Series>
+<Index>
+a        qrs
+b        XYZ
+c        123
+d        wX
+<<U1>    <<U4>
+#end_Series-via_str.strip()
+
+#start_Series-via_str.swapcase()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.swapcase()
+<Series>
+<Index>
+a        QRS
+b        xyz
+c        123
+d         Wx
+<<U1>    <<U4>
+#end_Series-via_str.swapcase()
+
+#start_Series-via_str.title()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.title()
+<Series>
+<Index>
+a        Qrs
+b        Xyz
+c        123
+d         Wx
+<<U1>    <<U4>
+#end_Series-via_str.title()
+
+#start_Series-via_str.upper()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.upper()
+<Series>
+<Index>
+a        QRS
+b        XYZ
+c        123
+d         WX
+<<U1>    <<U4>
+#end_Series-via_str.upper()
+
+#start_Series-via_str.zfill()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.zfill(8)
+<Series>
+<Index>
+a        0000qrs
+b        00000XYZ
+c        00000123
+d        0000 wX
+<<U1>    <<U8>
+#end_Series-via_str.zfill()
+
+#start_Series-via_fill_value().loc
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.via_fill_value(0).loc[['a', 'c', 'd', 'e']]
+<Series>
+<Index>
+a        10
+c        8
+d        0
+e        0
+<<U1>    <int64>
+#end_Series-via_fill_value().loc
+
+#start_Series-via_fill_value().__getitem__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.via_fill_value(0)[['a', 'c', 'd', 'e']]
+<Series>
+<Index>
+a        10
+c        8
+d        0
+e        0
+<<U1>    <int64>
+#end_Series-via_fill_value().__getitem__()
+
+#start_Series-via_fill_value().via_T
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.via_fill_value().via_T
+NotImplementedError('via_T functionality only available on Frame')
+#end_Series-via_fill_value().via_T
+
+#start_Series-via_fill_value().__add__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) + s2
+<Series>
+<Index>
+a        10
+b        4
+c        16
+d        19
+<<U1>    <int64>
+#end_Series-via_fill_value().__add__()
+
+#start_Series-via_fill_value().__sub__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) - s2
+<Series>
+<Index>
+a        10
+b        0
+c        0
+d        -19
+<<U1>    <int64>
+#end_Series-via_fill_value().__sub__()
+
+#start_Series-via_fill_value().__mul__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) * s2
+<Series>
+<Index>
+a        0
+b        4
+c        64
+d        0
+<<U1>    <int64>
+#end_Series-via_fill_value().__mul__()
+
+#start_Series-via_fill_value().__truediv__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) / s2
+<Series>
+<Index>
+a        inf
+b        1.0
+c        1.0
+d        0.0
+<<U1>    <float64>
+#end_Series-via_fill_value().__truediv__()
+
+#start_Series-via_fill_value().__floordiv__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) // s2
+<Series>
+<Index>
+a        0
+b        1
+c        1
+d        0
+<<U1>    <int64>
+#end_Series-via_fill_value().__floordiv__()
+
+#start_Series-via_fill_value().__mod__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) % s2
+<Series>
+<Index>
+a        0
+b        0
+c        0
+d        0
+<<U1>    <int64>
+#end_Series-via_fill_value().__mod__()
+
+#start_Series-via_fill_value().__pow__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) ** s2
+<Series>
+<Index>
+a        1
+b        4
+c        16777216
+d        0
+<<U1>    <int64>
+#end_Series-via_fill_value().__pow__()
+
+#start_Series-via_fill_value().__lshift__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) << s2
+<Series>
+<Index>
+a        10
+b        8
+c        2048
+d        0
+<<U1>    <int64>
+#end_Series-via_fill_value().__lshift__()
+
+#start_Series-via_fill_value().__rshift__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) >> s2
+<Series>
+<Index>
+a        10
+b        0
+c        0
+d        0
+<<U1>    <int64>
+#end_Series-via_fill_value().__rshift__()
+
+#start_Series-via_fill_value().__and__()
+>>> s1 = sf.Series((False, False, True), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((False, False, True), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(False) & s2
+<Series>
+<Index>
+a        False
+b        False
+c        False
+d        False
+<<U1>    <bool>
+#end_Series-via_fill_value().__and__()
+
+#start_Series-via_fill_value().__xor__()
+>>> s1 = sf.Series((False, False, True), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((False, False, True), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(False) ^ s2
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+<<U1>    <bool>
+#end_Series-via_fill_value().__xor__()
+
+#start_Series-via_fill_value().__or__()
+>>> s1 = sf.Series((False, False, True), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((False, False, True), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(False) | s2
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+<<U1>    <bool>
+#end_Series-via_fill_value().__or__()
+
+#start_Series-via_fill_value().__lt__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) < s2
+<Series>
+<Index>
+a        False
+b        False
+c        False
+d        True
+<<U1>    <bool>
+#end_Series-via_fill_value().__lt__()
+
+#start_Series-via_fill_value().__le__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) <= s2
+<Series>
+<Index>
+a        False
+b        True
+c        True
+d        True
+<<U1>    <bool>
+#end_Series-via_fill_value().__le__()
+
+#start_Series-via_fill_value().__eq__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) == s2
+<Series>
+<Index>
+a        False
+b        True
+c        True
+d        False
+<<U1>    <bool>
+#end_Series-via_fill_value().__eq__()
+
+#start_Series-via_fill_value().__ne__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) != s2
+<Series>
+<Index>
+a        True
+b        False
+c        False
+d        True
+<<U1>    <bool>
+#end_Series-via_fill_value().__ne__()
+
+#start_Series-via_fill_value().__gt__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) > s2
+<Series>
+<Index>
+a        True
+b        False
+c        False
+d        False
+<<U1>    <bool>
+#end_Series-via_fill_value().__gt__()
+
+#start_Series-via_fill_value().__ge__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) >= s2
+<Series>
+<Index>
+a        True
+b        True
+c        True
+d        False
+<<U1>    <bool>
+#end_Series-via_fill_value().__ge__()
+
+#start_Series-via_fill_value().__radd__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s2 + s1.via_fill_value(0)
+RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+#end_Series-via_fill_value().__radd__()
+
+#start_Series-via_fill_value().__rsub__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s2 - s1.via_fill_value(0)
+RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+#end_Series-via_fill_value().__rsub__()
+
+#start_Series-via_fill_value().__rmul__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s2 * s1.via_fill_value(0)
+RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+#end_Series-via_fill_value().__rmul__()
+
+#start_Series-via_fill_value().__rtruediv__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s2 / s1.via_fill_value(0)
+RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+#end_Series-via_fill_value().__rtruediv__()
+
+#start_Series-via_fill_value().__rfloordiv__()
+>>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
+>>> s2 // s1.via_fill_value(0)
+RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+#end_Series-via_fill_value().__rfloordiv__()
+
+#start_SeriesHE-__init__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-__init__()
+
+#start_SeriesHE-from_concat()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((4, 3, 12), index=('d', 'e', 'f'))
+>>> s = sf.SeriesHE.from_concat((s1, s2))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+d          4
+e          3
+f          12
+<<U1>      <int64>
+#end_SeriesHE-from_concat()
+
+#start_SeriesHE-from_concat_items()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((4, 3, 12), index=('d', 'e', 'f'))
+>>> s = sf.SeriesHE.from_concat_items((('x', s1), ('y', s2)))
+>>> s
+<SeriesHE>
+<IndexHierarchy>
+x                a     10
+x                b     2
+x                c     8
+y                d     4
+y                e     3
+y                f     12
+<<U1>            <<U1> <int64>
+#end_SeriesHE-from_concat_items()
+
+#start_SeriesHE-from_dict()
+>>> s = sf.SeriesHE.from_dict(dict(a=10, b=2, c=8))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-from_dict()
+
+#start_SeriesHE-from_element()
+>>> s = sf.SeriesHE.from_element(-1, index=('a', 'b', 'c'), name='x')
+>>> s
+<SeriesHE: x>
+<Index>
+a             -1
+b             -1
+c             -1
+<<U1>         <int64>
+#end_SeriesHE-from_element()
+
+#start_SeriesHE-from_items()
+>>> s = sf.SeriesHE.from_items((('a', 10), ('b', 2), ('c', 8)), name='x')
+>>> s
+<SeriesHE: x>
+<Index>
+a             10
+b             2
+c             8
+<<U1>         <int64>
+#end_SeriesHE-from_items()
+
+#start_SeriesHE-from_overlay()
+>>> s1 = sf.SeriesHE((11, 1, None), index=('a', 'b', 'c'))
+>>> s1
+<SeriesHE>
+<Index>
+a          11
+b          1
+c          None
+<<U1>      <object>
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s = sf.SeriesHE.from_overlay((s1, s2))
+>>> s
+<SeriesHE>
+<Index>
+a          11
+b          1
+c          8
+d          19
+<<U1>      <object>
+#end_SeriesHE-from_overlay()
+
+#start_SeriesHE-from_pandas()
+>>> df = pd.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s = sf.SeriesHE.from_pandas(df)
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<object>   <int64>
+#end_SeriesHE-from_pandas()
+
+#start_SeriesHE-to_frame()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+a       10
+b       2
+c       8
+<<U1>   <int64>
+#end_SeriesHE-to_frame()
+
+#start_SeriesHE-to_frame_go()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_frame_go()
+<FrameGO>
+<IndexGO> 0       <int64>
+<Index>
+a         10
+b         2
+c         8
+<<U1>     <int64>
+#end_SeriesHE-to_frame_go()
+
+#start_SeriesHE-to_frame_he()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_frame_he()
+<FrameHE>
+<Index>   0       <int64>
+<Index>
+a         10
+b         2
+c         8
+<<U1>     <int64>
+#end_SeriesHE-to_frame_he()
+
+#start_SeriesHE-to_pairs()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_pairs()
+(('a', 10), ('b', 2), ('c', 8))
+#end_SeriesHE-to_pairs()
+
+#start_SeriesHE-to_pandas()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_pandas()
+a    10
+b     2
+c     8
+dtype: int64
+#end_SeriesHE-to_pandas()
+
+#start_SeriesHE-to_series()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_series()
+<Series>
+<Index>
+a        10
+b        2
+c        8
+<<U1>    <int64>
+#end_SeriesHE-to_series()
+
+#start_SeriesHE-to_series_he()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.to_series_he()
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-to_series_he()
+
+#start_SeriesHE-STATIC
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.STATIC
+True
+#end_SeriesHE-STATIC
+
+#start_SeriesHE-T
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.T
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-T
+
+#start_SeriesHE-dtype
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.dtype
+int64
+#end_SeriesHE-dtype
+
+#start_SeriesHE-index
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.index
+<Index>
+a
+b
+c
+<<U1>
+#end_SeriesHE-index
+
+#start_SeriesHE-mloc
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.mloc
+94464619520672
+#end_SeriesHE-mloc
+
+#start_SeriesHE-name
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.name
+#end_SeriesHE-name
+
+#start_SeriesHE-nbytes
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.nbytes
+24
+#end_SeriesHE-nbytes
+
+#start_SeriesHE-ndim
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.ndim
+1
+#end_SeriesHE-ndim
+
+#start_SeriesHE-shape
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.shape
+(3,)
+#end_SeriesHE-shape
+
+#start_SeriesHE-size
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.size
+3
+#end_SeriesHE-size
+
+#start_SeriesHE-__array__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.__array__()
+[10  2  8]
+#end_SeriesHE-__array__()
+
+#start_SeriesHE-__array_ufunc__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> np.array((0, 1, 0)) * s
+<SeriesHE>
+<Index>
+a          0
+b          2
+c          0
+<<U1>      <int64>
+#end_SeriesHE-__array_ufunc__()
+
+#start_SeriesHE-__bool__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> bool(s)
+ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+#end_SeriesHE-__bool__()
+
+#start_SeriesHE-__deepcopy__()
+>>> import copy
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> copy.deepcopy(s)
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-__deepcopy__()
+
+#start_SeriesHE-__len__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> len(s)
+3
+#end_SeriesHE-__len__()
+
+#start_SeriesHE-__round__()
+>>> s = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          8.734
+<<U1>      <float64>
+>>> round(s, 1)
+<SeriesHE>
+<Index>
+a          10.2
+b          2.1
+c          8.7
+<<U1>      <float64>
+#end_SeriesHE-__round__()
+
+#start_SeriesHE-all()
+>>> s = sf.SeriesHE((False, False, True), index=('a', 'b', 'c'))
+>>> s.all()
+False
+#end_SeriesHE-all()
+
+#start_SeriesHE-any()
+>>> s = sf.SeriesHE((False, False, True), index=('a', 'b', 'c'))
+>>> s.any()
+True
+#end_SeriesHE-any()
+
+#start_SeriesHE-astype()
+>>> s = sf.SeriesHE((11, 1, None), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          11
+b          1
+c          None
+<<U1>      <object>
+>>> s.astype(float)
+<SeriesHE>
+<Index>
+a          11.0
+b          1.0
+c          nan
+<<U1>      <float64>
+#end_SeriesHE-astype()
+
+#start_SeriesHE-clip()
+>>> s = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          8.734
+<<U1>      <float64>
+>>> s.clip(lower=2.5, upper=10.1)
+<SeriesHE>
+<Index>
+a          10.1
+b          2.5
+c          8.734
+<<U1>      <float64>
+#end_SeriesHE-clip()
+
+#start_SeriesHE-count()
+>>> s = sf.SeriesHE((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s.count(skipna=True)
+3
+>>> s.count(unique=True)
+2
+#end_SeriesHE-count()
+
+#start_SeriesHE-cov()
+>>> s1 = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s1.cov(s2)
+17.924999999999997
+#end_SeriesHE-cov()
+
+#start_SeriesHE-cumprod()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.cumprod()
+<SeriesHE>
+<Index>
+a          10
+b          20
+c          160
+<<U1>      <int64>
+#end_SeriesHE-cumprod()
+
+#start_SeriesHE-cumsum()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.cumsum()
+<SeriesHE>
+<Index>
+a          10
+b          12
+c          20
+<<U1>      <int64>
+#end_SeriesHE-cumsum()
+
+#start_SeriesHE-drop_duplicated()
+>>> s = sf.SeriesHE((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          None
+d          8
+<<U1>      <object>
+>>> s.drop_duplicated()
+<SeriesHE>
+<Index>
+b          5
+c          None
+<<U1>      <object>
+#end_SeriesHE-drop_duplicated()
+
+#start_SeriesHE-dropfalsy()
+>>> s = sf.SeriesHE(('q', 'r', '', 's'), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          q
+b          r
+c
+d          s
+<<U1>      <<U1>
+>>> s.dropfalsy()
+<SeriesHE>
+<Index>
+a          q
+b          r
+d          s
+<<U1>      <<U1>
+#end_SeriesHE-dropfalsy()
+
+#start_SeriesHE-dropna()
+>>> s = sf.SeriesHE((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          None
+d          8
+<<U1>      <object>
+>>> s.dropna()
+<SeriesHE>
+<Index>
+a          8
+b          5
+d          8
+<<U1>      <object>
+#end_SeriesHE-dropna()
+
+#start_SeriesHE-duplicated()
+>>> s = sf.SeriesHE((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          None
+d          8
+<<U1>      <object>
+>>> s.duplicated()
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+d          True
+<<U1>      <bool>
+#end_SeriesHE-duplicated()
+
+#start_SeriesHE-equals()
+>>> s1 = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s1.equals(s2)
+False
+#end_SeriesHE-equals()
+
+#start_SeriesHE-fillfalsy()
+>>> s = sf.SeriesHE(('q', 'r', '', 's'), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          q
+b          r
+c
+d          s
+<<U1>      <<U1>
+>>> s.fillfalsy('missing')
+<SeriesHE>
+<Index>
+a          q
+b          r
+c          missing
+d          s
+<<U1>      <<U7>
+#end_SeriesHE-fillfalsy()
+
+#start_SeriesHE-fillfalsy_backward()
+>>> s = sf.SeriesHE(('', '', 'r', 's'), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a
+b
+c          r
+d          s
+<<U1>      <<U1>
+>>> s.fillfalsy_backward()
+<SeriesHE>
+<Index>
+a          r
+b          r
+c          r
+d          s
+<<U1>      <<U1>
+#end_SeriesHE-fillfalsy_backward()
+
+#start_SeriesHE-fillfalsy_forward()
+>>> s = sf.SeriesHE(('p', 'q', '', ''), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          p
+b          q
+c
+d
+<<U1>      <<U1>
+>>> s.fillfalsy_forward()
+<SeriesHE>
+<Index>
+a          p
+b          q
+c          q
+d          q
+<<U1>      <<U1>
+#end_SeriesHE-fillfalsy_forward()
+
+#start_SeriesHE-fillfalsy_leading()
+>>> s = sf.SeriesHE(('', '', 'r', 's'), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a
+b
+c          r
+d          s
+<<U1>      <<U1>
+>>> s.fillfalsy_leading('missing')
+<SeriesHE>
+<Index>
+a          missing
+b          missing
+c          r
+d          s
+<<U1>      <<U7>
+#end_SeriesHE-fillfalsy_leading()
+
+#start_SeriesHE-fillfalsy_trailing()
+>>> s = sf.SeriesHE(('p', 'q', '', ''), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          p
+b          q
+c
+d
+<<U1>      <<U1>
+>>> s.fillfalsy_trailing('missing')
+<SeriesHE>
+<Index>
+a          p
+b          q
+c          missing
+d          missing
+<<U1>      <<U7>
+#end_SeriesHE-fillfalsy_trailing()
+
+#start_SeriesHE-fillna()
+>>> s = sf.SeriesHE((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          nan
+d          8.734
+e          nan
+<<U1>      <float64>
+>>> s.fillna(0.0)
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          0.0
+d          8.734
+e          0.0
+<<U1>      <float64>
+#end_SeriesHE-fillna()
+
+#start_SeriesHE-fillna_backward()
+>>> s = sf.SeriesHE((np.nan, np.nan, 10.235, 2.124, 8.734), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          nan
+b          nan
+c          10.235
+d          2.124
+e          8.734
+<<U1>      <float64>
+>>> s.fillna_backward()
+<SeriesHE>
+<Index>
+a          10.235
+b          10.235
+c          10.235
+d          2.124
+e          8.734
+<<U1>      <float64>
+#end_SeriesHE-fillna_backward()
+
+#start_SeriesHE-fillna_forward()
+>>> s = sf.SeriesHE((10.235, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          8.734
+d          nan
+e          nan
+<<U1>      <float64>
+>>> s.fillna_forward()
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          8.734
+d          8.734
+e          8.734
+<<U1>      <float64>
+#end_SeriesHE-fillna_forward()
+
+#start_SeriesHE-fillna_leading()
+>>> s = sf.SeriesHE((np.nan, np.nan, 10.235, 2.124, 8.734), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          nan
+b          nan
+c          10.235
+d          2.124
+e          8.734
+<<U1>      <float64>
+>>> s.fillna_leading(0.0)
+<SeriesHE>
+<Index>
+a          0.0
+b          0.0
+c          10.235
+d          2.124
+e          8.734
+<<U1>      <float64>
+#end_SeriesHE-fillna_leading()
+
+#start_SeriesHE-fillna_trailing()
+>>> s = sf.SeriesHE((10.235, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          8.734
+d          nan
+e          nan
+<<U1>      <float64>
+>>> s.fillna_trailing(0.0)
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          8.734
+d          0.0
+e          0.0
+<<U1>      <float64>
+#end_SeriesHE-fillna_trailing()
+
+#start_SeriesHE-head()
+>>> s = sf.SeriesHE((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          nan
+d          8.734
+e          nan
+<<U1>      <float64>
+>>> s.head(2)
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+<<U1>      <float64>
+#end_SeriesHE-head()
+
+#start_SeriesHE-iloc_max()
+>>> s = sf.SeriesHE((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          nan
+d          8.734
+e          nan
+<<U1>      <float64>
+>>> s.iloc_max()
+0
+#end_SeriesHE-iloc_max()
+
+#start_SeriesHE-iloc_min()
+>>> s = sf.SeriesHE((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          nan
+d          8.734
+e          nan
+<<U1>      <float64>
+>>> s.iloc_min()
+1
+#end_SeriesHE-iloc_min()
+
+#start_SeriesHE-iloc_searchsorted()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.iloc_searchsorted(18)
+2
+#end_SeriesHE-iloc_searchsorted()
+
+#start_SeriesHE-insert_after()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((4, 3, 12), index=('d', 'e', 'f'))
+>>> s1.insert_after('b', s2)
+<SeriesHE>
+<Index>
+a          10
+b          2
+d          4
+e          3
+f          12
+c          8
+<<U1>      <int64>
+#end_SeriesHE-insert_after()
+
+#start_SeriesHE-insert_before()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((4, 3, 12), index=('d', 'e', 'f'))
+>>> s1.insert_before('b', s2)
+<SeriesHE>
+<Index>
+a          10
+d          4
+e          3
+f          12
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-insert_before()
+
+#start_SeriesHE-isfalsy()
+>>> s = sf.SeriesHE((2, '', 19, 0, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b
+c          19
+d          0
+e          None
+<<U1>      <object>
+>>> s.isfalsy()
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          False
+d          True
+e          True
+<<U1>      <bool>
+#end_SeriesHE-isfalsy()
+
+#start_SeriesHE-isin()
+>>> s = sf.SeriesHE((2, '', 19, 0, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.isin((2, 19))
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          True
+d          False
+e          False
+<<U1>      <bool>
+#end_SeriesHE-isin()
+
+#start_SeriesHE-isna()
+>>> s = sf.SeriesHE((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          nan
+d          8.734
+e          nan
+<<U1>      <float64>
+>>> s.isna()
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          False
+e          True
+<<U1>      <bool>
+#end_SeriesHE-isna()
+
+#start_SeriesHE-loc_max()
+>>> s = sf.SeriesHE((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          nan
+d          8.734
+e          nan
+<<U1>      <float64>
+>>> s.loc_max()
+a
+#end_SeriesHE-loc_max()
+
+#start_SeriesHE-loc_min()
+>>> s = sf.SeriesHE((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          nan
+d          8.734
+e          nan
+<<U1>      <float64>
+>>> s.loc_min()
+b
+#end_SeriesHE-loc_min()
+
+#start_SeriesHE-loc_searchsorted()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.loc_searchsorted(18)
+c
+#end_SeriesHE-loc_searchsorted()
+
+#start_SeriesHE-max()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.max()
+10
+#end_SeriesHE-max()
+
+#start_SeriesHE-mean()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.mean()
+6.666666666666667
+#end_SeriesHE-mean()
+
+#start_SeriesHE-median()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.median()
+8.0
+#end_SeriesHE-median()
+
+#start_SeriesHE-min()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.min()
+2
+#end_SeriesHE-min()
+
+#start_SeriesHE-notfalsy()
+>>> s = sf.SeriesHE((2, '', 19, 0, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b
+c          19
+d          0
+e          None
+<<U1>      <object>
+>>> s.notfalsy()
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          True
+d          False
+e          False
+<<U1>      <bool>
+#end_SeriesHE-notfalsy()
+
+#start_SeriesHE-notna()
+>>> s = sf.SeriesHE((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          nan
+d          8.734
+e          nan
+<<U1>      <float64>
+>>> s.notna()
+<SeriesHE>
+<Index>
+a          True
+b          True
+c          False
+d          True
+e          False
+<<U1>      <bool>
+#end_SeriesHE-notna()
+
+#start_SeriesHE-prod()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.prod()
+160
+#end_SeriesHE-prod()
+
+#start_SeriesHE-rank_dense()
+>>> s = sf.SeriesHE((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          0
+d          8
+<<U1>      <int64>
+>>> s.rank_dense()
+<SeriesHE>
+<Index>
+a          2
+b          1
+c          0
+d          2
+<<U1>      <int64>
+#end_SeriesHE-rank_dense()
+
+#start_SeriesHE-rank_max()
+>>> s = sf.SeriesHE((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          0
+d          8
+<<U1>      <int64>
+>>> s.rank_max()
+<SeriesHE>
+<Index>
+a          3
+b          1
+c          0
+d          3
+<<U1>      <int64>
+#end_SeriesHE-rank_max()
+
+#start_SeriesHE-rank_mean()
+>>> s = sf.SeriesHE((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          0
+d          8
+<<U1>      <int64>
+>>> s.rank_mean()
+<SeriesHE>
+<Index>
+a          2.5
+b          1.0
+c          0.0
+d          2.5
+<<U1>      <float64>
+#end_SeriesHE-rank_mean()
+
+#start_SeriesHE-rank_min()
+>>> s = sf.SeriesHE((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          0
+d          8
+<<U1>      <int64>
+>>> s.rank_min()
+<SeriesHE>
+<Index>
+a          2
+b          1
+c          0
+d          2
+<<U1>      <int64>
+#end_SeriesHE-rank_min()
+
+#start_SeriesHE-rank_ordinal()
+>>> s = sf.SeriesHE((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          0
+d          8
+<<U1>      <int64>
+>>> s.rank_ordinal()
+<SeriesHE>
+<Index>
+a          2
+b          1
+c          0
+d          3
+<<U1>      <int64>
+#end_SeriesHE-rank_ordinal()
+
+#start_SeriesHE-rehierarch()
+>>> s = sf.SeriesHE((3, 2, 8, 7), index=sf.IndexHierarchy.from_product((1, 2), ('a', 'b')))
+>>> s
+<SeriesHE>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+>>> s.rehierarch((1, 0))
+<SeriesHE>
+<IndexHierarchy>
+a                1       3
+a                2       8
+b                1       2
+b                2       7
+<<U1>            <int64> <int64>
+#end_SeriesHE-rehierarch()
+
+#start_SeriesHE-reindex()
+>>> s = sf.SeriesHE((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          0
+d          8
+<<U1>      <int64>
+>>> s.reindex(('d', 'f', 'e', 'c'), fill_value=-1)
+<SeriesHE>
+<Index>
+d          8
+f          -1
+e          -1
+c          0
+<<U1>      <int64>
+#end_SeriesHE-reindex()
+
+#start_SeriesHE-relabel()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> s.relabel(('x', 'y', 'z'))
+<SeriesHE>
+<Index>
+x          10
+y          2
+z          8
+<<U1>      <int64>
+>>> s.relabel(dict(a='x', b='y'))
+<SeriesHE>
+<Index>
+x          10
+y          2
+c          8
+<<U1>      <int64>
+>>> s.relabel(lambda l: f'+{l.upper()}+')
+<SeriesHE>
+<Index>
++A+        10
++B+        2
++C+        8
+<<U3>      <int64>
+#end_SeriesHE-relabel()
+
+#start_SeriesHE-relabel_flat()
+>>> s = sf.SeriesHE((3, 2, 8, 7), index=sf.IndexHierarchy.from_product((1, 2), ('a', 'b')))
+>>> s
+<SeriesHE>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+>>> s.relabel_flat()
+<SeriesHE>
+<Index>
+(1, 'a')   3
+(1, 'b')   2
+(2, 'a')   8
+(2, 'b')   7
+<object>   <int64>
+#end_SeriesHE-relabel_flat()
+
+#start_SeriesHE-relabel_level_add()
+>>> s = sf.SeriesHE((3, 2, 8, 7), index=sf.IndexHierarchy.from_product((1, 2), ('a', 'b')))
+>>> s
+<SeriesHE>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+>>> s.relabel_level_add('x')
+<SeriesHE>
+<IndexHierarchy>
+x                1       a     3
+x                1       b     2
+x                2       a     8
+x                2       b     7
+<<U1>            <int64> <<U1> <int64>
+#end_SeriesHE-relabel_level_add()
+
+#start_SeriesHE-relabel_level_drop()
+>>> s = sf.SeriesHE((3, 2, 8, 7), index=sf.IndexHierarchy.from_product((1, 2), ('a', 'b')))
+>>> s
+<SeriesHE>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+>>> s.iloc[:2].relabel_level_drop(1)
+<SeriesHE>
+<Index>
+a          3
+b          2
+<<U1>      <int64>
+#end_SeriesHE-relabel_level_drop()
+
+#start_SeriesHE-rename()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'), name='x')
+>>> s
+<SeriesHE: x>
+<Index>
+a             10
+b             2
+c             8
+<<U1>         <int64>
+>>> s.rename('y')
+<SeriesHE: y>
+<Index>
+a             10
+b             2
+c             8
+<<U1>         <int64>
+#end_SeriesHE-rename()
+
+#start_SeriesHE-roll()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.roll(2)
+<SeriesHE>
+<Index>
+a          34
+b          54
+c          2
+d          8
+e          19
+<<U1>      <int64>
+#end_SeriesHE-roll()
+
+#start_SeriesHE-sample()
+>>> s = sf.SeriesHE((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          nan
+d          8.734
+e          nan
+<<U1>      <float64>
+>>> s.sample(2, seed=0)
+<SeriesHE>
+<Index>
+a          10.235
+c          nan
+<<U1>      <float64>
+#end_SeriesHE-sample()
+
+#start_SeriesHE-shift()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.shift(2)
+<SeriesHE>
+<Index>
+a          nan
+b          nan
+c          2.0
+d          8.0
+e          19.0
+<<U1>      <float64>
+#end_SeriesHE-shift()
+
+#start_SeriesHE-sort_index()
+>>> s = sf.SeriesHE((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          0
+d          8
+<<U1>      <int64>
+>>> s.sort_index()
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          0
+d          8
+<<U1>      <int64>
+>>> s.sort_index(ascending=False)
+<SeriesHE>
+<Index>
+d          8
+c          0
+b          5
+a          8
+<<U1>      <int64>
+#end_SeriesHE-sort_index()
+
+#start_SeriesHE-sort_values()
+>>> s = sf.SeriesHE((8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          0
+d          8
+<<U1>      <int64>
+>>> s.sort_values()
+<SeriesHE>
+<Index>
+c          0
+b          5
+a          8
+d          8
+<<U1>      <int64>
+>>> s.sort_values(ascending=False)
+<SeriesHE>
+<Index>
+d          8
+a          8
+b          5
+c          0
+<<U1>      <int64>
+#end_SeriesHE-sort_values()
+
+#start_SeriesHE-std()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.std()
+3.39934634239519
+#end_SeriesHE-std()
+
+#start_SeriesHE-sum()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.sum()
+20
+#end_SeriesHE-sum()
+
+#start_SeriesHE-tail()
+>>> s = sf.SeriesHE((10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          nan
+d          8.734
+e          nan
+<<U1>      <float64>
+>>> s.tail(2)
+<SeriesHE>
+<Index>
+d          8.734
+e          nan
+<<U1>      <float64>
+#end_SeriesHE-tail()
+
+#start_SeriesHE-transpose()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.transpose()
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-transpose()
+
+#start_SeriesHE-unique()
+>>> s = sf.SeriesHE((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          None
+d          8
+<<U1>      <object>
+>>> s.unique()
+[8 5 None]
+#end_SeriesHE-unique()
+
+#start_SeriesHE-var()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.var()
+11.555555555555557
+#end_SeriesHE-var()
+
+#start_SeriesHE-__contains__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.__contains__('a')
+True
+#end_SeriesHE-__contains__()
+
+#start_SeriesHE-__iter__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.__iter__()
+<generator object Index.__iter__ at 0x7fe8c45c5d60>
+#end_SeriesHE-__iter__()
+
+#start_SeriesHE-__reversed__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.__reversed__()
+<reversed object at 0x7fe8c45d9340>
+#end_SeriesHE-__reversed__()
+
+#start_SeriesHE-get()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.get('a')
+10
+>>> s.get('z', -1)
+-1
+#end_SeriesHE-get()
+
+#start_SeriesHE-items()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.items())
+(('a', 10), ('b', 2), ('c', 8))
+#end_SeriesHE-items()
+
+#start_SeriesHE-keys()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.keys()
+<Index>
+a
+b
+c
+<<U1>
+#end_SeriesHE-keys()
+
+#start_SeriesHE-values
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.values
+[10  2  8]
+#end_SeriesHE-values
+
+#start_SeriesHE-interface
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.interface
+<Frame: SeriesHE>
+<Index>                              cls_name group                doc                  <<U18>
+<Index: signature>
+__init__(values, *, index, name, ... SeriesHE Constructor          Initializer. Args...
+from_concat(containers, *, index,... SeriesHE Constructor          Concatenate multi...
+from_concat_items(items, *, name,... SeriesHE Constructor          Produce a Series ...
+from_dict(mapping, *, dtype, name... SeriesHE Constructor          Series constructi...
+from_element(element, *, index, d... SeriesHE Constructor          Create a Series f...
+from_items(pairs, *, dtype, name,... SeriesHE Constructor          Series constructi...
+from_overlay(containers, *, index... SeriesHE Constructor          Return a new Seri...
+from_pandas(value, *, index, inde... SeriesHE Constructor          Given a Pandas Se...
+to_frame(axis, *, index, index_co... SeriesHE Exporter             Return a Frame vi...
+to_frame_go(axis, *, index, index... SeriesHE Exporter             Return FrameGO vi...
+to_frame_he(axis, *, index, index... SeriesHE Exporter             Return FrameHE vi...
+to_html(config, style_config)        SeriesHE Exporter             Return an HTML ta...
+to_html_datatables(fp, show, config) SeriesHE Exporter             Return a complete...
+to_pairs()                           SeriesHE Exporter             Return a tuple of...
+to_pandas()                          SeriesHE Exporter             Return a Pandas S...
+to_series()                          SeriesHE Exporter             Return a Series f...
+to_series_he()                       SeriesHE Exporter             Return a SeriesHE...
+...                                  ...      ...                  ...
+via_fill_value(fill_value).__le__... SeriesHE Accessor Fill Value
+via_fill_value(fill_value).__eq__... SeriesHE Accessor Fill Value
+via_fill_value(fill_value).__ne__... SeriesHE Accessor Fill Value
+via_fill_value(fill_value).__gt__... SeriesHE Accessor Fill Value
+via_fill_value(fill_value).__ge__... SeriesHE Accessor Fill Value
+via_fill_value(fill_value).__radd... SeriesHE Accessor Fill Value
+via_fill_value(fill_value).__rsub... SeriesHE Accessor Fill Value
+via_fill_value(fill_value).__rmul... SeriesHE Accessor Fill Value
+via_fill_value(fill_value).__rtru... SeriesHE Accessor Fill Value
+via_fill_value(fill_value).__rflo... SeriesHE Accessor Fill Value
+via_re(pattern, flags).search(pos... SeriesHE Accessor Regular ... Scan through stri...
+via_re(pattern, flags).match(pos,... SeriesHE Accessor Regular ... If zero or more c...
+via_re(pattern, flags).fullmatch(... SeriesHE Accessor Regular ... If the whole stri...
+via_re(pattern, flags).split(maxs... SeriesHE Accessor Regular ... Split string by t...
+via_re(pattern, flags).findall(po... SeriesHE Accessor Regular ... Return all non-ov...
+via_re(pattern, flags).sub(repl, ... SeriesHE Accessor Regular ... Return the string...
+via_re(pattern, flags).subn(repl,... SeriesHE Accessor Regular ... Perform the same ...
+<<U87>                               <<U8>    <<U27>               <<U83>
+#end_SeriesHE-interface
+
+#start_SeriesHE-__repr__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> repr(s)
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-__repr__()
+
+#start_SeriesHE-__str__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> str(s)
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-__str__()
+
+#start_SeriesHE-display()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.display()
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-display()
+
+#start_SeriesHE-display_tall()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.display_tall()
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-display_tall()
+
+#start_SeriesHE-display_wide()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.display_wide()
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-display_wide()
+
+#start_SeriesHE-assign[]()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.assign['c']('x')
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          x
+d          34
+e          54
+<<U1>      <object>
+>>> s.assign['c':]('x')
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          x
+d          x
+e          x
+<<U1>      <object>
+>>> s.assign[['a', 'd']](('x', 'y'))
+<SeriesHE>
+<Index>
+a          x
+b          8
+c          19
+d          y
+e          54
+<<U1>      <object>
+#end_SeriesHE-assign[]()
+
+#start_SeriesHE-assign[].apply()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.assign['c':].apply(lambda s: s / 100)
+<SeriesHE>
+<Index>
+a          2.0
+b          8.0
+c          0.19
+d          0.34
+e          0.54
+<<U1>      <float64>
+#end_SeriesHE-assign[].apply()
+
+#start_SeriesHE-assign.iloc[]()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.assign.iloc[2]('x')
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          x
+d          34
+e          54
+<<U1>      <object>
+>>> s.assign.iloc[2:]('x')
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          x
+d          x
+e          x
+<<U1>      <object>
+>>> s.assign.iloc[[0, 4]](('x', 'y'))
+<SeriesHE>
+<Index>
+a          x
+b          8
+c          19
+d          34
+e          y
+<<U1>      <object>
+#end_SeriesHE-assign.iloc[]()
+
+#start_SeriesHE-assign.iloc[].apply()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.assign.iloc[2:].apply(lambda s: s / 100)
+<SeriesHE>
+<Index>
+a          2.0
+b          8.0
+c          0.19
+d          0.34
+e          0.54
+<<U1>      <float64>
+#end_SeriesHE-assign.iloc[].apply()
+
+#start_SeriesHE-assign.loc[]()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.assign.loc['c']('x')
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          x
+d          34
+e          54
+<<U1>      <object>
+>>> s.assign.loc['c':]('x')
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          x
+d          x
+e          x
+<<U1>      <object>
+>>> s.assign.loc[['a', 'd']](('x', 'y'))
+<SeriesHE>
+<Index>
+a          x
+b          8
+c          19
+d          y
+e          54
+<<U1>      <object>
+#end_SeriesHE-assign.loc[]()
+
+#start_SeriesHE-assign.loc[].apply()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.assign.loc['c':].apply(lambda s: s / 100)
+<SeriesHE>
+<Index>
+a          2.0
+b          8.0
+c          0.19
+d          0.34
+e          0.54
+<<U1>      <float64>
+#end_SeriesHE-assign.loc[].apply()
+
+#start_SeriesHE-drop[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.drop['c']
+<SeriesHE>
+<Index>
+a          2
+b          8
+d          34
+e          54
+<<U1>      <int64>
+>>> s.drop['c':]
+<SeriesHE>
+<Index>
+a          2
+b          8
+<<U1>      <int64>
+>>> s.drop[['a', 'd']]
+<SeriesHE>
+<Index>
+b          8
+c          19
+e          54
+<<U1>      <int64>
+#end_SeriesHE-drop[]
+
+#start_SeriesHE-drop.iloc[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.drop.iloc[2]
+<SeriesHE>
+<Index>
+a          2
+b          8
+d          34
+e          54
+<<U1>      <int64>
+>>> s.drop.iloc[2:]
+<SeriesHE>
+<Index>
+a          2
+b          8
+<<U1>      <int64>
+>>> s.drop.iloc[[0, 4]]
+<SeriesHE>
+<Index>
+b          8
+c          19
+d          34
+<<U1>      <int64>
+#end_SeriesHE-drop.iloc[]
+
+#start_SeriesHE-drop.loc[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.drop.loc['c']
+<SeriesHE>
+<Index>
+a          2
+b          8
+d          34
+e          54
+<<U1>      <int64>
+>>> s.drop.loc['c':]
+<SeriesHE>
+<Index>
+a          2
+b          8
+<<U1>      <int64>
+>>> s.drop.loc[['a', 'd']]
+<SeriesHE>
+<Index>
+b          8
+c          19
+e          54
+<<U1>      <int64>
+#end_SeriesHE-drop.loc[]
+
+#start_SeriesHE-mask[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.mask['c']
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          False
+e          False
+<<U1>      <bool>
+>>> s.mask['c':]
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          True
+e          True
+<<U1>      <bool>
+>>> s.mask[['a', 'd']]
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+d          True
+e          False
+<<U1>      <bool>
+#end_SeriesHE-mask[]
+
+#start_SeriesHE-mask.iloc[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.mask.iloc[2]
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          False
+e          False
+<<U1>      <bool>
+>>> s.mask.iloc[2:]
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          True
+e          True
+<<U1>      <bool>
+>>> s.mask.iloc[[0, 4]]
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+d          False
+e          True
+<<U1>      <bool>
+#end_SeriesHE-mask.iloc[]
+
+#start_SeriesHE-mask.loc[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.mask.loc['c']
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          False
+e          False
+<<U1>      <bool>
+>>> s.mask.loc['c':]
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          True
+e          True
+<<U1>      <bool>
+>>> s.mask.loc[['a', 'd']]
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+d          True
+e          False
+<<U1>      <bool>
+#end_SeriesHE-mask.loc[]
+
+#start_SeriesHE-masked_array[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.masked_array['c']
+[2 8 -- 34 54]
+>>> s.masked_array['c':]
+[2 8 -- -- --]
+>>> s.masked_array[['a', 'd']]
+[-- 8 19 -- 54]
+#end_SeriesHE-masked_array[]
+
+#start_SeriesHE-masked_array.iloc[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.masked_array.iloc[2]
+[2 8 -- 34 54]
+>>> s.masked_array.iloc[2:]
+[2 8 -- -- --]
+>>> s.masked_array.iloc[[0, 4]]
+[-- 8 19 34 --]
+#end_SeriesHE-masked_array.iloc[]
+
+#start_SeriesHE-masked_array.loc[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.masked_array.loc['c']
+[2 8 -- 34 54]
+>>> s.masked_array.loc['c':]
+[2 8 -- -- --]
+>>> s.masked_array.loc[['a', 'd']]
+[-- 8 19 -- 54]
+#end_SeriesHE-masked_array.loc[]
+
+#start_SeriesHE-[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s['c']
+19
+>>> s['c':]
+<SeriesHE>
+<Index>
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s[['a', 'd']]
+<SeriesHE>
+<Index>
+a          2
+d          34
+<<U1>      <int64>
+#end_SeriesHE-[]
+
+#start_SeriesHE-iloc[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iloc[2]
+19
+>>> s.iloc[2:]
+<SeriesHE>
+<Index>
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.iloc[[0, 4]]
+<SeriesHE>
+<Index>
+a          2
+e          54
+<<U1>      <int64>
+#end_SeriesHE-iloc[]
+
+#start_SeriesHE-loc[]
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.loc['c']
+19
+>>> s.loc['c':]
+<SeriesHE>
+<Index>
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.loc[['a', 'd']]
+<SeriesHE>
+<Index>
+a          2
+d          34
+<<U1>      <int64>
+#end_SeriesHE-loc[]
+
+#start_SeriesHE-iter_element()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element())
+(2, 8, 19, 34, 54)
+#end_SeriesHE-iter_element()
+
+#start_SeriesHE-iter_element().apply()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_element().apply(lambda e: e > 10)
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        True
+<<U1>    <bool>
+#end_SeriesHE-iter_element().apply()
+
+#start_SeriesHE-iter_element().apply_iter()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element().apply_iter(lambda e: e > 10))
+(False, False, True, True, True)
+#end_SeriesHE-iter_element().apply_iter()
+
+#start_SeriesHE-iter_element().apply_iter_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element().apply_iter_items(lambda e: e > 10))
+(('a', False), ('b', False), ('c', True), ('d', True), ('e', True))
+#end_SeriesHE-iter_element().apply_iter_items()
+
+#start_SeriesHE-iter_element().apply_pool()
+>>> def func(e): return e > 10
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_element().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        True
+<<U1>    <bool>
+#end_SeriesHE-iter_element().apply_pool()
+
+#start_SeriesHE-iter_element().map_all()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> s.iter_element().map_all({2: 200, 10: -1, 8: 45})
+<Series>
+<Index>
+a        -1
+b        200
+c        45
+<<U1>    <int64>
+#end_SeriesHE-iter_element().map_all()
+
+#start_SeriesHE-iter_element().map_all_iter()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element().map_all_iter({2: 200, 10: -1, 8: 45}))
+(-1, 200, 45)
+#end_SeriesHE-iter_element().map_all_iter()
+
+#start_SeriesHE-iter_element().map_all_iter_items()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element().map_all_iter_items({2: 200, 10: -1, 8: 45}))
+(('a', -1), ('b', 200), ('c', 45))
+#end_SeriesHE-iter_element().map_all_iter_items()
+
+#start_SeriesHE-iter_element().map_any()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> s.iter_element().map_any({10: -1, 8: 45})
+<Series>
+<Index>
+a        -1
+b        2
+c        45
+<<U1>    <int64>
+#end_SeriesHE-iter_element().map_any()
+
+#start_SeriesHE-iter_element().map_any_iter()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element().map_any_iter({10: -1, 8: 45}))
+(-1, 2, 45)
+#end_SeriesHE-iter_element().map_any_iter()
+
+#start_SeriesHE-iter_element().map_any_iter_items()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element().map_any_iter_items({10: -1, 8: 45}))
+(('a', -1), ('b', 2), ('c', 45))
+#end_SeriesHE-iter_element().map_any_iter_items()
+
+#start_SeriesHE-iter_element().map_fill()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> s.iter_element().map_fill({10: -1, 8: 45}, fill_value=np.nan)
+<Series>
+<Index>
+a        -1.0
+b        nan
+c        45.0
+<<U1>    <float64>
+#end_SeriesHE-iter_element().map_fill()
+
+#start_SeriesHE-iter_element().map_fill_iter()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element().map_fill_iter({10: -1, 8: 45}, fill_value=np.nan))
+(-1, nan, 45)
+#end_SeriesHE-iter_element().map_fill_iter()
+
+#start_SeriesHE-iter_element().map_fill_iter_items()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element().map_fill_iter_items({10: -1, 8: 45}, fill_value=np.nan))
+(('a', -1), ('b', nan), ('c', 45))
+#end_SeriesHE-iter_element().map_fill_iter_items()
+
+#start_SeriesHE-iter_element_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element_items())
+(('a', 2), ('b', 8), ('c', 19), ('d', 34), ('e', 54))
+#end_SeriesHE-iter_element_items()
+
+#start_SeriesHE-iter_element_items().apply()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_element_items().apply(lambda l, e: e > 10 if l != 'c' else 0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+d        1
+e        1
+<<U1>    <int64>
+#end_SeriesHE-iter_element_items().apply()
+
+#start_SeriesHE-iter_element_items().apply_iter()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element_items().apply_iter(lambda l, e: e > 10 and l != 'e'))
+(False, False, True, True, False)
+#end_SeriesHE-iter_element_items().apply_iter()
+
+#start_SeriesHE-iter_element_items().apply_iter_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_element_items().apply_iter_items(lambda l, e: e > 10 and l != 'e'))
+(('a', False), ('b', False), ('c', True), ('d', True), ('e', False))
+#end_SeriesHE-iter_element_items().apply_iter_items()
+
+#start_SeriesHE-iter_element_items().apply_pool()
+>>> def func(pair): return pair[1] > 10 and pair[0] != 'e'
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_element_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        False
+b        False
+c        True
+d        True
+e        False
+<<U1>    <bool>
+#end_SeriesHE-iter_element_items().apply_pool()
+
+#start_SeriesHE-iter_element_items().map_all()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> s.iter_element_items().map_all({('b', 2): 200, ('a', 10): -1, ('c', 8): 45})
+<Series>
+<Index>
+a        -1
+b        200
+c        45
+<<U1>    <int64>
+#end_SeriesHE-iter_element_items().map_all()
+
+#start_SeriesHE-iter_element_items().map_all_iter()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element_items().map_all_iter({('b', 2): 200, ('a', 10): -1, ('c', 8): 45}))
+(-1, 200, 45)
+#end_SeriesHE-iter_element_items().map_all_iter()
+
+#start_SeriesHE-iter_element_items().map_all_iter_items()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element_items().map_all_iter_items({('b', 2): 200, ('a', 10): -1, ('c', 8): 45}))
+(('a', -1), ('b', 200), ('c', 45))
+#end_SeriesHE-iter_element_items().map_all_iter_items()
+
+#start_SeriesHE-iter_element_items().map_any()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> s.iter_element_items().map_any({('a', 10): -1, ('c', 8): 45})
+<Series>
+<Index>
+a        -1
+b        2
+c        45
+<<U1>    <int64>
+#end_SeriesHE-iter_element_items().map_any()
+
+#start_SeriesHE-iter_element_items().map_any_iter()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element_items().map_any_iter({('a', 10): -1, ('c', 8): 45}))
+(-1, 2, 45)
+#end_SeriesHE-iter_element_items().map_any_iter()
+
+#start_SeriesHE-iter_element_items().map_any_iter_items()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element_items().map_any_iter_items({('a', 10): -1, ('c', 8): 45}))
+(('a', -1), ('b', 2), ('c', 45))
+#end_SeriesHE-iter_element_items().map_any_iter_items()
+
+#start_SeriesHE-iter_element_items().map_fill()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> s.iter_element_items().map_fill({('a', 10): -1, ('c', 8): 45}, fill_value=np.nan)
+<Series>
+<Index>
+a        -1.0
+b        nan
+c        45.0
+<<U1>    <float64>
+#end_SeriesHE-iter_element_items().map_fill()
+
+#start_SeriesHE-iter_element_items().map_fill_iter()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element_items().map_fill_iter({('a', 10): -1, ('c', 8): 45}, fill_value=np.nan))
+(-1, nan, 45)
+#end_SeriesHE-iter_element_items().map_fill_iter()
+
+#start_SeriesHE-iter_element_items().map_fill_iter_items()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+>>> tuple(s.iter_element_items().map_fill_iter_items({('a', 10): -1, ('c', 8): 45}, fill_value=np.nan))
+(('a', -1), ('b', nan), ('c', 45))
+#end_SeriesHE-iter_element_items().map_fill_iter_items()
+
+#start_SeriesHE-iter_group()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group())
+(<SeriesHE>
+<Index>
+a          -2
+d          -2
+<<U1>      <int64>, <SeriesHE>
+<Index>
+b          8
+e          8
+<<U1>      <int64>, <SeriesHE>
+<Index>
+c          19
+<<U1>      <int64>)
+#end_SeriesHE-iter_group()
+
+#start_SeriesHE-iter_group().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group().apply(lambda s: s.sum())
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_SeriesHE-iter_group().apply()
+
+#start_SeriesHE-iter_group().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group().apply_iter(lambda s: s.sum()))
+(-4, 16, 19)
+#end_SeriesHE-iter_group().apply_iter()
+
+#start_SeriesHE-iter_group().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group().apply_iter_items(lambda s: s.sum()))
+((-2, -4), (8, 16), (19, 19))
+#end_SeriesHE-iter_group().apply_iter_items()
+
+#start_SeriesHE-iter_group().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_SeriesHE-iter_group().apply_pool()
+
+#start_SeriesHE-iter_group_array()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array())
+(array([-2, -2]), array([8, 8]), array([19]))
+#end_SeriesHE-iter_group_array()
+
+#start_SeriesHE-iter_group_array().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_array().apply(lambda s: s.sum())
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_SeriesHE-iter_group_array().apply()
+
+#start_SeriesHE-iter_group_array().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array().apply_iter(lambda s: s.sum()))
+(-4, 16, 19)
+#end_SeriesHE-iter_group_array().apply_iter()
+
+#start_SeriesHE-iter_group_array().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array().apply_iter_items(lambda s: s.sum()))
+((-2, -4), (8, 16), (19, 19))
+#end_SeriesHE-iter_group_array().apply_iter_items()
+
+#start_SeriesHE-iter_group_array().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_array().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_SeriesHE-iter_group_array().apply_pool()
+
+#start_SeriesHE-iter_group_array_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array_items())
+((-2, array([-2, -2])), (8, array([8, 8])), (19, array([19])))
+#end_SeriesHE-iter_group_array_items()
+
+#start_SeriesHE-iter_group_array_items().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_array_items().apply(lambda l, s: s.sum() if l != 8 else s.shape)
+<Series>
+<Index>
+-2       -4
+8        (2,)
+19       19
+<int64>  <object>
+#end_SeriesHE-iter_group_array_items().apply()
+
+#start_SeriesHE-iter_group_array_items().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array_items().apply_iter(lambda l, s: s.sum() if l != 8 else -1))
+(-4, -1, 19)
+#end_SeriesHE-iter_group_array_items().apply_iter()
+
+#start_SeriesHE-iter_group_array_items().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_array_items().apply_iter_items(lambda l, s: s.sum() if l != 8 else -1))
+((-2, -4), (8, -1), (19, 19))
+#end_SeriesHE-iter_group_array_items().apply_iter_items()
+
+#start_SeriesHE-iter_group_array_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_array_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_SeriesHE-iter_group_array_items().apply_pool()
+
+#start_SeriesHE-iter_group_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_items())
+((-2, <SeriesHE>
+<Index>
+a          -2
+d          -2
+<<U1>      <int64>), (8, <SeriesHE>
+<Index>
+b          8
+e          8
+<<U1>      <int64>), (19, <SeriesHE>
+<Index>
+c          19
+<<U1>      <int64>))
+#end_SeriesHE-iter_group_items()
+
+#start_SeriesHE-iter_group_items().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_items().apply(lambda l, s: s.sum() if l != 8 else s.shape)
+<Series>
+<Index>
+-2       -4
+8        (2,)
+19       19
+<int64>  <object>
+#end_SeriesHE-iter_group_items().apply()
+
+#start_SeriesHE-iter_group_items().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_items().apply_iter(lambda l, s: s.sum() if l != 8 else -1))
+(-4, -1, 19)
+#end_SeriesHE-iter_group_items().apply_iter()
+
+#start_SeriesHE-iter_group_items().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_items().apply_iter_items(lambda l, s: s.sum() if l != 8 else -1))
+((-2, -4), (8, -1), (19, 19))
+#end_SeriesHE-iter_group_items().apply_iter_items()
+
+#start_SeriesHE-iter_group_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+-2       -4
+8        16
+19       19
+<int64>  <int64>
+#end_SeriesHE-iter_group_items().apply_pool()
+
+#start_SeriesHE-iter_group_labels()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.iter_group_labels())
+(<SeriesHE>
+<Index>
+a          10
+<<U1>      <int64>, <SeriesHE>
+<Index>
+b          2
+<<U1>      <int64>, <SeriesHE>
+<Index>
+c          8
+<<U1>      <int64>)
+#end_SeriesHE-iter_group_labels()
+
+#start_SeriesHE-iter_group_labels().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels().apply(lambda s: s.sum())
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_SeriesHE-iter_group_labels().apply()
+
+#start_SeriesHE-iter_group_labels().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels().apply_iter(lambda s: s.sum()))
+(-2, 8, 19, -2, 8)
+#end_SeriesHE-iter_group_labels().apply_iter()
+
+#start_SeriesHE-iter_group_labels().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels().apply_iter_items(lambda s: s.sum()))
+(('a', -2), ('b', 8), ('c', 19), ('d', -2), ('e', 8))
+#end_SeriesHE-iter_group_labels().apply_iter_items()
+
+#start_SeriesHE-iter_group_labels().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_SeriesHE-iter_group_labels().apply_pool()
+
+#start_SeriesHE-iter_group_labels_array()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.iter_group_labels_array())
+(array([10]), array([2]), array([8]))
+#end_SeriesHE-iter_group_labels_array()
+
+#start_SeriesHE-iter_group_labels_array().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_array().apply(lambda s: s.sum())
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_SeriesHE-iter_group_labels_array().apply()
+
+#start_SeriesHE-iter_group_labels_array().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_array().apply_iter(lambda s: s.sum()))
+(-2, 8, 19, -2, 8)
+#end_SeriesHE-iter_group_labels_array().apply_iter()
+
+#start_SeriesHE-iter_group_labels_array().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_array().apply_iter_items(lambda s: s.sum()))
+(('a', -2), ('b', 8), ('c', 19), ('d', -2), ('e', 8))
+#end_SeriesHE-iter_group_labels_array().apply_iter_items()
+
+#start_SeriesHE-iter_group_labels_array().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_array().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_SeriesHE-iter_group_labels_array().apply_pool()
+
+#start_SeriesHE-iter_group_labels_array_items()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.iter_group_labels_array_items())
+(('a', array([10])), ('b', array([2])), ('c', array([8])))
+#end_SeriesHE-iter_group_labels_array_items()
+
+#start_SeriesHE-iter_group_labels_array_items().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_array_items().apply(lambda l, s: s.sum() if l != 8 else s.shape)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_SeriesHE-iter_group_labels_array_items().apply()
+
+#start_SeriesHE-iter_group_labels_array_items().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_array_items().apply_iter(lambda l, s: s.sum() if l != 8 else -1))
+(-2, 8, 19, -2, 8)
+#end_SeriesHE-iter_group_labels_array_items().apply_iter()
+
+#start_SeriesHE-iter_group_labels_array_items().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_array_items().apply_iter_items(lambda l, s: s.sum() if l != 8 else -1))
+(('a', -2), ('b', 8), ('c', 19), ('d', -2), ('e', 8))
+#end_SeriesHE-iter_group_labels_array_items().apply_iter_items()
+
+#start_SeriesHE-iter_group_labels_array_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_array_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_SeriesHE-iter_group_labels_array_items().apply_pool()
+
+#start_SeriesHE-iter_group_labels_items()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.iter_group_labels_items())
+(('a', <SeriesHE>
+<Index>
+a          10
+<<U1>      <int64>), ('b', <SeriesHE>
+<Index>
+b          2
+<<U1>      <int64>), ('c', <SeriesHE>
+<Index>
+c          8
+<<U1>      <int64>))
+#end_SeriesHE-iter_group_labels_items()
+
+#start_SeriesHE-iter_group_labels_items().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_items().apply(lambda l, s: s.sum() if l != 8 else s.shape)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_SeriesHE-iter_group_labels_items().apply()
+
+#start_SeriesHE-iter_group_labels_items().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_items().apply_iter(lambda l, s: s.sum() if l != 8 else -1))
+(-2, 8, 19, -2, 8)
+#end_SeriesHE-iter_group_labels_items().apply_iter()
+
+#start_SeriesHE-iter_group_labels_items().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_labels_items().apply_iter_items(lambda l, s: s.sum() if l != 8 else -1))
+(('a', -2), ('b', 8), ('c', 19), ('d', -2), ('e', 8))
+#end_SeriesHE-iter_group_labels_items().apply_iter_items()
+
+#start_SeriesHE-iter_group_labels_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_labels_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+a        -2
+b        8
+c        19
+d        -2
+e        8
+<<U1>    <int64>
+#end_SeriesHE-iter_group_labels_items().apply_pool()
+
+#start_SeriesHE-iter_window()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window(size=3, step=1))
+(<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+<<U1>      <int64>, <SeriesHE>
+<Index>
+b          8
+c          19
+d          34
+<<U1>      <int64>, <SeriesHE>
+<Index>
+c          19
+d          34
+e          54
+<<U1>      <int64>)
+#end_SeriesHE-iter_window()
+
+#start_SeriesHE-iter_window().apply()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window(size=3, step=1).apply(lambda s: s.sum())
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_SeriesHE-iter_window().apply()
+
+#start_SeriesHE-iter_window().apply_iter()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window(size=3, step=1).apply_iter(lambda s: s.sum()))
+(29, 61, 107)
+#end_SeriesHE-iter_window().apply_iter()
+
+#start_SeriesHE-iter_window().apply_iter_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window(size=3, step=1).apply_iter_items(lambda s: s.sum()))
+(('c', 29), ('d', 61), ('e', 107))
+#end_SeriesHE-iter_window().apply_iter_items()
+
+#start_SeriesHE-iter_window().apply_pool()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window(size=3, step=1).apply_pool(lambda s: s.sum(), use_threads=True)
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_SeriesHE-iter_window().apply_pool()
+
+#start_SeriesHE-iter_window_array()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array(size=3, step=1))
+(array([ 2,  8, 19]), array([ 8, 19, 34]), array([19, 34, 54]))
+#end_SeriesHE-iter_window_array()
+
+#start_SeriesHE-iter_window_array().apply()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_array(size=3, step=1).apply(lambda s: s.sum())
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_SeriesHE-iter_window_array().apply()
+
+#start_SeriesHE-iter_window_array().apply_iter()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array(size=3, step=1).apply_iter(lambda s: s.sum()))
+(29, 61, 107)
+#end_SeriesHE-iter_window_array().apply_iter()
+
+#start_SeriesHE-iter_window_array().apply_iter_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array(size=3, step=1).apply_iter_items(lambda s: s.sum()))
+(('c', 29), ('d', 61), ('e', 107))
+#end_SeriesHE-iter_window_array().apply_iter_items()
+
+#start_SeriesHE-iter_window_array().apply_pool()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_array(size=3, step=1).apply_pool(lambda s: s.sum(), use_threads=True)
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_SeriesHE-iter_window_array().apply_pool()
+
+#start_SeriesHE-iter_window_array_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array_items(size=3, step=1))
+(('c', array([ 2,  8, 19])), ('d', array([ 8, 19, 34])), ('e', array([19, 34, 54])))
+#end_SeriesHE-iter_window_array_items()
+
+#start_SeriesHE-iter_window_array_items().apply()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_array_items(size=3, step=1).apply(lambda l, s: s.sum() if l != 'd' else -1)
+<Series>
+<Index>
+c        29
+d        -1
+e        107
+<<U1>    <int64>
+#end_SeriesHE-iter_window_array_items().apply()
+
+#start_SeriesHE-iter_window_array_items().apply_iter()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array_items(size=3, step=1).apply_iter(lambda l, s: s.sum() if l != 'd' else -1))
+(29, -1, 107)
+#end_SeriesHE-iter_window_array_items().apply_iter()
+
+#start_SeriesHE-iter_window_array_items().apply_iter_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_array_items(size=3, step=1).apply_iter_items(lambda l, s: s.sum() if l != 'd' else -1))
+(('c', 29), ('d', -1), ('e', 107))
+#end_SeriesHE-iter_window_array_items().apply_iter_items()
+
+#start_SeriesHE-iter_window_array_items().apply_pool()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_array_items(size=3, step=1).apply_pool(lambda pair: pair[1].sum(), use_threads=True)
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_SeriesHE-iter_window_array_items().apply_pool()
+
+#start_SeriesHE-iter_window_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_items(size=3, step=1))
+(('c', <SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+<<U1>      <int64>), ('d', <SeriesHE>
+<Index>
+b          8
+c          19
+d          34
+<<U1>      <int64>), ('e', <SeriesHE>
+<Index>
+c          19
+d          34
+e          54
+<<U1>      <int64>))
+#end_SeriesHE-iter_window_items()
+
+#start_SeriesHE-iter_window_items().apply()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_items(size=3, step=1).apply(lambda l, s: s.sum() if l != 'd' else -1)
+<Series>
+<Index>
+c        29
+d        -1
+e        107
+<<U1>    <int64>
+#end_SeriesHE-iter_window_items().apply()
+
+#start_SeriesHE-iter_window_items().apply_iter()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_items(size=3, step=1).apply_iter(lambda l, s: s.sum() if l != 'd' else -1))
+(29, -1, 107)
+#end_SeriesHE-iter_window_items().apply_iter()
+
+#start_SeriesHE-iter_window_items().apply_iter_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_window_items(size=3, step=1).apply_iter_items(lambda l, s: s.sum() if l != 'd' else -1))
+(('c', 29), ('d', -1), ('e', 107))
+#end_SeriesHE-iter_window_items().apply_iter_items()
+
+#start_SeriesHE-iter_window_items().apply_pool()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_window_items(size=3, step=1).apply_pool(lambda pair: pair[1].sum(), use_threads=True)
+<Series>
+<Index>
+c        29
+d        61
+e        107
+<<U1>    <int64>
+#end_SeriesHE-iter_window_items().apply_pool()
+
+#start_SeriesHE-__add__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s + 8
+<SeriesHE>
+<Index>
+a          18
+b          10
+c          16
+<<U1>      <int64>
+>>> s + s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          nan
+b          4.0
+c          16.0
+<<U1>      <float64>
+#end_SeriesHE-__add__()
+
+#start_SeriesHE-__and__()
+>>> s = sf.SeriesHE((False, False, True), index=('a', 'b', 'c'))
+>>> s & True
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+<<U1>      <bool>
+>>> s & (True, False, True)
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+<<U1>      <bool>
+#end_SeriesHE-__and__()
+
+#start_SeriesHE-__eq__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s == 8
+False
+>>> s == s.reindex(('c', 'b'))
+False
+#end_SeriesHE-__eq__()
+
+#start_SeriesHE-__floordiv__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s // 8
+<SeriesHE>
+<Index>
+a          1
+b          0
+c          1
+<<U1>      <int64>
+>>> s // s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          nan
+b          1.0
+c          1.0
+<<U1>      <float64>
+#end_SeriesHE-__floordiv__()
+
+#start_SeriesHE-__ge__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s >= 8
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          True
+<<U1>      <bool>
+>>> s >= s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          True
+<<U1>      <bool>
+#end_SeriesHE-__ge__()
+
+#start_SeriesHE-__gt__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s > 8
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+<<U1>      <bool>
+>>> s > s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          False
+<<U1>      <bool>
+#end_SeriesHE-__gt__()
+
+#start_SeriesHE-__le__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s <= 8
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          True
+<<U1>      <bool>
+>>> s <= s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          True
+<<U1>      <bool>
+#end_SeriesHE-__le__()
+
+#start_SeriesHE-__lt__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s < 8
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          False
+<<U1>      <bool>
+>>> s < s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          False
+<<U1>      <bool>
+#end_SeriesHE-__lt__()
+
+#start_SeriesHE-__matmul__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s @ (3, 0, 4)
+62
+#end_SeriesHE-__matmul__()
+
+#start_SeriesHE-__mod__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s % 8
+<SeriesHE>
+<Index>
+a          2
+b          2
+c          0
+<<U1>      <int64>
+>>> s % s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          nan
+b          0.0
+c          0.0
+<<U1>      <float64>
+#end_SeriesHE-__mod__()
+
+#start_SeriesHE-__mul__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s * 8
+<SeriesHE>
+<Index>
+a          80
+b          16
+c          64
+<<U1>      <int64>
+>>> s * s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          nan
+b          4.0
+c          64.0
+<<U1>      <float64>
+#end_SeriesHE-__mul__()
+
+#start_SeriesHE-__ne__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s != 8
+True
+>>> s != s.reindex(('c', 'b'))
+True
+#end_SeriesHE-__ne__()
+
+#start_SeriesHE-__or__()
+>>> s = sf.SeriesHE((False, False, True), index=('a', 'b', 'c'))
+>>> s | True
+<SeriesHE>
+<Index>
+a          True
+b          True
+c          True
+<<U1>      <bool>
+>>> s | (True, False, True)
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          True
+<<U1>      <bool>
+#end_SeriesHE-__or__()
+
+#start_SeriesHE-__pow__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s ** 8
+<SeriesHE>
+<Index>
+a          100000000
+b          256
+c          16777216
+<<U1>      <int64>
+>>> s ** s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          nan
+b          4.0
+c          16777216.0
+<<U1>      <float64>
+#end_SeriesHE-__pow__()
+
+#start_SeriesHE-__radd__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> 8 + s
+<SeriesHE>
+<Index>
+a          18
+b          10
+c          16
+<<U1>      <int64>
+#end_SeriesHE-__radd__()
+
+#start_SeriesHE-__rfloordiv__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> 8 // s
+<SeriesHE>
+<Index>
+a          0
+b          4
+c          1
+<<U1>      <int64>
+#end_SeriesHE-__rfloordiv__()
+
+#start_SeriesHE-__rmatmul__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s @ (3, 0, 4)
+62
+#end_SeriesHE-__rmatmul__()
+
+#start_SeriesHE-__rmul__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> 8 * s
+<SeriesHE>
+<Index>
+a          80
+b          16
+c          64
+<<U1>      <int64>
+#end_SeriesHE-__rmul__()
+
+#start_SeriesHE-__rshift__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s >> 1
+<SeriesHE>
+<Index>
+a          5
+b          1
+c          4
+<<U1>      <int64>
+#end_SeriesHE-__rshift__()
+
+#start_SeriesHE-__rsub__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> 8 - s
+<SeriesHE>
+<Index>
+a          -2
+b          6
+c          0
+<<U1>      <int64>
+#end_SeriesHE-__rsub__()
+
+#start_SeriesHE-__rtruediv__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> 8 / s
+<SeriesHE>
+<Index>
+a          0.8
+b          4.0
+c          1.0
+<<U1>      <float64>
+#end_SeriesHE-__rtruediv__()
+
+#start_SeriesHE-__sub__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s - 8
+<SeriesHE>
+<Index>
+a          2
+b          -6
+c          0
+<<U1>      <int64>
+>>> s - s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          nan
+b          0.0
+c          0.0
+<<U1>      <float64>
+#end_SeriesHE-__sub__()
+
+#start_SeriesHE-__truediv__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s / 8
+<SeriesHE>
+<Index>
+a          1.25
+b          0.25
+c          1.0
+<<U1>      <float64>
+>>> s / s.reindex(('c', 'b'))
+<SeriesHE>
+<Index>
+a          nan
+b          1.0
+c          1.0
+<<U1>      <float64>
+#end_SeriesHE-__truediv__()
+
+#start_SeriesHE-__xor__()
+>>> s = sf.SeriesHE((False, False, True), index=('a', 'b', 'c'))
+>>> s ^ True
+<SeriesHE>
+<Index>
+a          True
+b          True
+c          False
+<<U1>      <bool>
+>>> s ^ (True, False, True)
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+<<U1>      <bool>
+#end_SeriesHE-__xor__()
+
+#start_SeriesHE-__abs__()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> abs(s)
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          2
+e          8
+<<U1>      <int64>
+#end_SeriesHE-__abs__()
+
+#start_SeriesHE-__invert__()
+>>> s = sf.SeriesHE((False, False, True), index=('a', 'b', 'c'))
+>>> ~s
+<SeriesHE>
+<Index>
+a          True
+b          True
+c          False
+<<U1>      <bool>
+#end_SeriesHE-__invert__()
+
+#start_SeriesHE-__neg__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> -s
+<SeriesHE>
+<Index>
+a          -10
+b          -2
+c          -8
+<<U1>      <int64>
+#end_SeriesHE-__neg__()
+
+#start_SeriesHE-__pos__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> +s
+<SeriesHE>
+<Index>
+a          10
+b          2
+c          8
+<<U1>      <int64>
+#end_SeriesHE-__pos__()
+
+#start_SeriesHE-via_dt.year
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.year
+<SeriesHE>
+<Index>
+a          1517
+b          1517
+c          1517
+d          1517
+e          1517
+<<U1>      <int64>
+#end_SeriesHE-via_dt.year
+
+#start_SeriesHE-via_dt.month
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.month
+<SeriesHE>
+<Index>
+a          1
+b          4
+c          12
+d          6
+e          10
+<<U1>      <int64>
+#end_SeriesHE-via_dt.month
+
+#start_SeriesHE-via_dt.day
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.day
+<SeriesHE>
+<Index>
+a          1
+b          1
+c          31
+d          30
+e          1
+<<U1>      <int64>
+#end_SeriesHE-via_dt.day
+
+#start_SeriesHE-via_dt.hour
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.hour
+<SeriesHE>
+<Index>
+a          0
+b          0
+c          0
+d          0
+e          0
+<<U1>      <int64>
+#end_SeriesHE-via_dt.hour
+
+#start_SeriesHE-via_dt.minute
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.minute
+<SeriesHE>
+<Index>
+a          0
+b          0
+c          0
+d          0
+e          0
+<<U1>      <int64>
+#end_SeriesHE-via_dt.minute
+
+#start_SeriesHE-via_dt.second
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.second
+<SeriesHE>
+<Index>
+a          0
+b          0
+c          0
+d          0
+e          0
+<<U1>      <int64>
+#end_SeriesHE-via_dt.second
+
+#start_SeriesHE-via_dt.weekday()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.weekday()
+<SeriesHE>
+<Index>
+a          0
+b          6
+c          0
+d          5
+e          0
+<<U1>      <int64>
+#end_SeriesHE-via_dt.weekday()
+
+#start_SeriesHE-via_dt.quarter()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.quarter()
+<SeriesHE>
+<Index>
+a          1
+b          2
+c          4
+d          2
+e          4
+<<U1>      <int64>
+#end_SeriesHE-via_dt.quarter()
+
+#start_SeriesHE-via_dt.is_month_end()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_month_end()
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          True
+e          False
+<<U1>      <bool>
+#end_SeriesHE-via_dt.is_month_end()
+
+#start_SeriesHE-via_dt.is_month_start()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_month_start()
+<SeriesHE>
+<Index>
+a          True
+b          True
+c          False
+d          False
+e          True
+<<U1>      <bool>
+#end_SeriesHE-via_dt.is_month_start()
+
+#start_SeriesHE-via_dt.is_year_end()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_year_end()
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          False
+e          False
+<<U1>      <bool>
+#end_SeriesHE-via_dt.is_year_end()
+
+#start_SeriesHE-via_dt.is_year_start()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_year_start()
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+d          False
+e          False
+<<U1>      <bool>
+#end_SeriesHE-via_dt.is_year_start()
+
+#start_SeriesHE-via_dt.is_quarter_end()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_quarter_end()
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          True
+e          False
+<<U1>      <bool>
+#end_SeriesHE-via_dt.is_quarter_end()
+
+#start_SeriesHE-via_dt.is_quarter_start()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.is_quarter_start()
+<SeriesHE>
+<Index>
+a          True
+b          True
+c          False
+d          False
+e          True
+<<U1>      <bool>
+#end_SeriesHE-via_dt.is_quarter_start()
+
+#start_SeriesHE-via_dt.timetuple()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.timetuple()
+<SeriesHE>
+<Index>
+a          time.struct_time(...
+b          time.struct_time(...
+c          time.struct_time(...
+d          time.struct_time(...
+e          time.struct_time(...
+<<U1>      <object>
+#end_SeriesHE-via_dt.timetuple()
+
+#start_SeriesHE-via_dt.isoformat()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.isoformat()
+<SeriesHE>
+<Index>
+a          1517-01-01
+b          1517-04-01
+c          1517-12-31
+d          1517-06-30
+e          1517-10-01
+<<U1>      <<U10>
+#end_SeriesHE-via_dt.isoformat()
+
+#start_SeriesHE-via_dt.fromisoformat()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.via_dt.fromisoformat()
+<SeriesHE>
+<Index>
+a          1517-01-01
+b          1517-04-01
+c          1517-12-31
+d          1517-06-30
+e          1517-10-01
+<<U1>      <object>
+#end_SeriesHE-via_dt.fromisoformat()
+
+#start_SeriesHE-via_dt.strftime()
+>>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt.strftime("%A | %B")
+<SeriesHE>
+<Index>
+a          Monday | January
+b          Sunday | April
+c          Monday | December
+d          Saturday | June
+e          Monday | October
+<<U1>      <<U17>
+#end_SeriesHE-via_dt.strftime()
+
+#start_SeriesHE-via_dt.strptime()
+>>> s = sf.SeriesHE(('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
+>>> s.via_dt.strptime("%m/%d/%Y")
+<SeriesHE>
+<Index>
+a          1517-01-01 00:00:00
+b          1517-04-01 00:00:00
+c          1517-06-30 00:00:00
+<<U1>      <object>
+#end_SeriesHE-via_dt.strptime()
+
+#start_SeriesHE-via_dt.strpdate()
+>>> s = sf.SeriesHE(('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
+>>> s.via_dt.strpdate("%m/%d/%Y")
+<SeriesHE>
+<Index>
+a          1517-01-01
+b          1517-04-01
+c          1517-06-30
+<<U1>      <object>
+#end_SeriesHE-via_dt.strpdate()
+
+#start_SeriesHE-via_str.__getitem__()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str[-1]
+<SeriesHE>
+<Index>
+a
+b          Z
+c          3
+d
+<<U1>      <<U1>
+#end_SeriesHE-via_str.__getitem__()
+
+#start_SeriesHE-via_str.capitalize()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.capitalize()
+<SeriesHE>
+<Index>
+a          Qrs
+b          Xyz
+c          123
+d           wx
+<<U1>      <<U4>
+#end_SeriesHE-via_str.capitalize()
+
+#start_SeriesHE-via_str.center()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.center(8)
+<SeriesHE>
+<Index>
+a            qrs
+b            XYZ
+c            123
+d             wX
+<<U1>      <<U8>
+#end_SeriesHE-via_str.center()
+
+#start_SeriesHE-via_str.count()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.count('X')
+<SeriesHE>
+<Index>
+a          0
+b          1
+c          0
+d          1
+<<U1>      <int64>
+#end_SeriesHE-via_str.count()
+
+#start_SeriesHE-via_str.decode()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'), dtype=bytes)
+>>> s.via_str.decode()
+<SeriesHE>
+<Index>
+a          qrs
+b          XYZ
+c          123
+d           wX
+<<U1>      <<U4>
+#end_SeriesHE-via_str.decode()
+
+#start_SeriesHE-via_str.encode()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.encode()
+<SeriesHE>
+<Index>
+a          b'qrs '
+b          b'XYZ'
+c          b'123'
+d          b' wX '
+<<U1>      <|S4>
+#end_SeriesHE-via_str.encode()
+
+#start_SeriesHE-via_str.endswith()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.endswith(' ')
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+d          True
+<<U1>      <bool>
+#end_SeriesHE-via_str.endswith()
+
+#start_SeriesHE-via_str.find()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.find('X')
+<SeriesHE>
+<Index>
+a          -1
+b          0
+c          -1
+d          2
+<<U1>      <int64>
+#end_SeriesHE-via_str.find()
+
+#start_SeriesHE-via_str.index()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.index('X')
+ValueError('substring not found')
+#end_SeriesHE-via_str.index()
+
+#start_SeriesHE-via_str.isalnum()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isalnum()
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          True
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_str.isalnum()
+
+#start_SeriesHE-via_str.isalpha()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isalpha()
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          False
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_str.isalpha()
+
+#start_SeriesHE-via_str.isdecimal()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isdecimal()
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_str.isdecimal()
+
+#start_SeriesHE-via_str.isdigit()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isdigit()
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_str.isdigit()
+
+#start_SeriesHE-via_str.islower()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.islower()
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_str.islower()
+
+#start_SeriesHE-via_str.isnumeric()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isnumeric()
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_str.isnumeric()
+
+#start_SeriesHE-via_str.isspace()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isspace()
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          False
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_str.isspace()
+
+#start_SeriesHE-via_str.istitle()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.istitle()
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          False
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_str.istitle()
+
+#start_SeriesHE-via_str.isupper()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.isupper()
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          False
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_str.isupper()
+
+#start_SeriesHE-via_str.ljust()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.ljust(8)
+<SeriesHE>
+<Index>
+a          qrs
+b          XYZ
+c          123
+d           wX
+<<U1>      <<U8>
+#end_SeriesHE-via_str.ljust()
+
+#start_SeriesHE-via_str.len()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.len()
+<SeriesHE>
+<Index>
+a          4
+b          3
+c          3
+d          4
+<<U1>      <int64>
+#end_SeriesHE-via_str.len()
+
+#start_SeriesHE-via_str.lower()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.lower()
+<SeriesHE>
+<Index>
+a          qrs
+b          xyz
+c          123
+d           wx
+<<U1>      <<U4>
+#end_SeriesHE-via_str.lower()
+
+#start_SeriesHE-via_str.lstrip()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.lstrip()
+<SeriesHE>
+<Index>
+a          qrs
+b          XYZ
+c          123
+d          wX
+<<U1>      <<U4>
+#end_SeriesHE-via_str.lstrip()
+
+#start_SeriesHE-via_str.partition()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.partition('X')
+<SeriesHE>
+<Index>
+a          ('qrs ', '', '')
+b          ('', 'X', 'YZ')
+c          ('123', '', '')
+d          (' w', 'X', ' ')
+<<U1>      <object>
+#end_SeriesHE-via_str.partition()
+
+#start_SeriesHE-via_str.replace()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.replace('X', '*')
+<SeriesHE>
+<Index>
+a          qrs
+b          *YZ
+c          123
+d           w*
+<<U1>      <<U4>
+#end_SeriesHE-via_str.replace()
+
+#start_SeriesHE-via_str.rfind()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rfind('X')
+<SeriesHE>
+<Index>
+a          -1
+b          0
+c          -1
+d          2
+<<U1>      <int64>
+#end_SeriesHE-via_str.rfind()
+
+#start_SeriesHE-via_str.rindex()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rindex('X')
+ValueError('substring not found')
+#end_SeriesHE-via_str.rindex()
+
+#start_SeriesHE-via_str.rjust()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rjust(8)
+<SeriesHE>
+<Index>
+a              qrs
+b               XYZ
+c               123
+d               wX
+<<U1>      <<U8>
+#end_SeriesHE-via_str.rjust()
+
+#start_SeriesHE-via_str.rpartition()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rpartition('X')
+<SeriesHE>
+<Index>
+a          ('', '', 'qrs ')
+b          ('', 'X', 'YZ')
+c          ('', '', '123')
+d          (' w', 'X', ' ')
+<<U1>      <object>
+#end_SeriesHE-via_str.rpartition()
+
+#start_SeriesHE-via_str.rsplit()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rsplit('X')
+<SeriesHE>
+<Index>
+a          ('qrs ',)
+b          ('', 'YZ')
+c          ('123',)
+d          (' w', ' ')
+<<U1>      <object>
+#end_SeriesHE-via_str.rsplit()
+
+#start_SeriesHE-via_str.rstrip()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.rstrip()
+<SeriesHE>
+<Index>
+a          qrs
+b          XYZ
+c          123
+d           wX
+<<U1>      <<U4>
+#end_SeriesHE-via_str.rstrip()
+
+#start_SeriesHE-via_str.split()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.split('X')
+<SeriesHE>
+<Index>
+a          ('qrs ',)
+b          ('', 'YZ')
+c          ('123',)
+d          (' w', ' ')
+<<U1>      <object>
+#end_SeriesHE-via_str.split()
+
+#start_SeriesHE-via_str.startswith()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.startswith('X')
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          False
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_str.startswith()
+
+#start_SeriesHE-via_str.strip()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.strip()
+<SeriesHE>
+<Index>
+a          qrs
+b          XYZ
+c          123
+d          wX
+<<U1>      <<U4>
+#end_SeriesHE-via_str.strip()
+
+#start_SeriesHE-via_str.swapcase()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.swapcase()
+<SeriesHE>
+<Index>
+a          QRS
+b          xyz
+c          123
+d           Wx
+<<U1>      <<U4>
+#end_SeriesHE-via_str.swapcase()
+
+#start_SeriesHE-via_str.title()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.title()
+<SeriesHE>
+<Index>
+a          Qrs
+b          Xyz
+c          123
+d           Wx
+<<U1>      <<U4>
+#end_SeriesHE-via_str.title()
+
+#start_SeriesHE-via_str.upper()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.upper()
+<SeriesHE>
+<Index>
+a          QRS
+b          XYZ
+c          123
+d           WX
+<<U1>      <<U4>
+#end_SeriesHE-via_str.upper()
+
+#start_SeriesHE-via_str.zfill()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s.via_str.zfill(8)
+<SeriesHE>
+<Index>
+a          0000qrs
+b          00000XYZ
+c          00000123
+d          0000 wX
+<<U1>      <<U8>
+#end_SeriesHE-via_str.zfill()
+
+#start_SeriesHE-via_fill_value().loc
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.via_fill_value(0).loc[['a', 'c', 'd', 'e']]
+<SeriesHE>
+<Index>
+a          10
+c          8
+d          0
+e          0
+<<U1>      <int64>
+#end_SeriesHE-via_fill_value().loc
+
+#start_SeriesHE-via_fill_value().__getitem__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.via_fill_value(0)[['a', 'c', 'd', 'e']]
+<SeriesHE>
+<Index>
+a          10
+c          8
+d          0
+e          0
+<<U1>      <int64>
+#end_SeriesHE-via_fill_value().__getitem__()
+
+#start_SeriesHE-via_fill_value().via_T
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.via_fill_value().via_T
+NotImplementedError('via_T functionality only available on Frame')
+#end_SeriesHE-via_fill_value().via_T
+
+#start_SeriesHE-via_fill_value().__add__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) + s2
+<SeriesHE>
+<Index>
+a          10
+b          4
+c          16
+d          19
+<<U1>      <int64>
+#end_SeriesHE-via_fill_value().__add__()
+
+#start_SeriesHE-via_fill_value().__sub__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) - s2
+<SeriesHE>
+<Index>
+a          10
+b          0
+c          0
+d          -19
+<<U1>      <int64>
+#end_SeriesHE-via_fill_value().__sub__()
+
+#start_SeriesHE-via_fill_value().__mul__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) * s2
+<SeriesHE>
+<Index>
+a          0
+b          4
+c          64
+d          0
+<<U1>      <int64>
+#end_SeriesHE-via_fill_value().__mul__()
+
+#start_SeriesHE-via_fill_value().__truediv__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) / s2
+<SeriesHE>
+<Index>
+a          inf
+b          1.0
+c          1.0
+d          0.0
+<<U1>      <float64>
+#end_SeriesHE-via_fill_value().__truediv__()
+
+#start_SeriesHE-via_fill_value().__floordiv__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) // s2
+<SeriesHE>
+<Index>
+a          0
+b          1
+c          1
+d          0
+<<U1>      <int64>
+#end_SeriesHE-via_fill_value().__floordiv__()
+
+#start_SeriesHE-via_fill_value().__mod__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) % s2
+<SeriesHE>
+<Index>
+a          0
+b          0
+c          0
+d          0
+<<U1>      <int64>
+#end_SeriesHE-via_fill_value().__mod__()
+
+#start_SeriesHE-via_fill_value().__pow__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) ** s2
+<SeriesHE>
+<Index>
+a          1
+b          4
+c          16777216
+d          0
+<<U1>      <int64>
+#end_SeriesHE-via_fill_value().__pow__()
+
+#start_SeriesHE-via_fill_value().__lshift__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) << s2
+<SeriesHE>
+<Index>
+a          10
+b          8
+c          2048
+d          0
+<<U1>      <int64>
+#end_SeriesHE-via_fill_value().__lshift__()
+
+#start_SeriesHE-via_fill_value().__rshift__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) >> s2
+<SeriesHE>
+<Index>
+a          10
+b          0
+c          0
+d          0
+<<U1>      <int64>
+#end_SeriesHE-via_fill_value().__rshift__()
+
+#start_SeriesHE-via_fill_value().__and__()
+>>> s1 = sf.SeriesHE((False, False, True), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((False, False, True), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(False) & s2
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          False
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_fill_value().__and__()
+
+#start_SeriesHE-via_fill_value().__xor__()
+>>> s1 = sf.SeriesHE((False, False, True), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((False, False, True), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(False) ^ s2
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          True
+<<U1>      <bool>
+#end_SeriesHE-via_fill_value().__xor__()
+
+#start_SeriesHE-via_fill_value().__or__()
+>>> s1 = sf.SeriesHE((False, False, True), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((False, False, True), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(False) | s2
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          True
+d          True
+<<U1>      <bool>
+#end_SeriesHE-via_fill_value().__or__()
+
+#start_SeriesHE-via_fill_value().__lt__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) < s2
+<SeriesHE>
+<Index>
+a          False
+b          False
+c          False
+d          True
+<<U1>      <bool>
+#end_SeriesHE-via_fill_value().__lt__()
+
+#start_SeriesHE-via_fill_value().__le__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) <= s2
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          True
+d          True
+<<U1>      <bool>
+#end_SeriesHE-via_fill_value().__le__()
+
+#start_SeriesHE-via_fill_value().__eq__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) == s2
+<SeriesHE>
+<Index>
+a          False
+b          True
+c          True
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_fill_value().__eq__()
+
+#start_SeriesHE-via_fill_value().__ne__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) != s2
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+d          True
+<<U1>      <bool>
+#end_SeriesHE-via_fill_value().__ne__()
+
+#start_SeriesHE-via_fill_value().__gt__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) > s2
+<SeriesHE>
+<Index>
+a          True
+b          False
+c          False
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_fill_value().__gt__()
+
+#start_SeriesHE-via_fill_value().__ge__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s1.via_fill_value(0) >= s2
+<SeriesHE>
+<Index>
+a          True
+b          True
+c          True
+d          False
+<<U1>      <bool>
+#end_SeriesHE-via_fill_value().__ge__()
+
+#start_SeriesHE-via_fill_value().__radd__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s2 + s1.via_fill_value(0)
+RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+#end_SeriesHE-via_fill_value().__radd__()
+
+#start_SeriesHE-via_fill_value().__rsub__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s2 - s1.via_fill_value(0)
+RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+#end_SeriesHE-via_fill_value().__rsub__()
+
+#start_SeriesHE-via_fill_value().__rmul__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s2 * s1.via_fill_value(0)
+RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+#end_SeriesHE-via_fill_value().__rmul__()
+
+#start_SeriesHE-via_fill_value().__rtruediv__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s2 / s1.via_fill_value(0)
+RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+#end_SeriesHE-via_fill_value().__rtruediv__()
+
+#start_SeriesHE-via_fill_value().__rfloordiv__()
+>>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
+>>> s2 // s1.via_fill_value(0)
+RuntimeError('via_fill_value interfaces can only be used on the left-hand side of binary expressions.')
+#end_SeriesHE-via_fill_value().__rfloordiv__()
 

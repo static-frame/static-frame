@@ -579,7 +579,8 @@ class InterfaceRecord(tp.NamedTuple):
                 terminus_name_no_args = f'{terminus_sig_no_args}.{field}'
             else:
                 terminus_name = f'{name}.{field}'
-                terminus_name_no_args = None
+                # NOTE: not certain that that no arg form is always right
+                terminus_name_no_args = f'{name}.{field}'
 
             if isinstance(delegate_obj, property):
                 # some date tools are properties
@@ -592,7 +593,7 @@ class InterfaceRecord(tp.NamedTuple):
                         use_signature=True,
                         delegate_reference=delegate_reference,
                         delegate_is_attr=True,
-                        signature_no_args=terminus_name
+                        signature_no_args=terminus_name_no_args
                         )
             else:
                 signature, signature_no_args = _get_signatures(

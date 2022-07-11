@@ -39,6 +39,9 @@ SERIES_INIT_T = dict(values=(-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_U = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
 SERIES_INIT_V = dict(values=('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
 SERIES_INIT_W = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_X = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+SERIES_INIT_Y = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'), dtype=b'bytes')
+SERIES_INIT_Z = dict(values=(False, False, True), index=('b', 'c', 'd'))
 
 SERIES_INIT_DICT_A = dict(sf.Series(**SERIES_INIT_A))
 SERIES_INIT_FROM_ELEMENT_A = dict(element=-1, index=('a', 'b', 'c'), name='x')
@@ -91,7 +94,7 @@ def calls_to_msg(calls: tp.Iterator[str],
                 yield from str(post).split('\n')
         except SyntaxError:
             exec(call, g, l)
-        except ValueError as e:
+        except (ValueError, RuntimeError, NotImplementedError) as e:
             yield repr(e) # show this error
 
     if i >= 0:
@@ -101,10 +104,47 @@ def calls_to_msg(calls: tp.Iterator[str],
 #-------------------------------------------------------------------------------
 class ExGen:
 
+    SIG_TO_OP_NUMERIC = {
+        '__add__()': '+',
+        '__eq__()': '==',
+        '__floordiv__()': '//',
+        '__ge__()': '>=',
+        '__gt__()': '>',
+        '__le__()': '<=',
+        '__lt__()': '<',
+        '__mod__()': '%',
+        '__mul__()': '*',
+        '__ne__()': '!=',
+        '__pow__()': '**',
+        '__sub__()': '-',
+        '__truediv__()': '/',
+        '__rfloordiv__()': '//',
+        '__radd__()': '+',
+        '__rmul__()': '*',
+        '__rsub__()': '-',
+        '__rtruediv__()': '/',
+    }
+    SIG_TO_OP_LOGIC = {
+        '__and__()': '&',
+        '__or__()': '|',
+        '__xor__()': '^',
+    }
+    SIG_TO_OP_MATMUL = {
+        '__matmul__()': '@',
+        '__rmatmul__()': '@',
+    }
+    SIG_TO_OP_BIT = {
+        '__rshift__()': '>>',
+        '__lshift__()': '<<',
+    }
+
+
     @classmethod
     def group_to_method(cls,
             ig: InterfaceGroup
             ) -> tp.Callable[[sf.Series], tp.Iterator[str]]:
+        '''Derive the function name from the group label, then get the function from the cls.
+        '''
         attr = str(ig).lower().replace(' ', '_').replace('-', '_')
         return getattr(cls, attr)
 
@@ -131,8 +171,7 @@ class ExGen:
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
 
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -169,8 +208,8 @@ class ExGen:
     def iterator(row: sf.Series) -> tp.Iterator[str]:
         return
 
-    @staticmethod
-    def operator_binary(row: sf.Series) -> tp.Iterator[str]:
+    @classmethod
+    def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
         return
 
     @staticmethod
@@ -189,12 +228,12 @@ class ExGen:
     def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
         return
 
-    @staticmethod
-    def accessor_fill_value(row: sf.Series) -> tp.Iterator[str]:
+    @classmethod
+    def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
         return
 
     @staticmethod
-    def accessor_re(row: sf.Series) -> tp.Iterator[str]:
+    def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
         return
 
 
@@ -205,8 +244,7 @@ class ExGenSeries(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
 
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args'][:-2] # drop paren
         iattr = f'{icls}.{attr}'
 
@@ -267,8 +305,7 @@ class ExGenSeries(ExGen):
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
 
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args'] # drop paren
 
         yield f's = {icls}({kwa(SERIES_INIT_A)})'
@@ -277,8 +314,7 @@ class ExGenSeries(ExGen):
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
 
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -502,8 +538,7 @@ class ExGenSeries(ExGen):
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
 
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -564,8 +599,7 @@ class ExGenSeries(ExGen):
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
 
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
@@ -622,8 +656,7 @@ class ExGenSeries(ExGen):
     @staticmethod
     def iterator(row: sf.Series) -> tp.Iterator[str]:
 
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         sig = row['signature_no_args']
         attr = sig
         attr_func = sig[:-2]
@@ -911,71 +944,35 @@ class ExGenSeries(ExGen):
             raise NotImplementedError(f'no handling for {attr}')
 
 
-    @staticmethod
-    def operator_binary(row: sf.Series) -> tp.Iterator[str]:
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+    @classmethod
+    def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
 
-        sig_to_op_numeric = {
-            '__add__()': '+',
-            '__eq__()': '==',
-            '__floordiv__()': '//',
-            '__ge__()': '>=',
-            '__gt__()': '>',
-            '__le__()': '<=',
-            '__lt__()': '<',
-            '__mod__()': '%',
-            '__mul__()': '*',
-            '__ne__()': '!=',
-            '__pow__()': '**',
-            '__sub__()': '-',
-            '__truediv__()': '/',
-            '__rfloordiv__()': '//',
-            '__radd__()': '+',
-            '__rmul__()': '*',
-            '__rsub__()': '-',
-            '__rtruediv__()': '/',
-        }
-        sig_to_op_logic = {
-            '__and__()': '&',
-            '__or__()': '|',
-            '__xor__()': '^',
-        }
-        sig_to_op_matmul = {
-            '__matmul__()': '@',
-            '__rmatmul__()': '@',
-        }
-        sig_to_op_bit = {
-            '__rshift__()': '>>',
-            '__lshift__()': '<<',
-        }
-
-        if attr in sig_to_op_numeric:
+        if attr in cls.SIG_TO_OP_NUMERIC:
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             if attr.startswith('__r'):
-                yield f'8 {sig_to_op_numeric[attr]} s'
+                yield f'8 {cls.SIG_TO_OP_NUMERIC[attr]} s'
                 # no need to show reverse on series
             else:
-                yield f's {sig_to_op_numeric[attr]} 8'
-                yield f"s {sig_to_op_numeric[attr]} s.reindex(('c', 'b'))"
-        elif attr in sig_to_op_logic:
+                yield f's {cls.SIG_TO_OP_NUMERIC[attr]} 8'
+                yield f"s {cls.SIG_TO_OP_NUMERIC[attr]} s.reindex(('c', 'b'))"
+        elif attr in cls.SIG_TO_OP_LOGIC:
             yield f's = {icls}({kwa(SERIES_INIT_F)})'
-            yield f"s {sig_to_op_logic[attr]} True"
-            yield f"s {sig_to_op_logic[attr]} (True, False, True)"
-        elif attr in sig_to_op_matmul:
+            yield f"s {cls.SIG_TO_OP_LOGIC[attr]} True"
+            yield f"s {cls.SIG_TO_OP_LOGIC[attr]} (True, False, True)"
+        elif attr in cls.SIG_TO_OP_MATMUL:
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
-            yield f"s {sig_to_op_matmul[attr]} (3, 0, 4)"
-        elif attr in sig_to_op_bit:
+            yield f"s {cls.SIG_TO_OP_MATMUL[attr]} (3, 0, 4)"
+        elif attr in cls.SIG_TO_OP_BIT:
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
-            yield f"s {sig_to_op_bit[attr]} 1"
+            yield f"s {cls.SIG_TO_OP_BIT[attr]} 1"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
     @staticmethod
     def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
 
         sig_to_op = {
@@ -996,8 +993,7 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -1019,36 +1015,102 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
-        if attr in ():
-            yield ''
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr == 'via_str.__getitem__()':
+            yield f's = {icls}({kwa(SERIES_INIT_X)})'
+            yield f's.via_str[-1]'
+        elif attr in (
+                'via_str.center()',
+                'via_str.ljust()',
+                'via_str.rjust()',
+                'via_str.zfill()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_X)})'
+            yield f's.{attr_func}(8)'
+        elif attr in (
+                'via_str.count()',
+                'via_str.find()',
+                'via_str.index()',
+                'via_str.partition()',
+                'via_str.rpartition()',
+                'via_str.rfind()',
+                'via_str.rindex()',
+                'via_str.rsplit()',
+                'via_str.split()',
+                'via_str.startswith()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_X)})'
+            yield f"s.{attr_func}('X')"
+        elif attr == 'via_str.decode()':
+            yield f's = {icls}({kwa(SERIES_INIT_Y)})'
+            yield f"s.{attr_func}()"
+        elif attr == 'via_str.endswith()':
+            yield f's = {icls}({kwa(SERIES_INIT_X)})'
+            yield f"s.{attr_func}(' ')"
+        elif attr == 'via_str.replace()':
+            yield f's = {icls}({kwa(SERIES_INIT_X)})'
+            yield f"s.{attr_func}('X', '*')"
+        else: # all other simple calls
+            yield f's = {icls}({kwa(SERIES_INIT_X)})'
+            yield f's.{attr}'
+            # print('missing', attr)
+
+    # none on string
+    # @staticmethod
+    # def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
+    #     cls = ContainerMap.str_to_cls(row['cls_name'])
+    #     icls = f'sf.{cls.__name__}' # interface cls
+    #     attr = row['signature_no_args']
+    #     if attr in ():
+    #         yield ''
+    #     else:
+    #         print('missing', attr)
+
+    @classmethod
+    def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        # attr_func = row['signature_no_args'][:-2]
+
+        attr_op = attr.replace('via_fill_value().', '')
+
+        if attr_op in cls.SIG_TO_OP_NUMERIC:
+            yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
+            yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
+            if attr_op.startswith('__r'): # NOTE: these raise
+                yield f's2 {cls.SIG_TO_OP_NUMERIC[attr_op]} s1.via_fill_value(0)'
+            else:
+                yield f's1.via_fill_value(0) {cls.SIG_TO_OP_NUMERIC[attr_op]} s2'
+        elif attr_op in cls.SIG_TO_OP_LOGIC:
+            yield f's1 = {icls}({kwa(SERIES_INIT_F)})'
+            yield f's2 = {icls}({kwa(SERIES_INIT_Z)})'
+            yield f"s1.via_fill_value(False) {cls.SIG_TO_OP_LOGIC[attr_op]} s2"
+        elif attr_op in cls.SIG_TO_OP_MATMUL:
+            yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
+            yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
+            yield f"s1.via_fill_value(1) {cls.SIG_TO_OP_MATMUL[attr_op]} s2"
+        elif attr_op in cls.SIG_TO_OP_BIT:
+            yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
+            yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
+            yield f"s1.via_fill_value(0) {cls.SIG_TO_OP_BIT[attr_op]} s2"
+        elif attr == 'via_fill_value().loc':
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s.via_fill_value(0).loc[['a', 'c', 'd', 'e']]"
+        elif attr == 'via_fill_value().__getitem__()':
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s.via_fill_value(0)[['a', 'c', 'd', 'e']]"
+        elif attr == 'via_fill_value().via_T':
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f's.{attr}'
         else:
-            print('missing', attr)
+            raise NotImplementedError(f'no handling for {attr}')
+
 
     @staticmethod
-    def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
-        attr = row['signature_no_args']
-        if attr in ():
-            yield ''
-        else:
-            print('missing', attr)
-
-    @staticmethod
-    def accessor_fill_value(row: sf.Series) -> tp.Iterator[str]:
-        cls = ContainerMap.str_to_cls(row['cls_name'])
-        icls = f'sf.{cls.__name__}' # interface cls
-        attr = row['signature_no_args']
-        if attr in ():
-            yield ''
-        else:
-            print('missing', attr)
-
-    @staticmethod
-    def accessor_re(row: sf.Series) -> tp.Iterator[str]:
+    def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
         cls = ContainerMap.str_to_cls(row['cls_name'])
         icls = f'sf.{cls.__name__}' # interface cls
         attr = row['signature_no_args']
@@ -1071,27 +1133,33 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            # InterfaceGroup.Constructor,
-            # InterfaceGroup.Exporter,
-            # InterfaceGroup.Attribute,
-            # InterfaceGroup.Method,
-            # InterfaceGroup.DictLike,
-            # InterfaceGroup.Display,
-            # InterfaceGroup.Assignment,
-            # InterfaceGroup.Selector,
-            # InterfaceGroup.Iterator,
-            # InterfaceGroup.OperatorBinary,
-            # InterfaceGroup.OperatorUnary,
+            InterfaceGroup.Constructor,
+            InterfaceGroup.Exporter,
+            InterfaceGroup.Attribute,
+            InterfaceGroup.Method,
+            InterfaceGroup.DictLike,
+            InterfaceGroup.Display,
+            InterfaceGroup.Assignment,
+            InterfaceGroup.Selector,
+            InterfaceGroup.Iterator,
+            InterfaceGroup.OperatorBinary,
+            InterfaceGroup.OperatorUnary,
             InterfaceGroup.AccessorDatetime,
+            InterfaceGroup.AccessorString,
+            InterfaceGroup.AccessorTranspose,
+            InterfaceGroup.AccessorFillValue,
+            # InterfaceGroup.AccessorRe,
+
             ):
         func = exg.group_to_method(ig)
+        # import ipdb; ipdb.set_trace()
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
             calls = func(row)
             yield from calls_to_msg(calls, row)
 
 def gen_all_examples() -> tp.Iterator[str]:
     yield from gen_examples(sf.Series, ExGenSeries)
-    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
+    yield from gen_examples(sf.SeriesHE, ExGenSeries)
 
 def write():
     doc_dir = os.path.abspath(os.path.dirname(__file__))
@@ -1107,4 +1175,4 @@ if __name__ == '__main__':
     for line in gen_all_examples():
         print(line)
         pass
-    # write()
+    write()
