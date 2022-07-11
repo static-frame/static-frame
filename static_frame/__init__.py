@@ -70,7 +70,8 @@ from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
-from static_frame.core.node_iter import IterNodeDelegate as IterNodeDelegate
+from static_frame.core.node_iter import IterNodeDelegate
+from static_frame.core.node_iter import IterNodeDelegateMapable
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroup
