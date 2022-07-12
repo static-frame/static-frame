@@ -40,7 +40,7 @@ SERIES_INIT_U = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-
 SERIES_INIT_V = dict(values=('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
 SERIES_INIT_W = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_X = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
-SERIES_INIT_Y = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'), dtype=b'bytes')
+# SERIES_INIT_Y = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'), dtype=b'bytes')
 SERIES_INIT_Z = dict(values=(False, False, True), index=('b', 'c', 'd'))
 
 SERIES_INIT_DICT_A = dict(sf.Series(**SERIES_INIT_A))
@@ -51,6 +51,8 @@ SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series(**SERIES_INIT_A)).ite
 FRAME_INIT_FROM_FIELDS_A = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 
 FRAME_INIT_FROM_FIELDS_B = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+
+FRAME_INIT_FROM_FIELDS_C = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
 
 
 
@@ -268,8 +270,62 @@ class ExGen:
         return
 
     @staticmethod
-    def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-        return
+    def accessor_string(row: sf.Series,
+            name: str,
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+
+        if attr == 'via_str.__getitem__()':
+            yield f'{name} = {ctr}'
+            yield f'{name}'
+            yield f'{name}.via_str[-1]'
+        elif attr in (
+                'via_str.center()',
+                'via_str.ljust()',
+                'via_str.rjust()',
+                'via_str.zfill()',
+                ):
+            yield f'{name} = {ctr}'
+            yield f'{name}'
+            yield f'{name}.{attr_func}(8)'
+        elif attr in (
+                'via_str.count()',
+                'via_str.find()',
+                'via_str.index()',
+                'via_str.partition()',
+                'via_str.rpartition()',
+                'via_str.rfind()',
+                'via_str.rindex()',
+                'via_str.rsplit()',
+                'via_str.split()',
+                'via_str.startswith()',
+                ):
+            yield f'{name} = {ctr}'
+            yield f'{name}'
+            yield f"{name}.{attr_func}('X')"
+        elif attr == 'via_str.decode()':
+            yield f'{name} = {ctr}.astype(bytes)'
+            yield f'{name}'
+            yield f"{name}.{attr_func}()"
+        elif attr == 'via_str.endswith()':
+            yield f'{name} = {ctr}'
+            yield f'{name}'
+            yield f"{name}.{attr_func}(' ')"
+        elif attr == 'via_str.replace()':
+            yield f'{name} = {ctr}'
+            yield f'{name}'
+            yield f"{name}.{attr_func}('X', '*')"
+        else: # all other simple calls
+            yield f'{name} = {ctr}'
+            yield f'{name}'
+            yield f'{name}.{attr}'
 
     @staticmethod
     def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
@@ -1064,59 +1120,7 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-        attr = row['signature_no_args']
-        attr_func = row['signature_no_args'][:-2]
-
-        if attr == 'via_str.__getitem__()':
-            yield f's = {icls}({kwa(SERIES_INIT_X)})'
-            yield f's.via_str[-1]'
-        elif attr in (
-                'via_str.center()',
-                'via_str.ljust()',
-                'via_str.rjust()',
-                'via_str.zfill()',
-                ):
-            yield f's = {icls}({kwa(SERIES_INIT_X)})'
-            yield f's.{attr_func}(8)'
-        elif attr in (
-                'via_str.count()',
-                'via_str.find()',
-                'via_str.index()',
-                'via_str.partition()',
-                'via_str.rpartition()',
-                'via_str.rfind()',
-                'via_str.rindex()',
-                'via_str.rsplit()',
-                'via_str.split()',
-                'via_str.startswith()',
-                ):
-            yield f's = {icls}({kwa(SERIES_INIT_X)})'
-            yield f"s.{attr_func}('X')"
-        elif attr == 'via_str.decode()':
-            yield f's = {icls}({kwa(SERIES_INIT_Y)})'
-            yield f"s.{attr_func}()"
-        elif attr == 'via_str.endswith()':
-            yield f's = {icls}({kwa(SERIES_INIT_X)})'
-            yield f"s.{attr_func}(' ')"
-        elif attr == 'via_str.replace()':
-            yield f's = {icls}({kwa(SERIES_INIT_X)})'
-            yield f"s.{attr_func}('X', '*')"
-        else: # all other simple calls
-            yield f's = {icls}({kwa(SERIES_INIT_X)})'
-            yield f's.{attr}'
-            # print('missing', attr)
-
-    # none on string
-    # @staticmethod
-    # def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
-    #     cls = ContainerMap.str_to_cls(row['cls_name'])
-    #     icls = f'sf.{cls.__name__}' # interface cls
-    #     attr = row['signature_no_args']
-    #     if attr in ():
-    #         yield ''
-    #     else:
-    #         print('missing', attr)
+        yield from ExGen.accessor_string(row, 's', '', SERIES_INIT_X)
 
     @classmethod
     def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -1923,52 +1927,10 @@ class ExGenFrame(ExGen):
     #         yield f's = {icls}({kwa(SERIES_INIT_U)})'
     #         yield f's.{attr}'
 
-    # @staticmethod
-    # def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
+    @staticmethod
+    def accessor_string(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_string(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_C)
 
-    #     if attr == 'via_str.__getitem__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_X)})'
-    #         yield f's.via_str[-1]'
-    #     elif attr in (
-    #             'via_str.center()',
-    #             'via_str.ljust()',
-    #             'via_str.rjust()',
-    #             'via_str.zfill()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_X)})'
-    #         yield f's.{attr_func}(8)'
-    #     elif attr in (
-    #             'via_str.count()',
-    #             'via_str.find()',
-    #             'via_str.index()',
-    #             'via_str.partition()',
-    #             'via_str.rpartition()',
-    #             'via_str.rfind()',
-    #             'via_str.rindex()',
-    #             'via_str.rsplit()',
-    #             'via_str.split()',
-    #             'via_str.startswith()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_X)})'
-    #         yield f"s.{attr_func}('X')"
-    #     elif attr == 'via_str.decode()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_Y)})'
-    #         yield f"s.{attr_func}()"
-    #     elif attr == 'via_str.endswith()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_X)})'
-    #         yield f"s.{attr_func}(' ')"
-    #     elif attr == 'via_str.replace()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_X)})'
-    #         yield f"s.{attr_func}('X', '*')"
-    #     else: # all other simple calls
-    #         yield f's = {icls}({kwa(SERIES_INIT_X)})'
-    #         yield f's.{attr}'
-    #         # print('missing', attr)
-
-    # none on string
     # @staticmethod
     # def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
     #     cls = ContainerMap.str_to_cls(row['cls_name'])
@@ -2038,10 +2000,10 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
     for ig in (
             # InterfaceGroup.Constructor,
             # InterfaceGroup.Exporter,
-            InterfaceGroup.Attribute, # sf
+            # InterfaceGroup.Attribute, # sf
             # InterfaceGroup.Method,
-            InterfaceGroup.DictLike, # sf
-            InterfaceGroup.Display, # sf
+            # InterfaceGroup.DictLike, # sf
+            # InterfaceGroup.Display, # sf
             # InterfaceGroup.Assignment,
             # InterfaceGroup.Selector,
             # InterfaceGroup.Iterator,
@@ -2051,7 +2013,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             # InterfaceGroup.AccessorString,
             # InterfaceGroup.AccessorTranspose,
             # InterfaceGroup.AccessorFillValue,
-            InterfaceGroup.AccessorRe,
+            # InterfaceGroup.AccessorRe, # sf
 
             ):
         func = exg.group_to_method(ig)
@@ -2061,7 +2023,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             yield from calls_to_msg(calls, row)
 
 def gen_all_examples() -> tp.Iterator[str]:
-    yield from gen_examples(sf.Series, ExGenSeries)
+    # yield from gen_examples(sf.Series, ExGenSeries)
     # yield from gen_examples(sf.SeriesHE, ExGenSeries)
     yield from gen_examples(sf.Frame, ExGenFrame)
     # yield from gen_examples(sf.FrameHE, ExGenFrame)
