@@ -1,6 +1,7 @@
 from io import StringIO
 import typing as tp
 import os
+import sys
 
 import numpy as np
 import static_frame as sf
@@ -48,10 +49,19 @@ SERIES_INIT_FROM_ELEMENT_A = dict(element=-1, index=('a', 'b', 'c'), name='x')
 SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series(**SERIES_INIT_A)).items()), name='x')
 
 
+FRAME_INIT_A = dict(data=b'np.arange(6).reshape(3,2)', index=(('p', 'q', 'r')), columns=(('a', 'b')), name='x')
+
+FRAME_INIT_B = dict(data=b'(np.arange(6).reshape(3,2) % 2).astype(bool)', index=(('p', 'q', 'r')), columns=(('c', 'd')), name='y')
+
+FRAME_INIT_FROM_DICT_A = dict(mapping=b"dict(a=(10, 2, 8, 3), b=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30'))", dtypes=b"dict(b=np.datetime64)", name='x')
+
+FRAME_INIT_FROM_DICT_RECORDS_A = dict(records=b"(dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01'))", index=('p', 'q'), dtypes=b"dict(c=np.datetime64)", name='x')
+
+FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A = dict(items=b"(('p', dict(a=10, b=False, c='1517-01-01')), ('q', dict(a=8, b=True, c='1517-04-01')))", dtypes=b"dict(c=np.datetime64)", name='x')
+
+
 FRAME_INIT_FROM_FIELDS_A = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
-
 FRAME_INIT_FROM_FIELDS_B = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
-
 FRAME_INIT_FROM_FIELDS_C = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
 
 
@@ -1169,25 +1179,52 @@ class ExGenSeries(ExGen):
 
 class ExGenFrame(ExGen):
 
-    # @staticmethod
-    # def constructor(row: sf.Series) -> tp.Iterator[str]:
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
 
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args'][:-2] # drop paren
-    #     iattr = f'{icls}.{attr}'
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args'][:-2] # drop paren
+        iattr = f'{icls}.{attr}'
 
-    #     if attr == '__init__':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #     elif attr == 'from_concat':
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_B)})'
-    #         yield f's = {iattr}((s1, s2))'
-    #     elif attr == 'from_concat_items':
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_B)})'
-    #         yield f"s = {iattr}((('x', s1), ('y', s2)))"
-    #     elif attr == 'from_dict':
-    #         yield f's = {iattr}(dict({kwa(SERIES_INIT_DICT_A, arg_first=False)}))'
+        if attr == '__init__':
+            yield f'{icls}({kwa(FRAME_INIT_A)})'
+        elif attr == 'from_arrow':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"aw = f1.to_arrow()"
+            yield 'aw'
+            yield f"{iattr}(aw, index_depth=1)"
+        elif attr == 'from_clipboard':
+            if sys.platform != 'darwin':
+                yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+                yield f"f1.to_clipboard()"
+                yield f"{iattr}(index_depth=1)"
+        elif attr == 'from_concat':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f'f2 = {icls}({kwa(FRAME_INIT_B)})'
+            yield f'{iattr}((f1, f2), axis=1)'
+            yield f"{iattr}((f1, f2.relabel(columns=('a', 'b'))), axis=0, index=sf.IndexAutoFactory)"
+        elif attr == 'from_concat_items':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f'f2 = {icls}({kwa(FRAME_INIT_B)})'
+            yield f"{iattr}(((f1.name, f1), (f2.name, f2)), axis=1)"
+            yield f"{iattr}(((f1.name, f1), (f2.name, f2.relabel(columns=('a', 'b')))), axis=0)"
+        elif attr == 'from_csv':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.to_csv('/tmp/f.csv')"
+            yield "open('/tmp/f.csv').read()"
+            yield f"{iattr}('/tmp/f.csv', index_depth=1)"
+        elif attr == 'from_delimited':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.to_delimited('/tmp/f.psv', delimiter='|')"
+            yield "open('/tmp/f.psv').read()"
+            yield f"{iattr}('/tmp/f.psv', delimiter='|', index_depth=1)"
+        elif attr == 'from_dict':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_A, arg_first=False)})'
+        elif attr == 'from_dict_records':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_A, arg_first=False)})'
+        elif attr == 'from_dict_records_items':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A, arg_first=False)})'
+
     #     elif attr == 'from_element':
     #         yield f's = {iattr}({kwa(SERIES_INIT_FROM_ELEMENT_A)})'
     #     elif attr == 'from_items':
@@ -1200,9 +1237,8 @@ class ExGenFrame(ExGen):
     #     elif attr == 'from_pandas':
     #         yield f'df = pd.Series({kwa(SERIES_INIT_A)})'
     #         yield f's = {iattr}(df)'
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
-    #     yield f's'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     # @staticmethod
     # def exporter(row: sf.Series) -> tp.Iterator[str]:
@@ -1994,7 +2030,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            # InterfaceGroup.Constructor,
+            InterfaceGroup.Constructor,
             # InterfaceGroup.Exporter,
             # InterfaceGroup.Attribute, # sf
             # InterfaceGroup.Method,
