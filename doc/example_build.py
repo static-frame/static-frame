@@ -1167,10 +1167,6 @@ class ExGenSeries(ExGen):
 
 
 
-
-
-
-
 class ExGenFrame(ExGen):
 
     # @staticmethod
