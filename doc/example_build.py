@@ -53,6 +53,13 @@ FRAME_INIT_A = dict(data=b'np.arange(6).reshape(3,2)', index=(('p', 'q', 'r')), 
 
 FRAME_INIT_B = dict(data=b'(np.arange(6).reshape(3,2) % 2).astype(bool)', index=(('p', 'q', 'r')), columns=(('c', 'd')), name='y')
 
+FRAME_INIT_FROM_ELEMENT_A = dict(element=0, index=(('p', 'q', 'r')), columns=(('a', 'b')), name='x')
+
+FRAME_INIT_FROM_ELEMENTS_A = dict(elements=(10, 2, 8, 3), index=(('p', 'q', 'r', 's')),columns=['a'], name='x')
+
+
+FRAME_INIT_FROM_ELEMENT_ITEMS_A = dict(items=((('a',  0), -1), (('b',  0), 10), (('a',  1), 3), (('b', 'a'), 1)), columns=(0, 1), index= ('a', 'b'), name='x', axis=1)
+
 FRAME_INIT_FROM_DICT_A = dict(mapping=b"dict(a=(10, 2, 8, 3), b=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30'))", dtypes=b"dict(b=np.datetime64)", name='x')
 
 FRAME_INIT_FROM_DICT_RECORDS_A = dict(records=b"(dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01'))", index=('p', 'q'), dtypes=b"dict(c=np.datetime64)", name='x')
@@ -94,17 +101,18 @@ def calls_to_msg(calls: tp.Iterator[str],
         ) -> tp.Iterator[str]:
     cls = ContainerMap.str_to_cls(row['cls_name'])
 
+    g = globals()
+    g['sf'] = sf
+    g['np'] = np
+    g['pd'] = pd
+    l = locals()
+
     i = -1
     for i, call in enumerate(calls):
         # enumerate to pass through empty calls without writing start / end boundaries
         if i == 0:
             yield f'#start_{cls.__name__}-{row["signature_no_args"]}'
 
-        g = globals()
-        g['sf'] = sf
-        g['np'] = np
-        g['pd'] = pd
-        l = locals()
         try:
             yield f'>>> {call}'
             post = eval(call, g, l)
@@ -1224,9 +1232,21 @@ class ExGenFrame(ExGen):
             yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_A, arg_first=False)})'
         elif attr == 'from_dict_records_items':
             yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A, arg_first=False)})'
+        elif attr == 'from_element':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_ELEMENT_A)})'
+        elif attr == 'from_element_items':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_ELEMENT_ITEMS_A)})'
+        elif attr == 'from_elements':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_ELEMENTS_A)})'
+        elif attr == 'from_fields':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_FIELDS_A)})'
 
-    #     elif attr == 'from_element':
-    #         yield f's = {iattr}({kwa(SERIES_INIT_FROM_ELEMENT_A)})'
+        elif attr == 'from_hdf5':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield f"f1.to_hdf5('/tmp/f.hdf5')"
+            yield f"f1.from_hdf5('/tmp/f.hdf5', label='x', index_depth=1)"
+
+
     #     elif attr == 'from_items':
     #         yield f's = {iattr}({kwa(SERIES_INIT_FROM_ITEMS_A)})'
     #     elif attr == 'from_overlay':
