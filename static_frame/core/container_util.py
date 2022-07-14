@@ -892,7 +892,7 @@ def rehierarch_from_type_blocks(*,
         raise RuntimeError('all depths must be specified')
 
     depth_map = np.array(depth_map)
-    indexers = []
+    indexers: tp.List[np.ndarray] = []
 
     for col_idx in range(depth):
         values_at_depth = labels._extract_array_column(col_idx)
@@ -902,8 +902,9 @@ def rehierarch_from_type_blocks(*,
     # Lexsort
     # The innermost level (i.e. [:-1]) is irrelavant to lexsorting
     # We sort lexsort from right to left (i.e. [::-1])
-    indexers = np.array(indexers, dtype=DTYPE_INT_DEFAULT)
-    sort_order = np.lexsort(indexers[depth_map][:-1][::-1])
+    indexers_arr = np.array(indexers, dtype=DTYPE_INT_DEFAULT)
+    del indexers
+    sort_order = np.lexsort(indexers_arr[depth_map][:-1][::-1])
 
     return labels._extract(row_key=sort_order, column_key=depth_map), sort_order
 
