@@ -1202,6 +1202,8 @@ def _index_many_to_one(
         arrays = [index.values]
 
     for index_pos, index in enumerate(indices_iter):
+        if index.depth != depth_first:
+            raise RuntimeError(f'Indices must have aligned depths')
         if depth_first > 1:
             for d in range(depth_first):
                 arrays[d].append(index.values_at_depth(d))
