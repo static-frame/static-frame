@@ -1224,9 +1224,9 @@ def _index_many_to_one(
     name = name_first if name_aligned else None
     if index_auto_aligned:
         if many_to_one_type is ManyToOneType.UNION:
-            size = max(a.size for a in arrays)
+            size = max(a.size for a in arrays) #type: ignore
         elif many_to_one_type is ManyToOneType.INTERSECT:
-            size = min(a.size for a in arrays)
+            size = min(a.size for a in arrays) #type: ignore
         return IndexAutoFactory(size, name=name).to_index(
                 default_constructor=cls_default,
                 explicit_constructor=explicit_constructor,
@@ -1243,16 +1243,16 @@ def _index_many_to_one(
 
     if cls_aligned and explicit_constructor is None:
         if cls_default.STATIC and not cls_first.STATIC:
-            constructor_cls = cls_first._IMMUTABLE_CONSTRUCTOR #type: ignore
+            constructor_cls = cls_first._IMMUTABLE_CONSTRUCTOR
         elif not cls_default.STATIC and cls_first.STATIC:
-            constructor_cls = cls_first._MUTABLE_CONSTRUCTOR #type: ignore
+            constructor_cls = cls_first._MUTABLE_CONSTRUCTOR
         else:
             constructor_cls = cls_first
 
         if index_types_aligned:
-            constructor = constructor_cls._from_arrays
+            constructor = constructor_cls._from_arrays #type: ignore
         else:
-            constructor = constructor_cls.from_labels
+            constructor = constructor_cls.from_labels #type: ignore
 
     elif explicit_constructor is not None:
         constructor = explicit_constructor
@@ -1261,15 +1261,16 @@ def _index_many_to_one(
 
     if index_types_aligned: # IndexHierarchy
         if many_to_one_type is ManyToOneType.CONCAT:
+            # each component of arrays is a list of arrays per depth
             arrays = [array_processor(d) for d in arrays]
             return constructor(arrays, #type: ignore
                     name=name,
                     index_constructors=index_constructors,
                     )
-        # convert to 2D arrays
-        # NOTE: this approach forces type consolidation accross depth levels; only other option is to operate on tuples per label
+        # NOTE: this approach forces type consolidation across depth levels; this is consistent with what has been don in the past; only other option is to operate on tuples per label
         blocks = []
         for i in range(index_pos + 1):
+            # convert to 2D arrays
             c = concat_resolved(
                     [column_2d_filter(arrays[d][i]) for d in range(depth_first)],
                     axis=1)
