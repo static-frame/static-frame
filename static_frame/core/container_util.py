@@ -1201,7 +1201,7 @@ def _index_many_to_one(
         index_types_aligned = False
         arrays = [index.values]
 
-    for index in indices_iter:
+    for index_pos, index in enumerate(indices_iter):
         if depth_first > 1:
             for d in range(depth_first):
                 arrays[d].append(index.values_at_depth(d))
@@ -1266,12 +1266,20 @@ def _index_many_to_one(
                     name=name,
                     index_constructors=index_constructors,
                     )
+        # convert to 2D arrays
+        # NOTE: this approach forces type consolidation accross depth levels; only other option is to operate on tuples per label
+        blocks = []
+        for i in range(index_pos + 1):
+            c = concat_resolved(
+                    [column_2d_filter(arrays[d][i]) for d in range(depth_first)],
+                    axis=1)
+            blocks.append(c)
 
-        raise NotImplementedError(arrays)
-        array = array_processor(arrays)
+        array = array_processor(blocks)
         return constructor(array, #type: ignore
                 name=name,
                 index_constructors=index_constructors,
+                depth_reference=depth_first,
                 )
     # returns an immutable array
     array = array_processor(arrays)
