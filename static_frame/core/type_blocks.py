@@ -460,7 +460,6 @@ class TypeBlocks(ContainerOperand):
                 block_parts = [tb._extract_array(column_key=i) for tb in type_blocks]
                 yield concat_resolved(block_parts)
 
-
     #---------------------------------------------------------------------------
 
     def __init__(self, *,
@@ -490,6 +489,7 @@ class TypeBlocks(ContainerOperand):
             self._row_dtype = None
 
     #---------------------------------------------------------------------------
+
     def __setstate__(self,
             state: tp.Tuple[object, tp.Mapping[str, tp.Any]],
             ) -> None:
@@ -657,7 +657,6 @@ class TypeBlocks(ContainerOperand):
     #     array.flags.writeable = False
     #     return array
 
-
     @property
     def values(self) -> np.ndarray:
         '''Returns a consolidated NP array of the all blocks.
@@ -729,7 +728,6 @@ class TypeBlocks(ContainerOperand):
                     yield b[NULL_SLICE, column] # expected to be immutable
         else:
             raise AxisInvalid(f'no support for axis: {axis}')
-
 
     def element_items(self,
             axis: int = 0,
@@ -873,7 +871,6 @@ class TypeBlocks(ContainerOperand):
             else:
                 yield cls._concatenate_blocks(group, group_dtype)
 
-
     def _reblock(self) -> tp.Iterator[np.ndarray]:
         '''Generator of new block that consolidate adjacent types that are the same.
         '''
@@ -885,6 +882,7 @@ class TypeBlocks(ContainerOperand):
         return self.from_blocks(self.consolidate_blocks(raw_blocks=self._blocks))
 
     #---------------------------------------------------------------------------
+
     def resize_blocks_by_element(self, *,
             index_ic: tp.Optional[IndexCorrespondence],
             columns_ic: tp.Optional[IndexCorrespondence],
@@ -1103,6 +1101,7 @@ class TypeBlocks(ContainerOperand):
                         col_src += 1
 
     #---------------------------------------------------------------------------
+
     def sort(self,
             axis: int,
             key: GetItemKeyTypeCompound,
@@ -1171,7 +1170,6 @@ class TypeBlocks(ContainerOperand):
             yield from group_sorted(blocks, axis=axis, key=key, drop=drop)
         else:
             yield from group_match(self, axis=axis, key=key, drop=drop)
-
 
     def group_extract(self,
             axis: int,
@@ -1334,6 +1332,7 @@ class TypeBlocks(ContainerOperand):
         return result
 
     #---------------------------------------------------------------------------
+
     def __round__(self, decimals: int = 0) -> 'TypeBlocks':
         '''
         Return a TypeBlocks rounded to the given decimals. Negative decimals round to the left of the decimal point.
@@ -1394,7 +1393,6 @@ class TypeBlocks(ContainerOperand):
                     outermost=outermost)
         return d
 
-
     #---------------------------------------------------------------------------
     # extraction utilities
 
@@ -1415,7 +1413,6 @@ class TypeBlocks(ContainerOperand):
             return slice(start_idx, None, -1)
         # stop is less than start, need to reduce by 1 to cover range
         return slice(start_idx, stop_idx - 1, -1)
-
 
     @classmethod
     def _indices_to_contiguous_pairs(cls, indices: tp.Iterable[tp.Tuple[int, int]]
@@ -1489,6 +1486,7 @@ class TypeBlocks(ContainerOperand):
                 yield from self._indices_to_contiguous_pairs(indices)
 
     #---------------------------------------------------------------------------
+
     def _mask_blocks(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None) -> tp.Iterator[np.ndarray]:
@@ -1530,7 +1528,6 @@ class TypeBlocks(ContainerOperand):
                 target_block_idx = target_slice = None
 
             yield mask
-
 
     def _astype_blocks(self,
             column_key: GetItemKeyType,
@@ -1603,8 +1600,6 @@ class TypeBlocks(ContainerOperand):
                 yield b # no change for this block
             else:
                 yield from parts
-
-
 
     def _astype_blocks_from_dtypes(self,
             dtype_factory: tp.Optional[tp.Callable[[int], np.dtype]],
@@ -1815,7 +1810,6 @@ class TypeBlocks(ContainerOperand):
                 else:
                     yield from parts
 
-
     def _shift_blocks_fill_by_element(self,
             row_shift: int = 0,
             column_shift: int = 0,
@@ -1877,7 +1871,6 @@ class TypeBlocks(ContainerOperand):
                             fill_value=fill_value)
                     array.flags.writeable = False
                     yield array
-
 
     def _shift_blocks_fill_by_callable(self,
             row_shift: int,
@@ -1951,7 +1944,6 @@ class TypeBlocks(ContainerOperand):
                         array.flags.writeable = False
                         yield array
                         col_idx += 1
-
 
     #---------------------------------------------------------------------------
     def _assign_from_iloc_by_blocks(self,
@@ -2034,7 +2026,6 @@ class TypeBlocks(ContainerOperand):
                 pass
             elif b.ndim == 2 and assigned_stop < b.shape[1]:
                 yield b[NULL_SLICE, assigned_stop:]
-
 
     def _assign_from_iloc_by_unit(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
@@ -2460,7 +2451,6 @@ class TypeBlocks(ContainerOperand):
 
             t_start = t_end
 
-
     def _assign_from_bloc_by_coordinate(self,
             bloc_key: np.ndarray,
             values_map: tp.Dict[tp.Tuple[int, int], tp.Any],
@@ -2511,8 +2501,8 @@ class TypeBlocks(ContainerOperand):
 
             t_start = t_end # always update start
 
-
     #---------------------------------------------------------------------------
+
     def _slice_blocks(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None
@@ -2590,7 +2580,6 @@ class TypeBlocks(ContainerOperand):
                     # NOTE: this is faster than using np.full(1, block_sliced, dtype=dtype)
                     block_sliced = np.array((block_sliced,), dtype=b.dtype)
                 yield block_sliced
-
 
     def _extract_array(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
@@ -2896,8 +2885,8 @@ class TypeBlocks(ContainerOperand):
                 values_dtype=values_dtype,
                 ))
 
-
     #---------------------------------------------------------------------------
+
     def drop(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
         '''
         Drop rows or columns from a TypeBlocks instance.
@@ -2906,7 +2895,7 @@ class TypeBlocks(ContainerOperand):
             key: if a single value, treated as a row key; if a tuple, treated as a pair of row, column keys.
         '''
         if isinstance(key, tuple):
-            # column dropping can leed to a TB with generator that yields nothing;
+            # column dropping can lead to a TB with generator that yields nothing;
             return TypeBlocks.from_blocks(
                     self._drop_blocks(*key),
                     shape_reference=self._shape
@@ -3051,7 +3040,6 @@ class TypeBlocks(ContainerOperand):
 
         return self.from_blocks(blocks())
 
-
     def transpose(self) -> 'TypeBlocks':
         '''Return a new TypeBlocks that transposes and concatenates all blocks.
         '''
@@ -3127,6 +3115,7 @@ class TypeBlocks(ContainerOperand):
         return self.from_blocks(blocks())
 
     #---------------------------------------------------------------------------
+
     def clip(self,
             lower: tp.Union[None, float, tp.Iterable[np.ndarray]],
             upper: tp.Union[None, float, tp.Iterable[np.ndarray]],
@@ -3306,7 +3295,6 @@ class TypeBlocks(ContainerOperand):
                 assigned.flags.writeable = False
                 yield assigned
 
-
     @staticmethod
     def _fill_missing_sided_axis_1(
             blocks: tp.Iterable[np.ndarray],
@@ -3387,7 +3375,6 @@ class TypeBlocks(ContainerOperand):
             else:
                 isna_exit_previous = sel.all(axis=1) & isna_exit_previous
 
-
     def fillna_leading(self,
             value: tp.Any,
             *,
@@ -3430,7 +3417,6 @@ class TypeBlocks(ContainerOperand):
             return self.from_blocks(blocks)
 
         raise AxisInvalid(f'no support for axis {axis}')
-
 
     def fillfalsy_leading(self,
             value: tp.Any,
@@ -3554,8 +3540,6 @@ class TypeBlocks(ContainerOperand):
 
                 assigned.flags.writeable = False
                 yield assigned
-
-
 
     @staticmethod
     def _fill_missing_directional_axis_1(
@@ -3718,7 +3702,6 @@ class TypeBlocks(ContainerOperand):
                 assigned.flags.writeable = False
                 yield assigned
 
-
     def fillna_forward(self,
             limit: int = 0,
             *,
@@ -3741,7 +3724,6 @@ class TypeBlocks(ContainerOperand):
                     ))
 
         raise AxisInvalid(f'no support for axis {axis}')
-
 
     def fillna_backward(self,
             limit: int = 0,
@@ -3790,7 +3772,6 @@ class TypeBlocks(ContainerOperand):
 
         raise AxisInvalid(f'no support for axis {axis}')
 
-
     def fillfalsy_backward(self,
             limit: int = 0,
             *,
@@ -3814,8 +3795,6 @@ class TypeBlocks(ContainerOperand):
             return self.from_blocks(blocks)
 
         raise AxisInvalid(f'no support for axis {axis}')
-
-
 
     #---------------------------------------------------------------------------
 
@@ -3851,7 +3830,6 @@ class TypeBlocks(ContainerOperand):
             column_key = None
 
         return row_key, column_key
-
 
     def fill_missing_by_unit(self,
             value: object,
