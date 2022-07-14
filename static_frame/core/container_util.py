@@ -2,7 +2,6 @@
 This module us for utilty functions that take as input and / or return Container subclasses such as Index, Series, or Frame, and that need to be shared by multiple such Container classes.
 '''
 
-from collections import defaultdict
 from itertools import zip_longest
 from functools import partial
 import datetime
