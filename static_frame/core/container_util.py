@@ -1180,13 +1180,11 @@ def _index_many_to_one(
             return explicit_constructor(()) #type: ignore
         return cls_default.from_labels(())
 
-    arrays = [index.values]
-
     name_first = index.name
     name_aligned = True
-
     cls_first = index.__class__
     cls_aligned = True
+    depth_first = index.depth
 
     # if we are unioning we can give back an index_auto_aligned
     index_auto_aligned = (many_to_one_type is not ManyToOneType.CONCAT
@@ -1196,14 +1194,20 @@ def _index_many_to_one(
 
     # if IndexHierarchy, collect index_types generators
     if index.ndim == 2:
-        depth_first = index.depth
         index_types_gen = [index.index_types.values]
         index_types_aligned = True
+        arrays = [[index.values_at_depth(d)] for d in range(depth_first)]
     else: # for 1D we ignore this
         index_types_aligned = False
+        arrays = [index.values]
 
     for index in indices_iter:
-        arrays.append(index.values)
+        if depth_first > 1:
+            for d in range(depth_first):
+                arrays[d].append(index.values_at_depth(d))
+        else:
+            arrays.append(index.values)
+
         if name_aligned and index.name != name_first:
             name_aligned = False
         if cls_aligned and index.__class__ != cls_first:
@@ -1211,6 +1215,7 @@ def _index_many_to_one(
         if index_auto_aligned and (index.ndim != 1 or index._map is not None): #type: ignore
             index_auto_aligned = False
 
+        # index_types_aligned can only be True if we have all IH of same depth
         if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
             index_types_gen.append(index.index_types.values)
         else:
@@ -1238,26 +1243,38 @@ def _index_many_to_one(
 
     if cls_aligned and explicit_constructor is None:
         if cls_default.STATIC and not cls_first.STATIC:
-            # default is static but aligned is mutable
-            constructor = cls_first._IMMUTABLE_CONSTRUCTOR.from_labels #type: ignore
+            constructor_cls = cls_first._IMMUTABLE_CONSTRUCTOR #type: ignore
         elif not cls_default.STATIC and cls_first.STATIC:
-            # default is mutable but aligned is static
-            constructor = cls_first._MUTABLE_CONSTRUCTOR.from_labels #type: ignore
+            constructor_cls = cls_first._MUTABLE_CONSTRUCTOR #type: ignore
         else:
-            constructor = cls_first.from_labels
+            constructor_cls = cls_first
+
+        if index_types_aligned:
+            constructor = constructor_cls._from_arrays
+        else:
+            constructor = constructor_cls.from_labels
+
     elif explicit_constructor is not None:
         constructor = explicit_constructor
     else:
         constructor = cls_default.from_labels
 
-    # returns an immutable array
-    array = array_processor(arrays)
-
     if index_types_aligned: # IndexHierarchy
+        if many_to_one_type is ManyToOneType.CONCAT:
+            arrays = [array_processor(d) for d in arrays]
+            return constructor(arrays, #type: ignore
+                    name=name,
+                    index_constructors=index_constructors,
+                    )
+
+        raise NotImplementedError(arrays)
+        array = array_processor(arrays)
         return constructor(array, #type: ignore
                 name=name,
                 index_constructors=index_constructors,
                 )
+    # returns an immutable array
+    array = array_processor(arrays)
     return constructor(array, name=name) #type: ignore
 
 def index_many_concat(
