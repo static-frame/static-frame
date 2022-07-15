@@ -1207,7 +1207,7 @@ def _index_many_to_one(
         index_types_aligned = False
         arrays = [index.values]
 
-    for index_pos, index in enumerate(indices_iter, start=1):
+    for index in indices_iter:
         if index.depth != depth_first:
             raise RuntimeError(f'Indices must have aligned depths')
         if mtot_is_concat and depth_first > 1:
@@ -1224,7 +1224,7 @@ def _index_many_to_one(
             index_auto_aligned = False
 
         # index_types_aligned can only be True if we have all IH of same depth
-        if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
+        if index_types_aligned:
             index_types_gen.append(index.index_types.values)
         else:
             index_types_aligned = False
