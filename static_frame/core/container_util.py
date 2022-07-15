@@ -1161,6 +1161,8 @@ def _index_many_to_one(
 
     array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
 
+    mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
+
     if many_to_one_type is ManyToOneType.UNION:
         array_processor = partial(ufunc_set_iter,
                 union=True,
@@ -1169,7 +1171,7 @@ def _index_many_to_one(
         array_processor = partial(ufunc_set_iter,
                 union=False,
                 assume_unique=True)
-    elif many_to_one_type is ManyToOneType.CONCAT:
+    elif mtot_is_concat:
         array_processor = concat_resolved
 
     indices_iter = iter(indices)
@@ -1186,8 +1188,8 @@ def _index_many_to_one(
     cls_aligned = True
     depth_first = index.depth
 
-    # if we are unioning we can give back an index_auto_aligned
-    index_auto_aligned = (many_to_one_type is not ManyToOneType.CONCAT
+    # if we are unioning we can give back an index_auto
+    index_auto_aligned = (not mtot_is_concat
             and index.ndim == 1
             and index._map is None #type: ignore
             )
@@ -1196,15 +1198,19 @@ def _index_many_to_one(
     if index.ndim == 2:
         index_types_gen = [index.index_types.values]
         index_types_aligned = True
-        arrays = [[index.values_at_depth(d)] for d in range(depth_first)]
-    else: # for 1D we ignore this
+        if mtot_is_concat:
+            arrays = [[index.values_at_depth(d)] for d in range(depth_first)]
+        else:
+            # NOTE: we accept type consolidation for set operations for now
+            arrays = [index.values]
+    else:
         index_types_aligned = False
         arrays = [index.values]
 
-    for index_pos, index in enumerate(indices_iter):
+    for index_pos, index in enumerate(indices_iter, start=1):
         if index.depth != depth_first:
             raise RuntimeError(f'Indices must have aligned depths')
-        if depth_first > 1:
+        if mtot_is_concat and depth_first > 1:
             for d in range(depth_first):
                 arrays[d].append(index.values_at_depth(d))
         else:
@@ -1262,23 +1268,15 @@ def _index_many_to_one(
         constructor = cls_default.from_labels
 
     if index_types_aligned: # IndexHierarchy
-        if many_to_one_type is ManyToOneType.CONCAT:
+        if mtot_is_concat:
             # each component of arrays is a list of arrays per depth
             arrays = [array_processor(d) for d in arrays]
             return constructor(arrays, #type: ignore
                     name=name,
                     index_constructors=index_constructors,
                     )
-        # NOTE: this approach forces type consolidation across depth levels; this is consistent with what has been don in the past; only other option is to operate on tuples per label
-        blocks = []
-        for i in range(index_pos + 1):
-            # convert to 2D arrays
-            c = concat_resolved(
-                    [column_2d_filter(arrays[d][i]) for d in range(depth_first)],
-                    axis=1)
-            blocks.append(c)
-
-        array = array_processor(blocks)
+        # NOTE: arrays is a list of 2D arrays, where rows are labels
+        array = array_processor(arrays)
         return constructor(array, #type: ignore
                 name=name,
                 index_constructors=index_constructors,

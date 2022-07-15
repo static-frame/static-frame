@@ -553,6 +553,15 @@ class TestUnit(TestCase):
         post1 = index_many_set((), Index, union=True, explicit_constructor=IndexDate)
         self.assertIs(post1.__class__, IndexDate)
 
+    def test_index_many_set_i(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        idx2 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+
+        post = index_many_set((idx1, idx2), Index, union=True)
+        # import ipdb; ipdb.set_trace()
+
+
     #---------------------------------------------------------------------------
 
     def test_get_col_dtype_factory_a(self) -> None:
