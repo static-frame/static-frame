@@ -4274,6 +4274,17 @@ class TestUnit(TestCase):
             [['1.0', '2.0'], ['21.0', '3.0'], ['24.0', '7.0'], ['23.0', 'nan']]
             )
 
+    #---------------------------------------------------------------------------
+    def test_hierarchy_concat_a(self) -> None:
+
+        f = ff.parse("f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(4,2)")
+        f1 = f.iloc[:2]
+        f2 = f.iloc[2:]
+
+        f3 = Frame.from_concat((f1, f2)) # RuntimeError
+        self.assertTrue(f.index.equals(f3.index, compare_dtype=True, compare_class=True))
+
+
 
 if __name__ == '__main__':
     unittest.main()

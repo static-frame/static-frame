@@ -447,9 +447,9 @@ class IndexHierarchy(IndexBase):
             index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
-        Construct an :obj:`IndexHierarchy` from a 2D NumPy array, or a collection of 1D arrays.
+        Construct an :obj:`IndexHierarchy` from a 2D NumPy array, or a collection of 1D arrays per depth.
 
-        Very similar implementation to :meth:`_from_type_blocks`
+        Very similar implementation to :meth:`_from_type_blocks`, but avoids creating TypeBlocks instance.
 
         Returns:
             :obj:`IndexHierarchy`
