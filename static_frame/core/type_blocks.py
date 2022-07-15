@@ -2793,47 +2793,50 @@ class TypeBlocks(ContainerOperand):
         size: int = 0
         target_slice: tp.Union[int, slice]
 
-        # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering.
-        t_start = 0
-        for block in self._blocks:
-            if block.ndim == 1:
-                t_end = t_start + 1
-                target_slice = t_start
-            else:
-                t_end = t_start + block.shape[1]
-                target_slice = slice(t_start, t_end)
+        # iterate through values in bloc_key?
 
-            # target will only be 1D when block is 1d
-            target = bloc_key[NULL_SLICE, target_slice]
-            if not target.any():
-                t_start = t_end
-                continue
 
-            # will always reduce to a 1D array
-            part = block[target]
-            if dt_resolve is None:
-                dt_resolve = part.dtype
-            else:
-                dt_resolve = resolve_dtype(dt_resolve, part.dtype)
-            size += len(part)
-            parts.append(part)
+        # # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering.
+        # t_start = 0
+        # for block in self._blocks:
+        #     if block.ndim == 1:
+        #         t_end = t_start + 1
+        #         target_slice = t_start
+        #     else:
+        #         t_end = t_start + block.shape[1]
+        #         target_slice = slice(t_start, t_end)
 
-            # get coordinates
-            if block.ndim == 1: # target will be 1D
-                for row_pos in np.nonzero(target)[0]:
-                    coords.append((row_pos, t_start))
-            else:
-                for row_pos, col_pos in zip(*np.nonzero(target)):
-                    coords.append((row_pos, t_start + col_pos))
-            t_start = t_end
+        #     # target will only be 1D when block is 1d
+        #     target = bloc_key[NULL_SLICE, target_slice]
+        #     if not target.any():
+        #         t_start = t_end
+        #         continue
 
-        # if size is zero, dt_resolve will be None
-        if size > 0:
-            array = np.empty(shape=size, dtype=dt_resolve)
-            np.concatenate(parts, out=array)
-            array.flags.writeable = False
-        else:
-            array = EMPTY_ARRAY
+        #     # will always reduce to a 1D array
+        #     part = block[target]
+        #     if dt_resolve is None:
+        #         dt_resolve = part.dtype
+        #     else:
+        #         dt_resolve = resolve_dtype(dt_resolve, part.dtype)
+        #     size += len(part)
+        #     parts.append(part)
+
+        #     # get coordinates
+        #     if block.ndim == 1: # target will be 1D
+        #         for row_pos in np.nonzero(target)[0]:
+        #             coords.append((row_pos, t_start))
+        #     else:
+        #         for row_pos, col_pos in zip(*np.nonzero(target)):
+        #             coords.append((row_pos, t_start + col_pos))
+        #     t_start = t_end
+
+        # # if size is zero, dt_resolve will be None
+        # if size > 0:
+        #     array = np.empty(shape=size, dtype=dt_resolve)
+        #     np.concatenate(parts, out=array)
+        #     array.flags.writeable = False
+        # else:
+        #     array = EMPTY_ARRAY
 
         return coords, array
 
