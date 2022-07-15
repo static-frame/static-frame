@@ -13,6 +13,7 @@ from enum import Enum
 import numpy as np
 from numpy import char as npc
 from arraykit import column_2d_filter
+from arraykit import resolve_dtype_iter
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import AnyCallable
@@ -1196,23 +1197,26 @@ def _index_many_to_one(
 
     # if IndexHierarchy, collect index_types generators
     if index.ndim == 2:
-        index_types_gen = [index.index_types.values]
-        index_types_aligned = True
+        is_ih = True
+        index_types_arrays = [index.index_types.values]
+        if not mtot_is_concat:
+            index_dtypes_arrays = [index.dtypes.values]
+
         if mtot_is_concat:
-            arrays = [[index.values_at_depth(d)] for d in range(depth_first)]
+            # store array for each depth; unpack aligned depths with zip
+            arrays = [[index.values_at_depth(d) for d in range(depth_first)]]
         else:
             # NOTE: we accept type consolidation for set operations for now
             arrays = [index.values]
     else:
-        index_types_aligned = False
+        is_ih = False
         arrays = [index.values]
 
     for index in indices_iter:
         if index.depth != depth_first:
             raise RuntimeError(f'Indices must have aligned depths')
         if mtot_is_concat and depth_first > 1:
-            for d in range(depth_first):
-                arrays[d].append(index.values_at_depth(d))
+            arrays.append([index.values_at_depth(d) for d in range(depth_first)])
         else:
             arrays.append(index.values)
 
@@ -1223,13 +1227,17 @@ def _index_many_to_one(
         if index_auto_aligned and (index.ndim != 1 or index._map is not None): #type: ignore
             index_auto_aligned = False
 
-        # index_types_aligned can only be True if we have all IH of same depth
-        if index_types_aligned:
-            index_types_gen.append(index.index_types.values)
+        # is_ih can only be True if we have all IH of same depth
+        if is_ih:
+            index_types_arrays.append(index.index_types.values)
+            if not mtot_is_concat:
+                index_dtypes_arrays.append(index.dtypes.values)
         else:
-            index_types_aligned = False
+            is_ih = False
 
     name = name_first if name_aligned else None
+
+    # return an index auto if we can
     if index_auto_aligned:
         if many_to_one_type is ManyToOneType.UNION:
             size = max(a.size for a in arrays) #type: ignore
@@ -1240,10 +1248,10 @@ def _index_many_to_one(
                 explicit_constructor=explicit_constructor,
                 )
 
-    if index_types_aligned: # for IndexHierarchy
-        # all depths are already aligned
+    if is_ih: # for IndexHierarchy
         index_constructors = []
-        for types in zip(*index_types_gen):
+        # get types for each depth level
+        for types in zip(*index_types_arrays):
             if all(types[0] == t for t in types[1:]):
                 index_constructors.append(types[0])
             else: # assume this is always a 1D index
@@ -1257,7 +1265,7 @@ def _index_many_to_one(
         else:
             constructor_cls = cls_first
 
-        if index_types_aligned:
+        if is_ih:
             constructor = constructor_cls._from_arrays #type: ignore
         else:
             constructor = constructor_cls.from_labels #type: ignore
@@ -1267,21 +1275,24 @@ def _index_many_to_one(
     else:
         constructor = cls_default.from_labels
 
-    if index_types_aligned: # IndexHierarchy
+    if is_ih: # IndexHierarchy
         if mtot_is_concat:
-            # each component of arrays is a list of arrays per depth
-            arrays = [array_processor(d) for d in arrays]
-            return constructor(arrays, #type: ignore
-                    name=name,
-                    index_constructors=index_constructors,
-                    )
-        # NOTE: arrays is a list of 2D arrays, where rows are labels
-        array = array_processor(arrays)
-        return constructor(array, #type: ignore
+            # align same-depth collections of arrays
+            arrays_per_depth = [array_processor(d) for d in zip(*arrays)]
+        else:
+            # NOTE: arrays is a list of 2D arrays, where rows are labels
+            array = array_processor(arrays)
+            arrays_per_depth = []
+            for d, dtypes in enumerate(zip(*index_dtypes_arrays)):
+                dtype = resolve_dtype_iter(dtypes)
+                arrays_per_depth.append(array[NULL_SLICE, d].astype(dtype))
+
+        return constructor(arrays_per_depth, #type: ignore
                 name=name,
                 index_constructors=index_constructors,
                 depth_reference=depth_first,
                 )
+
     # returns an immutable array
     array = array_processor(arrays)
     return constructor(array, name=name) #type: ignore

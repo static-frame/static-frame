@@ -559,7 +559,30 @@ class TestUnit(TestCase):
         idx2 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
 
         post = index_many_set((idx1, idx2), Index, union=True)
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
+        self.assertEqual(post.values.tolist(),
+            [['a', 1], ['a', 2], ['b', 1], ['b', 2]])
+
+    def test_index_many_set_j(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        idx2 = IndexHierarchy.from_product(('a', 'c'), (1, 2))
+
+        post = index_many_set((idx1, idx2), Index, union=True)
+        self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
+        self.assertEqual(post.values.tolist(),
+            [['a', 1], ['a', 2], ['b', 1], ['b', 2], ['c', 1], ['c', 2]])
+
+    def test_index_many_set_k(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        idx2 = IndexHierarchy.from_product(('a', 'c'), (1, 2))
+
+        post = index_many_set((idx1, idx2), Index, union=False)
+        self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
+        self.assertEqual(post.values.tolist(),
+            [['a', 1], ['a', 2]],)
+
 
 
     #---------------------------------------------------------------------------
