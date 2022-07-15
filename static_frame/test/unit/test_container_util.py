@@ -1,4 +1,5 @@
 import datetime
+import typing as tp
 
 import numpy as np
 
@@ -435,6 +436,8 @@ class TestUnit(TestCase):
         idx2 = IndexHierarchy.from_product(('c', 'd'), (1, 2))
 
         post = index_many_concat((idx1, idx2), cls_default=Index)
+        post = tp.cast(IndexHierarchy, post)
+
         self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
         self.assertEqual(post.to_frame().to_pairs(),
                 ((0, ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'), (4, 'c'), (5, 'c'), (6, 'd'), (7, 'd'))), (1, ((0, 1), (1, 2), (2, 1), (3, 2), (4, 1), (5, 2), (6, 1), (7, 2))))
@@ -559,6 +562,8 @@ class TestUnit(TestCase):
         idx2 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
 
         post = index_many_set((idx1, idx2), Index, union=True)
+        post = tp.cast(IndexHierarchy, post)
+
         self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
         self.assertEqual(post.values.tolist(),
             [['a', 1], ['a', 2], ['b', 1], ['b', 2]])
@@ -569,6 +574,8 @@ class TestUnit(TestCase):
         idx2 = IndexHierarchy.from_product(('a', 'c'), (1, 2))
 
         post = index_many_set((idx1, idx2), Index, union=True)
+        post = tp.cast(IndexHierarchy, post)
+
         self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
         self.assertEqual(post.values.tolist(),
             [['a', 1], ['a', 2], ['b', 1], ['b', 2], ['c', 1], ['c', 2]])
@@ -579,6 +586,8 @@ class TestUnit(TestCase):
         idx2 = IndexHierarchy.from_product(('a', 'c'), (1, 2))
 
         post = index_many_set((idx1, idx2), Index, union=False)
+        post = tp.cast(IndexHierarchy, post)
+
         self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
         self.assertEqual(post.values.tolist(),
             [['a', 1], ['a', 2]],)

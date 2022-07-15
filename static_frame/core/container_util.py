@@ -1200,7 +1200,7 @@ def _index_many_to_one(
         is_ih = True
         index_types_arrays = [index.index_types.values]
         if not mtot_is_concat:
-            index_dtypes_arrays = [index.dtypes.values]
+            index_dtypes_arrays = [index.dtypes.values] #type: ignore
 
         if mtot_is_concat:
             # store array for each depth; unpack aligned depths with zip
@@ -1231,7 +1231,7 @@ def _index_many_to_one(
         if is_ih:
             index_types_arrays.append(index.index_types.values)
             if not mtot_is_concat:
-                index_dtypes_arrays.append(index.dtypes.values)
+                index_dtypes_arrays.append(index.dtypes.values) #type: ignore
         else:
             is_ih = False
 
