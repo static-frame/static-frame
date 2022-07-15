@@ -4566,8 +4566,7 @@ class Frame(ContainerOperand):
         index = Index(
                 ((self._index[x], self._columns[y]) for x, y in coords),
                 dtype=DTYPE_OBJECT)
-        # NOTE: the ordering of coords is determined by block structure, and may not be consistent for same-valued Frame with different block structures; best then to sort here to provide consistent representation independent of block structure.
-        return Series(values, index=index, own_index=True).sort_index()
+        return Series(values, index=index, own_index=True)
 
     def _compound_loc_to_getitem_iloc(self,
             key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:

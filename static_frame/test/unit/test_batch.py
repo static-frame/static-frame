@@ -550,8 +550,15 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2))
         b2 = b1.bloc[f2 >= 2]
-        post = list(s.values.tolist() for s in b2.values)
-        self.assertEqual(post, [[30, 40, 50], [4, 5, 2, 6, 3]])
+        post = list(s.to_pairs() for s in b2.values)
+
+        self.assertEqual(post,
+            [((('x', 'b'), 30), (('y', 'b'), 40), (('z', 'b'), 50)),
+             ((('x', 'b'), 4),
+              (('y', 'c'), 2),
+              (('y', 'b'), 5),
+              (('z', 'c'), 3),
+              (('z', 'b'), 6))])
 
     #---------------------------------------------------------------------------
 

@@ -157,6 +157,10 @@ EMPTY_ARRAY_BOOL.flags.writeable = False
 EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
+EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
+EMPTY_ARRAY_OBJECT.flags.writeable = False
+
+
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
 NAT = np.datetime64('nat')
