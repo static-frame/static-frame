@@ -8,6 +8,8 @@ Corrected usage of ``IterNodeDelegate`` with iterator endpoints that do not iter
 
 Improved type and dtype preservation in concatenation and set operations on ``IndexHierarchy``.
 
+Normalized ordering of results from ``Frame.bloc[]`` selections to row-major ordering without sorting labels.
+
 
 0.9.7
 ----------
