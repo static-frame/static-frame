@@ -2018,6 +2018,18 @@ class TestUnit(TestCase):
         post = tuple(s1.iter_element_items().map_fill_iter(mapping, fill_value=None))
         self.assertEqual(post, (None, 300, None, 200, None))
 
+    def test_series_iter_element_map_fill_e(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        s2 = s1.iter_element_items().map_fill({('d', 21): -1}, fill_value=0)
+        self.assertEqual(s2.to_pairs(),
+                (('a', 0), ('b', 0), ('c', 0), ('d', -1), ('e', 0))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_series_sort_index_a(self) -> None:

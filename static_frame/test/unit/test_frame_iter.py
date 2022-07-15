@@ -210,6 +210,21 @@ class TestUnit(TestCase):
                 (('z', None), ('x', (True, False)), ('w', None), ('y', (True, True)))
                 )
 
+    def test_frame_iter_tuple_h(self) -> None:
+        # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        post = f[['r', 's']].iter_tuple_items(axis=1, constructor=tuple).map_fill({('w', (False, False)): None}, fill_value=0)
+        self.assertEqual(post.to_pairs(),
+            (('z', 0), ('x', 0), ('w', None), ('y', 0))
+            )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_iter_series_a(self) -> None:
@@ -375,6 +390,15 @@ class TestUnit(TestCase):
         f2 = f1.iter_element(axis=1).map_all(mapping)
         self.assertEqual([d.kind for d in f2.dtypes.values],
                 ['i', 'i', 'i'])
+
+    def test_frame_iter_element_f(self) -> None:
+        f1 = Frame.from_records(np.arange(9).reshape(3, 3))
+
+        mapping = {x: x*3 for x in range(3)}
+        f2 = f1.iter_element(axis=1).map_fill(mapping, fill_value=-1)
+        self.assertEqual(f2.to_pairs(),
+            ((0, ((0, 0), (1, -1), (2, -1))), (1, ((0, 3), (1, -1), (2, -1))), (2, ((0, 6), (1, -1), (2, -1))))
+            )
 
     #---------------------------------------------------------------------------
 
