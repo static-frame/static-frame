@@ -32,6 +32,7 @@ INTERFACE_STR = (
         '__getitem__',
         'capitalize',
         'center',
+        'contains',
         'count',
         'decode',
         'encode',
@@ -182,6 +183,18 @@ class InterfaceString(Interface[TContainer]):
         Return a container with its elements centered in a string of length ``width``.
         '''
         block_gen = self._process_blocks(self._blocks, npc.center, (width, fillchar))
+        return self._blocks_to_container(block_gen)
+
+    def contains(self,  item: str) -> TContainer:
+        '''
+        Return a Boolean container showing True of item is a substring of elements.
+        '''
+        block_gen = self._process_element_blocks(
+                blocks=self._blocks,
+                method_name='__contains__',
+                args=(item,),
+                dtype=DTYPE_STR,
+                )
         return self._blocks_to_container(block_gen)
 
     def count(self,
