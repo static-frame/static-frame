@@ -605,6 +605,14 @@ class InterfaceBatchString(InterfaceBatch):
         '''
         return self._batch_apply(lambda c: c.via_str.count(sub, start, end))
 
+    def contains(self,
+            item: str,
+            ) -> 'Batch':
+        '''
+        Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.contains(item))
+
     def decode(self,
             encoding: tp.Optional[str] = None,
             errors: tp.Optional[str] = None,
