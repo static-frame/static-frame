@@ -829,13 +829,9 @@ class TypeBlocks(ContainerOperand):
             ) -> np.array:
         '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array. This generally assumes that they dtype is aligned amonng the provided blocks.
         '''
+        # NOTE: when this is called we always have 2 or more blocks
         blocks_norm = [column_2d_filter(x) for x in blocks]
-        if len(blocks_norm) == 1:
-            b = blocks_norm.pop()
-            if b.dtype != dtype:
-                return b.astype(dtype)
-            return b
-
+        # assert len(blocks_norm) >= 2
         rows = blocks_norm[0].shape[0] # all 2D
         array = np.empty((rows, columns), dtype=dtype)
         np.concatenate(blocks_norm, axis=1, out=array)
@@ -859,7 +855,6 @@ class TypeBlocks(ContainerOperand):
                 group.append(block)
                 group_columns = 1 if block.ndim == 1 else block.shape[1]
                 continue
-
             # NOTE: could be less strict and look for compatibility within dtype kind (or other compatible types)
             if block.dtype != group_dtype:
                 # new group found, return stored

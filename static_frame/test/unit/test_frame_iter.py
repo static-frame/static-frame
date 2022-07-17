@@ -1209,6 +1209,15 @@ class TestUnit(TestCase):
         self.assertEqual([a.dtype.kind for a in post3], ['i', 'i', 'i'])
         # import ipdb; ipdb.set_trace()
 
+    def test_frame_iter_block_c(self) -> None:
+
+        f1 = ff.parse('s(2,4)|v(int)|c(I,str)')
+        # no additional consolidation possible
+        post1 = tuple(f1.iter_block(consolidate=True))
+        self.assertEqual(len(post1), 1)
+
+
+
 
 if __name__ == '__main__':
     import unittest
