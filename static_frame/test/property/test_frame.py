@@ -134,14 +134,6 @@ class TestUnit(TestCase):
                 a = getattr(f1, attr)(axis=axis).values # call the method
                 b = attrs.ufunc_skipna(values, axis=axis)
 
-    #             if a.dtype != b.dtype:
-    #                 continue
-    #             try:
-    #                 self.assertAlmostEqualArray(a, b)
-    #             except:
-    #                 import ipdb; ipdb.set_trace()
-    #                 raise
-
     @given(sfst.get_frame())
     def test_frame_isin(self, f1: Frame) -> None:
         value = f1.iloc[0, 0]

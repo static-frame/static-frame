@@ -647,10 +647,6 @@ class TestUnit(TestCase):
         self.assertTrue((np.int64(5) == s1).equals(5 == s1)) #pylint: disable=C0122
         self.assertTrue((np.int64(5) != s1).equals(5 != s1)) #pylint: disable=C0122
 
-
-
-        # import ipdb; ipdb.set_trace()
-
     #---------------------------------------------------------------------------
     def test_series_array(self) -> None:
         self.assertEqual(
@@ -2902,7 +2898,6 @@ class TestUnit(TestCase):
                 np.dtype('float64')
                 )
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(s1.shift(4, fill_value=None).to_pairs(),
                 (('a', None), ('b', None), ('c', None), ('d', None), ('e', 2), ('f', 3))
                 )
@@ -3394,7 +3389,6 @@ class TestUnit(TestCase):
         self.assertEqual(s1.iloc_searchsorted(87), 2)
         self.assertEqual(s1.iloc_searchsorted(87, side_left=False), 3)
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(s1.iloc_searchsorted([0, 123]).tolist(), [0, 3])
         self.assertEqual(s1.iloc_searchsorted([0, 6]).tolist(), [0, 1])
         self.assertEqual(s1.iloc_searchsorted([3, 8234]).tolist(), [0, 6])

@@ -194,7 +194,6 @@ class TestUnit(TestCase):
         self.assertEqual(post[0],
             (np.datetime64('2210-12-26'), np.datetime64('164167'))
             )
-        # import ipdb; ipdb.set_trace()
 
     def test_frame_iter_tuple_g(self) -> None:
         # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable

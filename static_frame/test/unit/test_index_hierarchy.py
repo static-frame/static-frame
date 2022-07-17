@@ -2611,7 +2611,6 @@ class TestUnit(TestCase):
         ih2 = IndexHierarchy.from_labels(labels)
 
         a1 = ih1 == ih2
-        # import ipdb; ipdb.set_trace()s
         self.assertEqual(a1.tolist(), [[True, True, True], [True, True, True]])
 
     def test_hierarchy_binary_operators_f(self) -> None:

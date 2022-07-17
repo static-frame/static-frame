@@ -305,7 +305,6 @@ class TestUnit(TestCase):
         index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
         s = Series(range(len(index)), index=index, dtype=np.int64)
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(s.display(config_rows_12).to_rows(),
                 [
                 '<Series>',

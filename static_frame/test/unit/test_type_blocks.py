@@ -142,7 +142,6 @@ class TestUnit(TestCase):
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
 
         row1 = tb1.iloc[2]
-        # import ipdb; ipdb.set_trace()
 
         self.assertEqual(tb1.shape, (3, 4))
 
@@ -1038,7 +1037,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb2.dtypes.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(tb2.shapes.tolist(),
                 [(3, 3), (3, 2), (3, 1), (3, 3)])
 
@@ -1078,7 +1076,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb2.dtypes.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(tb2.shapes.tolist(),
                 [(3, 3), (3, 2), (3, 1), (3, 3)])
 
@@ -3149,7 +3146,6 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        # import ipdb; ipdb.set_trace()
         self.assertTypeBlocksArrayEqual(
                 TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_element(1, 1, wrap=False, fill_value='x')),
                 [['x', 'x', 'x', 'x', 'x', 'x'],
@@ -3652,7 +3648,6 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2))
         tb2 = TypeBlocks.from_blocks((a1, a3))
 
-        # import ipdb; ipdb.set_trace()
         self.assertFalse(tb1.equals(tb2))
 
     #---------------------------------------------------------------------------
@@ -3975,7 +3970,6 @@ class TestUnit(TestCase):
                 dtypes=(),
                 size_one_unity=True,
                 )
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(post.dtype, np.dtype(float))
         self.assertEqual(post.tolist(), [-88017.0, -610.8])
 
