@@ -749,7 +749,6 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).T.to_frame()
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(f3.to_pairs(0),
                 (('x', ((('f1', 'b'), 0), (('f1', 'a'), 50), (('f2', 'b'), 3), (('f2', 'a'), 6))), ('y', ((('f1', 'b'), 20), (('f1', 'a'), 40), (('f2', 'b'), 1), (('f2', 'a'), 4))), ('z', ((('f1', 'b'), 10), (('f1', 'a'), 30), (('f2', 'b'), 20), (('f2', 'a'), 50))))
         )

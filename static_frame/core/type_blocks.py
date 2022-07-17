@@ -2063,7 +2063,6 @@ class TypeBlocks(ContainerOperand):
             value_dtype = value.dtype #type: ignore
         else:
             value_dtype = dtype_from_element(value)
-        # import ipdb; ipdb.set_trace()
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = self._key_to_block_slices(
                 column_key,

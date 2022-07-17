@@ -91,7 +91,6 @@ class TestUnit(TestCase):
                 )
         #scipy: [1.0, 3.5, 6.0, 3.5, 3.5, 3.5]
 
-        # import ipdb; ipdb.set_trace()
         a2 = rank_1d(np.array([0, 2, 3, 2]), 'mean', start=1)
         self.assertEqual(a2.tolist(),
                 [1.0, 2.5, 4.0, 2.5]
@@ -150,7 +149,6 @@ class TestUnit(TestCase):
     def test_rank_max_a(self) -> None:
 
         a1 = rank_1d(np.array([0, 2, 3, 2]), 'max', start=1)
-        # import ipdb; ipdb.set_trace()
 
         self.assertEqual(a1.tolist(),
                 [1, 3, 4, 3]

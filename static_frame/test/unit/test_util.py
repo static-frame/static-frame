@@ -2715,7 +2715,6 @@ class TestUnit(TestCase):
         post = blocks_to_array_2d(arrays)
         self.assertEqual(post.tolist(), [[1], [2]])
 
-        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()
