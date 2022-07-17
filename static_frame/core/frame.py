@@ -3483,7 +3483,7 @@ class Frame(ContainerOperand):
         return IterNodeBlock(
                 container=self,
                 function_values=self._iter_block,
-                function_items=None, # NOTE: might use integers for labels?
+                function_items=self._iter_block_items,
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.FRAME_BLOCKS
                 )
@@ -5312,9 +5312,13 @@ class Frame(ContainerOperand):
     def _iter_block(self,
             consolidate: bool = False,
             dtype: DtypeSpecifier = None,
-            ) -> tp.Iterator[tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]]:
+            ) -> tp.Iterator[np.ndarray]:
         '''
-        Generator of pairs of (index, column), value. This is driven by ``np.ndindex``, and thus orders by row.
+        Generator of np.ndarray from internal TypeBlocks.
+
+        Args:
+            conolidate: consolidate like-typed adjacent blocks.
+            dtype: conver types pre-consolidation.
         '''
         if not consolidate and dtype is None:
             yield from self._blocks._blocks
@@ -5325,6 +5329,12 @@ class Frame(ContainerOperand):
         elif consolidate and dtype is not None:
             yield from TypeBlocks.consolidate_blocks(
                 (b.astype(dtype) for b in self._blocks._blocks))
+
+    def _iter_block_items(self,
+            consolidate: bool = False,
+            dtype: DtypeSpecifier = None,
+            ) -> tp.Tuple[int, tp.Iterator[np.ndarray]]:
+        yield from enumerate(self._iter_block(consolidate=consolidate, dtype=dtype))
 
     def _iter_element_iloc_items(self,
             axis: int = 0,

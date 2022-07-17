@@ -56,7 +56,12 @@ class IterNodeApplyType(Enum):
 
     @classmethod
     def is_items(cls, apply_type: 'IterNodeApplyType') -> bool:
-        if apply_type is cls.SERIES_VALUES or apply_type is cls.INDEX_LABELS:
+        '''Return True if the apply_constructor to be used consumes items; otherwise, the apply_constructor consumes values alone.
+        '''
+        if (apply_type is cls.SERIES_VALUES
+                or apply_type is cls.INDEX_LABELS
+                or apply_type is cls.FRAME_BLOCKS
+                ):
             return False
         return True
 
@@ -161,6 +166,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         Args:
             {func}
+
+        Yields:
+            Pairs of label, value after function application.
         '''
         # depend on yield type, we determine what the passed in function expects to
         if self._yield_type is IterNodeType.VALUES:
@@ -177,6 +185,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         Args:
             {func}
+
+        Yields:
+            Values after function application.
         '''
         if self._yield_type is IterNodeType.VALUES:
             yield from (func(v) for v in self._func_values())
@@ -661,18 +672,20 @@ class IterNode(tp.Generic[FrameOrSeries]):
             blocks: tp.Iterable[np.ndarray],
             *,
             name: NameType = None,
+            dtype: DtypeSpecifier = None,
             index_constructor: tp.Optional[IndexConstructor]= None,
             ) -> 'Frame':
         from static_frame.core.frame import Frame
         assert isinstance(self._container, Frame)
 
+        # NOTE: not sure if we can / should use dtype argument
         return self._container.__class__(
                 TypeBlocks.from_blocks(blocks),
                 index=self._container._index,
                 columns=self._container._columns,
-                own_index=True,
                 index_constructor=index_constructor,
                 name=name,
+                own_index=True,
                 own_data=True,
                 )
 

@@ -194,7 +194,6 @@ class TestUnit(TestCase):
         self.assertEqual(post[0],
             (np.datetime64('2210-12-26'), np.datetime64('164167'))
             )
-        # import ipdb; ipdb.set_trace()
 
     def test_frame_iter_tuple_g(self) -> None:
         # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable
@@ -1178,6 +1177,37 @@ class TestUnit(TestCase):
 
         s1 = f1.iter_group('p', axis=0).apply(lambda f: f['q'].values.sum())
         self.assertEqual(list(s1.items()), [(2, 97), (30, 107)])
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_block_a(self) -> None:
+
+        f1 = ff.parse('s(3,4)|v(int,int,bool,int)|c(I,str)')
+
+        post1 = tuple(f1.iter_block())
+        self.assertEqual(len(post1), 3)
+
+        post2 = f1.iter_block().apply(lambda a: ~a)
+        self.assertEqual(f1._blocks.shapes.tolist(),
+                post2._blocks.shapes.tolist())
+        self.assertEqual(post2.to_pairs(),
+                (('zZbu', ((0, 88016), (1, -92868), (2, -84968))), ('ztsv', ((0, -162198), (1, 41156), (2, -5730))), ('zUvW', ((0, False), (1, True), (2, True))), ('zkuW', ((0, -129018), (1, -35022), (2, -166925))))
+                )
+
+    def test_frame_iter_block_b(self) -> None:
+
+        f1 = ff.parse('s(2,4)|v(int,int,bool,int)|c(I,str)')
+        # no additional consolidation possible
+        post1 = tuple(f1.iter_block(consolidate=True))
+        self.assertEqual(len(post1), 3)
+
+        # with pre-consolidation dtype conversion
+        post2 = tuple(f1.iter_block(consolidate=True, dtype=int))
+        self.assertEqual(len(post2), 1)
+
+        post3 = tuple(f1.iter_block(dtype=int))
+        self.assertEqual(len(post3), 3)
+        self.assertEqual([a.dtype.kind for a in post3], ['i', 'i', 'i'])
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
