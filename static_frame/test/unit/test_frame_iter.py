@@ -1216,8 +1216,12 @@ class TestUnit(TestCase):
         post1 = tuple(f1.iter_block(consolidate=True))
         self.assertEqual(len(post1), 1)
 
+    def test_frame_iter_block_d(self) -> None:
 
+        f1 = ff.parse('s(3,4)|v(int,int,bool,int)|c(I,str)')
 
+        post1 = tuple(f1.iter_block().apply_iter_items(lambda v: v.shape))
+        self.assertEqual(post1, ((0, (3, 2)), (1, (3,)), (2, (3,))))
 
 if __name__ == '__main__':
     import unittest
