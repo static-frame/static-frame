@@ -10,6 +10,8 @@ Improved type and dtype preservation in concatenation and set operations on ``In
 
 Normalized ordering of results from ``Frame.bloc[]`` selections to row-major ordering without sorting labels.
 
+Added ``via_str.contains()``.
+
 
 0.9.7
 ----------
