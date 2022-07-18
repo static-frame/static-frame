@@ -10,7 +10,6 @@ if __name__ == '__main__':
     build_dir = os.path.join(doc_dir, 'build', 'html')
 
     sys.path.append(os.path.join(os.path.dirname(doc_dir)))
-    # import ipdb; ipdb.set_trace()
 
     args = ['-E',
             '-b',

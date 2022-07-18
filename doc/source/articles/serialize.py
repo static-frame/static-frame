@@ -215,7 +215,6 @@ class SFReadNPY(FileIOTest):
         self.fixture.to_npy(self.fp_dir)
 
     def __call__(self):
-        # import ipdb; ipdb.set_trace()
         f = sf.Frame.from_npy(self.fp_dir)
         _ = f.loc[34715, 'zZbu']
 
@@ -235,7 +234,6 @@ class SFReadNPYMM(FileIOTest):
         self.fixture.to_npy(self.fp_dir)
 
     def __call__(self):
-        # import ipdb; ipdb.set_trace()
         f, close = sf.Frame.from_npy_mmap(self.fp_dir)
         _ = f.loc[34715, 'zZbu']
         close()
@@ -689,7 +687,6 @@ def run_test(
     print(display.display(config))
 
     plot_performance(f)
-    # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     # pandas_serialize_test()

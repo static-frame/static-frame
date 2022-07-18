@@ -647,10 +647,6 @@ class TestUnit(TestCase):
         self.assertTrue((np.int64(5) == s1).equals(5 == s1)) #pylint: disable=C0122
         self.assertTrue((np.int64(5) != s1).equals(5 != s1)) #pylint: disable=C0122
 
-
-
-        # import ipdb; ipdb.set_trace()
-
     #---------------------------------------------------------------------------
     def test_series_array(self) -> None:
         self.assertEqual(
@@ -2018,6 +2014,18 @@ class TestUnit(TestCase):
         post = tuple(s1.iter_element_items().map_fill_iter(mapping, fill_value=None))
         self.assertEqual(post, (None, 300, None, 200, None))
 
+    def test_series_iter_element_map_fill_e(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        s2 = s1.iter_element_items().map_fill({('d', 21): -1}, fill_value=0)
+        self.assertEqual(s2.to_pairs(),
+                (('a', 0), ('b', 0), ('c', 0), ('d', -1), ('e', 0))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_series_sort_index_a(self) -> None:
@@ -2890,7 +2898,6 @@ class TestUnit(TestCase):
                 np.dtype('float64')
                 )
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(s1.shift(4, fill_value=None).to_pairs(),
                 (('a', None), ('b', None), ('c', None), ('d', None), ('e', 2), ('f', 3))
                 )
@@ -3382,7 +3389,6 @@ class TestUnit(TestCase):
         self.assertEqual(s1.iloc_searchsorted(87), 2)
         self.assertEqual(s1.iloc_searchsorted(87, side_left=False), 3)
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(s1.iloc_searchsorted([0, 123]).tolist(), [0, 3])
         self.assertEqual(s1.iloc_searchsorted([0, 6]).tolist(), [0, 1])
         self.assertEqual(s1.iloc_searchsorted([3, 8234]).tolist(), [0, 6])
@@ -4031,6 +4037,13 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(s1.via_str[0].to_pairs(),
                 ((0, 'a'), (1, 'c'), (2, 'd'))
+                )
+
+    def test_series_str_contains_a(self) -> None:
+        s1 = Series(['ab_cdldkj', 'cd_LKSJ', 'df_foooooo'])
+        s2 = s1.via_str.contains('cd')
+        self.assertEqual(s2.to_pairs(),
+                ((0, 'True'), (1, 'True'), (2, 'False'))
                 )
 
     #---------------------------------------------------------------------------

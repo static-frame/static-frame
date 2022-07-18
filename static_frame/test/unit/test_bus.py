@@ -77,7 +77,6 @@ class TestUnit(TestCase):
 
             f3 = b2['bar']
             f4 = b2['foo']
-            # import ipdb; ipdb.set_trace()
             zs = StoreZipTSV(fp)
             zs.write(b1.items())
 

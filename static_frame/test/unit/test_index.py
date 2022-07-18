@@ -704,7 +704,6 @@ class TestUnit(TestCase):
             pbytes = pickle.dumps(index)
             index_new = pickle.loads(pbytes)
             for v in index: # iter labels
-                # import ipdb; ipdb.set_trace()
                 # this compares Index objects
                 self.assertFalse(index_new._labels.flags.writeable)
                 self.assertEqual(index_new.loc[v], index.loc[v])
@@ -1639,8 +1638,6 @@ class TestUnit(TestCase):
         idx1 = Index((0, '', None, 2))
         idx2 = idx1.dropfalsy()
         self.assertEqual(idx2.values.tolist(), [2])
-
-        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

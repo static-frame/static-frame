@@ -33,7 +33,7 @@ from static_frame.core.axis_map import buses_to_hierarchy
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import index_many_concat
 from static_frame.core.index import Index
 from static_frame.core.util import IndexConstructor
 from static_frame.core.container_util import index_from_optional_constructor
@@ -128,7 +128,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         array.flags.writeable = False
 
         if index_components is not None:
-            index = index_many_set(index_components, Index, union=True)
+            index = index_many_concat(index_components, Index)
 
         series = Series(array, name=name)
         return cls(series,

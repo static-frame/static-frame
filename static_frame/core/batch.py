@@ -1659,7 +1659,6 @@ class Batch(ContainerOperand, StoreClientMixin):
                 index = labels
             if axis == 1 and columns is None:
                 columns = labels
-            # import ipdb; ipdb.set_trace()
             return Frame.from_concat( #type: ignore
                     containers,
                     axis=axis,

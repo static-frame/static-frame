@@ -550,8 +550,15 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2))
         b2 = b1.bloc[f2 >= 2]
-        post = list(s.values.tolist() for s in b2.values)
-        self.assertEqual(post, [[30, 40, 50], [4, 5, 2, 6, 3]])
+        post = list(s.to_pairs() for s in b2.values)
+
+        self.assertEqual(post,
+            [((('x', 'b'), 30), (('y', 'b'), 40), (('z', 'b'), 50)),
+             ((('x', 'b'), 4),
+              (('y', 'c'), 2),
+              (('y', 'b'), 5),
+              (('z', 'c'), 3),
+              (('z', 'b'), 6))])
 
     #---------------------------------------------------------------------------
 
@@ -742,7 +749,6 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).T.to_frame()
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(f3.to_pairs(0),
                 (('x', ((('f1', 'b'), 0), (('f1', 'a'), 50), (('f2', 'b'), 3), (('f2', 'a'), 6))), ('y', ((('f1', 'b'), 20), (('f1', 'a'), 40), (('f2', 'b'), 1), (('f2', 'a'), 4))), ('z', ((('f1', 'b'), 10), (('f1', 'a'), 30), (('f2', 'b'), 20), (('f2', 'a'), 50))))
         )
@@ -1618,6 +1624,14 @@ class TestUnit(TestCase):
         post = Batch.from_frames((f1, f2)).via_str.center(8, '-').to_frame()
         self.assertEqual(post.to_pairs(),
                 (('zZbu', ((('a', 34715), '--zjZQ--'), (('a', -3648), '--zO5l--'), (('b', 34715), '--zjZQ--'), (('b', -3648), '--zO5l--'))), ('ztsv', ((('a', 34715), '--zaji--'), (('a', -3648), '--zJnC--'), (('b', 34715), '--zaji--'), (('b', -3648), '--zJnC--'))), ('zUvW', ((('a', 34715), '--ztsv--'), (('a', -3648), '--zUvW--'), (('b', 34715), '--ztsv--'), (('b', -3648), '--zUvW--')))))
+
+    def test_batch_via_str_contains(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.contains('zU').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'False'), (('a', -3648), 'False'), (('b', 34715), 'False'), (('b', -3648), 'False'))), ('ztsv', ((('a', 34715), 'False'), (('a', -3648), 'False'), (('b', 34715), 'False'), (('b', -3648), 'False'))), ('zUvW', ((('a', 34715), 'False'), (('a', -3648), 'True'), (('b', 34715), 'False'), (('b', -3648), 'True'))))
+                )
 
     def test_batch_via_str_count(self) -> None:
         f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')

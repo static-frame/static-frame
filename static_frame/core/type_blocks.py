@@ -1,8 +1,8 @@
 import typing as tp
-from itertools import zip_longest
-from itertools import chain
-from functools import partial
 from copy import deepcopy
+from functools import partial
+from itertools import chain
+from itertools import zip_longest
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -26,47 +26,49 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.util import array_shift
-from static_frame.core.util import array_to_groups_and_locations
-from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import binary_transition
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.util import DEFAULT_FAST_SORT_KIND
+from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import dtype_to_fill_value
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import dtype_from_element
+from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import EMPTY_ARRAY_OBJECT
 from static_frame.core.util import FILL_VALUE_DEFAULT
-from static_frame.core.util import full_for_fill
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import INT_TYPES
-from static_frame.core.util import isna_array
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import OptionalArrayList
+from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import ShapeType
+from static_frame.core.util import UFunc
+from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import array_deepcopy
+from static_frame.core.util import array_shift
+from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import array_ufunc_axis_skipna
+from static_frame.core.util import arrays_equal
+from static_frame.core.util import binary_transition
+from static_frame.core.util import blocks_to_array_2d
+from static_frame.core.util import concat_resolved
+from static_frame.core.util import dtype_from_element
+from static_frame.core.util import dtype_to_fill_value
+from static_frame.core.util import full_for_fill
+from static_frame.core.util import isfalsy_array
+from static_frame.core.util import isin_array
+from static_frame.core.util import isna_array
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import iterable_to_array_nd
+from static_frame.core.util import roll_1d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
-from static_frame.core.util import UFunc
-from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import isin_array
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import array_deepcopy
-from static_frame.core.util import arrays_equal
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import roll_1d
-from static_frame.core.util import ShapeType
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import OptionalArrayList
-from static_frame.core.util import blocks_to_array_2d
 
-from static_frame.core.style_config import StyleConfig
 
 #---------------------------------------------------------------------------
 def group_match(
@@ -2053,7 +2055,6 @@ class TypeBlocks(ContainerOperand):
             value_dtype = value.dtype #type: ignore
         else:
             value_dtype = dtype_from_element(value)
-        # import ipdb; ipdb.set_trace()
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = self._key_to_block_slices(
                 column_key,
@@ -2782,9 +2783,9 @@ class TypeBlocks(ContainerOperand):
 
     def extract_bloc(self,
             bloc_key: np.ndarray,
-            ) -> tp.Tuple[tp.List[tp.Tuple[int, int]], np.ndarray]:
+            ) -> tp.Tuple[np.ndarray, np.ndarray]:
         '''
-        Extract a 1D array from TypeBlocks, doing minimal type coercion.
+        Extract a 1D array from TypeBlocks, doing minimal type coercion. This returns results in row-major ordering.
         '''
         parts = []
         coords = []
@@ -2793,7 +2794,6 @@ class TypeBlocks(ContainerOperand):
         size: int = 0
         target_slice: tp.Union[int, slice]
 
-        # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering.
         t_start = 0
         for block in self._blocks:
             if block.ndim == 1:
@@ -2828,14 +2828,23 @@ class TypeBlocks(ContainerOperand):
             t_start = t_end
 
         # if size is zero, dt_resolve will be None
-        if size > 0:
-            array = np.empty(shape=size, dtype=dt_resolve)
-            np.concatenate(parts, out=array)
-            array.flags.writeable = False
-        else:
-            array = EMPTY_ARRAY
+        if size == 0:
+            return EMPTY_ARRAY_OBJECT, EMPTY_ARRAY
 
-        return coords, array
+        array = np.empty(shape=size, dtype=dt_resolve)
+        np.concatenate(parts, out=array)
+
+        # # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering. we sort integer tuples of coords here, and use that sort order to sort array; this is better than trying to sort the labels on the Series (labels that might not be sortable).
+
+        coords_array = np.empty(len(array), dtype=object)
+        coords_array[:] = coords # force creation of 1D object array
+
+        # NOTE: in this sort there should never be ties, so we can use an unstable sort
+        order = np.argsort(coords_array, kind=DEFAULT_FAST_SORT_KIND)
+        array = array[order]
+        array.flags.writeable = False
+
+        return coords_array[order], array
 
     #---------------------------------------------------------------------------
     # assignment interfaces

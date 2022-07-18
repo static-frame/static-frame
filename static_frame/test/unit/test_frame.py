@@ -14315,5 +14315,15 @@ class TestUnit(TestCase):
         self.assertEqual(s.name, ('b', 1))
 
 
+    #---------------------------------------------------------------------------
+    def test_frame_bloc_sel_a(self) -> None:
+
+        # this proves row-major ordering and not sorting on hashables
+        f = Frame(np.arange(6).reshape(3,2), index=(3, 2, 1), columns=('z', None))
+        self.assertEqual(f.bloc[f >= 0].to_pairs(),
+                (((3, 'z'), 0), ((3, None), 1), ((2, 'z'), 2), ((2, None), 3), ((1, 'z'), 4), ((1, None), 5))
+                )
+
+
 if __name__ == '__main__':
     unittest.main()

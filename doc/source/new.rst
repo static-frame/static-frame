@@ -6,6 +6,12 @@ What is New in Static Frame
 
 Corrected usage of ``IterNodeDelegate`` with iterator endpoints that do not iterate hashables; added ``IterNodeDelegateMapable`` for usage with iterators of hashables.
 
+Improved type and dtype preservation in concatenation and set operations on ``IndexHierarchy``.
+
+Normalized ordering of results from ``Frame.bloc[]`` selections to row-major ordering without sorting labels.
+
+Added ``via_str.contains()``.
+
 
 0.9.7
 ----------

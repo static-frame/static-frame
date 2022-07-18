@@ -72,8 +72,6 @@ def process(
 
             post = sf.Frame.from_concat(observations(fields))
 
-            # import ipdb; ipdb.set_trace()
-
             # create more rows with axis config.CHARACTERS over the groups
             def gen() -> tp.Iterator[sf.Frame]:
                 for label, func in config.CHARACTERS_AGGREGATE:
