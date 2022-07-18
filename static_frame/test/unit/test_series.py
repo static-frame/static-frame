@@ -4039,6 +4039,13 @@ class TestUnit(TestCase):
                 ((0, 'a'), (1, 'c'), (2, 'd'))
                 )
 
+    def test_series_str_contains_a(self) -> None:
+        s1 = Series(['ab_cdldkj', 'cd_LKSJ', 'df_foooooo'])
+        s2 = s1.via_str.contains('cd')
+        self.assertEqual(s2.to_pairs(),
+                ((0, 'True'), (1, 'True'), (2, 'False'))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_series_via_dt_year_a(self) -> None:

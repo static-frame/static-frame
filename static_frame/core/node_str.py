@@ -32,6 +32,7 @@ INTERFACE_STR = (
         '__getitem__',
         'capitalize',
         'center',
+        'contains',
         'count',
         'decode',
         'encode',
@@ -182,6 +183,18 @@ class InterfaceString(Interface[TContainer]):
         Return a container with its elements centered in a string of length ``width``.
         '''
         block_gen = self._process_blocks(self._blocks, npc.center, (width, fillchar))
+        return self._blocks_to_container(block_gen)
+
+    def contains(self,  item: str) -> TContainer:
+        '''
+        Return a Boolean container showing True of item is a substring of elements.
+        '''
+        block_gen = self._process_element_blocks(
+                blocks=self._blocks,
+                method_name='__contains__',
+                args=(item,),
+                dtype=DTYPE_STR,
+                )
         return self._blocks_to_container(block_gen)
 
     def count(self,
@@ -591,6 +604,14 @@ class InterfaceBatchString(InterfaceBatch):
         Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
         '''
         return self._batch_apply(lambda c: c.via_str.count(sub, start, end))
+
+    def contains(self,
+            item: str,
+            ) -> 'Batch':
+        '''
+        Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.contains(item))
 
     def decode(self,
             encoding: tp.Optional[str] = None,

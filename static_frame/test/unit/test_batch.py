@@ -1625,6 +1625,14 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('zZbu', ((('a', 34715), '--zjZQ--'), (('a', -3648), '--zO5l--'), (('b', 34715), '--zjZQ--'), (('b', -3648), '--zO5l--'))), ('ztsv', ((('a', 34715), '--zaji--'), (('a', -3648), '--zJnC--'), (('b', 34715), '--zaji--'), (('b', -3648), '--zJnC--'))), ('zUvW', ((('a', 34715), '--ztsv--'), (('a', -3648), '--zUvW--'), (('b', 34715), '--ztsv--'), (('b', -3648), '--zUvW--')))))
 
+    def test_batch_via_str_contains(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.contains('zU').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'False'), (('a', -3648), 'False'), (('b', 34715), 'False'), (('b', -3648), 'False'))), ('ztsv', ((('a', 34715), 'False'), (('a', -3648), 'False'), (('b', 34715), 'False'), (('b', -3648), 'False'))), ('zUvW', ((('a', 34715), 'False'), (('a', -3648), 'True'), (('b', 34715), 'False'), (('b', -3648), 'True'))))
+                )
+
     def test_batch_via_str_count(self) -> None:
         f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
         f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
