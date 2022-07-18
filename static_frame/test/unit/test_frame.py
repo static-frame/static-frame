@@ -12531,6 +12531,27 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_frame_via_values_apply_a(self) -> None:
+
+        f = ff.parse('s(3,4)|v(int,float)|c(I,str)')
+        post1 = abs(f).via_values.apply(np.log)
+        self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(),
+                (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
+                )
+
+        post2 = abs(f).via_values.apply(np.log, unify_blocks=True)
+        self.assertEqual(round(post2.fillna(0)).astype(int).to_pairs(),
+                (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
+                )
+
+        post3 = abs(f).via_values.apply(np.log, consolidate_blocks=True)
+        self.assertEqual(round(post3.fillna(0)).astype(int).to_pairs(),
+                (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
+                )
+
+
+    #---------------------------------------------------------------------------
+
     def test_frame_equals_a(self) -> None:
 
         idx1 = IndexHierarchy.from_product(
