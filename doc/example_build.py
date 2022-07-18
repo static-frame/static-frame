@@ -66,10 +66,20 @@ FRAME_INIT_FROM_DICT_RECORDS_A = dict(records=b"(dict(a=10, b=False, c='1517-01-
 
 FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A = dict(items=b"(('p', dict(a=10, b=False, c='1517-01-01')), ('q', dict(a=8, b=True, c='1517-04-01')))", dtypes=b"dict(c=np.datetime64)", name='x')
 
+FRAME_INIT_FROM_RECORDS_A = dict(records=b"((10, False, '1517-01-01'), (8, True,'1517-04-01'))", index=('p', 'q'), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+
+FRAME_INIT_FROM_RECORDS_ITEMS_A = dict(items=b"(('p', (10, False, '1517-01-01')), ('q', (8, True,'1517-04-01')))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+
 
 FRAME_INIT_FROM_FIELDS_A = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_FIELDS_B = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_FIELDS_C = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
+
+FRAME_INIT_FROM_ITEMS_A = dict(pairs=(('a', (10, 2, 8, 3)), ('b', ('qrs ', 'XYZ', '123', ' wX '))), index=('p', 'q', 'r', 's'), name='x')
+FRAME_INIT_FROM_ITEMS_B = dict(pairs=(('a', (10, 2, np.nan, 3)), ('b', ('qrs ', 'XYZ', None, None))), index=('p', 'q', 'r', 's'), name='x')
+FRAME_INIT_FROM_ITEMS_C = dict(pairs=(('a', (8, 3)), ('b', ('123', ' wX '))), index=('r', 's'), name='y')
+
+FRAME_INIT_FROM_JSON_A = dict(json_data='[{"a": 10, "b": false, "c": "1517-01-01"}, {"a": 8, "b": true, "c": "1517-04-01"}]', dtypes=b"dict(c=np.datetime64)", name='x')
 
 
 
@@ -1246,8 +1256,68 @@ class ExGenFrame(ExGen):
             yield f"f1.to_hdf5('/tmp/f.hdf5')"
             yield f"f1.from_hdf5('/tmp/f.hdf5', label='x', index_depth=1)"
 
+        elif attr == 'from_items':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_ITEMS_A)})'
 
-    #     elif attr == 'from_items':
+        elif attr == 'from_json':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_JSON_A)})'
+
+        elif attr == 'from_json_url':
+            pass
+
+        elif attr == 'from_msgpack':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield f'mb = f1.to_msgpack()'
+            yield 'mb'
+            yield f'{iattr}(mb)'
+
+        elif attr == 'from_npy':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f"f1.to_npy('/tmp/f.npy')"
+            yield f"{iattr}('/tmp/f.npy')"
+
+        elif attr == 'from_npy_mmap':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f"f1.to_npy('/tmp/f.npy')"
+            yield f"f2, closer = {iattr}('/tmp/f.npy')"
+            yield 'f2'
+            yield 'closer() # close mmaps after usage'
+
+        elif attr == 'from_npz':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f"f1.to_npz('/tmp/f.npz')"
+            yield f"{iattr}('/tmp/f.npz')"
+
+        elif attr == 'from_overlay':
+            yield f'f1 = {icls}.from_items({kwa(FRAME_INIT_FROM_ITEMS_B)})'
+            yield 'f1'
+            yield f'f2 = {icls}.from_items({kwa(FRAME_INIT_FROM_ITEMS_C)})'
+            yield 'f2'
+            yield f"{iattr}((f1, f2))"
+
+        elif attr == 'from_pandas':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield f'df = f1.to_pandas()'
+            yield 'df'
+            yield f'{iattr}(df, dtypes=dict(b=str))'
+
+        elif attr == 'from_parquet':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield f"f1.to_parquet('/tmp/f.parquet')"
+            yield f"{iattr}('/tmp/f.parquet', index_depth=1)"
+
+        elif attr == 'from_pickle':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f"f1.to_pickle('/tmp/f.pickle')"
+            yield f"{iattr}('/tmp/f.pickle')"
+
+        elif attr == 'from_records':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_RECORDS_A)})'
+
+        elif attr == 'from_records_items':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_RECORDS_ITEMS_A)})'
+
+
     #         yield f's = {iattr}({kwa(SERIES_INIT_FROM_ITEMS_A)})'
     #     elif attr == 'from_overlay':
     #         yield f's1 = {icls}({kwa(SERIES_INIT_C)})'
