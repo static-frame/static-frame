@@ -4,6 +4,8 @@ What is New in Static Frame
 0.9.8
 ----------
 
+Added ``via_values`` property to ``Series``, ``Index``, ``Frame``, ``IndexHierarchy`` and ``Batch``; permits applying functions to complete containers with ``apply()`` and supports usage as arguments in arbitrary NumPy functions with ``__array_ufunc__()``.
+
 Corrected usage of ``IterNodeDelegate`` with iterator endpoints that do not iterate hashables; added ``IterNodeDelegateMapable`` for usage with iterators of hashables.
 
 Improved type and dtype preservation in concatenation and set operations on ``IndexHierarchy``.
@@ -11,6 +13,8 @@ Improved type and dtype preservation in concatenation and set operations on ``In
 Normalized ordering of results from ``Frame.bloc[]`` selections to row-major ordering without sorting labels.
 
 Added ``via_str.contains()``.
+
+Corrected issue in ``ArchiveZIP`` when ``__del__`` is called when no archive is set.
 
 
 0.9.7
