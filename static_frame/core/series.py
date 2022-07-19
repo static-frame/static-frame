@@ -134,7 +134,6 @@ class Series(ContainerOperand):
 
     values: np.ndarray
     _index: IndexBase
-
     _NDIM: int = 1
 
     #---------------------------------------------------------------------------
