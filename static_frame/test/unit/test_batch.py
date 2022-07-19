@@ -1603,6 +1603,33 @@ class TestUnit(TestCase):
             self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
 
     #---------------------------------------------------------------------------
+    def test_batch_via_values_apply(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_values.apply(np.cos).to_frame()
+        self.assertEqual(round(post, 2).to_pairs(), #type: ignore
+                (('zZbu', ((('a', 0), -0.54), (('a', 1), 0.05), (('b', 0), -0.54), (('b', 1), 0.05))), ('ztsv', ((('a', 0), -0.96), (('a', 1), -0.54), (('b', 0), -0.96), (('b', 1), -0.54))), ('zUvW', ((('a', 0), -0.82), (('a', 1), 1.0), (('b', 0), -0.82), (('b', 1), 1.0))))
+                )
+
+    def test_batch_via_values_array_ufunc_a(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = np.sin(Batch.from_frames((f1, f2)).via_values).to_frame()
+        self.assertEqual(round(post, 2).to_pairs(),
+                ((0, ((('a', 0), -0.84), (('a', 1), 1.0), (('b', 0), -0.84), (('b', 1), 1.0))), (1, ((('a', 0), 0.28), (('a', 1), -0.84), (('b', 0), 0.28), (('b', 1), -0.84))), (2, ((('a', 0), 0.57), (('a', 1), 0.03), (('b', 0), 0.57), (('b', 1), 0.03))))
+                )
+
+    def test_batch_via_values_array_ufunc_b(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(float)|c(I,str)').rename('b')
+        post = np.sum(Batch.from_frames((f1, f2)).via_values).to_series()
+
+        self.assertEqual(post.to_pairs(),
+            (('a', 213543.0), ('b', 3424.54))
+            )
+
+
+    #---------------------------------------------------------------------------
     def test_batch_via_str_getitem(self) -> None:
         f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
         f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')

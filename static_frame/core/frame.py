@@ -92,6 +92,7 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_values import InterfaceValues
 from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
 from static_frame.core.rank import RankMethod
@@ -3094,6 +3095,13 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     # via interfaces
+
+    @property
+    def via_values(self) -> InterfaceValues['Frame']:
+        '''
+        Interface for applying functions to values (as arrays) in this container.
+        '''
+        return InterfaceValues(self)
 
     @property
     def via_str(self) -> InterfaceString['Frame']:

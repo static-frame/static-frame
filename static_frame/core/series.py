@@ -59,6 +59,8 @@ from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_values import InterfaceValues
+
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
@@ -132,7 +134,6 @@ class Series(ContainerOperand):
 
     values: np.ndarray
     _index: IndexBase
-
     _NDIM: int = 1
 
     #---------------------------------------------------------------------------
@@ -690,6 +691,13 @@ class Series(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
+    @property
+    def via_values(self) -> InterfaceValues['Series']:
+        '''
+        Interface for applying functions to values (as arrays) in this container.
+        '''
+        return InterfaceValues(self)
+
     @property
     def via_str(self) -> InterfaceString['Series']:
         '''

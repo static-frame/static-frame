@@ -37,6 +37,7 @@ from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_values import InterfaceValues
 
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_sample
@@ -158,6 +159,7 @@ class Index(IndexBase):
 
     # for compatability with IndexHierarchy, where this is implemented as a property method
     depth: int = 1
+    _NDIM: int = 1
 
     _map: tp.Optional[FrozenAutoMap]
     _labels: np.ndarray
@@ -607,6 +609,17 @@ class Index(IndexBase):
 
 
     #---------------------------------------------------------------------------
+
+    @property
+    def via_values(self) -> InterfaceValues['Index']:
+        '''
+        Interface for applying functions to values (as arrays) in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        return InterfaceValues(self)
+
     @property
     def via_str(self) -> InterfaceString[np.ndarray]:
         '''

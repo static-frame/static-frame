@@ -246,7 +246,7 @@ class ContainerOperand(ContainerBase):
     # --------------------------------------------------------------------------
     def __array__(self, dtype: np.dtype = None) -> np.ndarray:
         '''
-        Support the __array__ interface, returning a 1D array of values.
+        Support the __array__ interface, returning an array of values.
         '''
         if dtype is None:
             return self.values

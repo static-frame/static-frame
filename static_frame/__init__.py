@@ -91,6 +91,7 @@ from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_values import InterfaceValues
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
 from static_frame.core.series import Series as Series
