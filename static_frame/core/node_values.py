@@ -60,6 +60,8 @@ class InterfaceValues(Interface[TContainer]):
             unify_blocks: Group all arrays into single array, re-typing to an appropriate dtype.
             dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
         '''
+        from static_frame.core.frame import Frame
+
         if self._container._NDIM == 2:
             blocks: tp.Iterable[np.ndarray] = self._container._blocks._blocks
 
@@ -96,13 +98,6 @@ class InterfaceValues(Interface[TContainer]):
         # TODO: handle series
         raise NotImplementedError()
 
-    # def __array__(self, dtype: np.dtype = None) -> np.ndarray:
-    #     '''
-    #     Support the __array__ interface, returning an array of values.
-    #     '''
-    #     if dtype is None:
-    #         return self._container.values
-    #     return self._container.values.astype(dtype)
 
     def __array_ufunc__(self,
             ufunc: UFunc,
