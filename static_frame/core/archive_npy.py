@@ -302,7 +302,10 @@ class ArchiveZip(Archive):
         self.memory_map = memory_map
 
     def __del__(self) -> None:
-        self._archive.close()
+        # Note: If the fp we were given didn't exist, _archive also doesn't exist.
+        archive = getattr(self, '_archive', None)
+        if archive:
+            archive.close()
 
     def write_array(self, name: str, array: np.ndarray) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'

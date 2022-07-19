@@ -1,6 +1,7 @@
 import os
 from tempfile import TemporaryDirectory
-from io import UnsupportedOperation
+from io import UnsupportedOperation, StringIO
+import contextlib
 
 import numpy as np
 from numpy.lib.format import write_array # type: ignore
@@ -551,6 +552,18 @@ class TestUnit(TestCase):
             npy = NPY(fp, 'w')
             with self.assertRaises(UnsupportedOperation):
                 _ = npy.nbytes
+
+    def test_archive_zip_missing_cleanup(self) -> None:
+        # Test for cases where the specified file doesn't exist.
+        buffer = StringIO()
+        with contextlib.redirect_stderr(buffer):
+            with self.assertRaises(FileNotFoundError):
+                # Note at time of writing, the following is written to stderr
+                # `Exception ignored in: <function ArchiveZip.__del__>`
+                ArchiveZip('thisfiledoesntexist', writeable=False, memory_map=False)
+
+        # Assert that no error was printed to stderr.
+        self.assertEqual(buffer.getvalue(), '')
 
 
 if __name__ == '__main__':
