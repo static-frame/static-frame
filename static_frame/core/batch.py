@@ -790,6 +790,12 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     # via interfaces
+    @property
+    def via_values(self) -> InterfaceBatchValues:
+        '''
+        Interface for applying a function to values in this container.
+        '''
+        return InterfaceBatchValues(self.apply)
 
     @property
     def via_str(self) -> InterfaceBatchString:

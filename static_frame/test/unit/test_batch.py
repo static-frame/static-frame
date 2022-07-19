@@ -1603,6 +1603,17 @@ class TestUnit(TestCase):
             self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
 
     #---------------------------------------------------------------------------
+    def test_batch_via_values_apply(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_values(np.cos).to_frame()
+        import ipdb; ipdb.set_trace()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), 'Q'), (('a', -3648), 'l'), (('b', 34715), 'Q'), (('b', -3648), 'l'))), ('ztsv', ((('a', 34715), 'i'), (('a', -3648), 'C'), (('b', 34715), 'i'), (('b', -3648), 'C'))), ('zUvW', ((('a', 34715), 'v'), (('a', -3648), 'W'), (('b', 34715), 'v'), (('b', -3648), 'W'))))
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_batch_via_str_getitem(self) -> None:
         f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
         f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
