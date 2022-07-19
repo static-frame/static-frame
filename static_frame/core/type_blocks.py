@@ -821,20 +821,21 @@ class TypeBlocks(ContainerOperand):
                 self._reblock_signature(),
                 other._reblock_signature()))
 
-    @classmethod
-    def _concatenate_blocks(cls,
-            group: tp.Iterable[np.ndarray],
-            dtype: DtypeSpecifier = None,
+    @staticmethod
+    def _concatenate_blocks(
+            blocks: tp.Iterable[np.ndarray],
+            dtype: DtypeSpecifier,
+            columns: int,
             ) -> np.array:
-        '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array.
+        '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array. This generally assumes that they dtype is aligned amonng the provided blocks.
         '''
-        # NOTE: if len(group) is 1, can return
-        post = np.concatenate([column_2d_filter(x) for x in group], axis=1)
-        # NOTE: if give non-native byteorder dtypes, will convert them to native
-        if dtype is not None and post.dtype != dtype:
-            # could use `out` argument of np.concatenate to avoid copy, but would have to calculate resultant size first
-            return post.astype(dtype)
-        return post
+        # NOTE: when this is called we always have 2 or more blocks
+        blocks_norm = [column_2d_filter(x) for x in blocks]
+        # assert len(blocks_norm) >= 2
+        rows = blocks_norm[0].shape[0] # all 2D
+        array = np.empty((rows, columns), dtype=dtype)
+        np.concatenate(blocks_norm, axis=1, out=array)
+        return array
 
     @classmethod
     def consolidate_blocks(cls,
@@ -852,8 +853,8 @@ class TypeBlocks(ContainerOperand):
             if group_dtype is None: # first block of a type
                 group_dtype = block.dtype
                 group.append(block)
+                group_columns = 1 if block.ndim == 1 else block.shape[1]
                 continue
-
             # NOTE: could be less strict and look for compatibility within dtype kind (or other compatible types)
             if block.dtype != group_dtype:
                 # new group found, return stored
@@ -862,18 +863,20 @@ class TypeBlocks(ContainerOperand):
                     yield group[0]
                 else: # combine groups
                     # could pre allocating and assing as necessary for large groups
-                    yield cls._concatenate_blocks(group, group_dtype)
+                    yield cls._concatenate_blocks(group, group_dtype, group_columns)
                 group_dtype = block.dtype
                 group = [block]
+                group_columns = 1 if block.ndim == 1 else block.shape[1]
             else: # new block has same group dtype
                 group.append(block)
+                group_columns += 1 if block.ndim == 1 else block.shape[1]
 
         # always have one or more leftover
         if group:
             if len(group) == 1:
                 yield group[0]
             else:
-                yield cls._concatenate_blocks(group, group_dtype)
+                yield cls._concatenate_blocks(group, group_dtype, group_columns)
 
 
     def _reblock(self) -> tp.Iterator[np.ndarray]:
