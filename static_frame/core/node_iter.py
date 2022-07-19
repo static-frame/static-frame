@@ -52,7 +52,6 @@ class IterNodeApplyType(Enum):
     SERIES_ITEMS_GROUP_LABELS = 3
     FRAME_ELEMENTS = 4
     INDEX_LABELS = 5
-    FRAME_BLOCKS = 6
 
     @classmethod
     def is_items(cls, apply_type: 'IterNodeApplyType') -> bool:
@@ -60,7 +59,6 @@ class IterNodeApplyType(Enum):
         '''
         if (apply_type is cls.SERIES_VALUES
                 or apply_type is cls.INDEX_LABELS
-                or apply_type is cls.FRAME_BLOCKS
                 ):
             return False
         return True
@@ -668,27 +666,6 @@ class IterNode(tp.Generic[FrameOrSeries]):
         array, _ = iterable_to_array_1d(values, count=shape[0], dtype=dtype)
         return array
 
-    def to_frame_from_blocks(self,
-            blocks: tp.Iterable[np.ndarray],
-            *,
-            name: NameType = None,
-            dtype: DtypeSpecifier = None,
-            index_constructor: tp.Optional[IndexConstructor]= None,
-            ) -> 'Frame':
-        from static_frame.core.frame import Frame
-        assert isinstance(self._container, Frame)
-
-        # NOTE: not sure if we can / should use dtype argument
-        return self._container.__class__(
-                TypeBlocks.from_blocks(blocks),
-                index=self._container._index,
-                columns=self._container._columns,
-                index_constructor=index_constructor,
-                name=name,
-                own_index=True,
-                own_data=True,
-                )
-
     #---------------------------------------------------------------------------
     def _get_delegate_kwargs(self,
             **kwargs: object,
@@ -738,9 +715,6 @@ class IterNode(tp.Generic[FrameOrSeries]):
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
             apply_constructor = self.to_index_from_labels
 
-        elif self._apply_type is IterNodeApplyType.FRAME_BLOCKS:
-            apply_constructor = self.to_frame_from_blocks
-
         else:
             raise NotImplementedError(self._apply_type) #pragma: no cover
 
@@ -774,7 +748,6 @@ class IterNodeNoArg(IterNode[FrameOrSeries]):
             ) -> IterNodeDelegateMapable[FrameOrSeries]:
         return IterNode.get_delegate_mapable(self)
 
-
 class IterNodeAxisElement(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
@@ -786,22 +759,6 @@ class IterNodeAxisElement(IterNode[FrameOrSeries]):
             ) -> IterNodeDelegateMapable[FrameOrSeries]:
         return IterNode.get_delegate_mapable(self, axis=axis)
 
-class IterNodeBlock(IterNode[FrameOrSeries]):
-
-    __slots__ = _ITER_NODE_SLOTS
-
-    def __call__(self,
-            *,
-            consolidate: bool = False,
-            dtype: DtypeSpecifier = None,
-            # NOTE: might add option to normalize as 2D, or any D?
-            ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNode.get_delegate(self,
-                consolidate=consolidate,
-                dtype=dtype,
-                )
-
-
 class IterNodeAxis(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
@@ -811,7 +768,6 @@ class IterNodeAxis(IterNode[FrameOrSeries]):
             axis: int = 0
             ) -> IterNodeDelegateMapable[FrameOrSeries]:
         return IterNode.get_delegate_mapable(self, axis=axis)
-
 
 class IterNodeConstructorAxis(IterNode[FrameOrSeries]):
 

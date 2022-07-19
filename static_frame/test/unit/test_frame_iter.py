@@ -1178,50 +1178,6 @@ class TestUnit(TestCase):
         s1 = f1.iter_group('p', axis=0).apply(lambda f: f['q'].values.sum())
         self.assertEqual(list(s1.items()), [(2, 97), (30, 107)])
 
-    #---------------------------------------------------------------------------
-    def test_frame_iter_block_a(self) -> None:
-
-        f1 = ff.parse('s(3,4)|v(int,int,bool,int)|c(I,str)')
-
-        post1 = tuple(f1.iter_block())
-        self.assertEqual(len(post1), 3)
-
-        post2 = f1.iter_block().apply(lambda a: ~a)
-        self.assertEqual(f1._blocks.shapes.tolist(),
-                post2._blocks.shapes.tolist())
-        self.assertEqual(post2.to_pairs(),
-                (('zZbu', ((0, 88016), (1, -92868), (2, -84968))), ('ztsv', ((0, -162198), (1, 41156), (2, -5730))), ('zUvW', ((0, False), (1, True), (2, True))), ('zkuW', ((0, -129018), (1, -35022), (2, -166925))))
-                )
-
-    def test_frame_iter_block_b(self) -> None:
-
-        f1 = ff.parse('s(2,4)|v(int,int,bool,int)|c(I,str)')
-        # no additional consolidation possible
-        post1 = tuple(f1.iter_block(consolidate=True))
-        self.assertEqual(len(post1), 3)
-
-        # with pre-consolidation dtype conversion
-        post2 = tuple(f1.iter_block(consolidate=True, dtype=int))
-        self.assertEqual(len(post2), 1)
-
-        post3 = tuple(f1.iter_block(dtype=int))
-        self.assertEqual(len(post3), 3)
-        self.assertEqual([a.dtype.kind for a in post3], ['i', 'i', 'i'])
-        # import ipdb; ipdb.set_trace()
-
-    def test_frame_iter_block_c(self) -> None:
-
-        f1 = ff.parse('s(2,4)|v(int)|c(I,str)')
-        # no additional consolidation possible
-        post1 = tuple(f1.iter_block(consolidate=True))
-        self.assertEqual(len(post1), 1)
-
-    def test_frame_iter_block_d(self) -> None:
-
-        f1 = ff.parse('s(3,4)|v(int,int,bool,int)|c(I,str)')
-
-        post1 = tuple(f1.iter_block().apply_iter_items(lambda v: v.shape))
-        self.assertEqual(post1, ((0, (3, 2)), (1, (3,)), (2, (3,))))
 
 if __name__ == '__main__':
     import unittest

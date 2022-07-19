@@ -80,7 +80,6 @@ from static_frame.core.node_fill_value import InterfaceFillValueGO
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeAxisElement
-from static_frame.core.node_iter import IterNodeBlock
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
@@ -3474,21 +3473,6 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.FRAME_ELEMENTS
                 )
 
-
-    #---------------------------------------------------------------------------
-    @property
-    def iter_block(self) -> IterNodeAxisElement['Frame']:
-        '''Iterator of blocks, underlying 1D or 2D data that backs this container.
-        '''
-        return IterNodeBlock(
-                container=self,
-                function_values=self._iter_block,
-                function_items=self._iter_block_items,
-                yield_type=IterNodeType.VALUES,
-                apply_type=IterNodeApplyType.FRAME_BLOCKS
-                )
-
-
     #---------------------------------------------------------------------------
     # index manipulation
 
@@ -5309,32 +5293,6 @@ class Frame(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-    def _iter_block(self,
-            consolidate: bool = False,
-            dtype: DtypeSpecifier = None,
-            ) -> tp.Iterator[np.ndarray]:
-        '''
-        Generator of np.ndarray from internal TypeBlocks.
-
-        Args:
-            conolidate: consolidate like-typed adjacent blocks.
-            dtype: conver types pre-consolidation.
-        '''
-        if not consolidate and dtype is None:
-            yield from self._blocks._blocks
-        elif not consolidate and dtype is not None:
-            yield from (b.astype(dtype) for b in self._blocks._blocks)
-        elif consolidate and dtype is None:
-            yield from TypeBlocks.consolidate_blocks(self._blocks._blocks)
-        elif consolidate and dtype is not None:
-            yield from TypeBlocks.consolidate_blocks(
-                (b.astype(dtype) for b in self._blocks._blocks))
-
-    def _iter_block_items(self,
-            consolidate: bool = False,
-            dtype: DtypeSpecifier = None,
-            ) -> tp.Tuple[int, tp.Iterator[np.ndarray]]:
-        yield from enumerate(self._iter_block(consolidate=consolidate, dtype=dtype))
 
     def _iter_element_iloc_items(self,
             axis: int = 0,
