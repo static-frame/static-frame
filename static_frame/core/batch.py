@@ -55,6 +55,7 @@ from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_transpose import InterfaceBatchTranspose
+from static_frame.core.node_values import InterfaceBatchValues
 
 
 FrameOrSeries = tp.Union[Frame, Series]

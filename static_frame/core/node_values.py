@@ -53,7 +53,12 @@ class InterfaceValues(Interface[TContainer]):
             dtype: DtypeSpecifier = None,
             ) -> 'Frame':
         '''
-        Interface for using binary operators and methods with a pre-defined fill value.
+        Interface for applying functions direclty to underly NumPy arrays.
+
+        Args:
+            consolidate_blocks: Group adjacent same-typed arrays into 2D arrays.
+            unify_blocks: Group all arrays into single array, re-typing to an appropriate dtype.
+            dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
         '''
         if self._container._NDIM == 2:
             blocks = self._container._blocks._blocks
