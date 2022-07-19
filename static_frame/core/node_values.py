@@ -61,6 +61,7 @@ class InterfaceValues(Interface[TContainer]):
             dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
         '''
         from static_frame.core.frame import Frame
+        from static_frame.core.series import Series
         # from static_frame.core.frame import IndexHierarchy
 
         if self._container._NDIM == 2:
@@ -103,10 +104,22 @@ class InterfaceValues(Interface[TContainer]):
                     name=self._container._name,
                     own_blocks=True,
                 )
+        # all 1D containers
+        if dtype is not None:
+            values = func(self._container.values.astype(dtype))
+        else:
+            values = func(self._container.values)
 
-
-        # TODO: handle series
-        raise NotImplementedError()
+        if isinstance(self._container, Series):
+            return self._container.__class__(values,
+                    index=self._container.index,
+                    name=self._container.name,
+                    own_index=True,
+                    )
+        # else, Index
+        return self._container.__class__(values,
+                name=self._container.name,
+                )
 
 
     def __array_ufunc__(self,
