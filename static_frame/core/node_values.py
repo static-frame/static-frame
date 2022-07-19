@@ -108,7 +108,7 @@ class InterfaceValues(Interface[TContainer]):
                 *[(arg if arg is not self else arg._container.values) for arg in args],
                 **kwargs,
                 )
-        return NotImplemented
+        return NotImplemented #pragma: no cover
 
 
 class InterfaceBatchValues(InterfaceBatch):
@@ -158,4 +158,4 @@ class InterfaceBatchValues(InterfaceBatch):
                         )
             return self._batch_apply(func)
 
-        return NotImplemented
+        return NotImplemented #pragma: no cover
