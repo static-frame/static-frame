@@ -54,7 +54,11 @@ class IterNodeApplyType(Enum):
 
     @classmethod
     def is_items(cls, apply_type: 'IterNodeApplyType') -> bool:
-        if apply_type is cls.SERIES_VALUES or apply_type is cls.INDEX_LABELS:
+        '''Return True if the apply_constructor to be used consumes items; otherwise, the apply_constructor consumes values alone.
+        '''
+        if (apply_type is cls.SERIES_VALUES
+                or apply_type is cls.INDEX_LABELS
+                ):
             return False
         return True
 
@@ -159,6 +163,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         Args:
             {func}
+
+        Yields:
+            Pairs of label, value after function application.
         '''
         # depend on yield type, we determine what the passed in function expects to
         if self._yield_type is IterNodeType.VALUES:
@@ -175,6 +182,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         Args:
             {func}
+
+        Yields:
+            Values after function application.
         '''
         if self._yield_type is IterNodeType.VALUES:
             yield from (func(v) for v in self._func_values())
@@ -522,7 +532,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
     # apply constructors
 
-    def to_series_values(self,
+    def to_series_from_values(self,
             values: tp.Iterator[tp.Any],
             *,
             dtype: DtypeSpecifier,
@@ -555,7 +565,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 own_index=own_index,
                 )
 
-    def to_series_items(self,
+    def to_series_from_items(self,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
@@ -591,7 +601,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 index_constructor=index_constructor_final,
                 )
 
-    def to_series_items_group(self,
+    def to_series_from_group_items(self,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
@@ -615,7 +625,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 index_constructor=index_constructor
                 )
 
-    def to_frame_elements(self,
+    def to_frame_from_elements(self,
             items: tp.Iterable[tp.Tuple[
                     tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
             *,
@@ -641,7 +651,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 name=name,
                 )
 
-    def to_index_labels(self,
+    def to_index_from_labels(self,
             values: tp.Iterator[tp.Hashable], #pylint: disable=function-redefined
             dtype: DtypeSpecifier = None,
             name: NameType = None,
@@ -656,7 +666,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
         return array
 
     #---------------------------------------------------------------------------
-    def _get_delegate(self,
+    def _get_delegate_kwargs(self,
             **kwargs: object,
             ) -> tp.Dict[str, tp.Any]:
         '''
@@ -676,33 +686,33 @@ class IterNode(tp.Generic[FrameOrSeries]):
         apply_constructor: tp.Callable[..., tp.Union['Frame', 'Series']]
 
         if self._apply_type is IterNodeApplyType.SERIES_VALUES:
-            apply_constructor = partial(self.to_series_values, axis=axis)
+            apply_constructor = partial(self.to_series_from_values, axis=axis)
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS:
-            apply_constructor = partial(self.to_series_items, axis=axis)
+            apply_constructor = partial(self.to_series_from_items, axis=axis)
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES:
             try:
                 name_index = name_filter(kwargs.get('key', None))
             except TypeError:
                 name_index = None
-            apply_constructor = partial(self.to_series_items_group,
+            apply_constructor = partial(self.to_series_from_group_items,
                     name_index=name_index,
                     )
 
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS:
             # will always have `depth_level` in kwargs, and for Frame an axis; could attempt to get name from the index if it has a name
             name_index = None
-            apply_constructor = partial(self.to_series_items_group,
+            apply_constructor = partial(self.to_series_from_group_items,
                     name_index=name_index,
                     )
 
         elif self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
             assert isinstance(self._container, Frame) # for typing
-            apply_constructor = partial(self.to_frame_elements, axis=axis)
+            apply_constructor = partial(self.to_frame_from_elements, axis=axis)
 
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
-            apply_constructor = self.to_index_labels
+            apply_constructor = self.to_index_from_labels
 
         else:
             raise NotImplementedError(self._apply_type) #pragma: no cover
@@ -718,12 +728,12 @@ class IterNode(tp.Generic[FrameOrSeries]):
     def get_delegate(self,
             **kwargs: object,
             ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNodeDelegate(**self._get_delegate(**kwargs))
+        return IterNodeDelegate(**self._get_delegate_kwargs(**kwargs))
 
     def get_delegate_mapable(self,
             **kwargs: object,
             ) -> IterNodeDelegateMapable[FrameOrSeries]:
-        return IterNodeDelegateMapable(**self._get_delegate(**kwargs))
+        return IterNodeDelegateMapable(**self._get_delegate_kwargs(**kwargs))
 
 #-------------------------------------------------------------------------------
 # specialize IterNode based on arguments given to __call__
@@ -737,7 +747,6 @@ class IterNodeNoArg(IterNode[FrameOrSeries]):
             ) -> IterNodeDelegateMapable[FrameOrSeries]:
         return IterNode.get_delegate_mapable(self)
 
-
 class IterNodeAxisElement(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
@@ -749,7 +758,6 @@ class IterNodeAxisElement(IterNode[FrameOrSeries]):
             ) -> IterNodeDelegateMapable[FrameOrSeries]:
         return IterNode.get_delegate_mapable(self, axis=axis)
 
-
 class IterNodeAxis(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
@@ -759,7 +767,6 @@ class IterNodeAxis(IterNode[FrameOrSeries]):
             axis: int = 0
             ) -> IterNodeDelegateMapable[FrameOrSeries]:
         return IterNode.get_delegate_mapable(self, axis=axis)
-
 
 class IterNodeConstructorAxis(IterNode[FrameOrSeries]):
 
