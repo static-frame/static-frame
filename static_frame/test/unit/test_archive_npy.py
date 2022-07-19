@@ -1,6 +1,7 @@
 import os
 from tempfile import TemporaryDirectory
-from io import UnsupportedOperation
+from io import UnsupportedOperation, StringIO
+import contextlib
 
 import numpy as np
 from numpy.lib.format import write_array # type: ignore
@@ -554,8 +555,6 @@ class TestUnit(TestCase):
 
     def test_archive_zip_missing_cleanup(self):
         # Test for cases where the specified file doesn't exist.
-        import contextlib
-        from io import StringIO
         buffer = StringIO()
         with contextlib.redirect_stderr(buffer):
             with self.assertRaises(FileNotFoundError):
