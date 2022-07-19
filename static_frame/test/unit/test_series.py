@@ -4391,6 +4391,11 @@ class TestUnit(TestCase):
         self.assertEqual(s2.values.tolist(), [20, 40])
         self.assertEqual(np.sum(s1.via_values), 30)
 
+    def test_series_via_values_a(self) -> None:
+        s1 = Series((0, 20), index=('x', 'y'))
+        s2 = s1.via_values.apply(np.sort, dtype=str)
+        self.assertEqual(s2.to_pairs(),
+                (('x', '0'), ('y', '20')))
 
     #---------------------------------------------------------------------------
 
