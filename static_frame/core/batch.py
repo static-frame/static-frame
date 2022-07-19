@@ -1,8 +1,6 @@
 import typing as tp
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
-# import multiprocessing as mp
-# mp_context = mp.get_context('spawn')
 
 import numpy as np
 
@@ -13,11 +11,19 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_base import IndexBase
+from static_frame.core.node_dt import InterfaceBatchDatetime
+from static_frame.core.node_fill_value import InterfaceBatchFillValue
+from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_str import InterfaceBatchString
+from static_frame.core.node_transpose import InterfaceBatchTranspose
+from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store import StoreConfigMap
@@ -27,35 +33,30 @@ from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.store_zip import StoreZipNPZ
-from static_frame.core.util import AnyCallable
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
-from static_frame.core.util import Bloc2DKeyType
-from static_frame.core.util import BoolOrBools
+from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import BoolOrBools
+from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.exception import BatchIterableInvalid
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.index_base import IndexBase
-from static_frame.core.node_str import InterfaceBatchString
-from static_frame.core.node_fill_value import InterfaceBatchFillValue
-from static_frame.core.node_re import InterfaceBatchRe
-from static_frame.core.node_dt import InterfaceBatchDatetime
-from static_frame.core.node_transpose import InterfaceBatchTranspose
 
+# import multiprocessing as mp
+# mp_context = mp.get_context('spawn')
 
 FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
@@ -789,6 +790,12 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     # via interfaces
+    @property
+    def via_values(self) -> InterfaceBatchValues:
+        '''
+        Interface for applying a function to values in this container.
+        '''
+        return InterfaceBatchValues(self.apply)
 
     @property
     def via_str(self) -> InterfaceBatchString:

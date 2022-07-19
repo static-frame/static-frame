@@ -1330,16 +1330,10 @@ class TestUnit(TestCase):
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         self.assertEqual(idx1.tail(2).values.tolist(), ['d' ,'e'])
 
-    #---------------------------------------------------------------------------
-
     def test_index_via_str_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         a1 = idx1.via_str.upper()
-
-        self.assertEqual(a1.tolist(),
-                ['A', 'B', 'C', 'D', 'E']
-                )
 
     def test_index_via_str_b(self) -> None:
 
@@ -1374,6 +1368,15 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.via_dt.weekday().tolist(),
                 [2, 4, 6, 2, 4]
                 )
+
+
+    def test_index_via_values_a(self) -> None:
+
+        idx1 = IndexGO((10, 20, 30))
+        idx1.append(40)
+        idx2 = idx1.via_values.apply(lambda x: (x * .5).astype(int))
+        self.assertEqual(idx2.__class__, IndexGO)
+        self.assertEqual(idx2.values.tolist(), [5, 10, 15, 20])
 
     #---------------------------------------------------------------------------
 

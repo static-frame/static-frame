@@ -31,6 +31,8 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
+from static_frame.core.node_values import InterfaceValues
+from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_str import InterfaceString
@@ -298,6 +300,7 @@ class InterfaceGroup:
     Iterator = 'Iterator'
     OperatorBinary = 'Operator Binary'
     OperatorUnary = 'Operator Unary'
+    AccessorValues = 'Accessor Values'
     AccessorDatetime = 'Accessor Datetime'
     AccessorString = 'Accessor String'
     AccessorTranspose = 'Accessor Transpose'
@@ -548,7 +551,9 @@ class InterfaceRecord(tp.NamedTuple):
             max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
-        if cls_interface is InterfaceString or cls_interface is InterfaceBatchString:
+        if cls_interface is InterfaceValues or cls_interface is InterfaceBatchValues:
+            group = InterfaceGroup.AccessorValues
+        elif cls_interface is InterfaceString or cls_interface is InterfaceBatchString:
             group = InterfaceGroup.AccessorString
         elif cls_interface is InterfaceDatetime or cls_interface is InterfaceBatchDatetime:
             group = InterfaceGroup.AccessorDatetime
@@ -933,8 +938,13 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.from_getitem(**kwargs)
 
             elif obj.__class__ in (
-                    InterfaceString, InterfaceDatetime, InterfaceTranspose,
-                    InterfaceBatchString, InterfaceBatchDatetime, InterfaceBatchTranspose,
+                    InterfaceValues,
+                    InterfaceString,
+                    InterfaceDatetime,
+                    InterfaceTranspose,
+                    InterfaceBatchString,
+                    InterfaceBatchDatetime,
+                    InterfaceBatchTranspose,
                     ):
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=obj.__class__,

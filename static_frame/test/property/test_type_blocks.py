@@ -117,10 +117,6 @@ class TestUnit(TestCase):
         if tb1.shape[1] != tb2.shape[1]:
             self.assertFalse(post1)
 
-    @unittest.skip('pending')
-    def test_concatenate_blocks(self) -> None:
-        pass
-
     @given(sfst.get_type_blocks())
     def test_consolidate_blocks(self, tb: TypeBlocks) -> None:
 
