@@ -61,7 +61,7 @@ class InterfaceValues(Interface[TContainer]):
             dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
         '''
         if self._container._NDIM == 2:
-            blocks = self._container._blocks._blocks
+            blocks: tp.Iterable[np.ndarray] = self._container._blocks._blocks
 
             if unify_blocks:
                 dtype = self._container._blocks._row_dtype if dtype is None else dtype
@@ -83,15 +83,16 @@ class InterfaceValues(Interface[TContainer]):
                     blocks = (func(b) for b in blocks)
                 tb = TypeBlocks.from_blocks(blocks)
 
-            return self._container.__class__(
-                    tb,
-                    index=self._container.index,
-                    columns=self._container.columns,
-                    name=self._container.name,
-                    own_index=True,
-                    own_data=True,
-                    own_columns=self._container.STATIC,
-                    )
+            if isinstance(self._container, Frame):
+                return self._container.__class__(
+                        tb,
+                        index=self._container.index,
+                        columns=self._container.columns,
+                        name=self._container.name,
+                        own_index=True,
+                        own_data=True,
+                        own_columns=self._container.STATIC,
+                        )
         # TODO: handle series
         raise NotImplementedError()
 
