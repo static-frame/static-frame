@@ -3764,6 +3764,14 @@ class TestUnit(TestCase):
                 [10, 20, 11, 21]
                 )
 
+    def test_hierarchy_via_values_c(self) -> None:
+        ih1 = IndexHierarchyGO.from_product((0, 1), (10, 20))
+        ih1.append((2, 30))
+        post = np.sum(ih1.via_values, axis=1)
+        self.assertEqual(post.tolist(),
+                [10, 20, 11, 21, 32]
+                )
+
 
     #---------------------------------------------------------------------------
 
