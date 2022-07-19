@@ -13,7 +13,6 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 from arraykit import name_filter
 
-from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DepthLevelSpecifier
