@@ -8079,6 +8079,11 @@ class Frame(ContainerOperand):
                 include_columns=include_columns,
                 )
 
+        if label is STORE_LABEL_DEFAULT:
+            if not self.name:
+                raise RuntimeError('must provide a label or define Frame name.')
+            label = self.name
+
         st = StoreSQLite(fp)
         st.write(((label, self),),
                 config=config,

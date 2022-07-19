@@ -1317,8 +1317,38 @@ class ExGenFrame(ExGen):
         elif attr == 'from_records_items':
             yield f'{iattr}({kwa(FRAME_INIT_FROM_RECORDS_ITEMS_A)})'
 
+        elif attr == 'from_series':
+            yield f's = sf.Series({kwa(SERIES_INIT_S)})'
+            yield f'{iattr}(s)'
 
-    #         yield f's = {iattr}({kwa(SERIES_INIT_FROM_ITEMS_A)})'
+        elif attr == 'from_sql':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield "f1.to_sqlite('/tmp/f.db')"
+            yield 'import sqlite3'
+            yield "conn = sqlite3.connect('/tmp/f.db')"
+            yield f'{iattr}("select * from x limit 2", connection=conn, index_depth=1)'
+
+        elif attr == 'from_sqlite':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield "f1.to_sqlite('/tmp/f.db')"
+            yield f"{iattr}('/tmp/f.db', label=f1.name, index_depth=1)"
+
+        elif attr == 'from_structured_array':
+            yield "sa = np.array([(False, 8), (True, 19)], dtype=[('a', bool), ('b', int)])"
+            yield 'sa'
+            yield f"{iattr}(sa)"
+
+        elif attr == 'from_tsv':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.to_tsv('/tmp/f.tsv')"
+            yield "open('/tmp/f.tsv').read()"
+            yield f"{iattr}('/tmp/f.tsv', index_depth=1)"
+
+        elif attr == 'from_xlsx':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.to_xlsx('/tmp/f.xlsx')"
+            yield f"{iattr}('/tmp/f.xlsx', index_depth=1)"
+
     #     elif attr == 'from_overlay':
     #         yield f's1 = {icls}({kwa(SERIES_INIT_C)})'
     #         yield f's1'
