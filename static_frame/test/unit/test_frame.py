@@ -12565,6 +12565,12 @@ class TestUnit(TestCase):
                 [-0.79, 1.0, -0.73, -0.99]]
                 )
 
+    def test_frame_via_values_array_b(self) -> None:
+        f = ff.parse('s(3,4)|v(float)|c(I,str)')
+        post1 = np.sum(f.via_values, axis=0)
+        self.assertEqual(post1.round(2).tolist(),
+                [2027.4, 1810.0, 2447.36, 4361.16]
+                )
 
     #---------------------------------------------------------------------------
 

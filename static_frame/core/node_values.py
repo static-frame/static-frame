@@ -92,8 +92,16 @@ class InterfaceValues(Interface[TContainer]):
                     own_data=True,
                     own_columns=self._container.STATIC,
                     )
-        # TODO: handl series
+        # TODO: handle series
         raise NotImplementedError()
+
+    # def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+    #     '''
+    #     Support the __array__ interface, returning an array of values.
+    #     '''
+    #     if dtype is None:
+    #         return self._container.values
+    #     return self._container.values.astype(dtype)
 
     def __array_ufunc__(self,
             ufunc: UFunc,
@@ -103,11 +111,15 @@ class InterfaceValues(Interface[TContainer]):
             ) -> np.ndarray:
         '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
         '''
+        args_final = [(arg if arg is not self else arg._container.values)
+                for arg in args]
+
         if method == '__call__':
-            return ufunc(
-                *[(arg if arg is not self else arg._container.values) for arg in args],
-                **kwargs,
-                )
+            return ufunc(*args_final, **kwargs)
+        elif method == 'reduce':
+            func = getattr(ufunc, method)
+            return func(*args_final, **kwargs)
+
         return NotImplemented #pragma: no cover
 
 
@@ -148,14 +160,20 @@ class InterfaceBatchValues(InterfaceBatch):
             ) -> 'Batch':
         '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
         '''
+        # NOTE: want to fail method is not supported at call time of this function, not the deferred execution via Batch
         if method == '__call__':
-            def func(c):
+            def func(c: TContainer) -> np.ndarray:
                 nonlocal args
-                args = [(arg if arg is not self else c.values) for arg in args]
-                return ufunc(
-                        *args,
-                        **kwargs,
-                        )
-            return self._batch_apply(func)
+                args_final = [(arg if arg is not self else c.values) for arg in args]
+                return ufunc(*args_final, **kwargs)
+        elif method == 'reduce':
+            def func(c: TContainer) -> np.ndarray:
+                nonlocal args
+                args_final = [(arg if arg is not self else c.values) for arg in args]
+                func = getattr(ufunc, method)
+                return func(*args_final, **kwargs)
+        else:
+            return NotImplemented #pragma: no cover
 
-        return NotImplemented #pragma: no cover
+        return self._batch_apply(func)
+
