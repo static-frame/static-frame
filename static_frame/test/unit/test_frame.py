@@ -12549,6 +12549,16 @@ class TestUnit(TestCase):
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
+        post4 = abs(f).via_values.apply(np.log, consolidate_blocks=True, dtype=float)
+        self.assertEqual(round(post4.fillna(0)).astype(int).to_pairs(), #type: ignore
+                (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
+                )
+
+        post1 = abs(f).via_values.apply(np.log, dtype=float)
+        self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(), #type: ignore
+                (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
+                )
+
     def test_frame_via_values_apply_b(self) -> None:
         f = ff.parse('s(3,4)|v(bool)|c(I,str)')
         post1 = f.via_values.apply(np.sin)

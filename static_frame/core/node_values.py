@@ -51,7 +51,7 @@ class InterfaceValues(Interface[TContainer]):
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
             dtype: DtypeSpecifier = None,
-            ) -> 'Frame':
+            ) -> TContainer:
         '''
         Interface for applying functions direclty to underly NumPy arrays.
 
@@ -61,6 +61,7 @@ class InterfaceValues(Interface[TContainer]):
             dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
         '''
         from static_frame.core.frame import Frame
+        # from static_frame.core.frame import IndexHierarchy
 
         if self._container._NDIM == 2:
             blocks: tp.Iterable[np.ndarray] = self._container._blocks._blocks
@@ -95,6 +96,15 @@ class InterfaceValues(Interface[TContainer]):
                         own_data=True,
                         own_columns=self._container.STATIC,
                         )
+            else: #IndexHierarchy
+                return self._container._from_type_blocks(
+                    tb,
+                    index_constructors=self._container._index_constructors,
+                    name=self._container._name,
+                    own_blocks=True,
+                )
+
+
         # TODO: handle series
         raise NotImplementedError()
 

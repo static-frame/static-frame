@@ -62,7 +62,7 @@ We can reproduce Pandas behavior in StaticFrame by reindexing the same DataFrame
 <int64> <object> <float64> <object>
 
 
-One way to avoid type degredation in reindexing is to provide a fill value per column. With StaticFrame, fill values can be provide with a list, providing one value per column:
+One way to avoid type degradation in reindexing is to provide a fill value per column. With StaticFrame, fill values can be provide with a list, providing one value per column:
 
 >>> f.reindex((1, 0, 2), fill_value=['', 0, False])
 <Frame>
@@ -155,7 +155,7 @@ If we need to deviate from the supplied ``FillValueAuto`` defaults, an instance 
 <int64> <<U1> <int64> <object>
 
 
-In StaticFrame, the same multitude of fill value types are accepted nearly everywhere fill values are needed. For example, in shifting data, fill values must be provided; but when shifting an entire DataFrame of heterogenous types, one fill value is not enough. As shown below, the default ``fill_value``, NaN, forces all columnar types to either object or float.
+In StaticFrame, the same multitude of fill value types are accepted nearly everywhere fill values are needed. For example, in shifting data, fill values must be provided; but when shifting an entire DataFrame of heterogeneous types, one fill value is not enough. As shown below, the default ``fill_value``, NaN, forces all columnar types to either object or float.
 
 >>> f = sf.Frame.from_records((('a', 1, True, 'p', 23.2), ('b', 2, False, 'q', 85.1), ('c', 3, True, 'r', 1.23)), columns=tuple('abcde'))
 

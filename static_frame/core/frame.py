@@ -3099,7 +3099,7 @@ class Frame(ContainerOperand):
     @property
     def via_values(self) -> InterfaceValues['Frame']:
         '''
-        Interface for applying functions to values in this container.
+        Interface for applying functions to values (as arrays) in this container.
         '''
         return InterfaceValues(self)
 

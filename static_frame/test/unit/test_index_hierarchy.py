@@ -3749,6 +3749,22 @@ class TestUnit(TestCase):
                 [['2020*01', '2019*01*01'], ['2020*01', '2019*02*01'], ['2019*02', '2019*01*01'], ['2019*02', '2019*02*01'], ['2021*01', '2019*01*01']]
                 )
 
+    def test_hierarchy_via_values_a(self) -> None:
+        ih1 = IndexHierarchy.from_product((0, 1), (10, 20))
+        ih2 = ih1.via_values.apply(lambda b: -b)
+        self.assertEqual(ih2.values.tolist(),
+                [[0, -10], [0, -20], [-1, -10], [-1, -20]]
+                )
+
+
+    def test_hierarchy_via_values_b(self) -> None:
+        ih1 = IndexHierarchy.from_product((0, 1), (10, 20))
+        post = np.sum(ih1.via_values, axis=1)
+        self.assertEqual(post.tolist(),
+                [10, 20, 11, 21]
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_equals_a(self) -> None:
