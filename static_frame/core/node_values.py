@@ -29,6 +29,7 @@ TContainer = tp.TypeVar('TContainer',
 
 INTERFACE_VALUES = (
         'apply',
+        '__array_ufunc__',
         )
 
 class InterfaceValues(Interface[TContainer]):
