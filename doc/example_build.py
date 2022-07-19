@@ -1349,14 +1349,6 @@ class ExGenFrame(ExGen):
             yield f"f1.to_xlsx('/tmp/f.xlsx')"
             yield f"{iattr}('/tmp/f.xlsx', index_depth=1)"
 
-    #     elif attr == 'from_overlay':
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_C)})'
-    #         yield f's1'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-    #         yield f"s = {iattr}((s1, s2))"
-    #     elif attr == 'from_pandas':
-    #         yield f'df = pd.Series({kwa(SERIES_INIT_A)})'
-    #         yield f's = {iattr}(df)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
