@@ -553,7 +553,7 @@ class TestUnit(TestCase):
             with self.assertRaises(UnsupportedOperation):
                 _ = npy.nbytes
 
-    def test_archive_zip_missing_cleanup(self):
+    def test_archive_zip_missing_cleanup(self) -> None:
         # Test for cases where the specified file doesn't exist.
         buffer = StringIO()
         with contextlib.redirect_stderr(buffer):
