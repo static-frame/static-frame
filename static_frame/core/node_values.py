@@ -5,7 +5,6 @@ import numpy as np
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
-# from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFunc
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypeSpecifier
@@ -15,17 +14,17 @@ from static_frame.core.type_blocks import TypeBlocks
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
-    # from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
-    # from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
-    # from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
-    # from static_frame.core.node_fill_value import InterfaceFillValue #pylint: disable = W0611 #pragma: no cover
-    # from static_frame.core.node_fill_value import InterfaceBatchFillValue #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
+
 
 
 TContainer = tp.TypeVar('TContainer',
         'Frame',
         'IndexHierarchy',
+        'Series',
+        'Index',
         )
 
 INTERFACE_VALUES = (
@@ -65,10 +64,10 @@ class InterfaceValues(Interface[TContainer]):
         # from static_frame.core.frame import IndexHierarchy
 
         if self._container._NDIM == 2:
-            blocks: tp.Iterable[np.ndarray] = self._container._blocks._blocks
+            blocks: tp.Iterable[np.ndarray] = self._container._blocks._blocks #type: ignore
 
             if unify_blocks:
-                dtype = self._container._blocks._row_dtype if dtype is None else dtype
+                dtype = self._container._blocks._row_dtype if dtype is None else dtype #type: ignore
                 tb = TypeBlocks.from_blocks(func(blocks_to_array_2d(
                         blocks=blocks,
                         shape=self._container.shape,
@@ -98,9 +97,9 @@ class InterfaceValues(Interface[TContainer]):
                         own_columns=self._container.STATIC,
                         )
             else: #IndexHierarchy
-                return self._container._from_type_blocks(
+                return self._container._from_type_blocks( #type: ignore
                     tb,
-                    index_constructors=self._container._index_constructors,
+                    index_constructors=self._container._index_constructors, # type: ignore
                     name=self._container._name,
                     own_blocks=True,
                 )
