@@ -92,7 +92,24 @@ class InterfaceValues(Interface[TContainer]):
                     own_data=True,
                     own_columns=self._container.STATIC,
                     )
+        # TODO: handl series
         raise NotImplementedError()
+
+    def __array_ufunc__(self,
+            ufunc: UFunc,
+            method: str,
+            *args: tp.Any,
+            **kwargs: tp.Any,
+            ) -> np.ndarray:
+        '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
+        '''
+        if method == '__call__':
+            return ufunc(
+                *[(arg if arg is not self else arg._container.values) for arg in args],
+                **kwargs,
+                )
+        return NotImplemented
+
 
 class InterfaceBatchValues(InterfaceBatch):
 
@@ -123,3 +140,22 @@ class InterfaceBatchValues(InterfaceBatch):
                 dtype=dtype,
                 ))
 
+    def __array_ufunc__(self,
+            ufunc: UFunc,
+            method: str,
+            *args: tp.Any,
+            **kwargs: tp.Any,
+            ) -> 'Batch':
+        '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
+        '''
+        if method == '__call__':
+            def func(c):
+                nonlocal args
+                args = [(arg if arg is not self else c.values) for arg in args]
+                return ufunc(
+                        *args,
+                        **kwargs,
+                        )
+            return self._batch_apply(func)
+
+        return NotImplemented

@@ -12552,8 +12552,17 @@ class TestUnit(TestCase):
     def test_frame_via_values_apply_b(self) -> None:
         f = ff.parse('s(3,4)|v(bool)|c(I,str)')
         post1 = f.via_values.apply(np.sin)
-        self.assertEqual( round(post1).to_pairs(),
+        self.assertEqual(round(post1).to_pairs(),
                 (('zZbu', ((0, 0.0), (1, 0.0), (2, 0.0))), ('ztsv', ((0, 0.0), (1, 0.0), (2, 0.0))), ('zUvW', ((0, 1.0), (1, 0.0), (2, 0.0))), ('zkuW', ((0, 0.0), (1, 0.0), (2, 1.0))))
+                )
+
+    def test_frame_via_values_array_a(self) -> None:
+        f = ff.parse('s(3,4)|v(float)|c(I,str)')
+        post1 = np.cos(f.via_values)
+        self.assertEqual(post1.round(2).tolist(),
+                [[0.11, 0.24, -1.0, 0.95],
+                [0.5, -0.24, -0.76, -0.46],
+                [-0.79, 1.0, -0.73, -0.99]]
                 )
 
 
