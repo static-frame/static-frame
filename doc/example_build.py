@@ -12,7 +12,7 @@ from static_frame.core.interface import InterfaceGroup
 from static_frame.core.container_util import ContainerMap
 
 dt64 = np.datetime64
-
+#-------------------------------------------------------------------------------
 SERIES_INIT_A = dict(values=(10, 2, 8), index=('a', 'b', 'c'))
 SERIES_INIT_B = dict(values=(4, 3, 12), index=('d', 'e', 'f'))
 SERIES_INIT_C = dict(values=(11, 1, None), index=('a', 'b', 'c'))
@@ -48,15 +48,14 @@ SERIES_INIT_DICT_A = dict(sf.Series(**SERIES_INIT_A))
 SERIES_INIT_FROM_ELEMENT_A = dict(element=-1, index=('a', 'b', 'c'), name='x')
 SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series(**SERIES_INIT_A)).items()), name='x')
 
-
+#-------------------------------------------------------------------------------
 FRAME_INIT_A = dict(data=b'np.arange(6).reshape(3,2)', index=(('p', 'q', 'r')), columns=(('a', 'b')), name='x')
-
 FRAME_INIT_B = dict(data=b'(np.arange(6).reshape(3,2) % 2).astype(bool)', index=(('p', 'q', 'r')), columns=(('c', 'd')), name='y')
+FRAME_INIT_C = dict(data=b'(np.arange(6).reshape(3,2) * 4/3)', index=(('p', 'q', 'r')), columns=(('a', 'b')), name='y')
+FRAME_INIT_D= dict(data=b'(np.concatenate((np.arange(8) * 2, np.arange(8) ** 2)).reshape(4,4))', index=(('p', 'q', 'r', 's')), columns=(('a', 'b', 'c', 'd')), name='x')
 
 FRAME_INIT_FROM_ELEMENT_A = dict(element=0, index=(('p', 'q', 'r')), columns=(('a', 'b')), name='x')
-
 FRAME_INIT_FROM_ELEMENTS_A = dict(elements=(10, 2, 8, 3), index=(('p', 'q', 'r', 's')),columns=['a'], name='x')
-
 
 FRAME_INIT_FROM_ELEMENT_ITEMS_A = dict(items=((('a',  0), -1), (('b',  0), 10), (('a',  1), 3), (('b', 'a'), 1)), columns=(0, 1), index= ('a', 'b'), name='x', axis=1)
 
@@ -70,10 +69,12 @@ FRAME_INIT_FROM_RECORDS_A = dict(records=b"((10, False, '1517-01-01'), (8, True,
 
 FRAME_INIT_FROM_RECORDS_ITEMS_A = dict(items=b"(('p', (10, False, '1517-01-01')), ('q', (8, True,'1517-04-01')))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 
-
 FRAME_INIT_FROM_FIELDS_A = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_FIELDS_B = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_FIELDS_C = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
+FRAME_INIT_FROM_FIELDS_D = dict(fields=((10, 2, np.nan, 2), (False, True, None, True), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+FRAME_INIT_FROM_FIELDS_E = dict(fields=((10, 2, 0, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+
 
 FRAME_INIT_FROM_ITEMS_A = dict(pairs=(('a', (10, 2, 8, 3)), ('b', ('qrs ', 'XYZ', '123', ' wX '))), index=('p', 'q', 'r', 's'), name='x')
 FRAME_INIT_FROM_ITEMS_B = dict(pairs=(('a', (10, 2, np.nan, 3)), ('b', ('qrs ', 'XYZ', None, None))), index=('p', 'q', 'r', 's'), name='x')
@@ -1352,123 +1353,178 @@ class ExGenFrame(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def exporter(row: sf.Series) -> tp.Iterator[str]:
+    @staticmethod
+    def exporter(row: sf.Series) -> tp.Iterator[str]:
 
-    #     cls = ContainerMap.str_to_cls(row['cls_name'])
-    #     icls = f'sf.{cls.__name__}' # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
+        cls = ContainerMap.str_to_cls(row['cls_name'])
+        icls = f'sf.{cls.__name__}' # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
 
-    #     if attr in ('to_frame()',
-    #             'to_frame_go()',
-    #             'to_frame_he()',
-    #             'to_pairs()',
-    #             'to_pandas()',
-    #             'to_series_he()',
-    #             'to_series()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s.{attr_func}()"
-    #     elif attr in ('to_html()',
-    #             'to_html_datatables()',
-    #             'to_visidata()',
-    #             ):
-    #         pass
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr in (
+                'to_arrow()',
+                'to_frame()',
+                'to_frame_go()',
+                'to_frame_he()',
+                'to_pairs()',
+                'to_pandas()',
+                'to_series_he()',
+                'to_series()',
+                'to_latex()',
+                'to_markdown()',
+                'to_msgpack()',
+                'to_rst()',
+                'to_xarray()',
+                ):
+            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield f"s.{attr_func}()"
+        elif attr == 'to_clipboard()':
+            if sys.platform != 'darwin':
+                yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+                yield f"f1.to_clipboard()"
+        elif attr == 'to_csv()':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.to_csv('/tmp/f.csv')"
+            yield "open('/tmp/f.csv').read()"
+        elif attr == 'to_delimited()':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.to_delimited('/tmp/f.psv', delimiter='|')"
+            yield "open('/tmp/f.psv').read()"
+        elif attr == 'to_hdf5()':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.to_hdf5('/tmp/f.h5')"
+        elif attr == 'to_npy()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f"f1.to_npy('/tmp/f.npy')"
+            yield f"sf.Frame.from_npy('/tmp/f.npy')"
+        elif attr == 'to_npz()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f"f1.to_npz('/tmp/f.npz')"
+            yield f"sf.Frame.from_npz('/tmp/f.npz')"
+        elif attr == 'to_parquet()':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.to_parquet('/tmp/f.parquet')"
+        elif attr == 'to_pickle()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f"f1.to_pickle('/tmp/f.pickle')"
+            yield f"sf.Frame.from_pickle('/tmp/f.pickle')"
+        elif attr == 'to_sqlite()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield "f1.to_sqlite('/tmp/f.db')"
+            yield 'import sqlite3'
+            yield "conn = sqlite3.connect('/tmp/f.db')"
+            yield f'sf.Frame.from_sql("select * from x limit 2", connection=conn, index_depth=1)'
+        elif attr == 'to_tsv()':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.to_tsv('/tmp/f.tsv')"
+            yield "open('/tmp/f.tsv').read()"
+        elif attr == 'to_xlsx()':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.to_xlsx('/tmp/f.xlsx')"
+        elif attr in ('to_html()',
+                'to_html_datatables()',
+                'to_visidata()',
+                ):
+            pass
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen.attribute(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
 
-    # @staticmethod
-    # def method(row: sf.Series) -> tp.Iterator[str]:
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
 
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
 
-    #     if attr in (
-    #             '__array__()',
-    #             'max()',
-    #             'mean()',
-    #             'median()',
-    #             'min()',
-    #             'prod()',
-    #             'cumprod()',
-    #             'cumsum()',
-    #             'sum()',
-    #             'std()',
-    #             'var()',
-    #             'transpose()',
-    #              ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s.{attr_func}()"
+        if attr in (
+                '__array__()',
+                'max()',
+                'mean()',
+                'median()',
+                'min()',
+                'prod()',
+                'cumprod()',
+                'cumsum()',
+                'sum()',
+                'std()',
+                'var()',
+                'transpose()',
+                 ):
+            yield f'f = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f.{attr_func}()"
 
-    #     elif attr == '__array_ufunc__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"np.array((0, 1, 0)) * s"
-    #     elif attr == '__bool__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"bool(s)"
-    #     elif attr == '__deepcopy__()':
-    #         yield 'import copy'
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"copy.deepcopy(s)"
-    #     elif attr == '__len__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"len(s)"
-    #     elif attr == '__round__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_E)})'
-    #         yield 's'
-    #         yield f"round(s, 1)"
-    #     elif attr in (
-    #             'all()',
-    #             'any()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_F)})'
-    #         yield f"s.{attr_func}()"
-    #     elif attr == 'astype()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_C)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}(float)"
-    #     elif attr == 'clip()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_E)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}(lower=2.5, upper=10.1)"
-    #     elif attr == 'count()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_G)})'
-    #         yield f"s.{attr_func}(skipna=True)"
-    #         yield f"s.{attr_func}(unique=True)"
+        elif attr == '__array_ufunc__()':
+            yield f'f = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"np.array((1, 0)) * f"
+        elif attr == '__bool__()':
+            yield f'f = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"bool(f)"
+        elif attr == '__deepcopy__()':
+            yield 'import copy'
+            yield f'f = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"copy.deepcopy(f)"
+        elif attr == '__len__()':
+            yield f'f = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"len(f)"
+        elif attr == '__round__()':
+            yield f'f = {icls}({kwa(FRAME_INIT_C)})'
+            yield 'f'
+            yield f"round(f, 1)"
+        elif attr in (
+                'all()',
+                'any()',
+                ):
+            yield f'f = {icls}({kwa(FRAME_INIT_B)})'
+            yield f"f.{attr_func}()"
+        elif attr == 'astype[]()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f'
+            yield f"f.astype['c'](object)"
+        elif attr == 'astype()':
+            yield f'f = {icls}({kwa(FRAME_INIT_A)})'
+            yield 'f'
+            yield f"f.astype(float)"
+        elif attr == 'clip()':
+            yield f'f = {icls}({kwa(FRAME_INIT_A)})'
+            yield 'f'
+            yield f"f.{attr_func}(lower=2, upper=4)"
+        elif attr == 'count()':
+            yield f'f = {icls}.from_items({kwa(FRAME_INIT_FROM_ITEMS_B)})'
+            yield 'f'
+            yield f"f.{attr_func}(skipna=True)"
+            yield f"f.{attr_func}(unique=True)"
 
-    #     elif attr in ('cov()',):
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s1.{attr_func}(s2)"
-    #     elif attr in (
-    #             'drop_duplicated()',
-    #             'dropna()',
-    #             'duplicated()',
-    #             'unique()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_G)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}()"
+        elif attr in ('cov()',):
+            yield f'f1 = {icls}({kwa(FRAME_INIT_D)})'
+            yield f"f1.{attr_func}()"
+        elif attr in (
+                'drop_duplicated()',
+                'dropna()',
+                'duplicated()',
+                'unique()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_D)})'
+            yield 'f'
+            yield f"f.{attr_func}()"
 
-    #     elif attr == 'dropfalsy()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_H)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}()"
+        elif attr == 'dropfalsy()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_E)})'
+            yield 'f'
+            yield f"f.{attr_func}()"
 
-    #     elif attr == 'equals()':
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s1.{attr_func}(s2)"
-    #     elif attr == 'fillfalsy()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_H)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}('missing')"
+        elif attr == 'equals()':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f'f2 = {icls}({kwa(FRAME_INIT_C)})'
+            yield f"f1.{attr_func}(f2)"
+        elif attr == 'fillfalsy()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_E)})'
+            yield 'f'
+            yield f"f.{attr_func}(dict(a=1, b='abc', c=np.datetime64('2022-01-10')))"
+
     #     elif attr == 'fillfalsy_backward()':
     #         yield f's = {icls}({kwa(SERIES_INIT_I)})'
     #         yield 's'
@@ -1603,8 +1659,8 @@ class ExGenFrame(ExGen):
     #         yield f's = {icls}({kwa(SERIES_INIT_K)})'
     #         yield 's'
     #         yield f"s.{attr_func}(2, seed=0)"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
@@ -2143,11 +2199,11 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
     for ig in (
             InterfaceGroup.Constructor,
-            # InterfaceGroup.Exporter,
-            # InterfaceGroup.Attribute, # sf
-            # InterfaceGroup.Method,
-            # InterfaceGroup.DictLike, # sf
-            # InterfaceGroup.Display, # sf
+            InterfaceGroup.Exporter,
+            InterfaceGroup.Attribute,
+            InterfaceGroup.Method,
+            # InterfaceGroup.DictLike,
+            # InterfaceGroup.Display,
             # InterfaceGroup.Assignment,
             # InterfaceGroup.Selector,
             # InterfaceGroup.Iterator,
