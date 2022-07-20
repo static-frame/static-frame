@@ -74,6 +74,11 @@ FRAME_INIT_FROM_FIELDS_B = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' 
 FRAME_INIT_FROM_FIELDS_C = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
 FRAME_INIT_FROM_FIELDS_D = dict(fields=((10, 2, np.nan, 2), (False, True, None, True), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_FIELDS_E = dict(fields=((10, 2, 0, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+FRAME_INIT_FROM_FIELDS_F = dict(fields=((10, 2, 0, 0), (8, 3, 8, 0), (1, 0, 0, 0)), columns=('a', 'b', 'c'), name='x')
+FRAME_INIT_FROM_FIELDS_G = dict(fields=((0, 0, 10, 2), (0, 8, 3, 8), (0, 0, 0, 1)), columns=('a', 'b', 'c'), name='x')
+FRAME_INIT_FROM_FIELDS_H = dict(fields=((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+FRAME_INIT_FROM_FIELDS_I = dict(fields=((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+FRAME_INIT_FROM_FIELDS_J = dict(fields=((np.nan, np.nan, 10, 2), (np.nan, 8, 3, 8), (np.nan, np.nan, np.nan, 1)), columns=('a', 'b', 'c'), name='x')
 
 
 FRAME_INIT_FROM_ITEMS_A = dict(pairs=(('a', (10, 2, 8, 3)), ('b', ('qrs ', 'XYZ', '123', ' wX '))), index=('p', 'q', 'r', 's'), name='x')
@@ -1525,60 +1530,66 @@ class ExGenFrame(ExGen):
             yield 'f'
             yield f"f.{attr_func}(dict(a=1, b='abc', c=np.datetime64('2022-01-10')))"
 
-    #     elif attr == 'fillfalsy_backward()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_I)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}()"
-    #     elif attr == 'fillfalsy_forward()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_J)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}()"
-    #     elif attr == 'fillfalsy_leading()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_I)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}('missing')"
-    #     elif attr == 'fillfalsy_trailing()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_J)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}('missing')"
-    #     elif attr == 'fillna()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_K)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}(0.0)"
-    #     elif attr == 'fillna_backward()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_L)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}()"
-    #     elif attr == 'fillna_forward()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_M)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}()"
-    #     elif attr == 'fillna_leading()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_L)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}(0.0)"
-    #     elif attr == 'fillna_trailing()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_M)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}(0.0)"
-    #     elif attr in (
-    #             'head()',
-    #             'tail()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_K)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}(2)"
-    #     elif attr in (
-    #             'iloc_max()',
-    #             'iloc_min()',
-    #             'loc_max()',
-    #             'loc_min()',
-    #             'isna()',
-    #             'notna()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_K)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}()"
+        elif attr == 'fillfalsy_backward()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'
+            yield 'f'
+            yield f"f.{attr_func}()"
+        elif attr == 'fillfalsy_forward()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F)})'
+            yield 'f'
+            yield f"f.{attr_func}()"
+        elif attr == 'fillfalsy_leading()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'
+            yield 'f'
+            yield f"f.{attr_func}(-1)"
+        elif attr == 'fillfalsy_trailing()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F)})'
+            yield 'f'
+            yield f"f.{attr_func}(-1)"
+
+        elif attr == 'fillna()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_H)})'
+            yield 'f'
+            yield f"f.{attr_func}(-1)"
+
+        elif attr == 'fillna_backward()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_J)})'
+            yield 'f'
+            yield f"f.{attr_func}()"
+
+        elif attr == 'fillna_forward()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
+            yield 'f'
+            yield f"f.{attr_func}()"
+
+        elif attr == 'fillna_leading()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_J)})'
+            yield 'f'
+            yield f"f.{attr_func}(-1)"
+
+        elif attr == 'fillna_trailing()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
+            yield 'f'
+            yield f"f.{attr_func}(-1)"
+
+        elif attr in (
+                'head()',
+                'tail()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f'
+            yield f"f.{attr_func}(2)"
+        elif attr in (
+                'iloc_max()',
+                'iloc_min()',
+                'loc_max()',
+                'loc_min()',
+                'isna()',
+                'notna()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
+            yield 'f'
+            yield f"f.{attr_func}()"
     #     elif attr in (
     #             'iloc_searchsorted()',
     #             'loc_searchsorted()',
@@ -1586,20 +1597,30 @@ class ExGenFrame(ExGen):
     #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
     #         yield 's'
     #         yield f"s.{attr_func}(18)"
-    #     elif attr in ('insert_before()', 'insert_after()'):
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_B)})'
-    #         yield f"s1.{attr_func}('b', s2)"
-    #     elif attr in (
-    #             'isfalsy()',
-    #             'notfalsy()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_O)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}()"
-    #     elif attr == 'isin()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_O)})'
-    #         yield f"s.{attr_func}((2, 19))"
+        elif attr in ('insert_before()', 'insert_after()'):
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f'f2 = {icls}({kwa(FRAME_INIT_B)})'
+            yield f"f1.{attr_func}('b', f2)"
+        elif attr in (
+                'isfalsy()',
+                'notfalsy()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_E)})'
+            yield 'f'
+            yield f"f.{attr_func}()"
+        elif attr == 'isin()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F)})'
+            yield f"f.{attr_func}((0, 8))"
+
+        elif attr == 'join_inner()':
+            pass
+        elif attr == 'join_left()':
+            pass
+        elif attr == 'join_right()':
+            pass
+        elif attr == 'join_outer()':
+            pass
+
     #     elif attr in (
     #             'rank_dense()',
     #             'rank_max()',
