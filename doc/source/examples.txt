@@ -205,7 +205,7 @@ c
 #start_Series-mloc
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.mloc
-140706354067072
+140297217788752
 #end_Series-mloc
 
 #start_Series-name
@@ -4938,7 +4938,7 @@ c
 #start_SeriesHE-mloc
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.mloc
-140706394976192
+140297251062176
 #end_SeriesHE-mloc
 
 #start_SeriesHE-name
@@ -10207,7 +10207,7 @@ c           datetime64[D]
 #start_Frame-mloc
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[140706393139552 140706394951072 140706396374832]
+[140297248201216 140297216561808 140297249199008]
 #end_Frame-mloc
 
 #start_Frame-name
@@ -13147,13 +13147,13 @@ q        1
 #start_Frame-iter_group_labels().apply_iter()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter at 0x10fab0510>
+<generator object IterNodeDelegate.apply_iter at 0x117b79510>
 #end_Frame-iter_group_labels().apply_iter()
 
 #start_Frame-iter_group_labels().apply_iter_items()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter_items(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter_items at 0x10fab0510>
+<generator object IterNodeDelegate.apply_iter_items at 0x117b79510>
 #end_Frame-iter_group_labels().apply_iter_items()
 
 #start_Frame-iter_group_labels_array()
@@ -17141,7 +17141,7 @@ c           datetime64[D]
 #start_FrameHE-mloc
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[140706354244224 140706394958704 140706397856432]
+[140297216572400 140297216540288 140297249353808]
 #end_FrameHE-mloc
 
 #start_FrameHE-name
@@ -20081,13 +20081,13 @@ q        1
 #start_FrameHE-iter_group_labels().apply_iter()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter at 0x10faee2e0>
+<generator object IterNodeDelegate.apply_iter at 0x117bba2e0>
 #end_FrameHE-iter_group_labels().apply_iter()
 
 #start_FrameHE-iter_group_labels().apply_iter_items()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter_items(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter_items at 0x10faee270>
+<generator object IterNodeDelegate.apply_iter_items at 0x117bba270>
 #end_FrameHE-iter_group_labels().apply_iter_items()
 
 #start_FrameHE-iter_group_labels_array()
@@ -24047,7 +24047,7 @@ c           datetime64[D]
 #start_FrameGO-mloc
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[140706394943264 140706394958704 140706354244224]
+[140297245956160 140297216540288 140297249035840]
 #end_FrameGO-mloc
 
 #start_FrameGO-name
@@ -27014,13 +27014,13 @@ q        1
 #start_FrameGO-iter_group_labels().apply_iter()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter at 0x10fab0f20>
+<generator object IterNodeDelegate.apply_iter at 0x117b79f20>
 #end_FrameGO-iter_group_labels().apply_iter()
 
 #start_FrameGO-iter_group_labels().apply_iter_items()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter_items(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter_items at 0x10fab0510>
+<generator object IterNodeDelegate.apply_iter_items at 0x117b79510>
 #end_FrameGO-iter_group_labels().apply_iter_items()
 
 #start_FrameGO-iter_group_labels_array()
