@@ -61,6 +61,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/series-accessor_string.rst
    api_overview/series-accessor_fill_value.rst
    api_overview/series-accessor_regular_expression.rst
+   api_overview/series-accessor_values.rst
    api_overview/frame-constructor.rst
    api_overview/frame-exporter.rst
    api_overview/frame-attribute.rst
@@ -77,6 +78,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/frame-accessor_transpose.rst
    api_overview/frame-accessor_fill_value.rst
    api_overview/frame-accessor_regular_expression.rst
+   api_overview/frame-accessor_values.rst
 
 .. toctree::
    :maxdepth: 1
@@ -97,6 +99,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/series-accessor_string.rst
    api_detail/series-accessor_fill_value.rst
    api_detail/series-accessor_regular_expression.rst
+   api_detail/series-accessor_values.rst
    api_detail/frame-constructor.rst
    api_detail/frame-exporter.rst
    api_detail/frame-attribute.rst
@@ -113,5 +116,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/frame-accessor_transpose.rst
    api_detail/frame-accessor_fill_value.rst
    api_detail/frame-accessor_regular_expression.rst
+   api_detail/frame-accessor_values.rst
 
 :ref:`genindex`
