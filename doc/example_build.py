@@ -41,7 +41,10 @@ SERIES_INIT_U = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-
 SERIES_INIT_V = dict(values=('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
 SERIES_INIT_W = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_X = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
-# SERIES_INIT_Y = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'), dtype=b'bytes')
+SERIES_INIT_Y1 = dict(values=(0, -2, .5, 1), index=('p', 'q', 'r', 's'))
+SERIES_INIT_Y2 = dict(values=(False, True, True), index=('p', 'q', 'r'))
+SERIES_INIT_Y3 = dict(values=(0, -2, 3, 1), index=('p', 'q', 'r', 's'))
+
 SERIES_INIT_Z = dict(values=(False, False, True), index=('b', 'c', 'd'))
 
 SERIES_INIT_DICT_A = dict(sf.Series(**SERIES_INIT_A))
@@ -85,10 +88,25 @@ FRAME_INIT_FROM_FIELDS_K = dict(fields=((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 
 FRAME_INIT_FROM_FIELDS_L = dict(fields=((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
 
 FRAME_INIT_FROM_FIELDS_M = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=b"sf.IndexHierarchy.from_product((1, 2), ('p', 'q'))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
-FRAME_INIT_FROM_FIELDS_N = dict(fields=((10, 2, 0, 0), (8, 3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+
+FRAME_INIT_FROM_FIELDS_N = dict(fields=((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 FRAME_INIT_FROM_FIELDS_O = dict(fields=((1, 2, 0, 0), (2, 1, 2, 0), (1, 0, 2, 1)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 
 FRAME_INIT_FROM_FIELDS_P = dict(fields=((2, 9), (3, 8)), columns=('a', 'b'), index=('p', 'q'), name='x')
+
+FRAME_INIT_FROM_FIELDS_Q = dict(fields=((False, True, True), (True, True, False)), columns=('a', 'b'), index=('p', 'q', 'r'), name='x')
+
+FRAME_INIT_FROM_FIELDS_R1 = dict(fields=((3, 0, 20), (2, 0, 12)), index=('a', 'b', 'c'), columns=('x', 'y'), name='y')
+FRAME_INIT_FROM_FIELDS_R2 = dict(fields=((2, 4), (3, 14)), index=('b', 'c'), columns=('x', 'y'), name='y')
+FRAME_INIT_FROM_FIELDS_R3 = dict(fields=((0, 1), (2, 1)), index=('b', 'c'), columns=('x', 'y'), name='y')
+FRAME_INIT_FROM_FIELDS_R4 = dict(fields=((False, True), (True, True)), index=('b', 'c'), columns=('x', 'y'), name='y')
+FRAME_INIT_FROM_FIELDS_R5 = dict(fields=((False, True, True), (True, False, True)), index=('a', 'b', 'c'), columns=('x', 'y'), name='y')
+
+FRAME_INIT_FROM_FIELDS_S = dict(fields=(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'))
+FRAME_INIT_FROM_FIELDS_T = dict(fields=(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=b"np.datetime64")
+FRAME_INIT_FROM_FIELDS_U = dict(fields=(('4/1/1517', '12/31/1517', '6/30/1517'), ('4/1/2022', '12/31/2021', '6/30/2022')), index=('p', 'q', 'r'), columns=('a', 'b'))
+
+
 
 
 FRAME_INIT_FROM_ITEMS_A = dict(pairs=(('a', (10, 2, 8, 3)), ('b', ('qrs ', 'XYZ', '123', ' wX '))), index=('p', 'q', 'r', 's'), name='x')
@@ -340,6 +358,7 @@ class ExGen:
             yield f'{name}'
             yield f'{name}.{attr_func}(8)'
         elif attr in (
+                'via_str.contains()',
                 'via_str.count()',
                 'via_str.find()',
                 'via_str.index()',
@@ -404,6 +423,24 @@ class ExGen:
         else:
             yield f"{name}.via_re('[X123]').{attr_funcs[1]}()"
 
+    @staticmethod
+    def accessor_values(row: sf.Series,
+            name: str,
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+
+        yield f'{name} = {ctr}'
+        if attr == 'via_values.apply()':
+            yield f'{name}.via_values.apply(np.sin)'
+        elif attr == 'via_values.__array_ufunc__()':
+            yield f'np.sin({name}.via_values)'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
 
 
@@ -1183,6 +1220,9 @@ class ExGenSeries(ExGen):
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen.accessor_regular_expression(row, 's', '', SERIES_INIT_A)
 
+    @staticmethod
+    def accessor_values(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_values(row, 's', '', SERIES_INIT_A)
 
 
 class ExGenFrame(ExGen):
@@ -1574,13 +1614,6 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
             yield 'f'
             yield f"f.{attr_func}()"
-    #     elif attr in (
-    #             'iloc_searchsorted()',
-    #             'loc_searchsorted()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}(18)"
         elif attr in ('insert_before()', 'insert_after()'):
             yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
             yield f'f2 = {icls}({kwa(FRAME_INIT_B)})'
@@ -1725,6 +1758,15 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
             yield 'f'
             yield f"f.rename(index=(('d', 'e'))).{attr_func}()"
+        elif attr == 'extend()':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f'f2 = {icls}({kwa(FRAME_INIT_B)})'
+            yield f'f1.extend(f2)'
+            yield 'f1'
+        elif attr == 'extend_items()':
+            yield f'f1 = {icls}({kwa(FRAME_INIT_A)})'
+            yield f"f1.extend_items((('d', (1, 2, 3)), ('e', (4, 5, 6))))"
+            yield 'f1'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -2251,7 +2293,6 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
             yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 'p' else -1))"
 
-
         elif attr in (
                 'iter_group_labels().apply_pool()',
                 'iter_group_labels_array().apply_pool()',
@@ -2265,184 +2306,220 @@ class ExGenFrame(ExGen):
             pass
 
 
-    #     elif attr in (
-    #             'iter_window()',
-    #             'iter_window_array()',
-    #             'iter_window_array_items()',
-    #             'iter_window_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"tuple(s.{attr_func}(size=3, step=1))"
-    #     elif attr in (
-    #             'iter_window().apply()',
-    #             'iter_window_array().apply()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum())"
-    #     elif attr in (
-    #             'iter_window().apply_iter()',
-    #             'iter_window().apply_iter_items()',
-    #             'iter_window_array().apply_iter()',
-    #             'iter_window_array().apply_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"tuple(s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum()))"
-    #     elif attr in (
-    #             'iter_window_items().apply()',
-    #             'iter_window_array_items().apply()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda l, s: s.sum() if l != 'd' else -1)"
-    #     elif attr in (
-    #             'iter_window_items().apply_iter()',
-    #             'iter_window_items().apply_iter_items()',
-    #             'iter_window_array_items().apply_iter()',
-    #             'iter_window_array_items().apply_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"tuple(s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda l, s: s.sum() if l != 'd' else -1))"
-    #     elif attr in (
-    #             'iter_window().apply_pool()',
-    #             'iter_window_array().apply_pool()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum(), use_threads=True)"
-    #     elif attr in (
-    #             'iter_window_items().apply_pool()',
-    #             'iter_window_array_items().apply_pool()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda pair: pair[1].sum(), use_threads=True)"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        elif attr in (
+                'iter_window()',
+                'iter_window_array()',
+                'iter_window_array_items()',
+                'iter_window_items()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"tuple(f.{attr_func}(size=2, step=1))"
+        elif attr in (
+                'iter_window().apply()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda f: f.max().max())"
+        elif attr in (
+                'iter_window_array().apply()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda a: np.max(a))"
+        elif attr in (
+                'iter_window().apply_iter()',
+                'iter_window().apply_iter_items()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"tuple(f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda f: f.max().max()))"
 
+        elif attr in (
+                'iter_window_array().apply_iter()',
+                'iter_window_array().apply_iter_items()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"tuple(f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda a: np.max(a)))"
+        elif attr in (
+                'iter_window_array_items().apply()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda k, v: np.max(v) if k == 'r' else np.min(v))"
+        elif attr in (
+                'iter_window_array_items().apply_iter()',
+                'iter_window_array_items().apply_iter_items()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"tuple(f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda k, v: np.max(v) if k == 'r' else np.min(v)))"
+        elif attr in (
+                'iter_window_items().apply()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda k, v: v.max().max() if k == 'r' else v.min().min())"
+        elif attr in (
+                'iter_window_items().apply_iter()',
+                'iter_window_items().apply_iter_items()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"tuple(f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda k, v: v.max().max() if k == 'r' else v.min().min()))"
 
-    # @classmethod
-    # def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-
-    #     if attr in cls.SIG_TO_OP_NUMERIC:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         if attr.startswith('__r'):
-    #             yield f'8 {cls.SIG_TO_OP_NUMERIC[attr]} s'
-    #             # no need to show reverse on series
-    #         else:
-    #             yield f's {cls.SIG_TO_OP_NUMERIC[attr]} 8'
-    #             yield f"s {cls.SIG_TO_OP_NUMERIC[attr]} s.reindex(('c', 'b'))"
-    #     elif attr in cls.SIG_TO_OP_LOGIC:
-    #         yield f's = {icls}({kwa(SERIES_INIT_F)})'
-    #         yield f"s {cls.SIG_TO_OP_LOGIC[attr]} True"
-    #         yield f"s {cls.SIG_TO_OP_LOGIC[attr]} (True, False, True)"
-    #     elif attr in cls.SIG_TO_OP_MATMUL:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s {cls.SIG_TO_OP_MATMUL[attr]} (3, 0, 4)"
-    #     elif attr in cls.SIG_TO_OP_BIT:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s {cls.SIG_TO_OP_BIT[attr]} 1"
+        elif attr in (
+                'iter_window().apply_pool()',
+                'iter_window_array().apply_pool()',
+                'iter_window_array_items().apply_pool()',
+                'iter_window_items().apply_pool()',
+                ):
+            pass
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
 
-    #     sig_to_op = {
-    #         '__neg__()': '-',
-    #         '__pos__()': '+',
-    #     }
-    #     if attr == '__abs__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_T)})'
-    #         yield f'abs(s)'
-    #     elif attr == '__invert__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_F)})'
-    #         yield f'~s'
-    #     elif attr in sig_to_op:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"{sig_to_op[attr]}s"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+    @classmethod
+    def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
 
-    # @staticmethod
-    # def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
+        if attr in cls.SIG_TO_OP_NUMERIC:
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_P)})'
 
-    #     if attr == 'via_dt.fromisoformat()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_W)})'
-    #         yield f's.{attr}'
-    #     elif attr == 'via_dt.strftime()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_U)})'
-    #         yield f's.{attr_func}("%A | %B")'
-    #     elif attr in (
-    #             'via_dt.strptime()',
-    #             'via_dt.strpdate()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_V)})'
-    #         yield f's.{attr_func}("%m/%d/%Y")'
-    #     else:
-    #         yield f's = {icls}({kwa(SERIES_INIT_U)})'
-    #         yield f's.{attr}'
+            if attr.startswith('__r'):
+                yield f'8 {cls.SIG_TO_OP_NUMERIC[attr]} f1'
+                # no need to show reverse on series
+            else:
+                yield f'f1 {cls.SIG_TO_OP_NUMERIC[attr]} 8'
+                yield f"f1 {cls.SIG_TO_OP_NUMERIC[attr]} f2"
+        elif attr in cls.SIG_TO_OP_LOGIC:
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_Q)})'
+            yield f"f {cls.SIG_TO_OP_LOGIC[attr]} True"
+            yield f"f {cls.SIG_TO_OP_LOGIC[attr]} (True, False)"
+        elif attr in cls.SIG_TO_OP_MATMUL:
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_O)})'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield f"f1 {cls.SIG_TO_OP_MATMUL[attr]} f2"
+        elif attr in cls.SIG_TO_OP_BIT:
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield f"f1 {cls.SIG_TO_OP_BIT[attr]} 1"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def operator_unary(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        sig_to_op = {
+            '__neg__()': '-',
+            '__pos__()': '+',
+        }
+        if attr == '__abs__()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield f'abs(f)'
+        elif attr == '__invert__()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_Q)})'
+            yield f'~f'
+        elif attr in sig_to_op:
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield f"{sig_to_op[attr]}f"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr == 'via_dt.fromisoformat()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_S)})'
+            yield f'f.{attr}'
+        elif attr == 'via_dt.strftime()':
+            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T)})'
+            yield f's.{attr_func}("%A | %B")'
+        elif attr in (
+                'via_dt.strptime()',
+                'via_dt.strpdate()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_U)})'
+            yield f'f.{attr_func}("%m/%d/%Y")'
+        else:
+            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T)})'
+            yield f's.{attr}'
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen.accessor_string(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_C)
 
-    # @staticmethod
-    # def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
-    #     cls = ContainerMap.str_to_cls(row['cls_name'])
-    #     icls = f'sf.{cls.__name__}' # interface cls
-    #     attr = row['signature_no_args']
-    #     if attr in ():
-    #         yield ''
-    #     else:
-    #         print('missing', attr)
+    @classmethod
+    def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        _, attr_op = attr.split('.')
 
-    # @classmethod
-    # def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     # attr_func = row['signature_no_args'][:-2]
+        if attr == 'via_T.via_fill_value()':
+            yield ''
+        elif attr_op in cls.SIG_TO_OP_NUMERIC:
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield f's = sf.Series({kwa(SERIES_INIT_Y1)})'
+            yield f'f.via_T {cls.SIG_TO_OP_NUMERIC[attr_op]} s'
+        elif attr_op in cls.SIG_TO_OP_LOGIC:
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_Q)})'
+            yield f's = sf.Series({kwa(SERIES_INIT_Y2)})'
+            yield f'f.via_T {cls.SIG_TO_OP_LOGIC[attr_op]} s'
+        elif attr_op in cls.SIG_TO_OP_BIT:
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield f's = sf.Series({kwa(SERIES_INIT_Y3)})'
+            yield f'f.via_T {cls.SIG_TO_OP_BIT[attr_op]} s'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
-    #     attr_op = attr.replace('via_fill_value().', '')
+    @classmethod
+    def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_op = attr.replace('via_fill_value().', '')
 
-    #     if attr_op in cls.SIG_TO_OP_NUMERIC:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-    #         if attr_op.startswith('__r'): # NOTE: these raise
-    #             yield f's2 {cls.SIG_TO_OP_NUMERIC[attr_op]} s1.via_fill_value(0)'
-    #         else:
-    #             yield f's1.via_fill_value(0) {cls.SIG_TO_OP_NUMERIC[attr_op]} s2'
-    #     elif attr_op in cls.SIG_TO_OP_LOGIC:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_F)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_Z)})'
-    #         yield f"s1.via_fill_value(False) {cls.SIG_TO_OP_LOGIC[attr_op]} s2"
-    #     elif attr_op in cls.SIG_TO_OP_MATMUL:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-    #         yield f"s1.via_fill_value(1) {cls.SIG_TO_OP_MATMUL[attr_op]} s2"
-    #     elif attr_op in cls.SIG_TO_OP_BIT:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-    #         yield f"s1.via_fill_value(0) {cls.SIG_TO_OP_BIT[attr_op]} s2"
-    #     elif attr == 'via_fill_value().loc':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s.via_fill_value(0).loc[['a', 'c', 'd', 'e']]"
-    #     elif attr == 'via_fill_value().__getitem__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s.via_fill_value(0)[['a', 'c', 'd', 'e']]"
-    #     elif attr == 'via_fill_value().via_T':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's.{attr}'
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr_op in cls.SIG_TO_OP_NUMERIC:
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R2)})'
+            if attr_op.startswith('__r'): # NOTE: these raise
+                yield f'f2 {cls.SIG_TO_OP_NUMERIC[attr_op]} f1.via_fill_value(0)'
+            else:
+                yield f'f1.via_fill_value(0) {cls.SIG_TO_OP_NUMERIC[attr_op]} f2'
+        elif attr_op in cls.SIG_TO_OP_LOGIC:
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R5)})'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R4)})'
+            yield f'f1.via_fill_value(False) {cls.SIG_TO_OP_LOGIC[attr_op]} f2'
+        elif attr_op in cls.SIG_TO_OP_BIT:
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R3)})'
+            yield f'f1.via_fill_value(0) {cls.SIG_TO_OP_BIT[attr_op]} f2'
+        elif attr == 'via_fill_value().loc':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield f"f.via_fill_value(-1).loc[['a', 'b', 'd']]"
+        elif attr == 'via_fill_value().__getitem__()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield f"f.via_fill_value(-1)[['z', 'x']]"
+        elif attr == 'via_fill_value().via_T':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield f's = sf.Series({kwa(SERIES_INIT_D)})'
+            yield f'f.via_fill_value(-1).via_T * s'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     @staticmethod
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen.accessor_regular_expression(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_B)
 
+    @staticmethod
+    def accessor_values(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_values(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_N)
 
 
 
@@ -2457,23 +2534,23 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            # InterfaceGroup.Constructor,
-            # InterfaceGroup.Exporter,
-            # InterfaceGroup.Attribute,
-            # InterfaceGroup.Method,
-            # InterfaceGroup.DictLike,
-            # InterfaceGroup.Display,
-            # InterfaceGroup.Assignment,
-            # InterfaceGroup.Selector,
+            InterfaceGroup.Constructor,
+            InterfaceGroup.Exporter,
+            InterfaceGroup.Attribute,
+            InterfaceGroup.Method,
+            InterfaceGroup.DictLike,
+            InterfaceGroup.Display,
+            InterfaceGroup.Assignment,
+            InterfaceGroup.Selector,
             InterfaceGroup.Iterator,
-            # InterfaceGroup.OperatorBinary,
-            # InterfaceGroup.OperatorUnary,
-            # InterfaceGroup.AccessorDatetime,
-            # InterfaceGroup.AccessorString,
-            # InterfaceGroup.AccessorTranspose,
-            # InterfaceGroup.AccessorFillValue,
-            # InterfaceGroup.AccessorRe, # sf
-
+            InterfaceGroup.OperatorBinary,
+            InterfaceGroup.OperatorUnary,
+            InterfaceGroup.AccessorDatetime,
+            InterfaceGroup.AccessorString,
+            InterfaceGroup.AccessorTranspose,
+            InterfaceGroup.AccessorFillValue,
+            InterfaceGroup.AccessorRe,
+            InterfaceGroup.AccessorValues,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
@@ -2482,11 +2559,11 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             yield from calls_to_msg(calls, row)
 
 def gen_all_examples() -> tp.Iterator[str]:
-    # yield from gen_examples(sf.Series, ExGenSeries)
-    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
+    yield from gen_examples(sf.Series, ExGenSeries)
+    yield from gen_examples(sf.SeriesHE, ExGenSeries)
     yield from gen_examples(sf.Frame, ExGenFrame)
-    # yield from gen_examples(sf.FrameHE, ExGenFrame)
-    # yield from gen_examples(sf.FrameGO, ExGenFrame)
+    yield from gen_examples(sf.FrameHE, ExGenFrame)
+    yield from gen_examples(sf.FrameGO, ExGenFrame)
 
 
 def write():
@@ -2500,9 +2577,9 @@ def write():
 
 
 if __name__ == '__main__':
-    for line in gen_all_examples():
-        print(line)
-        pass
-    # write()
+    # for line in gen_all_examples():
+    #     print(line)
+    #     pass
+    write()
 
 
