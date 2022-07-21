@@ -61,41 +61,41 @@ def get_defined() -> tp.Set[str]:
 
 DOCUMENTED_COMPONENTS = (
         sf.Series,
-        sf.SeriesHE,
+        # sf.SeriesHE,
         sf.Frame,
-        sf.FrameGO,
-        sf.FrameHE,
-        sf.Bus,
-        sf.Batch,
-        sf.Yarn,
-        sf.Quilt,
-        sf.Index,
-        sf.IndexGO,
-        sf.IndexHierarchy,
-        sf.IndexHierarchyGO,
-        sf.IndexYear,
-        sf.IndexYearGO,
-        sf.IndexYearMonth,
-        sf.IndexYearMonthGO,
-        sf.IndexDate,
-        sf.IndexDateGO,
-        sf.IndexMinute,
-        sf.IndexMinuteGO,
-        sf.IndexHour,
-        sf.IndexHourGO,
-        sf.IndexSecond,
-        sf.IndexSecondGO,
-        sf.IndexMillisecond,
-        sf.IndexMillisecondGO,
-        sf.IndexMicrosecond,
-        sf.IndexMicrosecondGO,
-        sf.IndexNanosecond,
-        sf.IndexNanosecondGO,
-        sf.DisplayConfig,
-        sf.StoreConfig,
-        sf.StoreFilter,
-        sf.NPZ,
-        sf.NPY,
+        # sf.FrameGO,
+        # sf.FrameHE,
+        # sf.Bus,
+        # sf.Batch,
+        # sf.Yarn,
+        # sf.Quilt,
+        # sf.Index,
+        # sf.IndexGO,
+        # sf.IndexHierarchy,
+        # sf.IndexHierarchyGO,
+        # sf.IndexYear,
+        # sf.IndexYearGO,
+        # sf.IndexYearMonth,
+        # sf.IndexYearMonthGO,
+        # sf.IndexDate,
+        # sf.IndexDateGO,
+        # sf.IndexMinute,
+        # sf.IndexMinuteGO,
+        # sf.IndexHour,
+        # sf.IndexHourGO,
+        # sf.IndexSecond,
+        # sf.IndexSecondGO,
+        # sf.IndexMillisecond,
+        # sf.IndexMillisecondGO,
+        # sf.IndexMicrosecond,
+        # sf.IndexMicrosecondGO,
+        # sf.IndexNanosecond,
+        # sf.IndexNanosecondGO,
+        # sf.DisplayConfig,
+        # sf.StoreConfig,
+        # sf.StoreFilter,
+        # sf.NPZ,
+        # sf.NPY,
         )
 
 
@@ -103,17 +103,8 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
     post: tp.Dict[str, tp.Any] = {}
 
-    # performance_cls = []
-    # for name in dir(core):
-    #     obj = getattr(core, name)
-    #     if inspect.isclass(obj) and issubclass(obj, PerfTest):
-    #         performance_cls.append(obj.__name__)
-
-    # post['performance_cls'] = performance_cls
-
     # for docs
     post['examples_defined'] = get_defined()
-    # post['interface_groups'] = INTERFACE_GROUP_ORDER
 
     post['interface'] = {}
     for target in DOCUMENTED_COMPONENTS:
@@ -122,16 +113,19 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
                 max_args=99, # +inf, but keep as int
                 )
         # break into iterable of group, frame
-        inter_items = []
-        for g in INTERFACE_GROUP_ORDER:
-            inter_sub = inter.loc[inter['group'] == g]
-            if len(inter_sub): # some groups are empty
-                inter_items.append((g, inter_sub))
-        post['interface'][target.__name__] = (
-                target.__name__,
-                target,
-                inter_items,
-                )
+        # inter_items = []
+        for ig in INTERFACE_GROUP_ORDER:
+            ig_tag = ig.replace('-', '_').replace(' ', '_').lower()
+            inter_sub = inter.loc[inter['group'] == ig]
+            # if len(inter_sub): # some groups are empty
+            #     inter_items.append((ig, inter_sub))
+            post['interface'][(target.__name__, ig_tag)] = (
+                    target.__name__,
+                    target,
+                    ig,
+                    ig_tag,
+                    inter_sub,
+                    )
     return post
 
 jinja_contexts = {'ctx': get_jinja_contexts()}

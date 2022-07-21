@@ -7,42 +7,57 @@ import sys
 HEADER = '.. NOTE: auto-generated file, do not edit'
 
 
-def get_rst_import(group: str, name: str) -> str:
+def get_rst_import(group: str, name: str, ig_tag: str) -> str:
     '''
-    This approach works when we can import macros in this location. This does not yet work with ReadTheDocs.
+    Args:
+        group: either detail or overview
+        name: class Name to docuemnt
+        ig_tag: the interface group to document as tag string
     '''
     return f'''
 .. jinja:: ctx
 
     {{% import 'macros.jinja' as macros %}}
 
-    {{{{ macros.{group}(examples_defined=examples_defined, *interface['{name}']) }}}}
+    {{{{ macros.{group}(examples_defined=examples_defined, *interface[('{name}', '{ig_tag}')]) }}}}
 
 '''
 
-def get_rst_embed(group: str, name: str) -> str:
-    '''
-    This approach does not require importing the macro, and works with ReadTheDocs.
-    '''
-    doc_dir = os.path.abspath(os.path.dirname(__file__))
-    fp = os.path.join(doc_dir, 'source', 'macros.jinja')
+# def get_rst_embed(group: str, name: str) -> str:
+#     doc_dir = os.path.abspath(os.path.dirname(__file__))
+#     fp = os.path.join(doc_dir, 'source', 'macros.jinja')
 
-    with open(fp) as f:
-        macro_lines = f.readlines()
+#     with open(fp) as f:
+#         macro_lines = f.readlines()
 
-    lines = [HEADER]
-    lines.append('''
-.. jinja:: ctx
-''')
+#     lines = [HEADER]
+#     lines.append('''
+# .. jinja:: ctx
+# ''')
 
-    for line in macro_lines:
-        lines.append('    ' + line.rstrip())
+#     for line in macro_lines:
+#         lines.append('    ' + line.rstrip())
 
-    lines.append(f'''
-    {{{{ {group}(examples_defined=examples_defined, *interface['{name}']) }}}}
-''')
-    return '\n'.join(lines)
+#     lines.append(f'''
+#     {{{{ {group}(examples_defined=examples_defined, *interface['{name}']) }}}}
+# ''')
+#     return '\n'.join(lines)
 
+
+
+def name_to_snake_case(name: str):
+    name_chars = []
+    last_is_upper = False
+    for i, char in enumerate(name):
+        if char.isupper():
+            if i != 0 and not last_is_upper:
+                name_chars.append('_')
+            name_chars.append(char.lower())
+            last_is_upper = True
+        else:
+            name_chars.append(char)
+            last_is_upper = False
+    return ''.join(name_chars)
 
 def source_build() -> None:
     from doc.source.conf import get_jinja_contexts
@@ -52,32 +67,22 @@ def source_build() -> None:
 
     contexts = get_jinja_contexts()
 
-    for group in ('api_detail', 'api_overview'):
-        group_dir = os.path.join(doc_dir, 'source', group)
+    for group in ('api_overview', 'api_detail'):
+        source_dir = os.path.join(doc_dir, 'source')
+        group_dir = os.path.join(source_dir, group)
 
-        for name, cls, frame in contexts['interface'].values():
+        for name, cls, ig, ig_tag, frame in contexts['interface'].values():
+            if len(frame) == 0:
+                continue
 
-            name_chars = []
-            last_is_upper = False
-            for i, char in enumerate(name):
-                if char.isupper():
-                    if i != 0 and not last_is_upper:
-                        name_chars.append('_')
-                    name_chars.append(char.lower())
-                    last_is_upper = True
-                else:
-                    name_chars.append(char)
-                    last_is_upper = False
-
-            file_name = ''.join(name_chars) + '.rst'
+            file_name = f'{name_to_snake_case(name)}-{ig_tag}.rst'
             fp = os.path.join(group_dir, file_name)
 
-            if not os.path.exists(fp):
-                raise RuntimeError(f'must create and add RST file {fp}')
+            # if not os.path.exists(fp):
+            #     raise RuntimeError(f'must create and add RST file {fp}')
 
-            print(fp)
-            # rst = get_rst_embed(group, name)
-            rst = get_rst_import(group, name)
+            print(fp.replace(source_dir + '/', '   '))
+            rst = get_rst_import(group, name, ig_tag)
 
             # print(rst)
             with open(fp, 'w') as f:
