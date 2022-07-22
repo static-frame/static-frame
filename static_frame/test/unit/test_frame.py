@@ -13407,6 +13407,23 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
             ((('mass', 'lepton', 'muon'), ((0, 0.106),)), (('mass', 'lepton', 'tau'), ((0, 1.777),)), (('mass', 'quark', 'charm'), ((0, 1.3),)), (('mass', 'quark', 'strange'), ((0, 0.1),)), (('charge', 'lepton', 'muon'), ((0, -1.0),)), (('charge', 'lepton', 'tau'), ((0, -1.0),)), (('charge', 'quark', 'charm'), ((0, 0.666),)), (('charge', 'quark', 'strange'), ((0, -0.333),))))
 
+    def test_frame_pivot_unstack_c(self) -> None:
+
+        f1 = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+
+        f1 = f1.set_index_hierarchy(('type', 'name'), drop=True)
+        f2 = f1.pivot_unstack(0)
+        self.assertEqual(f2.fillna(0).to_pairs(),
+                ((('mass', 'lepton'), (('muon', 0.106), ('tau', 1.777), ('charm', 0.0), ('strange', 0.0))), (('mass', 'quark'), (('muon', 0.0), ('tau', 0.0), ('charm', 1.3), ('strange', 0.1))), (('charge', 'lepton'), (('muon', -1.0), ('tau', -1.0), ('charm', 0.0), ('strange', 0.0))), (('charge', 'quark'), (('muon', 0.0), ('tau', 0.0), ('charm', 0.666), ('strange', -0.333))))
+                )
+
+        f3 = f1.pivot_unstack(1)
+        self.assertEqual(f3.fillna(0).to_pairs(),
+                ((('mass', 'muon'), (('lepton', 0.106), ('quark', 0.0))), (('mass', 'tau'), (('lepton', 1.777), ('quark', 0.0))), (('mass', 'charm'), (('lepton', 0.0), ('quark', 1.3))), (('mass', 'strange'), (('lepton', 0.0), ('quark', 0.1))), (('charge', 'muon'), (('lepton', -1.0), ('quark', 0.0))), (('charge', 'tau'), (('lepton', -1.0), ('quark', 0.0))), (('charge', 'charm'), (('lepton', 0.0), ('quark', 0.666))), (('charge', 'strange'), (('lepton', 0.0), ('quark', -0.333))))
+                )
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_overlay_a(self) -> None:
