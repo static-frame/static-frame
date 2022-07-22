@@ -150,7 +150,7 @@ extensions = [
         'sphinx.ext.graphviz',
         'sphinx.ext.inheritance_diagram',
         'sphinxcontrib.napoleon',
-        'sphinxcontrib.jinja',
+        'sphinx_jinja',
         ]
 
 
