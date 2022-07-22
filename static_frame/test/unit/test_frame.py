@@ -7572,14 +7572,15 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=('w', 'x', 'y', 'z'))
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
 
         with temp_file('.sqlite') as fp:
             f1.to_sqlite(fp)
-            f2 = Frame.from_sqlite(fp, index_depth=f1.index.depth)
+            f2 = Frame.from_sqlite(fp, label='foo', index_depth=f1.index.depth)
             self.assertEqualFrames(f1, f2)
 
-            f3 = FrameGO.from_sqlite(fp, index_depth=f1.index.depth)
+            f3 = FrameGO.from_sqlite(fp, label='foo', index_depth=f1.index.depth)
             self.assertEqual(f3.__class__, FrameGO)
             self.assertEqual(f3.shape, (4, 5))
 
@@ -7596,12 +7597,14 @@ class TestUnit(TestCase):
                 (4, -4, 2000, True, 4, -4, 2000, True),
                 ),
                 index=IndexHierarchy.from_product(('top', 'bottom'), ('far', 'near'), ('left', 'right')),
-                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b'), (1, 2))
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b'), (1, 2)),
+                name='foo',
                 )
 
         with temp_file('.sqlite') as fp:
             f1.to_sqlite(fp)
             f2 = Frame.from_sqlite(fp,
+                    label='foo',
                     index_depth=f1.index.depth,
                     columns_depth=f1.columns.depth)
             self.assertEqualFrames(f1, f2)
@@ -7615,13 +7618,16 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=('q', 'r', 's', 't'),
-                index=('w', 'x', 'y', 'z'))
+                index=('w', 'x', 'y', 'z'),
+                name='foo',
+                )
 
         with temp_file('.sqlite') as fp:
             f1.to_sqlite(fp, include_index=False)
             f2 = Frame.from_sqlite(fp,
-                        index_depth=2,
-                        index_constructors=(IndexYear, IndexDate))
+                    label='foo',
+                    index_depth=2,
+                    index_constructors=(IndexYear, IndexDate))
             self.assertEqual(f2.index.depth, 2)
             self.assertEqual(f2.index.index_types.values.tolist(),
                         [IndexYear, IndexDate])
@@ -7635,12 +7641,14 @@ class TestUnit(TestCase):
                 columns=IndexHierarchy.from_product(('I', 'II'),
                         (1910, 1915),
                         ('2021-01-03', '1918-05-04'),
-                        )
+                        ),
+                name='foo',
                 )
 
         with temp_file('.sqlite') as fp:
             f1.to_sqlite(fp, include_index=False)
             f2 = Frame.from_sqlite(fp,
+                    label='foo',
                     index_depth=0,
                     columns_depth=3,
                     columns_constructors=(Index, IndexYear, IndexDate)
@@ -7648,7 +7656,7 @@ class TestUnit(TestCase):
             self.assertEqual(f2.columns.depth, 3)
             self.assertEqual(f2.columns.index_types.values.tolist(),
                         [Index, IndexYear, IndexDate])
-            self.assertEqual(f2.name, None)
+            self.assertEqual(f2.name, 'foo')
 
     #---------------------------------------------------------------------------
 
