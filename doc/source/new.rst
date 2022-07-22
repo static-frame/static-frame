@@ -16,6 +16,8 @@ Added ``via_str.contains()``.
 
 Corrected issue in ``ArchiveZIP`` when ``__del__`` is called when no archive is set.
 
+``Frame.to_sqlite()`` now requires a named ``Frame`` or an explicit ``label``; ``Frame.from_sqlite()``, ``Frame.from_hdf5()`` now make ``label`` a required argument.
+
 API Documentation re-organized, now using procedurally generated code examples.
 
 

@@ -65,7 +65,7 @@ class StoreSQLite(Store):
                 )
 
         index = frame._index
-        columns = frame._columns
+        # columns = frame._columns
 
         if not include_index:
             create_primary_key = ''
@@ -121,11 +121,8 @@ class StoreSQLite(Store):
             for label, frame in items:
                 c = config_map[label]
 
-                # for interface compatibility with StoreXLSX, where label can be None
-                if label is STORE_LABEL_DEFAULT:
-                    label = 'None'
-                else:
-                    label = config_map.default.label_encode(label)
+                # if label is STORE_LABEL_DEFAULT this will raise
+                label = config_map.default.label_encode(label)
 
                 self._frame_to_table(frame=frame,
                         label=label,
@@ -155,12 +152,8 @@ class StoreSQLite(Store):
             for label in labels:
                 c = config_map[label]
 
-                if label is STORE_LABEL_DEFAULT:
-                    label_encoded = 'None'
-                    name = None
-                else:
-                    label_encoded = config_map.default.label_encode(label)
-                    name = label
+                label_encoded = config_map.default.label_encode(label)
+                name = label
 
                 query = f'SELECT * from "{label_encoded}"'
 

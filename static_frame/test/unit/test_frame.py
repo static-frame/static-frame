@@ -7659,6 +7659,15 @@ class TestUnit(TestCase):
             self.assertEqual(f2.name, 'foo')
 
     #---------------------------------------------------------------------------
+    def test_frame_to_sqlite_a(self) -> None:
+        f1 = ff.parse('s(4,5)')
+        with temp_file('.sqlite') as fp:
+            # RuntimeError: must provide a label or define Frame name.
+            with self.assertRaises(RuntimeError):
+                f1.to_sqlite(fp)
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_from_hdf5_a(self) -> None:
         records = (
