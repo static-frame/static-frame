@@ -47,6 +47,86 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    :caption: API Overview
 
    api_overview/series.rst
+   api_overview/series_he.rst
+   api_overview/frame.rst
+   api_overview/frame_go.rst
+   api_overview/frame_he.rst
+   api_overview/bus.rst
+   api_overview/batch.rst
+   api_overview/yarn.rst
+   api_overview/quilt.rst
+   api_overview/index.rst
+   api_overview/index_go.rst
+   api_overview/index_hierarchy.rst
+   api_overview/index_hierarchy_go.rst
+   api_overview/index_year.rst
+   api_overview/index_year_go.rst
+   api_overview/index_year_month.rst
+   api_overview/index_year_month_go.rst
+   api_overview/index_date.rst
+   api_overview/index_date_go.rst
+   api_overview/index_minute.rst
+   api_overview/index_minute_go.rst
+   api_overview/index_hour.rst
+   api_overview/index_hour_go.rst
+   api_overview/index_second.rst
+   api_overview/index_second_go.rst
+   api_overview/index_millisecond.rst
+   api_overview/index_millisecond_go.rst
+   api_overview/index_microsecond.rst
+   api_overview/index_microsecond_go.rst
+   api_overview/index_nanosecond.rst
+   api_overview/index_nanosecond_go.rst
+   api_overview/display_config.rst
+   api_overview/store_config.rst
+   api_overview/store_filter.rst
+   api_overview/npz.rst
+   api_overview/npy.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API Detail
+
+   api_detail/series.rst
+   api_detail/series_he.rst
+   api_detail/frame.rst
+   api_detail/frame_go.rst
+   api_detail/frame_he.rst
+   api_detail/bus.rst
+   api_detail/batch.rst
+   api_detail/yarn.rst
+   api_detail/quilt.rst
+   api_detail/index.rst
+   api_detail/index_go.rst
+   api_detail/index_hierarchy.rst
+   api_detail/index_hierarchy_go.rst
+   api_detail/index_year.rst
+   api_detail/index_year_go.rst
+   api_detail/index_year_month.rst
+   api_detail/index_year_month_go.rst
+   api_detail/index_date.rst
+   api_detail/index_date_go.rst
+   api_detail/index_minute.rst
+   api_detail/index_minute_go.rst
+   api_detail/index_hour.rst
+   api_detail/index_hour_go.rst
+   api_detail/index_second.rst
+   api_detail/index_second_go.rst
+   api_detail/index_millisecond.rst
+   api_detail/index_millisecond_go.rst
+   api_detail/index_microsecond.rst
+   api_detail/index_microsecond_go.rst
+   api_detail/index_nanosecond.rst
+   api_detail/index_nanosecond_go.rst
+   api_detail/display_config.rst
+   api_detail/store_config.rst
+   api_detail/store_filter.rst
+   api_detail/npz.rst
+   api_detail/npy.rst
+
+.. toctree::
+   :hidden:
+
    api_overview/series-constructor.rst
    api_overview/series-exporter.rst
    api_overview/series-attribute.rst
@@ -63,7 +143,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/series-accessor_string.rst
    api_overview/series-accessor_fill_value.rst
    api_overview/series-accessor_regular_expression.rst
-   api_overview/series_he.rst
    api_overview/series_he-constructor.rst
    api_overview/series_he-exporter.rst
    api_overview/series_he-attribute.rst
@@ -80,7 +159,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/series_he-accessor_string.rst
    api_overview/series_he-accessor_fill_value.rst
    api_overview/series_he-accessor_regular_expression.rst
-   api_overview/frame.rst
    api_overview/frame-constructor.rst
    api_overview/frame-exporter.rst
    api_overview/frame-attribute.rst
@@ -98,7 +176,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/frame-accessor_transpose.rst
    api_overview/frame-accessor_fill_value.rst
    api_overview/frame-accessor_regular_expression.rst
-   api_overview/frame_go.rst
    api_overview/frame_go-constructor.rst
    api_overview/frame_go-exporter.rst
    api_overview/frame_go-attribute.rst
@@ -116,7 +193,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/frame_go-accessor_transpose.rst
    api_overview/frame_go-accessor_fill_value.rst
    api_overview/frame_go-accessor_regular_expression.rst
-   api_overview/frame_he.rst
    api_overview/frame_he-constructor.rst
    api_overview/frame_he-exporter.rst
    api_overview/frame_he-attribute.rst
@@ -134,7 +210,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/frame_he-accessor_transpose.rst
    api_overview/frame_he-accessor_fill_value.rst
    api_overview/frame_he-accessor_regular_expression.rst
-   api_overview/bus.rst
    api_overview/bus-constructor.rst
    api_overview/bus-exporter.rst
    api_overview/bus-attribute.rst
@@ -144,7 +219,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/bus-selector.rst
    api_overview/bus-iterator.rst
    api_overview/bus-operator_binary.rst
-   api_overview/batch.rst
    api_overview/batch-constructor.rst
    api_overview/batch-exporter.rst
    api_overview/batch-attribute.rst
@@ -159,7 +233,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/batch-accessor_transpose.rst
    api_overview/batch-accessor_fill_value.rst
    api_overview/batch-accessor_regular_expression.rst
-   api_overview/yarn.rst
    api_overview/yarn-constructor.rst
    api_overview/yarn-exporter.rst
    api_overview/yarn-attribute.rst
@@ -169,7 +242,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/yarn-selector.rst
    api_overview/yarn-iterator.rst
    api_overview/yarn-operator_binary.rst
-   api_overview/quilt.rst
    api_overview/quilt-constructor.rst
    api_overview/quilt-exporter.rst
    api_overview/quilt-attribute.rst
@@ -179,7 +251,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/quilt-selector.rst
    api_overview/quilt-iterator.rst
    api_overview/quilt-operator_binary.rst
-   api_overview/index.rst
    api_overview/index-constructor.rst
    api_overview/index-exporter.rst
    api_overview/index-attribute.rst
@@ -194,7 +265,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index-accessor_datetime.rst
    api_overview/index-accessor_string.rst
    api_overview/index-accessor_regular_expression.rst
-   api_overview/index_go.rst
    api_overview/index_go-constructor.rst
    api_overview/index_go-exporter.rst
    api_overview/index_go-attribute.rst
@@ -209,7 +279,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_go-accessor_datetime.rst
    api_overview/index_go-accessor_string.rst
    api_overview/index_go-accessor_regular_expression.rst
-   api_overview/index_hierarchy.rst
    api_overview/index_hierarchy-constructor.rst
    api_overview/index_hierarchy-exporter.rst
    api_overview/index_hierarchy-attribute.rst
@@ -225,7 +294,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_hierarchy-accessor_string.rst
    api_overview/index_hierarchy-accessor_transpose.rst
    api_overview/index_hierarchy-accessor_regular_expression.rst
-   api_overview/index_hierarchy_go.rst
    api_overview/index_hierarchy_go-constructor.rst
    api_overview/index_hierarchy_go-exporter.rst
    api_overview/index_hierarchy_go-attribute.rst
@@ -241,7 +309,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_hierarchy_go-accessor_string.rst
    api_overview/index_hierarchy_go-accessor_transpose.rst
    api_overview/index_hierarchy_go-accessor_regular_expression.rst
-   api_overview/index_year.rst
    api_overview/index_year-constructor.rst
    api_overview/index_year-exporter.rst
    api_overview/index_year-attribute.rst
@@ -256,7 +323,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_year-accessor_datetime.rst
    api_overview/index_year-accessor_string.rst
    api_overview/index_year-accessor_regular_expression.rst
-   api_overview/index_year_go.rst
    api_overview/index_year_go-constructor.rst
    api_overview/index_year_go-exporter.rst
    api_overview/index_year_go-attribute.rst
@@ -271,7 +337,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_year_go-accessor_datetime.rst
    api_overview/index_year_go-accessor_string.rst
    api_overview/index_year_go-accessor_regular_expression.rst
-   api_overview/index_year_month.rst
    api_overview/index_year_month-constructor.rst
    api_overview/index_year_month-exporter.rst
    api_overview/index_year_month-attribute.rst
@@ -286,7 +351,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_year_month-accessor_datetime.rst
    api_overview/index_year_month-accessor_string.rst
    api_overview/index_year_month-accessor_regular_expression.rst
-   api_overview/index_year_month_go.rst
    api_overview/index_year_month_go-constructor.rst
    api_overview/index_year_month_go-exporter.rst
    api_overview/index_year_month_go-attribute.rst
@@ -301,7 +365,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_year_month_go-accessor_datetime.rst
    api_overview/index_year_month_go-accessor_string.rst
    api_overview/index_year_month_go-accessor_regular_expression.rst
-   api_overview/index_date.rst
    api_overview/index_date-constructor.rst
    api_overview/index_date-exporter.rst
    api_overview/index_date-attribute.rst
@@ -316,7 +379,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_date-accessor_datetime.rst
    api_overview/index_date-accessor_string.rst
    api_overview/index_date-accessor_regular_expression.rst
-   api_overview/index_date_go.rst
    api_overview/index_date_go-constructor.rst
    api_overview/index_date_go-exporter.rst
    api_overview/index_date_go-attribute.rst
@@ -331,7 +393,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_date_go-accessor_datetime.rst
    api_overview/index_date_go-accessor_string.rst
    api_overview/index_date_go-accessor_regular_expression.rst
-   api_overview/index_minute.rst
    api_overview/index_minute-constructor.rst
    api_overview/index_minute-exporter.rst
    api_overview/index_minute-attribute.rst
@@ -346,7 +407,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_minute-accessor_datetime.rst
    api_overview/index_minute-accessor_string.rst
    api_overview/index_minute-accessor_regular_expression.rst
-   api_overview/index_minute_go.rst
    api_overview/index_minute_go-constructor.rst
    api_overview/index_minute_go-exporter.rst
    api_overview/index_minute_go-attribute.rst
@@ -361,7 +421,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_minute_go-accessor_datetime.rst
    api_overview/index_minute_go-accessor_string.rst
    api_overview/index_minute_go-accessor_regular_expression.rst
-   api_overview/index_hour.rst
    api_overview/index_hour-constructor.rst
    api_overview/index_hour-exporter.rst
    api_overview/index_hour-attribute.rst
@@ -376,7 +435,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_hour-accessor_datetime.rst
    api_overview/index_hour-accessor_string.rst
    api_overview/index_hour-accessor_regular_expression.rst
-   api_overview/index_hour_go.rst
    api_overview/index_hour_go-constructor.rst
    api_overview/index_hour_go-exporter.rst
    api_overview/index_hour_go-attribute.rst
@@ -391,7 +449,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_hour_go-accessor_datetime.rst
    api_overview/index_hour_go-accessor_string.rst
    api_overview/index_hour_go-accessor_regular_expression.rst
-   api_overview/index_second.rst
    api_overview/index_second-constructor.rst
    api_overview/index_second-exporter.rst
    api_overview/index_second-attribute.rst
@@ -406,7 +463,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_second-accessor_datetime.rst
    api_overview/index_second-accessor_string.rst
    api_overview/index_second-accessor_regular_expression.rst
-   api_overview/index_second_go.rst
    api_overview/index_second_go-constructor.rst
    api_overview/index_second_go-exporter.rst
    api_overview/index_second_go-attribute.rst
@@ -421,7 +477,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_second_go-accessor_datetime.rst
    api_overview/index_second_go-accessor_string.rst
    api_overview/index_second_go-accessor_regular_expression.rst
-   api_overview/index_millisecond.rst
    api_overview/index_millisecond-constructor.rst
    api_overview/index_millisecond-exporter.rst
    api_overview/index_millisecond-attribute.rst
@@ -436,7 +491,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_millisecond-accessor_datetime.rst
    api_overview/index_millisecond-accessor_string.rst
    api_overview/index_millisecond-accessor_regular_expression.rst
-   api_overview/index_millisecond_go.rst
    api_overview/index_millisecond_go-constructor.rst
    api_overview/index_millisecond_go-exporter.rst
    api_overview/index_millisecond_go-attribute.rst
@@ -451,7 +505,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_millisecond_go-accessor_datetime.rst
    api_overview/index_millisecond_go-accessor_string.rst
    api_overview/index_millisecond_go-accessor_regular_expression.rst
-   api_overview/index_microsecond.rst
    api_overview/index_microsecond-constructor.rst
    api_overview/index_microsecond-exporter.rst
    api_overview/index_microsecond-attribute.rst
@@ -466,7 +519,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_microsecond-accessor_datetime.rst
    api_overview/index_microsecond-accessor_string.rst
    api_overview/index_microsecond-accessor_regular_expression.rst
-   api_overview/index_microsecond_go.rst
    api_overview/index_microsecond_go-constructor.rst
    api_overview/index_microsecond_go-exporter.rst
    api_overview/index_microsecond_go-attribute.rst
@@ -481,7 +533,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_microsecond_go-accessor_datetime.rst
    api_overview/index_microsecond_go-accessor_string.rst
    api_overview/index_microsecond_go-accessor_regular_expression.rst
-   api_overview/index_nanosecond.rst
    api_overview/index_nanosecond-constructor.rst
    api_overview/index_nanosecond-exporter.rst
    api_overview/index_nanosecond-attribute.rst
@@ -496,7 +547,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_nanosecond-accessor_datetime.rst
    api_overview/index_nanosecond-accessor_string.rst
    api_overview/index_nanosecond-accessor_regular_expression.rst
-   api_overview/index_nanosecond_go.rst
    api_overview/index_nanosecond_go-constructor.rst
    api_overview/index_nanosecond_go-exporter.rst
    api_overview/index_nanosecond_go-attribute.rst
@@ -511,44 +561,34 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_nanosecond_go-accessor_datetime.rst
    api_overview/index_nanosecond_go-accessor_string.rst
    api_overview/index_nanosecond_go-accessor_regular_expression.rst
-   api_overview/display_config.rst
    api_overview/display_config-constructor.rst
    api_overview/display_config-exporter.rst
    api_overview/display_config-attribute.rst
    api_overview/display_config-method.rst
    api_overview/display_config-display.rst
    api_overview/display_config-operator_binary.rst
-   api_overview/store_config.rst
    api_overview/store_config-constructor.rst
    api_overview/store_config-exporter.rst
    api_overview/store_config-attribute.rst
    api_overview/store_config-method.rst
    api_overview/store_config-display.rst
    api_overview/store_config-operator_binary.rst
-   api_overview/store_filter.rst
    api_overview/store_filter-constructor.rst
    api_overview/store_filter-exporter.rst
    api_overview/store_filter-attribute.rst
    api_overview/store_filter-display.rst
    api_overview/store_filter-operator_binary.rst
-   api_overview/npz.rst
    api_overview/npz-constructor.rst
    api_overview/npz-attribute.rst
    api_overview/npz-method.rst
    api_overview/npz-display.rst
    api_overview/npz-operator_binary.rst
-   api_overview/npy.rst
    api_overview/npy-constructor.rst
    api_overview/npy-attribute.rst
    api_overview/npy-method.rst
    api_overview/npy-display.rst
    api_overview/npy-operator_binary.rst
 
-.. toctree::
-   :maxdepth: 1
-   :caption: API Detail
-
-   api_detail/series.rst
    api_detail/series-constructor.rst
    api_detail/series-exporter.rst
    api_detail/series-attribute.rst
@@ -565,7 +605,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/series-accessor_string.rst
    api_detail/series-accessor_fill_value.rst
    api_detail/series-accessor_regular_expression.rst
-   api_detail/series_he.rst
    api_detail/series_he-constructor.rst
    api_detail/series_he-exporter.rst
    api_detail/series_he-attribute.rst
@@ -582,7 +621,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/series_he-accessor_string.rst
    api_detail/series_he-accessor_fill_value.rst
    api_detail/series_he-accessor_regular_expression.rst
-   api_detail/frame.rst
    api_detail/frame-constructor.rst
    api_detail/frame-exporter.rst
    api_detail/frame-attribute.rst
@@ -600,7 +638,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/frame-accessor_transpose.rst
    api_detail/frame-accessor_fill_value.rst
    api_detail/frame-accessor_regular_expression.rst
-   api_detail/frame_go.rst
    api_detail/frame_go-constructor.rst
    api_detail/frame_go-exporter.rst
    api_detail/frame_go-attribute.rst
@@ -618,7 +655,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/frame_go-accessor_transpose.rst
    api_detail/frame_go-accessor_fill_value.rst
    api_detail/frame_go-accessor_regular_expression.rst
-   api_detail/frame_he.rst
    api_detail/frame_he-constructor.rst
    api_detail/frame_he-exporter.rst
    api_detail/frame_he-attribute.rst
@@ -636,7 +672,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/frame_he-accessor_transpose.rst
    api_detail/frame_he-accessor_fill_value.rst
    api_detail/frame_he-accessor_regular_expression.rst
-   api_detail/bus.rst
    api_detail/bus-constructor.rst
    api_detail/bus-exporter.rst
    api_detail/bus-attribute.rst
@@ -646,7 +681,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/bus-selector.rst
    api_detail/bus-iterator.rst
    api_detail/bus-operator_binary.rst
-   api_detail/batch.rst
    api_detail/batch-constructor.rst
    api_detail/batch-exporter.rst
    api_detail/batch-attribute.rst
@@ -661,7 +695,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/batch-accessor_transpose.rst
    api_detail/batch-accessor_fill_value.rst
    api_detail/batch-accessor_regular_expression.rst
-   api_detail/yarn.rst
    api_detail/yarn-constructor.rst
    api_detail/yarn-exporter.rst
    api_detail/yarn-attribute.rst
@@ -671,7 +704,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/yarn-selector.rst
    api_detail/yarn-iterator.rst
    api_detail/yarn-operator_binary.rst
-   api_detail/quilt.rst
    api_detail/quilt-constructor.rst
    api_detail/quilt-exporter.rst
    api_detail/quilt-attribute.rst
@@ -681,7 +713,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/quilt-selector.rst
    api_detail/quilt-iterator.rst
    api_detail/quilt-operator_binary.rst
-   api_detail/index.rst
    api_detail/index-constructor.rst
    api_detail/index-exporter.rst
    api_detail/index-attribute.rst
@@ -696,7 +727,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index-accessor_datetime.rst
    api_detail/index-accessor_string.rst
    api_detail/index-accessor_regular_expression.rst
-   api_detail/index_go.rst
    api_detail/index_go-constructor.rst
    api_detail/index_go-exporter.rst
    api_detail/index_go-attribute.rst
@@ -711,7 +741,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_go-accessor_datetime.rst
    api_detail/index_go-accessor_string.rst
    api_detail/index_go-accessor_regular_expression.rst
-   api_detail/index_hierarchy.rst
    api_detail/index_hierarchy-constructor.rst
    api_detail/index_hierarchy-exporter.rst
    api_detail/index_hierarchy-attribute.rst
@@ -727,7 +756,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_hierarchy-accessor_string.rst
    api_detail/index_hierarchy-accessor_transpose.rst
    api_detail/index_hierarchy-accessor_regular_expression.rst
-   api_detail/index_hierarchy_go.rst
    api_detail/index_hierarchy_go-constructor.rst
    api_detail/index_hierarchy_go-exporter.rst
    api_detail/index_hierarchy_go-attribute.rst
@@ -743,7 +771,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_hierarchy_go-accessor_string.rst
    api_detail/index_hierarchy_go-accessor_transpose.rst
    api_detail/index_hierarchy_go-accessor_regular_expression.rst
-   api_detail/index_year.rst
    api_detail/index_year-constructor.rst
    api_detail/index_year-exporter.rst
    api_detail/index_year-attribute.rst
@@ -758,7 +785,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_year-accessor_datetime.rst
    api_detail/index_year-accessor_string.rst
    api_detail/index_year-accessor_regular_expression.rst
-   api_detail/index_year_go.rst
    api_detail/index_year_go-constructor.rst
    api_detail/index_year_go-exporter.rst
    api_detail/index_year_go-attribute.rst
@@ -773,7 +799,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_year_go-accessor_datetime.rst
    api_detail/index_year_go-accessor_string.rst
    api_detail/index_year_go-accessor_regular_expression.rst
-   api_detail/index_year_month.rst
    api_detail/index_year_month-constructor.rst
    api_detail/index_year_month-exporter.rst
    api_detail/index_year_month-attribute.rst
@@ -788,7 +813,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_year_month-accessor_datetime.rst
    api_detail/index_year_month-accessor_string.rst
    api_detail/index_year_month-accessor_regular_expression.rst
-   api_detail/index_year_month_go.rst
    api_detail/index_year_month_go-constructor.rst
    api_detail/index_year_month_go-exporter.rst
    api_detail/index_year_month_go-attribute.rst
@@ -803,7 +827,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_year_month_go-accessor_datetime.rst
    api_detail/index_year_month_go-accessor_string.rst
    api_detail/index_year_month_go-accessor_regular_expression.rst
-   api_detail/index_date.rst
    api_detail/index_date-constructor.rst
    api_detail/index_date-exporter.rst
    api_detail/index_date-attribute.rst
@@ -818,7 +841,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_date-accessor_datetime.rst
    api_detail/index_date-accessor_string.rst
    api_detail/index_date-accessor_regular_expression.rst
-   api_detail/index_date_go.rst
    api_detail/index_date_go-constructor.rst
    api_detail/index_date_go-exporter.rst
    api_detail/index_date_go-attribute.rst
@@ -833,7 +855,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_date_go-accessor_datetime.rst
    api_detail/index_date_go-accessor_string.rst
    api_detail/index_date_go-accessor_regular_expression.rst
-   api_detail/index_minute.rst
    api_detail/index_minute-constructor.rst
    api_detail/index_minute-exporter.rst
    api_detail/index_minute-attribute.rst
@@ -848,7 +869,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_minute-accessor_datetime.rst
    api_detail/index_minute-accessor_string.rst
    api_detail/index_minute-accessor_regular_expression.rst
-   api_detail/index_minute_go.rst
    api_detail/index_minute_go-constructor.rst
    api_detail/index_minute_go-exporter.rst
    api_detail/index_minute_go-attribute.rst
@@ -863,7 +883,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_minute_go-accessor_datetime.rst
    api_detail/index_minute_go-accessor_string.rst
    api_detail/index_minute_go-accessor_regular_expression.rst
-   api_detail/index_hour.rst
    api_detail/index_hour-constructor.rst
    api_detail/index_hour-exporter.rst
    api_detail/index_hour-attribute.rst
@@ -878,7 +897,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_hour-accessor_datetime.rst
    api_detail/index_hour-accessor_string.rst
    api_detail/index_hour-accessor_regular_expression.rst
-   api_detail/index_hour_go.rst
    api_detail/index_hour_go-constructor.rst
    api_detail/index_hour_go-exporter.rst
    api_detail/index_hour_go-attribute.rst
@@ -893,7 +911,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_hour_go-accessor_datetime.rst
    api_detail/index_hour_go-accessor_string.rst
    api_detail/index_hour_go-accessor_regular_expression.rst
-   api_detail/index_second.rst
    api_detail/index_second-constructor.rst
    api_detail/index_second-exporter.rst
    api_detail/index_second-attribute.rst
@@ -908,7 +925,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_second-accessor_datetime.rst
    api_detail/index_second-accessor_string.rst
    api_detail/index_second-accessor_regular_expression.rst
-   api_detail/index_second_go.rst
    api_detail/index_second_go-constructor.rst
    api_detail/index_second_go-exporter.rst
    api_detail/index_second_go-attribute.rst
@@ -923,7 +939,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_second_go-accessor_datetime.rst
    api_detail/index_second_go-accessor_string.rst
    api_detail/index_second_go-accessor_regular_expression.rst
-   api_detail/index_millisecond.rst
    api_detail/index_millisecond-constructor.rst
    api_detail/index_millisecond-exporter.rst
    api_detail/index_millisecond-attribute.rst
@@ -938,7 +953,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_millisecond-accessor_datetime.rst
    api_detail/index_millisecond-accessor_string.rst
    api_detail/index_millisecond-accessor_regular_expression.rst
-   api_detail/index_millisecond_go.rst
    api_detail/index_millisecond_go-constructor.rst
    api_detail/index_millisecond_go-exporter.rst
    api_detail/index_millisecond_go-attribute.rst
@@ -953,7 +967,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_millisecond_go-accessor_datetime.rst
    api_detail/index_millisecond_go-accessor_string.rst
    api_detail/index_millisecond_go-accessor_regular_expression.rst
-   api_detail/index_microsecond.rst
    api_detail/index_microsecond-constructor.rst
    api_detail/index_microsecond-exporter.rst
    api_detail/index_microsecond-attribute.rst
@@ -968,7 +981,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_microsecond-accessor_datetime.rst
    api_detail/index_microsecond-accessor_string.rst
    api_detail/index_microsecond-accessor_regular_expression.rst
-   api_detail/index_microsecond_go.rst
    api_detail/index_microsecond_go-constructor.rst
    api_detail/index_microsecond_go-exporter.rst
    api_detail/index_microsecond_go-attribute.rst
@@ -983,7 +995,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_microsecond_go-accessor_datetime.rst
    api_detail/index_microsecond_go-accessor_string.rst
    api_detail/index_microsecond_go-accessor_regular_expression.rst
-   api_detail/index_nanosecond.rst
    api_detail/index_nanosecond-constructor.rst
    api_detail/index_nanosecond-exporter.rst
    api_detail/index_nanosecond-attribute.rst
@@ -998,7 +1009,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_nanosecond-accessor_datetime.rst
    api_detail/index_nanosecond-accessor_string.rst
    api_detail/index_nanosecond-accessor_regular_expression.rst
-   api_detail/index_nanosecond_go.rst
    api_detail/index_nanosecond_go-constructor.rst
    api_detail/index_nanosecond_go-exporter.rst
    api_detail/index_nanosecond_go-attribute.rst
@@ -1013,33 +1023,28 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_nanosecond_go-accessor_datetime.rst
    api_detail/index_nanosecond_go-accessor_string.rst
    api_detail/index_nanosecond_go-accessor_regular_expression.rst
-   api_detail/display_config.rst
    api_detail/display_config-constructor.rst
    api_detail/display_config-exporter.rst
    api_detail/display_config-attribute.rst
    api_detail/display_config-method.rst
    api_detail/display_config-display.rst
    api_detail/display_config-operator_binary.rst
-   api_detail/store_config.rst
    api_detail/store_config-constructor.rst
    api_detail/store_config-exporter.rst
    api_detail/store_config-attribute.rst
    api_detail/store_config-method.rst
    api_detail/store_config-display.rst
    api_detail/store_config-operator_binary.rst
-   api_detail/store_filter.rst
    api_detail/store_filter-constructor.rst
    api_detail/store_filter-exporter.rst
    api_detail/store_filter-attribute.rst
    api_detail/store_filter-display.rst
    api_detail/store_filter-operator_binary.rst
-   api_detail/npz.rst
    api_detail/npz-constructor.rst
    api_detail/npz-attribute.rst
    api_detail/npz-method.rst
    api_detail/npz-display.rst
    api_detail/npz-operator_binary.rst
-   api_detail/npy.rst
    api_detail/npy-constructor.rst
    api_detail/npy-attribute.rst
    api_detail/npy-method.rst

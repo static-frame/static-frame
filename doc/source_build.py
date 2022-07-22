@@ -36,7 +36,6 @@ def get_rst_import_toc(doc_group, cls_name: str) -> str:
 
 '''
 
-
 def name_to_snake_case(name: str):
     name_chars = []
     last_is_upper = False
@@ -58,10 +57,18 @@ def source_build() -> None:
 
     contexts = get_jinja_contexts()
 
+    toc_dir_public = {}
+    toc_dir_hidden = {}
+
+    api_groups = ('api_overview', 'api_detail')
+
     # groups are also the names of the macros
-    for group in ('api_overview', 'api_detail'):
+    for group in api_groups:
         source_dir = os.path.join(doc_dir, 'source')
         group_dir = os.path.join(source_dir, group)
+
+        toc_dir_public[group] = []
+        toc_dir_hidden[group] = []
 
         for cls_name, records in contexts['interface'].items():
 
@@ -70,7 +77,8 @@ def source_build() -> None:
             rst = get_rst_import_toc(group, cls_name)
             with open(fp, 'w') as f:
                 f.write(rst)
-            print(fp.replace(source_dir + '/', '   '))
+
+            toc_dir_public[group].append(fp.replace(source_dir + '/', '   '))
 
             for _, ig, ig_tag, frame in records.values():
                 if len(frame) == 0:
@@ -79,15 +87,24 @@ def source_build() -> None:
                 file_name = f'{name_to_snake_case(cls_name)}-{ig_tag}.rst'
                 fp = os.path.join(group_dir, file_name)
 
-                # if not os.path.exists(fp):
-                #     raise RuntimeError(f'must create and add RST file {fp}')
-
-                print(fp.replace(source_dir + '/', '   '))
                 rst = get_rst_import_api(group, cls_name, ig_tag)
-
                 # print(rst)
                 with open(fp, 'w') as f:
                     f.write(rst)
+
+                toc_dir_hidden[group].append(fp.replace(source_dir + '/', '   '))
+
+    # print to help create TOC in index.rst
+    for group in api_groups:
+        print(group)
+        for name in toc_dir_public[group]:
+            print(name)
+
+    for group in api_groups:
+        print(group)
+        for name in toc_dir_hidden[group]:
+            print(name)
+
 
 
 if __name__ == '__main__':
