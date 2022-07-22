@@ -17,7 +17,6 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import STORE_LABEL_DEFAULT
 
 
 class StoreSQLite(Store):
