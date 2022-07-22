@@ -110,7 +110,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
     post['toc'] = {}
     post['interface'] = {}
     for cls in DOCUMENTED_COMPONENTS:
-        inter = InterfaceSummary.to_frame(cls, #type: ignore
+        inter = InterfaceSummary.to_frame(cls,
                 minimized=False,
                 max_args=99, # +inf, but keep as int
                 )
