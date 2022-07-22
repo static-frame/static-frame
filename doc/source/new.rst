@@ -16,6 +16,8 @@ Added ``via_str.contains()``.
 
 Corrected issue in ``ArchiveZIP`` when ``__del__`` is called when no archive is set.
 
+API Documentation re-organized, now using procedurally generated code examples.
+
 
 0.9.7
 ----------
