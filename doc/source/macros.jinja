@@ -161,6 +161,9 @@ Detail: :ref:`api-detail-{{ name }}-{{ ig_tag }}`
 {{ name }}
 ================================================================================
 
+.. autoclass:: static_frame.{{ name }}
+    :noindex:
+
 :ref:`{{ name }}<api-overview-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-overview-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
 
 {%- endmacro %}
