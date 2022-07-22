@@ -8,6 +8,7 @@ from io import StringIO
 import numpy as np
 from arraykit import mloc
 
+from static_frame import DisplayConfig
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexDate
@@ -1641,6 +1642,13 @@ class TestUnit(TestCase):
         idx1 = Index((0, '', None, 2))
         idx2 = idx1.dropfalsy()
         self.assertEqual(idx2.values.tolist(), [2])
+
+    #---------------------------------------------------------------------------
+    def test_index_display_a(self) -> None:
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        idx.append('e')
+        post = idx.display(DisplayConfig(type_show=False, type_color=False))
+        self.assertEqual(str(post), 'a\nb\nc\nd\ne')
 
 if __name__ == '__main__':
     unittest.main()
