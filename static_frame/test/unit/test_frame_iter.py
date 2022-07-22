@@ -263,6 +263,18 @@ class TestUnit(TestCase):
         self.assertEqual(post5.shape, (10,))
 
     #---------------------------------------------------------------------------
+    def test_frame_iter_series_items_a(self) -> None:
+        f1 = ff.parse('f(Fg)|s(2,8)|i(I,str)|c(Ig,str)|v(int)')
+        post1 = tuple(f1.iter_series_items(axis=0))
+        self.assertEqual([(k, v.values.tolist()) for (k, v) in post1],
+                [('zZbu', [-88017, 92867]), ('ztsv', [162197, -41157]), ('zUvW', [-3648, 91301]), ('zkuW', [129017, 35021]), ('zmVj', [58768, 146284]), ('z2Oo', [84967, 13448]), ('z5l6', [146284, 170440]), ('zCE3', [137759, -62964])])
+
+        post2 = tuple(f1.iter_series_items(axis=1))
+        self.assertEqual([(k, v.values.tolist()) for (k, v) in post2],
+                [('zZbu', [-88017, 162197, -3648, 129017, 58768, 84967, 146284, 137759]), ('ztsv', [92867, -41157, 91301, 35021, 146284, 13448, 170440, -62964])]
+                )
+
+    #---------------------------------------------------------------------------
 
     def test_frame_iter_tuple_items_a(self) -> None:
         records = (
