@@ -16,7 +16,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
 
 .. toctree::
    :maxdepth: 3
-   :numbered:
    :caption: Quick Start
 
    readme
@@ -25,7 +24,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
 
 .. toctree::
    :maxdepth: 1
-   :numbered:
    :caption: Introduction
 
    intro
