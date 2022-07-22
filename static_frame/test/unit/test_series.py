@@ -5032,6 +5032,14 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 2), ('c', 4), ('d', 3), ('e', 4))
                 )
 
+    def test_series_via_fill_value_j(self) -> None:
+
+        s1 = Series(range(3), index=tuple('abc'))
+        s2 = Series(range(5), index=tuple('abcde'))
+
+        with self.assertRaises(NotImplementedError):
+            s2.via_fill_value(0).via_T * s2
+
     #---------------------------------------------------------------------------
 
     def test_series_via_re_search_a(self) -> None:
