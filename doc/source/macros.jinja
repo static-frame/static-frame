@@ -1,13 +1,13 @@
 {# api_detail /////////////////////////////////////////////////////////////// #}
-{% macro api_detail(name, cls, ig, ig_tag, frame_items, examples_defined) -%}
+{% macro api_detail(name, ig, ig_tag, frame_items, examples_defined, toc) -%}
 
-{# `name`: str class name, `cls`: container class, `ig`: full interface group str, `ig_tag`: linkable interface group str, `frame_items`: sub-frame for group #}
+{# `name`: str class name, `ig`: full interface group str, `ig_tag`: linkable interface group str, `frame_items`: sub-frame for group #}
 
 
 .. _api-detail-{{ name }}-{{ ig_tag }}:
 
 {{ name }}: {{ ig }}
-================================================================================
+************************************************************************************************
 
 Overview: :ref:`api-overview-{{ name }}-{{ ig_tag }}`
 
@@ -99,7 +99,7 @@ Overview: :ref:`api-overview-{{ name }}-{{ ig_tag }}`
 
 {% endfor %}
 
-{# :ref:`api-detail-{{ name }}`: {% for group_xref, _ in frame_items %}:ref:`{{ group_xref }}<api-detail-{{ name }}-{{ group_xref }}>`{{ " | " if not loop.last }}{% endfor %} #}
+:ref:`{{ name }}<api-detail-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-detail-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
 
 {%- endmacro %}
 
@@ -107,15 +107,14 @@ Overview: :ref:`api-overview-{{ name }}-{{ ig_tag }}`
 
 
 {# api_overview ///////////////////////////////////////////////////////////// #}
-{% macro api_overview(name, cls, ig, ig_tag, frame_items, examples_defined) -%}
-{# `name`: str class name, `cls`: container class, `ig`: full interface group str, `ig_tag`: linkable interface group str, `frame_items`: sub-frame for group #}
+{% macro api_overview(name, ig, ig_tag, frame_items, examples_defined, toc) -%}
 
+{# `name`: str class name, `ig`: full interface group str, `ig_tag`: linkable interface group str, `frame_items`: sub-frame for group #}
 
 .. _api-overview-{{ name }}-{{ ig_tag }}:
 
 {{ name }}: {{ ig }}
-================================================================================
-
+************************************************************************************************
 
 Detail: :ref:`api-detail-{{ name }}-{{ ig_tag }}`
 
@@ -130,7 +129,38 @@ Detail: :ref:`api-detail-{{ name }}-{{ ig_tag }}`
         {% endif -%}
     {% endfor %}
 
-{# :ref:`api-overview-{{ name }}`: {% for group_xref, _ in frame_items %}:ref:`{{ group_xref }}<api-overview-{{ name }}-{{ group_xref }}>`{{ " | " if not loop.last }}{% endfor %} #}
+:ref:`{{ name }}<api-overview-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-overview-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
 
-{# {% endfor %} #}
+{%- endmacro %}
+
+
+
+
+{# api_detail_toc /////////////////////////////////////////////////////////////// #}
+{% macro api_detail_toc(name, toc) -%}
+
+.. _api-detail-{{ name }}:
+
+{{ name }}
+================================================================================
+
+.. autoclass:: static_frame.{{ name }}
+
+:ref:`{{ name }}<api-detail-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-detail-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
+
+{%- endmacro %}
+
+
+
+
+{# api_overview_toc /////////////////////////////////////////////////////////////// #}
+{% macro api_overview_toc(name, toc) -%}
+
+.. _api-overview-{{ name }}:
+
+{{ name }}
+================================================================================
+
+:ref:`{{ name }}<api-overview-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-overview-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
+
 {%- endmacro %}

@@ -101,31 +101,37 @@ DOCUMENTED_COMPONENTS = (
 
 def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
+    # NOTE: we build dictionaries here so that we can pre-select groups when setting up args into the jina tempalates in source_build.py
+
     post: tp.Dict[str, tp.Any] = {}
 
     # for docs
     post['examples_defined'] = get_defined()
-
+    post['toc'] = {}
     post['interface'] = {}
-    for target in DOCUMENTED_COMPONENTS:
-        inter = InterfaceSummary.to_frame(target, #type: ignore
+    for cls in DOCUMENTED_COMPONENTS:
+        inter = InterfaceSummary.to_frame(cls, #type: ignore
                 minimized=False,
                 max_args=99, # +inf, but keep as int
                 )
-        # break into iterable of group, frame
-        # inter_items = []
+        post['interface'][cls.__name__] = {}
+
+        groups = []
         for ig in INTERFACE_GROUP_ORDER:
             ig_tag = ig.replace('-', '_').replace(' ', '_').lower()
             inter_sub = inter.loc[inter['group'] == ig]
-            # if len(inter_sub): # some groups are empty
-            #     inter_items.append((ig, inter_sub))
-            post['interface'][(target.__name__, ig_tag)] = (
-                    target.__name__,
-                    target,
+            if len(inter_sub) == 0:
+                continue
+            post['interface'][cls.__name__][ig_tag] = (
+                    cls.__name__,
                     ig,
                     ig_tag,
                     inter_sub,
                     )
+            groups.append((ig, ig_tag))
+
+        post['toc'][cls.__name__] = tuple(groups)
+
     return post
 
 jinja_contexts = {'ctx': get_jinja_contexts()}
@@ -364,3 +370,6 @@ texinfo_documents: tp.List[tp.Tuple[str, str, str, str, str, str, str]] = []
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+
+autodoc_typehints = 'none'

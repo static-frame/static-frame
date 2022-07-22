@@ -46,6 +46,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    :maxdepth: 1
    :caption: API Overview
 
+   api_overview/series.rst
    api_overview/series-constructor.rst
    api_overview/series-exporter.rst
    api_overview/series-attribute.rst
@@ -62,6 +63,8 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/series-accessor_fill_value.rst
    api_overview/series-accessor_regular_expression.rst
    api_overview/series-accessor_values.rst
+
+   api_overview/frame.rst
    api_overview/frame-constructor.rst
    api_overview/frame-exporter.rst
    api_overview/frame-attribute.rst
@@ -84,6 +87,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    :maxdepth: 1
    :caption: API Detail
 
+   api_detail/series.rst
    api_detail/series-constructor.rst
    api_detail/series-exporter.rst
    api_detail/series-attribute.rst
@@ -100,6 +104,8 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/series-accessor_fill_value.rst
    api_detail/series-accessor_regular_expression.rst
    api_detail/series-accessor_values.rst
+
+   api_detail/frame.rst
    api_detail/frame-constructor.rst
    api_detail/frame-exporter.rst
    api_detail/frame-attribute.rst

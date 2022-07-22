@@ -1,48 +1,40 @@
 import os
 import sys
 # import typing as tp
-
+from collections import deque
 
 
 HEADER = '.. NOTE: auto-generated file, do not edit'
 
-
-def get_rst_import(group: str, name: str, ig_tag: str) -> str:
+def get_rst_import_api(macro_name: str, cls_name: str, ig_tag: str) -> str:
     '''
+    Called once per cls interface group.
+
     Args:
-        group: either detail or overview
-        name: class Name to docuemnt
+        macro_name: either detail or overview
+        cls_name: class Name to docuemnt
         ig_tag: the interface group to document as tag string
     '''
+    # NOTE: we call the macro with `examples_defined`, `toc` as a kwargs, and then star-expand other args from the interface object mapping
+
     return f'''
 .. jinja:: ctx
 
     {{% import 'macros.jinja' as macros %}}
 
-    {{{{ macros.{group}(examples_defined=examples_defined, *interface[('{name}', '{ig_tag}')]) }}}}
+    {{{{ macros.{macro_name}(examples_defined=examples_defined, toc=toc, *interface['{cls_name}']['{ig_tag}']) }}}}
 
 '''
 
-# def get_rst_embed(group: str, name: str) -> str:
-#     doc_dir = os.path.abspath(os.path.dirname(__file__))
-#     fp = os.path.join(doc_dir, 'source', 'macros.jinja')
+def get_rst_import_toc(doc_group, cls_name: str) -> str:
+    return f'''
+.. jinja:: ctx
 
-#     with open(fp) as f:
-#         macro_lines = f.readlines()
+    {{% import 'macros.jinja' as macros %}}
 
-#     lines = [HEADER]
-#     lines.append('''
-# .. jinja:: ctx
-# ''')
+    {{{{ macros.{doc_group}_toc('{cls_name}', toc) }}}}
 
-#     for line in macro_lines:
-#         lines.append('    ' + line.rstrip())
-
-#     lines.append(f'''
-#     {{{{ {group}(examples_defined=examples_defined, *interface['{name}']) }}}}
-# ''')
-#     return '\n'.join(lines)
-
+'''
 
 
 def name_to_snake_case(name: str):
@@ -62,32 +54,40 @@ def name_to_snake_case(name: str):
 def source_build() -> None:
     from doc.source.conf import get_jinja_contexts
 
-
     doc_dir = os.path.abspath(os.path.dirname(__file__))
 
     contexts = get_jinja_contexts()
 
+    # groups are also the names of the macros
     for group in ('api_overview', 'api_detail'):
         source_dir = os.path.join(doc_dir, 'source')
         group_dir = os.path.join(source_dir, group)
 
-        for name, cls, ig, ig_tag, frame in contexts['interface'].values():
-            if len(frame) == 0:
-                continue
+        for cls_name, records in contexts['interface'].items():
 
-            file_name = f'{name_to_snake_case(name)}-{ig_tag}.rst'
+            file_name = f'{name_to_snake_case(cls_name)}.rst'
             fp = os.path.join(group_dir, file_name)
-
-            # if not os.path.exists(fp):
-            #     raise RuntimeError(f'must create and add RST file {fp}')
-
-            print(fp.replace(source_dir + '/', '   '))
-            rst = get_rst_import(group, name, ig_tag)
-
-            # print(rst)
+            rst = get_rst_import_toc(group, cls_name)
             with open(fp, 'w') as f:
                 f.write(rst)
+            print(fp.replace(source_dir + '/', '   '))
 
+            for _, ig, ig_tag, frame in records.values():
+                if len(frame) == 0:
+                    continue
+
+                file_name = f'{name_to_snake_case(cls_name)}-{ig_tag}.rst'
+                fp = os.path.join(group_dir, file_name)
+
+                # if not os.path.exists(fp):
+                #     raise RuntimeError(f'must create and add RST file {fp}')
+
+                print(fp.replace(source_dir + '/', '   '))
+                rst = get_rst_import_api(group, cls_name, ig_tag)
+
+                # print(rst)
+                with open(fp, 'w') as f:
+                    f.write(rst)
 
 
 if __name__ == '__main__':
