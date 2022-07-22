@@ -52,3 +52,26 @@ All tests and static analysis are run via GitHub Actions on pull requests, and a
 
 
 
+Awknowledgements & Contributors
+-----------------------------------
+
+Thanks to our many GitHub contributors:
+
+https://github.com/InvestmentSystems/static-frame/graphs/contributors
+
+Thanks to former and current Research Affiliates staff who have contributed greatly to the design of StaticFrame:
+
+- Brandt Bucher
+- Charles Burkland
+- Guru Devanla
+- John Hawk
+- John McCloskey
+- Adam Kay
+- Mark LeMoine
+- Myrl Marmarelis
+- Tom Rutherford
+- Yu Tomita
+- Quang Vu
+
+
+
