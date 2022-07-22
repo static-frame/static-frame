@@ -1,88 +1,93 @@
 import os
 import sys
 # import typing as tp
-
+from collections import deque
 
 
 HEADER = '.. NOTE: auto-generated file, do not edit'
 
+def get_rst_import_api(macro_name: str, cls_name: str, ig_tag: str) -> str:
+    '''
+    Called once per cls interface group.
 
-def get_rst_import(group: str, name: str) -> str:
+    Args:
+        macro_name: either detail or overview
+        cls_name: class Name to docuemnt
+        ig_tag: the interface group to document as tag string
     '''
-    This approach works when we can import macros in this location. This does not yet work with ReadTheDocs.
-    '''
+    # NOTE: we call the macro with `examples_defined`, `toc` as a kwargs, and then star-expand other args from the interface object mapping
+
     return f'''
 .. jinja:: ctx
 
     {{% import 'macros.jinja' as macros %}}
 
-    {{{{ macros.{group}(examples_defined=examples_defined, *interface['{name}']) }}}}
+    {{{{ macros.{macro_name}(examples_defined=examples_defined, toc=toc, *interface['{cls_name}']['{ig_tag}']) }}}}
 
 '''
 
-def get_rst_embed(group: str, name: str) -> str:
-    '''
-    This approach does not require importing the macro, and works with ReadTheDocs.
-    '''
-    doc_dir = os.path.abspath(os.path.dirname(__file__))
-    fp = os.path.join(doc_dir, 'source', 'macros.jinja')
-
-    with open(fp) as f:
-        macro_lines = f.readlines()
-
-    lines = [HEADER]
-    lines.append('''
+def get_rst_import_toc(doc_group, cls_name: str) -> str:
+    return f'''
 .. jinja:: ctx
-''')
 
-    for line in macro_lines:
-        lines.append('    ' + line.rstrip())
+    {{% import 'macros.jinja' as macros %}}
 
-    lines.append(f'''
-    {{{{ {group}(examples_defined=examples_defined, *interface['{name}']) }}}}
-''')
-    return '\n'.join(lines)
+    {{{{ macros.{doc_group}_toc('{cls_name}', toc) }}}}
 
+'''
+
+
+def name_to_snake_case(name: str):
+    name_chars = []
+    last_is_upper = False
+    for i, char in enumerate(name):
+        if char.isupper():
+            if i != 0 and not last_is_upper:
+                name_chars.append('_')
+            name_chars.append(char.lower())
+            last_is_upper = True
+        else:
+            name_chars.append(char)
+            last_is_upper = False
+    return ''.join(name_chars)
 
 def source_build() -> None:
     from doc.source.conf import get_jinja_contexts
-
 
     doc_dir = os.path.abspath(os.path.dirname(__file__))
 
     contexts = get_jinja_contexts()
 
-    for group in ('api_detail', 'api_overview'):
-        group_dir = os.path.join(doc_dir, 'source', group)
+    # groups are also the names of the macros
+    for group in ('api_overview', 'api_detail'):
+        source_dir = os.path.join(doc_dir, 'source')
+        group_dir = os.path.join(source_dir, group)
 
-        for name, cls, frame in contexts['interface'].values():
+        for cls_name, records in contexts['interface'].items():
 
-            name_chars = []
-            last_is_upper = False
-            for i, char in enumerate(name):
-                if char.isupper():
-                    if i != 0 and not last_is_upper:
-                        name_chars.append('_')
-                    name_chars.append(char.lower())
-                    last_is_upper = True
-                else:
-                    name_chars.append(char)
-                    last_is_upper = False
-
-            file_name = ''.join(name_chars) + '.rst'
+            file_name = f'{name_to_snake_case(cls_name)}.rst'
             fp = os.path.join(group_dir, file_name)
-
-            if not os.path.exists(fp):
-                raise RuntimeError(f'must create and add RST file {fp}')
-
-            print(fp)
-            # rst = get_rst_embed(group, name)
-            rst = get_rst_import(group, name)
-
-            # print(rst)
+            rst = get_rst_import_toc(group, cls_name)
             with open(fp, 'w') as f:
                 f.write(rst)
+            print(fp.replace(source_dir + '/', '   '))
 
+            for _, ig, ig_tag, frame in records.values():
+                if len(frame) == 0:
+                    continue
+
+                file_name = f'{name_to_snake_case(cls_name)}-{ig_tag}.rst'
+                fp = os.path.join(group_dir, file_name)
+
+                # if not os.path.exists(fp):
+                #     raise RuntimeError(f'must create and add RST file {fp}')
+
+                print(fp.replace(source_dir + '/', '   '))
+                rst = get_rst_import_api(group, cls_name, ig_tag)
+
+                # print(rst)
+                with open(fp, 'w') as f:
+                    f.write(rst)
 
 
 if __name__ == '__main__':

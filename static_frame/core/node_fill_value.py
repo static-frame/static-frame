@@ -88,7 +88,8 @@ class InterfaceFillValue(Interface[TContainer]):
         '''
         from static_frame.core.node_transpose import InterfaceTranspose
         from static_frame.core.frame import Frame
-        assert isinstance(self._container, Frame)
+        if not isinstance(self._container, Frame):
+            raise NotImplementedError('via_T functionality only available on Frame')
         return InterfaceTranspose(
                 container=self._container,
                 fill_value=self._fill_value,

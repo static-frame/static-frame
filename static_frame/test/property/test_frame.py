@@ -287,7 +287,7 @@ class TestUnit(TestCase):
         with temp_file('.sqlite') as fp:
 
             try:
-                f1.to_sqlite(fp)
+                f1.to_sqlite(fp, label='foo')
                 self.assertTrue(os.stat(fp).st_size > 0)
             except (sqlite3.IntegrityError, sqlite3.OperationalError, OverflowError):
                 # some indices, after translation, are not unique

@@ -24,31 +24,35 @@ import static_frame as sf
 from static_frame.core.interface import INTERFACE_GROUP_ORDER
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.util import AnyCallable
-from static_frame.test.unit.test_doc import api_example_str
+# from static_frame.test.unit.test_doc import api_example_str
 
 PREFIX_START = '#start_'
 PREFIX_END = '#end_'
 
 def get_defined() -> tp.Set[str]:
 
+    source_dir = os.path.abspath(os.path.dirname(__file__))
+    fp = os.path.join(source_dir, 'examples.txt')
+
     defined = set()
     signature_start = ''
     signature_end = ''
 
-    for line in api_example_str.split('\n'):
-        if line.startswith(PREFIX_START):
-            signature_start = line.replace(PREFIX_START, '').strip()
-        elif line.startswith(PREFIX_END):
-            signature_end = line.replace(PREFIX_END, '').strip()
-            if signature_start == signature_end:
-                if signature_start in defined:
-                    raise RuntimeError(f'duplicate definition: {signature_start}')
-                defined.add(signature_start)
-                signature_start = ''
-                signature_end = ''
-            else:
-                raise RuntimeError(f'mismatched: {signature_start}: {signature_end}')
-
+    with open(fp) as f:
+        for line in f:
+            line = line.rstrip()
+            if line.startswith(PREFIX_START):
+                signature_start = line.replace(PREFIX_START, '').strip()
+            elif line.startswith(PREFIX_END):
+                signature_end = line.replace(PREFIX_END, '').strip()
+                if signature_start == signature_end:
+                    if signature_start in defined:
+                        raise RuntimeError(f'duplicate definition: {signature_start}')
+                    defined.add(signature_start)
+                    signature_start = ''
+                    signature_end = ''
+                else:
+                    raise RuntimeError(f'mismatched: {signature_start}: {signature_end}')
     return defined
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -97,37 +101,37 @@ DOCUMENTED_COMPONENTS = (
 
 def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
+    # NOTE: we build dictionaries here so that we can pre-select groups when setting up args into the jina tempalates in source_build.py
+
     post: tp.Dict[str, tp.Any] = {}
-
-    # performance_cls = []
-    # for name in dir(core):
-    #     obj = getattr(core, name)
-    #     if inspect.isclass(obj) and issubclass(obj, PerfTest):
-    #         performance_cls.append(obj.__name__)
-
-    # post['performance_cls'] = performance_cls
 
     # for docs
     post['examples_defined'] = get_defined()
-    # post['interface_groups'] = INTERFACE_GROUP_ORDER
-
+    post['toc'] = {}
     post['interface'] = {}
-    for target in DOCUMENTED_COMPONENTS:
-        inter = InterfaceSummary.to_frame(target, #type: ignore
+    for cls in DOCUMENTED_COMPONENTS:
+        inter = InterfaceSummary.to_frame(cls,
                 minimized=False,
                 max_args=99, # +inf, but keep as int
                 )
-        # break into iterable of group, frame
-        inter_items = []
-        for g in INTERFACE_GROUP_ORDER:
-            inter_sub = inter.loc[inter['group'] == g]
-            if len(inter_sub): # some groups are empty
-                inter_items.append((g, inter_sub))
-        post['interface'][target.__name__] = (
-                target.__name__,
-                target,
-                inter_items,
-                )
+        post['interface'][cls.__name__] = {}
+
+        groups = []
+        for ig in INTERFACE_GROUP_ORDER:
+            ig_tag = ig.replace('-', '_').replace(' ', '_').lower()
+            inter_sub = inter.loc[inter['group'] == ig]
+            if len(inter_sub) == 0:
+                continue
+            post['interface'][cls.__name__][ig_tag] = (
+                    cls.__name__,
+                    ig,
+                    ig_tag,
+                    inter_sub,
+                    )
+            groups.append((ig, ig_tag))
+
+        post['toc'][cls.__name__] = tuple(groups)
+
     return post
 
 jinja_contexts = {'ctx': get_jinja_contexts()}
@@ -146,7 +150,7 @@ extensions = [
         'sphinx.ext.graphviz',
         'sphinx.ext.inheritance_diagram',
         'sphinxcontrib.napoleon',
-        'sphinxcontrib.jinja',
+        'sphinx_jinja',
         ]
 
 
@@ -366,3 +370,6 @@ texinfo_documents: tp.List[tp.Tuple[str, str, str, str, str, str, str]] = []
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+
+autodoc_typehints = 'none'
