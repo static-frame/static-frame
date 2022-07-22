@@ -1,4 +1,4 @@
-What is New in Static Frame
+What is New in StaticFrame
 ===============================
 
 0.9.8
