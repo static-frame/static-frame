@@ -2727,62 +2727,40 @@ class ExGenIndex(ExGen):
     def display(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen.display(row, 'ix', '', INDEX_INIT_C)
 
-    # @staticmethod
-    # def selector(row: sf.Series) -> tp.Iterator[str]:
+    @staticmethod
+    def selector(row: sf.Series) -> tp.Iterator[str]:
 
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_sel = row['signature_no_args'][:-2]
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_sel = row['signature_no_args'][:-2]
 
-    #     if attr in (
-    #             'drop[]',
-    #             'mask[]',
-    #             'masked_array[]',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_sel}['c']"
-    #         yield f"s.{attr_sel}['c':]"
-    #         yield f"s.{attr_sel}[['a', 'd']]"
-    #     elif attr in (
-    #             'drop.iloc[]',
-    #             'mask.iloc[]',
-    #             'masked_array.iloc[]',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_sel}[2]"
-    #         yield f"s.{attr_sel}[2:]"
-    #         yield f"s.{attr_sel}[[0, 4]]"
-    #     elif attr in (
-    #             'drop.loc[]',
-    #             'mask.loc[]',
-    #             'masked_array.loc[]',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_sel}['c']"
-    #         yield f"s.{attr_sel}['c':]"
-    #         yield f"s.{attr_sel}[['a', 'd']]"
-    #     elif attr == '[]':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s['c']"
-    #         yield f"s['c':]"
-    #         yield f"s[['a', 'd']]"
-    #     elif attr == '[]':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s['c']"
-    #         yield f"s['c':]"
-    #         yield f"s[['a', 'd']]"
-    #     elif attr == 'iloc[]':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.iloc[2]"
-    #         yield f"s.iloc[2:]"
-    #         yield f"s.iloc[[0, 4]]"
-    #     elif attr == 'loc[]':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.loc['c']"
-    #         yield f"s.loc['c':]"
-    #         yield f"s.loc[['a', 'd']]"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr == 'drop.iloc[]':
+            yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
+            yield f"ix.{attr_sel}[2]"
+            yield f"ix.{attr_sel}[2:]"
+            yield f"ix.{attr_sel}[[0, 3]]"
+        elif attr == 'drop.loc[]':
+            yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
+            yield f"ix.{attr_sel}['c']"
+            yield f"ix.{attr_sel}['c':]"
+            yield f"ix.{attr_sel}[['a', 'd']]"
+        elif attr == '[]':
+            yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
+            yield f"ix[2]"
+            yield f"ix[2:]"
+            yield f"ix[[0, 3]]"
+        elif attr in 'iloc[]':
+            yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
+            yield f"ix.iloc[2]"
+            yield f"ix.iloc[2:]"
+            yield f"ix.iloc[[0, 3]]"
+        elif attr == 'loc[]':
+            yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
+            yield f"ix.loc['c']"
+            yield f"ix.loc['c':]"
+            yield f"ix.loc[['a', 'e']]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     # @staticmethod
     # def iterator(row: sf.Series) -> tp.Iterator[str]:
@@ -3193,7 +3171,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             InterfaceGroup.DictLike,
             InterfaceGroup.Display,
             InterfaceGroup.Assignment,
-            # InterfaceGroup.Selector,
+            InterfaceGroup.Selector,
             # InterfaceGroup.Iterator,
             # InterfaceGroup.OperatorBinary,
             # InterfaceGroup.OperatorUnary,
