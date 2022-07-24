@@ -120,6 +120,8 @@ INDEX_INIT_B2 = dict(labels=(0, 1024, -2048, 4096))
 INDEX_INIT_C = dict(labels=(None, 'A', 1024, True), name='x')
 INDEX_INIT_D = dict(labels=(False, True), name='x')
 
+INDEX_INIT_E = dict(labels=('qrs ', 'XYZ', '123', ' wX '))
+
 INDEX_INIT_U = dict(labels=b'(datetime.datetime(1517, 1, 1), datetime.datetime(1517, 4, 1, 8, 30, 59))')
 INDEX_INIT_V = dict(labels=('1/1/1517', '4/1/1517', '6/30/1517'))
 INDEX_INIT_W = dict(labels=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'))
@@ -2872,9 +2874,9 @@ class ExGenIndex(ExGen):
             yield f'ix = {icls}({kwa(INDEX_INIT_U)})'
             yield f'ix.{attr}'
 
-    # @staticmethod
-    # def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_string(row, 's', '', SERIES_INIT_X)
+    @staticmethod
+    def accessor_string(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_string(row, 'ix', '', INDEX_INIT_E)
 
     # @classmethod
     # def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
