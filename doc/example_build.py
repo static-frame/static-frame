@@ -113,6 +113,7 @@ INDEX_INIT_A2 = dict(labels=('c', 'd', 'e', 'f'), name='y')
 INDEX_INIT_A3 = dict(labels=('', 'b', 'c', 'd'))
 INDEX_INIT_A4 = dict(labels=('a', 'b', 'c'))
 INDEX_INIT_A5 = dict(labels=('b', 'e', 'c', 'a', 'd'), name='x')
+INDEX_INIT_A6 = dict(labels=('d', 'e', 'f'))
 
 INDEX_INIT_B1 = dict(labels=(1024, 2048, 4096), name='x')
 INDEX_INIT_B2 = dict(labels=(0, 1024, -2048, 4096))
@@ -2625,6 +2626,13 @@ class ExGenIndex(ExGen):
         elif attr == '__len__()':
             yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
             yield f"len(ix)"
+        elif attr == 'append()':
+            yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
+            yield f"ix.append('f')"
+        elif attr == 'extend()':
+            yield f'ix1 = {icls}({kwa(INDEX_INIT_A4)})'
+            yield f'ix2 = {icls}({kwa(INDEX_INIT_A6)})'
+            yield f"ix1.extend(ix2)"
         elif attr in (
                 'all()',
                 'any()',
@@ -2878,52 +2886,14 @@ class ExGenIndex(ExGen):
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen.accessor_string(row, 'ix', '', INDEX_INIT_E)
 
-    # @classmethod
-    # def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     # attr_func = row['signature_no_args'][:-2]
 
-    #     attr_op = attr.replace('via_fill_value().', '')
+    @staticmethod
+    def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_regular_expression(row, 'ix', '', INDEX_INIT_E)
 
-    #     if attr_op in cls.SIG_TO_OP_NUMERIC:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-    #         if attr_op.startswith('__r'): # NOTE: these raise
-    #             yield f's2 {cls.SIG_TO_OP_NUMERIC[attr_op]} s1.via_fill_value(0)'
-    #         else:
-    #             yield f's1.via_fill_value(0) {cls.SIG_TO_OP_NUMERIC[attr_op]} s2'
-    #     elif attr_op in cls.SIG_TO_OP_LOGIC:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_F)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_Z)})'
-    #         yield f"s1.via_fill_value(False) {cls.SIG_TO_OP_LOGIC[attr_op]} s2"
-    #     elif attr_op in cls.SIG_TO_OP_MATMUL:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-    #         yield f"s1.via_fill_value(1) {cls.SIG_TO_OP_MATMUL[attr_op]} s2"
-    #     elif attr_op in cls.SIG_TO_OP_BIT:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-    #         yield f"s1.via_fill_value(0) {cls.SIG_TO_OP_BIT[attr_op]} s2"
-    #     elif attr == 'via_fill_value().loc':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s.via_fill_value(0).loc[['a', 'c', 'd', 'e']]"
-    #     elif attr == 'via_fill_value().__getitem__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s.via_fill_value(0)[['a', 'c', 'd', 'e']]"
-    #     elif attr == 'via_fill_value().via_T':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's.{attr}'
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
-
-    # @staticmethod
-    # def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_regular_expression(row, 's', '', SERIES_INIT_A)
-
-    # @staticmethod
-    # def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_values(row, 's', '', SERIES_INIT_A)
+    @staticmethod
+    def accessor_values(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_values(row, 'ix', '', INDEX_INIT_B2)
 
 
 
@@ -2954,11 +2924,11 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             InterfaceGroup.OperatorBinary,
             InterfaceGroup.OperatorUnary,
             InterfaceGroup.AccessorDatetime,
-            # InterfaceGroup.AccessorString,
-            # InterfaceGroup.AccessorTranspose,
-            # InterfaceGroup.AccessorFillValue,
-            # InterfaceGroup.AccessorRe,
-            # InterfaceGroup.AccessorValues,
+            InterfaceGroup.AccessorString,
+            InterfaceGroup.AccessorTranspose,
+            InterfaceGroup.AccessorFillValue,
+            InterfaceGroup.AccessorRe,
+            InterfaceGroup.AccessorValues,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
@@ -2967,13 +2937,14 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             yield from calls_to_msg(calls, row)
 
 def gen_all_examples() -> tp.Iterator[str]:
-    # yield from gen_examples(sf.Series, ExGenSeries)
-    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
-    # yield from gen_examples(sf.Frame, ExGenFrame)
-    # yield from gen_examples(sf.FrameHE, ExGenFrame)
-    # yield from gen_examples(sf.FrameGO, ExGenFrame)
+    yield from gen_examples(sf.Series, ExGenSeries)
+    yield from gen_examples(sf.SeriesHE, ExGenSeries)
+    yield from gen_examples(sf.Frame, ExGenFrame)
+    yield from gen_examples(sf.FrameHE, ExGenFrame)
+    yield from gen_examples(sf.FrameGO, ExGenFrame)
 
     yield from gen_examples(sf.Index, ExGenIndex)
+    yield from gen_examples(sf.IndexGO, ExGenIndex)
 
 
 def write():
@@ -2987,9 +2958,9 @@ def write():
 
 
 if __name__ == '__main__':
-    for line in gen_all_examples():
-        print(line)
-        pass
-    # write()
+    # for line in gen_all_examples():
+    #     print(line)
+    #     pass
+    write()
 
 
