@@ -117,6 +117,7 @@ INDEX_INIT_B1 = dict(labels=(1024, 2048, 4096), name='x')
 INDEX_INIT_B2 = dict(labels=(0, 1024, 2048, 4096))
 
 INDEX_INIT_C = dict(labels=(None, 'A', 1024, True), name='x')
+INDEX_INIT_D = dict(labels=(False, True), name='x')
 
 
 def repr_value(v) -> str:
@@ -2795,31 +2796,30 @@ class ExGenIndex(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    # @classmethod
-    # def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
+    @classmethod
+    def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
 
-    #     if attr in cls.SIG_TO_OP_NUMERIC:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         if attr.startswith('__r'):
-    #             yield f'8 {cls.SIG_TO_OP_NUMERIC[attr]} s'
-    #             # no need to show reverse on series
-    #         else:
-    #             yield f's {cls.SIG_TO_OP_NUMERIC[attr]} 8'
-    #             yield f"s {cls.SIG_TO_OP_NUMERIC[attr]} s.reindex(('c', 'b'))"
-    #     elif attr in cls.SIG_TO_OP_LOGIC:
-    #         yield f's = {icls}({kwa(SERIES_INIT_F)})'
-    #         yield f"s {cls.SIG_TO_OP_LOGIC[attr]} True"
-    #         yield f"s {cls.SIG_TO_OP_LOGIC[attr]} (True, False, True)"
-    #     elif attr in cls.SIG_TO_OP_MATMUL:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s {cls.SIG_TO_OP_MATMUL[attr]} (3, 0, 4)"
-    #     elif attr in cls.SIG_TO_OP_BIT:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s {cls.SIG_TO_OP_BIT[attr]} 1"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr in cls.SIG_TO_OP_NUMERIC:
+            yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
+            if attr.startswith('__r'):
+                yield f'8 {cls.SIG_TO_OP_NUMERIC[attr]} ix'
+                # no need to show reverse on series
+            else:
+                yield f'ix {cls.SIG_TO_OP_NUMERIC[attr]} 8'
+        elif attr in cls.SIG_TO_OP_LOGIC:
+            yield f'ix = {icls}({kwa(INDEX_INIT_D)})'
+            yield f"ix {cls.SIG_TO_OP_LOGIC[attr]} True"
+            yield f"ix {cls.SIG_TO_OP_LOGIC[attr]} (False, True)"
+        elif attr in cls.SIG_TO_OP_MATMUL:
+            yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
+            yield f"ix {cls.SIG_TO_OP_MATMUL[attr]} (3, 0, 4, 0)"
+        elif attr in cls.SIG_TO_OP_BIT:
+            yield f's = {icls}({kwa(INDEX_INIT_B2)})'
+            yield f"s {cls.SIG_TO_OP_BIT[attr]} 1"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     # @staticmethod
     # def operator_unary(row: sf.Series) -> tp.Iterator[str]:
@@ -2941,7 +2941,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             InterfaceGroup.Assignment,
             InterfaceGroup.Selector,
             InterfaceGroup.Iterator,
-            # InterfaceGroup.OperatorBinary,
+            InterfaceGroup.OperatorBinary,
             # InterfaceGroup.OperatorUnary,
             # InterfaceGroup.AccessorDatetime,
             # InterfaceGroup.AccessorString,
