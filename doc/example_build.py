@@ -2,6 +2,7 @@ from io import StringIO
 import typing as tp
 import os
 import sys
+import datetime
 
 import numpy as np
 import static_frame as sf
@@ -118,6 +119,11 @@ INDEX_INIT_B2 = dict(labels=(0, 1024, -2048, 4096))
 
 INDEX_INIT_C = dict(labels=(None, 'A', 1024, True), name='x')
 INDEX_INIT_D = dict(labels=(False, True), name='x')
+
+INDEX_INIT_U = dict(labels=b'(datetime.datetime(1517, 1, 1), datetime.datetime(1517, 4, 1, 8, 30, 59))')
+INDEX_INIT_V = dict(labels=('1/1/1517', '4/1/1517', '6/30/1517'))
+INDEX_INIT_W = dict(labels=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'))
+
 
 
 def repr_value(v) -> str:
@@ -2832,7 +2838,7 @@ class ExGenIndex(ExGen):
         }
         if attr == '__abs__()':
             yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
-            yield f'abs(s)'
+            yield f'abs(ix)'
         elif attr == '__invert__()':
             yield f'ix = {icls}({kwa(INDEX_INIT_D)})'
             yield f'~ix'
@@ -2842,27 +2848,29 @@ class ExGenIndex(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
+    @staticmethod
+    def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
 
-    #     if attr == 'via_dt.fromisoformat()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_W)})'
-    #         yield f's.{attr}'
-    #     elif attr == 'via_dt.strftime()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_U)})'
-    #         yield f's.{attr_func}("%A | %B")'
-    #     elif attr in (
-    #             'via_dt.strptime()',
-    #             'via_dt.strpdate()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_V)})'
-    #         yield f's.{attr_func}("%m/%d/%Y")'
-    #     else:
-    #         yield f's = {icls}({kwa(SERIES_INIT_U)})'
-    #         yield f's.{attr}'
+        if attr == 'via_dt.fromisoformat()':
+            yield f'ix = {icls}({kwa(INDEX_INIT_W)})'
+            yield f'ix.{attr}'
+        elif attr == 'via_dt.strftime()':
+            yield f'import datetime'
+            yield f'ix = {icls}({kwa(INDEX_INIT_U)})'
+            yield f'ix.{attr_func}("%A | %B")'
+        elif attr in (
+                'via_dt.strptime()',
+                'via_dt.strpdate()',
+                ):
+            yield f'ix = {icls}({kwa(INDEX_INIT_V)})'
+            yield f'ix.{attr_func}("%m/%d/%Y")'
+        else:
+            yield f'import datetime'
+            yield f'ix = {icls}({kwa(INDEX_INIT_U)})'
+            yield f'ix.{attr}'
 
     # @staticmethod
     # def accessor_string(row: sf.Series) -> tp.Iterator[str]:
@@ -2943,7 +2951,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             InterfaceGroup.Iterator,
             InterfaceGroup.OperatorBinary,
             InterfaceGroup.OperatorUnary,
-            # InterfaceGroup.AccessorDatetime,
+            InterfaceGroup.AccessorDatetime,
             # InterfaceGroup.AccessorString,
             # InterfaceGroup.AccessorTranspose,
             # InterfaceGroup.AccessorFillValue,
