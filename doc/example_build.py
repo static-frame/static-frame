@@ -114,7 +114,7 @@ INDEX_INIT_A4 = dict(labels=('a', 'b', 'c'))
 INDEX_INIT_A5 = dict(labels=('b', 'e', 'c', 'a', 'd'), name='x')
 
 INDEX_INIT_B1 = dict(labels=(1024, 2048, 4096), name='x')
-INDEX_INIT_B2 = dict(labels=(0, 1024, 2048, 4096))
+INDEX_INIT_B2 = dict(labels=(0, 1024, -2048, 4096))
 
 INDEX_INIT_C = dict(labels=(None, 'A', 1024, True), name='x')
 INDEX_INIT_D = dict(labels=(False, True), name='x')
@@ -2816,31 +2816,31 @@ class ExGenIndex(ExGen):
             yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
             yield f"ix {cls.SIG_TO_OP_MATMUL[attr]} (3, 0, 4, 0)"
         elif attr in cls.SIG_TO_OP_BIT:
-            yield f's = {icls}({kwa(INDEX_INIT_B2)})'
-            yield f"s {cls.SIG_TO_OP_BIT[attr]} 1"
+            yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
+            yield f"ix {cls.SIG_TO_OP_BIT[attr]} 1"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
+    @staticmethod
+    def operator_unary(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
 
-    #     sig_to_op = {
-    #         '__neg__()': '-',
-    #         '__pos__()': '+',
-    #     }
-    #     if attr == '__abs__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_T)})'
-    #         yield f'abs(s)'
-    #     elif attr == '__invert__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_F)})'
-    #         yield f'~s'
-    #     elif attr in sig_to_op:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"{sig_to_op[attr]}s"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        sig_to_op = {
+            '__neg__()': '-',
+            '__pos__()': '+',
+        }
+        if attr == '__abs__()':
+            yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
+            yield f'abs(s)'
+        elif attr == '__invert__()':
+            yield f'ix = {icls}({kwa(INDEX_INIT_D)})'
+            yield f'~ix'
+        elif attr in sig_to_op:
+            yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
+            yield f"{sig_to_op[attr]}ix"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     # @staticmethod
     # def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
@@ -2942,7 +2942,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             InterfaceGroup.Selector,
             InterfaceGroup.Iterator,
             InterfaceGroup.OperatorBinary,
-            # InterfaceGroup.OperatorUnary,
+            InterfaceGroup.OperatorUnary,
             # InterfaceGroup.AccessorDatetime,
             # InterfaceGroup.AccessorString,
             # InterfaceGroup.AccessorTranspose,
