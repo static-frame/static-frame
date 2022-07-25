@@ -129,59 +129,6 @@ INDEX_INIT_W = dict(labels=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-3
 
 
 
-def repr_value(v) -> str:
-    if isinstance(v, tuple):
-        return f"({', '.join(repr_value(x) for x in v)})"
-    if v is np.nan:
-        # default string repr is not evalable
-        return 'np.nan'
-    if isinstance(v, str):
-        return repr(v)
-    if isinstance(v, bytes):
-        # use bytes to denote code string that should not be quoted
-        return v.decode()
-    return str(v)
-
-def kwa(params, arg_first: bool = True):
-    arg_only = set()
-    if arg_first:
-        arg_only.add(0)
-
-    return ', '.join(
-        f'{k}={repr_value(v)}' if i not in arg_only else f'{repr_value(v)}'
-        for i, (k, v) in enumerate(params.items())
-        )
-
-def calls_to_msg(calls: tp.Iterator[str],
-        row: sf.Series
-        ) -> tp.Iterator[str]:
-    cls = ContainerMap.str_to_cls(row['cls_name'])
-
-    g = globals()
-    g['sf'] = sf
-    g['np'] = np
-    g['pd'] = pd
-    l = locals()
-
-    i = -1
-    for i, call in enumerate(calls):
-        # enumerate to pass through empty calls without writing start / end boundaries
-        if i == 0:
-            yield f'#start_{cls.__name__}-{row["signature_no_args"]}'
-
-        try:
-            yield f'>>> {call}'
-            post = eval(call, g, l)
-            if post is not None:
-                yield from str(post).split('\n')
-        except SyntaxError:
-            exec(call, g, l)
-        except (ValueError, RuntimeError, NotImplementedError) as e:
-            yield repr(e) # show this error
-
-    if i >= 0:
-        yield f'#end_{cls.__name__}-{row["signature_no_args"]}'
-        yield ''
 
 #-------------------------------------------------------------------------------
 class ExGen:
@@ -2766,7 +2713,7 @@ class ExGenIndex(ExGen):
             yield f"ix[2]"
             yield f"ix[2:]"
             yield f"ix[[0, 3]]"
-        elif attr in 'iloc[]':
+        elif attr == 'iloc[]':
             yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
             yield f"ix.iloc[2]"
             yield f"ix.iloc[2:]"
@@ -2901,7 +2848,510 @@ class ExGenIndex(ExGen):
 
 
 
+
+
+class _ExGenIndexDT64(ExGen):
+    INDEX_INIT_A = () # oroginal
+    INDEX_INIT_B = () # can be extended to a
+    INDEX_INIT_C = () # has NaT
+
+    INDEX_COMPONENT = ''
+
+
+    @classmethod
+    def constructor(cls, row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args'][:-2] # drop paren
+        iattr = f'{icls}.{attr}'
+
+        if attr == '__init__':
+            yield f'{icls}({kwa(cls.INDEX_INIT_A)})'
+        elif attr == 'from_labels':
+            yield f'{iattr}({kwa(cls.INDEX_INIT_A)})'
+        elif attr == 'from_pandas':
+            yield f'ix = pd.Index({kwa(cls.INDEX_INIT_A)})'
+            yield f'{iattr}(ix)'
+        elif attr == 'from_date_range':
+            yield f"{iattr}('2021-12-30', '2022-01-02')"
+        elif attr == 'from_year_month_range':
+            yield f"{iattr}('2021-12', '2022-01')"
+        elif attr == 'from_year_range':
+            yield f"{iattr}('2021', '2022')"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @classmethod
+    def exporter(cls, row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr in (
+                'to_pandas()',
+                'to_series_he()',
+                'to_series()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.{attr_func}()"
+        elif attr in ('to_html()',
+                'to_html_datatables()',
+                'to_visidata()',
+                ):
+            pass
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @classmethod
+    def attribute(cls, row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.attribute(row, 'ix', '', cls.INDEX_INIT_A)
+
+    @classmethod
+    def method(cls, row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr in (
+                '__array__()',
+                'copy()',
+                'max()',
+                'mean()',
+                'median()',
+                'min()',
+                'prod()',
+                'cumprod()',
+                'cumsum()',
+                'sum()',
+                'std()',
+                'var()',
+                 ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.{attr_func}()"
+
+        elif attr == '__array_ufunc__()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"np.array((0, 1, 0)) * ix"
+        elif attr == '__bool__()':
+            yield f's = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"bool(s)"
+        elif attr == '__copy__()':
+            yield 'import copy'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"copy.copy(ix)"
+        elif attr == '__deepcopy__()':
+            yield 'import copy'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"copy.deepcopy(ix)"
+        elif attr == '__len__()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"len(ix)"
+        elif attr == 'append()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.append('f')"
+        elif attr == 'extend()':
+            yield f'ix1 = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f'ix2 = {icls}({kwa(cls.INDEX_INIT_B)})'
+            yield f"ix1.extend(ix2)"
+        elif attr in (
+                'all()',
+                'any()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.{attr_func}()"
+        elif attr == 'astype()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"ix.{attr_func}(str)"
+        elif attr in (
+                'difference()',
+                'intersection()',
+                'union()',
+                ):
+            yield f'ix1 = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f'ix2 = {icls}({kwa(cls.INDEX_INIT_B)})'
+            yield f"ix1.{attr_func}(ix2)"
+        elif attr == 'dropfalsy()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield 'ix'
+            yield f"ix.{attr_func}()"
+        elif attr in (
+                'dropna()',
+                'unique()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield 'ix'
+            yield f"ix.{attr_func}()"
+
+        elif attr == 'equals()':
+            yield f'ix1 = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f'ix2 = {icls}({kwa(cls.INDEX_INIT_B)})'
+            yield f"ix1.{attr_func}(ix2)"
+        elif attr == 'fillfalsy()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield 'ix'
+            yield f"ix.{attr_func}('A')"
+        elif attr == 'fillna()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield 'ix'
+            yield f"ix.{attr_func}(0)"
+        elif attr in (
+                'head()',
+                'tail()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"ix.{attr_func}(2)"
+        elif attr in (
+                'iloc_searchsorted()',
+                'loc_searchsorted()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"ix.{attr_func}('c')"
+        elif attr == 'isin()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.{attr_func}(('{cls.INDEX_COMPONENT}',))"
+        elif attr == 'label_widths_at_depth()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"tuple(ix.{attr_func}(0))"
+        elif attr == 'sort()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"ix.{attr_func}()"
+            yield f"ix.{attr_func}(ascending=False)"
+        elif attr in (
+                'shift()',
+                'roll()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"ix.{attr_func}(2)" # could show fill value for shfit...
+        elif attr == 'relabel()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"ix.{attr_func}(lambda l: l.astype('<M8[ms]').astype(object).day)"
+        elif attr == 'level_add()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"ix.{attr_func}('A')"
+        elif attr == 'loc_to_iloc()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"ix.{attr_func}('d')"
+            yield f"ix.{attr_func}(['a', 'e'])"
+            yield f"ix.{attr_func}(slice('c', None))"
+        elif attr == 'rename()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.{attr_func}('y')"
+        elif attr == 'sample()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"ix.{attr_func}(2, seed=0)"
+        elif attr == 'values_at_depth()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.{attr_func}(0)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @classmethod
+    def dictionary_like(cls, row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.dictionary_like(row, 'ix', '', cls.INDEX_INIT_A)
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+
+        if attr == '__contains__()':
+            yield f"ix.{attr_func}('{cls.INDEX_COMPONENT}')"
+        elif attr == 'get()':
+            yield f"ix.{attr_func}('{cls.INDEX_COMPONENT}')"
+            yield f"ix.{attr_func}('z', -1)"
+        elif attr == 'values':
+            yield f"ix.{attr}"
+        elif attr in (
+                'items()',
+                '__reversed__()',
+                '__iter__()'
+                ):
+            yield f"tuple(ix.{attr_func}())"
+        else:
+            yield f'ix.{attr_func}()'
+
+
+
+    @classmethod
+    def display(cls, row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.display(row, 'ix', '', cls.INDEX_INIT_C)
+
+    @classmethod
+    def selector(cls, row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_sel = row['signature_no_args'][:-2]
+
+        if attr == 'drop.iloc[]':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.{attr_sel}[1]"
+            yield f"ix.{attr_sel}[1:]"
+            yield f"ix.{attr_sel}[[0, 2]]"
+        elif attr == 'drop.loc[]':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.{attr_sel}['{cls.INDEX_COMPONENT}']"
+            yield f"ix.{attr_sel}['{cls.INDEX_COMPONENT}':]"
+        elif attr == '[]':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix[1]"
+            yield f"ix[1:]"
+            yield f"ix[[0, 2]]"
+        elif attr == 'iloc[]':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.iloc[1]"
+            yield f"ix.iloc[1:]"
+            yield f"ix.iloc[[0, 2]]"
+        elif attr == 'loc[]':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.loc['{cls.INDEX_COMPONENT}']"
+            yield f"ix.loc['{cls.INDEX_COMPONENT}':]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @classmethod
+    def iterator(cls, row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        sig = row['signature_no_args']
+        attr = sig
+        attr_func = sig[:-2]
+
+        if attr in (
+                'iter_label()',
+                # 'iter_element_items()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"tuple(ix.{attr_func}())"
+        elif attr in (
+                'iter_label().apply()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.{attr_func}(lambda l: l.astype('<M8[ms]').astype(object).year)"
+        elif attr in (
+                'iter_label().apply_iter()',
+                'iter_label().apply_iter_items()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"tuple(ix.{attr_func}(lambda l: l.astype('<M8[ms]').astype(object)))"
+        elif attr in (
+                'iter_label().apply_pool()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix.{attr_func}(lambda l: l.astype('<M8[ms]').astype(object).month, use_threads=True)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @classmethod
+    def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr in ('__add__()', '__sub__()'):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix {cls.SIG_TO_OP_NUMERIC[attr]} 2"
+        elif attr in cls.SIG_TO_OP_NUMERIC:
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            if attr.startswith('__r'):
+                yield f"'{cls.INDEX_COMPONENT}' {cls.SIG_TO_OP_NUMERIC[attr]} ix"
+                # no need to show reverse on series
+            else:
+                yield f"ix {cls.SIG_TO_OP_NUMERIC[attr]} '{cls.INDEX_COMPONENT}'"
+        elif attr in cls.SIG_TO_OP_LOGIC:
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix {cls.SIG_TO_OP_LOGIC[attr]} True"
+            yield f"ix {cls.SIG_TO_OP_LOGIC[attr]} (False, True)"
+        elif attr in cls.SIG_TO_OP_MATMUL:
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix {cls.SIG_TO_OP_MATMUL[attr]} (3, 0, 4, 0)"
+        elif attr in cls.SIG_TO_OP_BIT:
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"ix {cls.SIG_TO_OP_BIT[attr]} 1"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @classmethod
+    def operator_unary(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        sig_to_op = {
+            '__neg__()': '-',
+            '__pos__()': '+',
+        }
+        if attr == '__abs__()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f'abs(ix)'
+        elif attr == '__invert__()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f'~ix'
+        elif attr in sig_to_op:
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f"{sig_to_op[attr]}ix"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @classmethod
+    def accessor_datetime(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr == 'via_dt.fromisoformat()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f'ix.{attr}'
+        elif attr == 'via_dt.strftime()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f'ix.{attr_func}("%A | %B")'
+        elif attr in (
+                'via_dt.strptime()',
+                'via_dt.strpdate()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f'ix.{attr_func}("%m/%d/%Y")'
+        else:
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield f'ix.{attr}'
+
+    @classmethod
+    def accessor_string(cls, row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_string(row, 'ix', '', cls.INDEX_INIT_A)
+
+    @classmethod
+    def accessor_regular_expression(cls, row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_regular_expression(row, 'ix', '', cls.INDEX_INIT_A)
+
+    @classmethod
+    def accessor_values(cls, row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_values(row, 'ix', '', cls.INDEX_INIT_A)
+
+
+
+class ExGenIndexYear(_ExGenIndexDT64):
+    INDEX_INIT_A = dict(labels=('1517', '1520', '1518'))
+    INDEX_INIT_B = dict(labels=('2022', '2021', '2018'))
+    INDEX_INIT_C = dict(labels=('1620', 'NaT', '1619')) # has NaT
+    INDEX_COMPONENT = '1518'
+
+class ExGenIndexYearMonth(_ExGenIndexDT64):
+    INDEX_INIT_A = dict(labels=('1517-04', '1517-12', '1517-06'))
+    INDEX_INIT_B = dict(labels=('2022-04', '2021-12', '2022-06'))
+    INDEX_INIT_C = dict(labels=('1620-09', 'NaT', '1620-11')) # has NaT
+    INDEX_COMPONENT = '1517-06'
+
+class ExGenIndexDate(_ExGenIndexDT64):
+    INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12', '1517-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_COMPONENT = '1517-06-30'
+
+class ExGenIndexMinute(_ExGenIndexDT64):
+    INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12', '1517-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_COMPONENT = '1517-06-30'
+
+class ExGenIndexHour(_ExGenIndexDT64):
+    INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_COMPONENT = '1517-06-30'
+
+class ExGenIndexSecond(_ExGenIndexDT64):
+    INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_COMPONENT = '1517-06-30'
+
+class ExGenIndexMillisecond(_ExGenIndexDT64):
+    INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_COMPONENT = '1517-06-30'
+
+class ExGenIndexMicrosecond(_ExGenIndexDT64):
+    INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_COMPONENT = '1517-06-30'
+
+class ExGenIndexNanosecond(_ExGenIndexDT64):
+    INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_COMPONENT = '1517-06-30'
+
 #-------------------------------------------------------------------------------
+
+
+def repr_value(v) -> str:
+    if isinstance(v, tuple):
+        return f"({', '.join(repr_value(x) for x in v)})"
+    if v is np.nan:
+        # default string repr is not evalable
+        return 'np.nan'
+    if isinstance(v, str):
+        return repr(v)
+    if isinstance(v, bytes):
+        # use bytes to denote code string that should not be quoted
+        return v.decode()
+    return str(v)
+
+def kwa(params, arg_first: bool = True):
+    arg_only = set()
+    if arg_first:
+        arg_only.add(0)
+
+    return ', '.join(
+        f'{k}={repr_value(v)}' if i not in arg_only else f'{repr_value(v)}'
+        for i, (k, v) in enumerate(params.items())
+        )
+
+def calls_to_msg(calls: tp.Iterator[str],
+        row: sf.Series
+        ) -> tp.Iterator[str]:
+    cls = ContainerMap.str_to_cls(row['cls_name'])
+
+    g = globals()
+    g['sf'] = sf
+    g['np'] = np
+    g['pd'] = pd
+    l = locals()
+
+    i = -1
+    for i, call in enumerate(calls):
+        # enumerate to pass through empty calls without writing start / end boundaries
+        if i == 0:
+            yield f'#start_{cls.__name__}-{row["signature_no_args"]}'
+
+        try:
+            yield f'>>> {call}'
+            post = eval(call, g, l)
+            if post is not None:
+                yield from str(post).split('\n')
+        except SyntaxError:
+            exec(call, g, l)
+        except (ValueError, RuntimeError, NotImplementedError, TypeError) as e:
+            yield repr(e) # show this error
+
+    if i >= 0:
+        yield f'#end_{cls.__name__}-{row["signature_no_args"]}'
+        yield ''
+
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
     sf.DisplayActive.set(sf.DisplayConfig(type_color=False))
@@ -2937,14 +3387,45 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             yield from calls_to_msg(calls, row)
 
 def gen_all_examples() -> tp.Iterator[str]:
-    yield from gen_examples(sf.Series, ExGenSeries)
-    yield from gen_examples(sf.SeriesHE, ExGenSeries)
-    yield from gen_examples(sf.Frame, ExGenFrame)
-    yield from gen_examples(sf.FrameHE, ExGenFrame)
-    yield from gen_examples(sf.FrameGO, ExGenFrame)
+    # yield from gen_examples(sf.Series, ExGenSeries)
+    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
 
-    yield from gen_examples(sf.Index, ExGenIndex)
-    yield from gen_examples(sf.IndexGO, ExGenIndex)
+    # yield from gen_examples(sf.Frame, ExGenFrame)
+    # yield from gen_examples(sf.FrameHE, ExGenFrame)
+    # yield from gen_examples(sf.FrameGO, ExGenFrame)
+
+    # yield from gen_examples(sf.Index, ExGenIndex)
+    # yield from gen_examples(sf.IndexGO, ExGenIndex)
+
+    yield from gen_examples(sf.IndexYear, ExGenIndexYear)
+    yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
+
+    yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
+    yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
+
+    yield from gen_examples(sf.IndexDate, ExGenIndexDate)
+    yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
+
+    yield from gen_examples(sf.IndexDate, ExGenIndexDate)
+    yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
+
+    yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
+    yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
+
+    yield from gen_examples(sf.IndexHour, ExGenIndexHour)
+    yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
+
+    yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
+    yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
+
+    yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
+    yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
+
+    yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
+    yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
+
+    yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
+    yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
 
 
 def write():
@@ -2958,9 +3439,9 @@ def write():
 
 
 if __name__ == '__main__':
-    # for line in gen_all_examples():
-    #     print(line)
-    #     pass
-    write()
+    for line in gen_all_examples():
+        print(line)
+        pass
+    # write()
 
 
