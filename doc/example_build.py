@@ -3387,15 +3387,15 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             yield from calls_to_msg(calls, row)
 
 def gen_all_examples() -> tp.Iterator[str]:
-    # yield from gen_examples(sf.Series, ExGenSeries)
-    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
+    yield from gen_examples(sf.Series, ExGenSeries)
+    yield from gen_examples(sf.SeriesHE, ExGenSeries)
 
-    # yield from gen_examples(sf.Frame, ExGenFrame)
-    # yield from gen_examples(sf.FrameHE, ExGenFrame)
-    # yield from gen_examples(sf.FrameGO, ExGenFrame)
+    yield from gen_examples(sf.Frame, ExGenFrame)
+    yield from gen_examples(sf.FrameHE, ExGenFrame)
+    yield from gen_examples(sf.FrameGO, ExGenFrame)
 
-    # yield from gen_examples(sf.Index, ExGenIndex)
-    # yield from gen_examples(sf.IndexGO, ExGenIndex)
+    yield from gen_examples(sf.Index, ExGenIndex)
+    yield from gen_examples(sf.IndexGO, ExGenIndex)
 
     yield from gen_examples(sf.IndexYear, ExGenIndexYear)
     yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
@@ -3442,6 +3442,6 @@ if __name__ == '__main__':
     for line in gen_all_examples():
         print(line)
         pass
-    # write()
+    write()
 
 
