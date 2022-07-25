@@ -3406,9 +3406,6 @@ def gen_all_examples() -> tp.Iterator[str]:
     yield from gen_examples(sf.IndexDate, ExGenIndexDate)
     yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
 
-    yield from gen_examples(sf.IndexDate, ExGenIndexDate)
-    yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
-
     yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
     yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
 
@@ -3442,7 +3439,7 @@ if __name__ == '__main__':
     for line in gen_all_examples():
         print(line)
         pass
-    # write()
+    write()
 
 
 
