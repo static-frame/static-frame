@@ -3841,7 +3841,7 @@ if __name__ == '__main__':
     for line in gen_all_examples():
         print(line)
         pass
-    write()
+    # write()
 
 
 
