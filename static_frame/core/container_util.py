@@ -95,6 +95,8 @@ class ContainerMap:
         from static_frame.core.index_datetime import IndexYearGO
         from static_frame.core.index_datetime import IndexYearMonth
         from static_frame.core.index_datetime import IndexYearMonthGO
+        from static_frame.core.index_datetime import IndexHour
+        from static_frame.core.index_datetime import IndexHourGO
         from static_frame.core.index_datetime import IndexMinute
         from static_frame.core.index_datetime import IndexMinuteGO
         from static_frame.core.index_datetime import IndexSecond
