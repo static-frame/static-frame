@@ -716,6 +716,7 @@ class IndexHierarchy(IndexBase):
         Args:
             names: Iterable of hashable names per depth.
         '''
+        # NOTE: this might take dtypes and/or IndexConstructors.
         name = tuple(names)
         if len(name) == 0:
             raise ErrorInitIndex('names must be non-empty.')
