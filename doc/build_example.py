@@ -448,32 +448,31 @@ class ExGenSeries(ExGen):
         iattr = f'{icls}.{attr}'
 
         if attr == '__init__':
-            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f'{icls}({kwa(SERIES_INIT_A)})'
         elif attr == 'from_concat':
             yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
             yield f's2 = {icls}({kwa(SERIES_INIT_B)})'
-            yield f's = {iattr}((s1, s2))'
+            yield f'{iattr}((s1, s2))'
         elif attr == 'from_concat_items':
             yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
             yield f's2 = {icls}({kwa(SERIES_INIT_B)})'
-            yield f"s = {iattr}((('x', s1), ('y', s2)))"
+            yield f"{iattr}((('x', s1), ('y', s2)))"
         elif attr == 'from_dict':
-            yield f's = {iattr}(dict({kwa(SERIES_INIT_DICT_A, arg_first=False)}))'
+            yield f'{iattr}(dict({kwa(SERIES_INIT_DICT_A, arg_first=False)}))'
         elif attr == 'from_element':
-            yield f's = {iattr}({kwa(SERIES_INIT_FROM_ELEMENT_A)})'
+            yield f'{iattr}({kwa(SERIES_INIT_FROM_ELEMENT_A)})'
         elif attr == 'from_items':
-            yield f's = {iattr}({kwa(SERIES_INIT_FROM_ITEMS_A)})'
+            yield f'{iattr}({kwa(SERIES_INIT_FROM_ITEMS_A)})'
         elif attr == 'from_overlay':
             yield f's1 = {icls}({kwa(SERIES_INIT_C)})'
             yield f's1'
             yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-            yield f"s = {iattr}((s1, s2))"
+            yield f"{iattr}((s1, s2))"
         elif attr == 'from_pandas':
             yield f'df = pd.Series({kwa(SERIES_INIT_A)})'
-            yield f's = {iattr}(df)'
+            yield f'{iattr}(df)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
-        yield f's'
 
     @staticmethod
     def exporter(row: sf.Series) -> tp.Iterator[str]:
