@@ -716,6 +716,7 @@ class IndexHierarchy(IndexBase):
         Args:
             names: Iterable of hashable names per depth.
         '''
+        # NOTE: this might take dtypes and/or IndexConstructors.
         name = tuple(names)
         if len(name) == 0:
             raise ErrorInitIndex('names must be non-empty.')
@@ -1530,8 +1531,8 @@ class IndexHierarchy(IndexBase):
         Return a new :obj:`IndexHierarchy` after applying `mapper` to a level or each individual level specified by `depth_level`.
 
         `mapper` can be a callable, mapping, or iterable.
-            - If a callable, it must accept a single value, and return a single value.
-            - If a mapping, it must map a single value to a single value.
+            - If a callable, it must accept a single hashable, and return a single hashable.
+            - If a mapping, it must map a single hashable to a single hashable.
             - If a iterable, it must be the same length as `self`.
 
         This call:
