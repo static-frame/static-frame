@@ -134,6 +134,7 @@ IH_INIT_FROM_LABELS_B = dict(labels=(('a', 1024, '1517-04-01'), ('a', 2048, '178
 IH_INIT_FROM_LABELS_C = dict(labels=((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=b"('x', 'y', 'z')")
 IH_INIT_FROM_LABELS_D = dict(labels=((False, True, True), (True, True, True), (False, True, False)), name=b"('x', 'y', 'z')")
 IH_INIT_FROM_LABELS_E = dict(labels=(('b', 1024, True), ('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
+IH_INIT_FROM_LABELS_F = dict(labels=(('b', 2048, True), ('c', 4096, True), ('c', 1024, True)), name='y')
 
 
 
@@ -141,8 +142,10 @@ IH_INIT_FROM_LABELS_E1 = dict(labels=(('a', 1024, True), ('a', 2048, True), ('a'
 IH_INIT_FROM_LABELS_E2 = dict(labels=(('a', 1024, True), ('b', 1024, True)), name='y')
 
 IH_INIT_FROM_LABELS_F = dict(labels=(('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
-IH_INIT_FROM_LABELS_G = dict(labels=((0, 1024), (1, 2048), (np.nan, np.nan)), name=b"('x', 'y')")
+IH_INIT_FROM_LABELS_G1 = dict(labels=((0, 1024), (1, 2048), (np.nan, np.nan)), name=b"('x', 'y')")
+IH_INIT_FROM_LABELS_G2 = dict(labels=((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=b"('x', 'y')")
 
+IH_INIT_FROM_LABELS_H = dict(labels=tuple(zip(('qrs ', 'XYZ', '123', ' wX '), ('4/1/1517', '12/31/1517', '6/30/1517', '12/31/2021'))))
 
 IH_INIT_FROM_LABELS_DELIMITED_A = dict(labels=("'a'|1024|False", "'b'|1024|True", "'b'|2048|False"), delimiter='|')
 
@@ -150,6 +153,12 @@ IH_INIT_FROM_PRODUCT_A1 = dict(levels=(('a', 'b'), ('1517-04-01', '1620-11-21'))
 IH_INIT_FROM_PRODUCT_A2 = dict(levels=(('a', 'b','c'), ('1517-04-01', '1620-11-21')), name='x', index_constructors=b"(sf.Index, sf.IndexDate)")
 
 IH_INIT_FROM_PRODUCT_B = dict(levels=(('a', 'b','c'), (1024, 4096, 2048)), name='x')
+
+IH_INIT_FROM_LABELS_U = dict(labels=b'((datetime.datetime(1517, 1, 1), datetime.datetime(2022, 4, 1, 8, 30, 59)), (datetime.datetime(1517, 4, 1), datetime.datetime(2022, 12, 31, 8, 30, 59)))')
+IH_INIT_FROM_LABELS_V = dict(labels=(tuple(zip(('4/1/1517', '12/31/1517', '6/30/1517'), ('4/1/2022', '12/31/2021', '6/30/2022')))))
+IH_INIT_FROM_LABELS_W = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30'))))
+
+IH_INIT_FROM_LABELS_X = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30'))), index_constructors=b'sf.IndexDate')
 
 
 
@@ -2599,10 +2608,12 @@ class ExGenIndex(ExGen):
         elif attr == 'append()':
             yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
             yield f"ix.append('f')"
+            yield 'ix'
         elif attr == 'extend()':
             yield f'ix1 = {icls}({kwa(INDEX_INIT_A4)})'
             yield f'ix2 = {icls}({kwa(INDEX_INIT_A6)})'
             yield f"ix1.extend(ix2)"
+            yield 'ix1'
         elif attr in (
                 'all()',
                 'any()',
@@ -2966,10 +2977,12 @@ class _ExGenIndexDT64(ExGen):
         elif attr == 'append()':
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield f"ix.append('f')"
+            yield 'ix'
         elif attr == 'extend()':
             yield f'ix1 = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield f'ix2 = {icls}({kwa(cls.INDEX_INIT_B)})'
             yield f"ix1.extend(ix2)"
+            yield 'ix1'
         elif attr in (
                 'all()',
                 'any()',
@@ -3414,13 +3427,15 @@ class ExGenIndexHierarchy(ExGen):
         elif attr == '__len__()':
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_C)})'
             yield f"len(ih)"
-        # elif attr == 'append()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield f"ih.append('f')"
-        # elif attr == 'extend()':
-        #     yield f'ih1 = {icls}({kwa(INDEX_INIT_A4)})'
-        #     yield f'ih2 = {icls}({kwa(INDEX_INIT_A6)})'
-        #     yield f"ih1.extend(ih2)"
+        elif attr == 'append()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield f"ih.append(('b', 4096, True))"
+            yield f'ih'
+        elif attr == 'extend()':
+            yield f'ih1 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield f'ih2 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F)})'
+            yield f"ih1.extend(ih2)"
+            yield 'ih1'
         elif attr in (
                 'all()',
                 'any()',
@@ -3453,7 +3468,7 @@ class ExGenIndexHierarchy(ExGen):
                 'dropna()',
                 'unique()',
                 ):
-            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G)})'
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G1)})'
             yield 'ih'
             yield f"ih.{attr_func}()"
 
@@ -3466,7 +3481,7 @@ class ExGenIndexHierarchy(ExGen):
             yield 'ih'
             yield f"ih.{attr_func}(-1)"
         elif attr == 'fillna()':
-            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G)})'
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G1)})'
             yield 'ih'
             yield f"ih.{attr_func}(0)"
         elif attr == 'flat()':
@@ -3510,7 +3525,7 @@ class ExGenIndexHierarchy(ExGen):
             yield 'ih'
             yield f"ih.{attr_func}(2)" # could show fill value for shfit...
         elif attr == 'level_add()':
-            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G)})'
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G1)})'
             yield 'ih'
             yield f"ih.{attr_func}('A')"
         elif attr == 'level_drop()':
@@ -3663,42 +3678,63 @@ class ExGenIndexHierarchy(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
+    @staticmethod
+    def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
 
-    #     if attr == 'via_dt.fromisoformat()':
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_W)})'
-    #         yield f'ix.{attr}'
-    #     elif attr == 'via_dt.strftime()':
-    #         yield f'import datetime'
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_U)})'
-    #         yield f'ix.{attr_func}("%A | %B")'
-    #     elif attr in (
-    #             'via_dt.strptime()',
-    #             'via_dt.strpdate()',
-    #             ):
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_V)})'
-    #         yield f'ix.{attr_func}("%m/%d/%Y")'
-    #     else:
-    #         yield f'import datetime'
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_U)})'
-    #         yield f'ix.{attr}'
+        if attr == 'via_dt.fromisoformat()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_W)})'
+            yield f'ih.{attr}'
+        elif attr == 'via_dt.strftime()':
+            yield f'import datetime'
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_U)})'
+            yield f'ih.{attr_func}("%A | %B")'
+        elif attr in (
+                'via_dt.strptime()',
+                'via_dt.strpdate()',
+                ):
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_V)})'
+            yield f'ih.{attr_func}("%m/%d/%Y")'
+        else:
+            yield f'import datetime'
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_X)})'
+            yield f'ih.{attr}'
 
-    # @staticmethod
-    # def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_string(row, 'ix', '', INDEX_INIT_E)
+    @staticmethod
+    def accessor_string(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_string(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H)
 
 
-    # @staticmethod
-    # def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_regular_expression(row, 'ix', '', INDEX_INIT_E)
+    @classmethod
+    def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        _, attr_op = attr.split('.')
 
-    # @staticmethod
-    # def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_values(row, 'ix', '', INDEX_INIT_B2)
+        if attr == 'via_T.via_fill_value()':
+            yield ''
+        elif attr_op in cls.SIG_TO_OP_NUMERIC:
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G2)})'
+            yield f'ih.via_T {cls.SIG_TO_OP_NUMERIC[attr_op]} (0, 1, 1, -1)'
+        elif attr_op in cls.SIG_TO_OP_LOGIC:
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_D)})'
+            yield f'ih.via_T {cls.SIG_TO_OP_LOGIC[attr_op]} (True, False, True)'
+        elif attr_op in cls.SIG_TO_OP_BIT:
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G2)})'
+            yield f's = sf.Series({kwa(SERIES_INIT_Y3)})'
+            yield f'ih.via_T {cls.SIG_TO_OP_BIT[attr_op]} (1, 2, 1, 2)'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_regular_expression(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H)
+
+    @staticmethod
+    def accessor_values(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_values(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_C)
 
 
 
@@ -3779,23 +3815,23 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            # InterfaceGroup.Constructor,
-            # InterfaceGroup.Exporter,
-            # InterfaceGroup.Attribute,
-            # InterfaceGroup.Method,
-            # InterfaceGroup.DictLike,
-            # InterfaceGroup.Display,
-            # InterfaceGroup.Assignment,
-            # InterfaceGroup.Selector,
-            # InterfaceGroup.Iterator,
-            # InterfaceGroup.OperatorBinary,
+            InterfaceGroup.Constructor,
+            InterfaceGroup.Exporter,
+            InterfaceGroup.Attribute,
+            InterfaceGroup.Method,
+            InterfaceGroup.DictLike,
+            InterfaceGroup.Display,
+            InterfaceGroup.Assignment,
+            InterfaceGroup.Selector,
+            InterfaceGroup.Iterator,
+            InterfaceGroup.OperatorBinary,
             InterfaceGroup.OperatorUnary,
-            # InterfaceGroup.AccessorDatetime,
-            # InterfaceGroup.AccessorString,
-            # InterfaceGroup.AccessorTranspose,
-            # InterfaceGroup.AccessorFillValue,
-            # InterfaceGroup.AccessorRe,
-            # InterfaceGroup.AccessorValues,
+            InterfaceGroup.AccessorDatetime,
+            InterfaceGroup.AccessorString,
+            InterfaceGroup.AccessorTranspose,
+            InterfaceGroup.AccessorFillValue,
+            InterfaceGroup.AccessorRe,
+            InterfaceGroup.AccessorValues,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
@@ -3804,46 +3840,45 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             yield from calls_to_msg(calls, row)
 
 def gen_all_examples() -> tp.Iterator[str]:
-    # yield from gen_examples(sf.Series, ExGenSeries)
-    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
+    yield from gen_examples(sf.Series, ExGenSeries)
+    yield from gen_examples(sf.SeriesHE, ExGenSeries)
 
-    # yield from gen_examples(sf.Frame, ExGenFrame)
-    # yield from gen_examples(sf.FrameHE, ExGenFrame)
-    # yield from gen_examples(sf.FrameGO, ExGenFrame)
+    yield from gen_examples(sf.Frame, ExGenFrame)
+    yield from gen_examples(sf.FrameHE, ExGenFrame)
+    yield from gen_examples(sf.FrameGO, ExGenFrame)
 
-    # yield from gen_examples(sf.Index, ExGenIndex)
-    # yield from gen_examples(sf.IndexGO, ExGenIndex)
+    yield from gen_examples(sf.Index, ExGenIndex)
+    yield from gen_examples(sf.IndexGO, ExGenIndex)
 
-    # yield from gen_examples(sf.IndexYear, ExGenIndexYear)
-    # yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
+    yield from gen_examples(sf.IndexYear, ExGenIndexYear)
+    yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
 
-    # yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
-    # yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
+    yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
+    yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
 
-    # yield from gen_examples(sf.IndexDate, ExGenIndexDate)
-    # yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
+    yield from gen_examples(sf.IndexDate, ExGenIndexDate)
+    yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
 
-    # yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
-    # yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
+    yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
+    yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
 
-    # yield from gen_examples(sf.IndexHour, ExGenIndexHour)
-    # yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
+    yield from gen_examples(sf.IndexHour, ExGenIndexHour)
+    yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
 
-    # yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
-    # yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
+    yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
+    yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
 
-    # yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
-    # yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
+    yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
+    yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
 
-    # yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
-    # yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
+    yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
+    yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
 
-    # yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
-    # yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
+    yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
+    yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
 
     yield from gen_examples(sf.IndexHierarchy, ExGenIndexHierarchy)
-    # yield from gen_examples(sf.IndexHierarchyGO, ExGenIndexHierarchy)
-
+    yield from gen_examples(sf.IndexHierarchyGO, ExGenIndexHierarchy)
 
 
 def write():
