@@ -131,8 +131,11 @@ INDEX_INIT_W = dict(labels=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-3
 #-------------------------------------------------------------------------------
 IH_INIT_FROM_LABELS_A = dict(labels=(('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
 IH_INIT_FROM_LABELS_B = dict(labels=(('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=b'(sf.Index, sf.Index, sf.IndexDate)', name=b"('x', 'y', 'z')")
-IH_INIT_FROM_LABELS_C = dict(labels=((0, 1024, 32), (1, 2048, 32), (1, 1024, 32)), name=b"('x', 'y', 'z')")
+IH_INIT_FROM_LABELS_C = dict(labels=((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=b"('x', 'y', 'z')")
 IH_INIT_FROM_LABELS_D = dict(labels=((False, True, True), (True, True, True), (False, True, False)), name=b"('x', 'y', 'z')")
+IH_INIT_FROM_LABELS_E = dict(labels=(('b', 1024, True), ('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
+
+
 
 IH_INIT_FROM_LABELS_E1 = dict(labels=(('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
 IH_INIT_FROM_LABELS_E2 = dict(labels=(('a', 1024, True), ('b', 1024, True)), name='y')
@@ -143,7 +146,12 @@ IH_INIT_FROM_LABELS_G = dict(labels=((0, 1024), (1, 2048), (np.nan, np.nan)), na
 
 IH_INIT_FROM_LABELS_DELIMITED_A = dict(labels=("'a'|1024|False", "'b'|1024|True", "'b'|2048|False"), delimiter='|')
 
-IH_INIT_FROM_PRODUCT_A = dict(levels=(('a', 'b'), ('1517-04-01', '1620-11-21')), name='x', index_constructors=b"(sf.Index, sf.IndexDate)")
+IH_INIT_FROM_PRODUCT_A1 = dict(levels=(('a', 'b'), ('1517-04-01', '1620-11-21')), name='x', index_constructors=b"(sf.Index, sf.IndexDate)")
+IH_INIT_FROM_PRODUCT_A2 = dict(levels=(('a', 'b','c'), ('1517-04-01', '1620-11-21')), name='x', index_constructors=b"(sf.Index, sf.IndexDate)")
+
+IH_INIT_FROM_PRODUCT_B = dict(levels=(('a', 'b','c'), (1024, 4096, 2048)), name='x')
+
+
 
 #-------------------------------------------------------------------------------
 class ExGen:
@@ -3330,7 +3338,7 @@ class ExGenIndexHierarchy(ExGen):
             yield f"mi = pd.MultiIndex.from_product((('a', 'b'), (1024, 2048)))"
             yield f'{iattr}(mi)'
         elif attr == 'from_product':
-            yield f'{iattr}({kwa(IH_INIT_FROM_PRODUCT_A, star_expand_first=True)})'
+            yield f'{iattr}({kwa(IH_INIT_FROM_PRODUCT_A1, star_expand_first=True)})'
         elif attr == 'from_tree':
             yield f"{iattr}({{'a': {{1024: (False, True), 2048: (True,)}}}})"
         else:
@@ -3449,200 +3457,211 @@ class ExGenIndexHierarchy(ExGen):
             yield 'ih'
             yield f"ih.{attr_func}()"
 
-        # elif attr == 'equals()':
-        #     yield f'ih1 = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield f'ih2 = {icls}({kwa(INDEX_INIT_B1)})'
-        #     yield f"ih1.{attr_func}(ih2)"
-        # elif attr == 'fillfalsy()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A3)})'
-        #     yield 'ih'
-        #     yield f"ih.{attr_func}('A')"
-        # elif attr == 'fillna()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_C)})'
-        #     yield 'ih'
-        #     yield f"ih.{attr_func}(0)"
-        # elif attr in (
-        #         'head()',
-        #         'tail()',
-        #         ):
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield 'ih'
-        #     yield f"ih.{attr_func}(2)"
-        # elif attr in (
-        #         'iloc_searchsorted()',
-        #         'loc_searchsorted()',
-        #         ):
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield 'ih'
-        #     yield f"ih.{attr_func}('c')"
-        # elif attr == 'isin()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield f"ih.{attr_func}(('a', 'e'))"
-        # elif attr == 'label_widths_at_depth()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield 'ih'
-        #     yield f"tuple(ih.{attr_func}(0))"
-        # elif attr == 'sort()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A5)})'
-        #     yield 'ih'
-        #     yield f"ih.{attr_func}()"
-        #     yield f"ih.{attr_func}(ascending=False)"
-        # elif attr in (
-        #         'shift()',
-        #         'roll()',
-        #         ):
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield 'ih'
-        #     yield f"ih.{attr_func}(2)" # could show fill value for shfit...
-        # elif attr == 'relabel()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A4)})'
-        #     yield 'ih'
-        #     yield f"ih.{attr_func}(dict(a='x', c='y'))"
-        #     yield f"ih.{attr_func}(lambda l: l.upper() if l != 'b' else l)"
-        # elif attr == 'level_add()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_B1)})'
-        #     yield 'ih'
-        #     yield f"ih.{attr_func}('A')"
-        # elif attr == 'loc_to_iloc()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield 'ih'
-        #     yield f"ih.{attr_func}('d')"
-        #     yield f"ih.{attr_func}(['a', 'e'])"
-        #     yield f"ih.{attr_func}(slice('c', None))"
-        # elif attr == 'rename()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield f"ih.{attr_func}('y')"
-        # elif attr == 'sample()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield 'ih'
-        #     yield f"ih.{attr_func}(2, seed=0)"
-        # elif attr == 'values_at_depth()':
-        #     yield f'ih = {icls}({kwa(INDEX_INIT_A1)})'
-        #     yield f"ih.{attr_func}(0)"
+        elif attr == 'equals()':
+            yield f'ih1 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_E1)})'
+            yield f'ih2 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_E2)})'
+            yield f"ih1.{attr_func}(ih2)"
+        elif attr == 'fillfalsy()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F)})'
+            yield 'ih'
+            yield f"ih.{attr_func}(-1)"
+        elif attr == 'fillna()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G)})'
+            yield 'ih'
+            yield f"ih.{attr_func}(0)"
+        elif attr == 'flat()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_B)})'
+            yield 'ih'
+            yield f"ih.{attr_func}().display_wide()"
+        elif attr in (
+                'head()',
+                'tail()',
+                ):
+            yield f'ih = {icls}.from_product({kwa(IH_INIT_FROM_PRODUCT_A2, star_expand_first=True)})'
+            yield 'ih'
+            yield f"ih.{attr_func}(2)"
+        elif attr in (
+                'iloc_searchsorted()',
+                'loc_searchsorted()',
+                ):
+            yield f'ih = {icls}.from_product({kwa(IH_INIT_FROM_PRODUCT_A2, star_expand_first=True)})'
+            yield 'ih'
+            yield f"ih.{attr_func}(('b', np.datetime64('1620-11-21')))"
+        elif attr == 'isin()':
+            yield f'ih = {icls}.from_product({kwa(IH_INIT_FROM_PRODUCT_A2, star_expand_first=True)})'
+            yield f"ih.{attr_func}((('c', np.datetime64('1517-04-01')), ('a', np.datetime64('1620-11-21'))))"
+        elif attr == 'label_widths_at_depth()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield 'ih'
+            yield f"tuple(ih.{attr_func}(0))"
+            yield f"tuple(ih.{attr_func}(1))"
+            yield f"tuple(ih.{attr_func}(2))"
+
+        elif attr == 'sort()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_E)})'
+            yield 'ih'
+            yield f"ih.{attr_func}()"
+            yield f"ih.{attr_func}(ascending=False)"
+        elif attr in (
+                'shift()',
+                'roll()',
+                ):
+            yield f'ih = {icls}.from_product({kwa(IH_INIT_FROM_PRODUCT_A2, star_expand_first=True)})'
+            yield 'ih'
+            yield f"ih.{attr_func}(2)" # could show fill value for shfit...
+        elif attr == 'level_add()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G)})'
+            yield 'ih'
+            yield f"ih.{attr_func}('A')"
+        elif attr == 'level_drop()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_B)})'
+            yield 'ih'
+            yield f"ih.{attr_func}()"
+        elif attr == 'loc_to_iloc()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield 'ih'
+            yield f"ih.{attr_func}(('b', 1024, True))"
+            yield f"ih.{attr_func}([('a', 1024, True), ('b', 1024, True)])"
+            yield f"ih.{attr_func}(slice(('a', 2048, False), None))"
+        elif attr == 'rehierarch()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_E)})'
+            yield f"ih.{attr_func}([2, 0, 1])"
+        elif attr == 'relabel()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_E)})'
+            yield f"ih.{attr_func}(lambda l: (l[0], l[1], str(l[2])[0]))"
+        elif attr == 'relabel_at_depth()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_E)})'
+            yield f"ih.{attr_func}(lambda l: str(l)[0], depth_level=[1, 2])"
+        elif attr == 'rename()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield f"ih.{attr_func}('y')"
+        elif attr == 'sample()':
+            yield f'ih = {icls}.from_product({kwa(IH_INIT_FROM_PRODUCT_A2, star_expand_first=True)})'
+            yield 'ih'
+            yield f"ih.{attr_func}(2, seed=0)"
+        elif attr == 'values_at_depth()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_B)})'
+            yield f"ih.{attr_func}(0)"
+            yield f"ih.{attr_func}(2)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.dictionary_like(row, 'ix', '', INDEX_INIT_A1)
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.dictionary_like(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_B)
 
-    # @staticmethod
-    # def display(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.display(row, 'ix', '', INDEX_INIT_C)
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.display(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_B)
 
-    # @staticmethod
-    # def selector(row: sf.Series) -> tp.Iterator[str]:
+    @staticmethod
+    def selector(row: sf.Series) -> tp.Iterator[str]:
 
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_sel = row['signature_no_args'][:-2]
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_sel = row['signature_no_args'][:-2]
 
-    #     if attr == 'drop.iloc[]':
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
-    #         yield f"ix.{attr_sel}[2]"
-    #         yield f"ix.{attr_sel}[2:]"
-    #         yield f"ix.{attr_sel}[[0, 3]]"
-    #     elif attr == 'drop.loc[]':
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
-    #         yield f"ix.{attr_sel}['c']"
-    #         yield f"ix.{attr_sel}['c':]"
-    #         yield f"ix.{attr_sel}[['a', 'd']]"
-    #     elif attr == '[]':
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
-    #         yield f"ix[2]"
-    #         yield f"ix[2:]"
-    #         yield f"ix[[0, 3]]"
-    #     elif attr == 'iloc[]':
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
-    #         yield f"ix.iloc[2]"
-    #         yield f"ix.iloc[2:]"
-    #         yield f"ix.iloc[[0, 3]]"
-    #     elif attr == 'loc[]':
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
-    #         yield f"ix.loc['c']"
-    #         yield f"ix.loc['c':]"
-    #         yield f"ix.loc[['a', 'e']]"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr == 'drop.iloc[]':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield f"ih.{attr_sel}[2]"
+            yield f"ih.{attr_sel}[2:]"
+            yield f"ih.{attr_sel}[[0, 3]]"
+        elif attr == '[]':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield f"ih[2]"
+            yield f"ih[2:]"
+            yield f"ih[[0, 3]]"
+        elif attr == 'iloc[]':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield f"ih.iloc[2]"
+            yield f"ih.iloc[2:]"
+            yield f"ih.iloc[[0, 3]]"
+        elif attr == 'loc[]':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield f"ih.loc[('a', 2048, True)]"
+            yield f"ih.loc[('a', 2048, True):]"
+            yield f"ih.loc[[('a', 2048, True), ('b', 1024, True)]]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def iterator(row: sf.Series) -> tp.Iterator[str]:
+    @staticmethod
+    def iterator(row: sf.Series) -> tp.Iterator[str]:
 
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     sig = row['signature_no_args']
-    #     attr = sig
-    #     attr_func = sig[:-2]
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        sig = row['signature_no_args']
+        attr = sig
+        attr_func = sig[:-2]
 
-    #     if attr in (
-    #             'iter_label()',
-    #             # 'iter_element_items()',
-    #             ):
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
-    #         yield f"tuple(ix.{attr_func}())"
-    #     elif attr in (
-    #             'iter_label().apply()',
-    #             ):
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
-    #         yield f"ix.{attr_func}(lambda l: l if l == 'b' else l.upper())"
-    #     elif attr in (
-    #             'iter_label().apply_iter()',
-    #             'iter_label().apply_iter_items()',
-    #             ):
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
-    #         yield f"tuple(ix.{attr_func}(lambda l: l if l == 'b' else l.upper()))"
-    #     elif attr in (
-    #             'iter_label().apply_pool()',
-    #             ):
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
-    #         yield f"ix.{attr_func}(lambda l: l if l == 'b' else l.upper(), use_threads=True)"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr in (
+                'iter_label()',
+                # 'iter_element_items()',
+                ):
+            yield f'ih = {icls}.from_product({kwa(IH_INIT_FROM_PRODUCT_B, star_expand_first=True)})'
+            yield f"tuple(ih.{attr_func}())"
+        elif attr in (
+                'iter_label().apply()',
+                ):
+            yield f'ih = {icls}.from_product({kwa(IH_INIT_FROM_PRODUCT_B, star_expand_first=True)})'
+            yield f"ih.{attr_func}(lambda l: (l[0].upper(), l[1]))"
+        elif attr in (
+                'iter_label().apply_iter()',
+                'iter_label().apply_iter_items()',
+                ):
+            yield f'ih = {icls}.from_product({kwa(IH_INIT_FROM_PRODUCT_B, star_expand_first=True)})'
+            yield f"tuple(ih.{attr_func}(lambda l: (l[0].upper(), l[1])))"
+        elif attr in (
+                'iter_label().apply_pool()',
+                ):
+            yield f'ih = {icls}.from_product({kwa(IH_INIT_FROM_PRODUCT_B, star_expand_first=True)})'
+            yield f"ih.{attr_func}(lambda l: (l[0].upper(), l[1]), use_threads=True)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
-    # @classmethod
-    # def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
+    @classmethod
+    def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
 
-    #     if attr in cls.SIG_TO_OP_NUMERIC:
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
-    #         if attr.startswith('__r'):
-    #             yield f'8 {cls.SIG_TO_OP_NUMERIC[attr]} ix'
-    #             # no need to show reverse on series
-    #         else:
-    #             yield f'ix {cls.SIG_TO_OP_NUMERIC[attr]} 8'
-    #     elif attr in cls.SIG_TO_OP_LOGIC:
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_D)})'
-    #         yield f"ix {cls.SIG_TO_OP_LOGIC[attr]} True"
-    #         yield f"ix {cls.SIG_TO_OP_LOGIC[attr]} (False, True)"
-    #     elif attr in cls.SIG_TO_OP_MATMUL:
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
-    #         yield f"ix {cls.SIG_TO_OP_MATMUL[attr]} (3, 0, 4, 0)"
-    #     elif attr in cls.SIG_TO_OP_BIT:
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
-    #         yield f"ix {cls.SIG_TO_OP_BIT[attr]} 1"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr in cls.SIG_TO_OP_NUMERIC:
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_C)})'
+            if attr.startswith('__r'):
+                yield f'8 {cls.SIG_TO_OP_NUMERIC[attr]} ih'
+                # no need to show reverse on series
+            else:
+                yield f'ih {cls.SIG_TO_OP_NUMERIC[attr]} 8'
+        elif attr in cls.SIG_TO_OP_LOGIC:
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_D)})'
+            yield f"ih {cls.SIG_TO_OP_LOGIC[attr]} True"
+            yield f"ih {cls.SIG_TO_OP_LOGIC[attr]} (False, True, True)"
+        elif attr in cls.SIG_TO_OP_MATMUL:
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_C)})'
+            yield f"ih {cls.SIG_TO_OP_MATMUL[attr]} (3, 0, 4)"
+        elif attr in cls.SIG_TO_OP_BIT:
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_C)})'
+            yield f"ih {cls.SIG_TO_OP_BIT[attr]} 1"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
+    @staticmethod
+    def operator_unary(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
 
-    #     sig_to_op = {
-    #         '__neg__()': '-',
-    #         '__pos__()': '+',
-    #     }
-    #     if attr == '__abs__()':
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
-    #         yield f'abs(ix)'
-    #     elif attr == '__invert__()':
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_D)})'
-    #         yield f'~ix'
-    #     elif attr in sig_to_op:
-    #         yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
-    #         yield f"{sig_to_op[attr]}ix"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        sig_to_op = {
+            '__neg__()': '-',
+            '__pos__()': '+',
+        }
+        if attr == '__abs__()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_C)})'
+            yield f'abs(ih)'
+        elif attr == '__invert__()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_D)})'
+            yield f'~ih'
+        elif attr in sig_to_op:
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_C)})'
+            yield f"{sig_to_op[attr]}ih"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     # @staticmethod
     # def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
@@ -3760,17 +3779,17 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            InterfaceGroup.Constructor,
-            InterfaceGroup.Exporter,
-            InterfaceGroup.Attribute,
-            InterfaceGroup.Method,
+            # InterfaceGroup.Constructor,
+            # InterfaceGroup.Exporter,
+            # InterfaceGroup.Attribute,
+            # InterfaceGroup.Method,
             # InterfaceGroup.DictLike,
             # InterfaceGroup.Display,
             # InterfaceGroup.Assignment,
             # InterfaceGroup.Selector,
             # InterfaceGroup.Iterator,
             # InterfaceGroup.OperatorBinary,
-            # InterfaceGroup.OperatorUnary,
+            InterfaceGroup.OperatorUnary,
             # InterfaceGroup.AccessorDatetime,
             # InterfaceGroup.AccessorString,
             # InterfaceGroup.AccessorTranspose,
