@@ -3794,7 +3794,7 @@ class ExGenBus(ExGen):
         iattr = f'{icls}.{attr}'
 
         if attr == '__init__':
-            yield f'{icls}({kwa(SERIES_INIT_A)})'
+            yield f"{icls}((sf.Frame({kwa(FRAME_INIT_A1)}), sf.Frame({kwa(FRAME_INIT_B1)})), index=('a', 'b'))"
         elif attr == 'from_concat':
             yield f'b1 = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f'b2 = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
@@ -4142,22 +4142,22 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
     for ig in (
             InterfaceGroup.Constructor,
-            InterfaceGroup.Exporter,
-            InterfaceGroup.Attribute,
-            InterfaceGroup.Method,
-            InterfaceGroup.DictLike,
-            InterfaceGroup.Display,
-            InterfaceGroup.Assignment,
-            InterfaceGroup.Selector,
-            InterfaceGroup.Iterator,
-            InterfaceGroup.OperatorBinary,
-            InterfaceGroup.OperatorUnary,
-            InterfaceGroup.AccessorDatetime,
-            InterfaceGroup.AccessorString,
-            InterfaceGroup.AccessorTranspose,
-            InterfaceGroup.AccessorFillValue,
-            InterfaceGroup.AccessorRe,
-            InterfaceGroup.AccessorValues,
+            # InterfaceGroup.Exporter,
+            # InterfaceGroup.Attribute,
+            # InterfaceGroup.Method,
+            # InterfaceGroup.DictLike,
+            # InterfaceGroup.Display,
+            # InterfaceGroup.Assignment,
+            # InterfaceGroup.Selector,
+            # InterfaceGroup.Iterator,
+            # InterfaceGroup.OperatorBinary,
+            # InterfaceGroup.OperatorUnary,
+            # InterfaceGroup.AccessorDatetime,
+            # InterfaceGroup.AccessorString,
+            # InterfaceGroup.AccessorTranspose,
+            # InterfaceGroup.AccessorFillValue,
+            # InterfaceGroup.AccessorRe,
+            # InterfaceGroup.AccessorValues,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
@@ -4166,45 +4166,45 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             yield from calls_to_msg(calls, row)
 
 def gen_all_examples() -> tp.Iterator[str]:
-    yield from gen_examples(sf.Series, ExGenSeries)
-    yield from gen_examples(sf.SeriesHE, ExGenSeries)
+    # yield from gen_examples(sf.Series, ExGenSeries)
+    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
 
-    yield from gen_examples(sf.Frame, ExGenFrame)
-    yield from gen_examples(sf.FrameHE, ExGenFrame)
-    yield from gen_examples(sf.FrameGO, ExGenFrame)
+    # yield from gen_examples(sf.Frame, ExGenFrame)
+    # yield from gen_examples(sf.FrameHE, ExGenFrame)
+    # yield from gen_examples(sf.FrameGO, ExGenFrame)
 
-    yield from gen_examples(sf.Index, ExGenIndex)
-    yield from gen_examples(sf.IndexGO, ExGenIndex)
+    # yield from gen_examples(sf.Index, ExGenIndex)
+    # yield from gen_examples(sf.IndexGO, ExGenIndex)
 
-    yield from gen_examples(sf.IndexYear, ExGenIndexYear)
-    yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
+    # yield from gen_examples(sf.IndexYear, ExGenIndexYear)
+    # yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
 
-    yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
-    yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
+    # yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
+    # yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
 
-    yield from gen_examples(sf.IndexDate, ExGenIndexDate)
-    yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
+    # yield from gen_examples(sf.IndexDate, ExGenIndexDate)
+    # yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
 
-    yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
-    yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
+    # yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
+    # yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
 
-    yield from gen_examples(sf.IndexHour, ExGenIndexHour)
-    yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
+    # yield from gen_examples(sf.IndexHour, ExGenIndexHour)
+    # yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
 
-    yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
-    yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
+    # yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
+    # yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
 
-    yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
-    yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
+    # yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
+    # yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
 
-    yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
-    yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
+    # yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
+    # yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
 
-    yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
-    yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
+    # yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
+    # yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
 
-    yield from gen_examples(sf.IndexHierarchy, ExGenIndexHierarchy)
-    yield from gen_examples(sf.IndexHierarchyGO, ExGenIndexHierarchy)
+    # yield from gen_examples(sf.IndexHierarchy, ExGenIndexHierarchy)
+    # yield from gen_examples(sf.IndexHierarchyGO, ExGenIndexHierarchy)
 
     yield from gen_examples(sf.Bus, ExGenBus)
 
