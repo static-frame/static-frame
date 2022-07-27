@@ -3974,372 +3974,110 @@ class ExGenBus(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.dictionary_like(row, 's', '', SERIES_INIT_A)
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.dictionary_like(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
 
-    # @staticmethod
-    # def display(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.display(row, 's', '', SERIES_INIT_A)
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.display(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
 
-    # @staticmethod
-    # def assignment(row: sf.Series) -> tp.Iterator[str]:
+    @staticmethod
+    def selector(row: sf.Series) -> tp.Iterator[str]:
 
-        # icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     # attr_func = row['signature_no_args'][:-2]
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_sel = row['signature_no_args'][:-2]
 
-    #     if attr == 'assign[]()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.assign['c']('x')"
-    #         yield f"s.assign['c':]('x')"
-    #         yield f"s.assign[['a', 'd']](('x', 'y'))"
-    #     elif attr == 'assign[].apply()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield 's'
-    #         yield f"s.assign['c':].apply(lambda s: s / 100)"
-    #     elif attr == 'assign.iloc[]()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.assign.iloc[2]('x')"
-    #         yield f"s.assign.iloc[2:]('x')"
-    #         yield f"s.assign.iloc[[0, 4]](('x', 'y'))"
-    #     elif attr == 'assign.iloc[].apply()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield 's'
-    #         yield f"s.assign.iloc[2:].apply(lambda s: s / 100)"
-    #     elif attr == 'assign.loc[]()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.assign.loc['c']('x')"
-    #         yield f"s.assign.loc['c':]('x')"
-    #         yield f"s.assign.loc[['a', 'd']](('x', 'y'))"
-    #     elif attr == 'assign.loc[].apply()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield 's'
-    #         yield f"s.assign.loc['c':].apply(lambda s: s / 100)"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr == 'drop[]':
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f"b.{attr_sel}['x']"
+            yield f"b.{attr_sel}['v':]"
+            yield f"b.{attr_sel}[['w', 'y']]"
+        elif attr == 'drop.iloc[]':
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f"b.{attr_sel}[1]"
+            yield f"b.{attr_sel}[1:]"
+            yield f"b.{attr_sel}[[0, 3]]"
+        elif attr == 'drop.loc[]':
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f"b.{attr_sel}['w']"
+            yield f"b.{attr_sel}['v':]"
+            yield f"b.{attr_sel}[['v', 'x']]"
+        elif attr == '[]':
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f"b['w']"
+            yield f"b['v':]"
+            yield f"b[['v', 'x']]"
+        elif attr == 'iloc[]':
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f"b.iloc[1]"
+            yield f"b.iloc[1:]"
+            yield f"b.iloc[[0, 3]]"
+        elif attr == 'loc[]':
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f"b.loc['w']"
+            yield f"b.loc['v':]"
+            yield f"b.loc[['v', 'x']]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
+    @staticmethod
+    def iterator(row: sf.Series) -> tp.Iterator[str]:
 
-    # @staticmethod
-    # def selector(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        sig = row['signature_no_args']
+        attr = sig
+        attr_func = sig[:-2]
 
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_sel = row['signature_no_args'][:-2]
+        if attr in (
+                'iter_element()',
+                'iter_element_items()',
+                ):
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f"tuple(b.{attr_func}())"
+        elif attr in (
+                'iter_element().apply()',
+                ):
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f"b.{attr_func}(lambda f: f.shape)"
+        elif attr in (
+                'iter_element_items().apply()',
+                ):
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f"b.{attr_func}(lambda l, f: f.size if l != 'v' else 0)"
+        elif attr in (
+                'iter_element().apply_iter()',
+                'iter_element().apply_iter_items()',
+                ):
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield 'b'
+            yield f"tuple(b.{attr_func}(lambda f: f.nbytes))"
+        elif attr in (
+                'iter_element().apply_pool()',
+                ):
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield 'b'
+            yield 'def func(f): return f.sum().sum()'
+            yield f"b.{attr_func}(func, use_threads=True)"
 
-    #     if attr in (
-    #             'drop[]',
-    #             'mask[]',
-    #             'masked_array[]',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_sel}['c']"
-    #         yield f"s.{attr_sel}['c':]"
-    #         yield f"s.{attr_sel}[['a', 'd']]"
-    #     elif attr in (
-    #             'drop.iloc[]',
-    #             'mask.iloc[]',
-    #             'masked_array.iloc[]',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_sel}[2]"
-    #         yield f"s.{attr_sel}[2:]"
-    #         yield f"s.{attr_sel}[[0, 4]]"
-    #     elif attr in (
-    #             'drop.loc[]',
-    #             'mask.loc[]',
-    #             'masked_array.loc[]',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_sel}['c']"
-    #         yield f"s.{attr_sel}['c':]"
-    #         yield f"s.{attr_sel}[['a', 'd']]"
-    #     elif attr == '[]':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s['c']"
-    #         yield f"s['c':]"
-    #         yield f"s[['a', 'd']]"
-    #     elif attr == '[]':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s['c']"
-    #         yield f"s['c':]"
-    #         yield f"s[['a', 'd']]"
-    #     elif attr == 'iloc[]':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.iloc[2]"
-    #         yield f"s.iloc[2:]"
-    #         yield f"s.iloc[[0, 4]]"
-    #     elif attr == 'loc[]':
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.loc['c']"
-    #         yield f"s.loc['c':]"
-    #         yield f"s.loc[['a', 'd']]"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
-
-    # @staticmethod
-    # def iterator(row: sf.Series) -> tp.Iterator[str]:
-
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     sig = row['signature_no_args']
-    #     attr = sig
-    #     attr_func = sig[:-2]
-
-    #     if sig.count('()') == 2:
-    #         # ['iter_element', 'apply']
-    #         attr_funcs = [x.strip('.') for x in sig.split('()') if x]
-
-    #     if attr in (
-    #             'iter_element()',
-    #             'iter_element_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"tuple(s.{attr_func}())"
-    #     elif attr in (
-    #             'iter_element().apply()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_func}(lambda e: e > 10)"
-    #     elif attr in (
-    #             'iter_element_items().apply()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_func}(lambda l, e: e > 10 if l != 'c' else 0)"
-    #     elif attr in (
-    #             'iter_element().apply_iter()',
-    #             'iter_element().apply_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"tuple(s.{attr_func}(lambda e: e > 10))"
-    #     elif attr in (
-    #             'iter_element().apply_pool()',
-    #             ):
-    #         yield 'def func(e): return e > 10'
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_func}(func, use_threads=True)"
-
-    #     elif attr in (
-    #             'iter_element().map_all()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}({{2: 200, 10: -1, 8: 45}})"
-    #     elif attr in (
-    #             'iter_element().map_all_iter()',
-    #             'iter_element().map_all_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"tuple(s.{attr_func}({{2: 200, 10: -1, 8: 45}}))"
-
-    #     elif attr in (
-    #             'iter_element().map_any()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}({{10: -1, 8: 45}})"
-    #     elif attr in (
-    #             'iter_element().map_any_iter()',
-    #             'iter_element().map_any_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"tuple(s.{attr_func}({{10: -1, 8: 45}}))"
-
-    #     elif attr in (
-    #             'iter_element().map_fill()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}({{10: -1, 8: 45}}, fill_value=np.nan)"
-    #     elif attr in (
-    #             'iter_element().map_fill_iter()',
-    #             'iter_element().map_fill_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"tuple(s.{attr_func}({{10: -1, 8: 45}}, fill_value=np.nan))"
-    #     # iter_element_items
-    #     elif attr in (
-    #             'iter_element_items().apply_iter()',
-    #             'iter_element_items().apply_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"tuple(s.{attr_func}(lambda l, e: e > 10 and l != 'e'))"
-    #     elif attr in (
-    #             'iter_element_items().apply_pool()',
-    #             ):
-    #         yield "def func(pair): return pair[1] > 10 and pair[0] != 'e'"
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_func}(func, use_threads=True)"
-
-
-    #     elif attr in (
-    #             'iter_element_items().map_all()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}({{('b', 2): 200, ('a', 10): -1, ('c', 8): 45}})"
-    #     elif attr in (
-    #             'iter_element_items().map_all_iter()',
-    #             'iter_element_items().map_all_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"tuple(s.{attr_func}({{('b', 2): 200, ('a', 10): -1, ('c', 8): 45}}))"
-
-    #     elif attr in (
-    #             'iter_element_items().map_any()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}({{('a', 10): -1, ('c', 8): 45}})"
-    #     elif attr in (
-    #             'iter_element_items().map_any_iter()',
-    #             'iter_element_items().map_any_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"tuple(s.{attr_func}({{('a', 10): -1, ('c', 8): 45}}))"
-    #     elif attr in (
-    #             'iter_element_items().map_fill()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"s.{attr_func}({{('a', 10): -1, ('c', 8): 45}}, fill_value=np.nan)"
-    #     elif attr in (
-    #             'iter_element_items().map_fill_iter()',
-    #             'iter_element_items().map_fill_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield 's'
-    #         yield f"tuple(s.{attr_func}({{('a', 10): -1, ('c', 8): 45}}, fill_value=np.nan))"
-
-    #     elif attr in (
-    #             'iter_group()',
-    #             'iter_group_array()',
-    #             'iter_group_array_items()',
-    #             'iter_group_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_T)})'
-    #         yield f"tuple(s.{attr_func}())"
-    #     elif attr in (
-    #             'iter_group().apply()',
-    #             'iter_group_labels().apply()',
-    #             'iter_group_array().apply()',
-    #             'iter_group_labels_array().apply()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_T)})'
-    #         yield f"s.{attr_func}(lambda s: s.sum())"
-    #     elif attr in (
-    #             'iter_group().apply_iter()',
-    #             'iter_group().apply_iter_items()',
-    #             'iter_group_array().apply_iter()',
-    #             'iter_group_array().apply_iter_items()',
-    #             'iter_group_labels().apply_iter()',
-    #             'iter_group_labels().apply_iter_items()',
-    #             'iter_group_labels_array().apply_iter()',
-    #             'iter_group_labels_array().apply_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_T)})'
-    #         yield f"tuple(s.{attr_func}(lambda s: s.sum()))"
-    #     elif attr in (
-    #             'iter_group().apply_pool()',
-    #             'iter_group_array().apply_pool()',
-    #             'iter_group_labels().apply_pool()',
-    #             'iter_group_labels_array().apply_pool()',
-    #             ):
-    #         yield "def func(s): return s.sum()"
-    #         yield f's = {icls}({kwa(SERIES_INIT_T)})'
-    #         yield f"s.{attr_func}(func, use_threads=True)"
-    #     elif attr in (
-    #             'iter_group_items().apply_pool()',
-    #             'iter_group_array_items().apply_pool()',
-    #             'iter_group_labels_items().apply_pool()',
-    #             'iter_group_labels_array_items().apply_pool()',
-    #             ):
-    #         # NOTE: check that this is delivering expected results
-    #         yield "def func(pair): return pair[1].sum()"
-    #         yield f's = {icls}({kwa(SERIES_INIT_T)})'
-    #         yield f"s.{attr_func}(func, use_threads=True)"
-    #     elif attr in (
-    #             'iter_group_items().apply()',
-    #             'iter_group_array_items().apply()',
-    #             'iter_group_labels_items().apply()',
-    #             'iter_group_labels_array_items().apply()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_T)})'
-    #         yield f"s.{attr_func}(lambda l, s: s.sum() if l != 8 else s.shape)"
-    #     elif attr in (
-    #             'iter_group_items().apply_iter()',
-    #             'iter_group_items().apply_iter_items()',
-    #             'iter_group_array_items().apply_iter()',
-    #             'iter_group_array_items().apply_iter_items()',
-    #             'iter_group_labels_items().apply_iter()',
-    #             'iter_group_labels_items().apply_iter_items()',
-    #             'iter_group_labels_array_items().apply_iter()',
-    #             'iter_group_labels_array_items().apply_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_T)})'
-    #         yield f"tuple(s.{attr_func}(lambda l, s: s.sum() if l != 8 else -1))"
-    #     elif attr in (
-    #             'iter_group_labels()',
-    #             'iter_group_labels_array()',
-    #             'iter_group_labels_items()',
-    #             'iter_group_labels_array_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"tuple(s.{attr_func}())"
-    #     elif attr in (
-    #             'iter_window()',
-    #             'iter_window_array()',
-    #             'iter_window_array_items()',
-    #             'iter_window_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"tuple(s.{attr_func}(size=3, step=1))"
-    #     elif attr in (
-    #             'iter_window().apply()',
-    #             'iter_window_array().apply()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum())"
-    #     elif attr in (
-    #             'iter_window().apply_iter()',
-    #             'iter_window().apply_iter_items()',
-    #             'iter_window_array().apply_iter()',
-    #             'iter_window_array().apply_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"tuple(s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum()))"
-    #     elif attr in (
-    #             'iter_window_items().apply()',
-    #             'iter_window_array_items().apply()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda l, s: s.sum() if l != 'd' else -1)"
-    #     elif attr in (
-    #             'iter_window_items().apply_iter()',
-    #             'iter_window_items().apply_iter_items()',
-    #             'iter_window_array_items().apply_iter()',
-    #             'iter_window_array_items().apply_iter_items()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"tuple(s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda l, s: s.sum() if l != 'd' else -1))"
-    #     elif attr in (
-    #             'iter_window().apply_pool()',
-    #             'iter_window_array().apply_pool()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum(), use_threads=True)"
-    #     elif attr in (
-    #             'iter_window_items().apply_pool()',
-    #             'iter_window_array_items().apply_pool()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_N)})'
-    #         yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda pair: pair[1].sum(), use_threads=True)"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        # iter_element_items
+        elif attr in (
+                'iter_element_items().apply_iter()',
+                'iter_element_items().apply_iter_items()',
+                ):
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield 'b'
+            yield f"tuple(b.{attr_func}(lambda l, f: f.shape if l != 'x' else 0))"
+        elif attr in (
+                'iter_element_items().apply_pool()',
+                ):
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield 'b'
+            yield "def func(pair): return pair[1].sum().sum() if pair[0] != 'v' else -1"
+            yield f"b.{attr_func}(func, use_threads=True)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
 
     # @classmethod
@@ -4509,15 +4247,15 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            InterfaceGroup.Constructor,
-            InterfaceGroup.Exporter,
-            InterfaceGroup.Attribute,
-            InterfaceGroup.Method,
+            # InterfaceGroup.Constructor,
+            # InterfaceGroup.Exporter,
+            # InterfaceGroup.Attribute,
+            # InterfaceGroup.Method,
             # InterfaceGroup.DictLike,
             # InterfaceGroup.Display,
             # InterfaceGroup.Assignment,
             # InterfaceGroup.Selector,
-            # InterfaceGroup.Iterator,
+            InterfaceGroup.Iterator,
             # InterfaceGroup.OperatorBinary,
             # InterfaceGroup.OperatorUnary,
             # InterfaceGroup.AccessorDatetime,

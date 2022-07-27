@@ -76,7 +76,7 @@ from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroup
 from static_frame.core.node_iter import IterNodeGroupAxis
-from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeType as IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe

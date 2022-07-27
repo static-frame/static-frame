@@ -741,6 +741,16 @@ class IterNode(tp.Generic[FrameOrSeries]):
 class IterNodeNoArg(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
+    CLS_DELEGATE = IterNodeDelegate
+
+    def __call__(self,
+            ) -> IterNodeDelegate[FrameOrSeries]:
+        return IterNode.get_delegate(self)
+
+
+class IterNodeNoArgMapable(IterNode[FrameOrSeries]):
+
+    __slots__ = _ITER_NODE_SLOTS
     CLS_DELEGATE = IterNodeDelegateMapable
 
     def __call__(self,
