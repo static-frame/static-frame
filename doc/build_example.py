@@ -4080,125 +4080,19 @@ class ExGenBus(ExGen):
             raise NotImplementedError(f'no handling for {attr}')
 
 
-    # @classmethod
-    # def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
+    @classmethod
+    def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
 
-    #     if attr in cls.SIG_TO_OP_NUMERIC:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         if attr.startswith('__r'):
-    #             yield f'8 {cls.SIG_TO_OP_NUMERIC[attr]} s'
-    #             # no need to show reverse on series
-    #         else:
-    #             yield f's {cls.SIG_TO_OP_NUMERIC[attr]} 8'
-    #             yield f"s {cls.SIG_TO_OP_NUMERIC[attr]} s.reindex(('c', 'b'))"
-    #     elif attr in cls.SIG_TO_OP_LOGIC:
-    #         yield f's = {icls}({kwa(SERIES_INIT_F)})'
-    #         yield f"s {cls.SIG_TO_OP_LOGIC[attr]} True"
-    #         yield f"s {cls.SIG_TO_OP_LOGIC[attr]} (True, False, True)"
-    #     elif attr in cls.SIG_TO_OP_MATMUL:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s {cls.SIG_TO_OP_MATMUL[attr]} (3, 0, 4)"
-    #     elif attr in cls.SIG_TO_OP_BIT:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s {cls.SIG_TO_OP_BIT[attr]} 1"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
-
-    # @staticmethod
-    # def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-
-    #     sig_to_op = {
-    #         '__neg__()': '-',
-    #         '__pos__()': '+',
-    #     }
-    #     if attr == '__abs__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_T)})'
-    #         yield f'abs(s)'
-    #     elif attr == '__invert__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_F)})'
-    #         yield f'~s'
-    #     elif attr in sig_to_op:
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"{sig_to_op[attr]}s"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
-
-    # @staticmethod
-    # def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
-
-    #     if attr == 'via_dt.fromisoformat()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_W)})'
-    #         yield f's.{attr}'
-    #     elif attr == 'via_dt.strftime()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_U)})'
-    #         yield f's.{attr_func}("%A | %B")'
-    #     elif attr in (
-    #             'via_dt.strptime()',
-    #             'via_dt.strpdate()',
-    #             ):
-    #         yield f's = {icls}({kwa(SERIES_INIT_V)})'
-    #         yield f's.{attr_func}("%m/%d/%Y")'
-    #     else:
-    #         yield f's = {icls}({kwa(SERIES_INIT_U)})'
-    #         yield f's.{attr}'
-
-    # @staticmethod
-    # def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_string(row, 's', '', SERIES_INIT_X)
-
-    # @classmethod
-    # def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     # attr_func = row['signature_no_args'][:-2]
-
-    #     attr_op = attr.replace('via_fill_value().', '')
-
-    #     if attr_op in cls.SIG_TO_OP_NUMERIC:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-    #         if attr_op.startswith('__r'): # NOTE: these raise
-    #             yield f's2 {cls.SIG_TO_OP_NUMERIC[attr_op]} s1.via_fill_value(0)'
-    #         else:
-    #             yield f's1.via_fill_value(0) {cls.SIG_TO_OP_NUMERIC[attr_op]} s2'
-    #     elif attr_op in cls.SIG_TO_OP_LOGIC:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_F)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_Z)})'
-    #         yield f"s1.via_fill_value(False) {cls.SIG_TO_OP_LOGIC[attr_op]} s2"
-    #     elif attr_op in cls.SIG_TO_OP_MATMUL:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-    #         yield f"s1.via_fill_value(1) {cls.SIG_TO_OP_MATMUL[attr_op]} s2"
-    #     elif attr_op in cls.SIG_TO_OP_BIT:
-    #         yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
-    #         yield f"s1.via_fill_value(0) {cls.SIG_TO_OP_BIT[attr_op]} s2"
-    #     elif attr == 'via_fill_value().loc':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s.via_fill_value(0).loc[['a', 'c', 'd', 'e']]"
-    #     elif attr == 'via_fill_value().__getitem__()':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f"s.via_fill_value(0)[['a', 'c', 'd', 'e']]"
-    #     elif attr == 'via_fill_value().via_T':
-    #         yield f's = {icls}({kwa(SERIES_INIT_A)})'
-    #         yield f's.{attr}'
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
-
-    # @staticmethod
-    # def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_regular_expression(row, 's', '', SERIES_INIT_A)
-
-    # @staticmethod
-    # def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_values(row, 's', '', SERIES_INIT_A)
+        # get __eq__ and few other methods even though they are not defined
+        if attr in cls.SIG_TO_OP_NUMERIC:
+            yield f'b1 = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'b1 {cls.SIG_TO_OP_NUMERIC[attr]} b2'
+            yield f'b1 {cls.SIG_TO_OP_NUMERIC[attr]} b1'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
 
 #-------------------------------------------------------------------------------
@@ -4247,23 +4141,23 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            # InterfaceGroup.Constructor,
-            # InterfaceGroup.Exporter,
-            # InterfaceGroup.Attribute,
-            # InterfaceGroup.Method,
-            # InterfaceGroup.DictLike,
-            # InterfaceGroup.Display,
-            # InterfaceGroup.Assignment,
-            # InterfaceGroup.Selector,
+            InterfaceGroup.Constructor,
+            InterfaceGroup.Exporter,
+            InterfaceGroup.Attribute,
+            InterfaceGroup.Method,
+            InterfaceGroup.DictLike,
+            InterfaceGroup.Display,
+            InterfaceGroup.Assignment,
+            InterfaceGroup.Selector,
             InterfaceGroup.Iterator,
-            # InterfaceGroup.OperatorBinary,
-            # InterfaceGroup.OperatorUnary,
-            # InterfaceGroup.AccessorDatetime,
-            # InterfaceGroup.AccessorString,
-            # InterfaceGroup.AccessorTranspose,
-            # InterfaceGroup.AccessorFillValue,
-            # InterfaceGroup.AccessorRe,
-            # InterfaceGroup.AccessorValues,
+            InterfaceGroup.OperatorBinary,
+            InterfaceGroup.OperatorUnary,
+            InterfaceGroup.AccessorDatetime,
+            InterfaceGroup.AccessorString,
+            InterfaceGroup.AccessorTranspose,
+            InterfaceGroup.AccessorFillValue,
+            InterfaceGroup.AccessorRe,
+            InterfaceGroup.AccessorValues,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
@@ -4272,45 +4166,45 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             yield from calls_to_msg(calls, row)
 
 def gen_all_examples() -> tp.Iterator[str]:
-    # yield from gen_examples(sf.Series, ExGenSeries)
-    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
+    yield from gen_examples(sf.Series, ExGenSeries)
+    yield from gen_examples(sf.SeriesHE, ExGenSeries)
 
-    # yield from gen_examples(sf.Frame, ExGenFrame)
-    # yield from gen_examples(sf.FrameHE, ExGenFrame)
-    # yield from gen_examples(sf.FrameGO, ExGenFrame)
+    yield from gen_examples(sf.Frame, ExGenFrame)
+    yield from gen_examples(sf.FrameHE, ExGenFrame)
+    yield from gen_examples(sf.FrameGO, ExGenFrame)
 
-    # yield from gen_examples(sf.Index, ExGenIndex)
-    # yield from gen_examples(sf.IndexGO, ExGenIndex)
+    yield from gen_examples(sf.Index, ExGenIndex)
+    yield from gen_examples(sf.IndexGO, ExGenIndex)
 
-    # yield from gen_examples(sf.IndexYear, ExGenIndexYear)
-    # yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
+    yield from gen_examples(sf.IndexYear, ExGenIndexYear)
+    yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
 
-    # yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
-    # yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
+    yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
+    yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
 
-    # yield from gen_examples(sf.IndexDate, ExGenIndexDate)
-    # yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
+    yield from gen_examples(sf.IndexDate, ExGenIndexDate)
+    yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
 
-    # yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
-    # yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
+    yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
+    yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
 
-    # yield from gen_examples(sf.IndexHour, ExGenIndexHour)
-    # yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
+    yield from gen_examples(sf.IndexHour, ExGenIndexHour)
+    yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
 
-    # yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
-    # yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
+    yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
+    yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
 
-    # yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
-    # yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
+    yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
+    yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
 
-    # yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
-    # yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
+    yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
+    yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
 
-    # yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
-    # yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
+    yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
+    yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
 
-    # yield from gen_examples(sf.IndexHierarchy, ExGenIndexHierarchy)
-    # yield from gen_examples(sf.IndexHierarchyGO, ExGenIndexHierarchy)
+    yield from gen_examples(sf.IndexHierarchy, ExGenIndexHierarchy)
+    yield from gen_examples(sf.IndexHierarchyGO, ExGenIndexHierarchy)
 
     yield from gen_examples(sf.Bus, ExGenBus)
 

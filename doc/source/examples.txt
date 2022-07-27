@@ -1,6 +1,5 @@
 #start_Series-__init__()
->>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
->>> s
+>>> sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 <Series>
 <Index>
 a        10
@@ -12,8 +11,7 @@ c        8
 #start_Series-from_concat()
 >>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s2 = sf.Series((4, 3, 12), index=('d', 'e', 'f'))
->>> s = sf.Series.from_concat((s1, s2))
->>> s
+>>> sf.Series.from_concat((s1, s2))
 <Series>
 <Index>
 a        10
@@ -28,8 +26,7 @@ f        12
 #start_Series-from_concat_items()
 >>> s1 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s2 = sf.Series((4, 3, 12), index=('d', 'e', 'f'))
->>> s = sf.Series.from_concat_items((('x', s1), ('y', s2)))
->>> s
+>>> sf.Series.from_concat_items((('x', s1), ('y', s2)))
 <Series>
 <IndexHierarchy>
 x                a     10
@@ -42,8 +39,7 @@ y                f     12
 #end_Series-from_concat_items()
 
 #start_Series-from_dict()
->>> s = sf.Series.from_dict(dict(a=10, b=2, c=8))
->>> s
+>>> sf.Series.from_dict(dict(a=10, b=2, c=8))
 <Series>
 <Index>
 a        10
@@ -53,8 +49,7 @@ c        8
 #end_Series-from_dict()
 
 #start_Series-from_element()
->>> s = sf.Series.from_element(-1, index=('a', 'b', 'c'), name='x')
->>> s
+>>> sf.Series.from_element(-1, index=('a', 'b', 'c'), name='x')
 <Series: x>
 <Index>
 a           -1
@@ -64,8 +59,7 @@ c           -1
 #end_Series-from_element()
 
 #start_Series-from_items()
->>> s = sf.Series.from_items((('a', 10), ('b', 2), ('c', 8)), name='x')
->>> s
+>>> sf.Series.from_items((('a', 10), ('b', 2), ('c', 8)), name='x')
 <Series: x>
 <Index>
 a           10
@@ -84,8 +78,7 @@ b        1
 c        None
 <<U1>    <object>
 >>> s2 = sf.Series((2, 8, 19), index=('b', 'c', 'd'))
->>> s = sf.Series.from_overlay((s1, s2))
->>> s
+>>> sf.Series.from_overlay((s1, s2))
 <Series>
 <Index>
 a        11
@@ -97,8 +90,7 @@ d        19
 
 #start_Series-from_pandas()
 >>> df = pd.Series((10, 2, 8), index=('a', 'b', 'c'))
->>> s = sf.Series.from_pandas(df)
->>> s
+>>> sf.Series.from_pandas(df)
 <Series>
 <Index>
 a        10
@@ -205,7 +197,7 @@ c
 #start_Series-mloc
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.mloc
-140632250572880
+94665845744128
 #end_Series-mloc
 
 #start_Series-name
@@ -4712,7 +4704,7 @@ c        ('8', 0)
 >>> s.via_values.apply(np.sin)
 <Series>
 <Index>
-a        -0.5440211108893699
+a        -0.5440211108893698
 b        0.9092974268256817
 c        0.9893582466233818
 <<U1>    <float64>
@@ -4725,8 +4717,7 @@ c        0.9893582466233818
 #end_Series-via_values.__array_ufunc__()
 
 #start_SeriesHE-__init__()
->>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
->>> s
+>>> sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 <SeriesHE>
 <Index>
 a          10
@@ -4738,8 +4729,7 @@ c          8
 #start_SeriesHE-from_concat()
 >>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s2 = sf.SeriesHE((4, 3, 12), index=('d', 'e', 'f'))
->>> s = sf.SeriesHE.from_concat((s1, s2))
->>> s
+>>> sf.SeriesHE.from_concat((s1, s2))
 <SeriesHE>
 <Index>
 a          10
@@ -4754,8 +4744,7 @@ f          12
 #start_SeriesHE-from_concat_items()
 >>> s1 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s2 = sf.SeriesHE((4, 3, 12), index=('d', 'e', 'f'))
->>> s = sf.SeriesHE.from_concat_items((('x', s1), ('y', s2)))
->>> s
+>>> sf.SeriesHE.from_concat_items((('x', s1), ('y', s2)))
 <SeriesHE>
 <IndexHierarchy>
 x                a     10
@@ -4768,8 +4757,7 @@ y                f     12
 #end_SeriesHE-from_concat_items()
 
 #start_SeriesHE-from_dict()
->>> s = sf.SeriesHE.from_dict(dict(a=10, b=2, c=8))
->>> s
+>>> sf.SeriesHE.from_dict(dict(a=10, b=2, c=8))
 <SeriesHE>
 <Index>
 a          10
@@ -4779,8 +4767,7 @@ c          8
 #end_SeriesHE-from_dict()
 
 #start_SeriesHE-from_element()
->>> s = sf.SeriesHE.from_element(-1, index=('a', 'b', 'c'), name='x')
->>> s
+>>> sf.SeriesHE.from_element(-1, index=('a', 'b', 'c'), name='x')
 <SeriesHE: x>
 <Index>
 a             -1
@@ -4790,8 +4777,7 @@ c             -1
 #end_SeriesHE-from_element()
 
 #start_SeriesHE-from_items()
->>> s = sf.SeriesHE.from_items((('a', 10), ('b', 2), ('c', 8)), name='x')
->>> s
+>>> sf.SeriesHE.from_items((('a', 10), ('b', 2), ('c', 8)), name='x')
 <SeriesHE: x>
 <Index>
 a             10
@@ -4810,8 +4796,7 @@ b          1
 c          None
 <<U1>      <object>
 >>> s2 = sf.SeriesHE((2, 8, 19), index=('b', 'c', 'd'))
->>> s = sf.SeriesHE.from_overlay((s1, s2))
->>> s
+>>> sf.SeriesHE.from_overlay((s1, s2))
 <SeriesHE>
 <Index>
 a          11
@@ -4823,8 +4808,7 @@ d          19
 
 #start_SeriesHE-from_pandas()
 >>> df = pd.Series((10, 2, 8), index=('a', 'b', 'c'))
->>> s = sf.SeriesHE.from_pandas(df)
->>> s
+>>> sf.SeriesHE.from_pandas(df)
 <SeriesHE>
 <Index>
 a          10
@@ -4942,7 +4926,7 @@ c
 #start_SeriesHE-mloc
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.mloc
-140632286923824
+94665834592368
 #end_SeriesHE-mloc
 
 #start_SeriesHE-name
@@ -9429,7 +9413,7 @@ c          ('8', 0)
 >>> s.via_values.apply(np.sin)
 <SeriesHE>
 <Index>
-a          -0.5440211108893699
+a          -0.5440211108893698
 b          0.9092974268256817
 c          0.9893582466233818
 <<U1>      <float64>
@@ -9460,10 +9444,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
-----
-__index0__: [["p","q","r"]]
-a: [[0,2,4]]
-b: [[1,3,5]]
 >>> sf.Frame.from_arrow(aw, index_depth=1)
 <Frame>
 <Index>  a       b       <<U1>
@@ -9473,6 +9453,19 @@ q        2       3
 r        4       5
 <object> <int64> <int64>
 #end_Frame-from_arrow()
+
+#start_Frame-from_clipboard()
+>>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
+>>> f1.to_clipboard()
+>>> sf.Frame.from_clipboard(index_depth=1)
+<Frame>
+<Index> a       b       <<U1>
+<Index>
+p       0       1
+q       2       3
+r       4       5
+<<U1>   <int64> <int64>
+#end_Frame-from_clipboard()
 
 #start_Frame-from_concat()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -9919,11 +9912,12 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
-----
-__index0__: [["p","q","r","s"]]
-a: [[10,2,8,3]]
-b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
+
+#start_Frame-to_clipboard()
+>>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
+>>> f1.to_clipboard()
+#end_Frame-to_clipboard()
 
 #start_Frame-to_csv()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -10215,7 +10209,7 @@ c           datetime64[D]
 #start_Frame-mloc
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[140632287142672 140632290569184 140632287027600]
+[94665833312432 94665839928400 94665845791312]
 #end_Frame-mloc
 
 #start_Frame-name
@@ -13161,13 +13155,13 @@ q        1
 #start_Frame-iter_group_labels().apply_iter()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter at 0x10ce75190>
+<generator object IterNodeDelegate.apply_iter at 0x7f8d2d5ba660>
 #end_Frame-iter_group_labels().apply_iter()
 
 #start_Frame-iter_group_labels().apply_iter_items()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter_items(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter_items at 0x10ce75190>
+<generator object IterNodeDelegate.apply_iter_items at 0x7f8d2d5ba660>
 #end_Frame-iter_group_labels().apply_iter_items()
 
 #start_Frame-iter_group_labels_array()
@@ -15642,7 +15636,7 @@ s       0.0       0.0       12.0
 <Frame>
 <Index> a         b         c         <<U1>
 <Index>
-p       inf       inf       inf
+p       nan       nan       nan
 q       1.0       1.0       -0.0
 r       0.0       16.0      18.0
 s       0.0       0.0       12.0
@@ -15891,7 +15885,7 @@ s       0.0       0.0       12.0
 <Frame>
 <Index> a         b         c         <<U1>
 <Index>
-p       inf       inf       inf
+p       nan       nan       nan
 q       1.0       1.0       -0.0
 r       0.0       16.0      18.0
 s       0.0       0.0       12.0
@@ -16365,7 +16359,7 @@ RuntimeError('via_fill_value interfaces can only be used on the left-hand side o
 <Frame: x>
 <Index>    a                   b                   c                   <<U1>
 <Index>
-p          -0.5440211108893699 0.9893582466233818  0.8414709848078965
+p          -0.5440211108893698 0.9893582466233818  0.8414709848078965
 q          -0.9092974268256817 -0.1411200080598672 0.0
 r          0.0                 0.9893582466233818  0.4121184852417566
 s          0.0                 0.0                 -0.5365729180004349
@@ -16400,10 +16394,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
-----
-__index0__: [["p","q","r"]]
-a: [[0,2,4]]
-b: [[1,3,5]]
 >>> sf.FrameHE.from_arrow(aw, index_depth=1)
 <FrameHE>
 <Index>   a       b       <<U1>
@@ -16413,6 +16403,19 @@ q         2       3
 r         4       5
 <object>  <int64> <int64>
 #end_FrameHE-from_arrow()
+
+#start_FrameHE-from_clipboard()
+>>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
+>>> f1.to_clipboard()
+>>> sf.FrameHE.from_clipboard(index_depth=1)
+<FrameHE>
+<Index>   a       b       <<U1>
+<Index>
+p         0       1
+q         2       3
+r         4       5
+<<U1>     <int64> <int64>
+#end_FrameHE-from_clipboard()
 
 #start_FrameHE-from_concat()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -16859,11 +16862,12 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
-----
-__index0__: [["p","q","r","s"]]
-a: [[10,2,8,3]]
-b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
+
+#start_FrameHE-to_clipboard()
+>>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
+>>> f1.to_clipboard()
+#end_FrameHE-to_clipboard()
 
 #start_FrameHE-to_csv()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -17155,7 +17159,7 @@ c           datetime64[D]
 #start_FrameHE-mloc
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[140632287052256 140632286885616 140632287140336]
+[94665834051552 94665830694496 94665857284416]
 #end_FrameHE-mloc
 
 #start_FrameHE-name
@@ -20101,13 +20105,13 @@ q        1
 #start_FrameHE-iter_group_labels().apply_iter()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter at 0x10d04f200>
+<generator object IterNodeDelegate.apply_iter at 0x7f8d2d780d60>
 #end_FrameHE-iter_group_labels().apply_iter()
 
 #start_FrameHE-iter_group_labels().apply_iter_items()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter_items(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter_items at 0x10d04f2e0>
+<generator object IterNodeDelegate.apply_iter_items at 0x7f8cd5358e40>
 #end_FrameHE-iter_group_labels().apply_iter_items()
 
 #start_FrameHE-iter_group_labels_array()
@@ -22554,7 +22558,7 @@ s         0.0       0.0       12.0
 <FrameHE>
 <Index>   a         b         c         <<U1>
 <Index>
-p         inf       inf       inf
+p         nan       nan       nan
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -22803,7 +22807,7 @@ s         0.0       0.0       12.0
 <FrameHE>
 <Index>   a         b         c         <<U1>
 <Index>
-p         inf       inf       inf
+p         nan       nan       nan
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -23277,7 +23281,7 @@ RuntimeError('via_fill_value interfaces can only be used on the left-hand side o
 <FrameHE: x>
 <Index>      a                   b                   c                   <<U1>
 <Index>
-p            -0.5440211108893699 0.9893582466233818  0.8414709848078965
+p            -0.5440211108893698 0.9893582466233818  0.8414709848078965
 q            -0.9092974268256817 -0.1411200080598672 0.0
 r            0.0                 0.9893582466233818  0.4121184852417566
 s            0.0                 0.0                 -0.5365729180004349
@@ -23312,10 +23316,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
-----
-__index0__: [["p","q","r"]]
-a: [[0,2,4]]
-b: [[1,3,5]]
 >>> sf.FrameGO.from_arrow(aw, index_depth=1)
 <FrameGO>
 <IndexGO> a       b       <<U1>
@@ -23325,6 +23325,19 @@ q         2       3
 r         4       5
 <object>  <int64> <int64>
 #end_FrameGO-from_arrow()
+
+#start_FrameGO-from_clipboard()
+>>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
+>>> f1.to_clipboard()
+>>> sf.FrameGO.from_clipboard(index_depth=1)
+<FrameGO>
+<IndexGO> a       b       <<U1>
+<Index>
+p         0       1
+q         2       3
+r         4       5
+<<U1>     <int64> <int64>
+#end_FrameGO-from_clipboard()
 
 #start_FrameGO-from_concat()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -23771,11 +23784,12 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
-----
-__index0__: [["p","q","r","s"]]
-a: [[10,2,8,3]]
-b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
+
+#start_FrameGO-to_clipboard()
+>>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
+>>> f1.to_clipboard()
+#end_FrameGO-to_clipboard()
 
 #start_FrameGO-to_csv()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -24067,7 +24081,7 @@ c           datetime64[D]
 #start_FrameGO-mloc
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[140632250750208 140632286885616 140632287075232]
+[94665840180352 94665834592368 94665840180432]
 #end_FrameGO-mloc
 
 #start_FrameGO-name
@@ -27040,13 +27054,13 @@ q        1
 #start_FrameGO-iter_group_labels().apply_iter()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter at 0x10d040270>
+<generator object IterNodeDelegate.apply_iter at 0x7f8d2d7803c0>
 #end_FrameGO-iter_group_labels().apply_iter()
 
 #start_FrameGO-iter_group_labels().apply_iter_items()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((1, 2), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter_items(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter_items at 0x10d040350>
+<generator object IterNodeDelegate.apply_iter_items at 0x7f8d2d780cf0>
 #end_FrameGO-iter_group_labels().apply_iter_items()
 
 #start_FrameGO-iter_group_labels_array()
@@ -29521,7 +29535,7 @@ s         0.0       0.0       12.0
 <FrameGO>
 <IndexGO> a         b         c         <<U1>
 <Index>
-p         inf       inf       inf
+p         nan       nan       nan
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -29770,7 +29784,7 @@ s         0.0       0.0       12.0
 <FrameGO>
 <IndexGO> a         b         c         <<U1>
 <Index>
-p         inf       inf       inf
+p         nan       nan       nan
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -30269,7 +30283,7 @@ c            FrameGO  FrameGO
 <FrameGO: x>
 <IndexGO>    a                   b                   c                   <<U1>
 <Index>
-p            -0.5440211108893699 0.9893582466233818  0.8414709848078965
+p            -0.5440211108893698 0.9893582466233818  0.8414709848078965
 q            -0.9092974268256817 -0.1411200080598672 0.0
 r            0.0                 0.9893582466233818  0.4121184852417566
 s            0.0                 0.0                 -0.5365729180004349
@@ -30368,7 +30382,7 @@ x        <Index>
 #start_Index-mloc
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.mloc
-140632250414736
+94665834592400
 #end_Index-mloc
 
 #start_Index-name
@@ -32073,7 +32087,7 @@ XYZ
 <Index>
 0.0
 -0.15853338004399595
-0.3130570127901234
+0.31305701279012343
 -0.5946419876082146
 <float64>
 #end_Index-via_values.apply()
@@ -32167,7 +32181,7 @@ x        <IndexGO>
 #start_IndexGO-mloc
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.mloc
-140632250434368
+94665839510384
 #end_IndexGO-mloc
 
 #start_IndexGO-name
@@ -33901,7 +33915,7 @@ XYZ
 <IndexGO>
 0.0
 -0.15853338004399595
-0.3130570127901234
+0.31305701279012343
 -0.5946419876082146
 <float64>
 #end_IndexGO-via_values.apply()
@@ -34011,7 +34025,7 @@ None     <IndexYear>
 #start_IndexYear-mloc
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.mloc
-140632337360912
+94665851444992
 #end_IndexYear-mloc
 
 #start_IndexYear-name
@@ -34148,13 +34162,13 @@ True
 #start_IndexYear-cumprod()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexYear-cumprod()
 
 #start_IndexYear-cumsum()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexYear-cumsum()
 
 #start_IndexYear-difference()
@@ -34890,7 +34904,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYear-__abs__()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYear-__abs__()
 
 #start_IndexYear-__invert__()
@@ -34902,7 +34916,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYear-__neg__()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYear-__neg__()
 
 #start_IndexYear-__pos__()
@@ -35682,7 +35696,7 @@ None     <IndexYearGO>
 #start_IndexYearGO-mloc
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.mloc
-140632289620656
+94665851915744
 #end_IndexYearGO-mloc
 
 #start_IndexYearGO-name
@@ -35831,13 +35845,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexYearGO-cumprod()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexYearGO-cumprod()
 
 #start_IndexYearGO-cumsum()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexYearGO-cumsum()
 
 #start_IndexYearGO-difference()
@@ -36588,7 +36602,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYearGO-__abs__()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYearGO-__abs__()
 
 #start_IndexYearGO-__invert__()
@@ -36600,7 +36614,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYearGO-__neg__()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYearGO-__neg__()
 
 #start_IndexYearGO-__pos__()
@@ -37402,7 +37416,7 @@ None     <IndexYearMonth>
 #start_IndexYearMonth-mloc
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix.mloc
-140632290741776
+94665839904704
 #end_IndexYearMonth-mloc
 
 #start_IndexYearMonth-name
@@ -37539,13 +37553,13 @@ True
 #start_IndexYearMonth-cumprod()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexYearMonth-cumprod()
 
 #start_IndexYearMonth-cumsum()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexYearMonth-cumsum()
 
 #start_IndexYearMonth-difference()
@@ -38281,7 +38295,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYearMonth-__abs__()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonth-__abs__()
 
 #start_IndexYearMonth-__invert__()
@@ -38293,7 +38307,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYearMonth-__neg__()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonth-__neg__()
 
 #start_IndexYearMonth-__pos__()
@@ -39095,7 +39109,7 @@ None     <IndexYearMonthGO>
 #start_IndexYearMonthGO-mloc
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.mloc
-140632289124336
+94665857188800
 #end_IndexYearMonthGO-mloc
 
 #start_IndexYearMonthGO-name
@@ -39244,13 +39258,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexYearMonthGO-cumprod()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexYearMonthGO-cumprod()
 
 #start_IndexYearMonthGO-cumsum()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexYearMonthGO-cumsum()
 
 #start_IndexYearMonthGO-difference()
@@ -40001,7 +40015,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYearMonthGO-__abs__()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonthGO-__abs__()
 
 #start_IndexYearMonthGO-__invert__()
@@ -40013,7 +40027,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYearMonthGO-__neg__()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonthGO-__neg__()
 
 #start_IndexYearMonthGO-__pos__()
@@ -40861,7 +40875,7 @@ None     <IndexDate>
 #start_IndexDate-mloc
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-140632337360912
+94665851444992
 #end_IndexDate-mloc
 
 #start_IndexDate-name
@@ -40998,13 +41012,13 @@ True
 #start_IndexDate-cumprod()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexDate-cumprod()
 
 #start_IndexDate-cumsum()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexDate-cumsum()
 
 #start_IndexDate-difference()
@@ -41740,7 +41754,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexDate-__abs__()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDate-__abs__()
 
 #start_IndexDate-__invert__()
@@ -41752,7 +41766,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexDate-__neg__()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDate-__neg__()
 
 #start_IndexDate-__pos__()
@@ -42603,7 +42617,7 @@ None     <IndexDateGO>
 #start_IndexDateGO-mloc
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-140632337732592
+94665845744128
 #end_IndexDateGO-mloc
 
 #start_IndexDateGO-name
@@ -42752,13 +42766,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexDateGO-cumprod()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexDateGO-cumprod()
 
 #start_IndexDateGO-cumsum()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexDateGO-cumsum()
 
 #start_IndexDateGO-difference()
@@ -43509,7 +43523,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexDateGO-__abs__()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDateGO-__abs__()
 
 #start_IndexDateGO-__invert__()
@@ -43521,7 +43535,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexDateGO-__neg__()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDateGO-__neg__()
 
 #start_IndexDateGO-__pos__()
@@ -44280,7 +44294,7 @@ None     <IndexMinute>
 #start_IndexMinute-mloc
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-140632289124336
+94665857188800
 #end_IndexMinute-mloc
 
 #start_IndexMinute-name
@@ -44417,13 +44431,13 @@ True
 #start_IndexMinute-cumprod()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexMinute-cumprod()
 
 #start_IndexMinute-cumsum()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexMinute-cumsum()
 
 #start_IndexMinute-difference()
@@ -45161,7 +45175,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMinute-__abs__()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinute-__abs__()
 
 #start_IndexMinute-__invert__()
@@ -45173,7 +45187,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMinute-__neg__()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinute-__neg__()
 
 #start_IndexMinute-__pos__()
@@ -45935,7 +45949,7 @@ None     <IndexMinuteGO>
 #start_IndexMinuteGO-mloc
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-140632337360912
+94665851444992
 #end_IndexMinuteGO-mloc
 
 #start_IndexMinuteGO-name
@@ -46084,13 +46098,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexMinuteGO-cumprod()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexMinuteGO-cumprod()
 
 #start_IndexMinuteGO-cumsum()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexMinuteGO-cumsum()
 
 #start_IndexMinuteGO-difference()
@@ -46843,7 +46857,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMinuteGO-__abs__()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinuteGO-__abs__()
 
 #start_IndexMinuteGO-__invert__()
@@ -46855,7 +46869,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMinuteGO-__neg__()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinuteGO-__neg__()
 
 #start_IndexMinuteGO-__pos__()
@@ -47617,7 +47631,7 @@ None     <IndexHour>
 #start_IndexHour-mloc
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-140632289124336
+94665857188800
 #end_IndexHour-mloc
 
 #start_IndexHour-name
@@ -47754,13 +47768,13 @@ True
 #start_IndexHour-cumprod()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexHour-cumprod()
 
 #start_IndexHour-cumsum()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexHour-cumsum()
 
 #start_IndexHour-difference()
@@ -48502,7 +48516,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexHour-__abs__()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHour-__abs__()
 
 #start_IndexHour-__invert__()
@@ -48514,7 +48528,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexHour-__neg__()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHour-__neg__()
 
 #start_IndexHour-__pos__()
@@ -49275,7 +49289,7 @@ None     <IndexHourGO>
 #start_IndexHourGO-mloc
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-140632289949680
+94665845052672
 #end_IndexHourGO-mloc
 
 #start_IndexHourGO-name
@@ -49424,13 +49438,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexHourGO-cumprod()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexHourGO-cumprod()
 
 #start_IndexHourGO-cumsum()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexHourGO-cumsum()
 
 #start_IndexHourGO-difference()
@@ -50187,7 +50201,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexHourGO-__abs__()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHourGO-__abs__()
 
 #start_IndexHourGO-__invert__()
@@ -50199,7 +50213,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexHourGO-__neg__()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHourGO-__neg__()
 
 #start_IndexHourGO-__pos__()
@@ -50960,7 +50974,7 @@ None     <IndexSecond>
 #start_IndexSecond-mloc
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-140632289620656
+94665851915744
 #end_IndexSecond-mloc
 
 #start_IndexSecond-name
@@ -51097,13 +51111,13 @@ True
 #start_IndexSecond-cumprod()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexSecond-cumprod()
 
 #start_IndexSecond-cumsum()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexSecond-cumsum()
 
 #start_IndexSecond-difference()
@@ -51845,7 +51859,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexSecond-__abs__()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecond-__abs__()
 
 #start_IndexSecond-__invert__()
@@ -51857,7 +51871,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexSecond-__neg__()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecond-__neg__()
 
 #start_IndexSecond-__pos__()
@@ -52623,7 +52637,7 @@ None     <IndexSecondGO>
 #start_IndexSecondGO-mloc
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-140632289124336
+94665857188800
 #end_IndexSecondGO-mloc
 
 #start_IndexSecondGO-name
@@ -52772,13 +52786,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexSecondGO-cumprod()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexSecondGO-cumprod()
 
 #start_IndexSecondGO-cumsum()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexSecondGO-cumsum()
 
 #start_IndexSecondGO-difference()
@@ -53535,7 +53549,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexSecondGO-__abs__()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecondGO-__abs__()
 
 #start_IndexSecondGO-__invert__()
@@ -53547,7 +53561,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexSecondGO-__neg__()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecondGO-__neg__()
 
 #start_IndexSecondGO-__pos__()
@@ -54313,7 +54327,7 @@ None     <IndexMillisecond>
 #start_IndexMillisecond-mloc
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-140632290741776
+94665839904704
 #end_IndexMillisecond-mloc
 
 #start_IndexMillisecond-name
@@ -54451,13 +54465,13 @@ True
 #start_IndexMillisecond-cumprod()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexMillisecond-cumprod()
 
 #start_IndexMillisecond-cumsum()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexMillisecond-cumsum()
 
 #start_IndexMillisecond-difference()
@@ -55205,7 +55219,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMillisecond-__abs__()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecond-__abs__()
 
 #start_IndexMillisecond-__invert__()
@@ -55217,7 +55231,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMillisecond-__neg__()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecond-__neg__()
 
 #start_IndexMillisecond-__pos__()
@@ -55995,7 +56009,7 @@ None     <IndexMillisecondGO>
 #start_IndexMillisecondGO-mloc
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-140632289949680
+94665845052672
 #end_IndexMillisecondGO-mloc
 
 #start_IndexMillisecondGO-name
@@ -56145,13 +56159,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexMillisecondGO-cumprod()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexMillisecondGO-cumprod()
 
 #start_IndexMillisecondGO-cumsum()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexMillisecondGO-cumsum()
 
 #start_IndexMillisecondGO-difference()
@@ -56914,7 +56928,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMillisecondGO-__abs__()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecondGO-__abs__()
 
 #start_IndexMillisecondGO-__invert__()
@@ -56926,7 +56940,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMillisecondGO-__neg__()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecondGO-__neg__()
 
 #start_IndexMillisecondGO-__pos__()
@@ -57704,7 +57718,7 @@ None     <IndexMicrosecond>
 #start_IndexMicrosecond-mloc
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-140632337732592
+94665845744128
 #end_IndexMicrosecond-mloc
 
 #start_IndexMicrosecond-name
@@ -57842,13 +57856,13 @@ True
 #start_IndexMicrosecond-cumprod()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexMicrosecond-cumprod()
 
 #start_IndexMicrosecond-cumsum()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexMicrosecond-cumsum()
 
 #start_IndexMicrosecond-difference()
@@ -58596,7 +58610,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMicrosecond-__abs__()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecond-__abs__()
 
 #start_IndexMicrosecond-__invert__()
@@ -58608,7 +58622,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMicrosecond-__neg__()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecond-__neg__()
 
 #start_IndexMicrosecond-__pos__()
@@ -59388,7 +59402,7 @@ None     <IndexMicrosecondGO>
 #start_IndexMicrosecondGO-mloc
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-140632337360912
+94665851444992
 #end_IndexMicrosecondGO-mloc
 
 #start_IndexMicrosecondGO-name
@@ -59538,13 +59552,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexMicrosecondGO-cumprod()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexMicrosecondGO-cumprod()
 
 #start_IndexMicrosecondGO-cumsum()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexMicrosecondGO-cumsum()
 
 #start_IndexMicrosecondGO-difference()
@@ -60307,7 +60321,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMicrosecondGO-__abs__()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecondGO-__abs__()
 
 #start_IndexMicrosecondGO-__invert__()
@@ -60319,7 +60333,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMicrosecondGO-__neg__()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecondGO-__neg__()
 
 #start_IndexMicrosecondGO-__pos__()
@@ -61099,7 +61113,7 @@ None     <IndexNanosecond>
 #start_IndexNanosecond-mloc
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.mloc
-140632289124336
+94665857188800
 #end_IndexNanosecond-mloc
 
 #start_IndexNanosecond-name
@@ -61237,13 +61251,13 @@ True
 #start_IndexNanosecond-cumprod()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexNanosecond-cumprod()
 
 #start_IndexNanosecond-cumsum()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexNanosecond-cumsum()
 
 #start_IndexNanosecond-difference()
@@ -61991,7 +62005,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexNanosecond-__abs__()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecond-__abs__()
 
 #start_IndexNanosecond-__invert__()
@@ -62003,7 +62017,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexNanosecond-__neg__()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecond-__neg__()
 
 #start_IndexNanosecond-__pos__()
@@ -62782,7 +62796,7 @@ None     <IndexNanosecondGO>
 #start_IndexNanosecondGO-mloc
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.mloc
-140632289620656
+94665851915744
 #end_IndexNanosecondGO-mloc
 
 #start_IndexNanosecondGO-name
@@ -62932,13 +62946,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexNanosecondGO-cumprod()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumprod()
-UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
 #end_IndexNanosecondGO-cumprod()
 
 #start_IndexNanosecondGO-cumsum()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumsum()
-UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
 #end_IndexNanosecondGO-cumsum()
 
 #start_IndexNanosecondGO-difference()
@@ -63701,7 +63715,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexNanosecondGO-__abs__()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecondGO-__abs__()
 
 #start_IndexNanosecondGO-__invert__()
@@ -63713,7 +63727,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexNanosecondGO-__neg__()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
+UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecondGO-__neg__()
 
 #start_IndexNanosecondGO-__pos__()
@@ -64584,7 +64598,7 @@ z        <IndexDate>
 #start_IndexHierarchy-mloc
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.mloc
-[140632290052848 140632290742640 140632250716784]
+[94665840137904 94665842840656 94665839537216]
 #end_IndexHierarchy-mloc
 
 #start_IndexHierarchy-name
@@ -64602,7 +64616,7 @@ z        <IndexDate>
 #start_IndexHierarchy-nbytes
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-693
+677
 #end_IndexHierarchy-nbytes
 
 #start_IndexHierarchy-ndim
@@ -64988,13 +65002,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x103c261f0> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f8d5b36c430> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x103e75dc0> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f8cd8955670> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -65121,7 +65135,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x103c263a0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f8d5b36c5e0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -65183,7 +65197,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x103c26550>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f8d5b36c790>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -66449,7 +66463,7 @@ XYZ              12/31/1517
 #start_IndexHierarchy-via_T.__floordiv__()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       inf]
+[[      nan       nan]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -66604,7 +66618,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexHierarchy-via_T.__rfloordiv__()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       inf]
+[[      nan       nan]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -66727,7 +66741,7 @@ XYZ              12/31/1517
 >>> ih.via_values.apply(np.sin)
 <IndexHierarchy: ('x', 'y', 'z')>
 0.0                               -0.15853338004399595 0.5514266812416906
-0.8414709848078965                0.3130570127901234   0.5514266812416906
+0.8414709848078965                0.31305701279012343  0.5514266812416906
 0.8414709848078965                -0.15853338004399595 0.5514266812416906
 <float64>                         <float64>            <float64>
 #end_IndexHierarchy-via_values.apply()
@@ -66907,7 +66921,7 @@ z        <IndexDateGO>
 #start_IndexHierarchyGO-mloc
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.mloc
-[140632290052848 140632294689616 140632294805424]
+[94665840137904 94665843581888 94665839933856]
 #end_IndexHierarchyGO-mloc
 
 #start_IndexHierarchyGO-name
@@ -66925,7 +66939,7 @@ z        <IndexDateGO>
 #start_IndexHierarchyGO-nbytes
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-693
+677
 #end_IndexHierarchyGO-nbytes
 
 #start_IndexHierarchyGO-ndim
@@ -67332,13 +67346,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x103c261f0> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f8d5b36c430> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x103e75dc0> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f8cd8955670> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -67465,7 +67479,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x103c263a0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f8d5b36c5e0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -67527,7 +67541,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x103c26550>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f8d5b36c790>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -68793,7 +68807,7 @@ XYZ                12/31/1517
 #start_IndexHierarchyGO-via_T.__floordiv__()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       inf]
+[[      nan       nan]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -68948,7 +68962,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexHierarchyGO-via_T.__rfloordiv__()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       inf]
+[[      nan       nan]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -69071,7 +69085,7 @@ XYZ                12/31/1517
 >>> ih.via_values.apply(np.sin)
 <IndexHierarchyGO: ('x', 'y', 'z')>
 0.0                                 -0.15853338004399595 0.5514266812416906
-0.8414709848078965                  0.3130570127901234   0.5514266812416906
+0.8414709848078965                  0.31305701279012343  0.5514266812416906
 0.8414709848078965                  -0.15853338004399595 0.5514266812416906
 <float64>                           <float64>            <float64>
 #end_IndexHierarchyGO-via_values.apply()
@@ -69083,4 +69097,1207 @@ XYZ                12/31/1517
  [ 0.84147098  0.31305701  0.55142668]
  [ 0.84147098 -0.15853338  0.55142668]]
 #end_IndexHierarchyGO-via_values.__array_ufunc__()
+
+#start_Bus-__init__()
+>>> sf.Bus((10, 2, 8), index=('a', 'b', 'c'))
+ErrorInitBus("supplied <class 'int'> is not a Frame or FrameDeferred.")
+#end_Bus-__init__()
+
+#start_Bus-from_concat()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> sf.Bus.from_concat((b1, b2))
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+#end_Bus-from_concat()
+
+#start_Bus-from_dict()
+>>> sf.Bus.from_dict(dict(j=sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), k=sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')))
+<Bus>
+<Index>
+j       Frame
+k       Frame
+<<U1>   <object>
+#end_Bus-from_dict()
+
+#start_Bus-from_frames()
+>>> sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+#end_Bus-from_frames()
+
+#start_Bus-from_hdf5()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.to_hdf5('/tmp/b.hdf5')
+>>> sf.Bus.from_hdf5('/tmp/b.hdf5')
+<Bus>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+<<U1>   <object>
+#end_Bus-from_hdf5()
+
+#start_Bus-from_items()
+>>> sf.Bus.from_items((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'))))
+<Bus>
+<Index>
+i       Frame
+j       Frame
+<<U1>   <object>
+#end_Bus-from_items()
+
+#start_Bus-from_series()
+>>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
+>>> f2 = sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')
+>>> s = sf.Series((f1, f2), index=(f1.name, f2.name))
+>>> sf.Bus.from_series(s)
+<Bus>
+<Index>
+x       Frame
+y       Frame
+<<U1>   <object>
+#end_Bus-from_series()
+
+#start_Bus-from_sqlite()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.to_sqlite('/tmp/b.sqlite')
+>>> sf.Bus.from_sqlite('/tmp/b.sqlite')
+<Bus>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+<<U1>   <object>
+#end_Bus-from_sqlite()
+
+#start_Bus-from_xlsx()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.to_xlsx('/tmp/b.xlsx')
+>>> sf.Bus.from_xlsx('/tmp/b.xlsx')
+<Bus>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+<<U1>   <object>
+#end_Bus-from_xlsx()
+
+#start_Bus-from_zip_csv()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.to_zip_csv('/tmp/b.zip')
+>>> sf.Bus.from_zip_csv('/tmp/b.zip')
+<Bus>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+<<U1>   <object>
+#end_Bus-from_zip_csv()
+
+#start_Bus-from_zip_npz()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.to_zip_npz('/tmp/b.zip')
+>>> sf.Bus.from_zip_npz('/tmp/b.zip')
+<Bus>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+<<U1>   <object>
+#end_Bus-from_zip_npz()
+
+#start_Bus-from_zip_parquet()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.to_zip_parquet('/tmp/b.zip')
+>>> sf.Bus.from_zip_parquet('/tmp/b.zip')
+<Bus>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+<<U1>   <object>
+#end_Bus-from_zip_parquet()
+
+#start_Bus-from_zip_pickle()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.to_zip_pickle('/tmp/b.zip')
+>>> sf.Bus.from_zip_pickle('/tmp/b.zip')
+<Bus>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+<<U1>   <object>
+#end_Bus-from_zip_pickle()
+
+#start_Bus-from_zip_tsv()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.to_zip_tsv('/tmp/b.zip')
+>>> sf.Bus.from_zip_tsv('/tmp/b.zip')
+<Bus>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+<<U1>   <object>
+#end_Bus-from_zip_tsv()
+
+#start_Bus-to_hdf5()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.to_hdf5('/tmp/b.hdf5')
+#end_Bus-to_hdf5()
+
+#start_Bus-to_series()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.to_series()
+<Series: i>
+<Index>
+x           Frame
+y           Frame
+<<U1>       <object>
+#end_Bus-to_series()
+
+#start_Bus-to_sqlite()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.to_sqlite('/tmp/b.sqlite')
+#end_Bus-to_sqlite()
+
+#start_Bus-to_xlsx()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.to_xlsx('/tmp/b.xlsx')
+#end_Bus-to_xlsx()
+
+#start_Bus-to_zip_csv()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.to_zip_csv('/tmp/b.zip')
+#end_Bus-to_zip_csv()
+
+#start_Bus-to_zip_npz()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.to_zip_npz('/tmp/b.zip')
+#end_Bus-to_zip_npz()
+
+#start_Bus-to_zip_parquet()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.to_zip_parquet('/tmp/b.zip')
+#end_Bus-to_zip_parquet()
+
+#start_Bus-to_zip_pickle()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.to_zip_pickle('/tmp/b.zip')
+#end_Bus-to_zip_pickle()
+
+#start_Bus-to_zip_tsv()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.to_zip_tsv('/tmp/b.zip')
+#end_Bus-to_zip_tsv()
+
+#start_Bus-STATIC
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.STATIC
+False
+#end_Bus-STATIC
+
+#start_Bus-dtype
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.dtype
+object
+#end_Bus-dtype
+
+#start_Bus-dtypes
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.dtypes
+<Frame>
+<Index> a        b        c        d        <<U1>
+<Index>
+x       int64    int64    None     None
+y       None     None     bool     bool
+<<U1>   <object> <object> <object> <object>
+#end_Bus-dtypes
+
+#start_Bus-index
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.index
+<Index>
+x
+y
+<<U1>
+#end_Bus-index
+
+#start_Bus-mloc
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.mloc
+<Series>
+<Index>
+x        (94665839439920,)
+y        (94665839865856,)
+<<U1>    <object>
+#end_Bus-mloc
+
+#start_Bus-name
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.name
+i
+#end_Bus-name
+
+#start_Bus-nbytes
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.nbytes
+54
+#end_Bus-nbytes
+
+#start_Bus-ndim
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.ndim
+1
+#end_Bus-ndim
+
+#start_Bus-shape
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.shape
+(2,)
+#end_Bus-shape
+
+#start_Bus-shapes
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.shapes
+<Series: shape>
+<Index>
+x               (3, 2)
+y               (3, 2)
+<<U1>           <object>
+#end_Bus-shapes
+
+#start_Bus-size
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.size
+2
+#end_Bus-size
+
+#start_Bus-status
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.status
+<Frame>
+<Index> loaded size      nbytes    shape    <<U6>
+<Index>
+x       True   6.0       48.0      (3, 2)
+y       True   6.0       6.0       (3, 2)
+<<U1>   <bool> <float64> <float64> <object>
+#end_Bus-status
+
+#start_Bus-__bool__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> bool(b)
+ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+#end_Bus-__bool__()
+
+#start_Bus-__len__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> len(b)
+2
+#end_Bus-__len__()
+
+#start_Bus-equals()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> b1.equals(b2)
+False
+#end_Bus-equals()
+
+#start_Bus-head()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b.head(2)
+<Bus>
+<Index>
+x       Frame
+y       Frame
+<<U1>   <object>
+#end_Bus-head()
+
+#start_Bus-rehierarch()
+>>> b = sf.Bus.from_items(((('i', 1024), sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), (('j', 4096), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), (('j', 2048), sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'))), index_constructor=sf.IndexHierarchy.from_labels)
+>>> b
+<Bus>
+<IndexHierarchy>
+i                1024    Frame
+j                4096    Frame
+j                2048    Frame
+<<U1>            <int64> <object>
+>>> b.rehierarch((1, 0))
+<Bus>
+<IndexHierarchy>
+1024             i     Frame
+4096             j     Frame
+2048             j     Frame
+<int64>          <<U1> <object>
+#end_Bus-rehierarch()
+
+#start_Bus-reindex()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.reindex(('y', 'z'), fill_value=sf.Frame()).status
+<Frame>
+<Index> loaded size      nbytes    shape    <<U6>
+<Index>
+y       True   6.0       6.0       (3, 2)
+z       True   0.0       0.0       (0, 0)
+<<U1>   <bool> <float64> <float64> <object>
+#end_Bus-reindex()
+
+#start_Bus-relabel()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.relabel(('A', 'B'))
+<Bus: i>
+<Index>
+A        Frame
+B        Frame
+<<U1>    <object>
+>>> b.relabel(dict(x='A'))
+<Bus: i>
+<Index>
+A        Frame
+y        Frame
+<<U1>    <object>
+>>> b.relabel(lambda l: f'+{l.upper()}+')
+<Bus: i>
+<Index>
++X+      Frame
++Y+      Frame
+<<U3>    <object>
+#end_Bus-relabel()
+
+#start_Bus-relabel_flat()
+>>> b = sf.Bus.from_items(((('i', 1024), sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), (('j', 4096), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), (('j', 2048), sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'))), index_constructor=sf.IndexHierarchy.from_labels)
+>>> b
+<Bus>
+<IndexHierarchy>
+i                1024    Frame
+j                4096    Frame
+j                2048    Frame
+<<U1>            <int64> <object>
+>>> b.relabel_flat()
+<Bus>
+<Index>
+('i', 1024) Frame
+('j', 4096) Frame
+('j', 2048) Frame
+<object>    <object>
+#end_Bus-relabel_flat()
+
+#start_Bus-relabel_level_add()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.relabel_level_add(2048)
+<Bus: i>
+<IndexHierarchy>
+2048             x     Frame
+2048             y     Frame
+<int64>          <<U1> <object>
+#end_Bus-relabel_level_add()
+
+#start_Bus-relabel_level_drop()
+>>> b = sf.Bus.from_items(((('i', 1024), sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), (('j', 4096), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), (('j', 2048), sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'))), index_constructor=sf.IndexHierarchy.from_labels)
+>>> b
+<Bus>
+<IndexHierarchy>
+i                1024    Frame
+j                4096    Frame
+j                2048    Frame
+<<U1>            <int64> <object>
+>>> b.relabel_level_drop()
+<Bus>
+<Index>
+1024    Frame
+4096    Frame
+2048    Frame
+<int64> <object>
+#end_Bus-relabel_level_drop()
+
+#start_Bus-rename()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.rename('j')
+<Bus: j>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+#end_Bus-rename()
+
+#start_Bus-roll()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b.roll(2)
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+#end_Bus-roll()
+
+#start_Bus-shift()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b.shift(2, fill_value=sf.Frame()).status
+<Frame>
+<Index> loaded size      nbytes    shape    <<U6>
+<Index>
+x       True   0.0       0.0       (0, 0)
+y       True   0.0       0.0       (0, 0)
+v       True   6.0       48.0      (3, 2)
+w       True   6.0       6.0       (3, 2)
+<<U1>   <bool> <float64> <float64> <object>
+#end_Bus-shift()
+
+#start_Bus-sort_index()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b.sort_index()
+<Bus>
+<Index>
+v       Frame
+w       Frame
+x       Frame
+y       Frame
+<<U1>   <object>
+>>> b.sort_index(ascending=False)
+<Bus>
+<Index>
+y       Frame
+x       Frame
+w       Frame
+v       Frame
+<<U1>   <object>
+#end_Bus-sort_index()
+
+#start_Bus-sort_values()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b.sort_values(key=lambda s:s.iter_element().apply(lambda f: f.nbytes))
+<Bus>
+<Index>
+y       Frame
+w       Frame
+x       Frame
+v       Frame
+<<U1>   <object>
+>>> b.sort_values(key=lambda s:s.iter_element().apply(lambda f: f.nbytes), ascending=False)
+<Bus>
+<Index>
+v       Frame
+x       Frame
+w       Frame
+y       Frame
+<<U1>   <object>
+#end_Bus-sort_values()
+
+#start_Bus-tail()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b.tail(2)
+<Bus>
+<Index>
+v       Frame
+w       Frame
+<<U1>   <object>
+#end_Bus-tail()
+
+#start_Bus-unpersist()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b1.to_zip_npz('/tmp/b.zip')
+>>> b2 = sf.Bus.from_zip_npz('/tmp/b.zip')
+>>> b2
+<Bus>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+<<U1>   <object>
+>>> tuple(b2.values)
+(<Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>, <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>)
+>>> b2
+<Bus>
+<Index>
+x       Frame
+y       Frame
+<<U1>   <object>
+>>> b2.unpersist()
+>>> b2
+<Bus>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+<<U1>   <object>
+#end_Bus-unpersist()
+
+#start_Bus-__contains__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.__contains__('a')
+False
+#end_Bus-__contains__()
+
+#start_Bus-__iter__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> tuple(b.__iter__())
+('x', 'y')
+#end_Bus-__iter__()
+
+#start_Bus-__reversed__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> tuple(b.__reversed__())
+('y', 'x')
+#end_Bus-__reversed__()
+
+#start_Bus-get()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.get('a')
+>>> b.get('z', -1)
+-1
+#end_Bus-get()
+
+#start_Bus-items()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> tuple(b.items())
+(('x', <Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>), ('y', <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>))
+#end_Bus-items()
+
+#start_Bus-keys()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.keys()
+<Index>
+x
+y
+<<U1>
+#end_Bus-keys()
+
+#start_Bus-values
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.values
+[<Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>
+ <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>]
+#end_Bus-values
+
+#start_Bus-interface
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.interface
+<Frame: Bus>
+<Index>                              cls_name group           doc                  <<U18>
+<Index: signature>
+__init__(frames, *, index, index_... Bus      Constructor     Default Bus const...
+from_concat(containers, *, index,... Bus      Constructor     Concatenate multi...
+from_dict(mapping, *, name, index... Bus      Constructor     Bus construction ...
+from_frames(frames, *, index_cons... Bus      Constructor     Return a Bus from...
+from_hdf5(fp, *, config, max_pers... Bus      Constructor     Given a file path...
+from_items(pairs, *, config, name... Bus      Constructor     Return a Bus from...
+from_series(series, *, store, con... Bus      Constructor     Create a Bus from...
+from_sqlite(fp, *, config, max_pe... Bus      Constructor     Given a file path...
+from_xlsx(fp, *, config, max_pers... Bus      Constructor     Given a file path...
+from_zip_csv(fp, *, config, max_p... Bus      Constructor     Given a file path...
+from_zip_npz(fp, *, config, max_p... Bus      Constructor     Given a file path...
+from_zip_parquet(fp, *, config, m... Bus      Constructor     Given a file path...
+from_zip_pickle(fp, *, config, ma... Bus      Constructor     Given a file path...
+from_zip_tsv(fp, *, config, max_p... Bus      Constructor     Given a file path...
+to_hdf5(fp, *, config)               Bus      Exporter        Write the complet...
+to_series()                          Bus      Exporter        Return a Series w...
+to_sqlite(fp, *, config)             Bus      Exporter        Write the complet...
+...                                  ...      ...             ...
+loc[key]                             Bus      Selector
+iter_element()                       Bus      Iterator        Iterator of eleme...
+iter_element().apply(func, *, dty... Bus      Iterator        Apply a function ...
+iter_element().apply_iter(func)      Bus      Iterator        Apply a function ...
+iter_element().apply_iter_items(f... Bus      Iterator        Apply a function ...
+iter_element().apply_pool(func, *... Bus      Iterator        Apply a function ...
+iter_element_items()                 Bus      Iterator        Iterator of label...
+iter_element_items().apply(func, ... Bus      Iterator        Apply a function ...
+iter_element_items().apply_iter(f... Bus      Iterator        Apply a function ...
+iter_element_items().apply_iter_i... Bus      Iterator        Apply a function ...
+iter_element_items().apply_pool(f... Bus      Iterator        Apply a function ...
+__eq__(value)                        Bus      Operator Binary Return self==value.
+__ge__(value)                        Bus      Operator Binary Return self>=value.
+__gt__(value)                        Bus      Operator Binary Return self>value.
+__le__(value)                        Bus      Operator Binary Return self<=value.
+__lt__(value)                        Bus      Operator Binary Return self<value.
+__ne__(value)                        Bus      Operator Binary Return self!=value.
+<<U58>                               <<U3>    <<U15>          <<U83>
+#end_Bus-interface
+
+#start_Bus-__repr__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> repr(b)
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+#end_Bus-__repr__()
+
+#start_Bus-__str__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> str(b)
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+#end_Bus-__str__()
+
+#start_Bus-display()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.display()
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.display(sf.DisplayConfig(type_show=False))
+x Frame
+y Frame
+#end_Bus-display()
+
+#start_Bus-display_tall()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.display_tall()
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+#end_Bus-display_tall()
+
+#start_Bus-display_wide()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.display_wide()
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+#end_Bus-display_wide()
+
+#start_Bus-drop[]
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b.drop['x']
+<Bus>
+<Index>
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b.drop['v':]
+<Bus>
+<Index>
+x       Frame
+y       Frame
+<<U1>   <object>
+>>> b.drop[['w', 'y']]
+<Bus>
+<Index>
+x       Frame
+v       Frame
+<<U1>   <object>
+#end_Bus-drop[]
+
+#start_Bus-drop.iloc[]
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b.drop.iloc[1]
+<Bus>
+<Index>
+x       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b.drop.iloc[1:]
+<Bus>
+<Index>
+x       Frame
+<<U1>   <object>
+>>> b.drop.iloc[[0, 3]]
+<Bus>
+<Index>
+y       Frame
+v       Frame
+<<U1>   <object>
+#end_Bus-drop.iloc[]
+
+#start_Bus-drop.loc[]
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b.drop.loc['w']
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+<<U1>   <object>
+>>> b.drop.loc['v':]
+<Bus>
+<Index>
+x       Frame
+y       Frame
+<<U1>   <object>
+>>> b.drop.loc[['v', 'x']]
+<Bus>
+<Index>
+y       Frame
+w       Frame
+<<U1>   <object>
+#end_Bus-drop.loc[]
+
+#start_Bus-[]
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b['w']
+<Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>
+>>> b['v':]
+<Bus>
+<Index>
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b[['v', 'x']]
+<Bus>
+<Index>
+v       Frame
+x       Frame
+<<U1>   <object>
+#end_Bus-[]
+
+#start_Bus-iloc[]
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b.iloc[1]
+<Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>
+>>> b.iloc[1:]
+<Bus>
+<Index>
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b.iloc[[0, 3]]
+<Bus>
+<Index>
+x       Frame
+w       Frame
+<<U1>   <object>
+#end_Bus-iloc[]
+
+#start_Bus-loc[]
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b.loc['w']
+<Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>
+>>> b.loc['v':]
+<Bus>
+<Index>
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> b.loc[['v', 'x']]
+<Bus>
+<Index>
+v       Frame
+x       Frame
+<<U1>   <object>
+#end_Bus-loc[]
+
+#start_Bus-iter_element()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> tuple(b.iter_element())
+(<Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>, <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>, <Frame: v>
+<Index>    a       b       <<U1>
+<Index>
+p          40      41
+q          42      43
+r          44      45
+<<U1>      <int64> <int64>, <Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>)
+#end_Bus-iter_element()
+
+#start_Bus-iter_element().apply()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b.iter_element().apply(lambda f: f.shape)
+<Series>
+<Index>
+x        (3, 2)
+y        (3, 2)
+v        (3, 2)
+w        (3, 2)
+<<U1>    <object>
+#end_Bus-iter_element().apply()
+
+#start_Bus-iter_element().apply_iter()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> tuple(b.iter_element().apply_iter(lambda f: f.nbytes))
+(48, 6, 48, 6)
+#end_Bus-iter_element().apply_iter()
+
+#start_Bus-iter_element().apply_iter_items()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> tuple(b.iter_element().apply_iter_items(lambda f: f.nbytes))
+(('x', 48), ('y', 6), ('v', 48), ('w', 6))
+#end_Bus-iter_element().apply_iter_items()
+
+#start_Bus-iter_element().apply_pool()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> def func(f): return f.sum().sum()
+>>> b.iter_element().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+x        15
+y        3
+v        255
+w        4
+<<U1>    <int64>
+#end_Bus-iter_element().apply_pool()
+
+#start_Bus-iter_element_items()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> tuple(b.iter_element_items())
+(('x', <Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>), ('y', <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>), ('v', <Frame: v>
+<Index>    a       b       <<U1>
+<Index>
+p          40      41
+q          42      43
+r          44      45
+<<U1>      <int64> <int64>), ('w', <Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>))
+#end_Bus-iter_element_items()
+
+#start_Bus-iter_element_items().apply()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b.iter_element_items().apply(lambda l, f: f.size if l != 'v' else 0)
+<Series>
+<Index>
+x        6
+y        6
+v        0
+w        6
+<<U1>    <int64>
+#end_Bus-iter_element_items().apply()
+
+#start_Bus-iter_element_items().apply_iter()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> tuple(b.iter_element_items().apply_iter(lambda l, f: f.shape if l != 'x' else 0))
+(0, (3, 2), (3, 2), (3, 2))
+#end_Bus-iter_element_items().apply_iter()
+
+#start_Bus-iter_element_items().apply_iter_items()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> tuple(b.iter_element_items().apply_iter_items(lambda l, f: f.shape if l != 'x' else 0))
+(('x', 0), ('y', (3, 2)), ('v', (3, 2)), ('w', (3, 2)))
+#end_Bus-iter_element_items().apply_iter_items()
+
+#start_Bus-iter_element_items().apply_pool()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b
+<Bus>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> def func(pair): return pair[1].sum().sum() if pair[0] != 'v' else -1
+>>> b.iter_element_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+x        15
+y        3
+v        -1
+w        4
+<<U1>    <int64>
+#end_Bus-iter_element_items().apply_pool()
+
+#start_Bus-__eq__()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> b1 == b2
+False
+>>> b1 == b1
+True
+#end_Bus-__eq__()
+
+#start_Bus-__ge__()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> b1 >= b2
+TypeError("'>=' not supported between instances of 'Bus' and 'Bus'")
+>>> b1 >= b1
+TypeError("'>=' not supported between instances of 'Bus' and 'Bus'")
+#end_Bus-__ge__()
+
+#start_Bus-__gt__()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> b1 > b2
+TypeError("'>' not supported between instances of 'Bus' and 'Bus'")
+>>> b1 > b1
+TypeError("'>' not supported between instances of 'Bus' and 'Bus'")
+#end_Bus-__gt__()
+
+#start_Bus-__le__()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> b1 <= b2
+TypeError("'<=' not supported between instances of 'Bus' and 'Bus'")
+>>> b1 <= b1
+TypeError("'<=' not supported between instances of 'Bus' and 'Bus'")
+#end_Bus-__le__()
+
+#start_Bus-__lt__()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> b1 < b2
+TypeError("'<' not supported between instances of 'Bus' and 'Bus'")
+>>> b1 < b1
+TypeError("'<' not supported between instances of 'Bus' and 'Bus'")
+#end_Bus-__lt__()
+
+#start_Bus-__ne__()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> b1 != b2
+True
+>>> b1 != b1
+False
+#end_Bus-__ne__()
 
