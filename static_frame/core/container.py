@@ -96,6 +96,8 @@ class ContainerBase(metaclass=InterfaceMeta):
                 ))
         return self.display(config=DisplayConfig(**args))
 
+
+
     #---------------------------------------------------------------------------
     def equals(self,
             other: tp.Any,
@@ -114,6 +116,24 @@ class ContainerBase(metaclass=InterfaceMeta):
         Raises ValueError to prohibit ambiguous use of truethy evaluation.
         '''
         raise ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+
+    def __lt__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
+    def __le__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
+    def __eq__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
+    def __ne__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
+    def __gt__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
+    def __ge__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
 
     #---------------------------------------------------------------------------
     def to_visidata(self) -> None:
