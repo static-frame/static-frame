@@ -107,6 +107,10 @@ class ContainerMap:
         from static_frame.core.index_datetime import IndexMicrosecondGO
         from static_frame.core.index_datetime import IndexNanosecond
         from static_frame.core.index_datetime import IndexNanosecondGO
+        from static_frame.core.bus import Bus
+        from static_frame.core.batch import Batch
+        from static_frame.core.yarn import Yarn
+        from static_frame.core.quilt import Quilt
 
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
