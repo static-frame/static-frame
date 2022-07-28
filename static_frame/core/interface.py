@@ -905,7 +905,9 @@ class InterfaceSummary(Features):
             elif hasattr(obj, '__doc__'):
                 doc = cls.scrub_doc(obj.__doc__)
 
-            if hasattr(obj, '__name__'):
+            if name_attr == 'values':
+                name = name_attr # on Batch this is generator that has an generic name
+            elif hasattr(obj, '__name__'):
                 name = obj.__name__
             else: # some attributes yield objects like arrays, Series, or Frame
                 name = name_attr
@@ -973,7 +975,10 @@ class InterfaceSummary(Features):
                         )
             elif callable(obj): # general methods
                 yield from InterfaceRecord.gen_from_method(**kwargs)
-            else: # attributes
+            else: #
+                print(name)
+                if name == 'values':
+                    import ipdb; ipdb.set_trace()
                 yield InterfaceRecord(cls_name,
                         InterfaceGroup.Attribute,
                         name,

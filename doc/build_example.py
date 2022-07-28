@@ -4110,240 +4110,106 @@ class ExGenBatch(ExGen):
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield 'bt'
             yield 'bt.to_frame()'
-    #     elif attr == 'from_arrow':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"aw = f1.to_arrow()"
-    #         yield 'aw'
-    #         yield f"{iattr}(aw, index_depth=1)"
-    #     elif attr == 'from_clipboard':
-    #         if sys.platform != 'darwin':
-    #             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #             yield f"f1.to_clipboard()"
-    #             yield f"{iattr}(index_depth=1)"
-    #     elif attr == 'from_concat':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'
-    #         yield f'{iattr}((f1, f2), axis=1)'
-    #         yield f"{iattr}((f1, f2.relabel(columns=('a', 'b'))), axis=0, index=sf.IndexAutoFactory)"
-    #     elif attr == 'from_concat_items':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'
-    #         yield f"{iattr}(((f1.name, f1), (f2.name, f2)), axis=1)"
-    #         yield f"{iattr}(((f1.name, f1), (f2.name, f2.relabel(columns=('a', 'b')))), axis=0)"
-    #     elif attr == 'from_csv':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.to_csv('/tmp/f.csv')"
-    #         yield "open('/tmp/f.csv').read()"
-    #         yield f"{iattr}('/tmp/f.csv', index_depth=1)"
-    #     elif attr == 'from_delimited':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.to_delimited('/tmp/f.psv', delimiter='|')"
-    #         yield "open('/tmp/f.psv').read()"
-    #         yield f"{iattr}('/tmp/f.psv', delimiter='|', index_depth=1)"
-    #     elif attr == 'from_dict':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_A, arg_first=False)})'
-    #     elif attr == 'from_dict_records':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_A, arg_first=False)})'
-    #     elif attr == 'from_dict_records_items':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A, arg_first=False)})'
-    #     elif attr == 'from_element':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_ELEMENT_A)})'
-    #     elif attr == 'from_element_items':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_ELEMENT_ITEMS_A)})'
-    #     elif attr == 'from_elements':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_ELEMENTS_A)})'
-    #     elif attr == 'from_fields':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+        elif attr == 'from_frames':
+            yield f'bt = {icls}.from_frames((sf.Frame({kwa(FRAME_INIT_A1)}), sf.Frame({kwa(FRAME_INIT_A2)})))'
+            yield 'bt'
+            yield 'bt.to_frame()'
+        elif attr == 'from_hdf5':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_hdf5('/tmp/f.hdf5')"
+            yield f"bt2 = {iattr}('/tmp/f.hdf5', config=sf.StoreConfig(index_depth=1))"
+            yield 'bt2.to_frame()'
+        elif attr == 'from_sqlite':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_sqlite('/tmp/f.sqlite')"
+            yield f"bt2 = {iattr}('/tmp/f.sqlite', config=sf.StoreConfig(index_depth=1))"
+            yield 'bt2.to_frame()'
+        elif attr == 'from_xlsx':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_xlsx('/tmp/f.xlsx')"
+            yield f"bt2 = {iattr}('/tmp/f.xlsx', config=sf.StoreConfig(index_depth=1))"
+            yield 'bt2.to_frame()'
+        elif attr == 'from_zip_csv':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_zip_csv('/tmp/f.zip')"
+            yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))"
+            yield 'bt2.to_frame()'
+        elif attr == 'from_zip_npz':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_zip_npz('/tmp/f.zip')"
+            yield f"bt2 = {iattr}('/tmp/f.zip')"
+            yield 'bt2.to_frame()'
+        elif attr == 'from_zip_parquet':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_zip_parquet('/tmp/f.zip')"
+            yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))"
+            yield 'bt2.to_frame()'
+        elif attr == 'from_zip_pickle':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_zip_pickle('/tmp/f.zip')"
+            yield f"bt2 = {iattr}('/tmp/f.zip')"
+            yield 'bt2.to_frame()'
+        elif attr == 'from_zip_tsv':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_zip_tsv('/tmp/f.zip')"
+            yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))"
+            yield 'bt2.to_frame()'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
-    #     elif attr == 'from_hdf5':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
-    #         yield f"f1.to_hdf5('/tmp/f.hdf5')"
-    #         yield f"f1.from_hdf5('/tmp/f.hdf5', label='x', index_depth=1)"
+    @staticmethod
+    def exporter(row: sf.Series) -> tp.Iterator[str]:
 
-    #     elif attr == 'from_items':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_ITEMS_A)})'
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
 
-    #     elif attr == 'from_json':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_JSON_A)})'
+        if attr in (
+                'to_bus()',
+                'to_frame()',
+                'to_series()',
+                ):
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.{attr_func}()"
+        elif attr == 'to_hdf5()':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.{attr_func}('/tmp/f.h5')"
+        elif attr == 'to_sqlite()':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.{attr_func}('/tmp/f.sqlite')"
+        elif attr == 'to_xlsx()':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.{attr_func}('/tmp/f.xlsx')"
+        elif attr in (
+                'to_zip_csv()',
+                'to_zip_npz()',
+                'to_zip_parquet()',
+                'to_zip_pickle()',
+                'to_zip_tsv()',
+                ):
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.{attr_func}('/tmp/f.zip')"
+        elif attr in ('to_html()',
+                'to_html_datatables()',
+                'to_visidata()',
+                ):
+            pass
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
-    #     elif attr == 'from_json_url':
-    #         pass
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.attribute(row, 'bt', '', BATCH_INIT_A)
 
-    #     elif attr == 'from_msgpack':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
-    #         yield f'mb = f1.to_msgpack()'
-    #         yield 'mb'
-    #         yield f'{iattr}(mb)'
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
 
-    #     elif attr == 'from_npy':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield f"f1.to_npy('/tmp/f.npy')"
-    #         yield f"{iattr}('/tmp/f.npy')"
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
 
-    #     elif attr == 'from_npy_mmap':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield f"f1.to_npy('/tmp/f.npy')"
-    #         yield f"f2, closer = {iattr}('/tmp/f.npy')"
-    #         yield 'f2'
-    #         yield 'closer() # close mmaps after usage'
-
-    #     elif attr == 'from_npz':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield f"f1.to_npz('/tmp/f.npz')"
-    #         yield f"{iattr}('/tmp/f.npz')"
-
-    #     elif attr == 'from_overlay':
-    #         yield f'f1 = {icls}.from_items({kwa(FRAME_INIT_FROM_ITEMS_B)})'
-    #         yield 'f1'
-    #         yield f'f2 = {icls}.from_items({kwa(FRAME_INIT_FROM_ITEMS_C)})'
-    #         yield 'f2'
-    #         yield f"{iattr}((f1, f2))"
-
-    #     elif attr == 'from_pandas':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
-    #         yield f'df = f1.to_pandas()'
-    #         yield 'df'
-    #         yield f'{iattr}(df, dtypes=dict(b=str))'
-
-    #     elif attr == 'from_parquet':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
-    #         yield f"f1.to_parquet('/tmp/f.parquet')"
-    #         yield f"{iattr}('/tmp/f.parquet', index_depth=1)"
-
-    #     elif attr == 'from_pickle':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield f"f1.to_pickle('/tmp/f.pickle')"
-    #         yield f"{iattr}('/tmp/f.pickle')"
-
-    #     elif attr == 'from_records':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_RECORDS_A)})'
-
-    #     elif attr == 'from_records_items':
-    #         yield f'{iattr}({kwa(FRAME_INIT_FROM_RECORDS_ITEMS_A)})'
-
-    #     elif attr == 'from_series':
-    #         yield f's = sf.Series({kwa(SERIES_INIT_S)})'
-    #         yield f'{iattr}(s)'
-
-    #     elif attr == 'from_sql':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield "f1.to_sqlite('/tmp/f.db')"
-    #         yield 'import sqlite3'
-    #         yield "conn = sqlite3.connect('/tmp/f.db')"
-    #         yield f'{iattr}("select * from x limit 2", connection=conn, index_depth=1)'
-
-    #     elif attr == 'from_sqlite':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield "f1.to_sqlite('/tmp/f.db')"
-    #         yield f"{iattr}('/tmp/f.db', label=f1.name, index_depth=1)"
-
-    #     elif attr == 'from_structured_array':
-    #         yield "sa = np.array([(False, 8), (True, 19)], dtype=[('a', bool), ('b', int)])"
-    #         yield 'sa'
-    #         yield f"{iattr}(sa)"
-
-    #     elif attr == 'from_tsv':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.to_tsv('/tmp/f.tsv')"
-    #         yield "open('/tmp/f.tsv').read()"
-    #         yield f"{iattr}('/tmp/f.tsv', index_depth=1)"
-
-    #     elif attr == 'from_xlsx':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.to_xlsx('/tmp/f.xlsx')"
-    #         yield f"{iattr}('/tmp/f.xlsx', index_depth=1)"
-
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
-
-    # @staticmethod
-    # def exporter(row: sf.Series) -> tp.Iterator[str]:
-
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
-
-    #     if attr in (
-    #             'to_arrow()',
-    #             'to_frame()',
-    #             'to_frame_go()',
-    #             'to_frame_he()',
-    #             'to_pairs()',
-    #             'to_pandas()',
-    #             'to_series_he()',
-    #             'to_series()',
-    #             'to_latex()',
-    #             'to_markdown()',
-    #             'to_msgpack()',
-    #             'to_rst()',
-    #             'to_xarray()',
-    #             ):
-    #         yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
-    #         yield f"s.{attr_func}()"
-    #     elif attr == 'to_clipboard()':
-    #         if sys.platform != 'darwin':
-    #             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #             yield f"f1.to_clipboard()"
-    #     elif attr == 'to_csv()':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.to_csv('/tmp/f.csv')"
-    #         yield "open('/tmp/f.csv').read()"
-    #     elif attr == 'to_delimited()':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.to_delimited('/tmp/f.psv', delimiter='|')"
-    #         yield "open('/tmp/f.psv').read()"
-    #     elif attr == 'to_hdf5()':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.to_hdf5('/tmp/f.h5')"
-    #     elif attr == 'to_npy()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield f"f1.to_npy('/tmp/f.npy')"
-    #         yield f"sf.Frame.from_npy('/tmp/f.npy')"
-    #     elif attr == 'to_npz()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield f"f1.to_npz('/tmp/f.npz')"
-    #         yield f"sf.Frame.from_npz('/tmp/f.npz')"
-    #     elif attr == 'to_parquet()':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.to_parquet('/tmp/f.parquet')"
-    #     elif attr == 'to_pickle()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield f"f1.to_pickle('/tmp/f.pickle')"
-    #         yield f"sf.Frame.from_pickle('/tmp/f.pickle')"
-    #     elif attr == 'to_sqlite()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield "f1.to_sqlite('/tmp/f.db')"
-    #         yield 'import sqlite3'
-    #         yield "conn = sqlite3.connect('/tmp/f.db')"
-    #         yield f'sf.Frame.from_sql("select * from x limit 2", connection=conn, index_depth=1)'
-    #     elif attr == 'to_tsv()':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.to_tsv('/tmp/f.tsv')"
-    #         yield "open('/tmp/f.tsv').read()"
-    #     elif attr == 'to_xlsx()':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.to_xlsx('/tmp/f.xlsx')"
-    #     elif attr in ('to_html()',
-    #             'to_html_datatables()',
-    #             'to_visidata()',
-    #             ):
-    #         pass
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
-
-    # @staticmethod
-    # def attribute(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.attribute(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
-
-    # @staticmethod
-    # def method(row: sf.Series) -> tp.Iterator[str]:
-
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
-
-    #     if attr in (
-    #             '__array__()',
+        if attr in (
+                # '__array__()',
     #             'max()',
     #             'mean()',
     #             'median()',
@@ -4355,16 +4221,19 @@ class ExGenBatch(ExGen):
     #             'std()',
     #             'var()',
     #             'transpose()',
-    #              ):
-    #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f.{attr_func}()"
+                 ):
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.{attr_func}()"
 
-    #     elif attr == '__array_ufunc__()':
-    #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"np.array((1, 0)) * f"
-    #     elif attr == '__bool__()':
-    #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"bool(f)"
+        elif attr == '__array__()':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"tuple(bt1.{attr_func}())"
+        elif attr == '__array_ufunc__()':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"(np.array((0.5, 0)) * bt1).to_frame()"
+        elif attr == '__bool__()':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bool(bt1)"
     #     elif attr == '__deepcopy__()':
     #         yield 'import copy'
     #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
@@ -4640,8 +4509,8 @@ class ExGenBatch(ExGen):
     #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
     #         yield f"f1.extend_items((('d', (1, 2, 3)), ('e', (4, 5, 6))))"
     #         yield 'f1'
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     # @staticmethod
     # def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
@@ -5442,9 +5311,9 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
     for ig in (
             InterfaceGroup.Constructor,
-            # InterfaceGroup.Exporter,
-            # InterfaceGroup.Attribute,
-            # InterfaceGroup.Method,
+            InterfaceGroup.Exporter,
+            InterfaceGroup.Attribute,
+            InterfaceGroup.Method,
             # InterfaceGroup.DictLike,
             # InterfaceGroup.Display,
             # InterfaceGroup.Assignment,
