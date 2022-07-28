@@ -90,9 +90,11 @@ SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series(**SERIES_INIT_A)).ite
 #-------------------------------------------------------------------------------
 FRAME_INIT_A1 = dict(data=b'np.arange(6).reshape(3,2)', index=(('p', 'q', 'r')), columns=(('a', 'b')), name='x')
 FRAME_INIT_A2 = dict(data=b'np.arange(40, 46).reshape(3,2)', index=(('p', 'q', 'r')), columns=(('a', 'b')), name='v')
+FRAME_INIT_A3 = dict(data=b'np.arange(100, 106).reshape(3,2) / 3', index=(('p', 'q', 'r')), columns=(('a', 'b')), name='x')
 
 FRAME_INIT_B1 = dict(data=b'(np.arange(6).reshape(3,2) % 2).astype(bool)', index=(('p', 'q', 'r')), columns=(('c', 'd')), name='y')
 FRAME_INIT_B2 = dict(data=b'(np.arange(6).reshape(3,2) % 3).astype(bool)', index=(('p', 'q', 'r')), columns=(('c', 'd')), name='w')
+
 
 FRAME_INIT_C = dict(data=b'(np.arange(6).reshape(3,2) * 4/3)', index=(('p', 'q', 'r')), columns=(('a', 'b')), name='y')
 FRAME_INIT_D= dict(data=b'(np.concatenate((np.arange(8) * 2, np.arange(8) ** 2)).reshape(4,4))', index=(('p', 'q', 'r', 's')), columns=(('a', 'b', 'c', 'd')), name='x')
@@ -116,12 +118,12 @@ FRAME_INIT_FROM_FIELDS_F = dict(fields=((10, 2, 0, 0), (8, 3, 8, 0), (1, 0, 0, 0
 FRAME_INIT_FROM_FIELDS_G = dict(fields=((0, 0, 10, 2), (0, 8, 3, 8), (0, 0, 0, 1)), columns=('a', 'b', 'c'), name='x')
 FRAME_INIT_FROM_FIELDS_H = dict(fields=((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_FIELDS_I = dict(fields=((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
-FRAME_INIT_FROM_FIELDS_J = dict(fields=((np.nan, np.nan, 10, 2), (np.nan, 8, 3, 8), (np.nan, np.nan, np.nan, 1)), columns=('a', 'b', 'c'), name='x')
+FRAME_INIT_FROM_FIELDS_J = dict(fields=((np.nan, np.nan, 10, 2), (np.nan, 8, 3, 8), (np.nan, np.nan, np.nan, 1)), columns=('a', 'b', 'c'), name='y')
 
 FRAME_INIT_FROM_FIELDS_K = dict(fields=((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 FRAME_INIT_FROM_FIELDS_L = dict(fields=((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
 
-FRAME_INIT_FROM_FIELDS_M = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=b"sf.IndexHierarchy.from_product((1, 2), ('p', 'q'))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+FRAME_INIT_FROM_FIELDS_M = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=b"sf.IndexHierarchy.from_product((1024, 2048), ('p', 'q'))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 
 FRAME_INIT_FROM_FIELDS_N = dict(fields=((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 FRAME_INIT_FROM_FIELDS_O = dict(fields=((1, 2, 0, 0), (2, 1, 2, 0), (1, 0, 2, 1)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -215,6 +217,20 @@ BUS_INIT_FROM_ITEMS_B = dict(pairs=((('i', 1024), f'sf.Frame({kwa(FRAME_INIT_A1)
 
 #-------------------------------------------------------------------------------
 BATCH_INIT_A = dict(items=(('i', f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8')), ('j', f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8'))))
+
+BATCH_INIT_B = dict(items=(('i', f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8')), ('j', f'sf.Frame({kwa(FRAME_INIT_A3)})'.encode('utf-8'))))
+
+# has Boolean
+BATCH_INIT_C = dict(items=(('i', f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8')), ('j', f'sf.Frame({kwa(FRAME_INIT_B2)})'.encode('utf-8'))))
+
+# has string, dt64
+BATCH_INIT_D = dict(items=(('i', f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_H)})'.encode('utf-8'))))
+
+# lots of NaNs
+BATCH_INIT_E = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_J)})'.encode('utf-8'))))
+
+# good from ranking
+BATCH_INIT_F = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'.encode('utf-8'))))
 
 
 #-------------------------------------------------------------------------------
@@ -4210,11 +4226,11 @@ class ExGenBatch(ExGen):
 
         if attr in (
                 # '__array__()',
-    #             'max()',
-    #             'mean()',
-    #             'median()',
-    #             'min()',
-    #             'prod()',
+                'max()',
+                'mean()',
+                'median()',
+                'min()',
+                'prod()',
     #             'cumprod()',
     #             'cumsum()',
     #             'sum()',
@@ -4222,18 +4238,18 @@ class ExGenBatch(ExGen):
     #             'var()',
     #             'transpose()',
                  ):
-            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
-            yield f"bt1.{attr_func}()"
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}().to_frame()"
 
         elif attr == '__array__()':
-            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
-            yield f"tuple(bt1.{attr_func}())"
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"tuple(bt.{attr_func}())"
         elif attr == '__array_ufunc__()':
-            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
-            yield f"(np.array((0.5, 0)) * bt1).to_frame()"
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"(np.array((0.5, 0)) * bt).to_frame()"
         elif attr == '__bool__()':
-            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
-            yield f"bool(bt1)"
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bool(bt)"
     #     elif attr == '__deepcopy__()':
     #         yield 'import copy'
     #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
@@ -4241,16 +4257,28 @@ class ExGenBatch(ExGen):
     #     elif attr == '__len__()':
     #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
     #         yield f"len(f)"
-    #     elif attr == '__round__()':
-    #         yield f'f = {icls}({kwa(FRAME_INIT_C)})'
-    #         yield 'f'
-    #         yield f"round(f, 1)"
-    #     elif attr in (
-    #             'all()',
-    #             'any()',
-    #             ):
-    #         yield f'f = {icls}({kwa(FRAME_INIT_B1)})'
-    #         yield f"f.{attr_func}()"
+        elif attr == '__round__()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
+            yield f"round(bt, 2).to_frame()"
+        elif attr in (
+                'all()',
+                'any()',
+                ):
+            yield f'bt = {icls}({kwa(BATCH_INIT_C)})'
+            yield f"bt.{attr_func}().to_frame()"
+        elif attr == 'apply()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_C)})'
+            yield f"bt.{attr_func}(lambda f: f.iter_element().apply(lambda e: '+' if e else '-')).to_frame()"
+        elif attr == 'apply_except()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
+            yield f"bt.{attr_func}(lambda f: f + 100, Exception).to_frame()"
+        elif attr == 'apply_items()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(lambda l, f: f * 100 if l == 'j' else f * 0.001).to_frame()"
+        elif attr == 'apply_items_except()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
+            yield f"bt.{attr_func}(lambda l, f: f * 100 if l == 'j' else f * 0.001, Exception).to_frame()"
+
     #     elif attr == 'astype[]()':
     #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
     #         yield 'f'
@@ -4259,137 +4287,103 @@ class ExGenBatch(ExGen):
     #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
     #         yield 'f'
     #         yield f"f.astype(float)"
-    #     elif attr == 'clip()':
-    #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(lower=2, upper=4)"
-    #     elif attr == 'count()':
-    #         yield f'f = {icls}.from_items({kwa(FRAME_INIT_FROM_ITEMS_B)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(skipna=True)"
-    #         yield f"f.{attr_func}(unique=True)"
+        elif attr == 'clip()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(lower=3, upper=41).to_frame()"
+        elif attr == 'count()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(skipna=True).to_frame()"
+            yield f"bt.{attr_func}(unique=True).to_frame()"
+        elif attr in ('cov()', 'cumprod()', 'cumsum()'):
+            yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
+            yield f"bt.{attr_func}().to_frame()"
+        elif attr in (
+                'drop_duplicated()',
+                'dropna()',
+                'duplicated()',
+                'unique()',
+                ):
+            yield f'bt = {icls}({kwa(BATCH_INIT_C)})'
+            yield f"bt.{attr_func}().to_frame()"
 
-    #     elif attr in ('cov()',):
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_D)})'
-    #         yield f"f1.{attr_func}()"
-    #     elif attr in (
-    #             'drop_duplicated()',
-    #             'dropna()',
-    #             'duplicated()',
-    #             'unique()',
-    #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_D)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}()"
+        elif attr == 'dropfalsy()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
+            yield f"bt.{attr_func}(condition=np.any, axis=0).to_frame()"
 
-    #     elif attr == 'dropfalsy()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_E)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}()"
+        elif attr == 'equals()':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f'bt2 = {icls}({kwa(BATCH_INIT_B)})'
+            yield f"bt1.{attr_func}(bt2)"
+        elif attr == 'fillfalsy()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
+            yield f"bt.{attr_func}([-1, '', np.nan]).to_frame()"
 
-    #     elif attr == 'equals()':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f'f2 = {icls}({kwa(FRAME_INIT_C)})'
-    #         yield f"f1.{attr_func}(f2)"
-    #     elif attr == 'fillfalsy()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_E)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(dict(a=1, b='abc', c=np.datetime64('2022-01-10')))"
+        elif attr == 'fillfalsy_backward()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+            yield f"bt.{attr_func}().to_frame()"
 
-    #     elif attr == 'fillfalsy_backward()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}()"
-    #     elif attr == 'fillfalsy_forward()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}()"
-    #     elif attr == 'fillfalsy_leading()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(-1)"
-    #     elif attr == 'fillfalsy_trailing()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(-1)"
+        elif attr == 'fillfalsy_forward()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+            yield f"bt.{attr_func}().to_frame()"
 
-    #     elif attr == 'fillna()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_H)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(-1)"
+        elif attr == 'fillfalsy_leading()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+            yield f"bt.{attr_func}(-1).to_frame()"
 
-    #     elif attr == 'fillna_backward()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_J)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}()"
+        elif attr == 'fillfalsy_trailing()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+            yield f"bt.{attr_func}(-1).to_frame()"
 
-    #     elif attr == 'fillna_forward()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}()"
+        elif attr == 'fillna()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
+            yield f"bt.{attr_func}(-1).to_frame()"
 
-    #     elif attr == 'fillna_leading()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_J)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(-1)"
+        elif attr == 'fillna_backward()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+            yield f"bt.{attr_func}().to_frame()"
 
-    #     elif attr == 'fillna_trailing()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(-1)"
+        elif attr == 'fillna_forward()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+            yield f"bt.{attr_func}().to_frame()"
 
-    #     elif attr in (
-    #             'head()',
-    #             'tail()',
-    #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(2)"
-    #     elif attr in (
-    #             'iloc_max()',
-    #             'iloc_min()',
-    #             'loc_max()',
-    #             'loc_min()',
-    #             'isna()',
-    #             'notna()',
-    #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}()"
+        elif attr == 'fillna_leading()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+            yield f"bt.{attr_func}(-1).to_frame()"
+
+        elif attr == 'fillna_trailing()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+            yield f"bt.{attr_func}(-1).to_frame()"
+
+        elif attr in (
+                'head()',
+                'tail()',
+                ):
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(2).to_frame()"
+        elif attr in (
+                'iloc_max()',
+                'iloc_min()',
+                'loc_max()',
+                'loc_min()',
+                'isna()',
+                'notna()',
+                ):
+            yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+            yield f"bt.{attr_func}().to_frame()"
     #     elif attr in ('insert_before()', 'insert_after()'):
     #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
     #         yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'
     #         yield f"f1.{attr_func}('b', f2)"
-    #     elif attr in (
-    #             'isfalsy()',
-    #             'notfalsy()',
-    #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_E)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}()"
-    #     elif attr == 'isin()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F)})'
-    #         yield f"f.{attr_func}((0, 8))"
+        elif attr in (
+                'isfalsy()',
+                'notfalsy()',
+                ):
+            yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
+            yield f"bt.{attr_func}().to_frame(fill_value=False)"
+        elif attr == 'isin()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+            yield f"bt.{attr_func}((3, 10)).to_frame()"
 
-    #     elif attr == 'join_inner()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
-    #         yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
-    #         yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
-    #     elif attr == 'join_left()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
-    #         yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
-    #         yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
-    #     elif attr == 'join_right()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
-    #         yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
-    #         yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
-    #     elif attr == 'join_outer()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
-    #         yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
-    #         yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
-    #     elif attr == 'pivot()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
-    #         yield f"f1.{attr_func}(index_fields='b', columns_fields='c')"
     #     elif attr == 'pivot_stack()':
     #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
     #         yield f"f1.{attr_func}()"
@@ -4399,16 +4393,15 @@ class ExGenBatch(ExGen):
     #         yield f'f2'
     #         yield f"f2.{attr_func}()"
 
-    #     elif attr in (
-    #             'rank_dense()',
-    #             'rank_max()',
-    #             'rank_min()',
-    #             'rank_mean()',
-    #             'rank_ordinal()',
-    #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}()"
+        elif attr in (
+                'rank_dense()',
+                'rank_max()',
+                'rank_min()',
+                'rank_mean()',
+                'rank_ordinal()',
+                ):
+            yield f'bt = {icls}({kwa(BATCH_INIT_F)})'
+            yield f"bt.{attr_func}().to_frame()"
 
     #     elif attr in (
     #             # 'sort_index()',
@@ -4430,16 +4423,14 @@ class ExGenBatch(ExGen):
     #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
     #         yield 'f'
     #         yield f"f.{attr_func}((1, 0))"
-    #     elif attr == 'reindex()':
-    #         yield f'f = {icls}.from_items({kwa(FRAME_INIT_FROM_ITEMS_A)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(('q', 't', 's', 'r'), fill_value=sf.FillValueAuto(i=-1, U=''))"
-    #     elif attr == 'relabel()':
-    #         yield f'f = {icls}.from_records({kwa(FRAME_INIT_FROM_RECORDS_A)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(('y', 'z'))"
-    #         yield f"f.{attr_func}(dict(q='x', p='y'))"
-    #         yield f"f.{attr_func}(lambda l: f'+{{l.upper()}}+')"
+        elif attr == 'reindex()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(('q', 'p', 'a'), fill_value=sf.FillValueAuto).to_frame()"
+        elif attr == 'relabel()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
+            yield f"bt.{attr_func}({{'q':'x', 'p':'y', 0:'x', 1:'y'}}).to_frame()"
+            yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
+            yield f"bt.{attr_func}(lambda l: f'+{{str(l).upper()}}+').to_frame()"
     #     elif attr == 'relabel_flat()':
     #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
     #         yield 'f'

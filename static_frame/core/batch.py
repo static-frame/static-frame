@@ -1461,6 +1461,8 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def count(self, *,
             skipna: bool = True,
+            skipfalsy: bool = False,
+            unique: bool = False,
             axis: int = 0,
             ) -> 'Batch':
         '''Apply count on contained Frames.
@@ -1468,6 +1470,8 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(
                 attr='count',
                 skipna=skipna,
+                skipfalsy=skipfalsy,
+                unique=unique,
                 axis=axis,
                 )
 
