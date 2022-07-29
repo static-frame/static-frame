@@ -123,7 +123,9 @@ FRAME_INIT_FROM_FIELDS_J = dict(fields=((np.nan, np.nan, 10, 2), (np.nan, 8, 3, 
 FRAME_INIT_FROM_FIELDS_K = dict(fields=((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 FRAME_INIT_FROM_FIELDS_L = dict(fields=((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
 
-FRAME_INIT_FROM_FIELDS_M = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=b"sf.IndexHierarchy.from_product((1024, 2048), ('p', 'q'))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+FRAME_INIT_FROM_FIELDS_M1 = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=b"sf.IndexHierarchy.from_product((1024, 2048), ('p', 'q'))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+
+FRAME_INIT_FROM_FIELDS_M2 = dict(fields=((23, 83, 19, 87), (True, True, False, False), ('2022-01-01', '2023-04-01', '2022-12-31', '2024-06-30')), index=b"sf.IndexHierarchy.from_product((1024, 2048), ('p', 'q'))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 
 FRAME_INIT_FROM_FIELDS_N = dict(fields=((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 FRAME_INIT_FROM_FIELDS_O = dict(fields=((1, 2, 0, 0), (2, 1, 2, 0), (1, 0, 2, 1)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -231,6 +233,9 @@ BATCH_INIT_E = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIE
 
 # good from ranking
 BATCH_INIT_F = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'.encode('utf-8'))))
+
+# index hierarchy
+BATCH_INIT_G = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M2)})'.encode('utf-8'))))
 
 
 #-------------------------------------------------------------------------------
@@ -1746,7 +1751,7 @@ class ExGenFrame(ExGen):
             yield 'f'
             yield f"f.{attr_func}(3, fill_value=sf.FillValueAuto)"
         elif attr == 'rehierarch()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.{attr_func}((1, 0))"
         elif attr == 'reindex()':
@@ -1760,27 +1765,27 @@ class ExGenFrame(ExGen):
             yield f"f.{attr_func}(dict(q='x', p='y'))"
             yield f"f.{attr_func}(lambda l: f'+{{l.upper()}}+')"
         elif attr == 'relabel_flat()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.{attr_func}(index=True)"
         elif attr == 'relabel_level_add()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.{attr_func}('I')"
         elif attr == 'relabel_level_drop()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.iloc[:2].{attr_func}(1)"
         elif attr == 'relabel_shift_in()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.{attr_func}('a')"
         elif attr == 'relabel_shift_out()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.rename(index=('d', 'e')).{attr_func}([1, 0])"
         elif attr == 'rename()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.{attr_func}('y', index='p', columns='q')"
         elif attr == 'sample()':
@@ -1788,11 +1793,11 @@ class ExGenFrame(ExGen):
             yield 'f'
             yield f"f.{attr_func}(2, 2, seed=0)"
         elif attr == 'set_columns()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.{attr_func}((1, 'p'), drop=True)"
         elif attr == 'set_columns_hierarchy()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.{attr_func}([(1, 'p'), (1, 'q')], drop=True)"
         elif attr == 'set_index()':
@@ -1804,11 +1809,11 @@ class ExGenFrame(ExGen):
             yield 'f'
             yield f"f.{attr_func}(['b', 'c'], drop=True, index_constructors=(sf.Index, sf.IndexDate))"
         elif attr == 'sort_columns()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.{attr_func}(ascending=False)"
         elif attr == 'sort_index()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.{attr_func}(ascending=False)"
         elif attr == 'unset_columns()':
@@ -1816,7 +1821,7 @@ class ExGenFrame(ExGen):
             yield 'f'
             yield f"f.rename(columns='o').{attr_func}()"
         elif attr == 'unset_index()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield 'f'
             yield f"f.rename(index=(('d', 'e'))).{attr_func}()"
         elif attr == 'extend()':
@@ -2306,51 +2311,51 @@ class ExGenFrame(ExGen):
                 'iter_group_labels_items()',
                 'iter_group_labels_array_items()',
                 ):
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield f"tuple(f.{attr_func}(1))"
 
         elif attr == 'iter_group_labels().apply()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda f: f['b'].sum())"
 
         elif attr in (
                 'iter_group_labels().apply_iter()',
                 'iter_group_labels().apply_iter_items()',
                 ):
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda f: f['b'].sum())"
 
         elif attr == 'iter_group_labels_array().apply()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda a: np.sum(a[:, 0]))"
 
         elif attr in (
                 'iter_group_labels_array().apply_iter()',
                 'iter_group_labels_array().apply_iter_items()',
                 ):
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda a: np.sum(a[:, 0])))"
 
         elif attr == 'iter_group_labels_array_items().apply()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: np.sum(v[:, 0]) if k != 'p' else -1)"
 
         elif attr in (
                 'iter_group_labels_array_items().apply_iter()',
                 'iter_group_labels_array_items().apply_iter_items()',
                 ):
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: np.sum(v[:, 0]) if k != 'p' else -1))"
 
         elif attr == 'iter_group_labels_items().apply()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 'p' else -1)"
 
         elif attr in (
                 'iter_group_labels_items().apply_iter()',
                 'iter_group_labels_items().apply_iter_items()',
                 ):
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
             yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 'p' else -1))"
 
         elif attr in (
@@ -4112,8 +4117,6 @@ class ExGenBus(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-
-
 class ExGenBatch(ExGen):
 
     @staticmethod
@@ -4233,10 +4236,10 @@ class ExGenBatch(ExGen):
                 'prod()',
     #             'cumprod()',
     #             'cumsum()',
-    #             'sum()',
-    #             'std()',
+                'sum()',
+                'std()',
     #             'var()',
-    #             'transpose()',
+                'transpose()',
                  ):
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}().to_frame()"
@@ -4411,16 +4414,14 @@ class ExGenBatch(ExGen):
     #         yield 'f'
     #         yield f"f.{attr_func}('c')"
     #         yield f"f.{attr_func}(['c', 'b'], ascending=False)"
-    #     elif attr == 'roll()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(3)"
-    #     elif attr == 'shift()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(3, fill_value=sf.FillValueAuto)"
+        elif attr == 'roll()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(1, include_index=True).to_frame()"
+        elif attr == 'shift()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(1, fill_value=sf.FillValueAuto).to_frame()"
     #     elif attr == 'rehierarch()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield 'f'
     #         yield f"f.{attr_func}((1, 0))"
         elif attr == 'reindex()':
@@ -4431,40 +4432,33 @@ class ExGenBatch(ExGen):
             yield f"bt.{attr_func}({{'q':'x', 'p':'y', 0:'x', 1:'y'}}).to_frame()"
             yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
             yield f"bt.{attr_func}(lambda l: f'+{{str(l).upper()}}+').to_frame()"
-    #     elif attr == 'relabel_flat()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(index=True)"
-    #     elif attr == 'relabel_level_add()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}('I')"
-    #     elif attr == 'relabel_level_drop()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
-    #         yield 'f'
-    #         yield f"f.iloc[:2].{attr_func}(1)"
-    #     elif attr == 'relabel_shift_in()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}('a')"
-    #     elif attr == 'relabel_shift_out()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
-    #         yield 'f'
-    #         yield f"f.rename(index=('d', 'e')).{attr_func}([1, 0])"
-    #     elif attr == 'rename()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}('y', index='p', columns='q')"
-    #     elif attr == 'sample()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(2, 2, seed=0)"
+        elif attr == 'relabel_flat()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_G)})'
+            yield f"bt.{attr_func}(index=True).to_frame()"
+        elif attr == 'relabel_level_add()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"tuple(bt.{attr_func}('I').values)"
+        elif attr == 'relabel_level_drop()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_G)})'
+            yield f"bt.iloc[:2].{attr_func}(1).to_frame()"
+        elif attr == 'relabel_shift_in()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_G)})'
+            yield f"tuple(bt.{attr_func}('a').values)"
+        # elif attr == 'relabel_shift_out()':
+        #     yield f'bt = {icls}({kwa(BATCH_INIT_G)})'
+        #     yield f"bt.rename(index=('d', 'e')).{attr_func}([1, 0]).to_frame()"
+        elif attr == 'rename()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}('y').to_bus()"
+        elif attr == 'sample()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(2, 2, seed=0).to_frame()"
     #     elif attr == 'set_columns()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield 'f'
     #         yield f"f.{attr_func}((1, 'p'), drop=True)"
     #     elif attr == 'set_columns_hierarchy()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield 'f'
     #         yield f"f.{attr_func}([(1, 'p'), (1, 'q')], drop=True)"
     #     elif attr == 'set_index()':
@@ -4475,20 +4469,23 @@ class ExGenBatch(ExGen):
     #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
     #         yield 'f'
     #         yield f"f.{attr_func}(['b', 'c'], drop=True, index_constructors=(sf.Index, sf.IndexDate))"
-    #     elif attr == 'sort_columns()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(ascending=False)"
-    #     elif attr == 'sort_index()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(ascending=False)"
+        elif attr == 'sort_columns()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(ascending=False).to_frame()"
+        elif attr == 'sort_index()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(ascending=False).to_frame()"
+        elif attr == 'sort_values()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}('a', ascending=False).to_frame()"
+
+
     #     elif attr == 'unset_columns()':
     #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
     #         yield 'f'
     #         yield f"f.rename(columns='o').{attr_func}()"
     #     elif attr == 'unset_index()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield 'f'
     #         yield f"f.rename(index=(('d', 'e'))).{attr_func}()"
     #     elif attr == 'extend()':
@@ -4978,51 +4975,51 @@ class ExGenBatch(ExGen):
     #             'iter_group_labels_items()',
     #             'iter_group_labels_array_items()',
     #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield f"tuple(f.{attr_func}(1))"
 
     #     elif attr == 'iter_group_labels().apply()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda f: f['b'].sum())"
 
     #     elif attr in (
     #             'iter_group_labels().apply_iter()',
     #             'iter_group_labels().apply_iter_items()',
     #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda f: f['b'].sum())"
 
     #     elif attr == 'iter_group_labels_array().apply()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda a: np.sum(a[:, 0]))"
 
     #     elif attr in (
     #             'iter_group_labels_array().apply_iter()',
     #             'iter_group_labels_array().apply_iter_items()',
     #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda a: np.sum(a[:, 0])))"
 
     #     elif attr == 'iter_group_labels_array_items().apply()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: np.sum(v[:, 0]) if k != 'p' else -1)"
 
     #     elif attr in (
     #             'iter_group_labels_array_items().apply_iter()',
     #             'iter_group_labels_array_items().apply_iter_items()',
     #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: np.sum(v[:, 0]) if k != 'p' else -1))"
 
     #     elif attr == 'iter_group_labels_items().apply()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 'p' else -1)"
 
     #     elif attr in (
     #             'iter_group_labels_items().apply_iter()',
     #             'iter_group_labels_items().apply_iter_items()',
     #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M)})'
+    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
     #         yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 'p' else -1))"
 
     #     elif attr in (

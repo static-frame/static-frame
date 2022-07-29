@@ -994,6 +994,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def roll(self,
             index: int = 0,
             columns: int = 0,
+            *,
             include_index: bool = False,
             include_columns: bool = False,
             ) -> 'Batch':
@@ -1700,10 +1701,6 @@ class Batch(ContainerOperand, StoreClientMixin):
             ) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''
-        # series = Series.from_items(
-        #         self.items(),
-        #         name=self._name,
-        #         dtype=DTYPE_OBJECT)
         frames = []
         index = []
         for i, f in self.items():
@@ -1714,4 +1711,5 @@ class Batch(ContainerOperand, StoreClientMixin):
                 index=index,
                 index_constructor=index_constructor,
                 config=self._config,
+                name=self._name,
                 )

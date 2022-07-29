@@ -3731,7 +3731,7 @@ class Frame(ContainerOperand):
                 name=self._name,
                 own_data=True,
                 own_index=True,
-                own_columns=True)
+                own_columns=self.STATIC)
 
     @doc_inject(selector='relabel_level_drop', class_name='Frame')
     def relabel_level_drop(self,
