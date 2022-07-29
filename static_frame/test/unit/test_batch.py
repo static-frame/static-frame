@@ -228,9 +228,6 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1, f2))
         self.assertTrue(repr(b1).startswith('<Batch at '))
 
-        b2 = b1.rename('foo')
-        self.assertTrue(repr(b2).startswith('<Batch: foo at '))
-
     #---------------------------------------------------------------------------
 
     def test_batch_shapes_a(self) -> None:
@@ -438,9 +435,8 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1, f2), name='foo')
         self.assertEqual(b1.name, 'foo')
 
-        b2 = b1.rename('bar')
-        self.assertEqual(b2.name, 'bar')
-        self.assertEqual(tuple(b2.keys()), ('f1', 'f2'))
+        b2 = b1.rename('bar') # this rename contained Frame
+        self.assertEqual(tuple(f.name for f in b2.values), ('bar', 'bar'))
 
     #---------------------------------------------------------------------------
 

@@ -607,8 +607,6 @@ class InterfaceRecord(tp.NamedTuple):
                         max_args=max_args,
                         name_no_args=terminus_name_no_args,
                         )
-                # if group == InterfaceGroup.AccessorRe:
-                #     print(signature, signature_no_args)
                 yield cls(cls_name,
                         group,
                         signature,

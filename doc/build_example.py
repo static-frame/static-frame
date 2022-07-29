@@ -4419,111 +4419,88 @@ class ExGenBatch(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.dictionary_like(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
 
-    # @staticmethod
-    # def display(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.display(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        yield f'bt = {icls}({kwa(BATCH_INIT_G)})'
+
+        if attr == 'values':
+            yield f"tuple(bt.{attr})"
+        elif attr in (
+                'keys()',
+                'items()',
+                '__reversed__()',
+                '__iter__()'
+                ):
+            yield f"tuple(bt.{attr_func}())"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
 
-    # @staticmethod
-    # def assignment(row: sf.Series) -> tp.Iterator[str]:
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.display(row, 'bt', '', BATCH_INIT_G)
 
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     # attr_func = row['signature_no_args'][:-2]
+    @staticmethod
+    def selector(row: sf.Series) -> tp.Iterator[str]:
 
-    #     if attr == 'assign[]()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.assign['a'](-1)"
-    #         yield f"f.assign[['a', 'c']](-1)"
-    #     elif attr == 'assign[].apply()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield 'f'
-    #         yield f"f.assign['a'].apply(lambda s: s / 100)"
-    #     elif attr == 'assign.iloc[]()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.assign.iloc[2]((-1, -2, -3))"
-    #         yield f"f.assign.iloc[2:](-1)"
-    #         yield f"f.assign.iloc[[0, 3]](-1)"
-    #     elif attr == 'assign.iloc[].apply()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield 'f'
-    #         yield f"f.assign.iloc[2:].apply(lambda s: s / 100)"
-    #     elif attr == 'assign.loc[]()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.assign.loc['r'](-1)"
-    #         yield f"f.assign.loc['r':](-1)"
-    #         yield f"f.assign.loc[['p', 's']](-1)"
-    #     elif attr == 'assign.loc[].apply()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield 'f'
-    #         yield f"f.assign.loc['r':].apply(lambda s: s / 100)"
-    #     elif attr == 'assign.bloc[]()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.assign.bloc[f > 5](-1)"
-    #     elif attr == 'assign.bloc[].apply()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.assign.bloc[f > 5].apply(lambda s: s * .01)"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_sel = row['signature_no_args'][:-2]
 
-    # @staticmethod
-    # def selector(row: sf.Series) -> tp.Iterator[str]:
-
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_sel = row['signature_no_args'][:-2]
-
-    #     if attr in (
-    #             'drop[]',
-    #             'mask[]',
-    #             'masked_array[]',
-    #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.{attr_sel}['c']"
-    #         yield f"f.{attr_sel}['b':]"
-    #         yield f"f.{attr_sel}[['a', 'c']]"
-    #     elif attr in (
-    #             'drop.iloc[]',
-    #             'mask.iloc[]',
-    #             'masked_array.iloc[]',
-    #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.{attr_sel}[1]"
-    #         yield f"f.{attr_sel}[1:]"
-    #         yield f"f.{attr_sel}[[0, 2]]"
-    #     elif attr == 'bloc[]':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.{attr_sel}[f > 5]"
-    #     elif attr in (
-    #             'drop.loc[]',
-    #             'mask.loc[]',
-    #             'masked_array.loc[]',
-    #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.{attr_sel}['r']"
-    #         yield f"f.{attr_sel}['r':]"
-    #         yield f"f.{attr_sel}[['p', 's']]"
-    #     elif attr == '[]':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f['b']"
-    #         yield f"f['b':]"
-    #         yield f"f[['a', 'c']]"
-    #     elif attr == 'iloc[]':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.iloc[2]"
-    #         yield f"f.iloc[2:]"
-    #         yield f"f.iloc[[0, 3]]"
-    #     elif attr == 'loc[]':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f"f.loc['r']"
-    #         yield f"f.loc['r':]"
-    #         yield f"f.loc[['p', 's']]"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr in (
+                # 'drop[]',
+                # 'mask[]',
+                # 'masked_array[]',
+                ):
+            pass
+            # yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            # yield f"bt.{attr_sel}['c']"
+            # yield f"bt.{attr_sel}['b':]"
+            # yield f"bt.{attr_sel}[['a', 'c']]"
+        # elif attr in (
+        #         'drop.iloc[]',
+        #         'mask.iloc[]',
+        #         'masked_array.iloc[]',
+        #         ):
+        #     yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+        #     yield f"bt.{attr_sel}[1]"
+        #     yield f"bt.{attr_sel}[1:]"
+        #     yield f"bt.{attr_sel}[[0, 2]]"
+        elif attr == 'bloc[]':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_sel}[np.arange(6).reshape(3,2) >= 3].to_frame()"
+        # elif attr in (
+        #         'drop.loc[]',
+        #         'mask.loc[]',
+        #         'masked_array.loc[]',
+        #         ):
+        #     yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+        #     yield f"bt.{attr_sel}['r']"
+        #     yield f"bt.{attr_sel}['r':]"
+        #     yield f"bt.{attr_sel}[['p', 's']]"
+        # elif attr == '[]':
+        #     yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+        #     yield f"bt['b']"
+        #     yield f"bt['b':]"
+        #     yield f"bt[['a', 'c']]"
+        # elif attr == 'iloc[]':
+        #     yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+        #     yield f"bt.iloc[2]"
+        #     yield f"bt.iloc[2:]"
+        #     yield f"bt.iloc[[0, 3]]"
+        # elif attr == 'loc[]':
+        #     yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+        #     yield f"bt.loc['r']"
+        #     yield f"bt.loc['r':]"
+        #     yield f"bt.loc[['p', 's']]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     # @staticmethod
     # def iterator(row: sf.Series) -> tp.Iterator[str]:
@@ -5217,14 +5194,14 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            InterfaceGroup.Constructor,
-            InterfaceGroup.Exporter,
-            InterfaceGroup.Attribute,
-            InterfaceGroup.Method,
+            # InterfaceGroup.Constructor,
+            # InterfaceGroup.Exporter,
+            # InterfaceGroup.Attribute,
+            # InterfaceGroup.Method,
             # InterfaceGroup.DictLike,
             # InterfaceGroup.Display,
             # InterfaceGroup.Assignment,
-            # InterfaceGroup.Selector,
+            InterfaceGroup.Selector,
             # InterfaceGroup.Iterator,
             # InterfaceGroup.OperatorBinary,
             # InterfaceGroup.OperatorUnary,
