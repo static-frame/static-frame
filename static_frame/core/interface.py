@@ -976,9 +976,6 @@ class InterfaceSummary(Features):
             elif callable(obj): # general methods
                 yield from InterfaceRecord.gen_from_method(**kwargs)
             else: #
-                print(name)
-                if name == 'values':
-                    import ipdb; ipdb.set_trace()
                 yield InterfaceRecord(cls_name,
                         InterfaceGroup.Attribute,
                         name,
