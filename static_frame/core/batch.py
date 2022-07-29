@@ -41,6 +41,7 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
+from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import BoolOrBools
@@ -403,14 +404,6 @@ class Batch(ContainerOperand, StoreClientMixin):
     def name(self) -> NameType:
         '''{}'''
         return self._name
-
-    def rename(self, name: NameType) -> 'Batch':
-        '''
-        Return a new Batch with an updated name attribute.
-        '''
-        def gen() -> IteratorFrameItems:
-            yield from self._items
-        return self._derive(gen, name=name)
 
     #---------------------------------------------------------------------------
     @property
@@ -842,6 +835,27 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
+
+
+    def rename(self,
+            name: NameType = NAME_DEFAULT,
+            *,
+            index: NameType = NAME_DEFAULT,
+            columns: NameType = NAME_DEFAULT,
+            ) -> 'Batch':
+        '''
+        Return a new Batch with an updated name attribute.
+        '''
+        return self._apply_attr(
+                attr='rename',
+                name=name,
+                index=index,
+                columns=columns,
+                )
+
+        # def gen() -> IteratorFrameItems:
+        #     yield from self._items
+        # return self._derive(gen, name=name)
 
     def sort_index(self,
             *,

@@ -4228,17 +4228,14 @@ class ExGenBatch(ExGen):
         attr_func = row['signature_no_args'][:-2]
 
         if attr in (
-                # '__array__()',
                 'max()',
                 'mean()',
                 'median()',
                 'min()',
                 'prod()',
-    #             'cumprod()',
-    #             'cumsum()',
                 'sum()',
                 'std()',
-    #             'var()',
+                'var()',
                 'transpose()',
                  ):
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
@@ -4253,13 +4250,6 @@ class ExGenBatch(ExGen):
         elif attr == '__bool__()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bool(bt)"
-    #     elif attr == '__deepcopy__()':
-    #         yield 'import copy'
-    #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"copy.deepcopy(f)"
-    #     elif attr == '__len__()':
-    #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"len(f)"
         elif attr == '__round__()':
             yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
             yield f"round(bt, 2).to_frame()"
@@ -4281,15 +4271,6 @@ class ExGenBatch(ExGen):
         elif attr == 'apply_items_except()':
             yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
             yield f"bt.{attr_func}(lambda l, f: f * 100 if l == 'j' else f * 0.001, Exception).to_frame()"
-
-    #     elif attr == 'astype[]()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield 'f'
-    #         yield f"f.astype['c'](object)"
-    #     elif attr == 'astype()':
-    #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield 'f'
-    #         yield f"f.astype(float)"
         elif attr == 'clip()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(lower=3, upper=41).to_frame()"
@@ -4373,10 +4354,6 @@ class ExGenBatch(ExGen):
                 ):
             yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
             yield f"bt.{attr_func}().to_frame()"
-    #     elif attr in ('insert_before()', 'insert_after()'):
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'
-    #         yield f"f1.{attr_func}('b', f2)"
         elif attr in (
                 'isfalsy()',
                 'notfalsy()',
@@ -4386,16 +4363,6 @@ class ExGenBatch(ExGen):
         elif attr == 'isin()':
             yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
             yield f"bt.{attr_func}((3, 10)).to_frame()"
-
-    #     elif attr == 'pivot_stack()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
-    #         yield f"f1.{attr_func}()"
-    #     elif attr == 'pivot_unstack()':
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
-    #         yield f"f2 = f1.pivot_stack()"
-    #         yield f'f2'
-    #         yield f"f2.{attr_func}()"
-
         elif attr in (
                 'rank_dense()',
                 'rank_max()',
@@ -4405,25 +4372,12 @@ class ExGenBatch(ExGen):
                 ):
             yield f'bt = {icls}({kwa(BATCH_INIT_F)})'
             yield f"bt.{attr_func}().to_frame()"
-
-    #     elif attr in (
-    #             # 'sort_index()',
-    #             'sort_values()',
-    #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}('c')"
-    #         yield f"f.{attr_func}(['c', 'b'], ascending=False)"
         elif attr == 'roll()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(1, include_index=True).to_frame()"
         elif attr == 'shift()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(1, fill_value=sf.FillValueAuto).to_frame()"
-    #     elif attr == 'rehierarch()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}((1, 0))"
         elif attr == 'reindex()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(('q', 'p', 'a'), fill_value=sf.FillValueAuto).to_frame()"
@@ -4444,31 +4398,12 @@ class ExGenBatch(ExGen):
         elif attr == 'relabel_shift_in()':
             yield f'bt = {icls}({kwa(BATCH_INIT_G)})'
             yield f"tuple(bt.{attr_func}('a').values)"
-        # elif attr == 'relabel_shift_out()':
-        #     yield f'bt = {icls}({kwa(BATCH_INIT_G)})'
-        #     yield f"bt.rename(index=('d', 'e')).{attr_func}([1, 0]).to_frame()"
         elif attr == 'rename()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}('y').to_bus()"
         elif attr == 'sample()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(2, 2, seed=0).to_frame()"
-    #     elif attr == 'set_columns()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}((1, 'p'), drop=True)"
-    #     elif attr == 'set_columns_hierarchy()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}([(1, 'p'), (1, 'q')], drop=True)"
-    #     elif attr == 'set_index()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}('c', drop=True, index_constructor=sf.IndexDate)"
-    #     elif attr == 'set_index_hierarchy()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
-    #         yield 'f'
-    #         yield f"f.{attr_func}(['b', 'c'], drop=True, index_constructors=(sf.Index, sf.IndexDate))"
         elif attr == 'sort_columns()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(ascending=False).to_frame()"
@@ -4478,25 +4413,9 @@ class ExGenBatch(ExGen):
         elif attr == 'sort_values()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}('a', ascending=False).to_frame()"
-
-
-    #     elif attr == 'unset_columns()':
-    #         yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield 'f'
-    #         yield f"f.rename(columns='o').{attr_func}()"
-    #     elif attr == 'unset_index()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
-    #         yield 'f'
-    #         yield f"f.rename(index=(('d', 'e'))).{attr_func}()"
-    #     elif attr == 'extend()':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'
-    #         yield f'f1.extend(f2)'
-    #         yield 'f1'
-    #     elif attr == 'extend_items()':
-    #         yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
-    #         yield f"f1.extend_items((('d', (1, 2, 3)), ('e', (4, 5, 6))))"
-    #         yield 'f1'
+        elif attr == 'unset_index()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_G)})'
+            yield f"bt.rename(index=('d', 'e')).{attr_func}().to_frame()"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
