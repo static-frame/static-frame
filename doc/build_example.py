@@ -126,9 +126,9 @@ FRAME_INIT_FROM_FIELDS_J = dict(fields=((np.nan, np.nan, 10, 2), (np.nan, 8, 3, 
 FRAME_INIT_FROM_FIELDS_K = dict(fields=((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 FRAME_INIT_FROM_FIELDS_L = dict(fields=((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
 
-FRAME_INIT_FROM_FIELDS_M1 = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=b"sf.IndexHierarchy.from_product((1024, 2048), ('p', 'q'))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+FRAME_INIT_FROM_FIELDS_M1 = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=b"sf.IndexHierarchy.from_product((0, 1), ('p', 'q'))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 
-FRAME_INIT_FROM_FIELDS_M2 = dict(fields=((23, 83, 19, 87), (True, True, False, False), ('2022-01-01', '2023-04-01', '2022-12-31', '2024-06-30')), index=b"sf.IndexHierarchy.from_product((1024, 2048), ('p', 'q'))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+FRAME_INIT_FROM_FIELDS_M2 = dict(fields=((23, 83, 19, 87), (True, True, False, False), ('2022-01-01', '2023-04-01', '2022-12-31', '2024-06-30')), index=b"sf.IndexHierarchy.from_product((0, 1), ('p', 'q'))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 
 FRAME_INIT_FROM_FIELDS_N = dict(fields=((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 FRAME_INIT_FROM_FIELDS_O = dict(fields=((1, 2, 0, 0), (2, 1, 2, 0), (1, 0, 2, 1)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -4729,47 +4729,47 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             yield from calls_to_msg(calls, row)
 
 def gen_all_examples() -> tp.Iterator[str]:
-    # yield from gen_examples(sf.Series, ExGenSeries)
-    # yield from gen_examples(sf.SeriesHE, ExGenSeries)
+    yield from gen_examples(sf.Series, ExGenSeries)
+    yield from gen_examples(sf.SeriesHE, ExGenSeries)
 
-    # yield from gen_examples(sf.Frame, ExGenFrame)
-    # yield from gen_examples(sf.FrameHE, ExGenFrame)
-    # yield from gen_examples(sf.FrameGO, ExGenFrame)
+    yield from gen_examples(sf.Frame, ExGenFrame)
+    yield from gen_examples(sf.FrameHE, ExGenFrame)
+    yield from gen_examples(sf.FrameGO, ExGenFrame)
 
-    # yield from gen_examples(sf.Index, ExGenIndex)
-    # yield from gen_examples(sf.IndexGO, ExGenIndex)
+    yield from gen_examples(sf.Index, ExGenIndex)
+    yield from gen_examples(sf.IndexGO, ExGenIndex)
 
-    # yield from gen_examples(sf.IndexYear, ExGenIndexYear)
-    # yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
+    yield from gen_examples(sf.IndexYear, ExGenIndexYear)
+    yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
 
-    # yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
-    # yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
+    yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
+    yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
 
-    # yield from gen_examples(sf.IndexDate, ExGenIndexDate)
-    # yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
+    yield from gen_examples(sf.IndexDate, ExGenIndexDate)
+    yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
 
-    # yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
-    # yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
+    yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
+    yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
 
-    # yield from gen_examples(sf.IndexHour, ExGenIndexHour)
-    # yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
+    yield from gen_examples(sf.IndexHour, ExGenIndexHour)
+    yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
 
-    # yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
-    # yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
+    yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
+    yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
 
-    # yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
-    # yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
+    yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
+    yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
 
-    # yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
-    # yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
+    yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
+    yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
 
-    # yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
-    # yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
+    yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
+    yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
 
-    # yield from gen_examples(sf.IndexHierarchy, ExGenIndexHierarchy)
-    # yield from gen_examples(sf.IndexHierarchyGO, ExGenIndexHierarchy)
+    yield from gen_examples(sf.IndexHierarchy, ExGenIndexHierarchy)
+    yield from gen_examples(sf.IndexHierarchyGO, ExGenIndexHierarchy)
 
-    # yield from gen_examples(sf.Bus, ExGenBus)
+    yield from gen_examples(sf.Bus, ExGenBus)
     yield from gen_examples(sf.Batch, ExGenBatch)
 
 
@@ -4788,7 +4788,7 @@ if __name__ == '__main__':
     for line in gen_all_examples():
         print(line)
         pass
-    # write()
+    write()
 
 
 
