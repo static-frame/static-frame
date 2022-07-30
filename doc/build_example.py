@@ -117,6 +117,7 @@ FRAME_INIT_FROM_FIELDS_F = dict(fields=((10, 2, 0, 0), (8, 3, 8, 0), (1, 0, 0, 0
 
 FRAME_INIT_FROM_FIELDS_G = dict(fields=((0, 0, 10, 2), (20, 18, -3, 18), (0, 0, 0, 1)), columns=('a', 'b', 'c'), name='x')
 FRAME_INIT_FROM_FIELDS_H = dict(fields=((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+
 FRAME_INIT_FROM_FIELDS_I = dict(fields=((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
 FRAME_INIT_FROM_FIELDS_J = dict(fields=((np.nan, np.nan, 10, 2), (np.nan, 8, 3, 8), (np.nan, np.nan, np.nan, 1)), columns=('a', 'b', 'c'), name='y')
 
@@ -140,9 +141,14 @@ FRAME_INIT_FROM_FIELDS_R3 = dict(fields=((0, 1), (2, 1)), index=('b', 'c'), colu
 FRAME_INIT_FROM_FIELDS_R4 = dict(fields=((False, True), (True, True)), index=('b', 'c'), columns=('x', 'y'), name='y')
 FRAME_INIT_FROM_FIELDS_R5 = dict(fields=((False, True, True), (True, False, True)), index=('a', 'b', 'c'), columns=('x', 'y'), name='y')
 
-FRAME_INIT_FROM_FIELDS_S = dict(fields=(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'))
-FRAME_INIT_FROM_FIELDS_T = dict(fields=(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=b"np.datetime64")
-FRAME_INIT_FROM_FIELDS_U = dict(fields=(('4/1/1517', '12/31/1517', '6/30/1517'), ('4/1/2022', '12/31/2021', '6/30/2022')), index=('p', 'q', 'r'), columns=('a', 'b'))
+FRAME_INIT_FROM_FIELDS_S1 = dict(fields=(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'))
+FRAME_INIT_FROM_FIELDS_S2 = dict(fields=(('1620-04-01', '1620-12-31', '1620-06-30'), ('1976-04-01', '1954-12-31', '1976-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'))
+
+FRAME_INIT_FROM_FIELDS_T1 = dict(fields=(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=b"np.datetime64")
+FRAME_INIT_FROM_FIELDS_T2 = dict(fields=(('1620-04-01', '1620-12-31', '1620-06-30'), ('1976-04-01', '1954-12-31', '1976-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=b"np.datetime64")
+
+FRAME_INIT_FROM_FIELDS_U1 = dict(fields=(('4/1/1517', '12/31/1517', '6/30/1517'), ('4/1/2022', '12/31/2021', '6/30/2022')), index=('p', 'q', 'r'), columns=('a', 'b'))
+FRAME_INIT_FROM_FIELDS_U2 = dict(fields=(('4/1/1620', '12/31/1620', '6/30/1620'), ('4/1/1976', '12/31/1954', '6/30/1976')), index=('p', 'q', 'r'), columns=('a', 'b'))
 
 FRAME_INIT_FROM_ITEMS_A = dict(pairs=(('a', (10, 2, 8, 3)), ('b', ('qrs ', 'XYZ', '123', ' wX '))), index=('p', 'q', 'r', 's'), name='x')
 FRAME_INIT_FROM_ITEMS_B = dict(pairs=(('a', (10, 2, np.nan, 3)), ('b', ('qrs ', 'XYZ', None, None))), index=('p', 'q', 'r', 's'), name='x')
@@ -231,11 +237,21 @@ BATCH_INIT_D = dict(items=(('i', f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8
 # lots of NaNs
 BATCH_INIT_E = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_J)})'.encode('utf-8'))))
 
-# good from ranking
+# good for ranking
 BATCH_INIT_F = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'.encode('utf-8'))))
 
 # index hierarchy
 BATCH_INIT_G = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M2)})'.encode('utf-8'))))
+
+# all dt64
+BATCH_INIT_H = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T2)})'.encode('utf-8'))))
+
+# dt strings
+BATCH_INIT_I = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_S1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_S2)})'.encode('utf-8'))))
+
+# dt strings
+BATCH_INIT_J = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_U1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_U2)})'.encode('utf-8'))))
+
 
 
 #-------------------------------------------------------------------------------
@@ -2502,19 +2518,19 @@ class ExGenFrame(ExGen):
         attr_func = row['signature_no_args'][:-2]
 
         if attr == 'via_dt.fromisoformat()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_S)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_S1)})'
             yield f'f.{attr}'
         elif attr == 'via_dt.strftime()':
-            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T)})'
+            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T1)})'
             yield f's.{attr_func}("%A | %B")'
         elif attr in (
                 'via_dt.strptime()',
                 'via_dt.strpdate()',
                 ):
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_U)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_U1)})'
             yield f'f.{attr_func}("%m/%d/%Y")'
         else:
-            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T)})'
+            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T1)})'
             yield f's.{attr}'
 
     @staticmethod
@@ -4534,31 +4550,31 @@ class ExGenBatch(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
+    @staticmethod
+    def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
 
-    #     if attr == 'via_dt.fromisoformat()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_S)})'
-    #         yield f'f.{attr}'
-    #     elif attr == 'via_dt.strftime()':
-    #         yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T)})'
-    #         yield f's.{attr_func}("%A | %B")'
-    #     elif attr in (
-    #             'via_dt.strptime()',
-    #             'via_dt.strpdate()',
-    #             ):
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_U)})'
-    #         yield f'f.{attr_func}("%m/%d/%Y")'
-    #     else:
-    #         yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T)})'
-    #         yield f's.{attr}'
+        if attr == 'via_dt.fromisoformat()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_I)})'
+            yield f'bt.{attr}.to_frame()'
+        elif attr == 'via_dt.strftime()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_H)})'
+            yield f'bt.{attr_func}("%A | %B").to_frame()'
+        elif attr in (
+                'via_dt.strptime()',
+                'via_dt.strpdate()',
+                ):
+            yield f'bt = {icls}({kwa(BATCH_INIT_J)})'
+            yield f'bt.{attr_func}("%m/%d/%Y").to_frame()'
+        else:
+            yield f'bt = {icls}({kwa(BATCH_INIT_H)})'
+            yield f'bt.{attr}.to_frame()'
 
-    # @staticmethod
-    # def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_string(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_C)
+    @staticmethod
+    def accessor_string(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_string(row, 'bt', '', BATCH_INIT_D)
 
     # @classmethod
     # def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -4680,12 +4696,12 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             # InterfaceGroup.DictLike,
             # InterfaceGroup.Display,
             # InterfaceGroup.Assignment,
-            InterfaceGroup.Selector,
-            InterfaceGroup.Iterator,
-            InterfaceGroup.OperatorBinary,
-            InterfaceGroup.OperatorUnary,
-            # InterfaceGroup.AccessorDatetime,
-            # InterfaceGroup.AccessorString,
+            # InterfaceGroup.Selector,
+            # InterfaceGroup.Iterator,
+            # InterfaceGroup.OperatorBinary,
+            # InterfaceGroup.OperatorUnary,
+            InterfaceGroup.AccessorDatetime,
+            InterfaceGroup.AccessorString,
             # InterfaceGroup.AccessorTranspose,
             # InterfaceGroup.AccessorFillValue,
             # InterfaceGroup.AccessorRe,
