@@ -109,8 +109,10 @@ FRAME_INIT_FROM_RECORDS_A = dict(records=b"((10, False, '1517-01-01'), (8, True,
 FRAME_INIT_FROM_RECORDS_ITEMS_A = dict(items=b"(('p', (10, False, '1517-01-01')), ('q', (8, True,'1517-04-01')))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 
 FRAME_INIT_FROM_FIELDS_A = dict(fields=((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
+
 FRAME_INIT_FROM_FIELDS_B = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_FIELDS_C = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
+
 FRAME_INIT_FROM_FIELDS_D = dict(fields=((10, 2, np.nan, 2), (False, True, None, True), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_FIELDS_E = dict(fields=((10, 2, 0, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_FIELDS_F = dict(fields=((10, 2, 0, 0), (8, 3, 8, 0), (1, 0, 0, 0)), columns=('a', 'b', 'c'), name='x')
@@ -251,6 +253,13 @@ BATCH_INIT_I = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIE
 
 # dt strings
 BATCH_INIT_J = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_U1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_U2)})'.encode('utf-8'))))
+
+BATCH_INIT_K = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_B)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'.encode('utf-8'))))
+
+BATCH_INIT_L = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_O)})'.encode('utf-8'))))
+
+# for from fill value
+BATCH_INIT_M = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R2)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R3)})'.encode('utf-8'))))
 
 
 
@@ -422,6 +431,7 @@ class ExGen:
             name: str,
             ctr_method: str,
             ctr_kwargs: str,
+            exporter: str = '',
             ) -> tp.Iterator[str]:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
@@ -433,7 +443,7 @@ class ExGen:
         if attr == 'via_str.__getitem__()':
             yield f'{name} = {ctr}'
             yield f'{name}'
-            yield f'{name}.via_str[-1]'
+            yield f'{name}.via_str[-1]{exporter}'
         elif attr in (
                 'via_str.center()',
                 'via_str.ljust()',
@@ -442,7 +452,7 @@ class ExGen:
                 ):
             yield f'{name} = {ctr}'
             yield f'{name}'
-            yield f'{name}.{attr_func}(8)'
+            yield f'{name}.{attr_func}(8){exporter}'
         elif attr in (
                 'via_str.contains()',
                 'via_str.count()',
@@ -458,23 +468,23 @@ class ExGen:
                 ):
             yield f'{name} = {ctr}'
             yield f'{name}'
-            yield f"{name}.{attr_func}('X')"
+            yield f"{name}.{attr_func}('X'){exporter}"
         elif attr == 'via_str.decode()':
             yield f'{name} = {ctr}.astype(bytes)'
             yield f'{name}'
-            yield f"{name}.{attr_func}()"
+            yield f"{name}.{attr_func}(){exporter}"
         elif attr == 'via_str.endswith()':
             yield f'{name} = {ctr}'
             yield f'{name}'
-            yield f"{name}.{attr_func}(' ')"
+            yield f"{name}.{attr_func}(' '){exporter}"
         elif attr == 'via_str.replace()':
             yield f'{name} = {ctr}'
             yield f'{name}'
-            yield f"{name}.{attr_func}('X', '*')"
+            yield f"{name}.{attr_func}('X', '*'){exporter}"
         else: # all other simple calls
             yield f'{name} = {ctr}'
             yield f'{name}'
-            yield f'{name}.{attr}'
+            yield f'{name}.{attr}{exporter}'
 
     @staticmethod
     def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
@@ -489,6 +499,7 @@ class ExGen:
             name: str,
             ctr_method: str,
             ctr_kwargs: str,
+            exporter: str = '',
             ) -> tp.Iterator[str]:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
@@ -501,19 +512,20 @@ class ExGen:
         yield f'{name}'
 
         if attr == 'via_re().sub()':
-            yield f"{name}.via_re('[X123]').{attr_funcs[1]}('==')"
+            yield f"{name}.via_re('[X123]').{attr_funcs[1]}('=='){exporter}"
         elif attr == 'via_re().subn()':
-            yield f"{name}.via_re('[X123]').{attr_funcs[1]}('==', 1)"
+            yield f"{name}.via_re('[X123]').{attr_funcs[1]}('==', 1){exporter}"
         elif attr == 'via_re().fullmatch()':
-            yield f"{name}.via_re('123').{attr_funcs[1]}()"
+            yield f"{name}.via_re('123').{attr_funcs[1]}(){exporter}"
         else:
-            yield f"{name}.via_re('[X123]').{attr_funcs[1]}()"
+            yield f"{name}.via_re('[X123]').{attr_funcs[1]}(){exporter}"
 
     @staticmethod
     def accessor_values(row: sf.Series,
             name: str,
             ctr_method: str,
             ctr_kwargs: str,
+            exporter: str = '',
             ) -> tp.Iterator[str]:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
@@ -522,9 +534,9 @@ class ExGen:
 
         yield f'{name} = {ctr}'
         if attr == 'via_values.apply()':
-            yield f'{name}.via_values.apply(np.sin)'
+            yield f'{name}.via_values.apply(np.sin){exporter}'
         elif attr == 'via_values.__array_ufunc__()':
-            yield f'np.sin({name}.via_values)'
+            yield f'np.sin({name}.via_values){exporter}'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -4287,6 +4299,9 @@ class ExGenBatch(ExGen):
         elif attr == 'apply_items_except()':
             yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
             yield f"bt.{attr_func}(lambda l, f: f * 100 if l == 'j' else f * 0.001, Exception).to_frame()"
+        elif attr == 'astype()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}(str).to_frame()"
         elif attr == 'clip()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(lower=3, upper=41).to_frame()"
@@ -4574,72 +4589,72 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_string(row, 'bt', '', BATCH_INIT_D)
+        yield from ExGen.accessor_string(row, 'bt', '', BATCH_INIT_K, ".to_frame()")
 
-    # @classmethod
-    # def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     _, attr_op = attr.split('.')
+    @classmethod
+    def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        _, attr_op = attr.split('.')
 
-    #     if attr == 'via_T.via_fill_value()':
-    #         yield ''
-    #     elif attr_op in cls.SIG_TO_OP_NUMERIC:
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f's = sf.Series({kwa(SERIES_INIT_Y1)})'
-    #         yield f'f.via_T {cls.SIG_TO_OP_NUMERIC[attr_op]} s'
-    #     elif attr_op in cls.SIG_TO_OP_LOGIC:
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_Q)})'
-    #         yield f's = sf.Series({kwa(SERIES_INIT_Y2)})'
-    #         yield f'f.via_T {cls.SIG_TO_OP_LOGIC[attr_op]} s'
-    #     elif attr_op in cls.SIG_TO_OP_BIT:
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-    #         yield f's = sf.Series({kwa(SERIES_INIT_Y3)})'
-    #         yield f'f.via_T {cls.SIG_TO_OP_BIT[attr_op]} s'
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr == 'via_T.via_fill_value()':
+            yield ''
+        elif attr_op in cls.SIG_TO_OP_NUMERIC:
+            yield f'bt = {icls}({kwa(BATCH_INIT_L)})'
+            yield f's = sf.Series({kwa(SERIES_INIT_Y1)})'
+            yield f'(bt.via_T {cls.SIG_TO_OP_NUMERIC[attr_op]} s).to_frame()'
+        elif attr_op in cls.SIG_TO_OP_LOGIC:
+            yield f'bt = {icls}({kwa(BATCH_INIT_C)})'
+            yield f's = sf.Series({kwa(SERIES_INIT_Y2)})'
+            yield f'(bt.via_T {cls.SIG_TO_OP_LOGIC[attr_op]} s).to_frame()'
+        elif attr_op in cls.SIG_TO_OP_BIT:
+            yield f'bt = {icls}({kwa(BATCH_INIT_L)})'
+            yield f's = sf.Series({kwa(SERIES_INIT_Y3)})'
+            yield f'(bt.via_T {cls.SIG_TO_OP_BIT[attr_op]} s).to_frame()'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
-    # @classmethod
-    # def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_op = attr.replace('via_fill_value().', '')
+    @classmethod
+    def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_op = attr.replace('via_fill_value().', '')
 
-    #     if attr_op in cls.SIG_TO_OP_NUMERIC:
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
-    #         yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R2)})'
-    #         if attr_op.startswith('__r'): # NOTE: these raise
-    #             yield f'f2 {cls.SIG_TO_OP_NUMERIC[attr_op]} f1.via_fill_value(0)'
-    #         else:
-    #             yield f'f1.via_fill_value(0) {cls.SIG_TO_OP_NUMERIC[attr_op]} f2'
-    #     elif attr_op in cls.SIG_TO_OP_LOGIC:
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R5)})'
-    #         yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R4)})'
-    #         yield f'f1.via_fill_value(False) {cls.SIG_TO_OP_LOGIC[attr_op]} f2'
-    #     elif attr_op in cls.SIG_TO_OP_BIT:
-    #         yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
-    #         yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R3)})'
-    #         yield f'f1.via_fill_value(0) {cls.SIG_TO_OP_BIT[attr_op]} f2'
-    #     elif attr == 'via_fill_value().loc':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
-    #         yield f"f.via_fill_value(-1).loc[['a', 'b', 'd']]"
-    #     elif attr == 'via_fill_value().__getitem__()':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
-    #         yield f"f.via_fill_value(-1)[['z', 'x']]"
-    #     elif attr == 'via_fill_value().via_T':
-    #         yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
-    #         yield f's = sf.Series({kwa(SERIES_INIT_D)})'
-    #         yield f'f.via_fill_value(-1).via_T * s'
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        if attr_op in cls.SIG_TO_OP_NUMERIC:
+            yield f'bt = {icls}({kwa(BATCH_INIT_M)})'
+            yield f'f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            if attr_op.startswith('__r'): # NOTE: these raise
+                yield f'(f {cls.SIG_TO_OP_NUMERIC[attr_op]} bt.via_fill_value(0)).to_frame()'
+            else:
+                yield f'(bt.via_fill_value(0) {cls.SIG_TO_OP_NUMERIC[attr_op]} f).to_frame()'
+        elif attr_op in cls.SIG_TO_OP_LOGIC:
+            yield f'bt = {icls}({kwa(BATCH_INIT_C)})'
+            yield f'f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_Q)})'
+            yield f'(bt.via_fill_value(False) {cls.SIG_TO_OP_LOGIC[attr_op]} f).to_frame()'
+        elif attr_op in cls.SIG_TO_OP_BIT:
+            yield f'bt = {icls}({kwa(BATCH_INIT_M)})'
+            yield f'f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R3)})'
+            yield f'(bt.via_fill_value(0) {cls.SIG_TO_OP_BIT[attr_op]} f).to_frame()'
+        elif attr == 'via_fill_value().loc':
+            yield f'bt = {icls}({kwa(BATCH_INIT_M)})'
+            yield f"bt.via_fill_value(-1).loc[['a', 'b', 'd']].to_frame()"
+        elif attr == 'via_fill_value().__getitem__()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_M)})'
+            yield f"bt.via_fill_value(-1)[['z', 'x']].to_frame()"
+        elif attr == 'via_fill_value().via_T':
+            yield f'bt = {icls}({kwa(BATCH_INIT_M)})'
+            yield f's = sf.Series({kwa(SERIES_INIT_D)})'
+            yield f'(bt.via_fill_value(-1).via_T * s).to_frame()'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
-    # @staticmethod
-    # def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_regular_expression(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_B)
+    @staticmethod
+    def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_regular_expression(row, 'bt', '', BATCH_INIT_D, '.to_frame()')
 
-    # @staticmethod
-    # def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-    #     yield from ExGen.accessor_values(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_N)
+    @staticmethod
+    def accessor_values(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen.accessor_values(row, 'bt', '', BATCH_INIT_D, '.to_frame()')
 
 
 
@@ -4689,23 +4704,23 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
             )
 
     for ig in (
-            # InterfaceGroup.Constructor,
-            # InterfaceGroup.Exporter,
-            # InterfaceGroup.Attribute,
-            # InterfaceGroup.Method,
-            # InterfaceGroup.DictLike,
-            # InterfaceGroup.Display,
-            # InterfaceGroup.Assignment,
-            # InterfaceGroup.Selector,
-            # InterfaceGroup.Iterator,
-            # InterfaceGroup.OperatorBinary,
-            # InterfaceGroup.OperatorUnary,
+            InterfaceGroup.Constructor,
+            InterfaceGroup.Exporter,
+            InterfaceGroup.Attribute,
+            InterfaceGroup.Method,
+            InterfaceGroup.DictLike,
+            InterfaceGroup.Display,
+            InterfaceGroup.Assignment,
+            InterfaceGroup.Selector,
+            InterfaceGroup.Iterator,
+            InterfaceGroup.OperatorBinary,
+            InterfaceGroup.OperatorUnary,
             InterfaceGroup.AccessorDatetime,
             InterfaceGroup.AccessorString,
-            # InterfaceGroup.AccessorTranspose,
-            # InterfaceGroup.AccessorFillValue,
-            # InterfaceGroup.AccessorRe,
-            # InterfaceGroup.AccessorValues,
+            InterfaceGroup.AccessorTranspose,
+            InterfaceGroup.AccessorFillValue,
+            InterfaceGroup.AccessorRe,
+            InterfaceGroup.AccessorValues,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()

@@ -55,6 +55,7 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
+from static_frame.core.util import DtypesSpecifier
 
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')
@@ -837,6 +838,20 @@ class Batch(ContainerOperand, StoreClientMixin):
     # transformations resulting in the same dimensionality
 
 
+    def astype(self,
+            dtypes: DtypesSpecifier,
+            *,
+            consolidate_blocks: bool = True,
+            ) -> 'Batch':
+        '''
+        Return a new Batch with astype transformed.
+        '''
+        return self._apply_attr(
+                attr='astype',
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
+                )
+
     def rename(self,
             name: NameType = NAME_DEFAULT,
             *,
@@ -852,10 +867,6 @@ class Batch(ContainerOperand, StoreClientMixin):
                 index=index,
                 columns=columns,
                 )
-
-        # def gen() -> IteratorFrameItems:
-        #     yield from self._items
-        # return self._derive(gen, name=name)
 
     def sort_index(self,
             *,
