@@ -839,17 +839,14 @@ class Batch(ContainerOperand, StoreClientMixin):
 
 
     def astype(self,
-            dtypes: DtypesSpecifier,
-            *,
-            consolidate_blocks: bool = True,
+            dtype: DtypesSpecifier,
             ) -> 'Batch':
         '''
         Return a new Batch with astype transformed.
         '''
         return self._apply_attr(
                 attr='astype',
-                dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks,
+                dtype=dtype,
                 )
 
     def rename(self,

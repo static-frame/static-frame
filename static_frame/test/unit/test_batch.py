@@ -2632,6 +2632,18 @@ class TestUnit(TestCase):
                 (('zZbu', ((('a', 0), -88017), (('a', 1), 0), (('b', 0), -88017), (('b', 1), 0))), ('ztsv', ((('a', 0), 162197), (('a', 1), 0), (('b', 0), 162197), (('b', 1), 0))), ('zUvW', ((('a', 0), -3648), (('a', 1), 0), (('b', 0), -3648), (('b', 1), 0))))
                 )
 
+    #---------------------------------------------------------------------------
+
+    def test_batch_astype_a(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = Batch.from_frames((f1, f2)).astype(str).to_frame()
+        self.assertEqual(
+                [dt.kind for dt in post.dtypes.values],
+                ['U', 'U', 'U']
+                )
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
