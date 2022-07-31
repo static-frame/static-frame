@@ -457,7 +457,6 @@ class Display:
                 rows.append([cls.to_cell(row, config=config)])
         else:
             count_max = config.display_rows
-            # print('comparing values to count_max', len(values), count_max)
             if len(values) > config.display_rows:
                 data_half_count = Display.truncate_half_count(count_max)
                 value_gen = partial(_gen_skip_middle,
@@ -725,7 +724,6 @@ class Display:
                         cell_formatted = cell_format_str.format(cell_raw)
                         cell_fill_width = pad_width - len(cell.raw) # this includes margin
 
-                    # print(col_idx, row_idx, cell, max_width, pad_width, cell_fill_width)
                     if config.cell_align_left:
                         # must manually add space as color chars make ljust not work
                         msg = cell_formatted + ' ' * cell_fill_width

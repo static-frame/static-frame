@@ -228,9 +228,6 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1, f2))
         self.assertTrue(repr(b1).startswith('<Batch at '))
 
-        b2 = b1.rename('foo')
-        self.assertTrue(repr(b2).startswith('<Batch: foo at '))
-
     #---------------------------------------------------------------------------
 
     def test_batch_shapes_a(self) -> None:
@@ -438,9 +435,8 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1, f2), name='foo')
         self.assertEqual(b1.name, 'foo')
 
-        b2 = b1.rename('bar')
-        self.assertEqual(b2.name, 'bar')
-        self.assertEqual(tuple(b2.keys()), ('f1', 'f2'))
+        b2 = b1.rename('bar') # this rename contained Frame
+        self.assertEqual(tuple(f.name for f in b2.values), ('bar', 'bar'))
 
     #---------------------------------------------------------------------------
 
@@ -2634,6 +2630,18 @@ class TestUnit(TestCase):
         post = (Batch.from_frames((f1, f2)).via_fill_value(0).via_T * Series((1,))).to_frame()
         self.assertEqual(post.to_pairs(),
                 (('zZbu', ((('a', 0), -88017), (('a', 1), 0), (('b', 0), -88017), (('b', 1), 0))), ('ztsv', ((('a', 0), 162197), (('a', 1), 0), (('b', 0), 162197), (('b', 1), 0))), ('zUvW', ((('a', 0), -3648), (('a', 1), 0), (('b', 0), -3648), (('b', 1), 0))))
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_batch_astype_a(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = Batch.from_frames((f1, f2)).astype(str).to_frame()
+        self.assertEqual(
+                [dt.kind for dt in post.dtypes.values],
+                ['U', 'U', 'U']
                 )
 
 if __name__ == '__main__':

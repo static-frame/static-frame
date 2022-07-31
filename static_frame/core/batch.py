@@ -41,6 +41,7 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
+from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import BoolOrBools
@@ -54,6 +55,7 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
+from static_frame.core.util import DtypesSpecifier
 
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')
@@ -99,7 +101,7 @@ def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]
 #-------------------------------------------------------------------------------
 class Batch(ContainerOperand, StoreClientMixin):
     '''
-    A lazy, sequentially evaluated container of :obj:`Frame` that broadcasts operations on contained :obj:`Frame` by return new :obj:`Batch` instances. Full evaluation of operations only occurs when iterating or calling an exporter.
+    A lazy, sequentially evaluated container of :obj:`Frame` that broadcasts operations on contained :obj:`Frame` by return new :obj:`Batch` instances. Full evaluation of operations only occurs when iterating or calling an exporter, such as ``to_frame()`` or ``to_series()``.
     '''
 
     __slots__ = (
@@ -403,14 +405,6 @@ class Batch(ContainerOperand, StoreClientMixin):
     def name(self) -> NameType:
         '''{}'''
         return self._name
-
-    def rename(self, name: NameType) -> 'Batch':
-        '''
-        Return a new Batch with an updated name attribute.
-        '''
-        def gen() -> IteratorFrameItems:
-            yield from self._items
-        return self._derive(gen, name=name)
 
     #---------------------------------------------------------------------------
     @property
@@ -843,6 +837,34 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
+
+    def astype(self,
+            dtype: DtypesSpecifier,
+            ) -> 'Batch':
+        '''
+        Return a new Batch with astype transformed.
+        '''
+        return self._apply_attr(
+                attr='astype',
+                dtype=dtype,
+                )
+
+    def rename(self,
+            name: NameType = NAME_DEFAULT,
+            *,
+            index: NameType = NAME_DEFAULT,
+            columns: NameType = NAME_DEFAULT,
+            ) -> 'Batch':
+        '''
+        Return a new Batch with an updated name attribute.
+        '''
+        return self._apply_attr(
+                attr='rename',
+                name=name,
+                index=index,
+                columns=columns,
+                )
+
     def sort_index(self,
             *,
             ascending: bool = True,
@@ -994,6 +1016,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def roll(self,
             index: int = 0,
             columns: int = 0,
+            *,
             include_index: bool = False,
             include_columns: bool = False,
             ) -> 'Batch':
@@ -1461,6 +1484,8 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def count(self, *,
             skipna: bool = True,
+            skipfalsy: bool = False,
+            unique: bool = False,
             axis: int = 0,
             ) -> 'Batch':
         '''Apply count on contained Frames.
@@ -1468,6 +1493,8 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(
                 attr='count',
                 skipna=skipna,
+                skipfalsy=skipfalsy,
+                unique=unique,
                 axis=axis,
                 )
 
@@ -1696,10 +1723,6 @@ class Batch(ContainerOperand, StoreClientMixin):
             ) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''
-        # series = Series.from_items(
-        #         self.items(),
-        #         name=self._name,
-        #         dtype=DTYPE_OBJECT)
         frames = []
         index = []
         for i, f in self.items():
@@ -1710,4 +1733,5 @@ class Batch(ContainerOperand, StoreClientMixin):
                 index=index,
                 index_constructor=index_constructor,
                 config=self._config,
+                name=self._name,
                 )
