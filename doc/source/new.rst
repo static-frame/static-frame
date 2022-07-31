@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+0.9.9
+----------
+
+Updated ``arraykit`` to 0.1.12
+
+Set minimum `numpy` to 1.18.5
+
+
 0.9.8
 ----------
 
