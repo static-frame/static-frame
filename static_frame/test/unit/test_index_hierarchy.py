@@ -1241,6 +1241,12 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_index_items(())
         self.assertEqual((0, 2), ih.shape)
 
+    def test_hierarchy_from_index_items_d(self) -> None:
+        ih1 = IndexHierarchy.from_labels((('x', 0), ('y', 1)))
+        ih2 = IndexHierarchy.from_labels((('p', 0), ('q', 1)))
+        ih3 = IndexHierarchy.from_index_items((('a', ih1), ('b', ih2)))
+        breakpoint()
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_from_labels_delimited_a(self) -> None:

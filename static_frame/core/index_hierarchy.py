@@ -592,19 +592,12 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def from_index_items(cls: tp.Type[IH],
+    def _from_index_items_1d(cls: tp.Type[IH],
             items: tp.Iterable[tp.Tuple[tp.Hashable, Index]],
             *,
             index_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = None,
             ) -> IH:
-        '''
-        Given an iterable of pairs of label, :obj:`Index`, produce an :obj:`IndexHierarchy` where the labels are depth 0, the indices are depth 1.
-
-        Args:
-            items: iterable of pairs of label, :obj:`Index`.
-            index_constructor: Optionally provide index constructor for outermost index.
-        '''
         labels: tp.List[tp.Hashable] = []
         index_inner: tp.Optional[IndexGO] = None  # We will grow this in-place
         indexers_inner: tp.List[np.ndarray] = []
@@ -613,6 +606,9 @@ class IndexHierarchy(IndexBase):
         repeats: tp.List[int] = []
 
         for label, index in items:
+            if index._NDIM != 1:
+                raise ErrorInitIndex("All indices must have the same shape.")
+
             labels.append(label)
 
             if index_inner is None:
@@ -660,6 +656,73 @@ class IndexHierarchy(IndexBase):
                 indexers=indexers,
                 name=name,
                 )
+
+    @classmethod
+    def from_index_items(cls: tp.Type[IH],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, IndexBase]],
+            *,
+            index_constructors: IndexConstructors = None,
+            name: NameType = None,
+            ) -> IH:
+        '''
+        Given an iterable of pairs of label, :obj:`IndexBase`, produce an :obj:`IndexHierarchy` where the labels are depth 0, the indices are depth 1.
+
+        Args:
+            items: iterable of pairs of label, :obj:`IndexBase`.
+            index_constructor: Optionally provide index constructor for outermost index.
+        '''
+        items = iter(items)
+        try:
+            label, index = next(items)
+        except StopIteration:
+            return cls._from_empty((), name=name, depth_reference=2)
+
+        if index._NDIM == 1:
+            if index_constructors is not None:
+                try:
+                    [index_constructor] = list(index_constructors)
+                except TypeError:
+                    raise ErrorInitIndex('Must provide exactly one index constructor.')
+            else:
+                index_constructor = None
+
+            return cls._from_index_items_1d(
+                    itertools.chain([(label, index)], items),
+                    index_constructor=index_constructor,
+                    name=name,
+                    )
+
+        ndim = index._NDIM
+        labels: tp.List[tp.Hashable] = [label]
+        repeats: tp.List[int] = [len(index)]
+
+        blocks = [index._blocks]
+        for label, index in items:
+            if index._NDIM != ndim:
+                raise ErrorInitIndex("All indices must have the same shape.")
+
+            labels.append(label)
+            repeats.append(len(index))
+            blocks.append(index._blocks)
+
+        tb = TypeBlocks.from_blocks(TypeBlocks.vstack_blocks_to_blocks(blocks))
+        size, depth = tb.shape
+
+        def gen_columns():
+            for i in range(depth):
+                yield tb._extract_array_column(i).reshape(size)
+
+        index_constructors_iter = cls._build_index_constructors(
+                index_constructors=index_constructors,
+                depth=tb.shape[1],
+                )
+
+        indices, indexers = construct_indices_and_indexers_from_column_arrays(
+                column_iter=gen_columns(),
+                index_constructors_iter=index_constructors_iter,
+                )
+
+        return cls(indices=indices, indexers=indexers, name=name)
 
     @classmethod
     def from_labels_delimited(cls: tp.Type[IH],
