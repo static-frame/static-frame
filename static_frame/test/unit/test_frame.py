@@ -10035,7 +10035,12 @@ class TestUnit(TestCase):
                 ['U', 'U', 'b', 'U', 'U']
                 )
 
+    def test_frame_astype_h(self) -> None:
+        f1 = Frame().astype(str)
+        self.assertEqual(f1.shape, (0, 0))
 
+        f2 = Frame().astype[:](str)
+        self.assertEqual(f2.shape, (0, 0))
 
     #---------------------------------------------------------------------------
 
@@ -14061,6 +14066,27 @@ class TestUnit(TestCase):
                  (('ztsv', 172133, 'z5l6'), ((34715, 'z2Oo'), (91301, 'zCE3'))),
                  (('AAAA', 999999, 'abcd'), ((34715, 'abcd'), (91301, 'abcd'))))
                 )
+
+
+    def test_frame_relabel_shift_in_g(self) -> None:
+
+        f1 = ff.parse('s(5,4)|i(I,int)|c(I,str)|v(dtD, dtY)')
+        f2 = f1.relabel_shift_in(sf.ILoc[:2], axis=0, index_constructors=IndexDate)
+
+        self.assertEqual(
+                [dt.kind for dt in f2.index.dtypes.values],
+                ['i', 'M', 'M']
+                )
+
+        f3 = f1.relabel_shift_in(sf.ILoc[:2], axis=0, index_constructors=(IndexDate, IndexYear))
+        self.assertEqual(
+                [dt.kind for dt in f3.index.dtypes.values],
+                ['i', 'M', 'M']
+                )
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.relabel_shift_in(sf.ILoc[:2], axis=0, index_constructors=(IndexDate, IndexYear, IndexDate))
+
 
     #---------------------------------------------------------------------------
 
