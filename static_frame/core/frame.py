@@ -3807,9 +3807,8 @@ class Frame(ContainerOperand):
             ih_index_constructors.extend(index_constructors for _ in name_posterior)
         else: # assume properly sized iterable
             ih_index_constructors.extend(index_constructors)
-
-        if len(ih_index_constructors) != len(ih_name):
-            raise RuntimeError('Incorrect number of values in index_constructors.')
+            if len(ih_index_constructors) != len(ih_name):
+                raise RuntimeError('Incorrect number of values in index_constructors.')
 
         index_opposite = index_opposite._drop_iloc(iloc_key)
 
