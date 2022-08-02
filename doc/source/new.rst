@@ -6,7 +6,9 @@ What is New in StaticFrame
 
 Updated ``arraykit`` to 0.1.12
 
-Set minimum `numpy` to 1.18.5
+Set minimum ``numpy`` to 1.18.5
+
+Added ``index_constructors`` parameter to ``Frame.relabel_shift_in()``.
 
 
 0.9.8
