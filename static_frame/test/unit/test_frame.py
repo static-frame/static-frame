@@ -14062,6 +14062,27 @@ class TestUnit(TestCase):
                  (('AAAA', 999999, 'abcd'), ((34715, 'abcd'), (91301, 'abcd'))))
                 )
 
+
+    def test_frame_relabel_shift_in_g(self) -> None:
+
+        f1 = ff.parse('s(5,4)|i(I,int)|c(I,str)|v(dtD, dtY)')
+        f2 = f1.relabel_shift_in(sf.ILoc[:2], axis=0, index_constructors=IndexDate)
+
+        self.assertEqual(
+                [dt.kind for dt in f2.index.dtypes.values],
+                ['i', 'M', 'M']
+                )
+
+        f3 = f1.relabel_shift_in(sf.ILoc[:2], axis=0, index_constructors=(IndexDate, IndexYear))
+        self.assertEqual(
+                [dt.kind for dt in f3.index.dtypes.values],
+                ['i', 'M', 'M']
+                )
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.relabel_shift_in(sf.ILoc[:2], axis=0, index_constructors=(IndexDate, IndexYear, IndexDate))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_relabel_shift_out_a(self) -> None:
