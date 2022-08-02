@@ -10035,7 +10035,12 @@ class TestUnit(TestCase):
                 ['U', 'U', 'b', 'U', 'U']
                 )
 
+    def test_frame_astype_h(self) -> None:
+        f1 = Frame().astype(str)
+        self.assertEqual(f1.shape, (0, 0))
 
+        f2 = Frame().astype[:](str)
+        self.assertEqual(f2.shape, (0, 0))
 
     #---------------------------------------------------------------------------
 
