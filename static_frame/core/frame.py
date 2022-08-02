@@ -8690,7 +8690,7 @@ class FrameAsType:
             *,
             consolidate_blocks: bool = True,
             ) -> 'Frame':
-        '''This method is only called after a __getitem__() call has been made; this instance is created and returned from that __getitem__() call; this is instance then exposes __call__() for the final provisioning of dtypes.
+        '''This method is only called after a __getitem__() selection has been made; this instance is created and returned from that __getitem__() call; this instance then exposes __call__() for the final provisioning of dtypes. When a root node gets __call__() direclty, an instance if this object is created and called.
         '''
         if self.column_key.__class__ is slice and self.column_key == NULL_SLICE:
             dtype_factory = get_col_dtype_factory(dtypes, self.container._columns)

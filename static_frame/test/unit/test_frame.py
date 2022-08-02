@@ -10042,7 +10042,6 @@ class TestUnit(TestCase):
         f2 = Frame().astype[:](str)
         self.assertEqual(f2.shape, (0, 0))
 
-
     #---------------------------------------------------------------------------
 
     def test_frame_pickle_a(self) -> None:
