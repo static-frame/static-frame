@@ -89,8 +89,9 @@ class InterfaceValues(Interface[TContainer]):
         if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
 
-        def func(block: np.ndarray) -> np.ndarray:
-            block = column_2d_filter(block)
+        def func(block: np.ndarray, normalize_2d: bool = True) -> np.ndarray:
+            if normalize_2d:
+                block = column_2d_filter(block)
 
             # look for self in args and replace with block
             args_final = [block]
@@ -151,10 +152,14 @@ class InterfaceValues(Interface[TContainer]):
                 own_blocks=True,
                 )
         # all 1D containers
-        if dtype is not None:
-            values = func(self._container.values.astype(dtype))
+        if self._dtype is not None:
+            values = func(self._container.values.astype(self._dtype),
+                    normalize_2d=False,
+                    )
         else:
-            values = func(self._container.values)
+            values = func(self._container.values,
+                    normalize_2d=False,
+                    )
 
         if isinstance(self._container, Series):
             return self._container.__class__(values,
