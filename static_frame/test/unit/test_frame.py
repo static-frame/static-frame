@@ -12558,36 +12558,35 @@ class TestUnit(TestCase):
         f = ff.parse('s(3,4)|v(int,float)|c(I,str)')
         # post1 = abs(f).via_values.apply(np.log)
 
-        post1 = np.log(abs(f).via_values())
-        import ipdb; ipdb.set_trace()
+        post1 = np.log(abs(f).via_values)
 
         self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
-        post2 = abs(f).via_values.apply(np.log, unify_blocks=True)
+        post2 = np.log(abs(f).via_values(unify_blocks=True))
         self.assertEqual(round(post2.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
-        post3 = abs(f).via_values.apply(np.log, consolidate_blocks=True)
+        post3 = np.log(abs(f).via_values(consolidate_blocks=True))
         self.assertEqual(round(post3.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
-        post4 = abs(f).via_values.apply(np.log, consolidate_blocks=True, dtype=float)
+        post4 = np.log(abs(f).via_values(consolidate_blocks=True, dtype=float))
         self.assertEqual(round(post4.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
-        post1 = abs(f).via_values.apply(np.log, dtype=float)
+        post1 = np.log(abs(f).via_values(dtype=float))
         self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
     def test_frame_via_values_apply_b(self) -> None:
         f = ff.parse('s(3,4)|v(bool)|c(I,str)')
-        post1 = f.via_values.apply(np.sin)
+        post1 = np.sin(f.via_values)
         self.assertEqual(round(post1).to_pairs(), #type: ignore
                 (('zZbu', ((0, 0.0), (1, 0.0), (2, 0.0))), ('ztsv', ((0, 0.0), (1, 0.0), (2, 0.0))), ('zUvW', ((0, 1.0), (1, 0.0), (2, 0.0))), ('zkuW', ((0, 0.0), (1, 0.0), (2, 1.0))))
                 )
@@ -12595,7 +12594,7 @@ class TestUnit(TestCase):
     def test_frame_via_values_array_a(self) -> None:
         f = ff.parse('s(3,4)|v(float)|c(I,str)')
         post1 = np.cos(f.via_values)
-        self.assertEqual(post1.round(2).tolist(),
+        self.assertEqual(post1.values.round(2).tolist(),
                 [[0.11, 0.24, -1.0, 0.95],
                 [0.5, -0.24, -0.76, -0.46],
                 [-0.79, 1.0, -0.73, -0.99]]
@@ -12603,7 +12602,7 @@ class TestUnit(TestCase):
 
     def test_frame_via_values_array_b(self) -> None:
         f = ff.parse('s(3,4)|v(float)|c(I,str)')
-        post1 = np.sum(f.via_values, axis=0)
+        post1 = np.sum(f.values, axis=0)
         self.assertEqual(post1.round(2).tolist(),
                 [2027.4, 1810.0, 2447.36, 4361.16]
                 )

@@ -18,8 +18,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
 
-
-
 TContainer = tp.TypeVar('TContainer',
         'Frame',
         'IndexHierarchy',
@@ -55,6 +53,24 @@ class InterfaceValues(Interface[TContainer]):
         self._consolidate_blocks = consolidate_blocks
         self._unify_blocks = unify_blocks
         self._dtype = dtype
+
+    def __call__(self,
+            *,
+            consolidate_blocks: bool = False,
+            unify_blocks: bool = False,
+            dtype: DtypeSpecifier = None,
+            ):
+        '''
+        Args:
+            consolidate_blocks: Group adjacent same-typed arrays into 2D arrays.
+            unify_blocks: Group all arrays into single array, re-typing to an appropriate dtype.
+            dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
+        '''
+        return self.__class__(self._container,
+                consolidate_blocks=consolidate_blocks,
+                unify_blocks=unify_blocks,
+                dtype=dtype,
+                )
 
     def __array_ufunc__(self,
             ufunc: UFunc,
