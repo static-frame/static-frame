@@ -1,7 +1,9 @@
-
 import typing as tp
 
 import numpy as np
+
+from arraykit import column_2d_filter
+
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
@@ -26,7 +28,7 @@ TContainer = tp.TypeVar('TContainer',
         )
 
 INTERFACE_VALUES = (
-        'apply',
+        # 'apply',
         '__array_ufunc__',
         )
 
@@ -84,6 +86,7 @@ class InterfaceValues(Interface[TContainer]):
             return NotImplemented #pragma: no cover
 
         def func(block: np.ndarray) -> np.ndarray:
+            block = column_2d_filter(block)
             args_final = [(arg if arg is not self else block)
                 for arg in args]
             if method == '__call__':
