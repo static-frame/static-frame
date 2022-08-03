@@ -27,10 +27,14 @@ TContainer = tp.TypeVar('TContainer',
         'Index',
         )
 
+FrameOrSeries = tp.Union['Frame', 'Series']
+
 INTERFACE_VALUES = (
-        # 'apply',
+        'apply',
         '__array_ufunc__',
         )
+VALID_UFUNC_ARRAY_METHODS = frozenset(('__call__', 'reduce'))
+
 
 class InterfaceValues(Interface[TContainer]):
     '''
@@ -79,16 +83,23 @@ class InterfaceValues(Interface[TContainer]):
             method: str,
             *args: tp.Any,
             **kwargs: tp.Any,
-            ) -> np.ndarray:
+            ) -> FrameOrSeries:
         '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
         '''
-        if method not in ('__call__', 'reduce'):
+        if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
 
         def func(block: np.ndarray) -> np.ndarray:
             block = column_2d_filter(block)
-            args_final = [(arg if arg is not self else block)
-                for arg in args]
+
+            # look for self in args and replace with block
+            args_final = [block]
+            for arg in args:
+                if arg is self:
+                    continue
+                args_final.append(arg)
+            # [(arg if arg is not self else block) for arg in args]
+
             if method == '__call__':
                 return ufunc(*args_final, **kwargs)
             elif method == 'reduce':
@@ -157,34 +168,54 @@ class InterfaceValues(Interface[TContainer]):
                 )
 
 
+    def apply(self,
+            func: UFunc,
+            *args: tp.Any,
+            **kwargs: tp.Any,
+            ) -> FrameOrSeries:
+        return self.__array_ufunc__(
+                ufunc=func,
+                method='__call__',
+                *args,
+                **kwargs,
+                )
+
 class InterfaceBatchValues(InterfaceBatch):
 
     __slots__ = (
             '_batch_apply',
+            '_consolidate_blocks',
+            '_unify_blocks',
+            '_dtype',
             )
     INTERFACE = INTERFACE_VALUES
 
     def __init__(self,
             batch_apply: tp.Callable[[AnyCallable], 'Batch'],
-            ) -> None:
-        self._batch_apply = batch_apply
-
-    #---------------------------------------------------------------------------
-    def apply(self,
-            func: UFunc,
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
             dtype: DtypeSpecifier = None,
+            ) -> None:
+        self._batch_apply = batch_apply
+        self._consolidate_blocks = consolidate_blocks
+        self._unify_blocks = unify_blocks
+        self._dtype = dtype
+
+    #---------------------------------------------------------------------------
+    def apply(self,
+            func: UFunc,
+            *args: tp.Any,
+            **kwargs: tp.Any,
             ) -> 'Batch':
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
-        return self._batch_apply(lambda c: c.via_values.apply(func,
-                consolidate_blocks=consolidate_blocks,
-                unify_blocks=unify_blocks,
-                dtype=dtype,
-                ))
+        return self._batch_apply(lambda c: c.via_values(
+                consolidate_blocks=self._consolidate_blocks,
+                unify_blocks=self._unify_blocks,
+                dtype=self._dtype,
+                ).apply(func, *args, **kwargs))
 
     def __array_ufunc__(self,
             ufunc: UFunc,
@@ -195,19 +226,33 @@ class InterfaceBatchValues(InterfaceBatch):
         '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
         '''
         # NOTE: want to fail method is not supported at call time of this function, not the deferred execution via Batch
-        if method == '__call__':
-            def func(c: TContainer) -> np.ndarray:
-                nonlocal args
-                args_final = [(arg if arg is not self else c.values) for arg in args]
-                return ufunc(*args_final, **kwargs)
-        elif method == 'reduce':
-            def func(c: TContainer) -> np.ndarray:
-                nonlocal args
-                args_final = [(arg if arg is not self else c.values) for arg in args]
-                func = getattr(ufunc, method)
-                return func(*args_final, **kwargs)
-        else:
+        if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
+
+        def func(c: TContainer) -> np.ndarray:
+            return c.via_values(
+                    consolidate_blocks=self._consolidate_blocks,
+                    unify_blocks=self._unify_blocks,
+                    dtype=self._dtype,
+                    ).__array_ufunc__(ufunc=ufunc,
+                            method=method,
+                            *args,
+                            **kwargs,
+                            )
+
+        # if method == '__call__':
+        #     def func(c: TContainer) -> np.ndarray:
+        #         nonlocal args
+        #         args_final = [(arg if arg is not self else c.values) for arg in args]
+        #         return ufunc(*args_final, **kwargs)
+        # elif method == 'reduce':
+        #     def func(c: TContainer) -> np.ndarray:
+        #         nonlocal args
+        #         args_final = [(arg if arg is not self else c.values) for arg in args]
+        #         func = getattr(ufunc, method)
+        #         return func(*args_final, **kwargs)
+        # else:
+        #     return NotImplemented #pragma: no cover
 
         return self._batch_apply(func)
 
