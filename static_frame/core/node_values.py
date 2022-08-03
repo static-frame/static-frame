@@ -178,8 +178,8 @@ class InterfaceValues(Interface[TContainer]):
             **kwargs: tp.Any,
             ) -> TContainer:
         return self.__array_ufunc__(
-                ufunc=func,
-                method='__call__',
+                func,
+                '__call__',
                 *args,
                 **kwargs,
                 )

@@ -12553,7 +12553,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_via_values_apply_a(self) -> None:
+    def test_frame_via_values_a(self) -> None:
 
         f = ff.parse('s(3,4)|v(int,float)|c(I,str)')
         # post1 = abs(f).via_values.apply(np.log)
@@ -12584,14 +12584,14 @@ class TestUnit(TestCase):
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
-    def test_frame_via_values_apply_b(self) -> None:
+    def test_frame_via_values_b(self) -> None:
         f = ff.parse('s(3,4)|v(bool)|c(I,str)')
         post1 = np.sin(f.via_values)
         self.assertEqual(round(post1).to_pairs(), #type: ignore
                 (('zZbu', ((0, 0.0), (1, 0.0), (2, 0.0))), ('ztsv', ((0, 0.0), (1, 0.0), (2, 0.0))), ('zUvW', ((0, 1.0), (1, 0.0), (2, 0.0))), ('zkuW', ((0, 0.0), (1, 0.0), (2, 1.0))))
                 )
 
-    def test_frame_via_values_array_a(self) -> None:
+    def test_frame_via_values_c(self) -> None:
         f = ff.parse('s(3,4)|v(float)|c(I,str)')
         post1 = np.cos(f.via_values)
         self.assertEqual(post1.values.round(2).tolist(),
@@ -12600,12 +12600,28 @@ class TestUnit(TestCase):
                 [-0.79, 1.0, -0.73, -0.99]]
                 )
 
-    def test_frame_via_values_array_b(self) -> None:
-        f = ff.parse('s(3,4)|v(float)|c(I,str)')
-        post1 = np.sum(f.values, axis=0)
-        self.assertEqual(post1.round(2).tolist(),
-                [2027.4, 1810.0, 2447.36, 4361.16]
+    def test_frame_via_values_d(self) -> None:
+        f = ff.parse('s(3,4)|v(int)|c(I,str)') % 4
+        post1 = np.power(f.via_values, 2)
+        self.assertEqual(post1.to_pairs(),
+                (('zZbu', ((0, 9), (1, 9), (2, 9))), ('ztsv', ((0, 1), (1, 9), (2, 1))), ('zUvW', ((0, 0), (1, 1), (2, 1))), ('zkuW', ((0, 1), (1, 1), (2, 0))))
                 )
+
+        post2 = f.via_values.apply(np.power, 2)
+        self.assertEqual(post1.to_pairs(),
+                (('zZbu', ((0, 9), (1, 9), (2, 9))), ('ztsv', ((0, 1), (1, 9), (2, 1))), ('zUvW', ((0, 0), (1, 1), (2, 1))), ('zkuW', ((0, 1), (1, 1), (2, 0))))
+                )
+
+    def test_frame_via_values_e(self) -> None:
+        f = ff.parse('s(3,4)|v(int, bool)|c(I,str)')
+
+        post2 = np.power(f.via_values(unify_blocks=True), 2)
+        self.assertEqual(
+            [dt.kind for dt in post2.dtypes.values],
+            ['O', 'O', 'O', 'O']
+            )
+        import ipdb; ipdb.set_trace()
+
 
     #---------------------------------------------------------------------------
 
