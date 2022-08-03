@@ -3096,12 +3096,24 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # via interfaces
 
-    @property
-    def via_values(self) -> InterfaceValues['Frame']:
+    def via_values(self,
+            consolidate_blocks: bool = False,
+            unify_blocks: bool = False,
+            dtype: DtypeSpecifier = None,
+            ) -> InterfaceValues['Frame']:
         '''
         Interface for applying functions to values (as arrays) in this container.
+
+        Args:
+            consolidate_blocks: Group adjacent same-typed arrays into 2D arrays.
+            unify_blocks: Group all arrays into single array, re-typing to an appropriate dtype.
+            dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
         '''
-        return InterfaceValues(self)
+        return InterfaceValues(self,
+                consolidate_blocks=consolidate_blocks,
+                unify_blocks=unify_blocks,
+                dtype=dtype,
+                )
 
     @property
     def via_str(self) -> InterfaceString['Frame']:

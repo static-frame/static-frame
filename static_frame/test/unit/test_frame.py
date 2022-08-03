@@ -12556,7 +12556,11 @@ class TestUnit(TestCase):
     def test_frame_via_values_apply_a(self) -> None:
 
         f = ff.parse('s(3,4)|v(int,float)|c(I,str)')
-        post1 = abs(f).via_values.apply(np.log)
+        # post1 = abs(f).via_values.apply(np.log)
+
+        post1 = np.log(abs(f).via_values())
+        import ipdb; ipdb.set_trace()
+
         self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )

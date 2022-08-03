@@ -33,33 +33,63 @@ INTERFACE_VALUES = (
         )
 
 class InterfaceValues(Interface[TContainer]):
-
+    '''
+    If a user wants to call a ufunc and get back an array of variable dimensionality, they have to call that ufunc on one consolidated array via .values; any attempt at block-level manipulation will have to, under some scenarios, figure out how to combine the per-block results (and an appropriate type) into an array. This is undesirable. Instead, all applications of this interface must use UFuncs that retain dimensionality.
+    '''
     __slots__ = (
             '_container',
+            '_consolidate_blocks',
+            '_unify_blocks',
+            '_dtype',
             )
     INTERFACE = INTERFACE_VALUES
 
     def __init__(self,
             container: TContainer,
-            ) -> None:
-        self._container: TContainer = container
-
-    #---------------------------------------------------------------------------
-    def apply(self,
-            func: UFunc,
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
             dtype: DtypeSpecifier = None,
-            ) -> TContainer:
-        '''
-        Interface for applying functions direclty to underly NumPy arrays.
+            ) -> None:
+        self._container: TContainer = container
+        self._consolidate_blocks = consolidate_blocks
+        self._unify_blocks = unify_blocks
+        self._dtype = dtype
 
-        Args:
-            consolidate_blocks: Group adjacent same-typed arrays into 2D arrays.
-            unify_blocks: Group all arrays into single array, re-typing to an appropriate dtype.
-            dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
+    #---------------------------------------------------------------------------
+    # def apply(self,
+    #         func: UFunc,
+    #         *args,
+    #         **kwargs
+    #         ) -> TContainer:
+    #     '''
+    #     Interface for applying functions direclty to underly NumPy arrays.
+
+    #     Args:
+    #         *args: positional arguments passed to the UFunc.
+    #         **kwargs: key-word arguments passed to the UFunc.
+    #     '''
+
+    def __array_ufunc__(self,
+            ufunc: UFunc,
+            method: str,
+            *args: tp.Any,
+            **kwargs: tp.Any,
+            ) -> np.ndarray:
+        '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
         '''
+        if method not in ('__call__', 'reduce'):
+            return NotImplemented #pragma: no cover
+
+        def func(block: np.ndarray) -> np.ndarray:
+            args_final = [(arg if arg is not self else block)
+                for arg in args]
+            if method == '__call__':
+                return ufunc(*args_final, **kwargs)
+            elif method == 'reduce':
+                func = getattr(ufunc, method)
+                return func(*args_final, **kwargs)
+
         from static_frame.core.frame import Frame
         from static_frame.core.series import Series
         # from static_frame.core.frame import IndexHierarchy
@@ -67,22 +97,22 @@ class InterfaceValues(Interface[TContainer]):
         if self._container._NDIM == 2:
             blocks: tp.Iterable[np.ndarray] = self._container._blocks._blocks #type: ignore
 
-            if unify_blocks:
-                dtype = self._container._blocks._row_dtype if dtype is None else dtype #type: ignore
+            if self._unify_blocks:
+                dtype = self._container._blocks._row_dtype if self._dtype is None else self._dtype #type: ignore
                 tb = TypeBlocks.from_blocks(func(blocks_to_array_2d(
                         blocks=blocks,
                         shape=self._container.shape,
                         dtype=dtype,
                         )))
-            elif consolidate_blocks:
-                if dtype is not None:
-                    blocks = (b.astype(dtype) for b in blocks)
+            elif self._consolidate_blocks:
+                if self._dtype is not None:
+                    blocks = (b.astype(self._dtype) for b in blocks)
                 tb = TypeBlocks.from_blocks(
                         func(b) for b in TypeBlocks.consolidate_blocks(blocks)
                         )
             else:
-                if dtype is not None:
-                    blocks = (func(b.astype(dtype)) for b in blocks)
+                if self._dtype is not None:
+                    blocks = (func(b.astype(self._dtype)) for b in blocks)
                 else:
                     blocks = (func(b) for b in blocks)
                 tb = TypeBlocks.from_blocks(blocks)
@@ -97,12 +127,12 @@ class InterfaceValues(Interface[TContainer]):
                         own_data=True,
                         own_columns=self._container.STATIC,
                         )
-            else: #IndexHierarchy
-                return self._container._from_type_blocks( #type: ignore
-                    tb,
-                    index_constructors=self._container._index_constructors, # type: ignore
-                    name=self._container._name,
-                    own_blocks=True,
+            #IndexHierarchy
+            return self._container._from_type_blocks( #type: ignore
+                tb,
+                index_constructors=self._container._index_constructors, # type: ignore
+                name=self._container._name,
+                own_blocks=True,
                 )
         # all 1D containers
         if dtype is not None:
@@ -120,26 +150,6 @@ class InterfaceValues(Interface[TContainer]):
         return self._container.__class__(values,
                 name=self._container.name,
                 )
-
-
-    def __array_ufunc__(self,
-            ufunc: UFunc,
-            method: str,
-            *args: tp.Any,
-            **kwargs: tp.Any,
-            ) -> np.ndarray:
-        '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
-        '''
-        args_final = [(arg if arg is not self else arg._container.values)
-                for arg in args]
-
-        if method == '__call__':
-            return ufunc(*args_final, **kwargs)
-        elif method == 'reduce':
-            func = getattr(ufunc, method)
-            return func(*args_final, **kwargs)
-
-        return NotImplemented #pragma: no cover
 
 
 class InterfaceBatchValues(InterfaceBatch):
