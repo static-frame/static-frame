@@ -56,20 +56,6 @@ class InterfaceValues(Interface[TContainer]):
         self._unify_blocks = unify_blocks
         self._dtype = dtype
 
-    #---------------------------------------------------------------------------
-    # def apply(self,
-    #         func: UFunc,
-    #         *args,
-    #         **kwargs
-    #         ) -> TContainer:
-    #     '''
-    #     Interface for applying functions direclty to underly NumPy arrays.
-
-    #     Args:
-    #         *args: positional arguments passed to the UFunc.
-    #         **kwargs: key-word arguments passed to the UFunc.
-    #     '''
-
     def __array_ufunc__(self,
             ufunc: UFunc,
             method: str,
