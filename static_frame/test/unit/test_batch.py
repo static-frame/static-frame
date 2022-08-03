@@ -1599,7 +1599,7 @@ class TestUnit(TestCase):
             self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
 
     #---------------------------------------------------------------------------
-    def test_batch_via_values_apply(self) -> None:
+    def test_batch_via_values_a(self) -> None:
         f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
         f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
         post = Batch.from_frames((f1, f2)).via_values.apply(np.cos).to_frame()
@@ -1607,7 +1607,7 @@ class TestUnit(TestCase):
                 (('zZbu', ((('a', 0), -0.54), (('a', 1), 0.05), (('b', 0), -0.54), (('b', 1), 0.05))), ('ztsv', ((('a', 0), -0.96), (('a', 1), -0.54), (('b', 0), -0.96), (('b', 1), -0.54))), ('zUvW', ((('a', 0), -0.82), (('a', 1), 1.0), (('b', 0), -0.82), (('b', 1), 1.0))))
                 )
 
-    def test_batch_via_values_array_ufunc_a(self) -> None:
+    def test_batch_via_values_b(self) -> None:
         f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
         f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
         post = np.sin(Batch.from_frames((f1, f2)).via_values).to_frame()
@@ -1615,7 +1615,7 @@ class TestUnit(TestCase):
                 (('zZbu', ((('a', 0), -0.84), (('a', 1), 1.0), (('b', 0), -0.84), (('b', 1), 1.0))), ('ztsv', ((('a', 0), 0.28), (('a', 1), -0.84), (('b', 0), 0.28), (('b', 1), -0.84))), ('zUvW', ((('a', 0), 0.57), (('a', 1), 0.03), (('b', 0), 0.57), (('b', 1), 0.03))))
                 )
 
-    def test_batch_via_values_array_ufunc_b(self) -> None:
+    def test_batch_via_values_c(self) -> None:
         f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
         f2 = ff.parse('s(2,3)|v(float)|c(I,str)').rename('b')
         post = Batch.from_frames((f1, f2)).apply(lambda s: np.sum(s.values)).to_series()
@@ -1623,6 +1623,16 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
             (('a', 213543.0), ('b', 3424.54))
             )
+
+    def test_batch_via_values_d(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a') % 3
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b') % 3
+        post = np.power(Batch.from_frames((f1, f2)).via_values(dtype=float), 2).to_frame()
+        self.assertEqual([dt.kind for dt in post.dtypes.values], ['f', 'f', 'f'])
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), 0.0), (('a', 1), 4.0), (('b', 0), 0.0), (('b', 1), 4.0))), ('ztsv', ((('a', 0), 4.0), (('a', 1), 0.0), (('b', 0), 4.0), (('b', 1), 0.0))), ('zUvW', ((('a', 0), 0.0), (('a', 1), 4.0), (('b', 0), 0.0), (('b', 1), 4.0)))))
+
+        # import ipdb; ipdb.set_trace()
 
 
     #---------------------------------------------------------------------------

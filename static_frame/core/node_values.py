@@ -31,7 +31,8 @@ INTERFACE_VALUES = (
         'apply',
         '__array_ufunc__',
         )
-VALID_UFUNC_ARRAY_METHODS = frozenset(('__call__', 'reduce'))
+
+VALID_UFUNC_ARRAY_METHODS = frozenset(('__call__',))
 
 
 class InterfaceValues(Interface[TContainer]):
@@ -84,6 +85,9 @@ class InterfaceValues(Interface[TContainer]):
             ) -> TContainer:
         '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
         '''
+        from static_frame.core.frame import Frame
+        from static_frame.core.series import Series
+
 
         if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
@@ -99,16 +103,7 @@ class InterfaceValues(Interface[TContainer]):
                     continue
                 args_final.append(arg)
             # [(arg if arg is not self else block) for arg in args]
-
-            if method == '__call__':
-                return ufunc(*args_final, **kwargs)
-            elif method == 'reduce':
-                func = getattr(ufunc, method)
-                return func(*args_final, **kwargs)
-
-        from static_frame.core.frame import Frame
-        from static_frame.core.series import Series
-        # from static_frame.core.frame import IndexHierarchy
+            return ufunc(*args_final, **kwargs)
 
         if self._container._NDIM == 2:
             blocks: tp.Iterable[np.ndarray] = self._container._blocks._blocks #type: ignore
