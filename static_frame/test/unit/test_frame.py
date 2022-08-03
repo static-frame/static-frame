@@ -12615,12 +12615,17 @@ class TestUnit(TestCase):
     def test_frame_via_values_e(self) -> None:
         f = ff.parse('s(3,4)|v(int, bool)|c(I,str)')
 
+        post1 = np.power(f.via_values(), 2)
+        self.assertEqual(
+            [dt.kind for dt in post1.dtypes.values],
+            ['i', 'i', 'i', 'i']
+            )
+
         post2 = np.power(f.via_values(unify_blocks=True), 2)
         self.assertEqual(
             [dt.kind for dt in post2.dtypes.values],
             ['O', 'O', 'O', 'O']
             )
-        import ipdb; ipdb.set_trace()
 
 
     #---------------------------------------------------------------------------
