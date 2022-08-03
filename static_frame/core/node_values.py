@@ -27,8 +27,6 @@ TContainer = tp.TypeVar('TContainer',
         'Index',
         )
 
-FrameOrSeries = tp.Union['Frame', 'Series']
-
 INTERFACE_VALUES = (
         'apply',
         '__array_ufunc__',
@@ -65,7 +63,7 @@ class InterfaceValues(Interface[TContainer]):
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
             dtype: DtypeSpecifier = None,
-            ):
+            ) -> 'InterfaceValues[TContainer]':
         '''
         Args:
             consolidate_blocks: Group adjacent same-typed arrays into 2D arrays.
@@ -83,7 +81,7 @@ class InterfaceValues(Interface[TContainer]):
             method: str,
             *args: tp.Any,
             **kwargs: tp.Any,
-            ) -> FrameOrSeries:
+            ) -> TContainer:
         '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
         '''
 
@@ -178,7 +176,7 @@ class InterfaceValues(Interface[TContainer]):
             func: UFunc,
             *args: tp.Any,
             **kwargs: tp.Any,
-            ) -> FrameOrSeries:
+            ) -> TContainer:
         return self.__array_ufunc__(
                 ufunc=func,
                 method='__call__',
@@ -228,7 +226,7 @@ class InterfaceBatchValues(InterfaceBatch):
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
             dtype: DtypeSpecifier = None,
-            ):
+            ) -> 'InterfaceBatchValues':
         '''
         Args:
             consolidate_blocks: Group adjacent same-typed arrays into 2D arrays.
@@ -263,20 +261,6 @@ class InterfaceBatchValues(InterfaceBatch):
                             *args,
                             **kwargs,
                             )
-
-        # if method == '__call__':
-        #     def func(c: TContainer) -> np.ndarray:
-        #         nonlocal args
-        #         args_final = [(arg if arg is not self else c.values) for arg in args]
-        #         return ufunc(*args_final, **kwargs)
-        # elif method == 'reduce':
-        #     def func(c: TContainer) -> np.ndarray:
-        #         nonlocal args
-        #         args_final = [(arg if arg is not self else c.values) for arg in args]
-        #         func = getattr(ufunc, method)
-        #         return func(*args_final, **kwargs)
-        # else:
-        #     return NotImplemented #pragma: no cover
 
         return self._batch_apply(func)
 
