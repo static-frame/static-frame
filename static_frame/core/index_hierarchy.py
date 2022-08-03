@@ -7,6 +7,7 @@ from functools import partial
 
 import numpy as np
 from arraykit import name_filter
+from arraykit import get_new_indexers_and_screen
 
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import index_from_optional_constructor
@@ -1910,7 +1911,12 @@ class IndexHierarchy(IndexBase):
         new_indexers: np.ndarray = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (index, indexer) in enumerate(zip(self._indices, self._indexers)):
-            unique_indexes, new_indexer = ufunc_unique1d_indexer(indexer[key])
+            selection = indexer[key]
+            if len(index) > len(selection):
+                unique_indexes, new_indexer = ufunc_unique1d_indexer(selection)
+            else:
+                unique_indexes, new_indexer = get_new_indexers_and_screen(selection, index.positions)
+
             new_indices.append(index._extract_iloc(unique_indexes))
             new_indexers[i] = new_indexer
 
