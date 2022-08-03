@@ -86,6 +86,7 @@ class InterfaceValues(Interface[TContainer]):
             ) -> FrameOrSeries:
         '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
         '''
+
         if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
 
@@ -93,10 +94,10 @@ class InterfaceValues(Interface[TContainer]):
             if normalize_2d:
                 block = column_2d_filter(block)
 
-            # look for self in args and replace with block
+            # NOTE: we assume that our target array (the passed in block) should alwasy be the first argument; then, we filter out arguments that are either this object or an InterfaceBatchValues instance
             args_final = [block]
             for arg in args:
-                if arg is self:
+                if arg is self or isinstance(arg, InterfaceBatchValues):
                     continue
                 args_final.append(arg)
             # [(arg if arg is not self else block) for arg in args]
@@ -222,6 +223,24 @@ class InterfaceBatchValues(InterfaceBatch):
                 dtype=self._dtype,
                 ).apply(func, *args, **kwargs))
 
+    def __call__(self,
+            *,
+            consolidate_blocks: bool = False,
+            unify_blocks: bool = False,
+            dtype: DtypeSpecifier = None,
+            ):
+        '''
+        Args:
+            consolidate_blocks: Group adjacent same-typed arrays into 2D arrays.
+            unify_blocks: Group all arrays into single array, re-typing to an appropriate dtype.
+            dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
+        '''
+        return self.__class__(self._batch_apply,
+                consolidate_blocks=consolidate_blocks,
+                unify_blocks=unify_blocks,
+                dtype=dtype,
+                )
+
     def __array_ufunc__(self,
             ufunc: UFunc,
             method: str,
@@ -239,8 +258,8 @@ class InterfaceBatchValues(InterfaceBatch):
                     consolidate_blocks=self._consolidate_blocks,
                     unify_blocks=self._unify_blocks,
                     dtype=self._dtype,
-                    ).__array_ufunc__(ufunc=ufunc,
-                            method=method,
+                    ).__array_ufunc__(ufunc,
+                            method,
                             *args,
                             **kwargs,
                             )
