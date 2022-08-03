@@ -434,8 +434,7 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2), name='foo')
         self.assertEqual(b1.name, 'foo')
-        post = repr(b1)
-        import ipdb; ipdb.set_trace()
+        self.assertTrue(repr(b1).startswith('<Batch: foo'))
 
         b2 = b1.rename('bar') # this rename contained Frame
         self.assertEqual(tuple(f.name for f in b2.values), ('bar', 'bar'))
