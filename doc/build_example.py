@@ -4700,7 +4700,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
     inter = InterfaceSummary.to_frame(target, #type: ignore
             minimized=False,
-            max_args=99, # +inf, but keep as int
+            max_args=99,
             )
 
     for ig in (
