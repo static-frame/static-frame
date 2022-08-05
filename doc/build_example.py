@@ -537,6 +537,8 @@ class ExGen:
             yield f'{name}.via_values.apply(np.sin){exporter}'
         elif attr == 'via_values.__array_ufunc__()':
             yield f'np.sin({name}.via_values){exporter}'
+        elif attr == 'via_values.__call__()':
+            yield f'np.sin({name}.via_values(unify_blocks=True)){exporter}'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -4654,13 +4656,11 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_values(row, 'bt', '', BATCH_INIT_D, '.to_frame()')
-
+        yield from ExGen.accessor_values(row, 'bt', '', BATCH_INIT_A, '.to_frame()')
 
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
-
 
 
 def calls_to_msg(calls: tp.Iterator[str],
@@ -4787,7 +4787,6 @@ def write():
 if __name__ == '__main__':
     for line in gen_all_examples():
         print(line)
-        pass
     # write()
 
 

@@ -30,6 +30,7 @@ TContainer = tp.TypeVar('TContainer',
 INTERFACE_VALUES = (
         'apply',
         '__array_ufunc__',
+        '__call__',
         )
 
 VALID_UFUNC_ARRAY_METHODS = frozenset(('__call__',))

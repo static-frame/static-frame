@@ -942,6 +942,7 @@ class InterfaceSummary(Features):
                     InterfaceString,
                     InterfaceDatetime,
                     InterfaceTranspose,
+                    InterfaceBatchValues,
                     InterfaceBatchString,
                     InterfaceBatchDatetime,
                     InterfaceBatchTranspose,
