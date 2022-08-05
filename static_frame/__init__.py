@@ -76,7 +76,7 @@ from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroup
 from static_frame.core.node_iter import IterNodeGroupAxis
-from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeType as IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
@@ -113,4 +113,4 @@ from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFil
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '0.9.8'
+__version__ = '0.9.9'

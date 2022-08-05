@@ -3100,6 +3100,11 @@ class Frame(ContainerOperand):
     def via_values(self) -> InterfaceValues['Frame']:
         '''
         Interface for applying functions to values (as arrays) in this container.
+
+        Args:
+            consolidate_blocks: Group adjacent same-typed arrays into 2D arrays.
+            unify_blocks: Group all arrays into single array, re-typing to an appropriate dtype.
+            dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
         '''
         return InterfaceValues(self)
 
@@ -3731,7 +3736,7 @@ class Frame(ContainerOperand):
                 name=self._name,
                 own_data=True,
                 own_index=True,
-                own_columns=True)
+                own_columns=self.STATIC)
 
     @doc_inject(selector='relabel_level_drop', class_name='Frame')
     def relabel_level_drop(self,
@@ -3762,6 +3767,7 @@ class Frame(ContainerOperand):
             key: GetItemKeyType,
             *,
             axis: int = 0,
+            index_constructors: IndexConstructors = None,
             ) -> 'Frame':
         '''
         Create, or augment, an :obj:`IndexHierarchy` by providing one or more selections from the Frame (via axis-appropriate ``loc`` selections) to move into the :obj:`Index`.
@@ -3774,25 +3780,40 @@ class Frame(ContainerOperand):
         if axis == 0: # select from columns, add to index
             index_target = self._index
             index_opposite = self._columns
+            target_default_ctr = Index
         else:
             index_target = self._columns
             index_opposite = self._index
+            target_default_ctr = self._COLUMNS_CONSTRUCTOR
 
         if index_target.depth == 1:
             ih_blocks = TypeBlocks.from_blocks((index_target.values,))
             name_prior = index_target.names if index_target.name is None else (index_target.name,)
+            ih_index_constructors = [index_target.__class__]
         else:
             # No recache is needed as it's not possible for an index to be GO
             ih_blocks = index_target._blocks.copy() # will mutate copied blocks
             # only use string form of labels if we are not storing a correctly sized tuple
             name_prior = index_target.name if index_target._name_is_names() else index_target.names
+            ih_index_constructors = index_target.index_types.values.tolist()
 
         iloc_key = index_opposite._loc_to_iloc(key)
         # NOTE: must do this before dropping
         if isinstance(iloc_key, INT_TYPES):
-            ih_name = name_prior + (index_opposite[iloc_key],)
+            name_posterior = (index_opposite[iloc_key],)
         else:
-            ih_name = name_prior + tuple(index_opposite[iloc_key])
+            name_posterior = tuple(index_opposite[iloc_key])
+
+        ih_name = name_prior + name_posterior
+
+        if index_constructors is None:
+            ih_index_constructors.extend(target_default_ctr for _ in name_posterior)
+        elif callable(index_constructors): # one constructor
+            ih_index_constructors.extend(index_constructors for _ in name_posterior)
+        else: # assume properly sized iterable
+            ih_index_constructors.extend(index_constructors)
+            if len(ih_index_constructors) != len(ih_name):
+                raise RuntimeError('Incorrect number of values in index_constructors.')
 
         index_opposite = index_opposite._drop_iloc(iloc_key)
 
@@ -3803,7 +3824,11 @@ class Frame(ContainerOperand):
                     shape_reference=(self.shape[0], len(index_opposite)),
                     )
 
-            index = IndexHierarchy._from_type_blocks(ih_blocks, name=ih_name)
+            index = IndexHierarchy._from_type_blocks(
+                    ih_blocks,
+                    name=ih_name,
+                    index_constructors=ih_index_constructors,
+                    )
             columns = index_opposite
         else: # select from index, add to columns
             ih_blocks.extend(self._blocks._extract(row_key=iloc_key).transpose())
@@ -3811,9 +3836,12 @@ class Frame(ContainerOperand):
                     self._blocks._drop_blocks(row_key=iloc_key),
                     shape_reference=(len(index_opposite), self.shape[1]),
                     )
-
             index = index_opposite
-            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(ih_blocks, name=ih_name)
+            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks(
+                    ih_blocks,
+                    name=ih_name,
+                    index_constructors=ih_index_constructors,
+                    )
 
         return self.__class__(
                 frame_blocks, # does not copy arrays
@@ -8690,7 +8718,8 @@ class FrameAsType:
             *,
             consolidate_blocks: bool = True,
             ) -> 'Frame':
-
+        '''This method is only called after a __getitem__() selection has been made; this instance is created and returned from that __getitem__() call; this instance then exposes __call__() for the final provisioning of dtypes. When a root node gets __call__() direclty, an instance if this object is created and called.
+        '''
         if self.column_key.__class__ is slice and self.column_key == NULL_SLICE:
             dtype_factory = get_col_dtype_factory(dtypes, self.container._columns)
             gen = self.container._blocks._astype_blocks_from_dtypes(dtype_factory)
@@ -8702,7 +8731,7 @@ class FrameAsType:
         if consolidate_blocks:
             gen = TypeBlocks.consolidate_blocks(gen)
 
-        blocks = TypeBlocks.from_blocks(gen)
+        blocks = TypeBlocks.from_blocks(gen, shape_reference=self.container.shape)
 
         return self.container.__class__(
                 data=blocks,

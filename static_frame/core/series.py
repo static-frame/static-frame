@@ -50,7 +50,7 @@ from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeGroup
-from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_selector import InterfaceAssignTrio
@@ -860,11 +860,11 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Series']:
+    def iter_element(self) -> IterNodeNoArgMapable['Series']:
         '''
         Iterator of elements.
         '''
-        return IterNodeNoArg(
+        return IterNodeNoArgMapable(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
@@ -873,11 +873,11 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Series']:
+    def iter_element_items(self) -> IterNodeNoArgMapable['Series']:
         '''
         Iterator of label, element pairs.
         '''
-        return IterNodeNoArg(
+        return IterNodeNoArgMapable(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,

@@ -3759,19 +3759,18 @@ class TestUnit(TestCase):
 
     def test_hierarchy_via_values_b(self) -> None:
         ih1 = IndexHierarchy.from_product((0, 1), (10, 20))
-        post = np.sum(ih1.via_values, axis=1)
+        post = np.sum(ih1.values, axis=1)
         self.assertEqual(post.tolist(),
                 [10, 20, 11, 21]
                 )
 
     def test_hierarchy_via_values_c(self) -> None:
-        ih1 = IndexHierarchyGO.from_product((0, 1), (10, 20))
-        ih1.append((2, 30))
-        post = np.sum(ih1.via_values, axis=1)
-        self.assertEqual(post.tolist(),
-                [10, 20, 11, 21, 32]
+        ih1 = IndexHierarchyGO.from_product((0, 1), (2, 3))
+        ih1.append((5, 3))
+        post = np.power(ih1.via_values, 2)
+        self.assertEqual(post.values.tolist(),
+                [[0, 4], [0, 9], [1, 4], [1, 9], [25, 9]]
                 )
-
 
     #---------------------------------------------------------------------------
 

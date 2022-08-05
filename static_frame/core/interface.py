@@ -607,8 +607,6 @@ class InterfaceRecord(tp.NamedTuple):
                         max_args=max_args,
                         name_no_args=terminus_name_no_args,
                         )
-                # if group == InterfaceGroup.AccessorRe:
-                #     print(signature, signature_no_args)
                 yield cls(cls_name,
                         group,
                         signature,
@@ -905,7 +903,9 @@ class InterfaceSummary(Features):
             elif hasattr(obj, '__doc__'):
                 doc = cls.scrub_doc(obj.__doc__)
 
-            if hasattr(obj, '__name__'):
+            if name_attr == 'values':
+                name = name_attr # on Batch this is generator that has an generic name
+            elif hasattr(obj, '__name__'):
                 name = obj.__name__
             else: # some attributes yield objects like arrays, Series, or Frame
                 name = name_attr
@@ -942,6 +942,7 @@ class InterfaceSummary(Features):
                     InterfaceString,
                     InterfaceDatetime,
                     InterfaceTranspose,
+                    InterfaceBatchValues,
                     InterfaceBatchString,
                     InterfaceBatchDatetime,
                     InterfaceBatchTranspose,
@@ -973,7 +974,7 @@ class InterfaceSummary(Features):
                         )
             elif callable(obj): # general methods
                 yield from InterfaceRecord.gen_from_method(**kwargs)
-            else: # attributes
+            else: #
                 yield InterfaceRecord(cls_name,
                         InterfaceGroup.Attribute,
                         name,
