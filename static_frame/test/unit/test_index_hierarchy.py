@@ -716,6 +716,44 @@ class TestUnit(TestCase):
             for j in range(i, len(selections)):
                 self.assertTrue(selections[i].equals(selections[j]), msg=(i, j))
 
+    def test_hierarchy_loc_to_iloc_s(self) -> None:
+
+        # https://github.com/InvestmentSystems/static-frame/issues/554
+        ih = ff.parse('v(bool)|i((I,ID),(int,dtD))|s(4,4)').index.sort()
+        start = ih.values_at_depth(1)[0]
+        end = ih.values_at_depth(1)[-1]
+
+        post = ih._loc_to_iloc(HLoc[:, start:end])
+        self.assertListEqual(list(post), [0, 1, 2, 3])
+
+        ih = IndexHierarchy.from_labels(
+            [
+                [4, 0],
+                [2, 1],
+                [0, 2],
+                [3, 3],
+                [1, 4],
+            ]
+        )
+
+        ih2 = ih.sort()
+
+        self.assertListEqual(
+            list(ih2), [
+                (0, 2),
+                (1, 4),
+                (2, 1),
+                (3, 3),
+                (4, 0),
+            ]
+        )
+
+        for idx1, idx2 in zip(ih._indices, ih2._indices):
+            self.assertTrue(idx1.equals(idx2))
+
+        post = ih2._loc_to_iloc(HLoc[:, 4:1])
+        self.assertListEqual(list(post), [1, 2])
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_loc_to_iloc_index_hierarchy_a(self) -> None:
