@@ -179,7 +179,7 @@ Overview: {{ name }}
     :header-rows: 0
 
     {% for ig, ig_tag in toc[name] -%}
-        :ref:`{{ ig }}<api-overview-{{ name }}-{{ ig_tag }}>`, {{ interface_group_doc[ig] }}
+        :ref:`{{ ig }}<api-overview-{{ name }}-{{ ig_tag }}>`, "{{ interface_group_doc[ig] }}"
     {% endfor %}
 
 

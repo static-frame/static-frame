@@ -226,6 +226,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/batch-selector.rst
    api_overview/batch-operator_binary.rst
    api_overview/batch-operator_unary.rst
+   api_overview/batch-accessor_values.rst
    api_overview/batch-accessor_datetime.rst
    api_overview/batch-accessor_string.rst
    api_overview/batch-accessor_transpose.rst
@@ -688,6 +689,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/batch-selector.rst
    api_detail/batch-operator_binary.rst
    api_detail/batch-operator_unary.rst
+   api_detail/batch-accessor_values.rst
    api_detail/batch-accessor_datetime.rst
    api_detail/batch-accessor_string.rst
    api_detail/batch-accessor_transpose.rst
