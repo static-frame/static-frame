@@ -312,6 +312,7 @@ class InterfaceGroup:
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items()
         if not k.startswith('_'))
 
+# NOTE: Used in conf.py to provide interface group documentation on class API TOC pages.
 INTERFACE_GROUP_DOC = {
     'Constructor': 'Alternative constructors for creating instances.',
     'Exporter': 'Methods for transforming, exporting, or serializing objects.',
@@ -319,18 +320,18 @@ INTERFACE_GROUP_DOC = {
     'Method': 'Methods for general functionality.',
     'Dictionary-Like': 'All dictionary-like methods and iterators.',
     'Display': 'Methods for providing a text representation of the object.',
-    'Assignment': 'Interfaces for creating new containers with assignment like specification.',
+    'Assignment': 'Interfaces for creating new containers with assignment-like specification.',
     'Selector': 'Interfaces for selecting by position, label or Boolean.',
     'Iterator': 'Interfaces for iterating (and applying functions to) elements, axis, groups, or windows.',
     'Operator Binary': 'Underlying (magic) methods for binary operator implementation.',
     'Operator Unary': 'Underlying (magic) methods for unary operator implementation.',
     'Accessor Values': 'Interface for using NumPy functions on conatainers.',
-    'Accessor Datetime': 'Interface for extracting date and datetime characteristics.',
+    'Accessor Datetime': 'Interface for extracting date and datetime characteristics on elements.',
     'Accessor String': 'Interface for employing string methods on container elements.',
-    'Accessor Transpose': 'Interface representing a virtual transposition, permiting using binary operators with Series along columns instead of rows.',
-    'Accessor Fill Value': 'Interface that permits supplying a fill value to be used if binary operator application forces reindexing.',
+    'Accessor Transpose': 'Interface representing a virtual transposition, permiting application of binary operators with Series along columns instead of rows.',
+    'Accessor Fill Value': 'Interface that permits supplying a fill value to be used when binary operator application forces reindexing.',
     'Accessor Regular Expression': 'Interface exposing regular expression application on container elements.',
-}
+    }
 
 class InterfaceRecord(tp.NamedTuple):
 
