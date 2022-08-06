@@ -32,7 +32,7 @@ def get_rst_import_toc(doc_group, cls_name: str) -> str:
 
     {{% import 'macros.jinja' as macros %}}
 
-    {{{{ macros.{doc_group}_toc('{cls_name}', toc) }}}}
+    {{{{ macros.{doc_group}_toc('{cls_name}', toc, interface_group_doc) }}}}
 
 '''
 
