@@ -18,6 +18,7 @@ from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import NotImplementedAxis
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
@@ -149,8 +150,10 @@ class Quilt(ContainerBase, StoreClientMixin):
         name = name if name else frame.name
         bus = Bus.from_frames(values(), config=config, name=name)
 
-	primary_index = IndexHierarchy.from_tree(axis_map_components,
-                index_constructors=IndexAutoConstructorFactory)
+        primary_index = IndexHierarchy.from_tree(
+                axis_map_components,
+                index_constructors=IndexAutoConstructorFactory,
+                )
 
         return cls(bus,
                 axis=axis,
