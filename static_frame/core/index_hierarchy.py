@@ -2260,13 +2260,8 @@ class IndexHierarchy(IndexBase):
         indexers = self._indexers[:, order]
         indexers.flags.writeable = False
 
-        indices = [
-                mutable_immutable_index_filter(self.STATIC, index)
-                for index in self._indices
-                ]
-
         return self.__class__(
-                indices=indices,
+                indices=self._indices, # will be copied with mutable_immutable_index_filter
                 indexers=indexers,
                 name=self._name,
                 blocks=blocks,
