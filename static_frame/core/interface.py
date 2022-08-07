@@ -23,7 +23,6 @@ from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_dt import InterfaceBatchDatetime
-from static_frame.core.node_iter import IterNodeDelegate
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
@@ -32,6 +31,8 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
+from static_frame.core.node_values import InterfaceValues
+from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_str import InterfaceString
@@ -287,6 +288,7 @@ class Features:
 
 
 #-------------------------------------------------------------------------------
+
 class InterfaceGroup:
     Constructor = 'Constructor'
     Exporter = 'Exporter'
@@ -299,6 +301,7 @@ class InterfaceGroup:
     Iterator = 'Iterator'
     OperatorBinary = 'Operator Binary'
     OperatorUnary = 'Operator Unary'
+    AccessorValues = 'Accessor Values'
     AccessorDatetime = 'Accessor Datetime'
     AccessorString = 'Accessor String'
     AccessorTranspose = 'Accessor Transpose'
@@ -308,6 +311,27 @@ class InterfaceGroup:
 # NOTE: order from definition retained
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items()
         if not k.startswith('_'))
+
+# NOTE: Used in conf.py to provide interface group documentation on class API TOC pages.
+INTERFACE_GROUP_DOC = {
+    'Constructor': 'Alternative constructors for creating instances.',
+    'Exporter': 'Methods for transforming, exporting, or serializing objects.',
+    'Attribute': 'Attributes for retrieving basic characteristics.',
+    'Method': 'Methods for general functionality.',
+    'Dictionary-Like': 'All dictionary-like methods and iterators.',
+    'Display': 'Methods for providing a text representation of the object.',
+    'Assignment': 'Interfaces for creating new containers with assignment-like specification.',
+    'Selector': 'Interfaces for selecting by position, label or Boolean.',
+    'Iterator': 'Interfaces for iterating (and applying functions to) elements, axis, groups, or windows.',
+    'Operator Binary': 'Underlying (magic) methods for binary operator implementation.',
+    'Operator Unary': 'Underlying (magic) methods for unary operator implementation.',
+    'Accessor Values': 'Interface for using NumPy functions on conatainers.',
+    'Accessor Datetime': 'Interface for extracting date and datetime characteristics on elements.',
+    'Accessor String': 'Interface for employing string methods on container elements.',
+    'Accessor Transpose': 'Interface representing a virtual transposition, permiting application of binary operators with Series along columns instead of rows.',
+    'Accessor Fill Value': 'Interface that permits supplying a fill value to be used when binary operator application forces reindexing.',
+    'Accessor Regular Expression': 'Interface exposing regular expression application on container elements.',
+    }
 
 class InterfaceRecord(tp.NamedTuple):
 
@@ -509,30 +533,34 @@ class InterfaceRecord(tp.NamedTuple):
                 is_attr=True, # doc as attr so sphinx does not add parens to sig
                 signature_no_args=signature_no_args,
                 )
+        # TypeBlocks as iter_* methods that are just functions
+        if hasattr(obj, 'CLS_DELEGATE'):
+            cls_interface = obj.CLS_DELEGATE #type: ignore
+            # IterNodeDelegate or IterNodeDelegateMapable
 
-        for field in IterNodeDelegate.INTERFACE: # apply, map, etc
-            delegate_obj = getattr(IterNodeDelegate, field)
-            delegate_reference = f'{IterNodeDelegate.__name__}.{field}'
-            doc = Features.scrub_doc(delegate_obj.__doc__)
+            for field in cls_interface.INTERFACE: # apply, map, etc
+                delegate_obj = getattr(cls_interface, field)
+                delegate_reference = f'{cls_interface.__name__}.{field}'
+                doc = Features.scrub_doc(delegate_obj.__doc__)
 
-            signature, signature_no_args = _get_signatures(
-                    name,
-                    obj.__call__, #type: ignore
-                    is_getitem=False,
-                    delegate_func=delegate_obj,
-                    delegate_name=field,
-                    max_args=max_args,
-                    )
-            yield cls(cls_name,
-                    InterfaceGroup.Iterator,
-                    signature,
-                    doc,
-                    reference,
-                    use_signature=True,
-                    is_attr=True,
-                    delegate_reference=delegate_reference,
-                    signature_no_args=signature_no_args
-                    )
+                signature, signature_no_args = _get_signatures(
+                        name,
+                        obj.__call__, #type: ignore
+                        is_getitem=False,
+                        delegate_func=delegate_obj,
+                        delegate_name=field,
+                        max_args=max_args,
+                        )
+                yield cls(cls_name,
+                        InterfaceGroup.Iterator,
+                        signature,
+                        doc,
+                        reference,
+                        use_signature=True,
+                        is_attr=True,
+                        delegate_reference=delegate_reference,
+                        signature_no_args=signature_no_args
+                        )
 
     @classmethod
     def gen_from_accessor(cls, *,
@@ -545,7 +573,9 @@ class InterfaceRecord(tp.NamedTuple):
             max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
-        if cls_interface is InterfaceString or cls_interface is InterfaceBatchString:
+        if cls_interface is InterfaceValues or cls_interface is InterfaceBatchValues:
+            group = InterfaceGroup.AccessorValues
+        elif cls_interface is InterfaceString or cls_interface is InterfaceBatchString:
             group = InterfaceGroup.AccessorString
         elif cls_interface is InterfaceDatetime or cls_interface is InterfaceBatchDatetime:
             group = InterfaceGroup.AccessorDatetime
@@ -576,7 +606,8 @@ class InterfaceRecord(tp.NamedTuple):
                 terminus_name_no_args = f'{terminus_sig_no_args}.{field}'
             else:
                 terminus_name = f'{name}.{field}'
-                terminus_name_no_args = None
+                # NOTE: not certain that that no arg form is always right
+                terminus_name_no_args = f'{name}.{field}'
 
             if isinstance(delegate_obj, property):
                 # some date tools are properties
@@ -589,7 +620,7 @@ class InterfaceRecord(tp.NamedTuple):
                         use_signature=True,
                         delegate_reference=delegate_reference,
                         delegate_is_attr=True,
-                        signature_no_args=terminus_name
+                        signature_no_args=terminus_name_no_args
                         )
             else:
                 signature, signature_no_args = _get_signatures(
@@ -598,8 +629,6 @@ class InterfaceRecord(tp.NamedTuple):
                         max_args=max_args,
                         name_no_args=terminus_name_no_args,
                         )
-                # if group == InterfaceGroup.AccessorRe:
-                #     print(signature, signature_no_args)
                 yield cls(cls_name,
                         group,
                         signature,
@@ -896,7 +925,9 @@ class InterfaceSummary(Features):
             elif hasattr(obj, '__doc__'):
                 doc = cls.scrub_doc(obj.__doc__)
 
-            if hasattr(obj, '__name__'):
+            if name_attr == 'values':
+                name = name_attr # on Batch this is generator that has an generic name
+            elif hasattr(obj, '__name__'):
                 name = obj.__name__
             else: # some attributes yield objects like arrays, Series, or Frame
                 name = name_attr
@@ -929,8 +960,14 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.from_getitem(**kwargs)
 
             elif obj.__class__ in (
-                    InterfaceString, InterfaceDatetime, InterfaceTranspose,
-                    InterfaceBatchString, InterfaceBatchDatetime, InterfaceBatchTranspose,
+                    InterfaceValues,
+                    InterfaceString,
+                    InterfaceDatetime,
+                    InterfaceTranspose,
+                    InterfaceBatchValues,
+                    InterfaceBatchString,
+                    InterfaceBatchDatetime,
+                    InterfaceBatchTranspose,
                     ):
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=obj.__class__,
@@ -959,7 +996,7 @@ class InterfaceSummary(Features):
                         )
             elif callable(obj): # general methods
                 yield from InterfaceRecord.gen_from_method(**kwargs)
-            else: # attributes
+            else: #
                 yield InterfaceRecord(cls_name,
                         InterfaceGroup.Attribute,
                         name,

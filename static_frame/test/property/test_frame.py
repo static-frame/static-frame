@@ -134,14 +134,6 @@ class TestUnit(TestCase):
                 a = getattr(f1, attr)(axis=axis).values # call the method
                 b = attrs.ufunc_skipna(values, axis=axis)
 
-    #             if a.dtype != b.dtype:
-    #                 continue
-    #             try:
-    #                 self.assertAlmostEqualArray(a, b)
-    #             except:
-    #                 import ipdb; ipdb.set_trace()
-    #                 raise
-
     @given(sfst.get_frame())
     def test_frame_isin(self, f1: Frame) -> None:
         value = f1.iloc[0, 0]
@@ -262,7 +254,7 @@ class TestUnit(TestCase):
             ))
     def test_frame_to_csv(self, f1: Frame) -> None:
         with temp_file('.csv') as fp:
-            f1.to_csv(fp)
+            f1.to_csv(fp, escape_char=r'`')
             self.assertTrue(os.stat(fp).st_size > 0)
 
             # not yet validating result, as edge cases with unusual unicode and non-unique indices are a problem
@@ -277,7 +269,7 @@ class TestUnit(TestCase):
             ))
     def test_frame_to_tsv(self, f1: Frame) -> None:
         with temp_file('.txt') as fp:
-            f1.to_tsv(fp)
+            f1.to_tsv(fp, escape_char='`')
             self.assertTrue(os.stat(fp).st_size > 0)
 
     @given(sfst.get_frame_or_frame_go(
@@ -295,7 +287,7 @@ class TestUnit(TestCase):
         with temp_file('.sqlite') as fp:
 
             try:
-                f1.to_sqlite(fp)
+                f1.to_sqlite(fp, label='foo')
                 self.assertTrue(os.stat(fp).st_size > 0)
             except (sqlite3.IntegrityError, sqlite3.OperationalError, OverflowError):
                 # some indices, after translation, are not unique

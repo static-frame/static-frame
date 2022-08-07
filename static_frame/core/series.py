@@ -24,6 +24,9 @@ from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import sort_index_for_order
+from static_frame.core.container_util import get_col_fill_value_factory
+from static_frame.core.container_util import is_fill_value_factory_initializer
+
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -47,7 +50,7 @@ from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeGroup
-from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_selector import InterfaceAssignTrio
@@ -56,6 +59,8 @@ from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_values import InterfaceValues
+
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
@@ -129,7 +134,6 @@ class Series(ContainerOperand):
 
     values: np.ndarray
     _index: IndexBase
-
     _NDIM: int = 1
 
     #---------------------------------------------------------------------------
@@ -363,7 +367,7 @@ class Series(ContainerOperand):
             func: tp.Callable[[np.ndarray], np.ndarray] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> 'Series':
-        '''Return a new :obj:`Series` made by overlaying containers, filling in values with aligned values from subsequent containers. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
+        '''Return a new :obj:`Series` made by overlaying containers, aligned values are filled with values from subsequent containers with left-to-right precedence. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
 
         Args:
             containers: Iterable of :obj:`Series`.
@@ -371,6 +375,8 @@ class Series(ContainerOperand):
             index: An :obj:`Index` or :obj:`IndexHierarchy`, or index initializer, to be used as the index upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
             union: If True, and no ``index`` argument is supplied, a union index from ``containers`` will be used; if False, the intersection index will be used.
             name:
+            func:
+            fill_value:
         '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
@@ -398,9 +404,6 @@ class Series(ContainerOperand):
 
         for container in container_iter:
             filled = post._fill_missing(container, func)
-            # if no targets are found self is returned; use to determine if no targets remain
-            if filled is post:
-                break
             post = filled
         return post
 
@@ -689,6 +692,13 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
+    def via_values(self) -> InterfaceValues['Series']:
+        '''
+        Interface for applying functions to values (as arrays) in this container.
+        '''
+        return InterfaceValues(self)
+
+    @property
     def via_str(self) -> InterfaceString['Series']:
         '''
         Interface for applying string methods to elements in this container.
@@ -784,6 +794,30 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
+    def iter_group_array(self) -> IterNodeGroup['Series']:
+        '''
+        Iterator of :obj:`Series`, where each :obj:`Series` matches unique values.
+        '''
+        return IterNodeGroup(
+                container=self,
+                function_items=partial(self._axis_group_items, as_array=True),
+                function_values=partial(self._axis_group, as_array=True),
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    @property
+    def iter_group_array_items(self) -> IterNodeGroup['Series']:
+        return IterNodeGroup(
+                container=self,
+                function_items=partial(self._axis_group_items, as_array=True),
+                function_values=partial(self._axis_group, as_array=True),
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    #---------------------------------------------------------------------------
+    @property
     def iter_group_labels(self) -> IterNodeDepthLevel['Series']:
         return IterNodeDepthLevel(
                 container=self,
@@ -805,11 +839,32 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Series']:
+    def iter_group_labels_array(self) -> IterNodeDepthLevel['Series']:
+        return IterNodeDepthLevel(
+                container=self,
+                function_items=partial(self._axis_group_labels_items, as_array=True),
+                function_values=partial(self._axis_group_labels, as_array=True),
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
+                )
+
+    @property
+    def iter_group_labels_array_items(self) -> IterNodeDepthLevel['Series']:
+        return IterNodeDepthLevel(
+                container=self,
+                function_items=partial(self._axis_group_labels_items, as_array=True),
+                function_values=partial(self._axis_group_labels, as_array=True),
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
+                )
+
+    #---------------------------------------------------------------------------
+    @property
+    def iter_element(self) -> IterNodeNoArgMapable['Series']:
         '''
         Iterator of elements.
         '''
-        return IterNodeNoArg(
+        return IterNodeNoArgMapable(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
@@ -818,11 +873,11 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Series']:
+    def iter_element_items(self) -> IterNodeNoArgMapable['Series']:
         '''
         Iterator of label, element pairs.
         '''
-        return IterNodeNoArg(
+        return IterNodeNoArgMapable(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
@@ -935,7 +990,12 @@ class Series(ContainerOperand):
                     own_index=True,
                     name=self._name)
 
-        values = full_for_fill(self.values.dtype, len(index), fill_value) #type: ignore
+        if is_fill_value_factory_initializer(fill_value):
+            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+        else:
+            fv = fill_value
+
+        values = full_for_fill(self.values.dtype, len(index), fv) #type: ignore
         # if some intersection of values
         if ic.has_common:
             values[ic.iloc_dst] = self.values[ic.iloc_src]
@@ -1153,6 +1213,7 @@ class Series(ContainerOperand):
         '''
         Args:
             func: A function that returns a same-shaped array of Booleans.
+
         '''
         values = self.values
         sel = func(values)
@@ -1447,7 +1508,7 @@ class Series(ContainerOperand):
             operator: UFunc,
             other: tp.Any,
             axis: int = 0,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
             ) -> 'Series':
         '''
         For binary operations, the `name` attribute does not propagate unless other is a scalar.
@@ -1676,6 +1737,9 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # extraction
 
+    # def _extract_array(self, key: GetItemKeyType) -> np.ndarray:
+    #     return self.values[key]
+
     def _extract_iloc(self, key: GetItemKeyType) -> 'Series':
         # iterable selection should be handled by NP
         values = self.values[key]
@@ -1788,21 +1852,25 @@ class Series(ContainerOperand):
     # axis functions
 
     def _axis_group_items(self, *,
-            axis: int = 0
+            axis: int = 0,
+            as_array: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
         if axis != 0:
             raise AxisInvalid(f'invalid axis {axis}')
 
         groups, locations = array_to_groups_and_locations(self.values)
 
+        func = self.values.__getitem__ if as_array else self._extract_iloc
+
         for idx, g in enumerate(groups):
             selection = locations == idx
-            yield g, self._extract_iloc(selection)
+            yield g, func(selection)
 
     def _axis_group(self, *,
-            axis: int = 0
+            axis: int = 0,
+            as_array: bool = False,
             ) -> tp.Iterator['Series']:
-        yield from (x for _, x in self._axis_group_items(axis=axis))
+        yield from (x for _, x in self._axis_group_items(axis=axis, as_array=as_array))
 
 
     def _axis_element_items(self,
@@ -1819,6 +1887,8 @@ class Series(ContainerOperand):
 
     def _axis_group_labels_items(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            *,
+            as_array: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
 
         if depth_level is None:
@@ -1829,17 +1899,23 @@ class Series(ContainerOperand):
         groups, locations = array_to_groups_and_locations(
                 values)
 
+        func = self.values.__getitem__ if as_array else self._extract_iloc
+
         for idx, g in enumerate(groups):
             selection = locations == idx
             if group_to_tuple:
                 g = tuple(g)
-            yield g, self._extract_iloc(selection)
+            yield g, func(selection)
 
     def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
+            *,
+            as_array: bool = False,
             ) -> tp.Iterator[tp.Hashable]:
         yield from (x for _, x in self._axis_group_labels_items(
-                depth_level=depth_level))
+                depth_level=depth_level,
+                as_array=as_array,
+                ))
 
 
 
@@ -2225,6 +2301,10 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
+        if is_fill_value_factory_initializer(fill_value):
+            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+        else:
+            fv = fill_value
 
         if shift:
             values = array_shift(
@@ -2232,7 +2312,7 @@ class Series(ContainerOperand):
                     shift=shift,
                     axis=0,
                     wrap=False,
-                    fill_value=fill_value)
+                    fill_value=fv)
             values.flags.writeable = False
         else:
             values = self.values
@@ -2251,6 +2331,11 @@ class Series(ContainerOperand):
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
+
+        if is_fill_value_factory_initializer(fill_value):
+            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+        else:
+            fv = fill_value
 
         if not skipna or self.dtype.kind not in DTYPE_NA_KINDS:
             rankable = self
@@ -2279,7 +2364,7 @@ class Series(ContainerOperand):
                 )
         # this will preserve the name
         return post.reindex(self.index, #type: ignore
-                fill_value=fill_value,
+                fill_value=fv,
                 check_equals=False, # the index will never be equal
                 )
 
@@ -3105,6 +3190,43 @@ class SeriesAssign(Assign):
         return self.__call__(value, fill_value=fill_value)
 
 
+    def apply_element(self,
+            func: AnyCallable,
+            *,
+            dtype: DtypeSpecifier = None,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''
+        Provide a function to apply to each element in the assignment target, and use that as the assignment value.
+
+        Args:
+            func: A function to apply to the assignment target.
+            *
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
+        '''
+        return self.apply(
+                lambda c: c.iter_element().apply(func, dtype=dtype),
+                fill_value=fill_value,
+                )
+
+    def apply_element_items(self,
+            func: AnyCallable,
+            *,
+            dtype: DtypeSpecifier = None,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
+        '''
+        Provide a function, taking pairs of label, element, to apply to each element in the assignment target, and use that as the assignment value.
+
+        Args:
+            func: A function, taking pairs of label, element, to apply to the assignment target.
+            *
+            fill_value: If the function does not produce a container with a matching index, the element will be used to fill newly created elements.
+        '''
+        return self.apply(
+                lambda c: c.iter_element_items().apply(func, dtype=dtype),
+                fill_value=fill_value,
+                )
 
 #-------------------------------------------------------------------------------
 class SeriesHE(Series):

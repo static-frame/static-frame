@@ -52,6 +52,7 @@ class NPYConverter:
     ARRAY_ALIGN = 64
     STRUCT_FMT = '<H' # version 1.0, unsigned short
     STRUCT_FMT_SIZE = struct.calcsize(STRUCT_FMT) # 2 bytes
+    MAGIC_AND_STRUCT_FMT_SIZE_LEN = MAGIC_LEN + STRUCT_FMT_SIZE
     ENCODING = 'latin1' # version 1.0
     BUFFERSIZE_NUMERATOR = 16 * 1024 ** 2 # ~16 MB
     NDITER_FLAGS = ('external_loop', 'buffered', 'zerosize_ok')
@@ -60,13 +61,13 @@ class NPYConverter:
     def _header_encode(cls, header: str) -> bytes:
         '''
         Takes a string header, and attaches the prefix and padding to it.
-        This is hard-coded to only use Version 3.0
+        This is hard-coded to only use Version 1.0
         '''
         center = header.encode(cls.ENCODING)
         hlen = len(center) + 1
 
         padlen = cls.ARRAY_ALIGN - (
-               (cls.MAGIC_LEN + cls.STRUCT_FMT_SIZE + hlen) % cls.ARRAY_ALIGN
+               (cls.MAGIC_AND_STRUCT_FMT_SIZE_LEN + hlen) % cls.ARRAY_ALIGN
                )
         prefix = cls.MAGIC_PREFIX + struct.pack(cls.STRUCT_FMT, hlen + padlen)
         postfix = b' ' * padlen + b'\n'
@@ -301,7 +302,10 @@ class ArchiveZip(Archive):
         self.memory_map = memory_map
 
     def __del__(self) -> None:
-        self._archive.close()
+        # Note: If the fp we were given didn't exist, _archive also doesn't exist.
+        archive = getattr(self, '_archive', None)
+        if archive:
+            archive.close()
 
     def write_array(self, name: str, array: np.ndarray) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'

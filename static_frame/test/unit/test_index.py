@@ -8,6 +8,7 @@ from io import StringIO
 import numpy as np
 from arraykit import mloc
 
+from static_frame import DisplayConfig
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexDate
@@ -193,13 +194,15 @@ class TestUnit(TestCase):
             _ = idx2.loc_to_iloc(5)
 
         self.assertEqual(idx2.loc_to_iloc(slice(1, 3)), slice(1, 4))
+
         with self.assertRaises(LocInvalid):
             _ = idx2.loc_to_iloc(slice('x', 'y'))
+
         with self.assertRaises(LocInvalid):
             # loc slices are always interpreted as inclusive, so going beyond the inclusive boundary is an error
             _ = idx2.loc_to_iloc(slice(0, 4))
 
-        self.assertEqual(idx2.loc_to_iloc([3, 0]), [3, 0])
+        self.assertEqual(idx2.loc_to_iloc([3, 0]).tolist(), [3, 0]) #type: ignore
         with self.assertRaises(KeyError):
             _ = idx2.loc_to_iloc([3, 20])
 
@@ -265,6 +268,28 @@ class TestUnit(TestCase):
                 default_constructor=Index)
         post = idx1.loc_to_iloc(NULL_SLICE)
         self.assertEqual(post, NULL_SLICE)
+
+    def test_index_loc_to_iloc_k(self) -> None:
+        idx1 = Index(range(4), loc_is_iloc=True)
+        self.assertTrue(idx1._map is None)
+        # for now, lists of Bools only work on indicies without maps
+        post = idx1.loc[[True, False, True, False]]
+        self.assertEqual(post.values.tolist(), [0, 2]) #type: ignore
+
+    def test_index_loc_to_iloc_l(self) -> None:
+        idx1 = Index(range(4), loc_is_iloc=True)
+        self.assertTrue(idx1._map is None)
+
+        post1 = idx1[Series((3, 1), index=('a', 'b'))]
+        post2 = idx1.loc_to_iloc(Series((3, 1), index=('a', 'b')))
+        self.assertEqual(post1.tolist(), post2.tolist()) #type: ignore
+
+    def test_index_loc_to_iloc_m(self) -> None:
+        idx1 = IndexGO(range(4), loc_is_iloc=True)
+        idx1.append(4)
+        self.assertTrue(idx1._map is None)
+        post1 = idx1.loc_to_iloc([3, 0])
+        self.assertEqual(post1.tolist(), [3, 0]) #type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -680,7 +705,6 @@ class TestUnit(TestCase):
             pbytes = pickle.dumps(index)
             index_new = pickle.loads(pbytes)
             for v in index: # iter labels
-                # import ipdb; ipdb.set_trace()
                 # this compares Index objects
                 self.assertFalse(index_new._labels.flags.writeable)
                 self.assertEqual(index_new.loc[v], index.loc[v])
@@ -800,7 +824,6 @@ class TestUnit(TestCase):
                 ['d', 'a', 'b', 'c'])
 
     #---------------------------------------------------------------------------
-
     def test_index_fillna_a(self) -> None:
 
         idx1 = Index(('a', 'b', 'c', None))
@@ -830,6 +853,14 @@ class TestUnit(TestCase):
         self.assertEqual(idx2.values.tolist(),
                 [3.0, 2.0, 'foo'],
                 )
+
+    #---------------------------------------------------------------------------
+    def test_index_fillfalsy_a(self) -> None:
+
+        idx1 = Index(('a', 'b', 'c', ''))
+        idx2 = idx1.fillfalsy('d')
+        self.assertEqual(idx2.values.tolist(),
+                ['a', 'b', 'c', 'd'])
 
     #---------------------------------------------------------------------------
 
@@ -1300,16 +1331,10 @@ class TestUnit(TestCase):
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         self.assertEqual(idx1.tail(2).values.tolist(), ['d' ,'e'])
 
-    #---------------------------------------------------------------------------
-
     def test_index_via_str_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         a1 = idx1.via_str.upper()
-
-        self.assertEqual(a1.tolist(),
-                ['A', 'B', 'C', 'D', 'E']
-                )
 
     def test_index_via_str_b(self) -> None:
 
@@ -1344,6 +1369,15 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.via_dt.weekday().tolist(),
                 [2, 4, 6, 2, 4]
                 )
+
+
+    def test_index_via_values_a(self) -> None:
+
+        idx1 = IndexGO((10, 20, 30))
+        idx1.append(40)
+        idx2 = idx1.via_values.apply(lambda x: (x * .5).astype(int))
+        self.assertEqual(idx2.__class__, IndexGO)
+        self.assertEqual(idx2.values.tolist(), [5, 10, 15, 20])
 
     #---------------------------------------------------------------------------
 
@@ -1546,6 +1580,75 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             ih1.iter_label().apply(ih2._loc_to_iloc)
 
+    #---------------------------------------------------------------------------
+    def test_index_extract_iloc_by_int(self) -> None:
+        idx = IndexGO(('a', 'b'))
+        idx.append('c')
+        post = idx._extract_iloc_by_int(2)
+        self.assertEqual(post, 'c')
+
+    #---------------------------------------------------------------------------
+    def test_index_dropna_a(self) -> None:
+        idx1 = Index((3.5, np.nan, 1.5))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3.5, 1.5])
+
+    def test_index_dropna_b(self) -> None:
+        idx1 = Index((3.5, None, 1.5))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3.5, 1.5])
+
+    def test_index_dropna_c(self) -> None:
+        idx1 = IndexDate(('2020-03', None, '1981-05-30'))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [datetime.date(2020, 3, 1), datetime.date(1981, 5, 30)])
+
+    def test_index_dropna_d(self) -> None:
+        idx1 = Index((None, np.nan))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [])
+
+    def test_index_dropna_e(self) -> None:
+        idx1 = Index((3, 4))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3, 4])
+        self.assertIs(idx2, idx1)
+
+    def test_index_dropna_f(self) -> None:
+        idx1 = IndexGO((3, 4))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [3, 4])
+        self.assertIsNot(idx2, idx1)
+
+    def test_index_dropna_g(self) -> None:
+        idx1 = IndexDate(('2020-03', '1981-05-30'))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [datetime.date(2020, 3, 1), datetime.date(1981, 5, 30)])
+        self.assertIs(idx1, idx2)
+
+    def test_index_dropna_h(self) -> None:
+        idx1 = IndexDateGO(('2020-03', '1981-05-30'))
+        idx2 = idx1.dropna()
+        self.assertEqual(idx2.values.tolist(), [datetime.date(2020, 3, 1), datetime.date(1981, 5, 30)])
+        self.assertIsNot(idx1, idx2)
+
+    #---------------------------------------------------------------------------
+    def test_index_dropfalsy_a(self) -> None:
+        idx1 = Index((3.5, np.nan, 1.5))
+        idx2 = idx1.dropfalsy()
+        self.assertEqual(idx2.values.tolist(), [3.5, 1.5])
+
+    def test_index_dropfalsy_b(self) -> None:
+        idx1 = Index((0, '', None, 2))
+        idx2 = idx1.dropfalsy()
+        self.assertEqual(idx2.values.tolist(), [2])
+
+    #---------------------------------------------------------------------------
+    def test_index_display_a(self) -> None:
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        idx.append('e')
+        post = idx.display(DisplayConfig(type_show=False, type_color=False))
+        self.assertEqual(str(post), 'a\nb\nc\nd\ne')
 
 if __name__ == '__main__':
     unittest.main()

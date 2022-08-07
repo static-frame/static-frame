@@ -186,6 +186,44 @@ class TestUnit(TestCase):
         self.assertEqual(post2,
                 [(1, 30), (2, 50), ('a', 'b'), (False, True), (True, False)])
 
+    def test_frame_iter_tuple_f(self) -> None:
+        f = ff.parse('s(3,2)|v(dtD,dtY)')
+        post = tuple(f.iter_tuple(constructor=tuple, axis=1))
+        self.assertEqual(len(post[0]), 2)
+        self.assertEqual(post[0][1].dtype, f.iloc[0, 1].dtype)
+        self.assertEqual(post[0],
+            (np.datetime64('2210-12-26'), np.datetime64('164167'))
+            )
+
+    def test_frame_iter_tuple_g(self) -> None:
+        # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        post = f[['r', 's']].iter_tuple(axis=1, constructor=tuple).map_any({(False, False): None})
+        self.assertEqual(post.to_pairs(),
+                (('z', None), ('x', (True, False)), ('w', None), ('y', (True, True)))
+                )
+
+    def test_frame_iter_tuple_h(self) -> None:
+        # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        post = f[['r', 's']].iter_tuple_items(axis=1, constructor=tuple).map_fill({('w', (False, False)): None}, fill_value=0)
+        self.assertEqual(post.to_pairs(),
+            (('z', 0), ('x', 0), ('w', None), ('y', 0))
+            )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_iter_series_a(self) -> None:
@@ -223,6 +261,18 @@ class TestUnit(TestCase):
         post5 = f1.iter_series(axis=1).apply(lambda s: int(s.sum()), dtype=object)
         self.assertEqual(post5.dtype, object)
         self.assertEqual(post5.shape, (10,))
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_series_items_a(self) -> None:
+        f1 = ff.parse('f(Fg)|s(2,8)|i(I,str)|c(Ig,str)|v(int)')
+        post1 = tuple(f1.iter_series_items(axis=0))
+        self.assertEqual([(k, v.values.tolist()) for (k, v) in post1],
+                [('zZbu', [-88017, 92867]), ('ztsv', [162197, -41157]), ('zUvW', [-3648, 91301]), ('zkuW', [129017, 35021]), ('zmVj', [58768, 146284]), ('z2Oo', [84967, 13448]), ('z5l6', [146284, 170440]), ('zCE3', [137759, -62964])])
+
+        post2 = tuple(f1.iter_series_items(axis=1))
+        self.assertEqual([(k, v.values.tolist()) for (k, v) in post2],
+                [('zZbu', [-88017, 162197, -3648, 129017, 58768, 84967, 146284, 137759]), ('ztsv', [92867, -41157, 91301, 35021, 146284, 13448, 170440, -62964])]
+                )
 
     #---------------------------------------------------------------------------
 
@@ -352,6 +402,15 @@ class TestUnit(TestCase):
         self.assertEqual([d.kind for d in f2.dtypes.values],
                 ['i', 'i', 'i'])
 
+    def test_frame_iter_element_f(self) -> None:
+        f1 = Frame.from_records(np.arange(9).reshape(3, 3))
+
+        mapping = {x: x*3 for x in range(3)}
+        f2 = f1.iter_element(axis=1).map_fill(mapping, fill_value=-1)
+        self.assertEqual(f2.to_pairs(),
+            ((0, ((0, 0), (1, -1), (2, -1))), (1, ((0, 3), (1, -1), (2, -1))), (2, ((0, 6), (1, -1), (2, -1))))
+            )
+
     #---------------------------------------------------------------------------
 
     def test_frame_iter_group_a(self) -> None:
@@ -445,6 +504,47 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
             ((np.datetime64('1998-10-12'), 1),
             (np.datetime64('1998-10-13'), 2)))
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_group_array_a(self) -> None:
+        f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)
+
+        post = tuple(f1.iter_group_array(1))
+        self.assertEqual([p.shape for p in post],
+                [(3, 3), (4, 3)]
+                )
+        self.assertEqual([p.__class__ for p in post],
+                [np.ndarray, np.ndarray]
+                )
+
+    def test_frame_iter_group_array_b(self) -> None:
+        f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)
+
+        post = tuple(f1.iter_group_array(1, drop=True))
+        self.assertEqual([p.shape for p in post],
+                [(3, 2), (4, 2)]
+                )
+        self.assertEqual([p.__class__ for p in post],
+                [np.ndarray, np.ndarray]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_group_array_items_a(self) -> None:
+        f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)
+
+        post = tuple(f1.iter_group_array_items(1))
+        self.assertEqual([p[1].shape for p in post],
+                [(3, 3), (4, 3)]
+                )
+        self.assertEqual([p[1].__class__ for p in post],
+                [np.ndarray, np.ndarray]
+                )
+        self.assertEqual([p[0] for p in post],
+                [0, 2]
+                )
 
     #---------------------------------------------------------------------------
 
@@ -646,7 +746,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_iter_group_index_a(self) -> None:
+    def test_frame_iter_group_labels_a(self) -> None:
 
         records = (
                 (2, 2, 'a', False, False),
@@ -663,7 +763,6 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             f1.iter_group_labels(foo=4)
 
-
         post = tuple(f1.iter_group_labels(0, axis=0))
 
         self.assertEqual(len(post), 3)
@@ -672,7 +771,7 @@ class TestUnit(TestCase):
                 (('x', 4), ('y', 64), ('z', 97))
                 )
 
-    def test_frame_iter_group_index_b(self) -> None:
+    def test_frame_iter_group_labels_b(self) -> None:
 
         records = (
                 (2, 2, 'a', 'q', False, False),
@@ -685,7 +784,6 @@ class TestUnit(TestCase):
 
         # with axis 1, we are grouping based on columns while maintain the index
         post_tuple = tuple(f1.iter_group_labels(1, axis=1))
-
         self.assertEqual(len(post_tuple), 2)
 
         post = f1[HLoc[f1.columns[0]]]
@@ -705,7 +803,7 @@ class TestUnit(TestCase):
                 (('a', 34), ('b', 131))
                 )
 
-    def test_frame_iter_group_index_c(self) -> None:
+    def test_frame_iter_group_labels_c(self) -> None:
         columns = tuple('pqrst')
         index = tuple('zxwy')
         records = (('A', 1, 'a', False, False),
@@ -725,6 +823,118 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('A', 'A:6'), ('B', 'B:6'))
         )
+
+    def test_frame_iter_group_labels_d(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, 4),
+                   ('A', 2, 'b', True, 3),
+                   ('B', 1, 'c', False, 2),
+                   ('B', 2, 'd', True, 1))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+        f = f.set_index_hierarchy(('p', 'q', 'r'), drop=True)
+
+        post = tuple(f.iter_group_labels_items((1, 2), axis=0))
+        self.assertEqual([p[0] for p in post],
+                [(1, 'a'), (1, 'c'), (2, 'b'), (2, 'd')]
+                )
+
+        self.assertEqual([p[1].values.tolist() for p in post],
+                [[[False, 4]], [[False, 2]], [[True, 3]], [[True, 1]]]
+                )
+
+    def test_frame_iter_group_labels_e(self) -> None:
+        index = tuple('pq')
+        columns = IndexHierarchy._from_type_blocks(TypeBlocks.from_blocks((
+                np.array(('A', 'A', 'B', 'B', 'B')),
+                np.array((4, 2, 1, 0, 4)),
+                np.array(('b', 'a', 'c', 'a', 'b')),
+                )))
+
+        records = (
+                   (True, False, 1, 2, 1),
+                   (False, True, 30, 8,7),
+                   )
+
+        f = Frame.from_records(
+                records, columns=columns, index=index)
+        post = tuple(f.iter_group_labels_items((2, 1), axis=1))
+        self.assertEqual([p[0] for p in post],
+                [('a', 0), ('a', 2), ('b', 4), ('c', 1)]
+                )
+        self.assertEqual([p[1].values.tolist() for p in post],
+                [[[2], [8]], [[False], [True]], [[True, 1], [False, 7]], [[1], [30]]]
+                )
+
+    def test_frame_iter_group_labels_f(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, 4),
+                   (None, 2, 'b', True, 3),
+                   ('B', 1, 'c', False, 2),
+                   ('B', None, 'd', True, 1))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+        f = f.set_index_hierarchy(('p', 'q'), drop=True)
+
+        post = tuple(f.iter_group_labels_items(0, axis=0))
+        self.assertEqual([p[0] for p in post],
+                ['A', None, 'B']
+                )
+        self.assertEqual([p[1].values.tolist() for p in post],
+            [[['a', False, 4]], [['b', True, 3]], [['c', False, 2], ['d', True, 1]]]
+            )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_iter_group_labels_array_a(self) -> None:
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+
+        f = Frame.from_records(records, columns=columns, index=index)
+        f = f.set_index_hierarchy(('p', 'q'), drop=True)
+
+        post1 = tuple(f.iter_group_labels_array(0))
+        self.assertEqual(len(post1), 2)
+        self.assertEqual([a.__class__ for a in post1], [np.ndarray, np.ndarray])
+        self.assertEqual([a.shape for a in post1], [(2, 2), (2, 2)])
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_iter_group_labels_array_items_a(self) -> None:
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+
+        f = Frame.from_records(records, columns=columns, index=index)
+        f = f.set_index_hierarchy(('p', 'q'), drop=True)
+
+        post1 = tuple(f.iter_group_labels_array_items(0))
+        self.assertEqual(len(post1), 2)
+        self.assertEqual([a[1].__class__ for a in post1], [np.ndarray, np.ndarray])
+        self.assertEqual([a[1].shape for a in post1], [(2, 2), (2, 2)])
+        self.assertEqual([a[0] for a in post1], ['A', 'B'])
+
+    def test_frame_iter_group_labels_array_items_b(self) -> None:
+        f = sf.Frame(np.arange(8).reshape(2, 4),
+                columns=sf.IndexHierarchy.from_labels(
+                        ((1, 'a'), (2, 'b'), (1, 'b'), (2, 'a'))
+                ))
+        post1 = tuple(f.iter_group_labels_array_items(1, axis=1))
+        self.assertEqual(len(post1), 2)
+        self.assertEqual([a[1].__class__ for a in post1], [np.ndarray, np.ndarray])
+        self.assertEqual([a[1].shape for a in post1], [(2, 2), (2, 2)])
+        self.assertEqual([a[0] for a in post1], ['a', 'b'])
 
     #---------------------------------------------------------------------------
 
@@ -976,7 +1186,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(post[1][1].to_pairs(0),
                 (('p', (('x', 30), ('z', 30))), ('q', (('x', 34), ('z', 73))), ('r', (('x', 'b'), ('z', 'd'))), ('s', (('x', True), ('z', True))), ('t', (('x', False), ('z', True)))))
-
 
         s1 = f1.iter_group('p', axis=0).apply(lambda f: f['q'].values.sum())
         self.assertEqual(list(s1.items()), [(2, 97), (30, 107)])

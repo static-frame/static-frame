@@ -194,4 +194,792 @@ Examples of recent presentations:
 
 
 
+#------------------------------------------
 
+Employing NumPy's NPY Format for Faster-Than-Parquet DataFrame Serialization
+
+
+--
+NEP 1
+
+    Defines NPY, a simple binary storage format for representing all NumPy arrays
+
+    Defines the NPZ format as a zipped collection of NPY
+
+    An efficient storage format for arrays still supported in NumPy
+
+    As Pandas emerged, usage of NPY eclipsed
+
+        A DataFrame is a lot more than an array
+
+--
+Using NPY for complete DataFrame encoding
+
+    All widely used DataFrame encodings (CSV, XLSX, HDF5, Parquet) are incomplete
+
+    Pickles are fastest of all but not safe
+
+    A custom NPZ package can be used for complete DataFrame serialization
+
+        Complete compatibility with NumPy
+
+        Faster than the widely used Parquet in nearly all scenarios
+
+    Not considering Parquet in isolation; Parquet as used for DataFrame serialization
+
+--
+About Me
+
+    CTO at Research Affiliates
+
+    Python programmer since 2000
+
+    In 2017 began implementing StaticFrame
+
+        DataFrame library based on an immutable data model
+
+        Supports all NumPy dtypes, even those not supported by Pandas
+
+            Unicode
+            datetime64 units other than nanoseconds
+
+        Introduces numerous novel containers for working with collections of DataFrames
+
+    Driven to find a better way to encode DataFrame's from my colleagues requests
+
+--
+The problem of serializing DataFrames in Pandas
+
+    No format (except Pickle) supports all DataFrame characteristics
+
+    No format supports all NumPy dtypes
+
+    Serialization of DataFrames is often critical to process performance
+
+--
+The Problem with pickle
+
+    Always fastest reading and writing DataFrames
+
+    NumPy C-types are fine for pickling
+
+    NumPy object arays can store arbitrary Python objects
+
+    Python objects from Pickles
+
+        Not safe from untrusted sources
+
+        Not suitable as long-term storage
+
+            Pickles hold references to objects that might go out of date
+
+            Pickles are not compatible across platforms / Python versions
+
+
+
+
+
+
+==
+How to Serialize a DataFrame
+
+    What are the components of a DataFrame?
+
+    How is column data stored in a DataFrame?
+
+
+--
+The Components of a DataFrame
+
+    Dataframes may have first been presented in 1991 as part of S language
+
+    No standard
+
+    My definition based on StaticFrame, which is a superset of Pandas components
+
+--
+The Components of a DataFrame
+
+    A DataFrame is collection columns
+
+    Columns are arrays
+
+    Columns may have heterogenous types
+
+    Row and column axis are labelled with Index objects
+
+    Index objects map "labels" (an array) to row / column positions
+
+    Index objects can have "depth" to support hierarchical indices
+
+    Index objects, and the DataFrame itself, can have `name` attributes
+
+<< diagram of frame >>
+<< screen shot of SF display >>
+
+--
+How Column Data is Stored in a DataFrame
+
+    Store collections of arrays for column data
+
+    Column data referred to as a "block"
+
+    Consolidating 1D arrays into 2D arrays offers performance
+
+        Reduce interaction with Python interpreter
+
+        Faster applications of NumPy functions
+
+        Faster copying
+
+--
+Approaches to Managing Blocks
+
+    Unconsolidated
+
+        Store one array per column
+
+        No aggregation benefit
+
+    Order independent
+
+        Collect same-typed column data into a 2D array per type
+
+        Used by Pandas
+
+        Maximizes opportunity for 2D consolidation
+
+        Forces random-ordered extraction in ordered processing
+
+    Order dependent
+
+        Adjacent columns of the same type can be consolidated
+
+        Used by StaticFrame
+
+        Opportunity for 2D consolidation dependent on adjacency
+
+        Optimizes ordered extraction (important!)
+
+
+<< diagram of approach to storing blocks >>
+
+
+
+
+<< This could be diagram that we fill in the various parts of the DF skeleton >>
+
+==
+Complete DataFrame Serialization
+
+    All values
+
+    All value types
+
+    Index and column labels
+
+    Index and columns types
+
+    Index and column depths
+
+    Index, columns, and frame name is specified
+
+--
+Serializing DataFrames: text formats
+
+    CSV, TSV, JSON
+
+    All values encoded as strings
+
+    No type information is encoded
+
+    Index and columns depths are not specified
+
+    Index and columns types are not specified
+
+    Index, columns, and frame name is not completely specified
+
+        Might be able to derive index or columns names but not both
+
+        << diagram to show this? >>
+
+    Always slowest
+
+--
+Serializing DataFrames: XLSX
+
+    All values encoded
+
+    Some types encoded
+
+        Support for Booleans, strings, numeric, datetime
+
+        No distinction between int, float, or reduced bit-depths numerics
+
+        No support for full range of dt64 units
+
+    Index and columns depths are not specified
+
+    Index and columns types are not specified
+
+    Index, columns names are not specified
+
+        Frame name implied by sheet name
+
+--
+Serializing DataFrames: Database
+
+    All values encoded
+
+    Some types encoded (depending in DB)
+
+    Index depths implied by primary keys, types are specified
+
+    Columns depth always 1, always a string
+
+    Index, columns names are not specified
+
+        Frame name implied by table name
+
+
+--
+Serializing DataFrames: Parquet
+
+    All values encoded
+
+    Some types encoded
+
+        Weak support for all units of datetime64
+
+        No support for fixed-size unicode strings
+
+    Index depth not specified, type implied by columns
+
+    Columns depth always 1, limited to string types
+
+    Index, columns, and frame name is not specified
+
+    Generally the fastest format widely used
+
+--
+No Complete Serialization Format for DataFrames
+
+    With Pandas, pickle is the only "complete" serialization format
+
+    While many formats get close, none are complete
+
+    Parquet is attractive for performance, but is not a DataFrame
+
+
+
+
+
+
+<< spend some time on Parquet; should this come earlier? >>
+
+==
+Parquet
+
+    Originally created for use in Apache Hadoop
+
+    Well supported by the Arrow library, PyArrow on Python
+
+    Cross-platform, cross-language support
+
+    A strict columnar representation
+
+        No 2D consolidation
+
+        100 columns of floats is 100 float columns
+
+--
+Parquet's usage
+
+    Parquet has been called a "gold standard" binary file format
+
+    Used natively by AWS Glue and related routines
+
+--
+Parquet is not a DataFrame
+
+    Arrow's Table is simpler than a DataFrame
+
+    Strict columnar representation does not permit same-type consolidation
+
+    Rows do not have an index
+
+    Row and column indices do not have names
+
+
+
+
+
+--
+The NPY format
+
+    A binary file format
+
+    Available via np.load(), np.save()
+
+    A header followed by a data payload of bytes
+
+    Header
+        A prefix: b'\x93NUMPY'
+
+        A version number: bytes((1, 0))
+
+        A binary representation of the string representation of a dictionary
+
+            Defines dtype, order, and shape
+
+            `ast.literal_eval()` used to convert back to a dictionary
+
+        Padding to align on 64 byte divisions
+
+    Body
+
+        Raw bytes that make up array data
+
+        Bytes for 2D array collected in contiguous Fortran or C ordering
+
+    NPY on disk can be memory mapped
+
+--
+Object Arrays in NPY
+
+    NPY supports object arrays by pickling array data
+
+    np.load() sets ``allow_pickle`` to False by default
+
+    As pickling an entire dataframe is very fast, no benefit from allowing NPY to support pickles
+
+--
+NPY Versions
+
+    All versions are actively supported and written
+
+    Versions differentiated by header size and encoding
+
+    Header need only be large if storing field names via structured arrays
+
+    Versions:
+
+        1.0: 65535 byte header ('<H', 2 byte), latin encoding
+        2.0: 4GB header ('<H', 4 byte), latin encoding
+        3.0: 4GB header ('<H', 4 byte), UTF-8 encoding
+
+    np.save() will save in the minimum compatible version
+
+--
+Loading an Array from Bytes
+
+    Given bytes, all we need is dtype, order, and shape
+
+    Using the from_bytes method
+
+--
+The NPZ format
+
+    A zip bundle of NPY files
+
+    Written with np.savez()
+
+    Read with np.load(), returning a dict-like object of arrays
+
+    Usage in original specification was not defined
+
+
+
+
+==
+--
+How to encode a DataFrame as an NPZ
+
+    Store blocks, index labels as NPY
+
+    Define metadata in a JSON
+
+        Name attributes of index, row, Frame
+
+        Index types
+
+    Bundle all NPY and JSON components into a single ZIP
+
+
+--
+A DataFrame as an NPZ
+
+    A DataFrame of 1000 columns might have thousands of NPY
+
+    In StaticFrame, same-typed adjacent columns can be represented as a 2D array
+
+    The greater same-type adjacency, the fewer the number of NPY
+
+--
+A DataFrame as a directory of NPY
+
+    Given a directory of NPY on a file system
+
+    Memory mapping of all array data is possible
+
+
+
+
+
+
+--
+Making NPY and NPZ fast
+
+    NumPy's routines are not optimzed for scale
+
+        Given an array, version type is determined with try/except fall back
+
+    StaticFrame re-implements NPY, NPZ writing for performance
+
+        As no structured array supported needed, only read/write version 1
+
+        Do not support structured arrays
+
+            Simplified version writing / discovery
+
+            Simplified conversion of dtype description to dtype
+
+        Do not support reading/writing object arrays
+
+        Faster header writing with an f-string, avoid creating a dictionary
+
+        No backwards compatibility for NPY authored in Python 2
+
+            Python 2 long integers used an "L" suffix
+
+            NumPy uses `tokenize.generate_tokens()` to filter headers for "L" strings
+
+        Faster header decoding
+
+            Using `ast.literal_eval()` creates significant performance overhead
+
+            A DataFrame is likely to have many arrays with same header
+
+            Can cache with map from raw bytes to Python objects
+
+--
+Making NPY and NPZ Correct
+
+    Hypothesis property testing
+
+    Ensure all SF Frames can round trip through NPZ
+
+    Ensure that all NPY components compatible with NumPy
+
+
+
+
+==
+--
+NPY and Memory Mappying
+
+
+
+
+--
+Using NPY to Memory Map DataFrames
+
+    Only possible if blocks on disk same format as blocks in memory
+
+    Only useful with an immutable data model
+
+        Do not need to make defensive copies
+
+        Operations only change what is necessary, reusing all possible array components
+
+        Array slices are views, even of memory map
+
+
+
+
+
+
+==
+Example Frame, arrays
+
+
+
+
+>>> f = sf.Frame.from_items(((('data', 'A'), (5, 9, 3)), (('data', 'B'), (4, 1, 6)), (('data', 'C'), (7, 8, 2)), (('valid', '*'), (False, True, True))), name='p', index=sf.IndexHierarchy.from_labels((('2012-03', 'x'), ('2012-03', 'y'), ('2012-04', 'x')), index_constructors=(sf.IndexYearMonth, sf.Index), name='r'), columns_constructor=partial(sf.IndexHierarchy.from_labels, name='q'))
+
+>>> f
+<Frame: p>
+<IndexHierarchy: q>       data    data    data    valid  <<U5>
+                          A       B       C       *      <<U1>
+<IndexHierarchy: r>
+2012-03             x     5       4       7       False
+2012-03             y     9       1       8       True
+2012-04             x     3       6       2       True
+<datetime64[M]>     <<U1> <int64> <int64> <int64> <bool>
+
+>>> f.to_pandas()
+
+
+
+
+
+f.to_npz('/Users/ariza/foo.npz', consolidate_blocks=True)
+
+__blocks_0__.npy
+__blocks_1__.npy
+__values_columns_0__.npy
+__values_columns_1__.npy
+__values_index_0__.npy
+__values_index_1__.npy
+__meta__.json
+
+
+>>> open('/Users/ariza/foo/__blocks_1__.npy', 'rb').read()
+b'\x93NUMPY\x01\x006\x00{"descr":"|b1","fortran_order":True,"shape":(3,)}    \n\x00\x01\x01'
+
+
+>>> open('/Users/ariza/foo/__values_columns_1__.npy', 'rb').read()
+b'\x93NUMPY\x01\x006\x00{"descr":"<U1","fortran_order":True,"shape":(4,)}    \nA\x00\x00\x00B\x00\x00\x00C\x00\x00\x00*\x00\x00\x00'
+
+>>> np.array(('A', 'B', 'C', '*')).tobytes()
+b'A\x00\x00\x00B\x00\x00\x00C\x00\x00\x00*\x00\x00\x00'
+
+>>> open('/Users/ariza/foo/__blocks_0__.npy', 'rb').read()
+
+
+In [17]: struct.pack('<H', 3)
+Out[17]: b'\x03\x00'
+
+In [18]: struct.pack('<H', 6)
+Out[18]: b'\x06\x00'
+
+In [19]: struct.pack('<H', 20)
+Out[19]: b'\x14\x00'
+
+In [20]: struct.pack('<H', 200)
+Out[20]: b'\xc8\x00'
+
+
+# NOTE: this is not 6!
+ipdb> struct.pack(cls.STRUCT_FMT, 54)
+b'6\x00'
+ipdb> struct.unpack(cls.STRUCT_FMT, b'6\x00')
+(54,)
+
+
+
+
+
+==
+--
+https://arrow.apache.org/docs/python/parquet.html
+
+
+Pandas encoding in Parquet
+
+Hierarchical indices become columns
+Hierarchical columns become tuples of strings
+
+
+>>> f = ff.parse('s(3,4)|i(IH,(str,int))|c(IH,(str,int))')
+>>> f
+<Frame>
+<IndexHierarchy>         zZbu      zZbu      ztsv      ztsv      <<U4>
+                         105269    119909    194224    172133    <int64>
+<IndexHierarchy>
+zZbu             105269  1930.4    -610.8    694.3     1080.4
+zZbu             119909  -1760.34  3243.94   -72.96    2580.34
+ztsv             194224  1857.34   -823.14   1826.02   700.42
+<<U4>            <int64> <float64> <float64> <float64> <float64>
+>>> df = f.to_pandas()
+>>> table = pa.Table.from_pandas(df)
+>>> table
+pyarrow.Table
+('zZbu', '105269'): double
+('zZbu', '119909'): double
+('ztsv', '194224'): double
+('ztsv', '172133'): double
+__index0__: string
+__index1__: int64
+----
+('zZbu', '105269'): [[1930.4,-1760.34,1857.34]]
+('zZbu', '119909'): [[-610.8,3243.94,-823.14]]
+('ztsv', '194224'): [[694.3,-72.96,1826.02]]
+('ztsv', '172133'): [[1080.4,2580.34,700.42]]
+__index0__: [["zZbu","zZbu","ztsv"]]
+__index1__: [[105269,119909,194224]]
+
+
+if attempting to go from DF to parquet, fails of columns in index hierarchy are not all string:
+
+ValueError:
+                    parquet must have string column names for all values in
+                     each level of the MultiIndex
+
+
+Because Parquet data needs to be decoded from the Parquet format and compression, it can’t be directly mapped from disk. Thus the memory_map option might perform better on some systems but won’t help much with resident memory consumption.
+
+When using pa.Table.from_pandas to convert to an Arrow table, by default one or more special columns are added to keep track of the index (row labels). Storing the index takes extra space, so if your index is not valuable, you may choose to omit it by passing preserve_index=False
+
+
+>>> f = ff.parse('s(3,4)|i(IH,(str,int))|c(I,str)')
+>>> f.to_pandas().to_parquet('/tmp/foo.parquet')
+>>> pfile = pq.ParquetFile('/tmp/foo.parquet')
+>>> pfile.metadata
+<pyarrow._parquet.FileMetaData object at 0x7fe1229c3a40>
+  created_by: parquet-cpp-arrow version 6.0.1
+  num_columns: 6
+  num_rows: 3
+  num_row_groups: 1
+  format_version: 1.0
+  serialized_size: 3588
+
+Some Parquet readers may only support timestamps stored in millisecond ('ms') or microsecond ('us') resolution. Since pandas uses nanoseconds to represent timestamps, this can occasionally be a nuisance. By default (when writing version 1.0 Parquet files), the nanoseconds will be cast to microseconds (‘us’).
+
+--
+https://github.com/apache/parquet-format
+
+Parquet metadata is encoded using Apache Thrift.
+
+Parquet is built to support very efficient compression and encoding schemes. Multiple projects have demonstrated the performance impact of applying the right compression and encoding scheme to the data. Parquet allows compression schemes to be specified on a per-column level,
+
+Hierarchically, a file consists of one or more row groups. A row group contains exactly one column chunk per column. Column chunks contain one or more pages.
+
+There are three types of metadata: file metadata, column (chunk) metadata and page header metadata. All thrift structures are serialized using the TCompactProtocol.
+
+
+
+
+The types supported by the file format are intended to be as minimal as possible, with a focus on how the types effect on disk storage. For example, 16-bit ints are not explicitly supported in the storage format since they are covered by 32-bit ints with an efficient encoding. This reduces the complexity of implementing readers and writers for the format. The types are:
+
+    BOOLEAN: 1 bit boolean
+    INT32: 32 bit signed ints
+    INT64: 64 bit signed ints
+    INT96: 96 bit signed ints
+    FLOAT: IEEE 32-bit floating point values
+    DOUBLE: IEEE 64-bit floating point values
+    BYTE_ARRAY: arbitrarily long byte arrays.
+
+
+Data pages can be individually checksummed. This allows disabling of checksums at the HDFS file level, to better support single row lookups. Data page checksums are calculated using the standard CRC32 algorithm on the compressed data of a page (not including the page header itself).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>> f = sf.Frame(np.random.rand(100_000, 1_000))
+
+>>> %timeit f.to_npz('/tmp/tmp.npz')
+1.44 s ± 35.5 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+>>> %timeit f.from_npz('/tmp/tmp.npz')
+1.1 s ± 48.7 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+
+
+>>> df = pd.DataFrame(np.random.rand(100_000, 1_000))
+>>> df.columns = [str(c) for c in df.columns]
+
+>>> %timeit df.to_parquet('/tmp/tmp.parquet')
+8.39 s ± 139 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+>>> %timeit pd.read_parquet('/tmp/tmp.parquet')
+1.32 s ± 108 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+
+
+In [25]: df = pd.DataFrame(np.random.rand(100_000, 1_000))
+In [26]: %timeit sf.Frame.from_pandas(df).to_npz('/tmp/tmp.npz')
+2.09 s ± 127 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+
+---------------------------------------
+{.env38} % python3
+Python 3.8.12 (default, Feb 28 2022, 12:15:08)
+[GCC 9.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import numpy as np; import static_frame as sf
+>>> columns = tuple('abcdef')
+>>> f = sf.FrameGO(index=np.arange(1_000_000))
+>>> for c in columns:
+...     f[c] = np.arange(1_000_000)
+...
+>>> f.shape
+(1000000, 6)
+>>> f.to_npy('/tmp/npy')
+>>>
+
+
+
+
+>>> import psutil; import static_frame as sf
+
+>>> m0 = psutil.virtual_memory().active
+>>> f = sf.Frame.from_npy('/tmp/npy')
+>>> psutil.virtual_memory().active - m0
+47910912
+
+>>> m0 = psutil.virtual_memory().active
+>>> f, func = sf.Frame.from_npy_mmap('/tmp/npy')
+>>> m1 = psutil.virtual_memory().active
+>>> m1 - m0
+73728
+
+
+
+>>> import mmap
+>>> with open('/tmp/bytes.bin', 'wb') as f: f.write(b'\x00\x01\x01')
+>>> f = open('/tmp/bytes.bin', 'rb')
+>>> mm = mmap.mmap(f.fileno(), 3, access=mmap.ACCESS_READ)
+>>> array = np.ndarray(shape=(3,), dtype=bool, buffer=mm)
+>>> array
+array([False,  True,  True])
+
+>>> array.flags
+  C_CONTIGUOUS : True
+  F_CONTIGUOUS : True
+  OWNDATA : False
+  WRITEABLE : False
+  ALIGNED : True
+  WRITEBACKIFCOPY : False
+  UPDATEIFCOPY : False
+
+
+
+>>> import psutil
+>>> psutil.Process().memory_info()
+pmem(rss=69828608, vms=2617835520, pfaults=18474, pageins=1457)
+>>>
+>>>
+>>>
+>>> m = psutil.Process().memory_info()
+>>> sf.Frame(np.random.rand(10_000, 10_000)).to_npy('/tmp/npy')
+
+
+>>> m0 = psutil.Process().memory_info()
+>>> f1 = sf.Frame.from_npy('/tmp/npy')
+>>> m2 = psutil.Process().memory_info()
+>>> f2, _ = sf.Frame.from_npy_mmap('/tmp/npy')
+>>> m3 = psutil.Process().memory_info()
+
+>>> m2.vms - m.vms
+808652800
+>>> m3.vms - m2.vms
+800788480
+>>> 800788480 / 808652800
+0.990274787894137

@@ -1,8 +1,8 @@
 import typing as tp
-from itertools import zip_longest
-from itertools import chain
-from functools import partial
 from copy import deepcopy
+from functools import partial
+from itertools import chain
+from itertools import zip_longest
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -26,89 +26,93 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.util import array_shift
-from static_frame.core.util import array_to_groups_and_locations
-from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import binary_transition
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.util import DEFAULT_FAST_SORT_KIND
+from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import dtype_to_fill_value
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import dtype_from_element
+from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import EMPTY_ARRAY_OBJECT
 from static_frame.core.util import FILL_VALUE_DEFAULT
-from static_frame.core.util import full_for_fill
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import INT_TYPES
-from static_frame.core.util import isna_array
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import OptionalArrayList
+from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import ShapeType
+from static_frame.core.util import UFunc
+from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import array_deepcopy
+from static_frame.core.util import array_shift
+from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import array_ufunc_axis_skipna
+from static_frame.core.util import arrays_equal
+from static_frame.core.util import binary_transition
+from static_frame.core.util import blocks_to_array_2d
+from static_frame.core.util import concat_resolved
+from static_frame.core.util import dtype_from_element
+from static_frame.core.util import dtype_to_fill_value
+from static_frame.core.util import full_for_fill
+from static_frame.core.util import isfalsy_array
+from static_frame.core.util import isin_array
+from static_frame.core.util import isna_array
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import iterable_to_array_nd
+from static_frame.core.util import roll_1d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
-from static_frame.core.util import UFunc
-from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import isin_array
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import array_deepcopy
-from static_frame.core.util import arrays_equal
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import roll_1d
-from static_frame.core.util import ShapeType
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import OptionalArrayList
-from static_frame.core.util import blocks_to_array_2d
 
-from static_frame.core.style_config import StyleConfig
 
 #---------------------------------------------------------------------------
 def group_match(
         blocks: 'TypeBlocks',
+        *,
         axis: int,
         key: GetItemKeyTypeCompound,
         drop: bool = False,
         extract: tp.Optional[int] = None,
+        as_array: bool = False,
+        group_source: tp.Optional[np.ndarray] = None,
         ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
     '''
     Args:
         key: iloc selector on opposite axis
-        drop: Optionall drop the target of the grouping as specified by ``key``.
+        drop: Optionally drop the target of the grouping as specified by ``key``.
+        extract: if provided, will be used to select from the group on the opposite axis
 
     Returns:
         Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
     '''
-
     # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
     if blocks._shape[0] == 0 or blocks._shape[1] == 0: # zero sized
         return
 
-    # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
     unique_axis = None
-    if axis == 0:
+
+    if group_source is not None:
+        pass
+    elif axis == 0:
         # axis 0 means we return row groups; key is a column key
         group_source = blocks._extract_array(column_key=key)
-        if group_source.ndim > 1:
-            unique_axis = 0
     elif axis == 1:
         # axis 1 means we return column groups; key is a row key
         group_source = blocks._extract_array(row_key=key)
-        if group_source.ndim > 1 and group_source.shape[0] > 1:
-            unique_axis = 1
     else:
         raise AxisInvalid(f'invalid axis: {axis}')
 
     groups, locations = array_to_groups_and_locations(
             group_source,
-            unique_axis)
+            axis,
+            )
 
-    if unique_axis is not None:
+    if group_source.ndim > 1:
         # NOTE: this is expensive!
         # make the groups hashable for usage in index construction
         if axis == 0:
@@ -125,20 +129,19 @@ def group_match(
     column_key: tp.Union[int, np.ndarray, None]
     row_key: tp.Union[int, np.ndarray, None]
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
+
+    func = blocks._extract_array if as_array else blocks._extract
+
     if axis == 0:
         if extract is not None:
             column_key = extract
-            func = blocks._extract_array
         else:
             column_key = None if not drop else drop_mask
-            func = blocks._extract
     else:
         if extract is not None:
             row_key = extract
-            func = blocks._extract_array
         else:
             row_key = None if not drop else drop_mask
-            func = blocks._extract
 
     # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
     selection = np.empty(len(locations), dtype=DTYPE_BOOL)
@@ -160,10 +163,13 @@ def group_match(
 
 def group_sorted(
         blocks: 'TypeBlocks',
+        *,
         axis: int,
         key: int,
         drop: bool = False,
         extract: tp.Optional[int] = None,
+        as_array: bool = False,
+        group_source: tp.Optional[np.ndarray] = None,
         ) -> tp.Iterator[tp.Tuple[np.ndarray, slice, tp.Union['TypeBlocks', np.ndarray]]]:
     '''
     This method must be called on sorted TypeBlocks instance.
@@ -171,22 +177,25 @@ def group_sorted(
     Args:
         blocks: sorted TypeBlocks
         order: args
-        key: iloc selector on opposite axis; must be an integer
-        drop: Optionall drop the target of the grouping as specified by ``key``.
+        key: iloc selector on opposite axis
+        drop: Optionally drop the target of the grouping as specified by ``key``.
         axis: if 0, key is column selection, yield groups of rows; if 1, key is row selection, yield gruops of columns
         kind: Type of sort; a stable sort is required to preserve original odering.
 
     Returns:
         Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
     '''
+    # if extract is not None drop must be False
+    # assert extract is not None and drop is False
 
     # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
     if blocks._shape[0] == 0 or blocks._shape[1] == 0: # zero sized
         return
 
-    # blocks, order = self.sort(key=key, axis=not axis, kind=kind)
-
-    if axis == 0:
+    if group_source is not None:
+        pass
+        # NOTE: axis 1 transposition is not required as group_source is already prepared by h-stacking 1D arrays
+    elif axis == 0:
         # axis 0 means we return row groups; key is a column key
         group_source = blocks._extract_array(column_key=key)
     elif axis == 1:
@@ -206,21 +215,18 @@ def group_sorted(
     column_key: tp.Union[int, np.ndarray, None]
     row_key: tp.Union[int, np.ndarray, None]
 
+    func = blocks._extract_array if as_array else blocks._extract
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
     if axis == 0:
         if extract is not None:
             column_key = extract
-            func = blocks._extract_array
         else:
             column_key = None if not drop else drop_mask
-            func = blocks._extract
     else:
         if extract is not None:
             row_key = extract
-            func = blocks._extract_array
         else:
             row_key = None if not drop else drop_mask
-            func = blocks._extract
 
     # find iloc positions where new value is not equal to previous; drop the first as roll wraps
     if group_source.ndim == 2:
@@ -259,6 +265,9 @@ def group_sorted(
             yield tuple(group_source[start]), slc, chunk
         else:
             yield group_source[start], slc, chunk
+
+
+TypeShape = tp.Union[int, tp.Tuple[int, int]]
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -388,24 +397,25 @@ class TypeBlocks(ContainerOperand):
 
     @classmethod
     def from_zero_size_shape(cls,
-            shape: tp.Tuple[int, int] = (0, 0)
+            shape: tp.Tuple[int, int] = (0, 0),
+            get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]] = None,
             ) -> 'TypeBlocks':
         '''
         Given a shape where one or both axis is 0 (a zero sized array), return a TypeBlocks instance.
         '''
-        #NOTE: might want to take dtypes here, so as we can create a zero row Frame with properly defined dtypes. The challenge is that DtypesSpecifier includes column name maps, and we do not have access to an index-like map in this context.
-
         rows, columns = shape
 
         if not (rows == 0 or columns == 0):
             raise RuntimeError(f'invalid shape for empty TypeBlocks: {shape}')
 
         # as types are organized vertically, storing an array with 0 rows but > 0 columns is appropriate as it takes type space
-
         if rows == 0 and columns > 0:
-            a = np.empty(shape)
-            a.flags.writeable = False
-            return cls.from_blocks(a)
+            if get_col_dtype is None:
+                blocks = np.empty(shape)
+                blocks.flags.writeable = False
+            else:
+                blocks = (np.empty(rows, dtype=get_col_dtype(i)) for i in range(columns))
+            return cls.from_blocks(blocks)
 
         # for arrays with no width, favor storing shape alone and not creating an array object; the shape will be binding for future appending
         return cls(blocks=list(), dtypes=list(), index=list(), shape=shape)
@@ -560,6 +570,20 @@ class TypeBlocks(ContainerOperand):
     def unified(self) -> bool:
         return len(self._blocks) <= 1
 
+    @property
+    def unified_dtypes(self) -> bool:
+        '''Return True if all blocks have the same dtype.
+        '''
+        # use blocks to iterate over fewer things
+        if len(self._blocks) <= 1:
+            return True
+        dtypes = iter(d.dtype for d in self._blocks)
+        d_first = next(dtypes)
+        for d in dtypes:
+            if d != d_first:
+                return False
+        return True
+
     #---------------------------------------------------------------------------
     # interfaces
 
@@ -600,7 +624,7 @@ class TypeBlocks(ContainerOperand):
     #     Given blocks and a combined shape, return a consolidated 2D or 1D array.
 
     #     Args:
-    #         shape: used in construting returned array; not ussed as a constraint.
+    #         shape: used in constructing returned array; not used as a constraint.
     #         force_1d: if True, a single row reduces to a 1D
     #     '''
     #     assert row_dtype is not None
@@ -684,6 +708,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[i]
             else:
                 # PERF: only creating and yielding one array at a time is shown to be slower; performance optimized: consolidate into a single array and then take slices
+                # NOTE: this might force unnecessary type coercion if going to a tuple
                 b = blocks_to_array_2d(
                         blocks=self._blocks,
                         shape=self._shape,
@@ -703,7 +728,7 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[NULL_SLICE, column] # excpeted to be immutable
+                    yield b[NULL_SLICE, column] # expected to be immutable
         else:
             raise AxisInvalid(f'no support for axis: {axis}')
 
@@ -796,20 +821,21 @@ class TypeBlocks(ContainerOperand):
                 self._reblock_signature(),
                 other._reblock_signature()))
 
-    @classmethod
-    def _concatenate_blocks(cls,
-            group: tp.Iterable[np.ndarray],
-            dtype: DtypeSpecifier = None,
+    @staticmethod
+    def _concatenate_blocks(
+            blocks: tp.Iterable[np.ndarray],
+            dtype: DtypeSpecifier,
+            columns: int,
             ) -> np.array:
-        '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array.
+        '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array. This generally assumes that they dtype is aligned amonng the provided blocks.
         '''
-        # NOTE: if len(group) is 1, can return
-        post = np.concatenate([column_2d_filter(x) for x in group], axis=1)
-        # NOTE: if give non-native byteorder dtypes, will convert them to native
-        if dtype is not None and post.dtype != dtype:
-            # could use `out` argument of np.concatenate to avoid copy, but would have to calculate resultant size first
-            return post.astype(dtype)
-        return post
+        # NOTE: when this is called we always have 2 or more blocks
+        blocks_norm = [column_2d_filter(x) for x in blocks]
+        # assert len(blocks_norm) >= 2
+        rows = blocks_norm[0].shape[0] # all 2D
+        array = np.empty((rows, columns), dtype=dtype)
+        np.concatenate(blocks_norm, axis=1, out=array)
+        return array
 
     @classmethod
     def consolidate_blocks(cls,
@@ -827,8 +853,8 @@ class TypeBlocks(ContainerOperand):
             if group_dtype is None: # first block of a type
                 group_dtype = block.dtype
                 group.append(block)
+                group_columns = 1 if block.ndim == 1 else block.shape[1]
                 continue
-
             # NOTE: could be less strict and look for compatibility within dtype kind (or other compatible types)
             if block.dtype != group_dtype:
                 # new group found, return stored
@@ -837,18 +863,20 @@ class TypeBlocks(ContainerOperand):
                     yield group[0]
                 else: # combine groups
                     # could pre allocating and assing as necessary for large groups
-                    yield cls._concatenate_blocks(group, group_dtype)
+                    yield cls._concatenate_blocks(group, group_dtype, group_columns)
                 group_dtype = block.dtype
                 group = [block]
+                group_columns = 1 if block.ndim == 1 else block.shape[1]
             else: # new block has same group dtype
                 group.append(block)
+                group_columns += 1 if block.ndim == 1 else block.shape[1]
 
         # always have one or more leftover
         if group:
             if len(group) == 1:
                 yield group[0]
             else:
-                yield cls._concatenate_blocks(group, group_dtype)
+                yield cls._concatenate_blocks(group, group_dtype, group_columns)
 
 
     def _reblock(self) -> tp.Iterator[np.ndarray]:
@@ -859,11 +887,10 @@ class TypeBlocks(ContainerOperand):
     def consolidate(self) -> 'TypeBlocks':
         '''Return a new TypeBlocks that unifies all adjacent types.
         '''
-        # note: not sure if we have a single block if we should return a new TypeBlocks instance (as done presently), or simply return self; either way, no new np arrays will be created
         return self.from_blocks(self.consolidate_blocks(raw_blocks=self._blocks))
 
-
-    def resize_blocks(self, *,
+    #---------------------------------------------------------------------------
+    def resize_blocks_by_element(self, *,
             index_ic: tp.Optional[IndexCorrespondence],
             columns_ic: tp.Optional[IndexCorrespondence],
             fill_value: tp.Any
@@ -872,8 +899,7 @@ class TypeBlocks(ContainerOperand):
         Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
         '''
         if columns_ic is None and index_ic is None:
-            for b in self._blocks:
-                yield b
+            yield from self._blocks
 
         elif columns_ic is None and index_ic is not None:
             for b in self._blocks:
@@ -881,7 +907,7 @@ class TypeBlocks(ContainerOperand):
                     # works for both 1d and 2s arrays
                     yield b[index_ic.iloc_src]
                 else:
-                    shape: tp.Union[int, tp.Tuple[int, int]] = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
+                    shape: TypeShape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
                     if index_ic.has_common:
                         values[index_ic.iloc_dst] = b[index_ic.iloc_src]
@@ -894,46 +920,163 @@ class TypeBlocks(ContainerOperand):
                 values = full_for_fill(None, shape, fill_value)
                 values.flags.writeable = False
                 yield values
-            else:
-                if self.unified and columns_ic.is_subset:
-                    b = self._blocks[0]
-                    if b.ndim == 1:
-                        yield b
-                    else:
-                        yield b[:, columns_ic.iloc_src]
+            elif self.unified and columns_ic.is_subset:
+                b = self._blocks[0]
+                if b.ndim == 1:
+                    yield b
                 else:
-                    dst_to_src = dict(
-                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
-                    for idx in range(columns_ic.size):
-                        if idx in dst_to_src:
-                            block_idx, block_col = self._index[dst_to_src[idx]]
-                            b = self._blocks[block_idx]
-                            if b.ndim == 1:
-                                yield b
-                            else:
-                                yield b[:, block_col]
-                        else: # just get an empty position, fill_value determines type
-                            values = full_for_fill(None,
-                                    self.shape[0],
-                                    fill_value)
-                            values.flags.writeable = False
-                            yield values
+                    yield b[:, columns_ic.iloc_src]
+            else:
+                dst_to_src = dict(
+                        zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
+                for idx in range(columns_ic.size):
+                    if idx in dst_to_src:
+                        block_idx, block_col = self._index[dst_to_src[idx]]
+                        b = self._blocks[block_idx]
+                        if b.ndim == 1:
+                            yield b
+                        else:
+                            yield b[:, block_col]
+                    else: # just get an empty position, fill_value determines type
+                        values = full_for_fill(None,
+                                self.shape[0],
+                                fill_value)
+                        values.flags.writeable = False
+                        yield values
 
         else: # both defined
-            assert columns_ic is not None and index_ic is not None
+            assert columns_ic is not None and index_ic is not None # mypy
             if not columns_ic.has_common and not index_ic.has_common:
                 # return an empty frame
                 shape = index_ic.size, columns_ic.size
                 values = full_for_fill(None, shape, fill_value)
                 values.flags.writeable = False
                 yield values
+            elif self.unified and index_ic.is_subset and columns_ic.is_subset:
+                b = self._blocks[0]
+                if b.ndim == 1:
+                    yield b[index_ic.iloc_src]
+                else:
+                    yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
+            else:
+                columns_dst_to_src = dict(
+                        zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
+
+                for idx in range(columns_ic.size):
+                    if idx in columns_dst_to_src:
+                        block_idx, block_col = self._index[columns_dst_to_src[idx]]
+                        b = self._blocks[block_idx]
+
+                        if index_ic.is_subset:
+                            if b.ndim == 1:
+                                # NOTE: iloc_src is in the right order for dst
+                                yield b[index_ic.iloc_src]
+                            else:
+                                yield b[index_ic.iloc_src, block_col]
+                        else: # need an empty to fill, compatible with this block
+                            values = full_for_fill(b.dtype,
+                                    index_ic.size,
+                                    fill_value)
+                            if b.ndim == 1:
+                                values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                            else:
+                                values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
+                            values.flags.writeable = False
+                            yield values
+                    else:
+                        values = full_for_fill(None,
+                                    index_ic.size,
+                                    fill_value)
+                        values.flags.writeable = False
+                        yield values
+
+    def resize_blocks_by_callable(self, *,
+            index_ic: tp.Optional[IndexCorrespondence],
+            columns_ic: tp.Optional[IndexCorrespondence],
+            fill_value: tp.Callable[[int, np.dtype], tp.Any]
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
+        '''
+        col_src = 0
+
+        if columns_ic is None and index_ic is None:
+            yield from self._blocks
+        elif columns_ic is None and index_ic is not None:
+            for b in self._blocks:
+                if index_ic.is_subset: # no rows added
+                    # works for both 1d and 2d arrays
+                    yield b[index_ic.iloc_src]
+                    col_src += (1 if b.ndim == 1 else b.shape[1])
+                elif b.ndim == 1:
+                    fv = fill_value(col_src, b.dtype)
+                    values = full_for_fill(b.dtype, index_ic.size, fv)
+                    if index_ic.has_common: # if we have some overlap
+                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                    values.flags.writeable = False
+                    yield values
+                    col_src += 1
+                else:
+                    for pos in range(b.shape[1]):
+                        fv = fill_value(col_src, b.dtype)
+                        values = full_for_fill(b.dtype, index_ic.size, fv)
+                        if index_ic.has_common: # if we have some overlap
+                            values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos]
+                        values.flags.writeable = False
+                        yield values
+                        col_src += 1
+
+        elif columns_ic is not None and index_ic is None:
+            if not columns_ic.has_common: # no columns in common
+                for pos in range(columns_ic.size):
+                    # we do not have a block to get a reference dtype in this situation; if a caller is using FillValueAuto, this has to fail; if a caller has given a mapping or sequence, this needs to work
+                    fv = fill_value(col_src, None)
+                    values = full_for_fill(None, self.shape[0], fv)
+                    values.flags.writeable = False
+                    yield values
+                    col_src += 1
+            elif self.unified and columns_ic.is_subset:
+                b = self._blocks[0]
+                if b.ndim == 1:
+                    yield b
+                else:
+                    yield b[:, columns_ic.iloc_src]
+            else:
+                dst_to_src = dict(
+                        zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
+                for idx in range(columns_ic.size):
+                    if idx in dst_to_src:
+                        block_idx, block_col = self._index[dst_to_src[idx]]
+                        b = self._blocks[block_idx]
+                        if b.ndim == 1:
+                            yield b
+                        else:
+                            yield b[:, block_col]
+                    else: # just get an empty position, fill_value determines type
+                        fv = fill_value(col_src, None)
+                        values = full_for_fill(None, self.shape[0], fv)
+                        values.flags.writeable = False
+                        yield values
+                    col_src += 1
+
+        else: # both defined
+            assert columns_ic is not None and index_ic is not None # mypy
+            if not columns_ic.has_common and not index_ic.has_common:
+                for pos in range(columns_ic.size):
+                    fv = fill_value(col_src, None)
+                    values = full_for_fill(None, index_ic.size, fv)
+                    values.flags.writeable = False
+                    yield values
+                    col_src += 1
             else:
                 if self.unified and index_ic.is_subset and columns_ic.is_subset:
                     b = self._blocks[0]
                     if b.ndim == 1:
+                        # NOTE: iloc_src is in the right order for dst
                         yield b[index_ic.iloc_src]
                     else:
                         yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
+                    col_src += 1
                 else:
                     columns_dst_to_src = dict(
                             zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
@@ -942,16 +1085,15 @@ class TypeBlocks(ContainerOperand):
                         if idx in columns_dst_to_src:
                             block_idx, block_col = self._index[columns_dst_to_src[idx]]
                             b = self._blocks[block_idx]
-
                             if index_ic.is_subset:
                                 if b.ndim == 1:
                                     yield b[index_ic.iloc_src]
                                 else:
+                                    # NOTE: this is not using iloc_dst if iloc_src is a different order
                                     yield b[index_ic.iloc_src, block_col]
-                            else: # need an empty to fill, compatible with this block
-                                values = full_for_fill(b.dtype,
-                                        index_ic.size,
-                                        fill_value)
+                            else: # need an empty to fill, compatible with this
+                                fv = fill_value(col_src, b.dtype)
+                                values = full_for_fill(b.dtype, index_ic.size, fv)
                                 if b.ndim == 1:
                                     values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                                 else:
@@ -959,12 +1101,13 @@ class TypeBlocks(ContainerOperand):
                                 values.flags.writeable = False
                                 yield values
                         else:
-                            values = full_for_fill(None,
-                                        index_ic.size,
-                                        fill_value)
+                            fv = fill_value(col_src, None)
+                            values = full_for_fill(None, index_ic.size, fv)
                             values.flags.writeable = False
                             yield values
+                        col_src += 1
 
+    #---------------------------------------------------------------------------
     def sort(self,
             axis: int,
             key: GetItemKeyTypeCompound,
@@ -1022,18 +1165,7 @@ class TypeBlocks(ContainerOperand):
 
         NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
         '''
-        # might unpack keys that are lists of one element
-        # key_is_int = isinstance(key, INT_TYPES)
-
-        # NOTE: using a stable sort is necssary for groups to retain initial ordering.
-        # use_sort = True
-        # if key_is_int and axis == 0 and self.dtypes[key] != DTYPE_OBJECT:
-        #     use_sort = True
-        # elif key_is_int and axis == 1 and self._row_dtype != DTYPE_OBJECT:
-        #     use_sort = True
-        # else:
-        #     use_sort = False
-
+        # NOTE: using a stable sort is necessary for groups to retain initial ordering.
         try:
             blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
             use_sorted = True
@@ -1041,9 +1173,9 @@ class TypeBlocks(ContainerOperand):
             use_sorted = False
 
         if use_sorted:
-            yield from group_sorted(blocks, axis, key, drop)
+            yield from group_sorted(blocks, axis=axis, key=key, drop=drop)
         else:
-            yield from group_match(self, axis, key, drop)
+            yield from group_match(self, axis=axis, key=key, drop=drop)
 
 
     def group_extract(self,
@@ -1058,17 +1190,7 @@ class TypeBlocks(ContainerOperand):
         NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
         '''
         # might unpack keys that are lists of one element
-        key_is_int = isinstance(key, INT_TYPES)
-
         # NOTE: using a stable sort is necssary for groups to retain initial ordering.
-
-        # if key_is_int and axis == 0 and self.dtypes[key] != DTYPE_OBJECT:
-        #     use_sort = True
-        # elif key_is_int and axis == 1 and self._row_dtype != DTYPE_OBJECT:
-        #     use_sort = True
-        # else:
-        #     use_sort = False
-
         try:
             blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
             use_sorted = True
@@ -1076,11 +1198,21 @@ class TypeBlocks(ContainerOperand):
             use_sorted = False
 
         if use_sorted:
-            yield from group_sorted(blocks, axis, key, drop=False, extract=extract)
+            yield from group_sorted(blocks,
+                    axis=axis,
+                    key=key,
+                    drop=False,
+                    extract=extract,
+                    as_array=True,
+                    )
         else:
-            yield from group_match(self, axis, key, drop=False, extract=extract)
-
-
+            yield from group_match(self,
+                    axis=axis,
+                    key=key,
+                    drop=False,
+                    extract=extract,
+                    as_array=True,
+                    )
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
@@ -1091,7 +1223,7 @@ class TypeBlocks(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Sequence[np.dtype],
             size_one_unity: bool
             ) -> np.ndarray:
         '''Apply a function that reduces blocks to a single axis. Note that this only works in axis 1 if the operation can be applied more than once, first by block, then by reduced blocks. This will not work for a ufunc like argmin, argmax, where the result of the function cannot be compared to the result of the function applied on a different block.
@@ -1186,20 +1318,21 @@ class TypeBlocks(ContainerOperand):
             else:
                 # Combine columns, end with block length shape and then call func again, for final result
                 if b.size == 1 and size_one_unity and not skipna:
-                    out[:, idx] = b
+                    out[NULL_SLICE, idx] = b
                 elif b.ndim == 1:
                     # if this is a composable, numeric single columns we just copy it and process it later; but if this is a logical application (and, or) then it is already Boolean
                     if out.dtype == DTYPE_BOOL and b.dtype != DTYPE_BOOL:
                         # making 2D with axis 0 func will result in element-wise operation
-                        out[:, idx] = func(array=column_2d_filter(b), axis=1)
+                        out[NULL_SLICE, idx] = func(array=column_2d_filter(b), axis=1)
                     else: # otherwise, keep as is
-                        out[:, idx] = b
+                        out[NULL_SLICE, idx] = b
                 else:
-                    func(array=b, axis=axis, out=out[:, idx])
+                    func(array=b, axis=axis, out=out[NULL_SLICE, idx])
 
         if axis == 0: # nothing more to do
             out.flags.writeable = False
             return out
+
         # If axis 1 and composable, can call function one more time on remaining components. Note that composability is problematic in cases where overflow is possible
         result = func(array=out, axis=1)
         result.flags.writeable = False
@@ -1327,7 +1460,7 @@ class TypeBlocks(ContainerOperand):
             retain_key_order: bool = True
             ) -> tp.Iterator[tp.Tuple[int, tp.Union[slice, int]]]:
         '''
-        For a column key (an integer, slice, or iterable), generate pairs of (block_idx, slice or integer) to cover all extractions. First, get the relevant index values (pairs of block id, column id), then convert those to contiguous slices.
+        For a column key (an integer, slice, iterable, Boolean array), generate pairs of (block_idx, slice or integer) to cover all extractions. First, get the relevant index values (pairs of block id, column id), then convert those to contiguous slices.
 
         Args:
             retain_key_order: if False, returned slices will be in ascending order.
@@ -1688,11 +1821,11 @@ class TypeBlocks(ContainerOperand):
                     yield from parts
 
 
-    def _shift_blocks(self,
+    def _shift_blocks_fill_by_element(self,
             row_shift: int = 0,
             column_shift: int = 0,
             wrap: bool = True,
-            fill_value: object = np.nan
+            fill_value: tp.Any = np.nan,
             ) -> tp.Iterator[np.ndarray]:
         '''
         Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``fill_value``.
@@ -1729,7 +1862,7 @@ class TypeBlocks(ContainerOperand):
                         )
 
             if not wrap:
-                shape = (self._shape[0], min(self._shape[1], abs(column_shift)))
+                shape = (row_count, min(column_count, abs(column_shift)))
                 empty = np.full(shape, fill_value)
                 if column_shift > 0:
                     block_head_iter = (empty,)
@@ -1741,14 +1874,89 @@ class TypeBlocks(ContainerOperand):
                 if (wrap and row_start_pos == 0) or (not wrap and row_shift == 0):
                     yield b
                 else:
-                    b = array_shift(
+                    array = array_shift(
                             array=b,
                             shift=row_shift,
                             axis=0,
                             wrap=wrap,
                             fill_value=fill_value)
-                    b.flags.writeable = False
+                    array.flags.writeable = False
+                    yield array
+
+
+    def _shift_blocks_fill_by_callable(self,
+            row_shift: int,
+            column_shift: int,
+            wrap: bool,
+            get_col_fill_value: tp.Callable[[int, np.dtype], tp.Any],
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``get_col_fill_value``.
+        '''
+        row_count, column_count = self._shape
+
+        # new start index is the opposite of the shift; if shifting by 2, the new start is the second from the end
+        index_start_pos = -(column_shift % column_count)
+        row_start_pos = -(row_shift % row_count)
+
+        # possibly be truthy
+        # index is columns here
+        if wrap and index_start_pos == 0 and row_start_pos == 0:
+            yield from self._blocks
+        elif not wrap and column_shift == 0 and row_shift == 0:
+            yield from self._blocks
+        else:
+            block_start_idx, block_start_column = self._index[index_start_pos]
+            block_start = self._blocks[block_start_idx]
+
+            if block_start_column == 0:
+                # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
+                block_head_iter: tp.Iterable[np.ndarray] = chain(
+                        (block_start,),
+                        self._blocks[block_start_idx + 1:])
+                block_tail_iter: tp.Iterable[np.ndarray] = self._blocks[:block_start_idx]
+            else:
+                block_head_iter = chain(
+                        (block_start[:, block_start_column:],),
+                        self._blocks[block_start_idx + 1:])
+                block_tail_iter = chain(
+                        self._blocks[:block_start_idx],
+                        (block_start[:, :block_start_column],)
+                        )
+
+            if not wrap:
+                # get the lesser of the existing number of columns or the shift
+                fill_count = min(column_count, abs(column_shift))
+                if column_shift > 0:
+                    block_head_iter = (
+                        np.full(row_count, get_col_fill_value(i, None))
+                        for i in range(fill_count)
+                        )
+                elif column_shift < 0:
+                    block_tail_iter = (
+                        np.full(row_count, get_col_fill_value(i, None))
+                        for i in range(column_count - fill_count, column_count)
+                        )
+
+            # NOTE: might consider not rolling when yielding an empty array
+            col_idx = 0
+            for b in chain(block_head_iter, block_tail_iter):
+                if (wrap and row_start_pos == 0) or (not wrap and row_shift == 0):
                     yield b
+                else:
+                    for i in range(1 if b.ndim == 1 else b.shape[1]):
+                        fv = get_col_fill_value(col_idx, b.dtype)
+                        array = array_shift(
+                                array=b if b.ndim == 1 else b[NULL_SLICE, i],
+                                shift=row_shift,
+                                axis=0,
+                                wrap=wrap,
+                                fill_value=fv,
+                                )
+                        array.flags.writeable = False
+                        yield array
+                        col_idx += 1
+
 
     #---------------------------------------------------------------------------
     def _assign_from_iloc_by_blocks(self,
@@ -1850,7 +2058,6 @@ class TypeBlocks(ContainerOperand):
             value_dtype = value.dtype #type: ignore
         else:
             value_dtype = dtype_from_element(value)
-        # import ipdb; ipdb.set_trace()
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = self._key_to_block_slices(
                 column_key,
@@ -1978,7 +2185,6 @@ class TypeBlocks(ContainerOperand):
         if value.__class__ is np.ndarray:
             value_dtype = value.dtype #type: ignore
             is_element = False
-            # assert value.shape == self.shape
             if value_valid is not None:
                 assert value_valid.shape == self.shape
         else: # assumed to be non-string, non-iterable
@@ -2026,6 +2232,60 @@ class TypeBlocks(ContainerOperand):
                 assigned.flags.writeable = False
                 yield assigned
 
+    def _assign_from_boolean_blocks_by_callable(self,
+            targets: tp.Iterable[np.ndarray],
+            get_col_fill_value: tp.Callable[[int, np.dtype], tp.Any],
+            ) -> tp.Iterator[np.ndarray]:
+        '''Assign value (a single element) into blocks by integer column, based on a Boolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. The result of calling func with the column number is the value set where the Boolean is True.
+
+        Args:
+            get_col_fill_value: A callable that given the index position returns the value
+            value_valid: same size Boolean area to be combined with targets
+        '''
+        col = 0
+        # value_slice: tp.Union[int, slice]
+
+        for block, target in zip_longest(self._blocks, targets):
+            # evaluate after updating target
+            if not target.any(): # works for ndim 1 and 2
+                yield block
+
+            if block.ndim == 1:
+                value = get_col_fill_value(col, block.dtype)
+                value_dtype = dtype_from_element(value)
+                assigned_dtype = resolve_dtype(value_dtype, block.dtype)
+                if block.dtype == assigned_dtype:
+                    assigned = block.copy()
+                else:
+                    assigned = block.astype(assigned_dtype)
+
+                assigned[target] = value
+                assigned.flags.writeable = False
+                yield assigned
+
+                col += 1
+            else:
+                target_flat = target.any(axis=0)
+                # NOTE: this implementation does maximal de-consolidation to ensure type resolution; this might instead collect fill values and find if they are unique accross blocks, but this would require them to be hashable or otherwise comparable, which they may not be
+                for i in range(block.shape[1]):
+                    if not target_flat[i]:
+                        # no targets in this columns
+                        yield block[NULL_SLICE, i] # slices are immutable
+                    else:
+                        value = get_col_fill_value(col, block.dtype)
+                        value_dtype = dtype_from_element(value)
+                        assigned_dtype = resolve_dtype(value_dtype, block.dtype)
+
+                        if block.dtype == assigned_dtype:
+                            assigned = block[NULL_SLICE, i].copy()
+                        else:
+                            assigned = block[NULL_SLICE, i].astype(assigned_dtype)
+
+                        assigned[target[NULL_SLICE, i]] = value
+                        assigned.flags.writeable = False
+                        yield assigned
+
+                    col += 1
 
     def _assign_from_boolean_blocks_by_blocks(self,
             targets: tp.Iterable[np.ndarray],
@@ -2036,7 +2296,7 @@ class TypeBlocks(ContainerOperand):
         This approach minimizes type coercion by reducing assigned values to columnar types.
 
         Args:
-            targets: arrays aligned to blocks
+            targets: Boolean arrays aligned to blocks
             values: Sequence of 1D arrays with aggregate shape equal to targets
         '''
         start = 0
@@ -2360,9 +2620,9 @@ class TypeBlocks(ContainerOperand):
         blocks = []
         rows = 0
         columns = 0
-        for b in tuple(self._slice_blocks( # a generator
+        for b in self._slice_blocks( # a generator
                 row_key=row_key,
-                column_key=column_key)):
+                column_key=column_key):
             if b.ndim == 1: # it is a single column
                 if not rows: # assume all the same after first
                     # if 1d, then the length should be the number of rows
@@ -2403,6 +2663,70 @@ class TypeBlocks(ContainerOperand):
         if b.ndim == 1:
             return b
         return b[NULL_SLICE, column]
+
+    def iter_row_elements(self,
+            key: int,
+            ) -> tp.Iterator[tp.Any]:
+        '''Alternative extractor that yields a full-row of values from a single integer selection. This will avoid any type coercion.
+        '''
+        for b in self._blocks:
+            if b.ndim == 1:
+                yield b[key]
+            else:
+                yield from b[key]
+
+    def iter_row_tuples(self,
+            key: tp.Optional[GetItemKeyTypeCompound],
+            *,
+            constructor: tp.Type[tp.Tuple[tp.Any, ...]] = tuple,
+            ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
+        '''Alternative extractor that yields tuples per row of values based on a selection of one or more columns. This interface yields all rows in the TypeBlocks.
+        '''
+        if key is None or (key.__class__ is slice and key == NULL_SLICE):
+            arrays = self._blocks
+        else:
+            arrays = list(self._slice_blocks(column_key=key))
+
+        if len(arrays) == 1:
+            array = arrays[0]
+            for i in range(array.shape[0]):
+                yield constructor(array[i]) # works for 1D, 2D
+        else:
+            def chainer(i: int) -> tp.Any:
+                for a in arrays:
+                    if a.ndim > 1:
+                        yield from a[i]
+                    else:
+                        yield a[i]
+            for i in range(self._shape[0]):
+                yield constructor(chainer(i))
+
+    def iter_columns_tuples(self,
+            key: tp.Optional[GetItemKeyTypeCompound],
+            *,
+            constructor: tp.Type[tp.Tuple[tp.Any, ...]] = tuple,
+            ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
+        '''Alternative extractor that yields tuples per column of values based on a selection of one or more rows. This interface yields all columns in the TypeBlocks.
+        '''
+        if key is None or (key.__class__ is slice and key == NULL_SLICE):
+            arrays = self._blocks
+        else:
+            arrays = list(self._slice_blocks(row_key=key))
+
+        if len(arrays) == 1:
+            array = arrays[0]
+            for i in range(array.shape[1]):
+                yield constructor(array[NULL_SLICE, i])
+        else:
+            def chainer() -> tp.Iterator[np.ndarray]:
+                for a in arrays:
+                    if a.ndim == 1:
+                        yield a
+                    else:
+                        for i in range(a.shape[1]):
+                            yield a[NULL_SLICE, i]
+
+            yield from map(constructor, chainer())
 
     def _extract(self,
             row_key: GetItemKeyType = None,
@@ -2462,9 +2786,9 @@ class TypeBlocks(ContainerOperand):
 
     def extract_bloc(self,
             bloc_key: np.ndarray,
-            ) -> tp.Tuple[tp.List[tp.Tuple[int, int]], np.ndarray]:
+            ) -> tp.Tuple[np.ndarray, np.ndarray]:
         '''
-        Extract a 1D array from TypeBlocks, doing minimal type coercion.
+        Extract a 1D array from TypeBlocks, doing minimal type coercion. This returns results in row-major ordering.
         '''
         parts = []
         coords = []
@@ -2507,14 +2831,23 @@ class TypeBlocks(ContainerOperand):
             t_start = t_end
 
         # if size is zero, dt_resolve will be None
-        if size > 0:
-            array = np.empty(shape=size, dtype=dt_resolve)
-            np.concatenate(parts, out=array)
-            array.flags.writeable = False
-        else:
-            array = EMPTY_ARRAY
+        if size == 0:
+            return EMPTY_ARRAY_OBJECT, EMPTY_ARRAY
 
-        return coords, array
+        array = np.empty(shape=size, dtype=dt_resolve)
+        np.concatenate(parts, out=array)
+
+        # # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering. we sort integer tuples of coords here, and use that sort order to sort array; this is better than trying to sort the labels on the Series (labels that might not be sortable).
+
+        coords_array = np.empty(len(array), dtype=object)
+        coords_array[:] = coords # force creation of 1D object array
+
+        # NOTE: in this sort there should never be ties, so we can use an unstable sort
+        order = np.argsort(coords_array, kind=DEFAULT_FAST_SORT_KIND)
+        array = array[order]
+        array.flags.writeable = False
+
+        return coords_array[order], array
 
     #---------------------------------------------------------------------------
     # assignment interfaces
@@ -3551,6 +3884,26 @@ class TypeBlocks(ContainerOperand):
                         targets=(func(b) for b in self._blocks),
                         value=value,
                         value_valid=value_valid
+                        )
+                )
+
+    def fill_missing_by_callable(self,
+            *,
+            func_missing: tp.Callable[[np.ndarray], np.ndarray],
+            get_col_fill_value: tp.Callable[[int], tp.Any]
+            ) -> 'TypeBlocks':
+        '''
+        Return a new TypeBlocks instance that fills missing values with the passed value.
+
+        Args:
+            value: value to fill missing with; can be an element or a same-sized array.
+            value_valid: Optionally provide a same-size array mask of the value setting (useful for carrying forward information from labels).
+            func_missing: A function that takes an array and returns a Boolean array.
+        '''
+        return self.from_blocks(
+                self._assign_from_boolean_blocks_by_callable(
+                        targets=(func_missing(b) for b in self._blocks),
+                        get_col_fill_value=get_col_fill_value,
                         )
                 )
 

@@ -636,12 +636,11 @@ class FrameIterSeriesApply(Perf):
 
         self.meta = {
             'float_index_str_row': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=prepare_iter_for_array,
-                explanation='appears to all be in apply_iter gen exp'
                 ),
             'float_index_str_row_dtype': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 ),
             'float_index_str_column': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
@@ -740,6 +739,70 @@ class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
     def mixed_index_str_column_dtype(self) -> None:
         s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=0)
         assert -149082 in s.index
+
+
+#-------------------------------------------------------------------------------
+
+class FrameIterTuple(Perf):
+    NUMBER = 50
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff_float = ff.parse('s(10000,10)|i(I,str)|c(I,str)|v(float,float,int)')
+        self.pdf_float = self.sff_float.to_pandas()
+
+        self.sff_mixed = ff.parse('s(10000,10)|v(int,int,float,bool,str)|i(I,str)|c(I,str)')
+        self.pdf_mixed = self.sff_mixed.to_pandas()
+
+        self.sff_uniform = ff.parse('s(10000,10)|v(float)|i(I,str)|c(I,str)')
+        self.pdf_uniform = self.sff_uniform.to_pandas()
+
+
+        from static_frame.core.type_blocks import TypeBlocks
+        # from static_frame.core.util import iterable_to_array_1d
+        # from static_frame.core.util import prepare_iter_for_array
+
+        self.meta = {
+            'float_index_str_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=TypeBlocks.iter_row_tuples,
+                explanation='Element-wise iteration per row to avoid type coercions.'
+                ),
+            'mixed_index_str_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=TypeBlocks.iter_row_tuples,
+                explanation='Element-wise iteration per row to avoid type coercions.'
+                ),
+            }
+
+class FrameIterTuple_N(FrameIterTuple, Native):
+
+    def float_index_str_row(self) -> None:
+        rows = list(self.sff_float.iter_tuple(axis=1))
+        assert len(rows) == 10000
+
+    def mixed_index_str_row(self) -> None:
+        rows = list(self.sff_mixed.iter_tuple(axis=1))
+        assert len(rows) == 10000
+
+    def uniform_index_str_row(self) -> None:
+        rows = list(self.sff_uniform.iter_tuple(axis=1))
+        assert len(rows) == 10000
+
+class FrameIterTuple_R(FrameIterTuple, Reference):
+
+    def float_index_str_row(self) -> None:
+        rows = list(self.pdf_float.itertuples(index=False))
+        assert len(rows) == 10000
+
+    def mixed_index_str_row(self) -> None:
+        rows = list(self.pdf_mixed.itertuples(index=False))
+        assert len(rows) == 10000
+
+    def uniform_index_str_row(self) -> None:
+        rows = list(self.pdf_uniform.itertuples(index=False))
+        assert len(rows) == 10000
 
 #-------------------------------------------------------------------------------
 class FrameIterGroupApply(Perf):
@@ -1073,13 +1136,12 @@ class Group(Perf):
         self.pdf2 = self.sff2.to_pandas()
 
         from static_frame import Frame
-        from static_frame import TypeBlocks
-        from static_frame.core.util import array_to_groups_and_locations
+        # from static_frame import TypeBlocks
+        # from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
             'wide_group_2': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=Frame._axis_group_iloc_items,
-                explanation='nearly identical, favoring slower'
                 ),
             'tall_group_100': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
@@ -1107,6 +1169,43 @@ class Group_R(Group, Reference):
     def tall_group_100(self) -> None:
         post = tuple(self.pdf2.groupby(1))
         assert len(post) == 100
+
+
+#-------------------------------------------------------------------------------
+class GroupLabel(Perf):
+    NUMBER = 20
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff1 = ff.parse('s(10_000,10)|v(int,str,bool)|i(IH,(str,int,str))|i(I,int)')
+        self.pdf1 = self.sff1.to_pandas()
+
+        from static_frame import Frame
+        from static_frame import IndexHierarchy
+        self.meta = {
+            'tall_group_1': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=IndexHierarchy._extract_iloc,
+                # explanation='nearly identical, favoring slower'
+                ),
+            # 'tall_group_100': FunctionMetaData(
+            #     # perf_status=PerfStatus.EXPLAINED_LOSS,
+            #     # line_target=Frame._axis_group_iloc_items,
+            #     ),
+            }
+
+class GroupLabel_N(GroupLabel, Native):
+
+    def tall_group_1(self) -> None:
+        post = tuple(self.sff1.iter_group_labels_items(1))
+        assert len(post) == 5000
+
+class GroupLabel_R(GroupLabel, Reference):
+
+    def tall_group_1(self) -> None:
+        post = tuple(self.pdf1.groupby(level=1))
+        assert len(post) == 5000
 
 
 #-------------------------------------------------------------------------------
@@ -1851,15 +1950,16 @@ def performance_tables_from_records(
 
     frame = sf.FrameGO.from_dict_records(records)
 
-    fields = ['Native', 'Reference', 'n/r', 'r/n']
+    fields = ['Native', 'Reference', 'n/r', 'r/n', 'win']
     stats = sf.Frame.from_concat((
+            frame[fields].sum().rename('sum'),
             frame[fields].min().rename('min'),
             frame[fields].max().rename('max'),
             frame[fields].mean().rename('mean'),
             frame[fields].median().rename('median'),
             frame[fields].std(ddof=1).rename('std')
             )).rename(index='name').unset_index()
-    if len(frame) < 9:
+    if len(frame) < 3:
         composit = frame.relabel(columns=frame.columns, index=sf.IndexAutoFactory)
     else:
         composit = sf.Frame.from_concat((frame, stats), columns=frame.columns, index=sf.IndexAutoFactory)

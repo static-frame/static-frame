@@ -14,7 +14,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -33,7 +33,7 @@ from static_frame.core.axis_map import buses_to_hierarchy
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import index_many_concat
 from static_frame.core.index import Index
 from static_frame.core.util import IndexConstructor
 from static_frame.core.container_util import index_from_optional_constructor
@@ -128,7 +128,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         array.flags.writeable = False
 
         if index_components is not None:
-            index = index_many_set(index_components, Index, union=True)
+            index = index_many_concat(index_components, Index)
 
         series = Series(array, name=name)
         return cls(series,
@@ -261,11 +261,11 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Yarn']:
+    def iter_element(self) -> IterNodeNoArgMapable['Yarn']:
         '''
         Iterator of elements.
         '''
-        return IterNodeNoArg(
+        return IterNodeNoArgMapable(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
@@ -274,11 +274,11 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Yarn']:
+    def iter_element_items(self) -> IterNodeNoArgMapable['Yarn']:
         '''
         Iterator of label, element pairs.
         '''
-        return IterNodeNoArg(
+        return IterNodeNoArgMapable(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,

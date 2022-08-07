@@ -1,16 +1,138 @@
-What is New in Static Frame
+What is New in StaticFrame
 ===============================
+
+0.9.10
+----------
+
+Corrected single depth selection issue with ``IndexHierarchy``.
+
+
+0.9.9
+----------
+
+Updated ``arraykit`` to 0.1.12.
+
+Set minimum ``numpy`` to 1.18.5.
+
+Added ``index_constructors`` parameter to ``Frame.relabel_shift_in()``.
+
+Corrected issue when ``Frame.astype()`` called with an empty ``Frame``.
+
+Extended ``via_values`` property to take optional consolidation arguments via ``__call__()`` constructor; usage of ``via_values`` instance returns same-typed, same-sized container.
+
+
+0.9.8
+----------
+
+Added ``via_values`` property to ``Series``, ``Index``, ``Frame``, ``IndexHierarchy`` and ``Batch``; permits applying functions to complete containers with ``apply()`` and supports usage as arguments in arbitrary NumPy functions with ``__array_ufunc__()``.
+
+Corrected usage of ``IterNodeDelegate`` with iterator endpoints that do not iterate hashables; added ``IterNodeDelegateMapable`` for usage with iterators of hashables.
+
+Improved type and dtype preservation in concatenation and set operations on ``IndexHierarchy``.
+
+Normalized ordering of results from ``Frame.bloc[]`` selections to row-major ordering without sorting labels.
+
+Added ``via_str.contains()``.
+
+Corrected issue in ``ArchiveZIP`` when ``__del__`` is called when no archive is set.
+
+``Frame.to_sqlite()`` now requires a named ``Frame`` or an explicit ``label``; ``Frame.from_sqlite()``, ``Frame.from_hdf5()`` now make ``label`` a required argument.
+
+API Documentation re-organized, now using procedurally generated code examples.
+
+
+0.9.7
+----------
+
+Corrected issue in ``Series.from_overlay()`` that prematurely aborted processing all ``Series``
+
+Normalized ordering of results from ``Frame.bloc[]`` selections.
+
+
+0.9.6
+----------
+
+Corrected issue in ``Quilt`` creation when given a ``Bus`` with ``Frame`` with ``datetime64`` indices.
+
+Extended ``IndexAutoConstructorFactory`` to evaluate dtype from arbitrary iterables, not just arrays.
+
+Improvements to consistency and performance of ``loc_to_iloc``.
+
+Implemented ``max`` and ``min`` methods on ``IndexHierarchy``; related statistical methods now raise.
+
+
+0.9.5
+----------
+
+Updated AutoMap to 0.5.1
+
+Removed "performance" package from setup.py
+
+
+0.9.4
+----------
+
+Enhanced support for ``fill_value`` as a ``FillValueAuto``, a mapping, or a sequence of fill values (per column) where appropriate.
+
+Added ``Index.dropna()``, ``Index.dropfalsy()``, ``IndexHierarchy.dropna()``, ``IndexHierarchy.dropfalsy()``.
+
+Added ``Index.fillfalsy()``, ``IndexHierarchy.fillfalsy()``.
+
+Performance improvements for ``Frame.iter_group_labels()``, ``Frame.iter_group_labels_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``.
+
+Fixed usage of ``dtypes`` argument when encountering zero-sized data in ``Frame.from_records()`` and ``Frame.from_pandas()``.
+
+Improved ``Frame.iter_tuple`` to not coerce types through arrays.
+
+Added ``Frame.set_columns()``, ``Frame.set_columns_hierarchy()``, and ``Frame.unset_columns()``.
+
+
+0.9.3
+----------
+
+Added ``apply_element()`` and ``apply_element_items()`` methods to ``FrameAssign`` and ``SeriesAssign`` interfaces.
+
+Added implementation of ``__array__()`` and ``__array_ufunc__()`` to all containers for better support with NumPy objects and binary operators.
+
+Added ``Series.iter_group_array()``, ``Series.iter_group_array_items()``, ``Series.iter_group_labels_array()``, ``Series.iter_group_labels_array_items()``.
+
+Added ``Frame.iter_group_array()``, ``Frame.iter_group_array_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``.
+
+Corrected issue when using binary operators with a ``FrameGO`` and a ``Series``.
+
+Corrected issue and performance of ``name`` assignment when extracting ``Series`` from ``Frame`` with an ``IndexHierarchy``.
+
+Added ``IndexAutoConstructorFactory`` for automatic constructor selection based on NumPy dtype.
+
+
+0.9.2
+----------
+
+Corrected more issues when calling ``IndexHierarchy.loc[]`` with another ``IndexHierarchy``, or when calling ``Frame.assign.apply`` when that frame has ``IndexHierarchy`` columns.
+
+Corrected undesirable type coercion from happening in single-row selections from ``IndexHierarchy``.
+
+
+0.9.1
+----------
+
+Corrected issue when calling ``IndexDatetime.loc[]`` with an empty list.
+
+Corrected issue when calling ``IndexHierarchy.loc[]`` with another ``IndexHierarchy``
+
 
 0.9.0
 ----------
 
 API change: ``Bus`` no longer accepts a ``Series`` on initialization; use ``Bus.from_series()``.
 
-API change: ``Batch`` no longer normalizes containers after each step in processing; use ``Batch.via_container`` to force elements or arrays into ``Frame`` or ``Series``.
+API change: ``Batch`` no longer normalizes containers after each step in processing; use ``Batch.via_container`` to force elements or arrays to ``Frame`` or ``Series``.
 
-API change: ``Index`` objects can no longer be created with ``np.datetime64`` arrays; such labels must use an ``IndexDatetime`` subclass instead. If this is happening implicitly with an operation, that operations should expose a parameter for ``index_constructor`` or ``index_constructors``.
+API change: ``Index`` objects can no longer be created with ``np.datetime64`` arrays; such labels must use an ``IndexDatetime`` subclass instead. If this is happening implicitly with an operation, that operation should expose a parameter for ``index_constructor`` or ``index_constructors``.
 
 API change: ``IndexAutoFactory`` is no longer accepted as an ``index_constructor`` argument in ``Series.from_pandas()`` and ``Frame.from_pandas()``; ``IndexAutoFactory`` should be passed as an ``index`` or ``columns`` argument instead.
+
+Minimum Python version is now 3.7
 
 New implementation of ``IndexHierarchy``, offering significantly improved performance and removal of the requirement of tree hierarchies.
 
@@ -50,7 +172,7 @@ Performance enhancements to ``Frame.pivot()``, ``Frame.iter_group()``, and ``Fra
 
 Extended ``Series.from_overlay()`` and ``Frame.from_overlay()`` to support ``func`` and ``fill_value`` arguments; ``func`` can be used to optionally specify what elements are available for assignment in overlay.
 
-Extended ``via_fill_value()`` interfaces to implement ``__getitem__`` and ``loc`` selection interfaces on :obj:`Series` and :obj:`Frame` for selections that potentially contain new labels filled with the fill value.
+Extended ``via_fill_value()`` interfaces to implement ``__getitem__`` and ``loc`` selection interfaces on ``Series`` and ``Frame`` for selections that potentially contain new labels filled with the fill value.
 
 
 0.8.34
@@ -678,7 +800,7 @@ API change: Container operands used with binary equality operators will raise if
 
 API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to False by default.
 
-API change: ``Series.relabel_add_level`` to ``Series.relabel_level_add``, ``Series.relabel_drop_level`` to ``Series.relabel_level_drop``, ``Frame.relabel_add_level`` to ``Frame.relabel_level_add``, ``Frame.relabel_drop_level`` to ``Frame.relabel_level_drop``, ``Index.add_level`` to ``Index.level_add``, ``IndexHierarchy.add_level`` to ``IndexHierarcchy.level_add``, ``IndexHierarchy.drop_level`` to ``IndexHierarchy.level_drop``.
+API change: ``Series.relabel_add_level`` to ``Series.relabel_level_add``, ``Series.relabel_drop_level`` to ``Series.relabel_level_drop``, ``Frame.relabel_add_level`` to ``Frame.relabel_level_add``, ``Frame.relabel_drop_level`` to ``Frame.relabel_level_drop``, ``Index.add_level`` to ``Index.level_add``, ``IndexHierarchy.add_level`` to ``IndexHierarchy.level_add``, ``IndexHierarchy.drop_level`` to ``IndexHierarchy.level_drop``.
 
 
 0.6.38

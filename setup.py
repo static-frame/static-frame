@@ -68,7 +68,7 @@ setup(
     version=get_version(),
     description='Immutable and grow-only Pandas-like DataFrames with a more explicit and consistent interface',
     long_description=get_long_description(),
-    python_requires='>3.6.0',
+    python_requires='>3.7.0',
     install_requires=list(get_install_requires()),
     extras_require=get_extras_require(),
     url='https://github.com/InvestmentSystems/static-frame',
@@ -87,7 +87,6 @@ setup(
             'Operating System :: MacOS :: MacOS X',
             'Operating System :: Microsoft :: Windows',
             'Operating System :: POSIX',
-            'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
@@ -98,7 +97,6 @@ setup(
     packages=[
             'static_frame',
             'static_frame.core',
-            'static_frame.performance',
             'static_frame.test', # needed for doc generation
             'static_frame.test.unit', # needed for doc generation
             ],

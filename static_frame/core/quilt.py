@@ -137,7 +137,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     if secondary_index is None:
                         secondary_index = f.columns
                 elif axis == 1: # along columns
-                    f = frame.iloc[:, start:end]
+                    f = frame.iloc[NULL_SLICE, start:end]
                     label = label_extractor(f.columns) # type: ignore
                     axis_map_components[label] = f.columns
                     if secondary_index is None:
@@ -149,7 +149,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         name = name if name else frame.name
         bus = Bus.from_frames(values(), config=config, name=name)
 
-        primary_index = IndexHierarchy.from_tree(axis_map_components)
+	primary_index = IndexHierarchy.from_tree(axis_map_components,
+                index_constructors=IndexAutoConstructorFactory)
 
         return cls(bus,
                 axis=axis,

@@ -41,13 +41,12 @@ def performance(context):
 
 
 @invoke.task
-def interface(context, container=None):
+def interface(context, container=None, doc=False):
     '''
     Optionally select a container type to discover what API endpoints have examples.
     '''
     from static_frame.core.container import ContainerBase
     import static_frame as sf
-
 
     def subclasses(cls) -> tp.Iterator[tp.Type]:
         if cls.__name__ not in ('IndexBase', 'IndexDatetime'):
@@ -64,34 +63,10 @@ def interface(context, container=None):
     else:
         f = getattr(sf, container).interface
 
-    print(f.display_tall())
-
-@invoke.task
-def example(context, container=None):
-    '''
-    Discover API members that have a code example.
-    '''
-    from static_frame.core.display_color import HexColor
-    from doc.source.conf import get_jinja_contexts
-
-    contexts = get_jinja_contexts()
-    defined = contexts['examples_defined']
-    signatures = set()
-
-    # discover all signatures; if it is defined, print in a darker color
-    for name, cls, frame in contexts['interface'].values():
-        for signature, row in frame.iter_tuple_items(axis=1):
-            target = f'{name}-{row.signature_no_args}'
-            signatures.add(target) # accumulate all signatures
-            if container and name != container:
-                continue
-            if target in defined:
-                print(HexColor.format_terminal(0x505050, target))
-            else:
-                print(target)
-
-    for line in sorted(defined - signatures):
-        print(HexColor.format_terminal(0x00ccff, line))
+    if not doc:
+        f = f.drop['doc']
+    dc = sf.DisplayConfig(cell_max_width_leftmost=99, cell_max_width=60, display_rows=99999, display_columns=99)
+    print(f.display(dc))
 
 
 #-------------------------------------------------------------------------------

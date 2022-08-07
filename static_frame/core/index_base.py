@@ -14,7 +14,6 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import dtype_from_element
@@ -220,6 +219,9 @@ class IndexBase(ContainerOperand):
         return Series(()) # pragma: no cover
 
     def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
+        raise NotImplementedError() #pragma: no cover
+
+    def _extract_iloc_by_int(self, key: int) -> tp.Hashable:
         raise NotImplementedError() #pragma: no cover
 
     def _update_array_cache(self) -> None:
@@ -455,34 +457,6 @@ class IndexBase(ContainerOperand):
         return self._ufunc_set(
                 self.__class__._UFUNC_DIFFERENCE,
                 other)
-
-    #---------------------------------------------------------------------------
-    # metaclass-applied functions
-
-    def _ufunc_shape_skipna(self, *,
-            axis: int,
-            skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
-            composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
-            size_one_unity: bool
-            ) -> np.ndarray:
-        '''
-        For Index and IndexHierarchy, _ufunc_shape_skipna and _ufunc_axis_skipna are defined the same.
-
-        Returns:
-            immutable NumPy array.
-        '''
-        return self._ufunc_axis_skipna(
-                axis=axis,
-                skipna=skipna,
-                ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna,
-                composable=composable, # shape on axis 1 is never composable
-                dtypes=dtypes,
-                size_one_unity=size_one_unity
-                )
 
     #---------------------------------------------------------------------------
     # via interfaces

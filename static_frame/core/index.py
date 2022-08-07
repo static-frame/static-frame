@@ -37,6 +37,7 @@ from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_values import InterfaceValues
 
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_sample
@@ -59,6 +60,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import intersect1d
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KeyIterableTypes
@@ -67,7 +69,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import setdiff1d
-from static_frame.core.util import slice_to_inclusive_slice
+from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_ufunc_axis_skipna
@@ -78,6 +80,8 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import DTYPE_NA_KINDS
+
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.loc_map import LocMap
 
@@ -155,6 +159,7 @@ class Index(IndexBase):
 
     # for compatability with IndexHierarchy, where this is implemented as a property method
     depth: int = 1
+    _NDIM: int = 1
 
     _map: tp.Optional[FrozenAutoMap]
     _labels: np.ndarray
@@ -604,6 +609,17 @@ class Index(IndexBase):
 
 
     #---------------------------------------------------------------------------
+
+    @property
+    def via_values(self) -> InterfaceValues['Index']:
+        '''
+        Interface for applying functions to values (as arrays) in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        return InterfaceValues(self)
+
     @property
     def via_str(self) -> InterfaceString[np.ndarray]:
         '''
@@ -751,7 +767,8 @@ class Index(IndexBase):
         try:
             indexer = indexer[ar1_indexer]
         except IndexError:
-            raise KeyError(f'{other} is not a subset of {self}')
+            # Display the first missing element
+            raise KeyError(self.difference(other)[0])
 
         indexer.flags.writeable = False
         return indexer
@@ -830,8 +847,6 @@ class Index(IndexBase):
             partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
-        Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
-
         Args:
             key_transform: A function that transforms keys to specialized type; used by IndexDate indices.
         Returns:
@@ -844,14 +859,15 @@ class Index(IndexBase):
 
         if self._map is None: # loc_is_iloc
             if key.__class__ is np.ndarray:
-                if key.dtype == bool: #type: ignore
+                if key.dtype == DTYPE_BOOL: #type: ignore
                     return key
                 if key.dtype != DTYPE_INT_DEFAULT: #type: ignore
                     # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
                     return key.astype(DTYPE_INT_DEFAULT) #type: ignore
             elif key.__class__ is slice:
-                key = slice_to_inclusive_slice(key) #type: ignore
+                # might raise LocInvalid
+                key = pos_loc_slice_to_iloc_slice(key, self.__len__())
             return key
 
         if key_transform:
@@ -878,30 +894,30 @@ class Index(IndexBase):
             key: a label key.
         '''
         if self._map is None: # loc is iloc
-            is_bool_array = key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL #type: ignore
+            # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array. This also handles and re-raises better exceptions.
 
-            try:
-                result = self._positions[key]
-            except IndexError:
-                # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
-                if is_bool_array:
-                    raise # loc selection on Boolean array selection returns IndexError
-                raise KeyError(key)
-            except TypeError:
-                raise LocInvalid(f'Invalid loc: {key}')
+            if not key.__class__ is slice:
+                if self._recache:
+                    self._update_array_cache()
 
-            if is_bool_array:
+                key = key_from_container_key(self, key)
+                is_array = key.__class__ is np.ndarray
+                try:
+                    # NOTE: this insures that the returned type will be DTYPE_INT_DEFAULT
+                    result = self._positions[key]
+                except IndexError:
+                    # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
+                    if is_array and key.dtype == DTYPE_BOOL: #type: ignore
+                        raise # loc selection on Boolean array selection returns IndexError
+                    raise KeyError(key)
+                # NOTE: not certain as to when a TypeError is raised here; might no longer be necessary
+                # except TypeError:
+                #     raise LocInvalid(f'Invalid loc: {key}')
+
                 return result # return position as array
 
-            if isinstance(key, slice):
-                if key == NULL_SLICE:
-                    return NULL_SLICE
-                if key.stop >= len(self):
-                    # while a valid slice of positions, loc lookups do not permit over-stating boundaries
-                    raise LocInvalid(f'Invalid loc: {key}')
-                key = slice_to_inclusive_slice(key)
-
-            return key
+            # might raise LocInvalid
+            return pos_loc_slice_to_iloc_slice(key, self.__len__())
 
         return self._loc_to_iloc(key)
 
@@ -926,8 +942,7 @@ class Index(IndexBase):
                 labels.flags.writeable = False
                 loc_is_iloc = False
         elif isinstance(key, KEY_ITERABLE_TYPES):
-            # we assume Booleans have been normalized to integers here
-            # can select directly from _labels[key] if if key is a list
+            # can select directly from _labels[key] if if key is a list, array, or Boolean array
             labels = self._labels[key]
             labels.flags.writeable = False
             loc_is_iloc = False
@@ -938,6 +953,15 @@ class Index(IndexBase):
                 loc_is_iloc=loc_is_iloc,
                 name=self._name,
                 )
+
+    def _extract_iloc_by_int(self,
+            key: int,
+            ) -> tp.Hashable:
+        '''Extract an element given an iloc integer key.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._labels[key] #type: ignore
 
     def _extract_loc(self: I,
             key: GetItemKeyType
@@ -1030,7 +1054,31 @@ class Index(IndexBase):
                 ufunc_skipna=ufunc_skipna
                 )
 
-    # _ufunc_shape_skipna defined in IndexBase
+    def _ufunc_shape_skipna(self, *,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
+            composable: bool,
+            dtypes: tp.Tuple[np.dtype, ...],
+            size_one_unity: bool
+            ) -> np.ndarray:
+        '''
+        As Index and IndexHierarchy return np.ndarray from such operations, _ufunc_shape_skipna and _ufunc_axis_skipna can be defined the same.
+
+        Returns:
+            immutable NumPy array.
+        '''
+        # NOTE: for 1D Index, can use axis for shape ufunc
+        return self._ufunc_axis_skipna(
+                axis=axis,
+                skipna=skipna,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna,
+                composable=composable, # shape on axis 1 is never composable
+                dtypes=dtypes,
+                size_one_unity=size_one_unity
+                )
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
@@ -1158,15 +1206,60 @@ class Index(IndexBase):
             values.flags.writeable = False
         return self.__class__(values, name=self._name)
 
-    @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> 'Index':
-        '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
+    #---------------------------------------------------------------------------
+    # na handling
+    # falsy handling
 
-        Args:
-            {value}
+    def _drop_missing(self,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            dtype_kind_targets: tp.Optional[tp.FrozenSet[str]],
+            ) -> 'Index':
         '''
+        Args:
+            func: UFunc that returns True for missing values
+        '''
+        labels = self.values
+        if dtype_kind_targets is not None and labels.dtype.kind not in dtype_kind_targets:
+            return self if self.STATIC else self.copy()
+
+        # get positions that we want to keep
+        isna = func(labels)
+        length = len(labels)
+        count = isna.sum()
+
+        if count == length: # all are NaN
+            return self.__class__((), name=self.name)
+        if count == 0: # None are nan
+            return self if self.STATIC else self.copy()
+
+        sel = np.logical_not(isna)
+        values = labels[sel]
+        values.flags.writeable = False
+
+        return self.__class__(values,
+                name=self._name,
+                )
+
+    def dropna(self) -> 'Index':
+        '''
+        Return a new :obj:`Index` after removing values of NaN or None.
+        '''
+        return self._drop_missing(isna_array, DTYPE_NA_KINDS)
+
+    def dropfalsy(self) -> 'Index':
+        '''
+        Return a new :obj:`Index` after removing values of NaN or None.
+        '''
+        return self._drop_missing(isfalsy_array, None)
+
+    #---------------------------------------------------------------------------
+
+    def _fill_missing(self,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            value: tp.Any,
+            ) -> 'Index':
         values = self.values # force usage of property for cache update
-        sel = isna_array(values)
+        sel = func(values)
         if not np.any(sel):
             return self if self.STATIC else self.copy()
 
@@ -1180,9 +1273,27 @@ class Index(IndexBase):
 
         assigned[sel] = value
         assigned.flags.writeable = False
-
         return self.__class__(assigned, name=self._name)
 
+    @doc_inject(selector='fillna')
+    def fillna(self, value: tp.Any) -> 'Index':
+        '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(isna_array, value)
+
+    @doc_inject(selector='fillna')
+    def fillfalsy(self, value: tp.Any) -> 'Index':
+        '''Return an :obj:`Index` with replacing falsy values with the supplied value.
+
+        Args:
+            {value}
+        '''
+        return self._fill_missing(isfalsy_array, value)
+
+    #---------------------------------------------------------------------------
     def _sample_and_key(self,
             count: int = 1,
             *,

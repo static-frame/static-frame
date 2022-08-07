@@ -15,13 +15,14 @@ from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import isna_array
 from static_frame.core.container_util import get_col_dtype_factory
+from static_frame.core.container_util import get_col_fill_value_factory
 
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase
 from static_frame.core.type_blocks import group_match
 from static_frame.core.type_blocks import group_sorted
 from static_frame.core.display_config import DisplayConfig
-
+from static_frame.core.fill_value_auto import FillValueAuto
 
 nan = np.nan
 
@@ -141,7 +142,6 @@ class TestUnit(TestCase):
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
 
         row1 = tb1.iloc[2]
-        # import ipdb; ipdb.set_trace()
 
         self.assertEqual(tb1.shape, (3, 4))
 
@@ -1037,7 +1037,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb2.dtypes.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(tb2.shapes.tolist(),
                 [(3, 3), (3, 2), (3, 1), (3, 3)])
 
@@ -1077,7 +1076,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb2.dtypes.tolist(),
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(tb2.shapes.tolist(),
                 [(3, 3), (3, 2), (3, 1), (3, 3)])
 
@@ -1161,6 +1159,29 @@ class TestUnit(TestCase):
 
         self.assertEqual(tb2.values.tolist(),
                 [[0, 1, 2], [3, 'a', 'b'], [6, 7, 8]])
+
+
+    #--------------------------------------------------------------------------
+    def test_type_blocks_assign_from_boolean_blocks_by_callable(self) -> None:
+
+        get_col_fill_value = get_col_fill_value_factory([-1, 'x', True], columns=None)
+
+        a1 = np.array([[3, 4], [3, 2],])
+        a2 = np.array([False, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        t1 = np.array([[0, 1], [1, 0],], dtype=bool)
+        t2 = np.array([0, 1], dtype=bool)
+        targets = (t1, t2)
+
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_from_boolean_blocks_by_callable(
+                       targets=targets,
+                       get_col_fill_value=get_col_fill_value,
+                       ))
+        self.assertEqual( tb2.values.tolist(),
+                [[3, 'x', False], [-1, 2, True]],
+                )
 
     #--------------------------------------------------------------------------
     def test_type_blocks_assign_blocks_from_keys_by_blocks_a(self) -> None:
@@ -2413,6 +2434,7 @@ class TestUnit(TestCase):
             self.assertEqual(tb1.nbytes, 0)
             self.assertEqual(len(tb1), tb1.shape[0])
 
+    #---------------------------------------------------------------------------
     def test_type_blocks_datetime64_a(self) -> None:
 
         d = np.datetime64
@@ -2436,7 +2458,8 @@ class TestUnit(TestCase):
 
         self.assertEqual(len(tb2._blocks), 1)
 
-    def test_type_blocks_resize_blocks_a(self) -> None:
+    #---------------------------------------------------------------------------
+    def test_type_blocks_resize_blocks_a1(self) -> None:
 
         a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
@@ -2449,9 +2472,244 @@ class TestUnit(TestCase):
                 iloc_dst=np.array((0, 2)),
                 size=2)
 
-        tb2 = TypeBlocks.from_blocks(tb1.resize_blocks(index_ic=index_ic, columns_ic=None, fill_value=None))
+        tb2 = TypeBlocks.from_blocks(tb1.resize_blocks_by_element(index_ic=index_ic, columns_ic=None, fill_value=None))
         self.assertEqual(tb2.shape, (2, 3))
 
+    def test_type_blocks_resize_blocks_a2(self) -> None:
+
+        a1 = np.arange(6).reshape(3, 2)
+        a2 = np.array([False, True, False])
+        a3 = np.array(['b', 'c', 'd'])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=False,
+                iloc_src=np.array((1, 2)),
+                iloc_dst=np.array((0, 2)),
+                size=5)
+
+        func = get_col_fill_value_factory([-1, -2, -3, -4], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=index_ic,
+                        columns_ic=None,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.shape, (5, 4))
+        self.assertEqual(tb2.values.tolist(),
+                [[2, 3, True, 'c'],
+                [-1, -2, -3, -4],
+                [4, 5, False, 'd'],
+                [-1, -2, -3, -4],
+                [-1, -2, -3, -4]]
+                )
+
+    def test_type_blocks_resize_blocks_a3(self) -> None:
+
+        a1 = np.arange(6).reshape(3, 2)
+        a2 = np.array([False, True, False])
+        a3 = np.array(['b', 'c', 'd'])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        columns_ic = IndexCorrespondence(has_common=False,
+                is_subset=False,
+                iloc_src=np.array(()),
+                iloc_dst=np.array(()),
+                size=6)
+
+        func = get_col_fill_value_factory([-1, -2, -3, -4, -5, -6], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=None,
+                        columns_ic=columns_ic,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.values.tolist(),
+                [[-1, -2, -3, -4, -5, -6], [-1, -2, -3, -4, -5, -6], [-1, -2, -3, -4, -5, -6]]
+                )
+
+    def test_type_blocks_resize_blocks_a4(self) -> None:
+
+        a1 = np.arange(6).reshape(3, 2)
+        a2 = np.array([False, True, False])
+        a3 = np.array(['b', 'c', 'd'])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=False,
+                iloc_src=np.array((1,2)),
+                iloc_dst=np.array((0,3)),
+                size=5)
+
+        func = get_col_fill_value_factory([-1, -2, -3, -4, -5], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=None,
+                        columns_ic=columns_ic,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.values.tolist(),
+                [[1, -2, -3, False, -5], [3, -2, -3, True, -5], [5, -2, -3, False, -5]]
+                )
+
+    def test_type_blocks_resize_blocks_a5(self) -> None:
+
+        a1 = np.arange(6).reshape(3, 2)
+        a2 = np.array([False, True, False])
+        a3 = np.array(['b', 'c', 'd'])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=False,
+                iloc_src=np.array((1, 2)),
+                iloc_dst=np.array((0, 2)),
+                size=5)
+
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=False,
+                iloc_src=np.array((1,2)),
+                iloc_dst=np.array((0,3)),
+                size=5)
+
+        func = get_col_fill_value_factory([-1, -2, -3, -4, -5], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=index_ic,
+                        columns_ic=columns_ic,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.values.tolist(),
+                [[3, -2, -3, True, -5],
+                [-1, -2, -3, -4, -5],
+                [5, -2, -3, False, -5],
+                [-1, -2, -3, -4, -5],
+                [-1, -2, -3, -4, -5]])
+
+    def test_type_blocks_resize_blocks_a6(self) -> None:
+
+        a1 = np.arange(6).reshape(3, 2)
+        a2 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        func = get_col_fill_value_factory([-1, -2, -3, -4], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=None,
+                        columns_ic=None,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.values.tolist(),
+                [[0, 1, False], [2, 3, True], [4, 5, False]]
+                )
+
+    def test_type_blocks_resize_blocks_a7(self) -> None:
+
+        a1 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1,))
+
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0,)),
+                iloc_dst=np.array((0,)),
+                size=1)
+
+        func = get_col_fill_value_factory([-1, -2], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=None,
+                        columns_ic=columns_ic,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.values.tolist(),
+                [[False], [True], [False]]
+                )
+
+
+    def test_type_blocks_resize_blocks_a8(self) -> None:
+
+        a1 = np.arange(9).reshape(3, 3)
+        tb1 = TypeBlocks.from_blocks((a1,))
+
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0,)),
+                iloc_dst=np.array((1,)),
+                size=2)
+
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((2,)),
+                iloc_dst=np.array((0,)),
+                size=2)
+
+        func = get_col_fill_value_factory([-1, -2], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=index_ic,
+                        columns_ic=columns_ic,
+                        fill_value=func,
+                        ))
+
+        self.assertEqual(tb2.values.tolist(), [[6]])
+
+
+    def test_type_blocks_resize_blocks_a9(self) -> None:
+
+        a1 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1,))
+
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0,)),
+                iloc_dst=np.array((0,)),
+                size=1)
+
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0, 1)),
+                iloc_dst=np.array((1, 0)),
+                size=2)
+
+        func = get_col_fill_value_factory([-1, -2], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=index_ic,
+                        columns_ic=columns_ic,
+                        fill_value=func,
+                        ))
+
+        self.assertEqual(tb2.values.tolist(), [[False], [True]])
+
+
+    def test_type_blocks_resize_blocks_a10(self) -> None:
+
+        a1 = np.arange(9).reshape(3, 3)
+        a2 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0,)),
+                iloc_dst=np.array((1,)),
+                size=2)
+
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0, 1)),
+                iloc_dst=np.array((1, 0)),
+                size=2)
+
+        func = get_col_fill_value_factory([-1, -2], columns=None)
+        tb2 = TypeBlocks.from_blocks(
+                tb1.resize_blocks_by_callable(
+                        index_ic=index_ic,
+                        columns_ic=columns_ic,
+                        fill_value=func,
+                        ))
+        self.assertEqual(tb2.values.tolist(), [[-1, 0], [-1, 3]])
+
+
+    #---------------------------------------------------------------------------
     def test_type_blocks_resize_blocks_b(self) -> None:
 
         a1 = np.arange(6).reshape(3, 2)
@@ -2474,7 +2732,7 @@ class TestUnit(TestCase):
                 iloc_dst=np.array((0)),
                 size=1)
 
-        result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
+        result = tb1.resize_blocks_by_element(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([[5], [3], [1]])]
         for r,e in zip_longest(result, expected):
             self.assertTrue(np.array_equal(r, e))
@@ -2497,7 +2755,7 @@ class TestUnit(TestCase):
                 iloc_dst=np.array((0)),
                 size=1)
 
-        result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
+        result = tb1.resize_blocks_by_element(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([0,5])]
         for r,e in zip_longest(result, expected):
             self.assertTrue(np.array_equal(r, e))
@@ -2514,7 +2772,7 @@ class TestUnit(TestCase):
                 iloc_dst=np.array((0)),
                 size=1)
 
-        result = tb1.resize_blocks(index_ic=None, columns_ic=columns_ic, fill_value=None)
+        result = tb1.resize_blocks_by_element(index_ic=None, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([0,1,2,3,4,5])]
         for r,e in zip_longest(result, expected):
             self.assertTrue(np.array_equal(r, e))
@@ -2538,7 +2796,7 @@ class TestUnit(TestCase):
                 iloc_dst=np.array((0,1,2)),
                 size=3)
 
-        result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
+        result = tb1.resize_blocks_by_element(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([0, 5]), np.array([ 0, 10]), np.array([ 1, 11])]
         # [[0,  0,  1],
         #  [5, 10, 11]]
@@ -2592,7 +2850,6 @@ class TestUnit(TestCase):
         a2 = np.array([4, 5, 6])
         a3 = np.array([False, False, True])
         a4 = np.array([True, False, True])
-
 
         tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4))
 
@@ -2861,21 +3118,21 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertTypeBlocksArrayEqual(
-                TypeBlocks.from_blocks(tb1._shift_blocks(1, 1, wrap=True)),
+                TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_element(1, 1, wrap=True)),
                 [[None, 0, 0, 1, 'oe', 'od'],
                 [None, 1, 2, 3, 'a', 'b'],
                 [None, 4, -1, 6, 'c', 'd']]
                 )
 
         self.assertTypeBlocksArrayEqual(
-                TypeBlocks.from_blocks(tb1._shift_blocks(-1, -1, wrap=True)),
+                TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_element(-1, -1, wrap=True)),
                 [[-1, 6, 'c', 'd', None, 4],
                 [0, 1, 'oe', 'od', None, 0],
                 [2, 3, 'a', 'b', None, 1]]
                 )
 
         self.assertTypeBlocksArrayEqual(
-                TypeBlocks.from_blocks(tb1._shift_blocks(-2, 2, wrap=True)),
+                TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_element(-2, 2, wrap=True)),
                 [['od', None, 0, 0, 1, 'oe'],
                 ['b', None, 1, 2, 3, 'a'],
                 ['d', None, 4, -1, 6, 'c']]
@@ -2889,9 +3146,8 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        # import ipdb; ipdb.set_trace()
         self.assertTypeBlocksArrayEqual(
-                TypeBlocks.from_blocks(tb1._shift_blocks(1, 1, wrap=False,fill_value='x')),
+                TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_element(1, 1, wrap=False, fill_value='x')),
                 [['x', 'x', 'x', 'x', 'x', 'x'],
                 ['x', 1, 2, 3, 'a', 'b'],
                 ['x', 4, -1, 6, 'c', 'd']],
@@ -2899,7 +3155,7 @@ class TestUnit(TestCase):
                 )
 
         self.assertTypeBlocksArrayEqual(
-                TypeBlocks.from_blocks(tb1._shift_blocks(2,
+                TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_element(2,
                         -2,
                         wrap=False,
                         fill_value=10)),
@@ -2916,7 +3172,7 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
         self.assertEqual(
-                TypeBlocks.from_blocks(tb1._shift_blocks(0, 0, True)).values.tolist(),
+                TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_element(0, 0, True)).values.tolist(),
                 [[1, 'a', 'b'], [2, 'c', 'd'], [3, 'oe', 'od']]
                 )
 
@@ -2927,8 +3183,125 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
         self.assertEqual(
-                TypeBlocks.from_blocks(tb1._shift_blocks(0, 0, False)).values.tolist(),
+                TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_element(0, 0, False)).values.tolist(),
                 [[1, 'a', 'b'], [2, 'c', 'd'], [3, 'oe', 'od']]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_type_blocks_shift_blocks_fill_by_callable_a(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, -1, 6], [0, 0, 1]], dtype=object)
+        a2 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        a3 = np.array([None, None, None])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+        get_col_fill_value = get_col_fill_value_factory(['x', False], None)
+        tb2 = TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_callable(0,
+                2,
+                wrap=False,
+                get_col_fill_value=get_col_fill_value,
+                ))
+        self.assertEqual(tb2.values.tolist(),
+                [['x', False, 1, 2, 3, 'a'], ['x', False, 4, -1, 6, 'c'], ['x', False, 0, 0, 1, 'oe']])
+
+        get_col_fill_value = get_col_fill_value_factory(['x', False, 0, 0, -2, -1], None)
+        tb3 = TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_callable(0,
+                -2,
+                wrap=False,
+                get_col_fill_value=get_col_fill_value,
+                ))
+        self.assertEqual(tb3.values.tolist(),
+                [[3, 'a', 'b', None, -2, -1], [6, 'c', 'd', None, -2, -1], [1, 'oe', 'od', None, -2, -1]])
+
+
+    def test_type_blocks_shift_blocks_fill_by_callable_b(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, 9, 6], [0, 0, 1]], dtype=object)
+        a2 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        a3 = np.array([None, None, None])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+        get_col_fill_value = get_col_fill_value_factory([-1, -2, -3, -4, -5, -6], None)
+        tb2 = TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_callable(2,
+                0,
+                wrap=False,
+                get_col_fill_value=get_col_fill_value,
+                ))
+
+        self.assertEqual(tb2.values.tolist(),
+                [[-1, -2, -3, -4, -5, -6], [-1, -2, -3, -4, -5, -6], [1, 2, 3, 'a', 'b', None]]
+                )
+
+        tb3 = TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_callable(-1,
+                0,
+                wrap=False,
+                get_col_fill_value=get_col_fill_value,
+                ))
+
+        self.assertEqual(tb3.values.tolist(),
+                [[4, 9, 6, 'c', 'd', None], [0, 0, 1, 'oe', 'od', None], [-1, -2, -3, -4, -5, -6]]
+                )
+
+        tb4 = TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_callable(0,
+                0,
+                wrap=False,
+                get_col_fill_value=get_col_fill_value,
+                ))
+        self.assertEqual(tb4.values.tolist(),
+                [[1, 2, 3, 'a', 'b', None], [4, 9, 6, 'c', 'd', None], [0, 0, 1, 'oe', 'od', None]]
+                )
+
+    def test_type_blocks_shift_blocks_fill_by_callable_c(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, 9, 6], [0, 0, 1]], dtype=int)
+        a2 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        a3 = np.array([None, None, None])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+        get_col_fill_value = get_col_fill_value_factory(FillValueAuto, None)
+        tb2 = TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_callable(2,
+                0,
+                wrap=False,
+                get_col_fill_value=get_col_fill_value,
+                ))
+        self.assertEqual(tb2.values.tolist(),
+                [[0, 0, 0, '', '', None],
+                [0, 0, 0, '', '', None],
+                [1, 2, 3, 'a', 'b', None]]
+                )
+
+    def test_type_blocks_shift_blocks_fill_by_callable_d(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, 9, 6], [0, 0, 1]], dtype=int)
+        a2 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        a3 = np.array([None, None, None])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+        get_col_fill_value = get_col_fill_value_factory([-1, -2, -3, -4, -5, -6], None)
+        tb2 = TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_callable(1,
+                2,
+                wrap=False,
+                get_col_fill_value=get_col_fill_value,
+                ))
+        self.assertEqual(tb2.values.tolist(),
+                [[-1, -2, -3, -4, -5, -6], [-1, -2, 1, 2, 3, 'a'], [-1, -2, 4, 9, 6, 'c']]
+                )
+
+    def test_type_blocks_shift_blocks_fill_by_callable_e(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, 9, 6], [0, 0, 1]], dtype=int)
+        a2 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        a3 = np.array([None, None, None])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+        get_col_fill_value = get_col_fill_value_factory([-1, -2, -3, -4, -5, -6], None)
+        tb2 = TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_callable(0,
+                0,
+                wrap=True, # for coverage
+                get_col_fill_value=get_col_fill_value,
+                ))
+        self.assertEqual(tb2.values.tolist(),
+                [[1, 2, 3, 'a', 'b', None], [4, 9, 6, 'c', 'd', None], [0, 0, 1, 'oe', 'od', None]]
                 )
 
     #---------------------------------------------------------------------------
@@ -3275,7 +3648,6 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2))
         tb2 = TypeBlocks.from_blocks((a1, a3))
 
-        # import ipdb; ipdb.set_trace()
         self.assertFalse(tb1.equals(tb2))
 
     #---------------------------------------------------------------------------
@@ -3435,13 +3807,30 @@ class TestUnit(TestCase):
         tb1 = ff.parse('s(4,6)|v(int)').assign.loc[1].apply(
                 lambda s: s % 3)._blocks
         tb1, _ = tb1.sort(key=1, axis=0)
-        post = tuple(group_sorted(tb1, axis=1, key=1, extract=0))
+        post = tuple(group_sorted(tb1,
+                axis=1,
+                key=1,
+                extract=0,
+                as_array=True,
+                ))
         self.assertEqual([x[0] for x in post],
                 [0, 1, 2]
                 )
         self.assertEqual([x[2].shape for x in post],
                 [(1,), (1,), (4,)]
                 )
+
+    def test_type_blocks_group_sorted_e(self) -> None:
+        tb1, _ = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)._blocks.sort(1, 1)
+        post = tuple(group_sorted(tb1,
+                axis=0,
+                key=1,
+                as_array=True,
+                ))
+        self.assertEqual([p[2].__class__ for p in post], [np.ndarray, np.ndarray])
+        self.assertEqual([p[2].shape for p in post], [(3, 3), (4, 3)])
+
 
     #---------------------------------------------------------------------------
 
@@ -3476,11 +3865,24 @@ class TestUnit(TestCase):
     def test_type_blocks_group_match_e(self) -> None:
         tb1 = ff.parse('s(4,6)|v(int)').assign.loc[1].apply(
                 lambda s: s % 2)._blocks
-        post = tuple(group_match(tb1, axis=1, key=1, extract=0))
+        post = tuple(group_match(tb1, axis=1, key=1, extract=0, as_array=True))
 
         self.assertEqual([x[0] for x in post], [0, 1])
         self.assertEqual([x[2].shape for x in post], [(2,), (4,)])
-        # import ipdb; ipdb.set_trace()
+
+    def test_type_blocks_group_match_f(self) -> None:
+        tb1 = ff.parse('s(7,3)|v(int)').assign[1].apply(
+                lambda s: s % 3)._blocks
+
+        post = tuple(group_match(tb1,
+                axis=0,
+                key=1,
+                as_array=True,
+                ))
+
+        self.assertEqual([p[2].__class__ for p in post], [np.ndarray, np.ndarray])
+        self.assertEqual([p[2].shape for p in post], [(3, 3), (4, 3)])
+
 
     #---------------------------------------------------------------------------
 
@@ -3568,7 +3970,6 @@ class TestUnit(TestCase):
                 dtypes=(),
                 size_one_unity=True,
                 )
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(post.dtype, np.dtype(float))
         self.assertEqual(post.tolist(), [-88017.0, -610.8])
 
@@ -3586,6 +3987,51 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             iter(tb)
 
+    #---------------------------------------------------------------------------
+    def test_iter_row_elements_a(self) -> None:
+        tb1 = ff.parse('s(3,10)|v(int,int,bool,str)')._blocks
+        post = tuple(tb1.iter_row_elements(2))
+        self.assertEqual(post,
+                (84967, 5729, False, 'zCE3', 170440, 175579, False, 'zljm', -31776, -97851))
+
+    #---------------------------------------------------------------------------
+    def test_iter_columns_tuples_a(self) -> None:
+        tb1 = ff.parse('s(4,6)|v(int,int,bool,str)')._blocks
+        post1 = tuple(tb1.iter_columns_tuples(None))
+        self.assertEqual(post1,
+                ((-88017, 92867, 84967, 13448), (162197, -41157, 5729, -168387), (True, False, False, True), ('z2Oo', 'z5l6', 'zCE3', 'zr4u'), (58768, 146284, 170440, 32395), (84967, 13448, 175579, 58768))
+                )
+
+        post2 = tuple(tb1.iter_columns_tuples([1, 3]))
+        self.assertEqual(post2,
+                ((92867, 13448), (-41157, -168387), (False, True), ('z5l6', 'zr4u'), (146284, 32395), (13448, 58768))
+                )
+
+    def test_iter_columns_tuples_b(self) -> None:
+        tb1 = ff.parse('s(2,3)|v(str)')._blocks
+        post1 = tuple(tb1.iter_columns_tuples(None))
+        self.assertEqual(post1, (('zjZQ', 'zO5l'), ('zaji', 'zJnC'), ('ztsv', 'zUvW')))
+        self.assertEqual(tb1.values.tolist(),
+                [['zjZQ', 'zaji', 'ztsv'], ['zO5l', 'zJnC', 'zUvW']])
+
+    #---------------------------------------------------------------------------
+    def test_unified_dtypes_a(self) -> None:
+
+        a1 = np.array([False, True, False])
+        a2 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        self.assertTrue(tb1.unified_dtypes)
+
+    def test_unified_dtypes_b(self) -> None:
+        a1 = np.array([False, True, False])
+        a2 = np.array([0, 2, 1])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        self.assertFalse(tb1.unified_dtypes)
+
+    def test_unified_dtypes_c(self) -> None:
+        a1 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, ))
+        self.assertTrue(tb1.unified_dtypes)
 
 if __name__ == '__main__':
     import unittest

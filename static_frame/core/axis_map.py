@@ -10,6 +10,7 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.series import Series
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_deepcopy
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 
 if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn #pylint: disable=W0611 #pragma: no cover
@@ -80,12 +81,11 @@ def build_quilt_indices(
 
     if include_index:
         assert primary_tree
-        primary: tp.Union[Series, IndexHierarchy] = IndexHierarchy.from_tree(primary_tree)
+        primary: tp.Union[Series, IndexHierarchy] = IndexHierarchy.from_tree(primary_tree, index_constructors=IndexAutoConstructorFactory)
     else:
         primary = Series(labels)
 
     return primary, secondary # type: ignore
-
 
 
 def buses_to_hierarchy(

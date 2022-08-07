@@ -3,5 +3,5 @@
 
     {% import 'macros.jinja' as macros %}
 
-    {{ macros.api_overview(examples_defined=examples_defined, *interface['IndexYearMonthGO']) }}
+    {{ macros.api_overview_toc('IndexYearMonthGO', toc, interface_group_doc) }}
 

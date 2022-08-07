@@ -869,6 +869,20 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             _ = IndexDate.from_date_range('2021-01-01', '2021-01-03') == (3, 2)
 
+    #---------------------------------------------------------------------------
+    def test_index_datetime_loc(self) -> None:
+        idx1 = IndexDate(())
+
+        idx2 = idx1.iloc[[]]
+        self.assertEqual(idx2.__class__, IndexDate)
+        self.assertEqual(len(idx2), 0)
+
+        idx3 = idx1.loc[[]]
+        self.assertEqual(idx3.__class__, IndexDate)
+        self.assertEqual(len(idx3), 0)
+
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()

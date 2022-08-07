@@ -7,6 +7,7 @@ from collections import OrderedDict
 import copy
 
 import numpy as np
+import frame_fixtures as ff
 
 from static_frame import DisplayConfig
 from static_frame import Frame
@@ -17,6 +18,7 @@ from static_frame import ILoc
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexDate
+from static_frame import IndexYear
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexYearMonth
@@ -30,7 +32,7 @@ from static_frame.core.index_hierarchy import build_indexers_from_product
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
-
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 
 SelfT = tp.TypeVar('SelfT')
 
@@ -274,7 +276,7 @@ class TestUnit(TestCase):
         labels = (('I', 'A'), ('I', 'B'))
 
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
-        self.assertIn(ih1.nbytes, (533, 557))
+        self.assertIn(ih1.nbytes, (509, 533, 557))
 
     def test_hierarchy_size_b(self) -> None:
 
@@ -282,7 +284,7 @@ class TestUnit(TestCase):
 
         ih1 = IndexHierarchyGO.from_labels(labels, name='foo')
         ih1.append(('I', 'C'))
-        self.assertIn(ih1.nbytes, (569, 585))
+        self.assertIn(ih1.nbytes, (545, 569, 585))
 
     def test_hierarchy_bool_a(self) -> None:
 
@@ -461,8 +463,8 @@ class TestUnit(TestCase):
         ih3 = IndexHierarchy.from_labels(labels[-3:])
 
         # selection with an IndexHierarchy
-        self.assertEqual(ih1._loc_to_iloc(ih2).tolist(), [0, 1, 2]) # type: ignore
-        self.assertEqual(ih1._loc_to_iloc(ih3).tolist(), [3, 4, 5]) # type: ignore
+        self.assertEqual(ih1._loc_to_iloc(ih2), [0, 1, 2])
+        self.assertEqual(ih1._loc_to_iloc(ih3), [3, 4, 5])
 
         # Depth 2 != 3
         sel = IndexHierarchy.from_labels([(0, 1)])
@@ -714,6 +716,109 @@ class TestUnit(TestCase):
             for j in range(i, len(selections)):
                 self.assertTrue(selections[i].equals(selections[j]), msg=(i, j))
 
+    def test_hierarchy_loc_to_iloc_s(self) -> None:
+
+        # https://github.com/InvestmentSystems/static-frame/issues/554
+        ih = ff.parse('v(bool)|i((I,ID),(int,dtD))|s(4,4)').index.sort()
+        start = ih.values_at_depth(1)[0]
+        end = ih.values_at_depth(1)[-1]
+
+        post = ih._loc_to_iloc(HLoc[:, start:end])
+        self.assertListEqual(list(post), [0, 1, 2, 3])
+
+        ih = IndexHierarchy.from_labels(
+            [
+                [4, 0],
+                [2, 1],
+                [0, 2],
+                [3, 3],
+                [1, 4],
+            ]
+        )
+
+        ih2 = ih.sort()
+
+        self.assertListEqual(
+            list(ih2), [
+                (0, 2),
+                (1, 4),
+                (2, 1),
+                (3, 3),
+                (4, 0),
+            ]
+        )
+
+        for idx1, idx2 in zip(ih._indices, ih2._indices):
+            self.assertTrue(idx1.equals(idx2))
+
+        post = ih2._loc_to_iloc(HLoc[:, 4:1])
+        self.assertListEqual(list(post), [1, 2])
+
+    #---------------------------------------------------------------------------
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_a(self) -> None:
+        ih1 = IndexHierarchy.from_labels([(0, 1), (0, 2), (1, 0), (1, 1)])
+        ih2 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
+
+        post = ih1._loc_to_iloc_index_hierarchy(ih2)
+
+        self.assertListEqual(post, [3, 1, 0])
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_b(self) -> None:
+        ih1 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
+
+        post = ih1._loc_to_iloc_index_hierarchy(ih1)
+
+        self.assertListEqual(post, [0, 1, 2])
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_c(self) -> None:
+        ih1 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
+
+        post = ih1._loc_to_iloc_index_hierarchy(ih1.iloc[1:])
+
+        self.assertListEqual(post, [1, 2])
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_d(self) -> None:
+        ih1 = IndexHierarchy.from_labels([(1, 1)])
+        ih2 = IndexHierarchyGO.from_labels([(2, 2)])
+        ih2.append((3, 3))
+
+        with self.assertRaises(KeyError):
+            ih1._loc_to_iloc_index_hierarchy(ih2)
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_e(self) -> None:
+        ih1 = IndexHierarchyGO.from_labels([(0, 0)])
+        ih2 = IndexHierarchyGO.from_labels([(0, 0)])
+        ih1.append((1, 1))
+        ih2.append((0, 1)) # Valid theoretical combination from ih1, except it doesn't actually exist
+
+        with self.assertRaises(KeyError):
+            ih1._loc_to_iloc_index_hierarchy(ih2)
+
+    def test_hierarchy_loc_to_iloc_index_hierarchy_f(self) -> None:
+        labels1 = (
+                ('c_II', 'B', 1),
+                ('c_II', 'A', 1),
+                ('c_I', 'C', 1),
+                ('c_I', 'B', 1),
+                ('c_I', 'A', 1),
+                ('c_I', 'D', 1),
+        )
+        labels2 = (
+                ('c_I', 'A', 1),
+                ('c_I', 'B', 1),
+                ('c_I', 'C', 1),
+                ('c_II', 'A', 1),
+                ('c_II', 'B', 1),
+        )
+
+        ih1 = IndexHierarchy.from_labels(labels1)
+        ih2 = IndexHierarchy.from_labels(labels2)
+
+        post = ih1._loc_to_iloc_index_hierarchy(ih2)
+
+        self.assertListEqual(post, [4, 3, 2, 1, 0])
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_iloc_a(self) -> None:
@@ -779,6 +884,23 @@ class TestUnit(TestCase):
         self.assertEqual(ih2._blocks.shape, (0, 3))
         self.assertEqual(ih2.shape, (0, 3))
 
+    def test_hierarchy_extract_iloc_d(self) -> None:
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'A', 2),
+                ('II', 'B', 1),
+                ('II', 'B', 2),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        post = ih1._extract_iloc(None)
+        self.assertTrue(post.equals(ih1)) # type: ignore
+        self.assertIs(post, ih1)
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_getitem_astype_a(self) -> None:
@@ -843,6 +965,16 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitIndex):
             IndexHierarchy.from_product(range(2), range(2), range(2), index_constructors=[Index for _ in range(8)])
+
+    def test_hierarchy_from_product_f(self) -> None:
+
+        groups = np.array(('1954', '2020'), np.datetime64)
+        dates = np.array(('2018-01-01', '2018-01-04'), np.datetime64)
+        ih = IndexHierarchy.from_product(groups, dates,
+                index_constructors=IndexAutoConstructorFactory)
+        self.assertEqual([str(dt) for dt in ih.dtypes.values],
+                ['datetime64[Y]', 'datetime64[D]'],
+                )
 
     #--------------------------------------------------------------------------
 
@@ -1106,6 +1238,16 @@ class TestUnit(TestCase):
                 [[None, None, 1], ['I', 'A', 2], ['I', 'B', 1], ['I', 'B', 2], ['II', 'A', 1], ['II', 'A', 2], ['II', 'B', 1], ['II', 'B', 2]]
                 )
 
+    def test_hierarchy_from_labels_k(self) -> None:
+
+        ih = IndexHierarchy.from_labels((),
+                depth_reference=3,
+                reorder_for_hierarchy=True,
+                )
+        self.assertEqual(ih.shape, (0, 3))
+        self.assertEqual(ih.depth, 3)
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_from_index_items_a(self) -> None:
@@ -1268,7 +1410,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_hierarchy_from_array_a(self) -> None:
+    def test_hierarchy_from_arrays_a(self) -> None:
 
         # NOTE: This will consolidate dtypes
         arrays1 = np.array((
@@ -1293,12 +1435,36 @@ class TestUnit(TestCase):
         ih2 = IndexHierarchy._from_arrays(arrays2)
         self.assertTrue(ih1.equals(ih2))
 
-    def test_hierarchy_from_array_b(self) -> None:
+    def test_hierarchy_from_arrays_b(self) -> None:
 
         arrays = [(1, 2), (1,)]
 
         with self.assertRaises(ErrorInitIndex):
             _ = IndexHierarchy._from_arrays(arrays)
+
+
+    def test_hierarchy_from_arrays_c(self) -> None:
+        a1 = np.array(('1954', '1954', '2020'), np.datetime64)
+        a2 = np.array(('2018-01-01', '2018-01-04', '2018-01-04'), np.datetime64)
+        ih = IndexHierarchy._from_arrays((a1, a2),
+                index_constructors=IndexAutoConstructorFactory)
+        self.assertEqual([str(dt) for dt in ih.dtypes.values],
+                ['datetime64[Y]', 'datetime64[D]'],
+                )
+        self.assertEqual(ih.name, None)
+
+
+    def test_hierarchy_from_arrays_d(self) -> None:
+        IACF = IndexAutoConstructorFactory
+        a1 = np.array(('1954', '1954', '2020'), np.datetime64)
+        a2 = np.array(('2018-01-01', '2018-01-04', '2018-01-04'), np.datetime64)
+        ih = IndexHierarchy._from_arrays((a1, a2),
+                index_constructors=(IACF('a'), IACF('b')),
+                )
+        self.assertEqual([str(dt) for dt in ih.dtypes.values],
+                ['datetime64[Y]', 'datetime64[D]'],
+                )
+        self.assertEqual(ih.name, ('a', 'b'))
 
     #---------------------------------------------------------------------------
 
@@ -1494,6 +1660,13 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             ih1.loc[Series([(1, 'dd')])]
+
+    def test_hierarchy_loc_d(self) -> None:
+        # https://github.com/InvestmentSystems/static-frame/issues/455
+        ih1 = IndexHierarchy.from_labels([(0, 1), (0, 2), (1, 0), (1, 1)])
+        ih2 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
+
+        self.assertEqual(tuple(ih2), tuple(ih1.loc[ih2]))
 
     def test_hierarchy_series_a(self) -> None:
         f1 = IndexHierarchy.from_tree
@@ -2476,7 +2649,6 @@ class TestUnit(TestCase):
         ih2 = IndexHierarchy.from_labels(labels)
 
         a1 = ih1 == ih2
-        # import ipdb; ipdb.set_trace()s
         self.assertEqual(a1.tolist(), [[True, True, True], [True, True, True]])
 
     def test_hierarchy_binary_operators_f(self) -> None:
@@ -3155,6 +3327,12 @@ class TestUnit(TestCase):
                 [[10, 3], [100, 21], [2000, 63], [40000, 441]]
                 )
 
+    def test_hierarchy_ufunc_axis_skipna_c(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
+        with self.assertRaises(NotImplementedError):
+            _ = ih1.std()
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_pickle_a(self) -> None:
@@ -3440,6 +3618,15 @@ class TestUnit(TestCase):
                 ((0, np.dtype('int64')), (1, np.dtype('int64')), (2, np.dtype('<M8[M]')))
                 )
 
+    def test_hierarchy_astype_f(self) -> None:
+
+        idx1 = IndexHierarchy.from_labels([("1", 2), (3, "4"), ('5', '6')], name=(5, 6))
+        idx2 = idx1.astype[np.array([True, False])](str)
+        self.assertEqual([d.kind for d in idx2.dtypes.values], ['U', 'O'])
+
+        idx3 = idx2.astype[np.array([True, True])](str)
+        self.assertEqual([d.kind for d in idx3.dtypes.values], ['U', 'U'])
+
     #---------------------------------------------------------------------------
 
     @skip_win #type: ignore
@@ -3600,6 +3787,29 @@ class TestUnit(TestCase):
                 [['2020*01', '2019*01*01'], ['2020*01', '2019*02*01'], ['2019*02', '2019*01*01'], ['2019*02', '2019*02*01'], ['2021*01', '2019*01*01']]
                 )
 
+    def test_hierarchy_via_values_a(self) -> None:
+        ih1 = IndexHierarchy.from_product((0, 1), (10, 20))
+        ih2 = ih1.via_values.apply(lambda b: -b)
+        self.assertEqual(ih2.values.tolist(),
+                [[0, -10], [0, -20], [-1, -10], [-1, -20]]
+                )
+
+
+    def test_hierarchy_via_values_b(self) -> None:
+        ih1 = IndexHierarchy.from_product((0, 1), (10, 20))
+        post = np.sum(ih1.values, axis=1)
+        self.assertEqual(post.tolist(),
+                [10, 20, 11, 21]
+                )
+
+    def test_hierarchy_via_values_c(self) -> None:
+        ih1 = IndexHierarchyGO.from_product((0, 1), (2, 3))
+        ih1.append((5, 3))
+        post = np.power(ih1.via_values, 2)
+        self.assertEqual(post.values.tolist(),
+                [[0, 4], [0, 9], [1, 4], [1, 9], [25, 9]]
+                )
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_equals_a(self) -> None:
@@ -3664,6 +3874,50 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
                 [[1, 'a', 2.0], [1, 'a', 'foo'], [1, 'b', 2.0], [1, 'b', 'foo'], [2, 'a', 2.0], [2, 'a', 'foo'], [2, 'b', 2.0], [2, 'b', 'foo'], [3, 'c', 'foo']]
                 )
+
+    #---------------------------------------------------------------------------
+    def test_hierarchy_fillfalsy_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('', 'b'), (2, ''))
+        ih2 = ih1.fillfalsy('x')
+        self.assertEqual(ih2.values.tolist(),
+                [[1, 'x', 2], [1, 'x', 'x'], [1, 'b', 2], [1, 'b', 'x'], [2, 'x', 2], [2, 'x', 'x'], [2, 'b', 2], [2, 'b', 'x']]
+                )
+
+    def test_hierarchy_fillfalsy_b(self) -> None:
+
+        ih1 = IndexHierarchyGO.from_product((1, 2), ('', 'b'))
+        ih1.append((3, ''))
+        ih2 = ih1.fillfalsy('x')
+        self.assertEqual(ih2.values.tolist(),
+                [[1, 'x'], [1, 'b'], [2, 'x'], [2, 'b'], [3, 'x']]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_hierarchy_dropna_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 'a'), (None, 'b'))
+        ih2: IndexHierarchy = ih1.dropna(condition=np.any)
+        self.assertEqual(ih2.values.tolist(), [[1, 'b'], ['a', 'b']])
+
+        ih3: IndexHierarchy = ih1.dropna(condition=np.all)
+        self.assertIs(ih3, ih1)
+
+    def test_hierarchy_dropna_b(self) -> None:
+
+        ih1 = IndexHierarchy.from_labels(((1, 'a'), (None, np.nan), (None, 'b')))
+        ih2: IndexHierarchy = ih1.dropna(condition=np.all)
+        self.assertEqual(ih2.values.tolist(), [[1, 'a'], [None, 'b']])
+
+    #---------------------------------------------------------------------------
+    def test_hierarchy_dropfalsy_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 'a'), ('', 'b'))
+        ih2: IndexHierarchy = ih1.dropfalsy(condition=np.any)
+        self.assertEqual(ih2.values.tolist(), [[1, 'b'], ['a', 'b']])
+
+        ih2 = ih1.dropna(condition=np.all)
+        self.assertIs(ih2, ih1)
 
     #---------------------------------------------------------------------------
     def test_hierarchy_from_names_a(self) -> None:
@@ -4015,6 +4269,80 @@ class TestUnit(TestCase):
         post19 = str(ihgo)
         self.assertNotEqual(post19, str(original))
         self.assertEqual(post19, str(ihgo))
+
+
+    #---------------------------------------------------------------------------
+
+    def test_hierarchy_iloc_a(self) -> None:
+
+        f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(6,2)')
+
+        post = f.loc[HLoc[f.index.iloc[0]]]
+        self.assertEqual(post.to_pairs(),
+            ((np.datetime64('1970-01-01T09:38:35'), -88017), (np.datetime64('1970-01-01T01:00:48'), False)))
+
+        ih = IndexHierarchy.from_labels(
+            [("1990", "2000-03-14")],
+            index_constructors=[IndexYear, IndexDate]
+        )
+
+        self.assertEqual(ih.loc[ih.iloc[0]],
+            (np.datetime64('1990'), np.datetime64('2000-03-14')))
+
+    #---------------------------------------------------------------------------
+    def test_hierarchy_max_a(self) -> None:
+        ih = IndexHierarchy.from_labels([[1, 2], [20, 1], [3, 4]])
+        self.assertEqual(ih.max().tolist(), [20, 1])
+        self.assertEqual(ih.min().tolist(), [1, 2])
+        self.assertEqual(ih.loc_to_iloc(ih.max()), 1)
+        self.assertEqual(ih.loc_to_iloc(ih.min()), 0)
+
+        with self.assertRaises(NotImplementedError):
+            _ = ih.max(axis=1)
+
+    def test_hierarchy_max_b(self) -> None:
+        ih = IndexHierarchy.from_labels([[3, 4], [20, 1], [2, 1], [22, None]])
+        self.assertEqual(ih.max().tolist(), [20, 1])
+        self.assertEqual(ih.min().tolist(), [2, 1])
+        self.assertEqual(ih.loc_to_iloc(ih.max()), 1)
+        self.assertEqual(ih.loc_to_iloc(ih.min()), 2)
+
+        with self.assertRaises(TypeError):
+            _ = ih.max(skipna=False)
+
+
+    def test_hierarchy_max_c(self) -> None:
+        ih = IndexHierarchy.from_labels([[1, 2], [20, 1], [3, 4]])
+        with self.assertRaises(NotImplementedError):
+            _ = ih.mean()
+
+    def test_hierarchy_max_d(self) -> None:
+        ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
+        ih.append([-1, -4])
+        post = ih.min()
+        self.assertEqual(post.tolist(), [-1, -4])
+
+    def test_hierarchy_cumsum_a(self) -> None:
+        ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
+        ih.append([-1, np.nan])
+
+        post = ih.cumsum()
+        self.assertEqual(post.tolist(),
+            [[1.0, 2.0], [21.0, 3.0], [24.0, 7.0], [23.0, 7.0]]
+            )
+        self.assertEqual(ih.cumsum(skipna=False).astype(str).tolist(),
+            [['1.0', '2.0'], ['21.0', '3.0'], ['24.0', '7.0'], ['23.0', 'nan']]
+            )
+
+    #---------------------------------------------------------------------------
+    def test_hierarchy_concat_a(self) -> None:
+
+        f = ff.parse("f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(4,2)")
+        f1 = f.iloc[:2]
+        f2 = f.iloc[2:]
+
+        f3 = Frame.from_concat((f1, f2)) # RuntimeError
+        self.assertTrue(f.index.equals(f3.index, compare_dtype=True, compare_class=True))
 
 
 

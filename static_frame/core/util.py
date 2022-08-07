@@ -28,6 +28,7 @@ from automap import FrozenAutoMap  # pylint: disable = E0611
 import numpy as np
 
 from static_frame.core.exception import InvalidDatetime64Comparison
+from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
@@ -80,6 +81,18 @@ DTYPE_NA_KINDS = frozenset((
         DTYPE_OBJECT_KIND,
         ))
 
+# this is all kinds except 'V'
+# DTYPE_FALSY_KINDS = frozenset((
+#         DTYPE_FLOAT_KIND,
+#         DTYPE_COMPLEX_KIND,
+#         DTYPE_DATETIME_KIND,
+#         DTYPE_TIMEDELTA_KIND,
+#         DTYPE_OBJECT_KIND,
+#         DTYPE_BOOL_KIND,
+#         'U', 'S', # str kinds
+#         'i', 'u' # int kinds
+#         ))
+
 # all kinds that can use tolist() to go to a compatible Python type
 DTYPE_OBJECTABLE_KINDS = frozenset((
         DTYPE_FLOAT_KIND,
@@ -95,7 +108,6 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
 DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
         'D', 'h', 'm', 's', 'ms', 'us',
         ))
-
 
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
@@ -145,10 +157,17 @@ EMPTY_ARRAY_BOOL.flags.writeable = False
 EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
+EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
+EMPTY_ARRAY_OBJECT.flags.writeable = False
+
+
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
 NAT = np.datetime64('nat')
 NAT_STR = 'NaT'
+
+# this is a different NAT but can be treated the same
+NAT_TD64 = np.timedelta64('nat')
 
 # define missing for timedelta as an untyped 0
 EMPTY_TIMEDELTA = np.timedelta64(0)
@@ -268,7 +287,6 @@ def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
     is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
     return not is_slice and not is_mask
 
-
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[
         DtypeSpecifier,
@@ -362,6 +380,37 @@ for attr in ('__add__', '__sub__', '__mul__', '__matmul__', '__truediv__', '__fl
     rattr = '__r' + attr[2:]
     OPERATORS[rattr] = rfunc
 
+UFUNC_TO_REVERSE_OPERATOR: tp.Dict[UFunc, UFunc] = {
+    # '__pos__': operator.__pos__,
+    # '__neg__': operator.__neg__,
+    # '__abs__': operator.__abs__,
+    # '__invert__': operator.__invert__,
+
+    np.add: OPERATORS['__radd__'],
+    np.subtract: OPERATORS['__rsub__'],
+    np.multiply: OPERATORS['__rmul__'],
+    np.matmul: OPERATORS['__rmatmul__'],
+    np.true_divide: OPERATORS['__rtruediv__'],
+    np.floor_divide: OPERATORS['__rfloordiv__'],
+
+
+    # '__mod__': operator.__mod__,
+
+    # '__pow__': operator.__pow__,
+    # '__lshift__': operator.__lshift__,
+    # '__rshift__': operator.__rshift__,
+    # '__and__': operator.__and__,
+    # '__xor__': operator.__xor__,
+    # '__or__': operator.__or__,
+    np.less: OPERATORS['__gt__'],
+    np.less_equal: OPERATORS['__ge__'],
+    np.equal: OPERATORS['__eq__'],
+    np.not_equal: OPERATORS['__ne__'],
+    np.greater: OPERATORS['__lt__'],
+    np.greater_equal: OPERATORS['__le__'],
+}
+
+
 #-------------------------------------------------------------------------------
 class WarningsSilent:
     '''Alternate context manager for silencing warnings with less overhead.
@@ -423,10 +472,21 @@ UFUNC_MAP: tp.Dict[UFunc, UFuncCategory] = {
     np.nancumprod: UFuncCategory.CUMMULATIVE,
 }
 
+def ufunc_to_category(func: UFunc) -> tp.Optional[UFuncCategory]:
+    if func.__class__ is partial: #type: ignore
+        # std, var partialed
+        func = func.func #type: ignore
+    return UFUNC_MAP.get(func, None)
+
+def ufunc_is_statistical(func: UFunc) -> bool:
+    category = ufunc_to_category(func)
+    return not category is UFuncCategory.STATISTICAL
+
+
 def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
     '''Given a common UFunc and dtype, return the expected return dtype, or None if not possible.
     '''
-    rt = UFUNC_MAP.get(func, None)
+    rt = ufunc_to_category(func)
 
     if rt is None:
         return None
@@ -622,6 +682,7 @@ def dtype_from_element(
     if value.__class__ is np.ndarray and value.ndim == 0:
         return value.dtype
     # all arrays, or SF containers, should be treated as objects when elements
+    # NOTE: might check for __iter__?
     if hasattr(value, '__len__') and not isinstance(value, str):
         return DTYPE_OBJECT
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
@@ -915,12 +976,15 @@ def ufunc_unique1d_indexer(array: np.ndarray,
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
+    masked_array = array[mask]
+    if len(masked_array) <= 1: # we have only one item
+        return masked_array, np.full(mask.shape, 0, dtype=DTYPE_INT_DEFAULT)
 
     indexer = np.empty(mask.shape, dtype=DTYPE_INT_DEFAULT)
     indexer[positions] = np.cumsum(mask) - 1
     indexer.flags.writeable = False
 
-    return array[mask], indexer
+    return masked_array, indexer
 
 
 def ufunc_unique1d_positions(array: np.ndarray,
@@ -1483,7 +1547,8 @@ def blocks_to_array_2d(
             if blocks_post is not None:
                 blocks_post.append(b)
 
-    shape = (rows, columns) if discover_shape else shape
+        if discover_shape:
+            shape = (rows, columns) #if discover_shape else shape
 
     if blocks_post is None:
         # blocks might be an iterator if we did not need to discover shape or dtype
@@ -1521,7 +1586,6 @@ def slice_to_ascending_slice(
     Args:
         size: the length of the container on this axis
     '''
-    # NOTE: a slice can have start > stop, and None as step: should that case be handled here?
     key_step = key.step
     key_start = key.start
     key_stop = key.stop
@@ -1529,31 +1593,51 @@ def slice_to_ascending_slice(
     if key_step is None or key_step > 0:
         return key
 
-    stop = key_start if key_start is None else key_start + 1
+    # will get rid of all negative values greater than the size; but will replace None with an appropriate number for usage in range
+    norm_key_start, norm_key_stop, norm_key_step = key.indices(size)
+
+    # everything else should be descending, but we might have non-descending start, stop
+    if key_start is not None and key_stop is not None:
+        if norm_key_start <= norm_key_stop: # an ascending range
+            return EMPTY_SLICE
+
+    norm_range = range(norm_key_start, norm_key_stop, norm_key_step)
+
+    # derive stop
+    if key_start is None:
+        stop = None
+    else:
+        stop = norm_range[0] + 1
 
     if key_step == -1:
-        # if 6, 1, -1, then
-        start = key_stop if key_stop is None else key_stop + 1
-        return slice(start, stop, 1)
+        # gets last realized value, not last range value
+        return slice(None if key_stop is None else norm_range[-1], stop, 1)
 
-    step = abs(key_step)
-    start = size - 1 if key_start is None else min(size - 1, key_start)
+    return slice(norm_range[-1], stop, key_step * -1)
 
-    if key_stop is None:
-        start = start - (step * (start // step))
-    else:
-        start = start - (step * ((start - key_stop - 1) // step))
-
-    return slice(start, stop, step)
-
-def slice_to_inclusive_slice(
+def pos_loc_slice_to_iloc_slice(
         key: slice,
-        offset: int = 0,
+        length: int,
         ) -> slice:
-    '''Make a stop exclusive key inclusive by adding one to the stop value.
+    '''Make a positional (integer) exclusive stop key inclusive by adding one to the stop value.
     '''
-    start = None if key.start is None else key.start + offset
-    stop = None if key.stop is None else key.stop + 1 + offset
+    if key == NULL_SLICE:
+        return key
+
+    # NOTE: we are not validating that this is an integer here
+    start = None if key.start is None else key.start
+
+    if key.stop is None:
+        stop = None
+    else:
+        try:
+            if key.stop >= length:
+                # while a valid slice of positions, loc lookups do not permit over-stating boundaries
+                raise LocInvalid(f'Invalid loc: {key}')
+        except TypeError: # if stop is not an int
+            raise LocInvalid(f'Invalid loc: {key}')
+
+        stop = key.stop + 1
     return slice(start, stop, key.step)
 
 
@@ -1586,7 +1670,7 @@ TD64_NS = np.timedelta64(1, 'ns')
 
 _DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH)
 
-DTU_PYARROW = set(('ns', 'D', 's'))
+DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
 def to_datetime64(
         value: DateInitializer,
@@ -1694,9 +1778,11 @@ def key_to_datetime_key(
 
 def array_to_groups_and_locations(
         array: np.ndarray,
-        unique_axis: tp.Optional[int] = 0,
+        unique_axis: int = 0,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''Locations are index positions for each group.
+    Args:
+        unique_axis: only used if ndim > 1
     '''
     if array.ndim == 1:
         return ufunc_unique1d_indexer(array)
@@ -2070,7 +2156,7 @@ def array_shift(*,
         shift_mod = shift % -array.shape[axis]
 
     if (not wrap and shift == 0) or (wrap and shift_mod == 0):
-        # must copy so as not let caller mutate arguement
+        # must copy so as not let caller mutate argument
         return array.copy()
 
     if wrap:
@@ -2862,7 +2948,6 @@ def array_from_element_method(*,
 class PositionsAllocator:
     '''Resource for re-using a single array of contiguous ascending integers for common applications in IndexBase.
     '''
-
     _size: int = 1024 # 1048576
     _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False

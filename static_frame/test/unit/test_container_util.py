@@ -1,9 +1,11 @@
 import datetime
+import typing as tp
 
 import numpy as np
 
 from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import get_col_dtype_factory
+from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_set
@@ -17,6 +19,7 @@ from static_frame.core.container_util import apply_binary_operator_blocks_column
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
 
+from static_frame.core.fill_value_auto import FillValueAuto
 
 from static_frame.core.frame import FrameHE
 
@@ -267,7 +270,8 @@ class TestUnit(TestCase):
         self.assertEqual(key_to_ascending_key([9, 5, 1], 3), [1, 5, 9])
         self.assertEqual(key_to_ascending_key(np.array([9, 5, 1]), 3).tolist(), [1, 5, 9]) # type: ignore
 
-        self.assertEqual(key_to_ascending_key(slice(3, 0, -1), 3), slice(1, 4, 1))
+        self.assertEqual(key_to_ascending_key(slice(3, 0, -1), 3), slice(1, 3, 1))
+
         self.assertEqual(key_to_ascending_key(100, 3), 100)
 
         self.assertEqual(key_to_ascending_key([], 3), [])
@@ -284,6 +288,8 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             key_to_ascending_key(dict(a=3), size=3)
+
+    #---------------------------------------------------------------------------
 
     def test_pandas_to_numpy_a(self) -> None:
         import pandas as pd
@@ -424,6 +430,31 @@ class TestUnit(TestCase):
                 [datetime.date(2020, 1, 1), datetime.date(2020, 1, 2), datetime.date(2020, 2, 1), datetime.date(2020, 2, 2)]
                 )
 
+    def test_index_many_concat_f(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        idx2 = IndexHierarchy.from_product(('c', 'd'), (1, 2))
+
+        post = index_many_concat((idx1, idx2), cls_default=Index)
+        post = tp.cast(IndexHierarchy, post)
+
+        self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
+        self.assertEqual(post.to_frame().to_pairs(),
+                ((0, ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'), (4, 'c'), (5, 'c'), (6, 'd'), (7, 'd'))), (1, ((0, 1), (1, 2), (2, 1), (3, 2), (4, 1), (5, 2), (6, 1), (7, 2))))
+                )
+
+    def test_index_many_concat_g(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        idx2 = Index(('a', 'b'))
+
+        # both raise for un-aligned depths, regardless of order
+        with self.assertRaises(RuntimeError):
+            post = index_many_concat((idx1, idx2), cls_default=Index)
+
+        with self.assertRaises(RuntimeError):
+            post = index_many_concat((idx2, idx1), cls_default=Index)
+
     #---------------------------------------------------------------------------
 
     def test_index_many_set_a(self) -> None:
@@ -525,6 +556,44 @@ class TestUnit(TestCase):
         post1 = index_many_set((), Index, union=True, explicit_constructor=IndexDate)
         self.assertIs(post1.__class__, IndexDate)
 
+    def test_index_many_set_i(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        idx2 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+
+        post = index_many_set((idx1, idx2), Index, union=True)
+        post = tp.cast(IndexHierarchy, post)
+
+        self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
+        self.assertEqual(post.values.tolist(),
+            [['a', 1], ['a', 2], ['b', 1], ['b', 2]])
+
+    def test_index_many_set_j(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        idx2 = IndexHierarchy.from_product(('a', 'c'), (1, 2))
+
+        post = index_many_set((idx1, idx2), Index, union=True)
+        post = tp.cast(IndexHierarchy, post)
+
+        self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
+        self.assertEqual(post.values.tolist(),
+            [['a', 1], ['a', 2], ['b', 1], ['b', 2], ['c', 1], ['c', 2]])
+
+    def test_index_many_set_k(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        idx2 = IndexHierarchy.from_product(('a', 'c'), (1, 2))
+
+        post = index_many_set((idx1, idx2), Index, union=False)
+        post = tp.cast(IndexHierarchy, post)
+
+        self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
+        self.assertEqual(post.values.tolist(),
+            [['a', 1], ['a', 2]],)
+
+
+
     #---------------------------------------------------------------------------
 
     def test_get_col_dtype_factory_a(self) -> None:
@@ -546,6 +615,51 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             _ = get_col_dtype_factory(dict(bar=np.dtype(bool)), None)
+
+    #---------------------------------------------------------------------------
+
+    def test_get_col_fill_value_a(self) -> None:
+        func1 = get_col_fill_value_factory({'a':-1, 'b':2}, columns=('b', 'a'))
+        self.assertEqual(func1(0, np.dtype(float)), 2)
+        self.assertEqual(func1(1, np.dtype(float)), -1)
+
+        with self.assertRaises(RuntimeError):
+            _ = get_col_fill_value_factory({'a':-1, 'b':2}, columns=None)
+
+
+    def test_get_col_fill_value_b(self) -> None:
+        func1 = get_col_fill_value_factory(('x', 1), columns=('b', 'a'))
+        self.assertEqual(func1(0, np.dtype(float)), ('x', 1))
+        self.assertEqual(func1(1, np.dtype(float)), ('x', 1))
+
+    def test_get_col_fill_value_c(self) -> None:
+        func1 = get_col_fill_value_factory(('x', 1), columns=('b', 'a'))
+        self.assertEqual(func1(0, np.dtype(float)), ('x', 1))
+        self.assertEqual(func1(1, np.dtype(float)), ('x', 1))
+
+    def test_get_col_fill_value_d(self) -> None:
+        func1 = get_col_fill_value_factory('x', columns=('b', 'a'))
+        self.assertEqual(func1(0, np.dtype(float)), 'x')
+        self.assertEqual(func1(1, np.dtype(float)), 'x')
+
+    def test_get_col_fill_value_e(self) -> None:
+        func1 = get_col_fill_value_factory(
+                (c for c in 'xy'),
+                columns=('b', 'a'),
+                )
+        self.assertEqual(func1(0, np.dtype(float)), 'x')
+        self.assertEqual(func1(1, np.dtype(float)), 'y')
+
+    def test_get_col_fill_value_f(self) -> None:
+        func1 = get_col_fill_value_factory(FillValueAuto, columns=None)
+        self.assertEqual(func1(0, np.dtype(object)), None)
+        self.assertEqual(func1(1, np.dtype(str)), '')
+
+    def test_get_col_fill_value_g(self) -> None:
+        func1 = get_col_fill_value_factory(FillValueAuto(O='', U='na'), columns=None)
+        self.assertEqual(func1(0, np.dtype(object)), '')
+        self.assertEqual(func1(1, np.dtype(str)), 'na')
+
 
     #---------------------------------------------------------------------------
 

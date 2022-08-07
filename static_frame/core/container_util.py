@@ -13,6 +13,7 @@ from enum import Enum
 import numpy as np
 from numpy import char as npc
 from arraykit import column_2d_filter
+from arraykit import resolve_dtype_iter
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import AnyCallable
@@ -46,8 +47,9 @@ from static_frame.core.util import WarningsSilent
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import RankMethod
-
+from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.container import ContainerOperand
 
 
 if tp.TYPE_CHECKING:
@@ -57,16 +59,24 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactory #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no cover
+    # from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no
+    from static_frame.core.index_auto import IndexConstructorFactoryBase #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.container import ContainerOperand #pylint: disable=W0611,C0412 #pragma: no cover
 
 
+ExplicitConstructor = tp.Union[
+        IndexConstructor,
+        'IndexConstructorFactoryBase',
+        tp.Type['IndexConstructorFactoryBase'],
+        None,
+        ]
+
+FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
 class ContainerMap:
 
-    _map: tp.Optional[tp.Dict[str, tp.Type['ContainerOperand']]] = None
+    _map: tp.Optional[tp.Dict[str, tp.Type[ContainerOperand]]] = None
 
     @classmethod
     def _update_map(cls) -> None:
@@ -85,6 +95,8 @@ class ContainerMap:
         from static_frame.core.index_datetime import IndexYearGO
         from static_frame.core.index_datetime import IndexYearMonth
         from static_frame.core.index_datetime import IndexYearMonthGO
+        from static_frame.core.index_datetime import IndexHour
+        from static_frame.core.index_datetime import IndexHourGO
         from static_frame.core.index_datetime import IndexMinute
         from static_frame.core.index_datetime import IndexMinuteGO
         from static_frame.core.index_datetime import IndexSecond
@@ -95,28 +107,29 @@ class ContainerMap:
         from static_frame.core.index_datetime import IndexMicrosecondGO
         from static_frame.core.index_datetime import IndexNanosecond
         from static_frame.core.index_datetime import IndexNanosecondGO
+        from static_frame.core.bus import Bus
+        from static_frame.core.batch import Batch
+        from static_frame.core.yarn import Yarn
+        from static_frame.core.quilt import Quilt
 
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
     @classmethod
-    def str_to_cls(cls, name: str) -> tp.Type['ContainerOperand']:
+    def str_to_cls(cls, name: str) -> tp.Type[ContainerOperand]:
         if cls._map is None:
             cls._update_map()
         return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
 
-
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
-        ) -> tp.Callable[[int], np.dtype]:
+        ) -> tp.Callable[[int], DtypeSpecifier]:
     '''
     Return a function, or None, to get values from a DtypeSpecifier by integer column positions.
 
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
     '''
-    from static_frame.core.series import Series
-
     # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
     # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
 
@@ -147,6 +160,77 @@ def get_col_dtype_factory(
 
     return get_col_dtype
 
+
+def get_col_fill_value_factory(
+        fill_value: tp.Any,
+        columns: tp.Optional[tp.Sequence[tp.Hashable]],
+        ) -> tp.Callable[[int, np.dtype], tp.Any]:
+    '''
+    Return a function to get fill_vlaue.
+
+    Args:
+        columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
+    '''
+    # if all false it is an iterable
+    is_fva = False
+    is_map = False
+    is_element = False
+
+    if fill_value is FillValueAuto:
+        is_fva = True
+        fill_value = FILL_VALUE_AUTO_DEFAULT
+    elif is_mapping(fill_value):
+        is_map = True
+    elif isinstance(fill_value, tuple): # tuple is an element
+        is_element = True
+    elif hasattr(fill_value, '__iter__') and not isinstance(fill_value, str):
+        # an iterable or iterator but not a string
+        pass
+    elif isinstance(fill_value, FillValueAuto):
+        is_fva = True
+    else: # can assume an element
+        is_element = True
+
+    if columns is None and is_map:
+        raise RuntimeError('cannot lookup fill_value by name without supplied columns labels')
+
+    def get_col_fill_value(col_idx: int, dtype: tp.Optional[np.dtype]) -> tp.Any:
+        '''dtype can be used for automatic selection based on dtype kind
+        '''
+        nonlocal fill_value # might mutate a generator into a tuple
+        if is_fva and dtype is not None: # use the mapping from dtype
+            return fill_value[dtype]
+        if is_fva and dtype is None:
+            raise RuntimeError('Cannot use a FillValueAuto in a context where new blocks are being created.')
+        if is_element:
+            return fill_value
+        if is_map:
+            return fill_value.get(columns[col_idx], np.nan) #type: ignore
+        # NOTE: the types trying to select here could be more explicit
+        if not hasattr(fill_value, '__len__') or not hasattr(fill_value, '__getitem__'):
+            fill_value = tuple(fill_value)
+        return fill_value[col_idx]
+
+    return get_col_fill_value
+
+
+def is_element(value: tp.Any, container_is_element: bool = False) -> bool:
+    '''
+    Args:
+        container_is_element: Boolean to show if SF containers are treated as elements.
+    '''
+    if isinstance(value, str) or isinstance(value, tuple):
+        return True
+    if container_is_element and isinstance(value, ContainerOperand):
+        return True
+    return not hasattr(value, '__iter__')
+
+def is_fill_value_factory_initializer(value: tp.Any) -> bool:
+    # NOTE: in the context of a fill-value, we will not accept SF containers for now; a Series might be used as a mapping, but more clear to just force that to be converted to a dict
+    return (not is_element(value, container_is_element=True)
+            or value is FillValueAuto
+            or isinstance(value, FillValueAuto)
+            )
 
 def is_static(value: IndexConstructor) -> bool:
     try:
@@ -271,14 +355,12 @@ def df_slice_to_arrays(*,
     else:
         yield array
 
-
-
 #---------------------------------------------------------------------------
 def index_from_optional_constructor(
         value: tp.Union[IndexInitializer, 'IndexAutoFactory'],
         *,
         default_constructor: IndexConstructor,
-        explicit_constructor: tp.Union[IndexConstructor, 'IndexDefaultFactory', None] = None,
+        explicit_constructor: ExplicitConstructor = None,
         ) -> IndexBase:
     '''
     Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
@@ -286,7 +368,8 @@ def index_from_optional_constructor(
     # NOTE: this might return an own_index flag to show callers when a new index has been created
     # NOTE: do not pass `name` here; instead, partial contstuctors if necessary
     from static_frame.core.index_auto import IndexAutoFactory
-    from static_frame.core.index_auto import IndexDefaultFactory
+    from static_frame.core.index_auto import IndexConstructorFactoryBase
+    from static_frame.core.index_auto import IndexAutoConstructorFactory
 
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
@@ -295,10 +378,16 @@ def index_from_optional_constructor(
                 )
 
     if explicit_constructor:
-        if isinstance(explicit_constructor, IndexDefaultFactory):
-            # partial the default constructor with a name argument
-            return explicit_constructor(default_constructor)(value)
-        return explicit_constructor(value)
+        if isinstance(explicit_constructor, IndexConstructorFactoryBase):
+            return explicit_constructor(value,
+                    default_constructor=default_constructor,
+                    )
+        elif explicit_constructor is IndexAutoConstructorFactory:
+            # handle class-only case; get constructor, then call with values
+            return explicit_constructor.to_index(value, # type: ignore
+                    default_constructor=default_constructor,
+                    )
+        return explicit_constructor(value) #type: ignore
 
     # default constructor could be a function with a STATIC attribute
     if isinstance(value, IndexBase):
@@ -318,6 +407,21 @@ def index_from_optional_constructor(
 
     # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value)
+
+def constructor_from_optional_constructor(
+        default_constructor: IndexConstructor,
+        explicit_constructor: ExplicitConstructor = None,
+        ) -> IndexConstructor:
+    '''Return a constructor, resolving default and explicit constructor .
+    '''
+    def func(
+            value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            ) -> IndexBase:
+        return index_from_optional_constructor(value,
+                default_constructor=default_constructor,
+                explicit_constructor=explicit_constructor,
+                )
+    return func
 
 def index_from_optional_constructors(
         value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
@@ -359,8 +463,7 @@ def index_from_optional_constructors(
         own_index = True
     return index, own_index
 
-
-def index_from_optional_constructors_deferred(
+def constructor_from_optional_constructors(
         *,
         depth: int,
         default_constructor: IndexConstructor,
@@ -400,6 +503,7 @@ def index_constructor_empty(
         return True
     return False
 
+#---------------------------------------------------------------------------
 def matmul(
         lhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],
         rhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],
@@ -841,7 +945,7 @@ def rehierarch_from_index_hierarchy(*,
 def array_from_value_iter(
         key: tp.Hashable,
         idx: int,
-        get_value_iter: tp.Callable[[tp.Hashable], tp.Iterator[tp.Any]],
+        get_value_iter: tp.Callable[[tp.Hashable, int], tp.Iterator[tp.Any]],
         get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]],
         row_count: int,
         ) -> np.ndarray:
@@ -865,7 +969,7 @@ def array_from_value_iter(
     if dtype is not None:
         try:
             values = np.fromiter(
-                    get_value_iter(key),
+                    get_value_iter(key, idx),
                     count=row_count,
                     dtype=dtype)
             values.flags.writeable = False
@@ -875,7 +979,7 @@ def array_from_value_iter(
     if values is None:
         # returns an immutable array
         values, _ = iterable_to_array_1d(
-                get_value_iter(key),
+                get_value_iter(key, idx),
                 dtype=dtype
                 )
     return values
@@ -1064,6 +1168,8 @@ def _index_many_to_one(
 
     array_processor: tp.Callable[[tp.Sequence[np.ndarray]], np.ndarray]
 
+    mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
+
     if many_to_one_type is ManyToOneType.UNION:
         array_processor = partial(ufunc_set_iter,
                 union=True,
@@ -1072,7 +1178,7 @@ def _index_many_to_one(
         array_processor = partial(ufunc_set_iter,
                 union=False,
                 assume_unique=True)
-    elif many_to_one_type is ManyToOneType.CONCAT:
+    elif mtot_is_concat:
         array_processor = concat_resolved
 
     indices_iter = iter(indices)
@@ -1083,30 +1189,43 @@ def _index_many_to_one(
             return explicit_constructor(()) #type: ignore
         return cls_default.from_labels(())
 
-    arrays = [index.values]
-
     name_first = index.name
     name_aligned = True
-
     cls_first = index.__class__
     cls_aligned = True
+    depth_first = index.depth
 
-    # if we are unioning we can give back an index_auto_aligned
-    index_auto_aligned = (many_to_one_type is not ManyToOneType.CONCAT
+    # if we are unioning we can give back an index_auto
+    index_auto_aligned = (not mtot_is_concat
             and index.ndim == 1
             and index._map is None #type: ignore
             )
 
     # if IndexHierarchy, collect index_types generators
     if index.ndim == 2:
-        depth_first = index.depth
-        index_types_gen = [index.index_types.values]
-        index_types_aligned = True
-    else: # for 1D we ignore this
-        index_types_aligned = False
+        is_ih = True
+        index_types_arrays = [index.index_types.values]
+        if not mtot_is_concat:
+            index_dtypes_arrays = [index.dtypes.values] #type: ignore
+
+        if mtot_is_concat:
+            # store array for each depth; unpack aligned depths with zip
+            arrays = [[index.values_at_depth(d) for d in range(depth_first)]]
+        else:
+            # NOTE: we accept type consolidation for set operations for now
+            arrays = [index.values]
+    else:
+        is_ih = False
+        arrays = [index.values]
 
     for index in indices_iter:
-        arrays.append(index.values)
+        if index.depth != depth_first:
+            raise RuntimeError(f'Indices must have aligned depths')
+        if mtot_is_concat and depth_first > 1:
+            arrays.append([index.values_at_depth(d) for d in range(depth_first)])
+        else:
+            arrays.append(index.values)
+
         if name_aligned and index.name != name_first:
             name_aligned = False
         if cls_aligned and index.__class__ != cls_first:
@@ -1114,26 +1233,31 @@ def _index_many_to_one(
         if index_auto_aligned and (index.ndim != 1 or index._map is not None): #type: ignore
             index_auto_aligned = False
 
-        if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
-            index_types_gen.append(index.index_types.values)
+        # is_ih can only be True if we have all IH of same depth
+        if is_ih:
+            index_types_arrays.append(index.index_types.values)
+            if not mtot_is_concat:
+                index_dtypes_arrays.append(index.dtypes.values) #type: ignore
         else:
-            index_types_aligned = False
+            is_ih = False
 
     name = name_first if name_aligned else None
+
+    # return an index auto if we can
     if index_auto_aligned:
         if many_to_one_type is ManyToOneType.UNION:
-            size = max(a.size for a in arrays)
+            size = max(a.size for a in arrays) #type: ignore
         elif many_to_one_type is ManyToOneType.INTERSECT:
-            size = min(a.size for a in arrays)
+            size = min(a.size for a in arrays) #type: ignore
         return IndexAutoFactory(size, name=name).to_index(
                 default_constructor=cls_default,
                 explicit_constructor=explicit_constructor,
                 )
 
-    if index_types_aligned: # for IndexHierarchy
-        # all depths are already aligned
+    if is_ih: # for IndexHierarchy
         index_constructors = []
-        for types in zip(*index_types_gen):
+        # get types for each depth level
+        for types in zip(*index_types_arrays):
             if all(types[0] == t for t in types[1:]):
                 index_constructors.append(types[0])
             else: # assume this is always a 1D index
@@ -1141,26 +1265,42 @@ def _index_many_to_one(
 
     if cls_aligned and explicit_constructor is None:
         if cls_default.STATIC and not cls_first.STATIC:
-            # default is static but aligned is mutable
-            constructor = cls_first._IMMUTABLE_CONSTRUCTOR.from_labels #type: ignore
+            constructor_cls = cls_first._IMMUTABLE_CONSTRUCTOR
         elif not cls_default.STATIC and cls_first.STATIC:
-            # default is mutable but aligned is static
-            constructor = cls_first._MUTABLE_CONSTRUCTOR.from_labels #type: ignore
+            constructor_cls = cls_first._MUTABLE_CONSTRUCTOR
         else:
-            constructor = cls_first.from_labels
+            constructor_cls = cls_first
+
+        if is_ih:
+            constructor = constructor_cls._from_arrays #type: ignore
+        else:
+            constructor = constructor_cls.from_labels #type: ignore
+
     elif explicit_constructor is not None:
         constructor = explicit_constructor
     else:
         constructor = cls_default.from_labels
 
-    # returns an immutable array
-    array = array_processor(arrays)
+    if is_ih: # IndexHierarchy
+        if mtot_is_concat:
+            # align same-depth collections of arrays
+            arrays_per_depth = [array_processor(d) for d in zip(*arrays)]
+        else:
+            # NOTE: arrays is a list of 2D arrays, where rows are labels
+            array = array_processor(arrays)
+            arrays_per_depth = []
+            for d, dtypes in enumerate(zip(*index_dtypes_arrays)):
+                dtype = resolve_dtype_iter(dtypes)
+                arrays_per_depth.append(array[NULL_SLICE, d].astype(dtype))
 
-    if index_types_aligned: # IndexHierarchy
-        return constructor(array, #type: ignore
+        return constructor(arrays_per_depth, #type: ignore
                 name=name,
                 index_constructors=index_constructors,
+                depth_reference=depth_first,
                 )
+
+    # returns an immutable array
+    array = array_processor(arrays)
     return constructor(array, name=name) #type: ignore
 
 def index_many_concat(

@@ -39,22 +39,22 @@ History
 The ideas behind StaticFrame developed out of years of work with Pandas and related tabular data structures by the Investment Systems team at Research Affiliates, LLC. In May of 2017 Christopher Ariza proposed the basic model to the Investment Systems team and began implementation. The first public release was in May 2018.
 
 
+Media
+********************************
+
 Articles
-************
+..........
 
-2022: `StaticFrame from the Ground Up: Getting Started with Immutable DataFrames <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
-
-2022: `Using Higher-Order Containers to Efficiently Process 7,163 (or More) DataFrames <https://towardsdatascience.com/using-higher-order-containers-to-efficiently-process-7-163-or-more-dataframes-964da8b0c679>`_.
-
-2020: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_.
-
+- 2022: `One Fill Value Is Not Enough: Preserving Columnar Types When Reindexing DataFrames <https://dev.to/flexatone/one-fill-value-is-not-enough-preserving-columnar-types-when-reindexing-dataframes-2jdj>`_
+- 2022: `StaticFrame from the Ground Up: Getting Started with Immutable DataFrames <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
+- 2022: `Using Higher-Order Containers to Efficiently Process 7,163 (or More) DataFrames <https://towardsdatascience.com/using-higher-order-containers-to-efficiently-process-7-163-or-more-dataframes-964da8b0c679>`_
+- 2020: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_
 
 
 Presentations
-***********************************
+..................
 
-The following presentations and interviews describe StaticFrame in greater depth.
-
+- PyCon US 2022: "Employing NumPy's NPY Format for Faster-Than-Parquet DataFrame Serialization": https://youtu.be/HLH5AwF-jx4
 - PyData Global 2021: "Why Datetimes Need Units: Avoiding a Y2262 Problem & Harnessing the Power of NumPy's datetime64": https://www.youtube.com/watch?v=jdnr7sgxCQI
 - PyData LA 2019: "The Best Defense is not a Defensive Copy" (lightning talk starting at 18:25): https://youtu.be/_WXMs8o9Gdw
 - PyData LA 2019: "Fitting Many Dimensions into One The Promise of Hierarchical Indices for Data Beyond Two Dimensions": https://youtu.be/xX8tXSNDpmE
@@ -62,26 +62,4 @@ The following presentations and interviews describe StaticFrame in greater depth
 - Talk Python to Me, interview: https://talkpython.fm/episodes/show/204/staticframe-like-pandas-but-safer
 - PyData LA 2018: "StaticFrame: An Immutable Alternative to Pandas": https://pyvideo.org/pydata-la-2018/staticframe-an-immutable-alternative-to-pandas.html
 
-
-
-Contributors
-***********************************
-
-These members of the Investment Systems team have contributed greatly to the design of StaticFrame:
-
-- Brandt Bucher
-- Charles Burkland
-- Guru Devanla
-- John Hawk
-- John McCloskey
-- Adam Kay
-- Mark LeMoine
-- Myrl Marmarelis
-- Tom Rutherford
-- Yu Tomita
-- Quang Vu
-
-Thanks also for additional contributions from GitHub users:
-
-https://github.com/InvestmentSystems/static-frame/graphs/contributors
 

@@ -16,11 +16,12 @@ import frame_fixtures as ff
 import pandas as pd
 
 sys.path.append(os.getcwd())
+
 import static_frame as sf
 from static_frame.core.display_color import HexColor
 
+
 class FileIOTest:
-    NUMBER = 4
     SUFFIX = '.tmp'
 
     def __init__(self, fixture: str):
@@ -214,7 +215,6 @@ class SFReadNPY(FileIOTest):
         self.fixture.to_npy(self.fp_dir)
 
     def __call__(self):
-        # import ipdb; ipdb.set_trace()
         f = sf.Frame.from_npy(self.fp_dir)
         _ = f.loc[34715, 'zZbu']
 
@@ -234,15 +234,16 @@ class SFReadNPYMM(FileIOTest):
         self.fixture.to_npy(self.fp_dir)
 
     def __call__(self):
-        # import ipdb; ipdb.set_trace()
-        f = sf.Frame.from_npy(self.fp_dir, memory_map=True)
+        f, close = sf.Frame.from_npy_mmap(self.fp_dir)
         _ = f.loc[34715, 'zZbu']
-
+        close()
 
 
 #-------------------------------------------------------------------------------
+NUMBER = 5
+
 def scale(v):
-    return int(v * 1)
+    return int(v * 10)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -262,9 +263,21 @@ FF_square_columnar   = f's({scale(1_000)},{scale(1_000)})|v(int,bool,float)|i(I,
 def get_versions() -> str:
     import platform
     import pyarrow
-    return f'OS: {platform.system()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__}\n'
+    return f'OS: {platform.system()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 
-def plot(frame: sf.Frame):
+FIXTURE_SHAPE_MAP = {
+    '1000x10': 'Tall',
+    '100x100': 'Square',
+    '10x1000': 'Wide',
+    '10000x100': 'Tall',
+    '1000x1000': 'Square',
+    '100x10000': 'Wide',
+    '100000x1000': 'Tall',
+    '10000x10000': 'Square',
+    '1000x100000': 'Wide',
+}
+
+def plot_performance(frame: sf.Frame):
     fixture_total = len(frame['fixture'].unique())
     cat_total = len(frame['category'].unique())
     name_total = len(frame['name'].unique())
@@ -273,8 +286,8 @@ def plot(frame: sf.Frame):
 
     # for legend
     name_replace = {
-        PDReadParquetArrow.__name__: 'Parquet\n (pd, snappy)',
-        PDWriteParquetArrow.__name__: 'Parquet\n (pd, snappy)',
+        PDReadParquetArrow.__name__: 'Parquet\n(pd, snappy)',
+        PDWriteParquetArrow.__name__: 'Parquet\n(pd, snappy)',
         PDReadParquetArrowNoComp.__name__: 'Parquet\n(pd, no compression)',
         PDWriteParquetArrowNoComp.__name__: 'Parquet\n(pd, no compression)',
         PDReadParquetFast.__name__: 'Parquet\n(pd, FastParquet)',
@@ -289,6 +302,7 @@ def plot(frame: sf.Frame):
         SFWriteNPZ.__name__: 'NPZ (sf)',
         SFReadNPY.__name__: 'NPY (sf)',
         SFWriteNPY.__name__: 'NPY (sf)',
+        SFReadNPYMM.__name__: 'NPY mmap (sf)'
     }
 
     name_order = {
@@ -306,23 +320,14 @@ def plot(frame: sf.Frame):
         SFWriteNPZ.__name__: 5,
         SFReadNPY.__name__: 6,
         SFWriteNPY.__name__: 6,
-        SFReadPickle.__name__: 7,
-        SFWritePickle.__name__: 7,
+        SFReadNPYMM.__name__: 7,
+        SFReadPickle.__name__: 8,
+        SFWritePickle.__name__: 8,
     }
 
-    fixture_shape_map = {
-        '1000x10': 'Tall',
-        '100x100': 'Square',
-        '10x1000': 'Wide',
-        '10000x100': 'Tall',
-        '1000x1000': 'Square',
-        '100x10000': 'Wide',
-        '100000x1000': 'Tall',
-        '10000x10000': 'Square',
-        '1000x100000': 'Wide',
-    }
+    # cmap = plt.get_cmap('terrain')
+    cmap = plt.get_cmap('plasma')
 
-    cmap = plt.get_cmap('terrain')
     color = cmap(np.arange(name_total) / name_total)
 
     # categories are read, write
@@ -341,7 +346,7 @@ def plot(frame: sf.Frame):
 
             # ax.set_ylabel()
             cat_io, cat_dtype = cat_label.split(' ')
-            title = f'{cat_io.title()}\n{cat_dtype.title()}\n{fixture_shape_map[fixture_label]}'
+            title = f'{cat_io.title()}\n{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
             ax.set_title(title, fontsize=8)
             ax.set_box_aspect(0.75) # makes taller tan wide
             time_max = fixture['time'].max()
@@ -359,26 +364,25 @@ def plot(frame: sf.Frame):
                     labelbottom=False,
                     )
 
-
-    fig.set_size_inches(6, 7) # width, height
+    fig.set_size_inches(6, 3.5) # width, height
     fig.legend(post, names_display, loc='center right', fontsize=8)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
-    fig.text(.14, .97, f'NPY & NPZ Performance: {count:.0e} Elements', fontsize=10)
-    fig.text(.14, .92, get_versions(), fontsize=8)
+    fig.text(.05, .97, f'NPZ Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
+    fig.text(.05, .91, get_versions(), fontsize=6)
     # get fixtures size reference
-    shape_map = {shape: fixture_shape_map[shape] for shape in frame['fixture'].unique()}
+    shape_map = {shape: FIXTURE_SHAPE_MAP[shape] for shape in frame['fixture'].unique()}
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
-    fig.text(.14, .915, shape_msg, fontsize=8)
+    fig.text(.05, .91, shape_msg, fontsize=6)
 
     fp = '/tmp/serialize.png'
     plt.subplots_adjust(
             left=0.05,
             bottom=0.05,
             right=0.75,
-            top=0.82,
+            top=0.75,
             wspace=-0.2, # width
-            hspace=1.5,
+            hspace=1,
             )
     # plt.rcParams.update({'font.size': 22})
     plt.savefig(fp, dpi=300)
@@ -387,6 +391,7 @@ def plot(frame: sf.Frame):
         os.system(f'eog {fp}&')
     else:
         os.system(f'open {fp}')
+
 
 #-------------------------------------------------------------------------------
 def convert_size(size_bytes):
@@ -398,6 +403,91 @@ def convert_size(size_bytes):
     p = math.pow(1024, i)
     s = round(size_bytes / p, 2)
     return '%s %s' % (s, size_name[i])
+
+
+def plot_size(frame: sf.Frame):
+    # for legend
+    name_replace = {
+        'parquet': 'Parquet\n(pd, snappy)',
+        'parquet_noc': 'Parquet\n(pd, no compression)',
+        # PDReadFeather.__name__: 'Feather (pd)',
+        'pickle': 'Pickle (sf)',
+        'npz': 'NPZ (sf)',
+        'npy': 'NPY (sf)',
+    }
+
+    fixture_total = len(frame)
+    names = ('parquet', 'parquet_noc', 'npz', 'pickle')
+    name_total = len(names)
+
+    fig, axes = plt.subplots(3, 3)
+
+    # cmap = plt.get_cmap('terrain')
+    cmap = plt.get_cmap('plasma')
+    color = cmap(np.arange(name_total) / name_total)
+
+    sl_to_pos = {'tall': 0, 'square': 1, 'wide': 2}
+    cl_to_pos = {'columnar': 0, 'mixed': 1, 'uniform': 2}
+
+    # categories are read, write
+    for fixture_count, (fixture_label, row) in enumerate(frame.iter_series_items(axis=1)):
+        shape_label, dtype_label = fixture_label.split('_')
+
+        # ax = axes[sl_to_pos[shape_label]][cl_to_pos[dtype_label]]
+        ax = axes[cl_to_pos[dtype_label]][sl_to_pos[shape_label]]
+
+        x = np.arange(name_total)
+    #     names_display = [name_replace[l] for l in names]
+        results = row[list(names)].values
+        post = ax.bar(names, results, color=color)
+        shape_key = f"{row['shape'][0]}x{row['shape'][1]}"
+        title = f'{dtype_label.title()}\n{FIXTURE_SHAPE_MAP[shape_key]}'
+        # title = f'{cat_io.title()}\n{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
+
+
+        ax.set_title(title, fontsize=8)
+        ax.set_box_aspect(0.75) # makes taller tan wide
+        size_max = results.max()
+        ax.set_yticks([0, size_max * 0.5, size_max])
+        ax.set_yticklabels(['',
+                convert_size(size_max * 0.5),
+                convert_size(size_max),
+                ], fontsize=6)
+        ax.tick_params(
+                axis='x',
+                which='both',
+                bottom=False,
+                top=False,
+                labelbottom=False,
+                )
+
+    fig.set_size_inches(6, 3.5) # width, height
+    fig.legend(post, [name_replace[n] for n in names], loc='center right', fontsize=8)
+    # horizontal, vertical
+    count = ff.parse(FF_tall_uniform).size
+    fig.text(.05, .97, f'NPZ Size: {count:.0e} Elements', fontsize=10)
+    fig.text(.05, .91, get_versions(), fontsize=6)
+    # get fixtures size reference
+    shape_map = {shape: FIXTURE_SHAPE_MAP[f'{shape[0]}x{shape[1]}'] for shape in frame['shape'].unique()}
+    shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
+    fig.text(.05, .91, shape_msg, fontsize=6)
+
+    fp = '/tmp/serialize-size.png'
+    plt.subplots_adjust(
+            left=0.05,
+            bottom=0.05,
+            right=0.75,
+            top=0.75,
+            wspace=-0.2, # width
+            hspace=1,
+            )
+    # plt.rcParams.update({'font.size': 22})
+    plt.savefig(fp, dpi=300)
+
+    if sys.platform.startswith('linux'):
+        os.system(f'eog {fp}&')
+    else:
+        os.system(f'open {fp}')
 
 def get_sizes():
     records = []
@@ -423,18 +513,21 @@ def get_sizes():
         df.to_parquet(fp)
         size_parquet = os.path.getsize(fp)
         os.unlink(fp)
+        record.append(size_parquet)
         record.append(convert_size(size_parquet))
 
         _, fp = tempfile.mkstemp(suffix='.parquet')
         df.to_parquet(fp, compression=None)
         size_parquet_noc = os.path.getsize(fp)
         os.unlink(fp)
+        record.append(size_parquet_noc)
         record.append(convert_size(size_parquet_noc))
 
         _, fp = tempfile.mkstemp(suffix='.npz')
         f.to_npz(fp, include_columns=True)
         size_npz = os.path.getsize(fp)
         os.unlink(fp)
+        record.append(size_npz)
         record.append(convert_size(size_npz))
 
         _, fp = tempfile.mkstemp(suffix='.pickle')
@@ -443,6 +536,7 @@ def get_sizes():
         file.close()
         size_pickle = os.path.getsize(fp)
         os.unlink(fp)
+        record.append(size_pickle)
         record.append(convert_size(size_pickle))
 
         record.append(round(size_npz / size_parquet, 3))
@@ -454,14 +548,20 @@ def get_sizes():
             columns=('fixture',
             'shape',
             'parquet',
+            'parquet_hr', # human readable
             'parquet_noc',
+            'parquet_noc_hr',
             'npz',
+            'npz_hr',
             'pickle',
+            'pickle_hr',
+
             'npz/parquet',
             'npz/parquet_noc'
             )).set_index('fixture', drop=True)
 
     print(f.display_wide())
+    plot_size(f)
 
 
 def pandas_serialize_test():
@@ -508,7 +608,34 @@ def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
     f = ff.parse(fixture)
     return label, f'{f.shape[0]:}x{f.shape[1]}', fixture
 
-def run_test():
+CLS_READ = (
+    PDReadParquetArrow,
+    PDReadParquetArrowNoComp,
+    # PDReadParquetFast, # not faster!
+    # PDReadFeather,
+
+    # SFReadParquet,
+    SFReadNPZ,
+    # SFReadNPY,
+    SFReadNPYMM,
+    SFReadPickle,
+    )
+CLS_WRITE = (
+    # PDWriteParquetArrow,
+    # PDWriteParquetArrowNoComp,
+    # PDWriteParquetFast, # not faster!
+    # SFWriteParquet,
+    # PDWriteFeather,
+    SFWriteNPZ,
+    # SFWriteNPY,
+    SFWritePickle,
+    )
+
+
+def run_test(
+        include_read: bool = True,
+        include_write: bool = True,
+        ):
     records = []
     for dtype_hetero, fixture_label, fixture in (
             fixture_to_pair('uniform', FF_wide_uniform),
@@ -523,42 +650,20 @@ def run_test():
             fixture_to_pair('mixed', FF_square_mixed),
             fixture_to_pair('columnar', FF_square_columnar),
             ):
-        cls_read = (
-            PDReadParquetArrow,
-            PDReadParquetArrowNoComp,
-            # PDReadParquetFast, # not faster!
-            PDReadFeather,
-
-            # SFReadParquet,
-            SFReadNPZ,
-            SFReadNPY,
-            SFReadPickle,
-            # SFReadNPYMM,
-            )
-        cls_write = (
-            PDWriteParquetArrow,
-            PDWriteParquetArrowNoComp,
-            # PDWriteParquetFast, # not faster!
-            # SFWriteParquet,
-            PDWriteFeather,
-            SFWriteNPZ,
-            SFWriteNPY,
-            SFWritePickle,
-            )
 
         for cls, category_prefix in chain(
-                zip(cls_read, repeat('read')),
-                zip(cls_write, repeat('write')),
+                (zip(CLS_READ, repeat('read')) if include_read else ()),
+                (zip(CLS_WRITE, repeat('write')) if include_write else ()),
                 ):
             runner = cls(fixture)
             category = f'{category_prefix} {dtype_hetero}'
 
-            record = [cls.__name__, cls.NUMBER, category, fixture_label]
+            record = [cls.__name__, NUMBER, category, fixture_label]
             try:
                 result = timeit.timeit(
                         f'runner()',
                         globals=locals(),
-                        number=cls.NUMBER)
+                        number=NUMBER)
             except OSError:
                 result = np.nan
             finally:
@@ -581,11 +686,12 @@ def run_test():
             )
     print(display.display(config))
 
-    plot(f)
-    # import ipdb; ipdb.set_trace()
+    plot_performance(f)
 
 if __name__ == '__main__':
     # pandas_serialize_test()
-    # get_sizes()
-    run_test()
+    get_sizes()
+    # run_test(include_read=True, include_write=False)
+    # run_test(include_read=False, include_write=True)
+
 
