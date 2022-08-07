@@ -3,5 +3,5 @@
 
     {% import 'macros.jinja' as macros %}
 
-    {{ macros.api_detail_toc('FrameGO', toc) }}
+    {{ macros.api_detail_toc('FrameGO', toc, interface_group_doc) }}
 

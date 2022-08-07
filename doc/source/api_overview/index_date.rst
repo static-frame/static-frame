@@ -3,5 +3,5 @@
 
     {% import 'macros.jinja' as macros %}
 
-    {{ macros.api_overview_toc('IndexDate', toc) }}
+    {{ macros.api_overview_toc('IndexDate', toc, interface_group_doc) }}
 
