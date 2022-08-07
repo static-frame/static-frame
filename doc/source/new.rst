@@ -4,7 +4,7 @@ What is New in StaticFrame
 0.9.10
 ----------
 
-Correct single depth selection issue with ``IndexHierarchy``.
+Corrected single depth selection issue with ``IndexHierarchy``.
 
 
 0.9.9
