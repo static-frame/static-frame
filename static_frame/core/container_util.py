@@ -1166,7 +1166,7 @@ def _index_many_to_one(
     '''
     from static_frame.core.index_auto import IndexAutoFactory
 
-    array_processor: tp.Callable[[tp.Sequence[np.ndarray]], np.ndarray]
+    array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
 
     mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
 

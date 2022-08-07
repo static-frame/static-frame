@@ -108,4 +108,7 @@ def buses_to_hierarchy(
             raise init_exception_cls(f'Bus names must be unique: {label} duplicated')
         tree[label] = extractor(bus._index)
 
-    return IndexHierarchy.from_tree(tree)
+    return IndexHierarchy.from_tree(
+            tree,
+            index_constructors=IndexAutoConstructorFactory,
+            )

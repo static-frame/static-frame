@@ -339,18 +339,18 @@ class Series(ContainerOperand):
                 for label, series in items:
                     array_values.append(series.values)
                     yield from product((label,), series._index)
-        try:
-            # populates array_values as side
-            ih = index_from_optional_constructor(
-                    gen(),
-                    default_constructor=IndexHierarchy.from_index_items,
-                    explicit_constructor=index_constructor,
-                    )
+
+        # populates array_values as side
+        ih = index_from_optional_constructor(
+                gen(),
+                default_constructor=IndexHierarchy.from_index_items,
+                explicit_constructor=index_constructor,
+                )
+        if array_values:
             # returns immutable array
             values = concat_resolved(array_values)
             own_index = True
-        except StopIteration:
-            # Default to empty when given an empty iterable
+        else:
             ih = None #type: ignore
             values = ()
             own_index = False

@@ -757,7 +757,6 @@ def dtype_from_element(
 #     return dt_resolve
 
 
-
 def concat_resolved(
         arrays: tp.Sequence[np.ndarray],
         axis: int = 0,
@@ -774,14 +773,13 @@ def concat_resolved(
         raise NotImplementedError('no handling of concatenating flattened arrays')
 
     # first pass to determine shape and resolved type
-    arrays_iter = iter(arrays)
-    first = next(arrays_iter)
+    first = arrays[0]
 
     # ndim = first.ndim
     dt_resolve = first.dtype
     shape = list(first.shape)
 
-    for array in arrays_iter:
+    for array in arrays[1:]:
         if dt_resolve != DTYPE_OBJECT:
             dt_resolve = resolve_dtype(array.dtype, dt_resolve)
         shape[axis] += array.shape[axis]
