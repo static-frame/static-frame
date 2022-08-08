@@ -468,12 +468,18 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         self._bus = bus
         self._axis = axis
+        # @flexatone - should this raise instead?
+        # if retain_labels and not include_index:
+        #     raise RuntimeError('Do you even know what you want?')
         self._retain_labels = retain_labels if include_index else False
         self._deepcopy_from_bus = deepcopy_from_bus
         self._include_index = include_index
 
         if (primary_index is None) ^ (secondary_index is None):
-            raise ErrorInitQuilt('if supplying primary_index, supply secondary_index')
+            raise ErrorInitQuilt('if supplying `primary_index`, supply `secondary_index`')
+
+        if (iloc_to_frame_label is None) ^ (frame_label_offset is None):
+            raise ErrorInitQuilt('if supplying `iloc_to_frame_label`, supply `frame_label_offset`')
 
         self._primary_index = primary_index
         self._secondary_index = secondary_index
@@ -561,6 +567,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             name
         '''
+        # TODO: Why is this here again?
         if not self._assign_axis:
             additional_kwargs = dict(
                     primary_index=self._primary_index,
@@ -947,6 +954,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
 
+    # Copied impl from code on master
     def _extract_null_slice_array(self: Q,
             extractor: AnyCallable,
             ) -> np.ndarray:
@@ -990,6 +998,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             return concat_resolved(components)
         return concat_resolved(components, axis=self._axis)
 
+    # Copied impl from code on master
     def _extract_hierarchy_array(self: Q,
             sel_key: GetItemKeyType,
             opposite_key: GetItemKeyType,
@@ -998,6 +1007,8 @@ class Quilt(ContainerBase, StoreClientMixin):
             primary_index_sel: tp.Union[tp.Tuple[tp.Hashable, ...], IndexBase],
             extractor: AnyCallable,
             ) -> tp.Union[tp.Any, np.ndarray]:
+
+        # Duplicated in `_extract_hierarchy`. Re-use possible?
         sel = np.full(len(self._primary_index), False)
         sel[sel_key] = True
 
@@ -1017,12 +1028,14 @@ class Quilt(ContainerBase, StoreClientMixin):
             if self._axis == 0:
                 component = self._bus.loc[frame_label]._extract_array(sel_component, opposite_key) # type: ignore
                 if sel_reduces:
-                    component = component[0]
+                    [component] = component # ?
+                    # component = component[0]
             else:
                 component = self._bus.loc[frame_label]._extract_array(opposite_key, sel_component) # type: ignore
                 if sel_reduces:
                     if component.ndim == 1:
-                        component = component[0]
+                        [component] = component # ?
+                        # component = component[0]
                     elif component.ndim == 2:
                         component = component[NULL_SLICE, 0]
 
@@ -1034,10 +1047,12 @@ class Quilt(ContainerBase, StoreClientMixin):
         # NOTE: concatenate allocates a new array, meaning we don't need to use extractor
         if sel_reduces or opposite_reduces:
             return concat_resolved(parts)
+
         return concat_resolved(parts, axis=self._axis)
 
     #---------------------------------------------------------------------------
 
+    # Copied impl from code on master
     def _extract_null_slice(self: Q,
             extractor: AnyCallable,
             ) -> Frame:
@@ -1055,9 +1070,16 @@ class Quilt(ContainerBase, StoreClientMixin):
             frames = (extractor(frame) for frame in self._bus.values)
 
         if not self._include_index:
-            return Frame.from_concat(frames, axis=self._axis, index=self._primary_index) # type: ignore
+            return Frame.from_concat( # type: ignore
+                    frames,
+                    axis=self._axis,
+                    index=self._primary_index,
+                    )
 
-        return Frame.from_concat(frames, axis=self._axis) # type: ignore
+        return Frame.from_concat( # type: ignore
+                frames,
+                axis=self._axis,
+                )
 
     def _extract_no_hierarchy(self: Q,
             primary_index_sel: tp.Union[int, IndexBase],
@@ -1099,6 +1121,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 axis=self._axis,
                 )
 
+    # Based on impl from code on master, refactored logic though
     def _extract_hierarchy(self: Q,
             sel_key: GetItemKeyType,
             opposite_key: GetItemKeyType,
@@ -1112,11 +1135,13 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         def get_component(frame_label: tp.Hashable) -> tp.Any:
             sel_component = sel[self._primary_index._loc_to_iloc(HLoc[frame_label])] # type: ignore
+
             if self._axis == 0:
                 return self._bus.loc[frame_label].iloc[sel_component, opposite_key]
 
             return self._bus.loc[frame_label].iloc[opposite_key, sel_component]
 
+        # TODO: Prove this
         if sel_reduces and opposite_reduces:
             return get_component(primary_index_sel[0]).iloc[0]
 
@@ -1486,7 +1511,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         '''
-        return self._iter_window(False, IterNodeType.VALUES)
+        return self._iter_window(as_array=False, yield_type=IterNodeType.VALUES)
 
     @property
     @doc_inject(selector='window')
@@ -1496,7 +1521,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         '''
-        return self._iter_window(False, IterNodeType.ITEMS)
+        return self._iter_window(as_array=False, yield_type=IterNodeType.ITEMS)
 
     @property
     @doc_inject(selector='window')
@@ -1506,7 +1531,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         '''
-        return self._iter_window(True, IterNodeType.VALUES)
+        return self._iter_window(as_array=True, yield_type=IterNodeType.VALUES)
 
     @property
     @doc_inject(selector='window')
@@ -1516,7 +1541,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         '''
-        return self._iter_window(True, IterNodeType.ITEMS)
+        return self._iter_window(as_array=True, yield_type=IterNodeType.ITEMS)
 
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality

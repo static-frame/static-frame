@@ -43,6 +43,9 @@ def build_quilt_indices(
     '''
     Given a :obj:`Bus` and an axis, derive the primary and secondary indices for a Quilt. Validate the :obj:`Index` of the secondary index.
     '''
+    if not bus.size:
+        raise init_exception_cls('Container is empty.')
+
     # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
@@ -83,6 +86,7 @@ def build_quilt_indices(
         assert primary_tree
         primary: tp.Union[Series, IndexHierarchy] = IndexHierarchy.from_tree(primary_tree, index_constructors=IndexAutoConstructorFactory)
     else:
+        assert labels
         primary = Series(labels)
 
     return primary, secondary # type: ignore

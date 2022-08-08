@@ -1179,7 +1179,7 @@ def _index_many_to_one(
                 union=False,
                 assume_unique=True)
     elif mtot_is_concat:
-        array_processor = concat_resolved
+        array_processor = concat_resolved # type: ignore
 
     indices_iter = iter(indices)
     try:
