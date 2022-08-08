@@ -479,6 +479,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             raise ErrorInitQuilt('if supplying `primary_index`, supply `secondary_index`')
 
         if (iloc_to_frame_label is None) ^ (frame_label_offset is None):
+            # TODO: Coverage
             raise ErrorInitQuilt('if supplying `iloc_to_frame_label`, supply `frame_label_offset`')
 
         self._primary_index = primary_index
@@ -516,6 +517,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 self._iloc_to_frame_label = None
                 self._frame_label_offset = None
             else:
+                # TODO: Coverage
                 self._primary_index = primary.index # type: ignore
                 self._iloc_to_frame_label = primary # type: ignore
                 s: Series = self._iloc_to_frame_label.drop_duplicated(exclude_first=True) # type: ignore
@@ -576,6 +578,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     frame_label_offset=self._frame_label_offset,
                     )
         else:
+            # TODO: Coverage
             additional_kwargs = {}
 
         return self.__class__(self._bus.rename(name),
@@ -600,6 +603,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             {config}
         '''
         if self._assign_axis:
+            # TODO: Coverage
             self._update_axis_labels()
 
         drop_column_dtype = False
@@ -732,8 +736,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         Returns:
             :obj:`int`
         '''
-        # return self._blocks.nbytes
         if self._assign_axis:
+            # TODO: Coverage
             self._update_axis_labels()
 
         return sum(f.nbytes for f in self._bus.values)

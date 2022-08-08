@@ -147,6 +147,7 @@ class IndexAutoFactory:
                 )
 
     def __repr__(self) -> str:
+        # TODO: Coverage
         return f'IndexAutoFactory<{self._size}>'
 
 
@@ -154,5 +155,3 @@ IndexAutoFactoryType = tp.Type[IndexAutoFactory]
 RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitializer]
 
 IndexInitOrAutoType = tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]]
-
-
