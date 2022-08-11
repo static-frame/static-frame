@@ -31,7 +31,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Accessor Datetime', 20), ('Accessor Fill Value', 26), ('Accessor Regular Expression', 7), ('Accessor String', 38), ('Accessor Transpose', 24), ('Accessor Values', 3), ('Assignment', 8), ('Attribute', 11), ('Constructor', 34), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 26), ('Iterator', 136), ('Method', 88), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+            (('Accessor Datetime', 20), ('Accessor Fill Value', 26), ('Accessor Regular Expression', 7), ('Accessor String', 38), ('Accessor Transpose', 24), ('Accessor Values', 3), ('Assignment', 16), ('Attribute', 11), ('Constructor', 34), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 26), ('Iterator', 136), ('Method', 88), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
         )
 
     def test_interface_summary_c(self) -> None:
@@ -75,7 +75,7 @@ class TestUnit(TestCase):
         f = Frame.interface.loc[Frame.interface.index.via_str.startswith('assign')]
         # assignmewnt interface is one of the most complex, so we can check the signatures here explicitly
         self.assertEqual(f.index.values.tolist(),
-                ['assign[key](value, *, fill_value)', 'assign[key].apply(func, *, fill_value)', 'assign.iloc[key](value, *, fill_value)', 'assign.iloc[key].apply(func, *, fill_value)', 'assign.loc[key](value, *, fill_value)', 'assign.loc[key].apply(func, *, fill_value)', 'assign.bloc[key](value, *, fill_value)', 'assign.bloc[key].apply(func, *, fill_value)'])
+                ['assign[key](value, *, fill_value)', 'assign[key].apply(func, *, fill_value)', 'assign[key].apply_element(func, *, dtype, fill_value)', 'assign[key].apply_element_items(func, *, dtype, fill_value)', 'assign.iloc[key](value, *, fill_value)', 'assign.iloc[key].apply(func, *, fill_value)', 'assign.iloc[key].apply_element(func, *, dtype, fill_value)', 'assign.iloc[key].apply_element_items(func, *, dtype, fill_value)', 'assign.loc[key](value, *, fill_value)', 'assign.loc[key].apply(func, *, fill_value)', 'assign.loc[key].apply_element(func, *, dtype, fill_value)', 'assign.loc[key].apply_element_items(func, *, dtype, fill_value)', 'assign.bloc[key](value, *, fill_value)', 'assign.bloc[key].apply(func, *, fill_value)', 'assign.bloc[key].apply_element(func, *, dtype, fill_value)', 'assign.bloc[key].apply_element_items(func, *, dtype, fill_value)'])
 
     def test_interface_via_re_signature_no_args(self) -> None:
         inter = InterfaceSummary.to_frame(Series,
