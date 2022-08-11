@@ -29,6 +29,7 @@ import numpy as np
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 from static_frame.core.exception import LocInvalid
+from static_frame.core.exception import InvalidDatetime64Initializer
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
@@ -1677,7 +1678,7 @@ TD64_MS = np.timedelta64(1, 'ms')
 TD64_US = np.timedelta64(1, 'us')
 TD64_NS = np.timedelta64(1, 'ns')
 
-_DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH)
+_DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH) # year is handled separately
 
 DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
@@ -1696,11 +1697,10 @@ def to_datetime64(
         else: # assume value is single value;
             # note that integers will be converted to units from epoch
             if isinstance(value, INT_TYPES):
-                if dtype == DT64_YEAR:
-                    # convert to string as that is likely what is wanted
+                if dtype == DT64_YEAR: # convert to string as that is generally what is wanted
                     value = str(value)
                 elif dtype in _DT_NOT_FROM_INT:
-                    raise RuntimeError('attempting to create {} from an integer, which is generally not desired as the result will be offset from the epoch.'.format(dtype))
+                    raise InvalidDatetime64Initializer(f'Attempting to create {dtype} from an integer, which is generally not desired as the result will be an offset from the epoch.')
             # cannot use the datetime directly
             if dtype != np.datetime64:
                 dt = np.datetime64(value, np.datetime_data(dtype)[0])
@@ -1712,7 +1712,7 @@ def to_datetime64(
         if dtype:
             # dtype can be either generic, or a matching specific dtype
             if dtype != np.datetime64 and dtype != dt.dtype:
-                raise RuntimeError(f'value ({dt}) is not a supported dtype ({dtype})')
+                raise InvalidDatetime64Initializer(f'value ({dt}) is not a supported dtype ({dtype})')
     return dt
 
 def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:

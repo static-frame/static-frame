@@ -4,6 +4,7 @@ import numpy as np
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
+from static_frame.core.index_datetime import IndexDatetime # base class
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.index_base import IndexBase  # pylint: disable = W0611
 from static_frame.core.util import DTYPE_INT_DEFAULT
@@ -13,6 +14,7 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.exception import InvalidDatetime64Initializer
 
 class IndexConstructorFactoryBase:
     def __call__(self,
@@ -111,6 +113,9 @@ class IndexAutoFactory:
         labels = PositionsAllocator.get(initializer)
 
         if explicit_constructor:
+            # NOTE: we raise when a Python integer is given to a dt64 index, but accept an NP array of integers; labels here is already an array, this would work without an explicit check.
+            if isinstance(explicit_constructor, type) and issubclass(explicit_constructor, IndexDatetime): # type: ignore
+                raise InvalidDatetime64Initializer(f'Attempting to create {explicit_constructor.__name__} from an {cls.__name__}, which is generally not desired as the result will be an offset from the epoch. Supply explicit labels.')
             if isinstance(explicit_constructor, IndexDefaultFactory):
                 return explicit_constructor(labels,
                         default_constructor=default_constructor,
