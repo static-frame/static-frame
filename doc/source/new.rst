@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+0.9.11
+----------
+
+Supplying an ``IndexDatetime`` subclass as an ``explicit_constructor`` to an ``IndexAutoFactory`` now raises.
+
+
 0.9.10
 ----------
 
