@@ -3120,6 +3120,13 @@ class Series(ContainerOperand):
 class SeriesAssign(Assign):
     __slots__ = ('container', 'key')
 
+    INTERFACE = (
+        '__call__',
+        'apply',
+        'apply_element',
+        'apply_element_items',
+        )
+
     def __init__(self,
             container: Series,
             key: GetItemKeyType
