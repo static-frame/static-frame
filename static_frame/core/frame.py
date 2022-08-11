@@ -456,7 +456,6 @@ class Frame(ContainerOperand):
                         columns_constructor=columns_constructor,
                         ))
         frames = normalized
-
         own_index = False
         own_columns = False
 
@@ -2938,6 +2937,7 @@ class Frame(ContainerOperand):
         # check after creation, as we cannot determine from the constructor (it might be a method on a class)
         if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC:
             raise ErrorInitFrame(f'supplied column constructor does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
+
         #-----------------------------------------------------------------------
         # index assignment
 
