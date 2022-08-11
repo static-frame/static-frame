@@ -857,6 +857,14 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield 's'
             yield f"s.assign['c':].apply(lambda s: s / 100)"
+        elif attr == 'assign[].apply_element()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign['b':].apply_element(lambda e: e if e < 10 else f'--{{e}}--')"
+        elif attr == 'assign[].apply_element_items()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign['b':].apply_element_items(lambda l, e: e if l == 'c' else f'--{{e}}--')"
         elif attr == 'assign.iloc[]()':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield f"s.assign.iloc[2]('x')"
@@ -866,6 +874,14 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield 's'
             yield f"s.assign.iloc[2:].apply(lambda s: s / 100)"
+        elif attr == 'assign.iloc[].apply_element()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign.iloc[2:].apply_element(lambda e: e / 100 if e < 10 else e)"
+        elif attr == 'assign.iloc[].apply_element_items()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign.iloc[2:].apply_element_items(lambda l, e: e if l == 'c' else f'--{{e}}--')"
         elif attr == 'assign.loc[]()':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield f"s.assign.loc['c']('x')"
@@ -875,6 +891,14 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield 's'
             yield f"s.assign.loc['c':].apply(lambda s: s / 100)"
+        elif attr == 'assign.loc[].apply_element()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign.loc['c':].apply_element(lambda e: e / 100 if e < 10 else e)"
+        elif attr == 'assign.loc[].apply_element_items()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign.loc['c':].apply_element_items(lambda l, e: e / 100 if l == 'c' else e)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -1890,6 +1914,14 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield 'f'
             yield f"f.assign['a'].apply(lambda s: s / 100)"
+        elif attr == 'assign[].apply_element()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign['a'].apply_element(lambda e: e / 100 if e < 8 else e)"
+        elif attr == 'assign[].apply_element_items()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign['a'].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)"
         elif attr == 'assign.iloc[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield f"f.assign.iloc[2]((-1, -2, -3))"
@@ -1899,6 +1931,14 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield 'f'
             yield f"f.assign.iloc[2:].apply(lambda s: s / 100)"
+        elif attr == 'assign.iloc[].apply_element()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign.iloc[1:].apply_element(lambda e: e / 100 if e < 8 else e)"
+        elif attr == 'assign.iloc[].apply_element_items()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign.iloc[1:].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)"
         elif attr == 'assign.loc[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield f"f.assign.loc['r'](-1)"
@@ -1908,12 +1948,26 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield 'f'
             yield f"f.assign.loc['r':].apply(lambda s: s / 100)"
+        elif attr == 'assign.loc[].apply_element()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign.loc['r':].apply_element(lambda e: e / 100 if e < 10 else e)"
+        elif attr == 'assign.loc[].apply_element_items()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign.loc['r':].apply_element_items(lambda l, e: e / 100 if l[1] == 'c' else e)"
         elif attr == 'assign.bloc[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield f"f.assign.bloc[f > 5](-1)"
         elif attr == 'assign.bloc[].apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield f"f.assign.bloc[f > 5].apply(lambda s: s * .01)"
+        elif attr == 'assign.bloc[].apply_element()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield f"f.assign.bloc[f > 5].apply_element(lambda e: e * .01 if e == 8 else e)"
+        elif attr == 'assign.bloc[].apply_element_items()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield f"f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
