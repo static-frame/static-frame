@@ -69,7 +69,7 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(
                 f2.columns.values.tolist(),
-                ['cls_name', 'group', 'doc', 'reference', 'use_signature', 'is_attr', 'delegate_reference', 'delegate_is_attr', 'signature_no_args']
+                ['cls_name', 'group', 'doc', 'reference', 'use_signature', 'is_attr', 'delegate_reference', 'delegate_is_attr', 'signature_no_args', 'sna_label']
                 )
 
     def test_interface_assign_a(self) -> None:
@@ -100,6 +100,7 @@ class TestUnit(TestCase):
     def test_interface_util_a(self) -> None:
         f = InterfaceSummary.to_frame(FillValueAuto, minimized=False, max_args=99)
         self.assertTrue(f.size > 0)
+        self.assertEqual(len(f), len(f['sna_label'].unique()))
 
 if __name__ == '__main__':
     import unittest
