@@ -14,6 +14,7 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.test.test_case import TestCase
 from static_frame import NPZ
 from static_frame import NPY
+from static_frame import FillValueAuto
 
 
 class TestUnit(TestCase):
@@ -94,15 +95,11 @@ class TestUnit(TestCase):
     def test_interface_get_instance(self) -> None:
         for component in DOCUMENTED_COMPONENTS:
             post = InterfaceSummary.get_instance(component)
-            if post is NPY or post is NPZ: #type: ignore
-                continue
-            if not isinstance(post, ContainerBase):
-                self.assertTrue(isinstance(post, ( # type: ignore
-                    DisplayConfig,
-                    StoreConfig,
-                    StoreFilter,
-                    )))
+            self.assertTrue(post is not None)
 
+    def test_interface_util_a(self) -> None:
+        f = InterfaceSummary.to_frame(FillValueAuto, minimized=False, max_args=99)
+        self.assertTrue(f.size > 0)
 
 if __name__ == '__main__':
     import unittest
