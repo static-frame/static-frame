@@ -1,18 +1,21 @@
 '''
 Tools for documenting the SF interface.
 '''
-import typing as tp
 import inspect
-from itertools import chain
+import typing as tp
 from collections import namedtuple
+from itertools import chain
 
 import numpy as np
 
+from static_frame.core.archive_npy import NPY
+from static_frame.core.archive_npy import NPZ
 from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameAsType
@@ -21,8 +24,12 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYear
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_dt import InterfaceBatchDatetime
+from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_fill_value import InterfaceBatchFillValue
+from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_re import InterfaceBatchRe
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
@@ -31,25 +38,19 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
-from static_frame.core.node_values import InterfaceValues
-from static_frame.core.node_values import InterfaceBatchValues
-from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_re import InterfaceBatchRe
-from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_str import InterfaceBatchString
-from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
-from static_frame.core.node_fill_value import InterfaceFillValue
-from static_frame.core.node_fill_value import InterfaceBatchFillValue
+from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_values import InterfaceBatchValues
+from static_frame.core.node_values import InterfaceValues
+from static_frame.core.quilt import Quilt
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import AnyCallable
 from static_frame.core.util import DT64_S
-from static_frame.core.quilt import Quilt
+from static_frame.core.util import AnyCallable
 from static_frame.core.yarn import Yarn
-from static_frame.core.archive_npy import NPY
-from static_frame.core.archive_npy import NPZ
 
 #-------------------------------------------------------------------------------
 
@@ -830,7 +831,8 @@ class InterfaceSummary(Features):
                     IndexBase,
                     DisplayConfig,
                     StoreFilter,
-                    StoreConfig
+                    StoreConfig,
+                    DisplayActive,
                     ))
 
     @classmethod
