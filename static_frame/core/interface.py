@@ -44,6 +44,7 @@ from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.node_values import InterfaceValues
+from static_frame.core.platform import Platform
 from static_frame.core.quilt import Quilt
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
@@ -833,6 +834,7 @@ class InterfaceSummary(Features):
                     StoreFilter,
                     StoreConfig,
                     DisplayActive,
+                    Platform,
                     ))
 
     @classmethod
