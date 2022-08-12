@@ -2249,8 +2249,8 @@ class TypeBlocks(ContainerOperand):
             # evaluate after updating target
             if not target.any(): # works for ndim 1 and 2
                 yield block
-
-            if block.ndim == 1:
+                col += 1 if block.ndim == 1 else block.shape[1]
+            elif block.ndim == 1:
                 value = get_col_fill_value(col, block.dtype)
                 value_dtype = dtype_from_element(value)
                 assigned_dtype = resolve_dtype(value_dtype, block.dtype)
@@ -2262,7 +2262,6 @@ class TypeBlocks(ContainerOperand):
                 assigned[target] = value
                 assigned.flags.writeable = False
                 yield assigned
-
                 col += 1
             else:
                 target_flat = target.any(axis=0)
@@ -2284,7 +2283,6 @@ class TypeBlocks(ContainerOperand):
                         assigned[target[NULL_SLICE, i]] = value
                         assigned.flags.writeable = False
                         yield assigned
-
                     col += 1
 
     def _assign_from_boolean_blocks_by_blocks(self,

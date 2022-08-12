@@ -5746,9 +5746,9 @@ class TestUnit(TestCase):
 
     def test_frame_fillna_e(self) -> None:
 
-        f = Frame(np.arange(4).reshape(2, 2))
-        with self.assertRaises(RuntimeError):
-            # must provde a Frame
+        f = Frame.from_fields(((None, 'foo'), ('a', np.nan)))
+        with self.assertRaises(ValueError):
+            # ValueError: Fill values must be one-dimensional arrays.
             f.fillna(np.arange(4).reshape(2, 2))
 
     def test_frame_fillna_f(self) -> None:
@@ -5792,6 +5792,17 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('A', (('w', -1.0), ('x', 3.0), ('y', 0.0))), ('B', (('w', 2.0), ('x', 30.0), ('y', -1.0))), ('C', (('w', 3), ('x', 'na'), ('y', 2))), ('D', (('w', 0), ('x', 'na'), ('y', 3))))
                 )
+
+    def test_frame_fillna_i(self) -> None:
+        f1 = sf.Frame.from_fields((('', 'foo'), ('bar', None), ('baz', '')), columns=('a', 'b', 'c'))
+        f2 = f1.fillna({'a': 'x', 'b': 'x', 'c':'y'})
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, ''), (1, 'foo'))), ('b', ((0, 'bar'), (1, 'x'))), ('c', ((0, 'baz'), (1, '')))))
+
+        f3 = f1.fillfalsy({'a': 'x', 'b': 'x', 'c':'y'})
+        self.assertEqual(f3.to_pairs(),
+                (('a', ((0, 'x'), (1, 'foo'))), ('b', ((0, 'bar'), (1, 'x'))), ('c', ((0, 'baz'), (1, 'y')))))
+
 
     #---------------------------------------------------------------------------
 
