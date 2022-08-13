@@ -181,6 +181,9 @@ def get_col_fill_value_factory(
         fill_value = FILL_VALUE_AUTO_DEFAULT
     elif is_mapping(fill_value):
         is_map = True
+    elif fill_value.__class__ is np.ndarray: # tuple is an element
+        if fill_value.ndim > 1:
+            raise ValueError('Fill values must be one-dimensional arrays.')
     elif isinstance(fill_value, tuple): # tuple is an element
         is_element = True
     elif hasattr(fill_value, '__iter__') and not isinstance(fill_value, str):
